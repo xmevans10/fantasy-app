@@ -4,14 +4,19 @@ Self-contained prompts to drive the next three milestones. Each file can be hand
 agent: it carries enough context to execute without prior conversation. Written in the Fable-5
 spirit — **state the goal and success criteria; don't over-prescribe the steps.**
 
-| Milestone | Theme | File |
-|-----------|-------|------|
-| **M3** | Real sports data pipeline (no more hardcoded content) | [M3-real-sports-data.md](M3-real-sports-data.md) |
-| **M4** | Social retention — Leagues, Versus, Stats, Push | [M4-social-retention.md](M4-social-retention.md) |
-| **M5** | Monetization + breadth — Pro/StoreKit, packs, remaining formats, seasons | [M5-monetization-breadth.md](M5-monetization-breadth.md) |
+| Milestone | Theme | File | Status (2026-06-29) |
+|-----------|-------|------|---------------------|
+| **M3** | Real sports data pipeline (no more hardcoded content) | [M3-real-sports-data.md](M3-real-sports-data.md) | ✅ shipped |
+| **M4** | Social retention — Leagues, Versus, Stats, Push | [M4-social-retention.md](M4-social-retention.md) | ⬜ pending (Leagues/Stats are placeholder tabs) |
+| **M5** | Monetization + breadth — Pro/StoreKit, packs, formats | [M5-monetization-breadth.md](M5-monetization-breadth.md) | 🟧 breadth/scoring shipped; **monetization pending** |
+| **M6** | Community fixes + backend hardening | [M6-community-fixes-hardening.md](M6-community-fixes-hardening.md) | 🟧 Task 1 + Phase A done (feed fix, daily determinism, grades 0–100, ESPN-keyless NBA, git init) |
+| **M7** | Content scale + automation (CI, broad pulls, bounds) | [M7-content-scale-and-automation.md](M7-content-scale-and-automation.md) | ⬜ pending |
+| **M8** | Single-game grading (net-new data model) | [M8-single-game-grading.md](M8-single-game-grading.md) | ⬜ pending |
+| **M9** | Gameplay quality + UX polish | [M9-gameplay-quality-and-polish.md](M9-gameplay-quality-and-polish.md) | ⬜ pending |
 
-Recommended order: **M3 → M4 → M5** (real content makes leagues/versus meaningful; monetization
-comes once retention works).
+Browse/Archive (expose the full daily pool) + the Profile build-out are being done inline this
+session, so they have no prompt file. Recommended next order: **M7 (let the engine run) → M4/M9
+(retention + polish) → M5 monetization → M8**.
 
 ---
 
