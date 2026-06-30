@@ -77,12 +77,32 @@ struct Keep4CardView: View {
                     .foregroundStyle(team.onPrimary.opacity(0.72))
             }
             Spacer(minLength: 6)
-            // The grade is the hidden number players sort on — only reveal it post-submit.
-            if isLocked { gradeChip }
+            // Team logo during play; the grade (the hidden sort number) replaces it on reveal.
+            if isLocked { gradeChip } else { teamLogoView }
         }
         .padding(.horizontal, 14).padding(.vertical, 11)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(team.primary)
+    }
+
+    /// ESPN team-logo CDN, keyed by sport + lowercase abbreviation (all our abbrs resolve).
+    private var teamLogoURL: URL? {
+        let abbr = player.teamAbbr.lowercased()
+        guard !abbr.isEmpty else { return nil }
+        let league = sport == .nfl ? "nfl" : "nba"
+        return URL(string: "https://a.espncdn.com/i/teamlogos/\(league)/500/\(abbr).png")
+    }
+
+    @ViewBuilder private var teamLogoView: some View {
+        if let url = teamLogoURL {
+            AsyncImage(url: url) { phase in
+                if let img = phase.image { img.resizable().scaledToFit() } else { Color.clear }
+            }
+            .frame(width: 40, height: 40)
+            .background(Color.white.opacity(0.15))   // faint disc, not a heavy white badge
+            .clipShape(Circle())
+            .overlay(Circle().strokeBorder(team.onPrimary.opacity(0.35), lineWidth: 1))
+        }
     }
 
     /// Player headshot (nflverse/ESPN) in a team-tinted circle; falls back to a glyph when absent.
@@ -157,16 +177,23 @@ struct Keep4CardView: View {
 
     // MARK: - Controls
 
+    private static let cutGradient = LinearGradient(
+        colors: [Color(hex: 0xFF5B4A), Color(hex: 0xC41F14)], startPoint: .top, endPoint: .bottom)
+    private static let keepGradient = LinearGradient(
+        colors: [Color(hex: 0x2BD27A), Color(hex: 0x12923F)], startPoint: .top, endPoint: .bottom)
+
     private var segmentedControl: some View {
         HStack(spacing: 0) {
-            segment(title: "Cut", pile: .cut, color: .dangerFill, on: .onDanger)
-            segment(title: "Keep", pile: .keep, color: .successFill, on: .onSuccess)
+            segment(title: "Cut", pile: .cut, gradient: Self.cutGradient)
+            segment(title: "Keep", pile: .keep, gradient: Self.keepGradient)
         }
         .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(Color.borderInk, lineWidth: 2))
     }
 
-    private func segment(title: String, pile: Pile, color: Color, on: Color) -> some View {
+    /// Both sides always carry their color (red Cut / green Keep) as a gradient; the picked
+    /// side goes full-strength while the other dims, so the choice still reads at a glance.
+    private func segment(title: String, pile: Pile, gradient: LinearGradient) -> some View {
         let active = assignment == pile
         let disabled = disabledPile == pile
         return Button {
@@ -175,11 +202,11 @@ struct Keep4CardView: View {
         } label: {
             Text(title.uppercased())
                 .font(.custom(active ? FontName.condBlack : FontName.condBold, size: 15))
-                .foregroundStyle(active ? on : Color.textPrimary)
+                .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 9)
-                .background(active ? color : Color.surfaceMuted)
-                .opacity(disabled ? 0.35 : 1)
+                .background(gradient)
+                .opacity(disabled ? 0.3 : (active || assignment == nil ? 1 : 0.5))
         }
         .buttonStyle(.plain)
         .disabled(disabled)
