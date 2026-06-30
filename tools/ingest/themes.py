@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 class StatColumn:
     stat: str       # raw stat key in RawSeason.stats
     label: str      # on-card label, e.g. "Rec Yds"
-    fmt: str        # 'comma_int' | 'int' | 'dec1'
+    fmt: str        # 'comma_int' | 'int' | 'dec1' | 'pct1'
 
 
 @dataclass(frozen=True)
