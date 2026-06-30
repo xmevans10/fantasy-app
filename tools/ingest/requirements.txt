@@ -1,0 +1,9 @@
+# BallIQ ingestion pipeline.
+#
+# The pipeline itself uses ONLY the Python standard library at runtime
+# (urllib + csv + json) so it runs unchanged in CI and locally with just
+# Python 3.11+ — no pandas/pyarrow/requests install needed. nflverse publishes
+# CSV variants of every dataset, which the stdlib `csv` module reads directly.
+#
+# Tests need pytest:
+pytest>=8.0

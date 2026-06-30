@@ -1,0 +1,1052 @@
+[
+  {
+    "id": "nfl-wr-receiving-00",
+    "theme": "Elite WR receiving seasons",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "antonio-brown-2015",
+        "name": "Antonio Brown",
+        "teamAbbr": "PIT",
+        "seasonYear": 2015,
+        "grade": 83.5,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,834"
+          },
+          {
+            "label": "TD",
+            "value": "10"
+          },
+          {
+            "label": "Rec",
+            "value": "136"
+          }
+        ]
+      },
+      {
+        "id": "ceedee-lamb-2023",
+        "name": "CeeDee Lamb",
+        "teamAbbr": "DAL",
+        "seasonYear": 2023,
+        "grade": 89.1,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,749"
+          },
+          {
+            "label": "TD",
+            "value": "12"
+          },
+          {
+            "label": "Rec",
+            "value": "135"
+          }
+        ]
+      },
+      {
+        "id": "cooper-kupp-2021",
+        "name": "Cooper Kupp",
+        "teamAbbr": "LA",
+        "seasonYear": 2021,
+        "grade": 97.0,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,947"
+          },
+          {
+            "label": "TD",
+            "value": "16"
+          },
+          {
+            "label": "Rec",
+            "value": "145"
+          }
+        ]
+      },
+      {
+        "id": "davante-adams-2020",
+        "name": "Davante Adams",
+        "teamAbbr": "GB",
+        "seasonYear": 2020,
+        "grade": 78.1,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,374"
+          },
+          {
+            "label": "TD",
+            "value": "18"
+          },
+          {
+            "label": "Rec",
+            "value": "115"
+          }
+        ]
+      },
+      {
+        "id": "julio-jones-2015",
+        "name": "Julio Jones",
+        "teamAbbr": "ATL",
+        "seasonYear": 2015,
+        "grade": 80.8,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,871"
+          },
+          {
+            "label": "TD",
+            "value": "8"
+          },
+          {
+            "label": "Rec",
+            "value": "136"
+          }
+        ]
+      },
+      {
+        "id": "justin-jefferson-2022",
+        "name": "Justin Jefferson",
+        "teamAbbr": "MIN",
+        "seasonYear": 2022,
+        "grade": 79.3,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,809"
+          },
+          {
+            "label": "TD",
+            "value": "8"
+          },
+          {
+            "label": "Rec",
+            "value": "128"
+          }
+        ]
+      },
+      {
+        "id": "michael-thomas-2019",
+        "name": "Michael Thomas",
+        "teamAbbr": "NO",
+        "seasonYear": 2019,
+        "grade": 81.6,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,725"
+          },
+          {
+            "label": "TD",
+            "value": "9"
+          },
+          {
+            "label": "Rec",
+            "value": "149"
+          }
+        ]
+      },
+      {
+        "id": "tyreek-hill-2023",
+        "name": "Tyreek Hill",
+        "teamAbbr": "MIA",
+        "seasonYear": 2023,
+        "grade": 82.5,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,799"
+          },
+          {
+            "label": "TD",
+            "value": "13"
+          },
+          {
+            "label": "Rec",
+            "value": "119"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nfl-rb-workhorse-00",
+    "theme": "Workhorse RB seasons",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "christian-mccaffrey-2019",
+        "name": "Christian McCaffrey",
+        "teamAbbr": "CAR",
+        "seasonYear": 2019,
+        "grade": 100.0,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,387"
+          },
+          {
+            "label": "TD",
+            "value": "15"
+          },
+          {
+            "label": "YPC",
+            "value": "4.8"
+          }
+        ]
+      },
+      {
+        "id": "david-johnson-2016",
+        "name": "David Johnson",
+        "teamAbbr": "ARI",
+        "seasonYear": 2016,
+        "grade": 90.7,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,239"
+          },
+          {
+            "label": "TD",
+            "value": "16"
+          },
+          {
+            "label": "YPC",
+            "value": "4.2"
+          }
+        ]
+      },
+      {
+        "id": "demarco-murray-2014",
+        "name": "DeMarco Murray",
+        "teamAbbr": "DAL",
+        "seasonYear": 2014,
+        "grade": 78.3,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,845"
+          },
+          {
+            "label": "TD",
+            "value": "13"
+          },
+          {
+            "label": "YPC",
+            "value": "4.7"
+          }
+        ]
+      },
+      {
+        "id": "jamaal-charles-2013",
+        "name": "Jamaal Charles",
+        "teamAbbr": "KC",
+        "seasonYear": 2013,
+        "grade": 83.4,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,287"
+          },
+          {
+            "label": "TD",
+            "value": "12"
+          },
+          {
+            "label": "YPC",
+            "value": "5.0"
+          }
+        ]
+      },
+      {
+        "id": "jonathan-taylor-2021",
+        "name": "Jonathan Taylor",
+        "teamAbbr": "IND",
+        "seasonYear": 2021,
+        "grade": 82.2,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,811"
+          },
+          {
+            "label": "TD",
+            "value": "18"
+          },
+          {
+            "label": "YPC",
+            "value": "5.5"
+          }
+        ]
+      },
+      {
+        "id": "le-veon-bell-2014",
+        "name": "Le'Veon Bell",
+        "teamAbbr": "PIT",
+        "seasonYear": 2014,
+        "grade": 80.6,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,361"
+          },
+          {
+            "label": "TD",
+            "value": "8"
+          },
+          {
+            "label": "YPC",
+            "value": "4.7"
+          }
+        ]
+      },
+      {
+        "id": "saquon-barkley-2018",
+        "name": "Saquon Barkley",
+        "teamAbbr": "NYG",
+        "seasonYear": 2018,
+        "grade": 83.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,307"
+          },
+          {
+            "label": "TD",
+            "value": "11"
+          },
+          {
+            "label": "YPC",
+            "value": "5.0"
+          }
+        ]
+      },
+      {
+        "id": "todd-gurley-2017",
+        "name": "Todd Gurley",
+        "teamAbbr": "LA",
+        "seasonYear": 2017,
+        "grade": 84.7,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,305"
+          },
+          {
+            "label": "TD",
+            "value": "13"
+          },
+          {
+            "label": "YPC",
+            "value": "4.7"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nfl-qb-mvp-00",
+    "theme": "MVP-caliber QB seasons",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "aaron-rodgers-2020",
+        "name": "Aaron Rodgers",
+        "teamAbbr": "GB",
+        "seasonYear": 2020,
+        "grade": 82.0,
+        "stats": [
+          {
+            "label": "Yds",
+            "value": "4,299"
+          },
+          {
+            "label": "TD",
+            "value": "48"
+          },
+          {
+            "label": "INT",
+            "value": "5"
+          }
+        ]
+      },
+      {
+        "id": "cam-newton-2015",
+        "name": "Cam Newton",
+        "teamAbbr": "CAR",
+        "seasonYear": 2015,
+        "grade": 84.9,
+        "stats": [
+          {
+            "label": "Yds",
+            "value": "3,837"
+          },
+          {
+            "label": "TD",
+            "value": "35"
+          },
+          {
+            "label": "INT",
+            "value": "10"
+          }
+        ]
+      },
+      {
+        "id": "deshaun-watson-2020",
+        "name": "Deshaun Watson",
+        "teamAbbr": "HOU",
+        "seasonYear": 2020,
+        "grade": 78.1,
+        "stats": [
+          {
+            "label": "Yds",
+            "value": "4,823"
+          },
+          {
+            "label": "TD",
+            "value": "33"
+          },
+          {
+            "label": "INT",
+            "value": "7"
+          }
+        ]
+      },
+      {
+        "id": "josh-allen-2021",
+        "name": "Josh Allen",
+        "teamAbbr": "BUF",
+        "seasonYear": 2021,
+        "grade": 86.5,
+        "stats": [
+          {
+            "label": "Yds",
+            "value": "4,407"
+          },
+          {
+            "label": "TD",
+            "value": "36"
+          },
+          {
+            "label": "INT",
+            "value": "15"
+          }
+        ]
+      },
+      {
+        "id": "justin-herbert-2021",
+        "name": "Justin Herbert",
+        "teamAbbr": "LAC",
+        "seasonYear": 2021,
+        "grade": 77.4,
+        "stats": [
+          {
+            "label": "Yds",
+            "value": "5,014"
+          },
+          {
+            "label": "TD",
+            "value": "38"
+          },
+          {
+            "label": "INT",
+            "value": "15"
+          }
+        ]
+      },
+      {
+        "id": "patrick-mahomes-2018",
+        "name": "Patrick Mahomes",
+        "teamAbbr": "KC",
+        "seasonYear": 2018,
+        "grade": 91.2,
+        "stats": [
+          {
+            "label": "Yds",
+            "value": "5,097"
+          },
+          {
+            "label": "TD",
+            "value": "50"
+          },
+          {
+            "label": "INT",
+            "value": "12"
+          }
+        ]
+      },
+      {
+        "id": "peyton-manning-2013",
+        "name": "Peyton Manning",
+        "teamAbbr": "DEN",
+        "seasonYear": 2013,
+        "grade": 92.0,
+        "stats": [
+          {
+            "label": "Yds",
+            "value": "5,477"
+          },
+          {
+            "label": "TD",
+            "value": "55"
+          },
+          {
+            "label": "INT",
+            "value": "10"
+          }
+        ]
+      },
+      {
+        "id": "tom-brady-2021",
+        "name": "Tom Brady",
+        "teamAbbr": "TB",
+        "seasonYear": 2021,
+        "grade": 80.2,
+        "stats": [
+          {
+            "label": "Yds",
+            "value": "5,316"
+          },
+          {
+            "label": "TD",
+            "value": "43"
+          },
+          {
+            "label": "INT",
+            "value": "12"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nba-scorers-00",
+    "theme": "Elite scoring seasons",
+    "sport": "nba",
+    "players": [
+      {
+        "id": "david-robinson-1994",
+        "name": "David Robinson",
+        "teamAbbr": "SAS",
+        "seasonYear": 1994,
+        "grade": 83.1,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "29.8"
+          },
+          {
+            "label": "RPG",
+            "value": "10.7"
+          },
+          {
+            "label": "APG",
+            "value": "4.8"
+          }
+        ]
+      },
+      {
+        "id": "hakeem-olajuwon-1994",
+        "name": "Hakeem Olajuwon",
+        "teamAbbr": "HOU",
+        "seasonYear": 1994,
+        "grade": 79.8,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "27.3"
+          },
+          {
+            "label": "RPG",
+            "value": "11.9"
+          },
+          {
+            "label": "APG",
+            "value": "3.6"
+          }
+        ]
+      },
+      {
+        "id": "james-harden-2019",
+        "name": "James Harden",
+        "teamAbbr": "HOU",
+        "seasonYear": 2019,
+        "grade": 80.6,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "36.1"
+          },
+          {
+            "label": "RPG",
+            "value": "6.6"
+          },
+          {
+            "label": "APG",
+            "value": "7.5"
+          }
+        ]
+      },
+      {
+        "id": "luka-doncic-2024",
+        "name": "Luka Doncic",
+        "teamAbbr": "DAL",
+        "seasonYear": 2024,
+        "grade": 83.9,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "33.9"
+          },
+          {
+            "label": "RPG",
+            "value": "9.2"
+          },
+          {
+            "label": "APG",
+            "value": "9.8"
+          }
+        ]
+      },
+      {
+        "id": "michael-jordan-1987",
+        "name": "Michael Jordan",
+        "teamAbbr": "CHI",
+        "seasonYear": 1987,
+        "grade": 80.7,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "37.1"
+          },
+          {
+            "label": "RPG",
+            "value": "5.2"
+          },
+          {
+            "label": "APG",
+            "value": "4.6"
+          }
+        ]
+      },
+      {
+        "id": "nikola-jokic-2022",
+        "name": "Nikola Jokic",
+        "teamAbbr": "DEN",
+        "seasonYear": 2022,
+        "grade": 79.5,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "27.1"
+          },
+          {
+            "label": "RPG",
+            "value": "13.8"
+          },
+          {
+            "label": "APG",
+            "value": "7.9"
+          }
+        ]
+      },
+      {
+        "id": "russell-westbrook-2017",
+        "name": "Russell Westbrook",
+        "teamAbbr": "OKC",
+        "seasonYear": 2017,
+        "grade": 85.1,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "31.6"
+          },
+          {
+            "label": "RPG",
+            "value": "10.7"
+          },
+          {
+            "label": "APG",
+            "value": "10.4"
+          }
+        ]
+      },
+      {
+        "id": "shaquille-o-neal-2000",
+        "name": "Shaquille O'Neal",
+        "teamAbbr": "LAL",
+        "seasonYear": 2000,
+        "grade": 78.7,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "29.7"
+          },
+          {
+            "label": "RPG",
+            "value": "13.6"
+          },
+          {
+            "label": "APG",
+            "value": "3.8"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nba-bigs-00",
+    "theme": "Dominant big-man seasons",
+    "sport": "nba",
+    "players": [
+      {
+        "id": "anthony-davis-2018",
+        "name": "Anthony Davis",
+        "teamAbbr": "NOP",
+        "seasonYear": 2018,
+        "grade": 70.3,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "28.1"
+          },
+          {
+            "label": "RPG",
+            "value": "11.1"
+          },
+          {
+            "label": "BPG",
+            "value": "2.6"
+          }
+        ]
+      },
+      {
+        "id": "david-robinson-1994",
+        "name": "David Robinson",
+        "teamAbbr": "SAS",
+        "seasonYear": 1994,
+        "grade": 83.1,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "29.8"
+          },
+          {
+            "label": "RPG",
+            "value": "10.7"
+          },
+          {
+            "label": "BPG",
+            "value": "3.3"
+          }
+        ]
+      },
+      {
+        "id": "giannis-antetokounmpo-2020",
+        "name": "Giannis Antetokounmpo",
+        "teamAbbr": "MIL",
+        "seasonYear": 2020,
+        "grade": 75.4,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "29.5"
+          },
+          {
+            "label": "RPG",
+            "value": "13.6"
+          },
+          {
+            "label": "BPG",
+            "value": "1.0"
+          }
+        ]
+      },
+      {
+        "id": "hakeem-olajuwon-1994",
+        "name": "Hakeem Olajuwon",
+        "teamAbbr": "HOU",
+        "seasonYear": 1994,
+        "grade": 79.8,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "27.3"
+          },
+          {
+            "label": "RPG",
+            "value": "11.9"
+          },
+          {
+            "label": "BPG",
+            "value": "3.7"
+          }
+        ]
+      },
+      {
+        "id": "joel-embiid-2023",
+        "name": "Joel Embiid",
+        "teamAbbr": "PHI",
+        "seasonYear": 2023,
+        "grade": 74.6,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "33.1"
+          },
+          {
+            "label": "RPG",
+            "value": "10.2"
+          },
+          {
+            "label": "BPG",
+            "value": "1.7"
+          }
+        ]
+      },
+      {
+        "id": "kevin-garnett-2004",
+        "name": "Kevin Garnett",
+        "teamAbbr": "MIN",
+        "seasonYear": 2004,
+        "grade": 74.1,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "24.2"
+          },
+          {
+            "label": "RPG",
+            "value": "13.9"
+          },
+          {
+            "label": "BPG",
+            "value": "2.2"
+          }
+        ]
+      },
+      {
+        "id": "nikola-jokic-2022",
+        "name": "Nikola Jokic",
+        "teamAbbr": "DEN",
+        "seasonYear": 2022,
+        "grade": 79.5,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "27.1"
+          },
+          {
+            "label": "RPG",
+            "value": "13.8"
+          },
+          {
+            "label": "BPG",
+            "value": "0.9"
+          }
+        ]
+      },
+      {
+        "id": "shaquille-o-neal-2000",
+        "name": "Shaquille O'Neal",
+        "teamAbbr": "LAL",
+        "seasonYear": 2000,
+        "grade": 78.7,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "29.7"
+          },
+          {
+            "label": "RPG",
+            "value": "13.6"
+          },
+          {
+            "label": "BPG",
+            "value": "3.0"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nba-playmakers-00",
+    "theme": "Floor-general seasons",
+    "sport": "nba",
+    "players": [
+      {
+        "id": "allen-iverson-2006",
+        "name": "Allen Iverson",
+        "teamAbbr": "PHI",
+        "seasonYear": 2006,
+        "grade": 64.9,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "33.0"
+          },
+          {
+            "label": "APG",
+            "value": "7.4"
+          },
+          {
+            "label": "SPG",
+            "value": "1.9"
+          }
+        ]
+      },
+      {
+        "id": "damian-lillard-2023",
+        "name": "Damian Lillard",
+        "teamAbbr": "POR",
+        "seasonYear": 2023,
+        "grade": 62.5,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "32.2"
+          },
+          {
+            "label": "APG",
+            "value": "7.3"
+          },
+          {
+            "label": "SPG",
+            "value": "0.9"
+          }
+        ]
+      },
+      {
+        "id": "dwyane-wade-2009",
+        "name": "Dwyane Wade",
+        "teamAbbr": "MIA",
+        "seasonYear": 2009,
+        "grade": 71.6,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "30.2"
+          },
+          {
+            "label": "APG",
+            "value": "7.5"
+          },
+          {
+            "label": "SPG",
+            "value": "2.2"
+          }
+        ]
+      },
+      {
+        "id": "james-harden-2019",
+        "name": "James Harden",
+        "teamAbbr": "HOU",
+        "seasonYear": 2019,
+        "grade": 80.6,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "36.1"
+          },
+          {
+            "label": "APG",
+            "value": "7.5"
+          },
+          {
+            "label": "SPG",
+            "value": "2.0"
+          }
+        ]
+      },
+      {
+        "id": "lebron-james-2020",
+        "name": "LeBron James",
+        "teamAbbr": "LAL",
+        "seasonYear": 2020,
+        "grade": 66.8,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "25.3"
+          },
+          {
+            "label": "APG",
+            "value": "10.2"
+          },
+          {
+            "label": "SPG",
+            "value": "1.2"
+          }
+        ]
+      },
+      {
+        "id": "luka-doncic-2024",
+        "name": "Luka Doncic",
+        "teamAbbr": "DAL",
+        "seasonYear": 2024,
+        "grade": 83.9,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "33.9"
+          },
+          {
+            "label": "APG",
+            "value": "9.8"
+          },
+          {
+            "label": "SPG",
+            "value": "1.4"
+          }
+        ]
+      },
+      {
+        "id": "nikola-jokic-2022",
+        "name": "Nikola Jokic",
+        "teamAbbr": "DEN",
+        "seasonYear": 2022,
+        "grade": 79.5,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "27.1"
+          },
+          {
+            "label": "APG",
+            "value": "7.9"
+          },
+          {
+            "label": "SPG",
+            "value": "1.5"
+          }
+        ]
+      },
+      {
+        "id": "russell-westbrook-2017",
+        "name": "Russell Westbrook",
+        "teamAbbr": "OKC",
+        "seasonYear": 2017,
+        "grade": 85.1,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "31.6"
+          },
+          {
+            "label": "APG",
+            "value": "10.4"
+          },
+          {
+            "label": "SPG",
+            "value": "1.6"
+          }
+        ]
+      }
+    ]
+  }
+]

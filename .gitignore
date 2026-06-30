@@ -1,0 +1,25 @@
+# Xcode / build artifacts
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.DS_Store
+
+# Swift Package Manager
+.swiftpm/
+.build/
+
+# Secrets — real Supabase config (anon key); commit Supabase.example.plist only
+BallIQ/Backend/Supabase.plist
+Secrets.xcconfig
+*.p8
+
+# Ingestion pipeline — local secrets + provider data cache
+tools/ingest/.env
+tools/ingest/.cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Claude Code local settings
+.claude/settings.local.json

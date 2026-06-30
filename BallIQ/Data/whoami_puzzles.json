@@ -1,0 +1,523 @@
+[
+  {
+    "id": "nfl-whoami-brett-favre",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1991 to 2010"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Quarterback"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Falcons, Packers, Jets, Vikings"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Over 71,000 passing yards and 508 touchdown passes"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Started 297 consecutive games — the quarterback iron-man record"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 4"
+      }
+    ],
+    "answer": {
+      "canonical": "Brett Favre",
+      "aliases": [
+        "favre",
+        "brett favre"
+      ]
+    }
+  },
+  {
+    "id": "nfl-whoami-peyton-manning",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1998 to 2015"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Quarterback"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Colts, Broncos"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "71,940 passing yards and 539 touchdown passes"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Five-time MVP who won Super Bowls with two different franchises"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 18"
+      }
+    ],
+    "answer": {
+      "canonical": "Peyton Manning",
+      "aliases": [
+        "peyton manning",
+        "manning"
+      ]
+    }
+  },
+  {
+    "id": "nfl-whoami-tom-brady",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 2000 to 2022"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Quarterback"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Patriots, Buccaneers"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Over 89,000 passing yards and 649 touchdown passes"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Drafted 199th overall, then won seven Super Bowl titles"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 12"
+      }
+    ],
+    "answer": {
+      "canonical": "Tom Brady",
+      "aliases": [
+        "tom brady",
+        "brady"
+      ]
+    }
+  },
+  {
+    "id": "nfl-whoami-jerry-rice",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1985 to 2004"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Wide Receiver"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "49ers, Raiders, Seahawks"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "22,895 receiving yards and 197 receiving touchdowns"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "The NFL's all-time leader in receptions, receiving yards, and touchdowns"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 80"
+      }
+    ],
+    "answer": {
+      "canonical": "Jerry Rice",
+      "aliases": [
+        "jerry rice",
+        "rice"
+      ]
+    }
+  },
+  {
+    "id": "nfl-whoami-barry-sanders",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1989 to 1998"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Running Back"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Lions"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "15,269 rushing yards in just ten seasons"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Retired at 30 while still within reach of the all-time rushing record"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 20"
+      }
+    ],
+    "answer": {
+      "canonical": "Barry Sanders",
+      "aliases": [
+        "barry sanders",
+        "sanders"
+      ]
+    }
+  },
+  {
+    "id": "nfl-whoami-randy-moss",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1998 to 2012"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Wide Receiver"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Vikings, Raiders, Patriots, 49ers"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "156 receiving touchdowns, including a record 23 in 2007"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Set the single-season receiving touchdown record in 2007"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 84"
+      }
+    ],
+    "answer": {
+      "canonical": "Randy Moss",
+      "aliases": [
+        "randy moss",
+        "moss"
+      ]
+    }
+  },
+  {
+    "id": "nba-whoami-michael-jordan",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1984 to 2003"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Shooting Guard"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Bulls, Wizards"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "32,292 career points at 30.1 per game"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Won six titles and six Finals MVPs; highest career scoring average in NBA history"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 23"
+      }
+    ],
+    "answer": {
+      "canonical": "Michael Jordan",
+      "aliases": [
+        "michael jordan",
+        "jordan",
+        "mj"
+      ]
+    }
+  },
+  {
+    "id": "nba-whoami-kobe-bryant",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1996 to 2016"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Shooting Guard"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Lakers"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "33,643 career points and five championships"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Scored 81 points in a single game and spent his entire career with one team"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore numbers 8 and 24"
+      }
+    ],
+    "answer": {
+      "canonical": "Kobe Bryant",
+      "aliases": [
+        "kobe bryant",
+        "kobe",
+        "bryant"
+      ]
+    }
+  },
+  {
+    "id": "nba-whoami-tim-duncan",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1997 to 2016"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Power Forward"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Spurs"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Five championships and 15 All-Star selections"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "'The Big Fundamental' — one franchise for his entire 19-year career"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 21"
+      }
+    ],
+    "answer": {
+      "canonical": "Tim Duncan",
+      "aliases": [
+        "tim duncan",
+        "duncan"
+      ]
+    }
+  },
+  {
+    "id": "nba-whoami-shaquille-o-neal",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1992 to 2011"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Center"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Magic, Lakers, Heat, Suns, Cavaliers"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "28,596 career points and four championships"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "A dominant center who won three straight Finals MVPs from 2000 to 2002"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 34"
+      }
+    ],
+    "answer": {
+      "canonical": "Shaquille O'Neal",
+      "aliases": [
+        "shaquille oneal",
+        "shaq",
+        "oneal"
+      ]
+    }
+  },
+  {
+    "id": "nba-whoami-allen-iverson",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1996 to 2010"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Point Guard"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "76ers, Nuggets, Pistons, Grizzlies"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "2001 MVP at 26.7 points per game for his career"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "'The Answer' — won MVP standing just six feet tall"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 3"
+      }
+    ],
+    "answer": {
+      "canonical": "Allen Iverson",
+      "aliases": [
+        "allen iverson",
+        "iverson",
+        "ai"
+      ]
+    }
+  },
+  {
+    "id": "nba-whoami-dirk-nowitzki",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1998 to 2019"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Power Forward"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Mavericks"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "31,560 career points, the 2007 MVP, and a 2011 title"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Spent all 21 seasons with one franchise and popularized the one-legged fadeaway"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 41"
+      }
+    ],
+    "answer": {
+      "canonical": "Dirk Nowitzki",
+      "aliases": [
+        "dirk nowitzki",
+        "dirk",
+        "nowitzki"
+      ]
+    }
+  }
+]

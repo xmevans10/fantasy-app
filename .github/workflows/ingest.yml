@@ -1,0 +1,37 @@
+name: ingest-puzzles
+
+on:
+  schedule:
+    - cron: "0 9 * * *"     # daily 09:00 UTC — keep the puzzle pool fresh
+  push:
+    paths:
+      - "tools/ingest/**"
+      - ".github/workflows/ingest.yml"
+  workflow_dispatch:        # allow manual + on-demand backfill
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt
+      - run: python -m pytest tools/ingest/tests -q
+
+  ingest:
+    needs: test
+    runs-on: ubuntu-latest
+    # Only push real data to Supabase on schedule / manual runs, not every PR push.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    env:
+      BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m tools.ingest.main --backfill 30 --upsert
