@@ -17,6 +17,12 @@ from .http import fetch_json
 
 _API = "https://api.balldontlie.io/v1"
 
+# balldontlie's free tier rate-limits aggressively. `fetch_player_season` makes two
+# sequential calls (player lookup, then season averages); without spacing them the
+# second reliably 429s. Pause between them (the per-target pause in `fetch_targets`
+# only spaces *targets*, not the two calls within one).
+_INTER_CALL_DELAY = 1.2
+
 
 def available() -> bool:
     return bool(os.getenv("BALLDONTLIE_API_KEY"))
@@ -51,6 +57,7 @@ def fetch_player_season(name: str, season_year: int) -> RawSeason | None:
     player = _find_player(name)
     if not player:
         return None
+    time.sleep(_INTER_CALL_DELAY)  # space the two sequential calls so the second doesn't 429
     start_year = season_year - 1
     data = fetch_json(
         f"{_API}/season_averages?season={start_year}&player_ids[]={player['id']}",

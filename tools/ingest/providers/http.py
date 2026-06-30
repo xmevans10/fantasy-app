@@ -56,7 +56,7 @@ def fetch_json(url: str, *, headers: dict[str, str] | None = None,
     return json.loads(body)
 
 
-def _get(url: str, *, headers: dict[str, str] | None = None, retries: int = 3) -> str:
+def _get(url: str, *, headers: dict[str, str] | None = None, retries: int = 4) -> str:
     req = urllib.request.Request(url)
     req.add_header("User-Agent", _USER_AGENT)
     for name, value in (headers or {}).items():
@@ -68,11 +68,17 @@ def _get(url: str, *, headers: dict[str, str] | None = None, retries: int = 3) -
             with urllib.request.urlopen(req, timeout=60) as resp:
                 return resp.read().decode("utf-8")
         except urllib.error.HTTPError as err:
-            # 4xx (e.g. balldontlie 401 missing key) won't fix on retry.
-            if 400 <= err.code < 500:
+            # 429 (rate limited) IS retryable with backoff; other 4xx (e.g. balldontlie
+            # 401 missing key) won't fix on retry, so fail fast.
+            if err.code != 429 and 400 <= err.code < 500:
                 raise
             last_err = err
+            # Honor an explicit Retry-After (seconds) when the server sends one.
+            retry_after = err.headers.get("Retry-After") if err.headers else None
+            if retry_after and retry_after.strip().isdigit():
+                time.sleep(min(float(retry_after), 30))
+                continue
         except urllib.error.URLError as err:
             last_err = err
-        time.sleep(1.5 * (attempt + 1))
+        time.sleep(min(1.5 * 2 ** attempt, 30))  # exponential backoff, capped
     raise RuntimeError(f"GET failed after {retries} attempts: {url}") from last_err
