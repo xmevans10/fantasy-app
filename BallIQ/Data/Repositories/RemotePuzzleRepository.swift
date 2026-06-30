@@ -28,6 +28,20 @@ final class RemotePuzzleRepository: PuzzleRepository {
         return await fallback.whoAmIPuzzle(for: filter, date: date)
     }
 
+    func allKeep4(for filter: SportFilter) async -> [Keep4Puzzle] {
+        if let pool = await fetch(format: "keep4", filter: filter, as: Keep4Puzzle.self), !pool.isEmpty {
+            return pool
+        }
+        return await fallback.allKeep4(for: filter)
+    }
+
+    func allWhoAmI(for filter: SportFilter) async -> [WhoAmIPuzzle] {
+        if let pool = await fetch(format: "whoami", filter: filter, as: WhoAmIPuzzle.self), !pool.isEmpty {
+            return pool
+        }
+        return await fallback.allWhoAmI(for: filter)
+    }
+
     private func fetch<T: Decodable>(format: String, filter: SportFilter, as type: T.Type) async -> [T]? {
         var query = [URLQueryItem(name: "select", value: "content"),
                      URLQueryItem(name: "format", value: "eq.\(format)"),

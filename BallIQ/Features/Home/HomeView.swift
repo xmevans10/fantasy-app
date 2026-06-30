@@ -51,6 +51,9 @@ struct HomeView: View {
                     }
                     .heroReveal(2)
 
+                    NavigationLink { BrowseView().environmentObject(container) } label: { browseRow }
+                        .heroReveal(3)
+
                     section("Game formats") {
                         LazyVGrid(columns: gridColumns, spacing: 12) {
                             ForEach(GameFormat.all) { format in
@@ -58,12 +61,12 @@ struct HomeView: View {
                             }
                         }
                     }
-                    .heroReveal(3)
+                    .heroReveal(4)
 
                     section("Your rank") {
                         RankWidget(rating: container.rating(for: rankSport))
                     }
-                    .heroReveal(4)
+                    .heroReveal(5)
                 }
                 .padding(16)
             }
@@ -80,6 +83,24 @@ struct HomeView: View {
             }
             .task(id: container.sportFilter) { await loadDaily() }
         }
+    }
+
+    /// Entry point to the full archive (every daily puzzle, not just today's).
+    private var browseRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "square.grid.2x2.fill")
+                .font(.system(size: 20, weight: .bold)).foregroundStyle(Color.accentText)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Browse all puzzles").font(.title).foregroundStyle(Color.textPrimary)
+                Text("REPLAY THE FULL ARCHIVE").font(.label11).foregroundStyle(Color.textMuted)
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .cardSurface()
     }
 
     private func launch(_ format: GameFormat) {

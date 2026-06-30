@@ -4,6 +4,9 @@ import Foundation
 protocol PuzzleRepository {
     func keep4Puzzle(for filter: SportFilter, date: Date) async -> Keep4Puzzle?
     func whoAmIPuzzle(for filter: SportFilter, date: Date) async -> WhoAmIPuzzle?
+    /// The full pool (for the Browse/Archive surface), not just today's pick.
+    func allKeep4(for filter: SportFilter) async -> [Keep4Puzzle]
+    func allWhoAmI(for filter: SportFilter) async -> [WhoAmIPuzzle]
     var availableSports: [Sport] { get }
 }
 
@@ -31,6 +34,9 @@ final class LocalPuzzleRepository: PuzzleRepository {
     func whoAmIPuzzle(for filter: SportFilter, date: Date) async -> WhoAmIPuzzle? {
         pick(from: filtered(whoami, by: filter), date: date)
     }
+
+    func allKeep4(for filter: SportFilter) async -> [Keep4Puzzle] { filtered(keep4, by: filter) }
+    func allWhoAmI(for filter: SportFilter) async -> [WhoAmIPuzzle] { filtered(whoami, by: filter) }
 
     // MARK: - Helpers
 
