@@ -37,6 +37,8 @@ def _fmt_value(value: float, fmt: str) -> str:
         return f"{int(round(value))}"
     if fmt == "dec1":
         return f"{value:.1f}"
+    if fmt == "pct1":               # fraction → one-decimal percent, e.g. 0.612 → "61.2"
+        return f"{value * 100:.1f}"
     raise ValueError(f"unknown fmt {fmt!r}")
 
 
@@ -59,8 +61,10 @@ KEEP4_THEMES: list[Theme] = [
         min_stats={"receiving_yards": 1000, "games": 10},
         columns=[
             StatColumn("receiving_yards", "Rec Yds", "comma_int"),
-            StatColumn("receiving_tds", "TD", "int"),
             StatColumn("receptions", "Rec", "int"),
+            StatColumn("receiving_tds", "Rec TD", "int"),
+            StatColumn("ypr", "Yds/Rec", "dec1"),
+            StatColumn("targets", "Tgts", "int"),
         ],
     ),
     Theme(
@@ -72,8 +76,10 @@ KEEP4_THEMES: list[Theme] = [
         min_stats={"rushing_yards": 1100, "carries": 200},
         columns=[
             StatColumn("rushing_yards", "Rush Yds", "comma_int"),
-            StatColumn("rushing_tds", "TD", "int"),
-            StatColumn("ypc", "YPC", "dec1"),
+            StatColumn("rushing_tds", "Rush TD", "int"),
+            StatColumn("ypc", "Yds/Carry", "dec1"),
+            StatColumn("receptions", "Rec", "int"),
+            StatColumn("receiving_yards", "Rec Yds", "comma_int"),
         ],
     ),
     Theme(
@@ -84,9 +90,11 @@ KEEP4_THEMES: list[Theme] = [
         positions=frozenset({"QB"}),
         min_stats={"passing_yards": 3800, "passing_tds": 28},
         columns=[
-            StatColumn("passing_yards", "Yds", "comma_int"),
-            StatColumn("passing_tds", "TD", "int"),
+            StatColumn("passing_yards", "Pass Yds", "comma_int"),
+            StatColumn("passing_tds", "Pass TD", "int"),
             StatColumn("interceptions", "INT", "int"),
+            StatColumn("rushing_yards", "Rush Yds", "comma_int"),
+            StatColumn("rushing_tds", "Rush TD", "int"),
         ],
     ),
     # ── NBA (seed today; balldontlie when keyed) ───────────────────────
@@ -101,6 +109,8 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("ppg", "PPG", "dec1"),
             StatColumn("rpg", "RPG", "dec1"),
             StatColumn("apg", "APG", "dec1"),
+            StatColumn("spg", "SPG", "dec1"),
+            StatColumn("ts_pct", "TS%", "pct1"),
         ],
     ),
     Theme(
@@ -114,6 +124,8 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("ppg", "PPG", "dec1"),
             StatColumn("rpg", "RPG", "dec1"),
             StatColumn("bpg", "BPG", "dec1"),
+            StatColumn("apg", "APG", "dec1"),
+            StatColumn("ts_pct", "TS%", "pct1"),
         ],
     ),
     Theme(
@@ -126,7 +138,9 @@ KEEP4_THEMES: list[Theme] = [
         columns=[
             StatColumn("ppg", "PPG", "dec1"),
             StatColumn("apg", "APG", "dec1"),
+            StatColumn("rpg", "RPG", "dec1"),
             StatColumn("spg", "SPG", "dec1"),
+            StatColumn("ts_pct", "TS%", "pct1"),
         ],
     ),
 ]

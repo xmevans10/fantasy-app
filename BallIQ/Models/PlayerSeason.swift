@@ -10,6 +10,9 @@ struct PlayerSeason: Identifiable, Codable, Equatable {
     let stats: [StatLine]
     /// Hidden quality grade used to derive the true ranking. Higher = better.
     let grade: Double
+    /// Optional player headshot URL (nflverse / ESPN); nil for older/seed seasons. Additive +
+    /// optional so existing baked content (no key) decodes unchanged.
+    var headshot: String? = nil
 
     struct StatLine: Codable, Equatable, Hashable {
         let label: String

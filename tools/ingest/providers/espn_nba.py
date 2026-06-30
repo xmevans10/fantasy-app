@@ -20,6 +20,7 @@ from .http import fetch_json
 
 _SEARCH = "https://site.web.api.espn.com/apis/search/v2"
 _STATS = "https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/{id}/stats"
+_HEADSHOT = "https://a.espncdn.com/i/headshots/nba/players/full/{id}.png"
 
 # ESPN is keyless and generous; a small pause between players is courtesy, not necessity.
 _RATE_DELAY = 0.3
@@ -62,12 +63,14 @@ def _attempted(made_attempted: str) -> float:
         return 0.0
 
 
-def parse_seasons(name: str, data: dict) -> dict[int, RawSeason]:
+def parse_seasons(name: str, data: dict, athlete_id: str = "") -> dict[int, RawSeason]:
     """Turn an ESPN athlete-stats payload into `{season_year: RawSeason}` (end-year keyed).
 
     Pure (no network) so it's unit-testable. When a season appears more than once
-    (traded mid-year), the row with the most games played wins.
+    (traded mid-year), the row with the most games played wins. `athlete_id` (when
+    given) builds the ESPN headshot URL — one current headshot per player.
     """
+    headshot = _HEADSHOT.format(id=athlete_id) if athlete_id else ""
     teams = data.get("teams", {})  # keyed by team slug
     averages = next((c for c in data.get("categories", []) if c.get("name") == "averages"), None)
     if not averages:
@@ -115,6 +118,7 @@ def parse_seasons(name: str, data: dict) -> dict[int, RawSeason]:
                 "ts_pct": round(ts, 3),
             },
             source="espn",
+            headshot=headshot,
         )
     return out
 
@@ -124,7 +128,7 @@ def fetch_player_season(name: str, season_year: int) -> RawSeason | None:
     if not aid:
         return None
     data = fetch_json(_STATS.format(id=aid), cache_key=f"espn_nba_stats_{aid}.json")
-    return parse_seasons(name, data).get(season_year)
+    return parse_seasons(name, data, athlete_id=aid).get(season_year)
 
 
 def fetch_targets(targets: list[tuple[str, int]]) -> list[RawSeason]:
@@ -142,7 +146,8 @@ def fetch_targets(targets: list[tuple[str, int]]) -> list[RawSeason]:
                 print(f"[espn] no athlete match: {name}")
                 continue
             seasons = parse_seasons(name, fetch_json(_STATS.format(id=aid),
-                                                     cache_key=f"espn_nba_stats_{aid}.json"))
+                                                     cache_key=f"espn_nba_stats_{aid}.json"),
+                                     athlete_id=aid)
             for year in years:
                 if season := seasons.get(year):
                     out.append(season)

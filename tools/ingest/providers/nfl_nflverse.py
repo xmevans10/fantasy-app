@@ -83,6 +83,7 @@ def fetch_year(year: int, *, ttl_hours: float = 24 * 30) -> list[RawSeason]:
                 position=pos,
                 stats=stats,
                 source="nflverse",
+                headshot=row.get("headshot_url") or "",
             )
         )
     return seasons

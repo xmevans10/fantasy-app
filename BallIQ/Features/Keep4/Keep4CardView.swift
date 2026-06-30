@@ -36,7 +36,7 @@ struct Keep4CardView: View {
     var body: some View {
         VStack(spacing: 0) {
             teamBand
-            statRow
+            statGrid
             if !isLocked {
                 segmentedControl.padding(.horizontal, 12).padding(.bottom, 12).padding(.top, 2)
             } else if let revealCorrect {
@@ -65,7 +65,8 @@ struct Keep4CardView: View {
     // MARK: - Team-color band
 
     private var teamBand: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .center, spacing: 11) {
+            headshotView
             VStack(alignment: .leading, spacing: 3) {
                 Text(player.name.uppercased())
                     .font(.custom(FontName.condBlack, size: 21))
@@ -84,6 +85,26 @@ struct Keep4CardView: View {
         .background(team.primary)
     }
 
+    /// Player headshot (nflverse/ESPN) in a team-tinted circle; falls back to a glyph when absent.
+    private var headshotView: some View {
+        let fallback = Image(systemName: "person.fill")
+            .font(.system(size: 22))
+            .foregroundStyle(team.onPrimary.opacity(0.55))
+        return Group {
+            if let s = player.headshot, let url = URL(string: s) {
+                AsyncImage(url: url) { phase in
+                    if let img = phase.image { img.resizable().scaledToFill() } else { fallback }
+                }
+            } else {
+                fallback
+            }
+        }
+        .frame(width: 48, height: 48)
+        .background(team.onPrimary.opacity(0.15))
+        .clipShape(Circle())
+        .overlay(Circle().strokeBorder(team.onPrimary.opacity(0.25), lineWidth: 1))
+    }
+
     /// The quality grade, shown only on reveal (never during selection — it's the answer).
     private var gradeChip: some View {
         let onSecondary: Color = team.onPrimary == .white ? Color(hex: 0x15120B) : .white
@@ -100,21 +121,28 @@ struct Keep4CardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
     }
 
-    private var statRow: some View {
-        HStack(spacing: 16) {
+    private static let statColumns = Array(
+        repeating: GridItem(.flexible(), spacing: 12, alignment: .leading), count: 3)
+
+    /// Stats in a 3-wide grid so a fuller line (5+ stats, incl. QB rushing) reads cleanly
+    /// and the card uses its vertical canvas instead of one cramped row.
+    private var statGrid: some View {
+        LazyVGrid(columns: Self.statColumns, alignment: .leading, spacing: 10) {
             ForEach(player.stats, id: \.label) { stat in
                 VStack(alignment: .leading, spacing: 1) {
                     Text(hideStats ? "—" : stat.value)
-                        .font(.custom(FontName.condBlack, size: 22))
+                        .font(.custom(FontName.condBlack, size: 19))
                         .foregroundStyle(hideStats ? Color.textMuted : Color.textPrimary)
+                        .lineLimit(1).minimumScaleFactor(0.7)
                     Text(stat.label.uppercased())
                         .font(.label11)
                         .foregroundStyle(Color.textMuted)
+                        .lineLimit(1).minimumScaleFactor(0.7)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            Spacer(minLength: 0)
         }
-        .padding(.horizontal, 14).padding(.top, 11).padding(.bottom, isLocked ? 0 : 6)
+        .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, isLocked ? 2 : 8)
     }
 
     private func verdict(_ correct: Bool) -> some View {

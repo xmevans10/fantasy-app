@@ -28,7 +28,7 @@ class PuzzleRow:
 # ── Keep4 ─────────────────────────────────────────────────────────────────────
 
 def _player_content(theme: Theme, season: RawSeason, value: float) -> dict:
-    return {
+    content = {
         "id": season.player_id,
         "name": season.name,
         "teamAbbr": season.team_abbr,
@@ -36,6 +36,9 @@ def _player_content(theme: Theme, season: RawSeason, value: float) -> dict:
         "grade": value,
         "stats": format_columns(theme, season.stats),
     }
+    if season.headshot:
+        content["headshot"] = season.headshot
+    return content
 
 
 def grade_pool(theme: Theme, seasons: list[RawSeason]) -> list[tuple[RawSeason, float]]:

@@ -22,7 +22,8 @@ class RawSeason:
     sport: str               # 'nfl' | 'nba'
     position: str            # 'WR','RB','QB' | 'G','F','C' ...
     stats: dict[str, float]  # raw numeric stats, e.g. {'rushing_yards': 2027, ...}
-    source: str = "seed"     # provenance: 'nflverse' | 'balldontlie' | 'seed'
+    source: str = "seed"     # provenance: 'nflverse' | 'espn' | 'balldontlie' | 'seed'
+    headshot: str = ""       # player headshot URL (provider-supplied); "" when unavailable
 
     @property
     def player_id(self) -> str:
