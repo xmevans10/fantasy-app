@@ -63,6 +63,19 @@ def _attempted(made_attempted: str) -> float:
         return 0.0
 
 
+def _norm_position(raw: str) -> str:
+    """Collapse ESPN's granular position (PG/SG/SF/PF/C/G/F/NA) into the {G,F,C}
+    buckets the Keep4 themes filter on. Returns '' for unknown so it can be dropped."""
+    p = (raw or "").upper()
+    if p in ("PG", "SG", "G", "GUARD"):
+        return "G"
+    if p in ("SF", "PF", "F", "FORWARD"):
+        return "F"
+    if p in ("C", "CENTER"):
+        return "C"
+    return ""
+
+
 def parse_seasons(name: str, data: dict, athlete_id: str = "") -> dict[int, RawSeason]:
     """Turn an ESPN athlete-stats payload into `{season_year: RawSeason}` (end-year keyed).
 
@@ -105,7 +118,7 @@ def parse_seasons(name: str, data: dict, athlete_id: str = "") -> dict[int, RawS
             team_abbr=abbr,
             season_year=int(year),
             sport="nba",
-            position=(row.get("position") or "G").upper(),
+            position=_norm_position(row.get("position", "")),
             stats={
                 "games": games,
                 "ppg": ppg,
@@ -156,4 +169,23 @@ def fetch_targets(targets: list[tuple[str, int]]) -> list[RawSeason]:
             time.sleep(_RATE_DELAY)
         except Exception as err:  # noqa: BLE001
             print(f"[espn] skipping {name}: {err}")
+    return out
+
+
+def fetch_by_ids(id_to_name: dict[str, str]) -> list[RawSeason]:
+    """Fetch *every* season for each ESPN athlete id, keyed `{athlete_id: display_name}`.
+
+    Used to build a broad NBA pool from ids discovered by `espn_nba_pool` (pyespn
+    stat-leaders), one stats call per athlete, keeping all of their seasons (not just
+    one). Goes through the shared on-disk cache so re-runs don't refetch.
+    """
+    out: list[RawSeason] = []
+    for aid, name in id_to_name.items():
+        try:
+            data = fetch_json(_STATS.format(id=aid),
+                              cache_key=f"espn_nba_stats_{aid}.json")
+            out += parse_seasons(name, data, athlete_id=aid).values()
+            time.sleep(_RATE_DELAY)
+        except Exception as err:  # noqa: BLE001
+            print(f"[espn] skipping id {aid} ({name}): {err}")
     return out

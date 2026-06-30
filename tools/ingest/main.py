@@ -21,7 +21,7 @@ from .assemble import PuzzleRow
 from .baselines import compute_baselines
 from .grade import grade
 from .models import RawSeason
-from .providers import espn_nba, nba_balldontlie, nfl_nflverse, seed
+from .providers import espn_nba, espn_nba_pool, nba_balldontlie, nfl_nflverse, seed
 from .themes import KEEP4_THEMES
 from .validate import validate
 
@@ -59,14 +59,15 @@ def gather_seasons(nfl_years: list[int]) -> list[RawSeason]:
 
     # ESPN (keyless, historical) is primary; balldontlie (needs a key) then the curated
     # seed are fallbacks so the pipeline always yields real, factual NBA content.
-    print("[nba] fetching live season averages from ESPN …")
-    nba = espn_nba.fetch_targets(NBA_LIVE_TARGETS)
-    if nba:
-        print(f"[nba] ESPN: {len(nba)} season averages")
-    elif nba_balldontlie.available():
-        print("[nba] ESPN empty — trying balldontlie")
-        nba = nba_balldontlie.fetch_targets(NBA_LIVE_TARGETS) or seed.load_nba()
+    pool = espn_nba_pool.load_pool()  # {athlete_id: name}, refreshed via pyespn (occasional)
+    if pool:
+        print(f"[nba] fetching all seasons for {len(pool)} pooled stars from ESPN …")
+        nba = espn_nba.fetch_by_ids(pool)
+        print(f"[nba] ESPN by-id pool: {len(nba)} season averages")
     else:
+        print("[nba] no id pool — falling back to seed targets via ESPN")
+        nba = espn_nba.fetch_targets(NBA_LIVE_TARGETS)
+    if not nba:                       # ESPN unreachable → keep the pipeline real but offline
         print("[nba] ESPN empty — using curated real-stat seed (data/nba_seed.csv)")
         nba = seed.load_nba()
     print(f"[nba] {len(nba)} player-seasons")

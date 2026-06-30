@@ -26,8 +26,8 @@ class Theme:
     positions: frozenset[str]
     min_stats: dict[str, float]      # inclusion thresholds (>=)
     columns: list[StatColumn]
-    pool_cap: int = 16               # keep the top-N graded seasons as candidates
-    max_variants: int = 6            # how many distinct 8-card puzzles to cut
+    pool_cap: int = 24               # keep the top-N graded seasons as candidates
+    max_variants: int = 3            # how many distinct 8-card puzzles to cut
 
 
 def _fmt_value(value: float, fmt: str) -> str:
@@ -97,14 +97,78 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("rushing_tds", "Rush TD", "int"),
         ],
     ),
-    # ── NBA (seed today; balldontlie when keyed) ───────────────────────
+    Theme(
+        key="nfl-qb-dual",
+        title="Dual-threat QB seasons",
+        sport="nfl",
+        scale="nfl_qb_fantasy",
+        positions=frozenset({"QB"}),
+        # Real running QBs: meaningful passing volume *and* 400+ yards on the ground.
+        min_stats={"passing_yards": 2600, "rushing_yards": 400},
+        columns=[
+            StatColumn("rushing_yards", "Rush Yds", "comma_int"),
+            StatColumn("rushing_tds", "Rush TD", "int"),
+            StatColumn("passing_yards", "Pass Yds", "comma_int"),
+            StatColumn("passing_tds", "Pass TD", "int"),
+            StatColumn("interceptions", "INT", "int"),
+        ],
+    ),
+    Theme(
+        key="nfl-rb-receiving",
+        title="Pass-catching RB seasons",
+        sport="nfl",
+        scale="nfl_skill_ppr",
+        positions=frozenset({"RB"}),
+        # Backs who beat you through the air, not just on the ground.
+        min_stats={"receptions": 55, "receiving_yards": 450},
+        columns=[
+            StatColumn("receptions", "Rec", "int"),
+            StatColumn("receiving_yards", "Rec Yds", "comma_int"),
+            StatColumn("rushing_yards", "Rush Yds", "comma_int"),
+            StatColumn("receiving_tds", "Rec TD", "int"),
+            StatColumn("rushing_tds", "Rush TD", "int"),
+        ],
+    ),
+    Theme(
+        key="nfl-wr-deep",
+        title="Big-play WR seasons",
+        sport="nfl",
+        scale="nfl_skill_ppr",
+        positions=frozenset({"WR"}),
+        # Field-stretchers: 900+ yards at a high yards-per-catch clip.
+        min_stats={"receiving_yards": 900, "ypr": 15.5},
+        columns=[
+            StatColumn("ypr", "Yds/Rec", "dec1"),
+            StatColumn("receiving_yards", "Rec Yds", "comma_int"),
+            StatColumn("receiving_tds", "Rec TD", "int"),
+            StatColumn("receptions", "Rec", "int"),
+            StatColumn("targets", "Tgts", "int"),
+        ],
+    ),
+    Theme(
+        key="nfl-te-mismatch",
+        title="Mismatch TE seasons",
+        sport="nfl",
+        scale="nfl_skill_ppr",
+        positions=frozenset({"TE"}),
+        # The position the old catalog never touched — receiving tight ends.
+        min_stats={"receiving_yards": 650, "games": 10},
+        columns=[
+            StatColumn("receiving_yards", "Rec Yds", "comma_int"),
+            StatColumn("receptions", "Rec", "int"),
+            StatColumn("receiving_tds", "Rec TD", "int"),
+            StatColumn("ypr", "Yds/Rec", "dec1"),
+            StatColumn("targets", "Tgts", "int"),
+        ],
+    ),
+    # ── NBA (live ESPN pool — 800+ players via espn_nba_pool / pyespn) ───────
     Theme(
         key="nba-scorers",
         title="Elite scoring seasons",
         sport="nba",
         scale="nba_fantasy",
         positions=frozenset({"G", "F", "C"}),
-        min_stats={"ppg": 26.0},
+        min_stats={"ppg": 26.0, "games": 40},
         columns=[
             StatColumn("ppg", "PPG", "dec1"),
             StatColumn("rpg", "RPG", "dec1"),
@@ -119,7 +183,7 @@ KEEP4_THEMES: list[Theme] = [
         sport="nba",
         scale="nba_fantasy",
         positions=frozenset({"F", "C"}),
-        min_stats={"rpg": 9.5},
+        min_stats={"rpg": 9.5, "games": 40},
         columns=[
             StatColumn("ppg", "PPG", "dec1"),
             StatColumn("rpg", "RPG", "dec1"),
@@ -134,12 +198,57 @@ KEEP4_THEMES: list[Theme] = [
         sport="nba",
         scale="nba_fantasy",
         positions=frozenset({"G", "F", "C"}),
-        min_stats={"apg": 7.0},
+        min_stats={"apg": 7.0, "games": 40},
         columns=[
             StatColumn("ppg", "PPG", "dec1"),
             StatColumn("apg", "APG", "dec1"),
             StatColumn("rpg", "RPG", "dec1"),
             StatColumn("spg", "SPG", "dec1"),
+            StatColumn("ts_pct", "TS%", "pct1"),
+        ],
+    ),
+    Theme(
+        key="nba-rim-protectors",
+        title="Rim-protector seasons",
+        sport="nba",
+        scale="nba_fantasy",
+        positions=frozenset({"F", "C"}),
+        min_stats={"bpg": 2.0, "games": 40},
+        columns=[
+            StatColumn("bpg", "BPG", "dec1"),
+            StatColumn("rpg", "RPG", "dec1"),
+            StatColumn("ppg", "PPG", "dec1"),
+            StatColumn("spg", "SPG", "dec1"),
+            StatColumn("ts_pct", "TS%", "pct1"),
+        ],
+    ),
+    Theme(
+        key="nba-two-way-guards",
+        title="Two-way guard seasons",
+        sport="nba",
+        scale="nba_fantasy",
+        positions=frozenset({"G"}),
+        min_stats={"spg": 1.8, "games": 40},
+        columns=[
+            StatColumn("spg", "SPG", "dec1"),
+            StatColumn("ppg", "PPG", "dec1"),
+            StatColumn("apg", "APG", "dec1"),
+            StatColumn("rpg", "RPG", "dec1"),
+            StatColumn("ts_pct", "TS%", "pct1"),
+        ],
+    ),
+    Theme(
+        key="nba-double-double",
+        title="Double-double machine seasons",
+        sport="nba",
+        scale="nba_fantasy",
+        positions=frozenset({"F", "C"}),
+        min_stats={"ppg": 18.0, "rpg": 10.0, "games": 40},
+        columns=[
+            StatColumn("ppg", "PPG", "dec1"),
+            StatColumn("rpg", "RPG", "dec1"),
+            StatColumn("apg", "APG", "dec1"),
+            StatColumn("bpg", "BPG", "dec1"),
             StatColumn("ts_pct", "TS%", "pct1"),
         ],
     ),
