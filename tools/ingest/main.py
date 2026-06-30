@@ -32,7 +32,7 @@ FALLBACK_WHOAMI = ROOT / "BallIQ" / "Data" / "whoami_puzzles.json"
 FALLBACK_CATALOG = ROOT / "BallIQ" / "Data" / "player_seasons.json"
 FALLBACK_BASELINES = ROOT / "BallIQ" / "Data" / "stat_baselines.json"
 
-DEFAULT_NFL_YEARS = list(range(2012, 2024))
+DEFAULT_NFL_YEARS = list(range(1999, 2024))  # nflverse's full player-stats history (1999+)
 
 # NBA seasons to refresh live (the curated seed defines the target player-seasons).
 NBA_LIVE_TARGETS = [(r.name, r.season_year) for r in seed.load_nba()]
