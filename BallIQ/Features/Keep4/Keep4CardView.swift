@@ -13,6 +13,11 @@ struct Keep4CardView: View {
     var disabledPile: Pile? = nil
     /// "Rare/foil" holographic treatment — used on the single top season in the result reveal.
     var foil: Bool = false
+    /// Unit under the revealed grade ("PTS" for fantasy totals).
+    var gradeUnit: String = "PTS"
+    /// Vibes puzzles have no formula and never show a number — the team logo stays put even
+    /// on reveal instead of flipping to the grade chip.
+    var showGrade: Bool = true
     let onAssign: (Pile) -> Void
 
     @State private var dragX: CGFloat = 0
@@ -60,6 +65,12 @@ struct Keep4CardView: View {
         .animation(Motion.snap, value: dragX)
         .animation(Motion.easeOut, value: assignment)
         .animation(Motion.easeOut, value: revealCorrect)
+        // The drag gesture that commits Keep/Cut has no VoiceOver equivalent by itself; the tap
+        // buttons in `segmentedControl` are the accessible fallback (labeled below). These rotor
+        // actions are an *additional* shortcut mirroring what the drag does for sighted users —
+        // additive, not a replacement for labeling the buttons themselves.
+        .accessibilityAction(named: "Keep") { if !isLocked, disabledPile != .keep { onAssign(.keep) } }
+        .accessibilityAction(named: "Cut") { if !isLocked, disabledPile != .cut { onAssign(.cut) } }
     }
 
     // MARK: - Team-color band
@@ -77,8 +88,10 @@ struct Keep4CardView: View {
                     .foregroundStyle(team.onPrimary.opacity(0.72))
             }
             Spacer(minLength: 6)
-            // Team logo during play; the grade (the hidden sort number) replaces it on reveal.
-            if isLocked { gradeChip } else { teamLogoView }
+            // Team logo (or country flag for teamless sports) during play; the grade (the
+            // hidden sort number) replaces it on reveal — unless this is a vibes puzzle,
+            // which never shows a number.
+            if isLocked && showGrade { gradeChip } else { logoSlot }
         }
         .padding(.horizontal, 14).padding(.vertical, 11)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -93,6 +106,16 @@ struct Keep4CardView: View {
         return URL(string: "https://a.espncdn.com/i/teamlogos/\(league)/500/\(abbr).png")
     }
 
+    /// Team logo for sports with real clubs; a country flag badge for sports without one
+    /// (tennis — `teamAbbr` holds a country code there, see `Sport.hasTeams`).
+    @ViewBuilder private var logoSlot: some View {
+        if sport.hasTeams {
+            teamLogoView
+        } else {
+            countryBadgeView
+        }
+    }
+
     @ViewBuilder private var teamLogoView: some View {
         if let url = teamLogoURL {
             AsyncImage(url: url) { phase in
@@ -102,7 +125,27 @@ struct Keep4CardView: View {
             .background(Color.white.opacity(0.15))   // faint disc, not a heavy white badge
             .clipShape(Circle())
             .overlay(Circle().strokeBorder(team.onPrimary.opacity(0.35), lineWidth: 1))
+            .accessibilityHidden(true)   // decorative — team is already read via player.subtitle
         }
+    }
+
+    /// Country flag emoji in the same disc treatment as `teamLogoView`; falls back to the
+    /// plain code as text if the flag can't be resolved (never a blank/broken image).
+    private var countryBadgeView: some View {
+        Group {
+            if let flag = CountryFlags.flag(for: player.teamAbbr) {
+                Text(flag).font(.system(size: 24))
+            } else {
+                Text(player.teamAbbr.uppercased())
+                    .font(.custom(FontName.condBlack, size: 12))
+                    .foregroundStyle(team.onPrimary)
+            }
+        }
+        .frame(width: 40, height: 40)
+        .background(Color.white.opacity(0.15))
+        .clipShape(Circle())
+        .overlay(Circle().strokeBorder(team.onPrimary.opacity(0.35), lineWidth: 1))
+        .accessibilityHidden(true)   // decorative — country is already read via player.subtitle
     }
 
     /// Player headshot (nflverse/ESPN) in a team-tinted circle; falls back to a glyph when absent.
@@ -123,16 +166,17 @@ struct Keep4CardView: View {
         .background(team.onPrimary.opacity(0.15))
         .clipShape(Circle())
         .overlay(Circle().strokeBorder(team.onPrimary.opacity(0.25), lineWidth: 1))
+        .accessibilityHidden(true)   // decorative — the player's name is already read as text
     }
 
-    /// The quality grade, shown only on reveal (never during selection — it's the answer).
+    /// The PPR/fantasy point total (the hidden sort number), shown only on reveal.
     private var gradeChip: some View {
         let onSecondary: Color = team.onPrimary == .white ? Color(hex: 0x15120B) : .white
         return VStack(spacing: 0) {
             Text("\(Int(player.grade.rounded()))")
                 .font(.hero(24))
                 .foregroundStyle(onSecondary)
-            Text("GRADE")
+            Text(gradeUnit)
                 .font(.custom(FontName.condBold, size: 9))
                 .foregroundStyle(onSecondary.opacity(0.8))
         }
@@ -160,6 +204,7 @@ struct Keep4CardView: View {
                         .lineLimit(1).minimumScaleFactor(0.7)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
             }
         }
         .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, isLocked ? 2 : 8)
@@ -210,6 +255,8 @@ struct Keep4CardView: View {
         }
         .buttonStyle(.plain)
         .disabled(disabled)
+        .accessibilityLabel("\(title) \(player.name)")
+        .accessibilityHint(disabled ? "\(pile == .keep ? "Keep" : "Cut") pile is full" : "")
     }
 
     private var dragGesture: some Gesture {

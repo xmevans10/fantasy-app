@@ -1,8 +1,8 @@
-# BallIQ — M9: Gameplay quality + UX polish
+# Playbook — M9: Gameplay quality + UX polish
 
 Self-contained prompt for a fresh agent. Read [prompts/README.md](README.md) for shared context.
 Assumes the repo as of **2026-06-29 after M6 Phase A** (feed clobber fixed, daily determinism,
-grades 0–100). `fantasy-app` is **BallIQ**, a native SwiftUI iOS sports-trivia app.
+grades 0–100). `fantasy-app` is **Playbook**, a native SwiftUI iOS sports-trivia app.
 
 A grab-bag of smaller, high-signal quality fixes surfaced during the M6 review. Each is independently
 shippable — do them in any order, smallest blast radius first.

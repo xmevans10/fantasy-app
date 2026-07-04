@@ -4,7 +4,7 @@
 
 ## Goal
 
-Turn BallIQ from a solo daily game into a competitive, sticky one by shipping the retention engine
+Turn Playbook from a solo daily game into a competitive, sticky one by shipping the retention engine
 from the product brief: **weekly Leagues** (cohorts with promotion/relegation), **async Versus 1v1**,
 the **Stats** tab (rating history + breakdowns), and **push notifications**. These are the strongest
 daily-retention drivers — players should have a reason to come back multiple times a day to defend a

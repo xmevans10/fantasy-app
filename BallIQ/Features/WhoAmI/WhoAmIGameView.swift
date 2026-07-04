@@ -17,6 +17,9 @@ struct WhoAmIGameView: View {
     @State private var result: WhoAmIScoring.Result?
     @State private var rewards: RepositoryContainer.SessionRewards?
     @FocusState private var fieldFocused: Bool
+    @State private var showReportDialog = false
+    @State private var showReportSent = false
+    @State private var didLogStart = false
 
     private var allRevealed: Bool { revealedCount >= puzzle.clues.count }
     private var currentValue: Int {
@@ -36,7 +39,30 @@ struct WhoAmIGameView: View {
             }
         }
         .background(Color.appBackground)
-        .onAppear { if DebugLaunch.autoSubmitResult { autoSolveForScreenshot() } }
+        .onAppear {
+            if !didLogStart {
+                didLogStart = true
+                container.track(.gameStarted, ["format": "whoami", "ranked": "\(ranked)",
+                                               "community": "\(communityID != nil)"])
+            }
+            if DebugLaunch.autoSubmitResult { autoSolveForScreenshot() }
+        }
+        .reportReasonDialog(isPresented: $showReportDialog) { reason in report(reason: reason) }
+        .alert("Report sent", isPresented: $showReportSent) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Thanks — we'll take a look.")
+        }
+    }
+
+    /// Best-effort (matches `reportCommunity`'s own `try?` fire-and-forget).
+    private func report(reason: String) {
+        guard let communityID else { return }
+        Task {
+            await container.reportCommunity(id: communityID, reason: reason)
+            Haptics.success()
+            showReportSent = true
+        }
     }
 
     private var playBoard: some View {
@@ -69,6 +95,15 @@ struct WhoAmIGameView: View {
                 Text(puzzle.sport.displayName)
                     .font(.label12)
                     .foregroundStyle(Color.textMuted)
+                if communityID != nil {
+                    Button { showReportDialog = true } label: {
+                        Image(systemName: "flag")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(Color.textMuted)
+                    }
+                    .accessibilityLabel("Report this puzzle")
+                    .padding(.leading, 12)
+                }
             }
             VStack(spacing: 4) {
                 Text("Who am I?")
@@ -92,7 +127,7 @@ struct WhoAmIGameView: View {
     private func clueRow(_ clue: WhoAmIPuzzle.Clue) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Text("\(clue.order)")
-                .font(.system(size: 13, weight: .medium))
+                .font(.custom(FontName.condBlack, size: 14))
                 .foregroundStyle(Color.accentText)
                 .frame(width: 26, height: 26)
                 .background(Color.accentBg)
@@ -110,6 +145,7 @@ struct WhoAmIGameView: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardSurface()
+        .accessibilityElement(children: .combine)
     }
 
     private var guessBar: some View {
@@ -130,15 +166,16 @@ struct WhoAmIGameView: View {
                         .offset(x: wrongShake ? -8 : 0)
 
                     Button(action: submitGuess) {
-                        Text("Guess")
-                            .font(.system(size: 15, weight: .medium))
+                        Text("GUESS")
+                            .font(.heading)
                             .foregroundStyle(Color.onAccent)
                             .padding(.horizontal, 18)
-                            .padding(.vertical, 11)
+                            .padding(.vertical, 10)
                             .background(Color.accentFill)
                             .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PrimePressStyle())
+                    .accessibilityHint("Submits the name you entered")
                 }
 
                 HStack {
@@ -150,14 +187,16 @@ struct WhoAmIGameView: View {
                     Spacer()
                     if allRevealed {
                         Button("Give up", action: giveUp)
-                            .font(.system(size: 14))
+                            .font(.body14)
                             .foregroundStyle(Color.textMuted)
                     } else {
                         Button(action: nextClue) {
                             Text("Next clue · −\(nextCueCost) pts")
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.bodyStrong)
                                 .foregroundStyle(Color.accentText)
                         }
+                        .accessibilityLabel("Reveal next clue")
+                        .accessibilityHint("Costs \(nextCueCost) points")
                     }
                 }
             }

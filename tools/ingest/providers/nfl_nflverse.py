@@ -84,6 +84,8 @@ def fetch_year(year: int, *, ttl_hours: float = 24 * 30) -> list[RawSeason]:
                 stats=stats,
                 source="nflverse",
                 headshot=row.get("headshot_url") or "",
+                # gsis id (= players.csv key) so the bio join in main.py is collision-free.
+                meta={"gsis_id": row.get("player_id") or ""},
             )
         )
     return seasons

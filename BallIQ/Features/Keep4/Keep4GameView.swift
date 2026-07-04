@@ -6,6 +6,10 @@ struct Keep4GameView: View {
     var ranked: Bool = true
     /// Set for community puzzles so a play is logged (powers the Popular sort).
     var communityID: String? = nil
+    /// Community author's username — personalizes the custom-scoring explainer when known.
+    var authorName: String? = nil
+    /// Set when played from the Versus tab, so the score is submitted to the challenge.
+    var versusChallengeID: Int? = nil
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
@@ -16,6 +20,8 @@ struct Keep4GameView: View {
     @State private var result: Keep4Scoring.Result?
     @State private var rewards: RepositoryContainer.SessionRewards?
     @State private var mode: Keep4Mode = .normal
+    @State private var showReportDialog = false
+    @State private var showReportSent = false
 
     private let pileLimit = 4
 
@@ -47,8 +53,28 @@ struct Keep4GameView: View {
         }
         .background(Color.appBackground)
         .onAppear {
-            if order.isEmpty { order = Self.blindOrder(for: puzzle) }
+            if order.isEmpty {
+                order = Self.blindOrder(for: puzzle)
+                container.track(.gameStarted, ["format": "keep4", "ranked": "\(ranked)",
+                                               "community": "\(communityID != nil)"])
+            }
             if DebugLaunch.autoSubmitResult { autoFillForScreenshot() }
+        }
+        .reportReasonDialog(isPresented: $showReportDialog) { reason in report(reason: reason) }
+        .alert("Report sent", isPresented: $showReportSent) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Thanks — we'll take a look.")
+        }
+    }
+
+    /// Best-effort (matches `reportCommunity`'s own `try?` fire-and-forget).
+    private func report(reason: String) {
+        guard let communityID else { return }
+        Task {
+            await container.reportCommunity(id: communityID, reason: reason)
+            Haptics.success()
+            showReportSent = true
         }
     }
 
@@ -75,7 +101,7 @@ struct Keep4GameView: View {
                         insertion: .opacity.combined(with: .offset(y: 14)),
                         removal: .opacity))
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 16)
             }
             Spacer(minLength: 0)
             footer
@@ -115,6 +141,15 @@ struct Keep4GameView: View {
                 Text("CARD \(min(index + 1, order.count)) OF \(order.count)")
                     .font(.label12)
                     .foregroundStyle(Color.textMuted)
+                if communityID != nil {
+                    Button { showReportDialog = true } label: {
+                        Image(systemName: "flag")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(Color.textMuted)
+                    }
+                    .accessibilityLabel("Report this puzzle")
+                    .padding(.leading, 12)
+                }
             }
 
             VStack(spacing: 4) {
@@ -125,6 +160,16 @@ struct Keep4GameView: View {
                     .font(.title)
                     .foregroundStyle(Color.textPrimary)
                     .multilineTextAlignment(.center)
+                if let description = puzzle.description, !description.isEmpty {
+                    Text(description)
+                        .font(.body14)
+                        .foregroundStyle(Color.textMuted)
+                        .multilineTextAlignment(.center)
+                }
+                VStack(spacing: 6) {
+                    scoringNote
+                    GrainChip(grain: puzzle.puzzleGrain())
+                }
             }
 
             HStack(spacing: 10) {
@@ -162,39 +207,29 @@ struct Keep4GameView: View {
                     .multilineTextAlignment(.center)
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 16)
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity)
     }
 
+    /// How this puzzle's hidden ranking was produced (PPR / era-adjusted / author's custom
+    /// rule) — the pre-game scoring explainer, always visible above the deck.
+    private var scoringNote: some View {
+        ScoringNoteChip(kind: puzzle.scoringKind(), sport: puzzle.sport, author: authorName)
+            .padding(.top, 2)
+    }
+
     private var modePicker: some View {
-        HStack(spacing: 0) {
-            ForEach(Keep4Mode.allCases, id: \.self) { m in
-                let active = mode == m
-                Button {
-                    withAnimation(Motion.snap) { mode = m }
-                    Haptics.tap()
-                } label: {
-                    Text(m.title)
-                        .font(.system(size: 13, weight: active ? .medium : .regular))
-                        .foregroundStyle(active ? Color.onAccent : Color.textPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 7)
-                        .background(active ? Color.accentFill : Color.clear)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .background(Color.surfaceMuted)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-        .frame(maxWidth: 200)
+        PrimeSegmentedControl(options: Keep4Mode.allCases.map { ($0.title, $0) },
+                              selection: $mode)
+            .frame(maxWidth: 220)
     }
 
     private func tally(label: String, count: Int, color: Color) -> some View {
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 8, height: 8)
-            Text("\(label) \(count)/\(pileLimit)")
-                .font(.system(size: 13, weight: .medium))
+            Text("\(label.uppercased()) \(count)/\(pileLimit)")
+                .font(.label12)
                 .foregroundStyle(Color.textPrimary)
         }
         .padding(.horizontal, 12)
@@ -232,6 +267,7 @@ struct Keep4GameView: View {
                                               ranked: ranked)
             rewards = rw
             if let communityID { await container.recordCommunityPlay(id: communityID) }
+            if let versusChallengeID { await container.submitVersusResult(challengeID: versusChallengeID, performance: performance) }
             withAnimation(Motion.easeOut) { result = r }
         }
     }

@@ -1,70 +1,96 @@
 import SwiftUI
 
-/// The shareable result image for a Keep4/Cut4 attempt.
-/// Per the brief: logo + theme + score, the 8 seasons with Keep/Cut + correct/incorrect.
-/// Deliberately shows NO rating.
+/// The shareable result image for a Keep4/Cut4 attempt — the one piece of the app people see
+/// *outside* the app, so it carries the full Prime Time treatment: condensed caps, an Anton
+/// score block, ink outline + hard ledge. Per the brief: logo + theme + score, the 8 seasons
+/// with Keep/Cut + correct/incorrect. Deliberately shows NO rating.
 struct ShareCardView: View {
     let puzzle: Keep4Puzzle
     let placement: [String: Pile]
     let result: Keep4Scoring.Result
 
+    private var heroFill: Color { result.isPerfect ? .voltFill : .accentFill }
+    private var heroInk: Color { result.isPerfect ? .onVolt : .onAccent }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Wordmark(size: 20)
-                Spacer()
-                Text("K4C4")
-                    .font(.label12)
-                    .foregroundStyle(Color.accentText)
+        VStack(alignment: .leading, spacing: 0) {
+            // Colored header band: score + theme
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Wordmark(size: 20)
+                    Spacer()
+                    Text("K4C4")
+                        .font(.custom(FontName.condBlack, size: 14))
+                        .foregroundStyle(heroInk.opacity(0.85))
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("\(result.correctCount)/\(puzzle.players.count)")
+                        .font(.hero(40))
+                        .foregroundStyle(heroInk)
+                    Text(result.isPerfect ? "PERFECT SORT" : "CORRECT")
+                        .font(.custom(FontName.condBlack, size: 15))
+                        .foregroundStyle(heroInk.opacity(0.85))
+                }
+                Text(puzzle.theme.uppercased())
+                    .font(.custom(FontName.condBold, size: 14))
+                    .foregroundStyle(heroInk.opacity(0.8))
+                    .lineLimit(2)
             }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(heroFill)
 
-            Text(puzzle.theme)
-                .font(.system(size: 18, weight: .medium))
-                .foregroundStyle(Color.textPrimary)
-
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("\(result.correctCount)/\(puzzle.players.count)")
-                    .font(.system(size: 30, weight: .medium))
-                    .foregroundStyle(Color.textPrimary)
-                Text(result.isPerfect ? "Perfect sort" : "correct")
-                    .font(.body14)
-                    .foregroundStyle(result.isPerfect ? Color.successText : Color.textMuted)
-            }
-
-            VStack(spacing: 6) {
-                ForEach(puzzle.players) { player in
+            // The 8 picks
+            VStack(spacing: 0) {
+                ForEach(Array(puzzle.players.enumerated()), id: \.element.id) { i, player in
                     let pile = placement[player.id]
                     let correct = result.correctness[player.id] ?? false
                     HStack(spacing: 8) {
-                        Text(pile == .keep ? "Keep" : "Cut")
-                            .font(.system(size: 10, weight: .medium))
+                        Text(pile == .keep ? "KEEP" : "CUT")
+                            .font(.custom(FontName.condBlack, size: 11))
                             .foregroundStyle(pile == .keep ? Color.onSuccess : Color.onDanger)
-                            .frame(width: 42)
+                            .frame(width: 44)
                             .padding(.vertical, 3)
                             .background(pile == .keep ? Color.successFill : Color.dangerFill)
                             .clipShape(Capsule())
-                        Text(player.name)
-                            .font(.label12)
+                        Text(player.name.uppercased())
+                            .font(.custom(FontName.condBold, size: 13))
                             .foregroundStyle(Color.textPrimary)
+                            .lineLimit(1).minimumScaleFactor(0.7)
                         Spacer()
                         Image(systemName: correct ? "checkmark" : "xmark")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.system(size: 11, weight: .black))
                             .foregroundStyle(correct ? Color.successText : Color.dangerText)
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 7)
+                    if i < puzzle.players.count - 1 {
+                        Rectangle().fill(Color.hairline).frame(height: Hairline.width)
+                            .padding(.leading, 16)
                     }
                 }
             }
+            .padding(.vertical, 6)
+            .background(Color.surface1)
 
-            Text("Play at BallIQ")
-                .font(.label11)
+            Text("PLAY AT PLAYBOOK")
+                .font(.custom(FontName.condBold, size: 11))
                 .foregroundStyle(Color.textMuted)
+                .padding(.horizontal, 16).padding(.vertical, 9)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.surfaceMuted)
         }
-        .padding(20)
         .frame(width: 320)
-        .background(Color.surface)
         .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
-                .stroke(Color.hairline, lineWidth: Hairline.width)
+                .strokeBorder(Color.borderInk, lineWidth: 2.5)
+        )
+        .padding(6)   // room for the ledge in the rendered image
+        .background(
+            RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
+                .fill(Color.borderInk)
+                .offset(x: 4, y: 4)
+                .padding(6)
         )
     }
 }

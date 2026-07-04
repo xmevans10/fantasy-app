@@ -9,17 +9,18 @@ import Foundation
 ///   so 1,400 receiving yards in 2004 and 2024 are judged relative to their era. Falls back
 ///   to a fixed scale when no baseline exists or the season's sample is too thin.
 /// - `.points(perUnit)` — fantasy-point contribution (`value * perUnit`), summed with no
-///   weight-normalization. Ranking is by the true fantasy total (so the audited PPR fix holds),
-///   but the *displayed* grade is that total min-maxed into 0–100 via the rule's `displayScale`
-///   (a strict monotonic transform — it cannot change who's Keep vs Cut, only the number shown,
-///   so it reads on the same familiar scale as every other formula instead of a points total that
-///   looks wildly different across sports). Points rules are homogeneous (all terms `.points`);
-///   a penalty's sign lives in its coefficient (e.g. interceptions at −2), so `higherWins` is
-///   ignored. A points rule with no `displayScale` set falls back to showing the raw total.
-/// - `.eraPoints(perUnit)` — era-adjusted fantasy points: the raw value is scaled by a per-era
-///   *volume index* (`globalMean / eraMean` for the stat) before applying the coefficient, so the
-///   same production is worth more in a scarce era. Falls back to `.points` (index 1.0) when no
-///   trustworthy baseline exists. Toggling `eraAdjusted` swaps `.points` ↔ `.eraPoints`.
+///   weight-normalization. The grade *is* the raw fantasy total (so the audited PPR fix holds
+///   and the displayed number is the season's real point total — see the "PPR scoring" note in
+///   `CreateKeep4View`). Points rules are homogeneous (all terms `.points`); a penalty's sign
+///   lives in its coefficient (e.g. interceptions at −2), so `higherWins` is ignored. A custom
+///   rule can still opt into the legacy 0–100 normalized display by setting `displayScale`.
+/// - `.eraPoints(perUnit)` — era-adjusted fantasy points. The rule's raw fantasy TOTAL is scaled
+///   by a single per-(sport, position, season-year) *volume index* (see `eraTotalIndex`), so the
+///   same production is worth more in a scarce era. A single total index — validated by
+///   tools/ingest/era_analysis.py (M10) — is a monotonic rescale within a position-year, so it
+///   can never reorder two same-position same-year seasons the way noisy per-stat ratios can.
+///   Falls back to `.points` (index 1.0) when no trustworthy baseline exists. Toggling
+///   `eraAdjusted` swaps `.points` ↔ `.eraPoints`. Mirrored by grade.py `era_index`/`grade_era`.
 ///
 /// The six built-in fixed presets reproduce the `GradeFormula` scales *exactly* (same stats,
 /// bounds, weights, inversions); the fantasy presets mirror grade.py's `_FANTASY` byte-for-byte.
@@ -46,8 +47,10 @@ struct ScoringRule: Equatable, Hashable {
     }
 
     let terms: [Term]
-    /// 0–100 display bounds for a points rule's raw fantasy total (nil → show raw points).
-    /// Non-points rules ignore this; their components already self-normalize to 0–100.
+    /// Legacy 0–100 display bounds for a points rule's raw fantasy total. The shipped
+    /// presets leave this nil — the grade IS the raw point total, shown as-is (see
+    /// `CreateKeep4View`'s "PPR scoring" note) — but a custom rule can still opt into the
+    /// old normalized display by setting one.
     let displayScale: FixedScale?
 
     init(terms: [Term], displayScale: FixedScale? = nil) {
@@ -76,17 +79,18 @@ struct ScoringRule: Equatable, Hashable {
                baselines: StatBaselines? = nil) -> Double {
         if isPoints {
             // Points rules sum contributions directly — no weight-normalize.
-            let raw = terms.reduce(0.0) { sum, term in
+            var raw = terms.reduce(0.0) { sum, term in
                 switch term.norm {
-                case .points(let perUnit):
+                case .points(let perUnit), .eraPoints(let perUnit):
                     return sum + (stats[term.stat] ?? 0) * perUnit
-                case .eraPoints(let perUnit):
-                    let idx = Self.eraIndex(stat: term.stat, sport: sport, position: position,
-                                            year: seasonYear, baselines: baselines)
-                    return sum + (stats[term.stat] ?? 0) * idx * perUnit
                 default:
                     return sum   // fixed/era terms don't participate in a points rule
                 }
+            }
+            let isEra = terms.contains { if case .eraPoints = $0.norm { return true } else { return false } }
+            if isEra {
+                raw *= Self.eraTotalIndex(sport: sport, position: position,
+                                          year: seasonYear, baselines: baselines)
             }
             guard let scale = displayScale else {
                 return (raw * 10).rounded() / 10   // no display bounds configured — show raw points
@@ -131,14 +135,25 @@ struct ScoringRule: Equatable, Hashable {
         }
     }
 
-    /// Per-era volume index for a stat: `globalMean / eraMean`, so the same production scores
-    /// higher in a scarcer era. Returns 1.0 (no adjustment) when the era sample is too thin or
-    /// the stat isn't in the baselines.
-    static func eraIndex(stat: String, sport: Sport, position: String, year: Int,
-                         baselines: StatBaselines?) -> Double {
-        guard let era = baselines?.lookup(sport: sport, position: position, stat: stat, year: year),
+    /// The pseudo-stat baselines.py emits: the unified fantasy-total distribution over
+    /// QUALIFY-gated (full-time) seasons per (sport, position, year).
+    static let fantasyTotalStat = "fantasy_total"
+
+    /// The single per-(sport, position, year) fantasy-total volume index (>1 = scarcer era):
+    ///
+    ///     globalMean(fantasy_total) / eraMean(fantasy_total, year)
+    ///
+    /// over the `fantasy_total` pseudo-stat rows (qualified-season populations — raw recorder
+    /// means are diluted by cameo seasons and population growth). Returns 1.0 when the era row
+    /// is missing/too thin or a mean is non-positive. Byte-parity with grade.py `era_index`.
+    static func eraTotalIndex(sport: Sport, position: String, year: Int,
+                              baselines: StatBaselines?) -> Double {
+        guard let baselines,
+              let era = baselines.lookup(sport: sport, position: position,
+                                         stat: fantasyTotalStat, year: year),
               era.count >= minBaselineSamples, era.mean > 0,
-              let global = baselines?.globalMean(sport: sport, position: position, stat: stat),
+              let global = baselines.globalMean(sport: sport, position: position,
+                                                stat: fantasyTotalStat),
               global > 0
         else { return 1.0 }
         return global / era.mean
@@ -179,20 +194,49 @@ extension ScoringRule {
                               ("ppg",    12.0,  34.0, 0.30, true),
                               ("ts_pct", 0.480, 0.660, 0.15, true)),
 
-        // Fantasy-point presets (mirror grade.py `_FANTASY` + `_FANTASY_BOUNDS`). Ranked by the
-        // raw fantasy total; displayed as that total min-maxed to 0–100 (see grade.py docstring
-        // for how the bounds were anchored to real catalog percentiles).
-        "nfl_skill_ppr": pointsRule(displayScale: .init(lo: 40, hi: 450),
-                                    ("receptions", 1.0), ("receiving_yards", 0.1),
+        // Fantasy-point presets (mirror grade.py `_FANTASY`). Ranked by — and displayed as —
+        // the raw fantasy total; no 0–100 normalization (see grade.py docstring).
+        // `nfl_fantasy` is the unified any-position formula (passing + rushing + receiving),
+        // matching the daily pipeline exactly — the one shipped NFL preset, and what makes
+        // cross-position pools fair. The narrower skill/QB splits remain for older content.
+        "nfl_fantasy": pointsRule(("passing_yards", 0.04), ("passing_tds", 4.0),
+                                  ("interceptions", -2.0), ("receptions", 1.0),
+                                  ("receiving_yards", 0.1), ("receiving_tds", 6.0),
+                                  ("rushing_yards", 0.1), ("rushing_tds", 6.0)),
+        // Half PPR / Standard: same unified formula, reception credit dialed down (0.5) or
+        // dropped entirely (Standard has no reception term at all — 0 coefficient would just
+        // be a no-op line item).
+        "nfl_fantasy_half": pointsRule(("passing_yards", 0.04), ("passing_tds", 4.0),
+                                       ("interceptions", -2.0), ("receptions", 0.5),
+                                       ("receiving_yards", 0.1), ("receiving_tds", 6.0),
+                                       ("rushing_yards", 0.1), ("rushing_tds", 6.0)),
+        "nfl_fantasy_standard": pointsRule(("passing_yards", 0.04), ("passing_tds", 4.0),
+                                           ("interceptions", -2.0),
+                                           ("receiving_yards", 0.1), ("receiving_tds", 6.0),
+                                           ("rushing_yards", 0.1), ("rushing_tds", 6.0)),
+        "nfl_skill_ppr": pointsRule(("receptions", 1.0), ("receiving_yards", 0.1),
                                     ("receiving_tds", 6.0), ("rushing_yards", 0.1),
                                     ("rushing_tds", 6.0)),
-        "nfl_qb_fantasy": pointsRule(displayScale: .init(lo: 100, hi: 450),
-                                     ("passing_yards", 0.04), ("passing_tds", 4.0),
+        "nfl_qb_fantasy": pointsRule(("passing_yards", 0.04), ("passing_tds", 4.0),
                                      ("interceptions", -2.0), ("rushing_yards", 0.1),
                                      ("rushing_tds", 6.0)),
-        "nba_fantasy": pointsRule(displayScale: .init(lo: 15, hi: 75),
-                                  ("ppg", 1.0), ("rpg", 1.2), ("apg", 1.5),
+        "nba_fantasy": pointsRule(("ppg", 1.0), ("rpg", 1.2), ("apg", 1.5),
                                   ("spg", 3.0), ("bpg", 3.0)),
+
+        // Baseball/soccer/tennis presets (mirror grade.py `_FANTASY` byte-for-byte).
+        "baseball_hitter_fantasy": pointsRule(("hits", 1.0), ("doubles", 1.0),
+                                              ("triples", 2.0), ("home_runs", 3.0),
+                                              ("runs", 1.0), ("rbi", 1.0),
+                                              ("base_on_balls", 1.0), ("stolen_bases", 2.0)),
+        "baseball_pitcher_fantasy": pointsRule(("innings_pitched", 1.0), ("strike_outs", 1.0),
+                                               ("wins", 5.0), ("saves", 6.0),
+                                               ("earned_runs", -1.0), ("base_on_balls", -0.5)),
+        "soccer_attacker_fantasy": pointsRule(("goals", 5.0), ("assists", 3.0),
+                                              ("appearances", 1.0)),
+        "soccer_defender_fantasy": pointsRule(("clean_sheets", 4.0), ("goals", 6.0),
+                                              ("assists", 3.0), ("appearances", 0.5)),
+        "tennis_fantasy": pointsRule(("matches_won", 1.0), ("titles", 8.0),
+                                     ("grand_slams", 30.0), ("matches_lost", -0.5)),
     ]
 
     static func preset(_ key: String) -> ScoringRule? { presets[key] }
@@ -226,12 +270,12 @@ extension ScoringRule {
         })
     }
 
-    /// Build a fantasy-points rule from `(stat, perUnit)` pairs, displayed as `displayScale`
-    /// min-maxed to 0–100. `weight` is unused by points grading (the coefficient lives in
+    /// Build a fantasy-points rule from `(stat, perUnit)` pairs, displayed as the raw total
+    /// (no `displayScale`). `weight` is unused by points grading (the coefficient lives in
     /// `perUnit`); we set it to 1 and `higherWins` to true.
-    private static func pointsRule(displayScale: FixedScale, _ specs: (String, Double)...) -> ScoringRule {
+    private static func pointsRule(_ specs: (String, Double)...) -> ScoringRule {
         ScoringRule(terms: specs.map { stat, perUnit in
             Term(stat: stat, weight: 1, higherWins: true, norm: .points(perUnit: perUnit))
-        }, displayScale: displayScale)
+        })
     }
 }

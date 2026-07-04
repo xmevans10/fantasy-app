@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct RankWidget: View {
+    /// The sport whose rating is displayed — the label must match the number.
+    let sport: Sport
     let rating: Int
 
     private var tier: Tier { Tier.forRating(rating) }
@@ -26,7 +28,7 @@ struct RankWidget: View {
                     Text(tier.name.uppercased())
                         .font(.title)
                         .foregroundStyle(Color.textPrimary)
-                    Text("NFL RATING")
+                    Text("\(sport.displayName.uppercased()) RATING")
                         .font(.label11)
                         .foregroundStyle(Color.textMuted)
                 }

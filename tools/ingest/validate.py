@@ -8,7 +8,7 @@ from __future__ import annotations
 from .assemble import KEEP_COUNT, PuzzleRow
 
 _VALID_KINDS = {"era", "position", "teams", "statLine", "fact", "jersey"}
-_VALID_SPORTS = {"nfl", "nba"}
+_VALID_SPORTS = {"nfl", "nba", "baseball", "soccer", "tennis"}
 
 
 def validate(row: PuzzleRow) -> None:

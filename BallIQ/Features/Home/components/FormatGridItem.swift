@@ -32,7 +32,7 @@ struct FormatGridItem: View {
                     .font(.custom(FontName.condBold, size: 16))
                     .foregroundStyle(Color.textPrimary)
                     .multilineTextAlignment(.leading)
-                Text((format.isPlayable ? "Daily" : (format.isPro ? "Pro only" : "Soon")).uppercased())
+                Text((format.subtitle ?? (format.isPlayable ? "Daily" : (format.isPro ? "Pro only" : "Soon"))).uppercased())
                     .font(.label11)
                     .foregroundStyle(format.isPlayable ? Color.accentText : Color.textMuted)
             }
@@ -41,7 +41,7 @@ struct FormatGridItem: View {
             .cardSurface()
             .opacity(dimmed ? 0.55 : 1)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PrimePressStyle())
         .disabled(!format.isPlayable)
     }
 }

@@ -105,7 +105,7 @@ struct RewardsRow: View {
         VStack(spacing: 2) {
             Text(label).font(.label11).foregroundStyle(Color.textMuted)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(value).font(.system(size: 20, weight: .medium)).foregroundStyle(Color.textPrimary)
+                Text(value).font(.hero(20)).foregroundStyle(Color.textPrimary)
                 if let accent { Text(accent).font(.label12).foregroundStyle(accentColor) }
             }
         }

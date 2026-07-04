@@ -15,7 +15,7 @@ struct ScoringStat: Identifiable, Hashable {
 
     var id: String { "\(sport.rawValue):\(key)" }
 
-    enum Fmt { case commaInt, int, dec1, pct }
+    enum Fmt { case commaInt, int, dec1, pct, dec3 }
 
     /// A fixed-scale scoring term seeded from this stat's defaults.
     func term(weight: Double = 1) -> ScoringRule.Term {
@@ -31,6 +31,7 @@ struct ScoringStat: Identifiable, Hashable {
         case .int:  return "\(Int(value.rounded()))"
         case .dec1: return String(format: "%.1f", value)
         case .pct:  return "\(Int((value * 100).rounded()))%"
+        case .dec3: return String(format: "%.3f", value)
         }
     }
 }
@@ -61,6 +62,39 @@ extension ScoringStat {
             ScoringStat(key: "bpg",    label: "BPG", sport: .nba, lo: 0.3,   hi: 3.7,   higherWins: true, fmt: .dec1),
             ScoringStat(key: "ts_pct", label: "TS%", sport: .nba, lo: 0.480, hi: 0.670, higherWins: true, fmt: .pct),
             ScoringStat(key: "fg_pct", label: "FG%", sport: .nba, lo: 0.420, hi: 0.620, higherWins: true, fmt: .pct),
+        ],
+        .baseball: [
+            ScoringStat(key: "hits",           label: "Hits",     sport: .baseball, lo: 80,    hi: 200,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "doubles",        label: "2B",       sport: .baseball, lo: 15,    hi: 55,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "triples",        label: "3B",       sport: .baseball, lo: 0,     hi: 15,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "home_runs",      label: "HR",       sport: .baseball, lo: 5,     hi: 65,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "runs",           label: "R",        sport: .baseball, lo: 50,    hi: 140,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "rbi",            label: "RBI",      sport: .baseball, lo: 40,    hi: 140,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "base_on_balls",  label: "BB",       sport: .baseball, lo: 20,    hi: 120,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "stolen_bases",   label: "SB",       sport: .baseball, lo: 0,     hi: 70,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "avg",            label: "AVG",      sport: .baseball, lo: 0.230, hi: 0.340, higherWins: true,  fmt: .dec3),
+            ScoringStat(key: "obp",            label: "OBP",      sport: .baseball, lo: 0.300, hi: 0.450, higherWins: true,  fmt: .dec3),
+            ScoringStat(key: "slg",            label: "SLG",      sport: .baseball, lo: 0.380, hi: 0.700, higherWins: true,  fmt: .dec3),
+            ScoringStat(key: "ops",            label: "OPS",      sport: .baseball, lo: 0.680, hi: 1.150, higherWins: true,  fmt: .dec3),
+            ScoringStat(key: "innings_pitched", label: "IP",      sport: .baseball, lo: 80,    hi: 230,   higherWins: true,  fmt: .dec1),
+            ScoringStat(key: "wins",           label: "W",        sport: .baseball, lo: 5,     hi: 24,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "saves",          label: "SV",       sport: .baseball, lo: 0,     hi: 60,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "strike_outs",    label: "K",        sport: .baseball, lo: 60,    hi: 320,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "earned_runs",    label: "ER",       sport: .baseball, lo: 20,    hi: 90,    higherWins: false, fmt: .int),
+            ScoringStat(key: "era",            label: "ERA",      sport: .baseball, lo: 1.5,   hi: 5.5,   higherWins: false, fmt: .dec3),
+            ScoringStat(key: "whip",           label: "WHIP",     sport: .baseball, lo: 0.80,  hi: 1.40,  higherWins: false, fmt: .dec3),
+        ],
+        .soccer: [
+            ScoringStat(key: "appearances",  label: "Apps",         sport: .soccer, lo: 15, hi: 38, higherWins: true, fmt: .int),
+            ScoringStat(key: "goals",        label: "Goals",        sport: .soccer, lo: 0,  hi: 40, higherWins: true, fmt: .int),
+            ScoringStat(key: "assists",      label: "Assists",      sport: .soccer, lo: 0,  hi: 20, higherWins: true, fmt: .int),
+            ScoringStat(key: "clean_sheets", label: "Clean Sheets", sport: .soccer, lo: 0,  hi: 25, higherWins: true, fmt: .int),
+        ],
+        .tennis: [
+            ScoringStat(key: "matches_won",  label: "Wins",   sport: .tennis, lo: 20, hi: 100, higherWins: true,  fmt: .int),
+            ScoringStat(key: "matches_lost", label: "Losses", sport: .tennis, lo: 0,  hi: 25,  higherWins: false, fmt: .int),
+            ScoringStat(key: "titles",       label: "Titles", sport: .tennis, lo: 0,  hi: 15,  higherWins: true,  fmt: .int),
+            ScoringStat(key: "grand_slams",  label: "Slams",  sport: .tennis, lo: 0,  hi: 4,   higherWins: true,  fmt: .int),
         ],
     ]
 

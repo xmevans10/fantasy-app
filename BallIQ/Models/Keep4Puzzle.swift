@@ -6,6 +6,18 @@ struct Keep4Puzzle: Identifiable, Codable, Equatable {
     let theme: String
     let sport: Sport
     let players: [PlayerSeason]   // exactly 8
+    /// Optional author's note about the puzzle (community puzzles only). Additive + optional
+    /// so existing baked content (no key) decodes unchanged.
+    var description: String? = nil
+    /// How the grades were produced ("ppr" | "era" | "custom"), baked at community publish.
+    /// nil for daily content and legacy community rows — resolved by `scoringKind(themes:)`.
+    /// Additive + optional so existing baked content decodes unchanged.
+    var scoring: ScoringKind? = nil
+    /// What window of production the cards represent ("season" | "game" | "career"), baked
+    /// by `assemble.py` for daily content or at community publish. nil for legacy rows —
+    /// resolved by `puzzleGrain(themes:)`. Additive + optional so existing baked content
+    /// decodes unchanged.
+    var grain: String? = nil
 
     /// Player ids that belong in the correct Keep pile (the 4 highest grades).
     var correctKeepIDs: Set<String> {

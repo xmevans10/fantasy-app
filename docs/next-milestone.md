@@ -1,4 +1,4 @@
-# BallIQ — Milestone 5 handoff: PPR scoring + "foil" card sparkle
+# Playbook — Milestone 5 handoff: PPR scoring + "foil" card sparkle
 
 > **✅ SHIPPED (2026-06-29).** Both tasks landed, plus a follow-on 0–100 display normalization. For
 > how grading works *now*, read **[scoring-and-grading.md](scoring-and-grading.md)** — that is the
@@ -9,7 +9,7 @@ creation work shipped; build + 49 Xcode tests green; `tools/ingest` py tests 16/
 
 ## Where things stand (don't re-derive)
 
-- `fantasy-app` is **BallIQ**, a native SwiftUI iOS sports-trivia app (NOT the chess coach in the
+- `fantasy-app` is **Playbook**, a native SwiftUI iOS sports-trivia app (NOT the chess coach in the
   global `~/CLAUDE.md`). Toolchain: Xcode 26.5 / Swift 6.x, `SWIFT_VERSION = 5.0` in the project.
   Hand-written `.xcodeproj` (objectVersion 70) with **synchronized file groups** — new files under
   `BallIQ/` auto-compile, no pbxproj edits (one exception set exists for `Info.plist`).

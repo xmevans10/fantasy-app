@@ -35,10 +35,12 @@ struct CreateView: View {
                 choice(title: "K4C4", blurb: "Pick 8 real seasons; the top 4 by the stats are the answer.",
                        symbol: "rectangle.stack.fill", accent: .accentFill, on: .onAccent)
             }
+            .buttonStyle(PrimePressStyle())
             NavigationLink { CreateWhoAmIView().environmentObject(container) } label: {
                 choice(title: "Who Am I?", blurb: "Write six clues that lead to a mystery player.",
                        symbol: "person.fill.questionmark", accent: .voltFill, on: .onVolt)
             }
+            .buttonStyle(PrimePressStyle())
             Spacer()
         }
         .padding(16)
@@ -62,15 +64,8 @@ struct CreateView: View {
     }
 
     private var signInPrompt: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "lock.fill").font(.system(size: 40)).foregroundStyle(Color.textMuted)
-            Text("Sign in to create").font(.title).foregroundStyle(Color.textPrimary)
-            Text("Community puzzles are tied to your account so others know who made them.")
-                .font(.body14).foregroundStyle(Color.textMuted)
-                .multilineTextAlignment(.center).padding(.horizontal, 24)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
+        EmptyStateView(symbol: "lock.fill",
+                       title: "Sign in to create",
+                       message: "Community puzzles are tied to your account so others know who made them.")
     }
 }

@@ -2,8 +2,9 @@
 
 A `RawSeason` is a single real player-season pulled from a provider (nflverse,
 balldontlie, or the curated seed). It carries the raw numeric stats keyed by a
-stable name; `grade.py` turns those into a 0-100 quality score and `assemble.py`
-turns them into the camelCase `content` JSON the Swift Codable models decode.
+stable name; `grade.py` turns those into a ranking quality score (raw fantasy
+points) and `assemble.py` turns them into the camelCase `content` JSON the
+Swift Codable models decode.
 """
 from __future__ import annotations
 
@@ -24,11 +25,29 @@ class RawSeason:
     stats: dict[str, float]  # raw numeric stats, e.g. {'rushing_yards': 2027, ...}
     source: str = "seed"     # provenance: 'nflverse' | 'espn' | 'balldontlie' | 'seed'
     headshot: str = ""       # player headshot URL (provider-supplied); "" when unavailable
+    # Single-game grain (None/"" = season aggregate). A row with `week` set is one game.
+    week: int | None = None
+    opponent: str = ""       # opponent team abbr for game-grain rows, e.g. "DEN"
+    # Career-grain aggregate (see career.py) — one row per (sport, position, player) summing
+    # every real season the pipeline pulled. Mutually exclusive with `week` (a career row is
+    # never a single game); `season_year` holds the player's LAST season for sort/recency
+    # purposes, with the full span in `meta["first_year"]`/`meta["last_year"]`.
+    career: bool = False
+    # Mutable bag of biographical/contextual fields for niche filters (first_name, college,
+    # draft_round, draft_pick, height_in, age, jersey, birth_state, rookie_year, gsis_id …).
+    # `frozen=True` only blocks rebinding the attribute, not mutating this dict — providers
+    # and the bio join populate it in place.
+    meta: dict[str, str] = field(default_factory=dict)
 
     @property
     def player_id(self) -> str:
-        """Stable id for this season inside a puzzle, e.g. 'derrick-henry-2020'."""
-        return f"{slug(self.name)}-{self.season_year}"
+        """Stable id for this entity inside a puzzle, e.g. 'derrick-henry-2020' (season),
+        'derrick-henry-2020-wk12' (single game), or 'derrick-henry-career' (career aggregate)
+        so none of the three grains ever collide."""
+        if self.career:
+            return f"{slug(self.name)}-career"
+        base = f"{slug(self.name)}-{self.season_year}"
+        return f"{base}-wk{self.week:02d}" if self.week is not None else base
 
 
 def slug(text: str) -> str:

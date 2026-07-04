@@ -4,7 +4,7 @@
 
 ## Goal
 
-Make BallIQ a business and broaden the content: ship the **Pro subscription** and **format packs**
+Make Playbook a business and broaden the content: ship the **Pro subscription** and **format packs**
 via StoreKit 2 with proper gating, add the **remaining game formats** (Over/Under, Draft & Spin, and
 the Pro-only Grid), and add the **8-week season structure** with cosmetic rewards. After this, the app
 has a revenue model and enough format variety to sustain the "multi-format daily" promise.

@@ -1,11 +1,11 @@
-# BallIQ — M6: Community fixes + backend hardening
+# Playbook — M6: Community fixes + backend hardening
 
 Self-contained prompt for a fresh agent. Read [prompts/README.md](README.md) for shared context
 (build/test commands, architecture, design system, secrets policy) — it is not repeated here. Assumes
 the repo as of **2026-06-29**: M5 shipped (PPR fantasy scoring + 0–100 display grade + foil card),
 both test suites green, grading reference at [docs/scoring-and-grading.md](../docs/scoring-and-grading.md).
 
-`fantasy-app` is **BallIQ**, a native SwiftUI iOS sports-trivia app (NOT the chess coach in the global
+`fantasy-app` is **Playbook**, a native SwiftUI iOS sports-trivia app (NOT the chess coach in the global
 `~/CLAUDE.md`). Supabase project `nhccgufqwndtoasdbkhc`; a Supabase MCP is connected (use it for SQL).
 `tools/ingest/.env` (gitignored) holds the service-role + provider keys. App ships only the public anon
 key in gitignored `BallIQ/Backend/Supabase.plist`.

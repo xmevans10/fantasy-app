@@ -1,9 +1,18 @@
-"""Curated seed provider — real, factual player-seasons hand-sourced from
-Basketball-Reference.
+"""Curated seed provider — real, factual player-seasons hand-sourced from public
+records (Basketball-Reference for NBA; well-documented record/award-winning
+seasons for baseball/soccer/tennis).
 
-Used for NBA when no BALLDONTLIE_API_KEY is configured, so the pipeline still
-produces real (not fictional) content offline. Every row is a real stat line;
-see data/nba_seed.csv. NFL needs no seed — nflverse covers it live.
+Used when a live source is unavailable or (for soccer/tennis) doesn't exist yet, so
+the pipeline still produces real (not fictional) content offline. Every row is a real
+stat line. NFL needs no seed — nflverse covers it live; baseball's `mlb_stats.py` is
+also live, so `load_baseball()` is a fallback, not the primary path.
+
+**Soccer and tennis are seed-only for now** (no live provider) — verified this
+session that the assumed sources didn't check out: ESPN's soccer stats endpoint only
+ever returned international-duty splits (not club-season stats) for the players
+tested, and the assumed tennis data-source repo doesn't exist under that account.
+These seed sets are small and hand-curated from well-documented record/award seasons;
+broadening them needs a real data source, not more manual rows.
 """
 from __future__ import annotations
 
@@ -11,6 +20,7 @@ import csv
 from pathlib import Path
 
 from ..models import RawSeason
+from .mlb_stats import HEADSHOT_URL
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
@@ -44,6 +54,122 @@ def load_nba() -> list[RawSeason]:
                     position=row["position"],
                     stats=stats,
                     source="seed",
+                )
+            )
+    return out
+
+
+def load_baseball() -> list[RawSeason]:
+    """Fallback for `mlb_stats.py`. Hitting/pitching rows share one CSV (position
+    'H'/'P' selects which stat block is real; the other side's columns are blank).
+    `mlb_id` (the real MLB person id, same as `main.MLB_LIVE_TARGETS`) builds a headshot
+    via the same image CDN `mlb_stats.py` uses live — no separate image source needed."""
+    path = DATA_DIR / "baseball_seed.csv"
+    out: list[RawSeason] = []
+    with path.open(encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            position = row["position"]
+            if position == "H":
+                stats = {
+                    "plate_appearances": _f(row, "plate_appearances"),
+                    "at_bats": _f(row, "at_bats"),
+                    "hits": _f(row, "hits"),
+                    "doubles": _f(row, "doubles"),
+                    "triples": _f(row, "triples"),
+                    "home_runs": _f(row, "home_runs"),
+                    "runs": _f(row, "runs"),
+                    "rbi": _f(row, "rbi"),
+                    "base_on_balls": _f(row, "base_on_balls"),
+                    "stolen_bases": _f(row, "stolen_bases"),
+                    "avg": _f(row, "avg"),
+                    "obp": _f(row, "obp"),
+                    "slg": _f(row, "slg"),
+                    "ops": _f(row, "ops"),
+                }
+            else:
+                stats = {
+                    "innings_pitched": _f(row, "innings_pitched"),
+                    "wins": _f(row, "wins"),
+                    "losses": _f(row, "losses"),
+                    "saves": _f(row, "saves"),
+                    "strike_outs": _f(row, "strike_outs"),
+                    "earned_runs": _f(row, "earned_runs"),
+                    "era": _f(row, "era"),
+                    "whip": _f(row, "whip"),
+                }
+            mlb_id = row.get("mlb_id", "")
+            out.append(
+                RawSeason(
+                    name=row["name"],
+                    team_abbr=row["team_abbr"],
+                    season_year=int(row["season_year"]),
+                    sport="baseball",
+                    position=position,
+                    stats=stats,
+                    source="seed",
+                    headshot=HEADSHOT_URL.format(id=mlb_id) if mlb_id else "",
+                )
+            )
+    return out
+
+
+def load_soccer() -> list[RawSeason]:
+    """Seed-only (no live provider — see module docstring). Hand-curated from
+    well-documented Golden Boot/Golden Glove/record seasons. `headshot` is a real
+    Wikimedia Commons image URL, resolved once per player against Wikipedia's summary
+    API while writing this CSV (not fetched live by this loader — see `models.py`)."""
+    path = DATA_DIR / "soccer_seed.csv"
+    out: list[RawSeason] = []
+    with path.open(encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            stats = {
+                "appearances": _f(row, "appearances"),
+                "goals": _f(row, "goals"),
+                "assists": _f(row, "assists"),
+                "clean_sheets": _f(row, "clean_sheets"),
+            }
+            out.append(
+                RawSeason(
+                    name=row["name"],
+                    team_abbr=row["team_abbr"],
+                    season_year=int(row["season_year"]),
+                    sport="soccer",
+                    position=row["position"],
+                    stats=stats,
+                    source="seed",
+                    headshot=row.get("headshot", ""),
+                )
+            )
+    return out
+
+
+def load_tennis() -> list[RawSeason]:
+    """Seed-only (no live provider — see module docstring). `position` is a constant
+    'Player' — tennis has no position families. `team_abbr` holds the player's
+    country code (real, but standing in for the team-color/team-badge slot the app's
+    other sports use; tennis cards fall back to the no-team styling). `headshot` is a
+    real Wikimedia Commons image URL, resolved once per player against Wikipedia's
+    summary API while writing this CSV (not fetched live by this loader)."""
+    path = DATA_DIR / "tennis_seed.csv"
+    out: list[RawSeason] = []
+    with path.open(encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            stats = {
+                "matches_won": _f(row, "matches_won"),
+                "matches_lost": _f(row, "matches_lost"),
+                "titles": _f(row, "titles"),
+                "grand_slams": _f(row, "grand_slams"),
+            }
+            out.append(
+                RawSeason(
+                    name=row["name"],
+                    team_abbr=row["team_abbr"],
+                    season_year=int(row["season_year"]),
+                    sport="tennis",
+                    position="Player",
+                    stats=stats,
+                    source="seed",
+                    headshot=row.get("headshot", ""),
                 )
             )
     return out

@@ -51,27 +51,23 @@ final class GradeFormulaTests: XCTestCase {
         XCTAssertLessThanOrEqual(GradeFormula.grade(monster, scale: "nfl_rb"), 100)
     }
 
-    // MARK: - Fantasy-point scales (raw points min-maxed to 0-100; locked to grade.py `_FANTASY`)
+    // MARK: - Fantasy-point scales (grade IS the raw point total; locked to grade.py `_FANTASY`)
 
     func testFantasyPprExactGrade() {
-        // Raw 145 + 194.7 + 96 = 435.7 pts → (435.7-40)/(450-40) * 100 = 96.5
         let kupp = ["receptions": 145.0, "receiving_yards": 1947, "receiving_tds": 16]
-        XCTAssertEqual(GradeFormula.grade(kupp, scale: "nfl_skill_ppr"), 96.5, accuracy: 0.001)
-        // Rushing-only: raw 202.7 + 102 = 304.7 pts → (304.7-40)/410 * 100 = 64.6
+        XCTAssertEqual(GradeFormula.grade(kupp, scale: "nfl_skill_ppr"), 435.7, accuracy: 0.001)
         let henry = ["rushing_yards": 2027.0, "rushing_tds": 17, "ypc": 5.4]
-        XCTAssertEqual(GradeFormula.grade(henry, scale: "nfl_skill_ppr"), 64.6, accuracy: 0.001)
+        XCTAssertEqual(GradeFormula.grade(henry, scale: "nfl_skill_ppr"), 304.7, accuracy: 0.001)
     }
 
     func testFantasyQbExactGrade() {
-        // Raw 192 + 160 − 12 = 340.0 pts → (340-100)/(450-100) * 100 = 68.6
         let qb = ["passing_yards": 4800.0, "passing_tds": 40, "interceptions": 6]
-        XCTAssertEqual(GradeFormula.grade(qb, scale: "nfl_qb_fantasy"), 68.6, accuracy: 0.001)
+        XCTAssertEqual(GradeFormula.grade(qb, scale: "nfl_qb_fantasy"), 340.0, accuracy: 0.001)
     }
 
     func testFantasyNbaExactGrade() {
-        // Raw 37.1 + 6.24 + 6.9 + 8.7 + 4.5 = 63.4 pts → (63.4-15)/(75-15) * 100 = 80.7
         let jordan = ["ppg": 37.1, "rpg": 5.2, "apg": 4.6, "spg": 2.9, "bpg": 1.5]
-        XCTAssertEqual(GradeFormula.grade(jordan, scale: "nba_fantasy"), 80.7, accuracy: 0.001)
+        XCTAssertEqual(GradeFormula.grade(jordan, scale: "nba_fantasy"), 63.4, accuracy: 0.001)
     }
 
     func testFantasyPprRewardsReceptionsAndTds() {
@@ -91,5 +87,31 @@ final class GradeFormulaTests: XCTestCase {
         XCTAssertEqual(card.grade, 80.6, accuracy: 0.001)
         XCTAssertEqual(card.stats.first { $0.label == "Rush Yds" }?.value, "2,027")
         XCTAssertEqual(card.stats.first { $0.label == "YPC" }?.value, "5.4")
+    }
+
+    /// M17: a season row (no career flag at all, e.g. decoded from the bundled fallback)
+    /// must not be mistaken for a career row.
+    func testCatalogSeasonWithNoCareerFlagIsNotCareer() {
+        let season = CatalogSeason(id: "derrick-henry-2020", sport: .nfl, name: "Derrick Henry",
+                                   teamAbbr: "TEN", seasonYear: 2020, position: "RB", stats: [:])
+        XCTAssertFalse(season.isCareer)
+        XCTAssertEqual(season.subtitle, "TEN · 2020")
+    }
+
+    /// M17: a career row's subtitle reads the full span, matching PlayerSeason.subtitle.
+    func testCatalogSeasonCareerSubtitleReadsFullSpan() {
+        let career = CatalogSeason(id: "derrick-henry-career", sport: .nfl, name: "Derrick Henry",
+                                   teamAbbr: "TEN", seasonYear: 2023, position: "RB", stats: [:],
+                                   career: true, firstYear: 2016, lastYear: 2023)
+        XCTAssertTrue(career.isCareer)
+        XCTAssertEqual(career.subtitle, "TEN · 2016-2023")
+    }
+
+    /// M17: `CatalogQuery.career` defaults to season-only — the same scope every query
+    /// had before career rows existed in the catalog — so free-form/season-template
+    /// search never regresses to seeing career aggregates mixed in.
+    func testCatalogQueryDefaultsToSeasonOnly() {
+        XCTAssertFalse(CatalogQuery().career)
+        XCTAssertFalse(CatalogQuery(sport: .nfl).career)
     }
 }

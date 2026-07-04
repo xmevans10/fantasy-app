@@ -7,3 +7,8 @@
 #
 # Tests need pytest:
 pytest>=8.0
+
+# OPTIONAL — only for refreshing the NBA athlete-id pool
+# (`python -m tools.ingest.providers.espn_nba_pool`). Imported lazily inside that
+# script, so the daily pipeline stays stdlib-only and never needs this installed.
+# pyespn>=0.3.3

@@ -4,7 +4,7 @@
 
 ## Goal
 
-Replace BallIQ's hand-authored, bundled puzzle content and **invented** player `grade` values with
+Replace Playbook's hand-authored, bundled puzzle content and **invented** player `grade` values with
 **real player-season data** ingested from a live sports source into the Supabase `puzzles` table.
 After this milestone, the daily Keep4/Cut4 and Who Am I? puzzles are generated from real statistics —
 the "true top 4" in a Keep4 sort reflects actual real-world performance, and Who Am I? clues are

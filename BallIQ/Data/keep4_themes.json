@@ -1,0 +1,1202 @@
+[
+  {
+    "key": "nfl-wr-receiving",
+    "title": "Elite WR receiving seasons",
+    "sport": "nfl",
+    "scale": "nfl_skill_ppr",
+    "positions": [
+      "WR"
+    ],
+    "minStats": {
+      "games": 10,
+      "receiving_yards": 1000
+    },
+    "columns": [
+      {
+        "stat": "receiving_yards",
+        "label": "Rec Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "receptions",
+        "label": "Rec",
+        "fmt": "int"
+      },
+      {
+        "stat": "receiving_tds",
+        "label": "Rec TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "ypr",
+        "label": "Yds/Rec",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "targets",
+        "label": "Tgts",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-rb-workhorse",
+    "title": "Workhorse RB seasons",
+    "sport": "nfl",
+    "scale": "nfl_skill_ppr",
+    "positions": [
+      "RB"
+    ],
+    "minStats": {
+      "carries": 200,
+      "rushing_yards": 1100
+    },
+    "columns": [
+      {
+        "stat": "rushing_yards",
+        "label": "Rush Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "rushing_tds",
+        "label": "Rush TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "ypc",
+        "label": "Yds/Carry",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "receptions",
+        "label": "Rec",
+        "fmt": "int"
+      },
+      {
+        "stat": "receiving_yards",
+        "label": "Rec Yds",
+        "fmt": "comma_int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-qb-mvp",
+    "title": "MVP-caliber QB seasons",
+    "sport": "nfl",
+    "scale": "nfl_qb_fantasy",
+    "positions": [
+      "QB"
+    ],
+    "minStats": {
+      "passing_tds": 28,
+      "passing_yards": 3800
+    },
+    "columns": [
+      {
+        "stat": "passing_yards",
+        "label": "Pass Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "passing_tds",
+        "label": "Pass TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "interceptions",
+        "label": "INT",
+        "fmt": "int"
+      },
+      {
+        "stat": "rushing_yards",
+        "label": "Rush Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "rushing_tds",
+        "label": "Rush TD",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-qb-dual",
+    "title": "Dual-threat QB seasons",
+    "sport": "nfl",
+    "scale": "nfl_qb_fantasy",
+    "positions": [
+      "QB"
+    ],
+    "minStats": {
+      "passing_yards": 2600,
+      "rushing_yards": 400
+    },
+    "columns": [
+      {
+        "stat": "rushing_yards",
+        "label": "Rush Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "rushing_tds",
+        "label": "Rush TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "passing_yards",
+        "label": "Pass Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "passing_tds",
+        "label": "Pass TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "interceptions",
+        "label": "INT",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-rb-receiving",
+    "title": "Pass-catching RB seasons",
+    "sport": "nfl",
+    "scale": "nfl_skill_ppr",
+    "positions": [
+      "RB"
+    ],
+    "minStats": {
+      "receiving_yards": 450,
+      "receptions": 55
+    },
+    "columns": [
+      {
+        "stat": "receptions",
+        "label": "Rec",
+        "fmt": "int"
+      },
+      {
+        "stat": "receiving_yards",
+        "label": "Rec Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "rushing_yards",
+        "label": "Rush Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "receiving_tds",
+        "label": "Rec TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "rushing_tds",
+        "label": "Rush TD",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-wr-deep",
+    "title": "Big-play WR seasons",
+    "sport": "nfl",
+    "scale": "nfl_skill_ppr",
+    "positions": [
+      "WR"
+    ],
+    "minStats": {
+      "receiving_yards": 900,
+      "ypr": 15.5
+    },
+    "columns": [
+      {
+        "stat": "ypr",
+        "label": "Yds/Rec",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "receiving_yards",
+        "label": "Rec Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "receiving_tds",
+        "label": "Rec TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "receptions",
+        "label": "Rec",
+        "fmt": "int"
+      },
+      {
+        "stat": "targets",
+        "label": "Tgts",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-total-fantasy",
+    "title": "All-time fantasy seasons — any position",
+    "sport": "nfl",
+    "scale": "nfl_fantasy",
+    "positions": [
+      "QB",
+      "RB",
+      "TE",
+      "WR"
+    ],
+    "minStats": {
+      "games": 10
+    },
+    "columns": [
+      {
+        "stat": "passing_yards",
+        "label": "Pass Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "passing_tds",
+        "label": "Pass TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "rushing_yards",
+        "label": "Rush Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "rushing_tds",
+        "label": "Rush TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "receptions",
+        "label": "Rec",
+        "fmt": "int"
+      },
+      {
+        "stat": "receiving_yards",
+        "label": "Rec Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "receiving_tds",
+        "label": "Rec TD",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-total-fantasy-era",
+    "title": "Best seasons of all time — era-adjusted",
+    "sport": "nfl",
+    "scale": "nfl_fantasy",
+    "positions": [
+      "QB",
+      "RB",
+      "TE",
+      "WR"
+    ],
+    "minStats": {
+      "games": 10
+    },
+    "columns": [
+      {
+        "stat": "passing_yards",
+        "label": "Pass Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "passing_tds",
+        "label": "Pass TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "rushing_yards",
+        "label": "Rush Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "rushing_tds",
+        "label": "Rush TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "receptions",
+        "label": "Rec",
+        "fmt": "int"
+      },
+      {
+        "stat": "receiving_yards",
+        "label": "Rec Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "receiving_tds",
+        "label": "Rec TD",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": true
+  },
+  {
+    "key": "nfl-te-mismatch",
+    "title": "Mismatch TE seasons",
+    "sport": "nfl",
+    "scale": "nfl_skill_ppr",
+    "positions": [
+      "TE"
+    ],
+    "minStats": {
+      "games": 10,
+      "receiving_yards": 650
+    },
+    "columns": [
+      {
+        "stat": "receiving_yards",
+        "label": "Rec Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "receptions",
+        "label": "Rec",
+        "fmt": "int"
+      },
+      {
+        "stat": "receiving_tds",
+        "label": "Rec TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "ypr",
+        "label": "Yds/Rec",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "targets",
+        "label": "Tgts",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nba-scorers",
+    "title": "Elite scoring seasons",
+    "sport": "nba",
+    "scale": "nba_fantasy",
+    "positions": [
+      "C",
+      "F",
+      "G"
+    ],
+    "minStats": {
+      "games": 40,
+      "ppg": 26.0
+    },
+    "columns": [
+      {
+        "stat": "ppg",
+        "label": "PPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "rpg",
+        "label": "RPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "apg",
+        "label": "APG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "spg",
+        "label": "SPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "ts_pct",
+        "label": "TS%",
+        "fmt": "pct1"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nba-bigs",
+    "title": "Dominant big-man seasons",
+    "sport": "nba",
+    "scale": "nba_fantasy",
+    "positions": [
+      "C",
+      "F"
+    ],
+    "minStats": {
+      "games": 40,
+      "rpg": 9.5
+    },
+    "columns": [
+      {
+        "stat": "ppg",
+        "label": "PPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "rpg",
+        "label": "RPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "bpg",
+        "label": "BPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "apg",
+        "label": "APG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "ts_pct",
+        "label": "TS%",
+        "fmt": "pct1"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nba-playmakers",
+    "title": "Floor-general seasons",
+    "sport": "nba",
+    "scale": "nba_fantasy",
+    "positions": [
+      "C",
+      "F",
+      "G"
+    ],
+    "minStats": {
+      "apg": 7.0,
+      "games": 40
+    },
+    "columns": [
+      {
+        "stat": "ppg",
+        "label": "PPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "apg",
+        "label": "APG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "rpg",
+        "label": "RPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "spg",
+        "label": "SPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "ts_pct",
+        "label": "TS%",
+        "fmt": "pct1"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nba-rim-protectors",
+    "title": "Rim-protector seasons",
+    "sport": "nba",
+    "scale": "nba_fantasy",
+    "positions": [
+      "C",
+      "F"
+    ],
+    "minStats": {
+      "bpg": 2.0,
+      "games": 40
+    },
+    "columns": [
+      {
+        "stat": "bpg",
+        "label": "BPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "rpg",
+        "label": "RPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "ppg",
+        "label": "PPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "spg",
+        "label": "SPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "ts_pct",
+        "label": "TS%",
+        "fmt": "pct1"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nba-two-way-guards",
+    "title": "Two-way guard seasons",
+    "sport": "nba",
+    "scale": "nba_fantasy",
+    "positions": [
+      "G"
+    ],
+    "minStats": {
+      "games": 40,
+      "spg": 1.8
+    },
+    "columns": [
+      {
+        "stat": "spg",
+        "label": "SPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "ppg",
+        "label": "PPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "apg",
+        "label": "APG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "rpg",
+        "label": "RPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "ts_pct",
+        "label": "TS%",
+        "fmt": "pct1"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nba-double-double",
+    "title": "Double-double machine seasons",
+    "sport": "nba",
+    "scale": "nba_fantasy",
+    "positions": [
+      "C",
+      "F"
+    ],
+    "minStats": {
+      "games": 40,
+      "ppg": 18.0,
+      "rpg": 10.0
+    },
+    "columns": [
+      {
+        "stat": "ppg",
+        "label": "PPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "rpg",
+        "label": "RPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "apg",
+        "label": "APG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "bpg",
+        "label": "BPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "ts_pct",
+        "label": "TS%",
+        "fmt": "pct1"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-game-rb-explosion",
+    "title": "Explosive single-game RB performances",
+    "sport": "nfl",
+    "scale": "nfl_skill_ppr_game",
+    "positions": [
+      "RB"
+    ],
+    "minStats": {
+      "rushing_yards": 120
+    },
+    "columns": [
+      {
+        "stat": "rushing_yards",
+        "label": "Rush Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "rushing_tds",
+        "label": "Rush TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "ypc",
+        "label": "Yds/Carry",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "receiving_yards",
+        "label": "Rec Yds",
+        "fmt": "comma_int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "game",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-game-wr-explosion",
+    "title": "Explosive single-game WR performances",
+    "sport": "nfl",
+    "scale": "nfl_skill_ppr_game",
+    "positions": [
+      "WR"
+    ],
+    "minStats": {
+      "receiving_yards": 130
+    },
+    "columns": [
+      {
+        "stat": "receiving_yards",
+        "label": "Rec Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "receptions",
+        "label": "Rec",
+        "fmt": "int"
+      },
+      {
+        "stat": "receiving_tds",
+        "label": "Rec TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "ypr",
+        "label": "Yds/Rec",
+        "fmt": "dec1"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "game",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-game-qb-explosion",
+    "title": "Explosive single-game QB performances",
+    "sport": "nfl",
+    "scale": "nfl_qb_fantasy_game",
+    "positions": [
+      "QB"
+    ],
+    "minStats": {
+      "passing_yards": 300
+    },
+    "columns": [
+      {
+        "stat": "passing_yards",
+        "label": "Pass Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "passing_tds",
+        "label": "Pass TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "interceptions",
+        "label": "INT",
+        "fmt": "int"
+      },
+      {
+        "stat": "rushing_yards",
+        "label": "Rush Yds",
+        "fmt": "comma_int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "game",
+    "eraAdjusted": false
+  },
+  {
+    "key": "baseball-power-hitters",
+    "title": "Elite power-hitting seasons",
+    "sport": "baseball",
+    "scale": "baseball_hitter_fantasy",
+    "positions": [
+      "H"
+    ],
+    "minStats": {
+      "plate_appearances": 300
+    },
+    "columns": [
+      {
+        "stat": "home_runs",
+        "label": "HR",
+        "fmt": "int"
+      },
+      {
+        "stat": "rbi",
+        "label": "RBI",
+        "fmt": "int"
+      },
+      {
+        "stat": "avg",
+        "label": "AVG",
+        "fmt": "dec3"
+      },
+      {
+        "stat": "ops",
+        "label": "OPS",
+        "fmt": "dec3"
+      },
+      {
+        "stat": "runs",
+        "label": "R",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "baseball-ace-pitchers",
+    "title": "Ace pitching seasons",
+    "sport": "baseball",
+    "scale": "baseball_pitcher_fantasy",
+    "positions": [
+      "P"
+    ],
+    "minStats": {
+      "innings_pitched": 80
+    },
+    "columns": [
+      {
+        "stat": "strike_outs",
+        "label": "K",
+        "fmt": "int"
+      },
+      {
+        "stat": "wins",
+        "label": "W",
+        "fmt": "int"
+      },
+      {
+        "stat": "era",
+        "label": "ERA",
+        "fmt": "dec2"
+      },
+      {
+        "stat": "whip",
+        "label": "WHIP",
+        "fmt": "dec2"
+      },
+      {
+        "stat": "innings_pitched",
+        "label": "IP",
+        "fmt": "dec1"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "soccer-attackers",
+    "title": "Elite goal-scoring seasons",
+    "sport": "soccer",
+    "scale": "soccer_attacker_fantasy",
+    "positions": [
+      "FW",
+      "MF"
+    ],
+    "minStats": {
+      "appearances": 15
+    },
+    "columns": [
+      {
+        "stat": "goals",
+        "label": "Goals",
+        "fmt": "int"
+      },
+      {
+        "stat": "assists",
+        "label": "Assists",
+        "fmt": "int"
+      },
+      {
+        "stat": "appearances",
+        "label": "Apps",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "soccer-defenders",
+    "title": "Clean-sheet defender & keeper seasons",
+    "sport": "soccer",
+    "scale": "soccer_defender_fantasy",
+    "positions": [
+      "DF",
+      "GK"
+    ],
+    "minStats": {
+      "appearances": 15
+    },
+    "columns": [
+      {
+        "stat": "clean_sheets",
+        "label": "Clean Sheets",
+        "fmt": "int"
+      },
+      {
+        "stat": "appearances",
+        "label": "Apps",
+        "fmt": "int"
+      },
+      {
+        "stat": "goals",
+        "label": "Goals",
+        "fmt": "int"
+      },
+      {
+        "stat": "assists",
+        "label": "Assists",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "tennis-tour-dominance",
+    "title": "Dominant tour seasons",
+    "sport": "tennis",
+    "scale": "tennis_fantasy",
+    "positions": [
+      "Player"
+    ],
+    "minStats": {
+      "matches_won": 40
+    },
+    "columns": [
+      {
+        "stat": "matches_won",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "titles",
+        "label": "Titles",
+        "fmt": "int"
+      },
+      {
+        "stat": "grand_slams",
+        "label": "Slams",
+        "fmt": "int"
+      },
+      {
+        "stat": "matches_lost",
+        "label": "Losses",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "tennis-grand-slam",
+    "title": "Grand Slam-era seasons",
+    "sport": "tennis",
+    "scale": "tennis_fantasy",
+    "positions": [
+      "Player"
+    ],
+    "minStats": {
+      "grand_slams": 2
+    },
+    "columns": [
+      {
+        "stat": "grand_slams",
+        "label": "Slams",
+        "fmt": "int"
+      },
+      {
+        "stat": "titles",
+        "label": "Titles",
+        "fmt": "int"
+      },
+      {
+        "stat": "matches_won",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "matches_lost",
+        "label": "Losses",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-career-fantasy",
+    "title": "All-time career fantasy leaders",
+    "sport": "nfl",
+    "scale": "nfl_fantasy",
+    "positions": [
+      "QB",
+      "RB",
+      "TE",
+      "WR"
+    ],
+    "minStats": {
+      "games": 80
+    },
+    "columns": [
+      {
+        "stat": "passing_yards",
+        "label": "Pass Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "passing_tds",
+        "label": "Pass TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "rushing_yards",
+        "label": "Rush Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "rushing_tds",
+        "label": "Rush TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "receptions",
+        "label": "Rec",
+        "fmt": "int"
+      },
+      {
+        "stat": "receiving_yards",
+        "label": "Rec Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "receiving_tds",
+        "label": "Rec TD",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "career",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nba-career-fantasy",
+    "title": "All-time career leaders",
+    "sport": "nba",
+    "scale": "nba_fantasy",
+    "positions": [
+      "C",
+      "F",
+      "G"
+    ],
+    "minStats": {
+      "games": 300
+    },
+    "columns": [
+      {
+        "stat": "ppg",
+        "label": "PPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "rpg",
+        "label": "RPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "apg",
+        "label": "APG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "spg",
+        "label": "SPG",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "bpg",
+        "label": "BPG",
+        "fmt": "dec1"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "career",
+    "eraAdjusted": false
+  },
+  {
+    "key": "baseball-career-hitters",
+    "title": "Career power-hitting leaders",
+    "sport": "baseball",
+    "scale": "baseball_hitter_fantasy",
+    "positions": [
+      "H"
+    ],
+    "minStats": {
+      "plate_appearances": 3000
+    },
+    "columns": [
+      {
+        "stat": "home_runs",
+        "label": "HR",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "rbi",
+        "label": "RBI",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "avg",
+        "label": "AVG",
+        "fmt": "dec3"
+      },
+      {
+        "stat": "ops",
+        "label": "OPS",
+        "fmt": "dec3"
+      },
+      {
+        "stat": "runs",
+        "label": "R",
+        "fmt": "comma_int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "career",
+    "eraAdjusted": false
+  },
+  {
+    "key": "baseball-career-pitchers",
+    "title": "Career pitching leaders",
+    "sport": "baseball",
+    "scale": "baseball_pitcher_fantasy",
+    "positions": [
+      "P"
+    ],
+    "minStats": {
+      "innings_pitched": 800
+    },
+    "columns": [
+      {
+        "stat": "strike_outs",
+        "label": "K",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "wins",
+        "label": "W",
+        "fmt": "int"
+      },
+      {
+        "stat": "era",
+        "label": "ERA",
+        "fmt": "dec2"
+      },
+      {
+        "stat": "whip",
+        "label": "WHIP",
+        "fmt": "dec2"
+      },
+      {
+        "stat": "innings_pitched",
+        "label": "IP",
+        "fmt": "comma_int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "career",
+    "eraAdjusted": false
+  }
+]

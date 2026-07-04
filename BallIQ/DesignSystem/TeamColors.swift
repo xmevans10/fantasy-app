@@ -39,19 +39,31 @@ enum TeamColors {
 
     private static func normalize(_ abbr: String, sport: Sport) -> String {
         let up = abbr.uppercased()
-        let aliases: [String: String] = sport == .nfl
-            ? ["LA": "LAR", "STL": "LAR", "OAK": "LV", "LVR": "LV", "SD": "LAC", "SDG": "LAC",
-               "WSH": "WAS", "JAC": "JAX", "ARZ": "ARI", "GNB": "GB", "KAN": "KC", "NWE": "NE",
-               "NOR": "NO", "SFO": "SF", "TAM": "TB", "CLV": "CLE", "BLT": "BAL", "HST": "HOU"]
-            : ["NO": "NOP", "NOH": "NOP", "NJN": "BKN", "NYN": "BKN", "PHO": "PHX", "SAN": "SAS",
-               "GS": "GSW", "NY": "NYK", "UTAH": "UTA", "CHO": "CHA", "SEA": "OKC"]
+        let aliases: [String: String]
+        switch sport {
+        case .nfl:
+            aliases = ["LA": "LAR", "STL": "LAR", "OAK": "LV", "LVR": "LV", "SD": "LAC", "SDG": "LAC",
+                       "WSH": "WAS", "JAC": "JAX", "ARZ": "ARI", "GNB": "GB", "KAN": "KC", "NWE": "NE",
+                       "NOR": "NO", "SFO": "SF", "TAM": "TB", "CLV": "CLE", "BLT": "BAL", "HST": "HOU"]
+        case .nba:
+            aliases = ["NO": "NOP", "NOH": "NOP", "NJN": "BKN", "NYN": "BKN", "PHO": "PHX", "SAN": "SAS",
+                       "GS": "GSW", "NY": "NYK", "UTAH": "UTA", "CHO": "CHA", "SEA": "OKC"]
+        case .baseball, .soccer, .tennis:
+            aliases = [:]   // no historical-franchise collisions to normalize yet
+        }
         return aliases[up] ?? up
     }
 
     // MARK: - Tables (primary, secondary) hex
 
     private static func table(for sport: Sport) -> [String: (UInt32, UInt32)] {
-        sport == .nfl ? nfl : nba
+        switch sport {
+        case .nfl: return nfl
+        case .nba: return nba
+        case .baseball: return mlb
+        case .soccer: return soccer
+        case .tennis: return [:]   // no team/club — every lookup falls through to `fallback`
+        }
     }
 
     private static let nfl: [String: (UInt32, UInt32)] = [
@@ -79,5 +91,28 @@ enum TeamColors {
         "ORL": (0x0077C0, 0xC4CED4), "PHI": (0x006BB6, 0xED174C), "PHX": (0x1D1160, 0xE56020),
         "POR": (0xE03A3E, 0x000000), "SAC": (0x5A2D81, 0x63727A), "SAS": (0xC4CED4, 0x000000),
         "TOR": (0xCE1141, 0x000000), "UTA": (0x002B5C, 0x00471B), "WAS": (0x002B5C, 0xE31837),
+    ]
+
+    /// All 30 MLB clubs — matches `providers/mlb_stats.py`'s `TEAM_ABBR` id table exactly.
+    private static let mlb: [String: (UInt32, UInt32)] = [
+        "LAA": (0xBA0021, 0x003263), "AZ":  (0xA71930, 0x000000), "BAL": (0xDF4601, 0x000000),
+        "BOS": (0xBD3039, 0x0D2B56), "CHC": (0x0E3386, 0xCC3433), "CIN": (0xC6011F, 0x000000),
+        "CLE": (0x00385D, 0xE50022), "COL": (0x33006F, 0x000000), "DET": (0x0C2340, 0xFA4616),
+        "HOU": (0x002D62, 0xEB6E1F), "KC":  (0x004687, 0xBD9B60), "LAD": (0x005A9C, 0xEF3E42),
+        "WSH": (0xAB0003, 0x14225A), "NYM": (0x002D72, 0xFF5910), "ATH": (0x003831, 0xEFB21E),
+        "PIT": (0x27251F, 0xFDB827), "SD":  (0x2F241D, 0xFFC425), "SEA": (0x0C2C56, 0x005C5C),
+        "SF":  (0xFD5A1E, 0x000000), "STL": (0xC41E3A, 0x0C2340), "TB":  (0x092C5C, 0x8FBCE6),
+        "TEX": (0x003278, 0xC0111F), "TOR": (0x134A8E, 0xE8291C), "MIN": (0x002B5C, 0xD31145),
+        "PHI": (0xE81828, 0x002D72), "ATL": (0x13274F, 0xCE1141), "CWS": (0x27251F, 0xC4CED4),
+        "MIA": (0x00A3E0, 0xEF3340), "NYY": (0x0C2340, 0xC4CED3), "MIL": (0x0A2351, 0xB6922E),
+    ]
+
+    /// A handful of clubs the seed-only soccer content actually references — not a full
+    /// league table (no live soccer provider yet, see `providers/seed.py`).
+    private static let soccer: [String: (UInt32, UInt32)] = [
+        "MCI": (0x6CABDD, 0x1C2C5B), "FCB": (0x004D98, 0xA50044), "RMA": (0xFEBE10, 0x00529F),
+        "LIV": (0xC8102E, 0xF6EB61), "BAY": (0xDC052D, 0x0066B2), "PSG": (0x004170, 0xDA291C),
+        "TOT": (0x132257, 0xFFFFFF), "CHE": (0x034694, 0xDBA111), "MUN": (0xDA291C, 0xFBE122),
+        "BUR": (0x6C1D45, 0x99D6EA), "AVL": (0x670E36, 0x95BFE5),
     ]
 }

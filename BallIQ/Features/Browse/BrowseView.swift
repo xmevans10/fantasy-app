@@ -8,12 +8,16 @@ struct BrowseView: View {
 
     @State private var format: BrowseFormat = .keep4
     @State private var sportFilter: SportFilter = .all
+    @State private var decadeFilter: DecadeFilter = .all
+    @State private var searchText = ""
+    @State private var searchExpanded = false
     @State private var keep4: [Keep4Puzzle] = []
     @State private var whoami: [WhoAmIPuzzle] = []
     @State private var loading = false
 
     @State private var activeKeep4: Keep4Puzzle?
     @State private var activeWhoAmI: WhoAmIPuzzle?
+    @State private var shareTarget: SharablePuzzle?
 
     enum BrowseFormat: String, CaseIterable {
         case keep4, whoami
@@ -36,39 +40,42 @@ struct BrowseView: View {
         .fullScreenCover(item: $activeWhoAmI) { p in
             WhoAmIGameView(puzzle: p, ranked: false).environmentObject(container)
         }
+        .sheet(item: $shareTarget) { target in
+            PuzzleShareSheet(puzzle: target, surface: "puzzle_browse")
+                .environmentObject(container)
+        }
     }
 
     private var refreshKey: String { "\(format.rawValue)-\(sportFilter.rawValue)" }
-    private var currentEmpty: Bool { format == .keep4 ? keep4.isEmpty : whoami.isEmpty }
+    private var currentEmpty: Bool { format == .keep4 ? filteredKeep4.isEmpty : whoami.isEmpty }
 
     // MARK: - Controls
 
+    /// One collapsed control row instead of a stack of always-expanded chip rows: Format/
+    /// Sport/Decade are `PrimeDropdown`s (native `Menu`), search collapses to an icon until
+    /// tapped. Search only applies to K4C4 — Who Am I? archive cards are deliberately
+    /// anonymous ("Mystery player #n"); searching would leak answers — so it and Decade
+    /// (a K4C4-only facet, see `BrowseFilters`) drop out of the row for that tab.
     private var controls: some View {
-        VStack(spacing: 10) {
-            Picker("Format", selection: $format) {
-                ForEach(BrowseFormat.allCases, id: \.self) { Text($0.title).tag($0) }
-            }
-            .pickerStyle(.segmented)
-
-            HStack(spacing: 8) {
-                ForEach(SportFilter.allCases) { f in
-                    pill(f.title, active: sportFilter == f) { sportFilter = f }
+        HStack(spacing: 8) {
+            if searchExpanded {
+                PrimeExpandingSearch(placeholder: "Search themes or players",
+                                    text: $searchText, isExpanded: $searchExpanded)
+            } else {
+                PrimeDropdown(options: BrowseFormat.allCases, selection: $format,
+                             title: \.title, isDefault: { _ in false })
+                PrimeDropdown(options: SportFilter.allCases, selection: $sportFilter, title: \.title)
+                if format == .keep4 {
+                    PrimeDropdown(options: DecadeFilter.allCases, selection: $decadeFilter, title: \.title)
                 }
-                Spacer()
+                Spacer(minLength: 0)
+                if format == .keep4 {
+                    PrimeExpandingSearch(placeholder: "Search themes or players",
+                                        text: $searchText, isExpanded: $searchExpanded)
+                }
             }
         }
         .padding(16)
-    }
-
-    private func pill(_ title: String, active: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title.uppercased()).font(.label12)
-                .foregroundStyle(active ? Color.onAccent : Color.textPrimary)
-                .padding(.horizontal, 14).padding(.vertical, 8)
-                .background(active ? Color.accentFill : Color.surfaceMuted)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Content
@@ -94,11 +101,19 @@ struct BrowseView: View {
         }
     }
 
+    private var filteredKeep4: [Keep4Puzzle] {
+        keep4.filter {
+            BrowseFilters.matchesDecade($0, filter: decadeFilter) &&
+                PuzzleSearch.matches(query: searchText, keep4: $0)
+        }
+    }
+
     /// Themes repeat across many distinct puzzles, so number duplicates ("… #2") to tell them apart.
     private var numberedKeep4: [(puzzle: Keep4Puzzle, title: String)] {
-        let totals = Dictionary(grouping: keep4, by: \.theme).mapValues(\.count)
+        let visible = filteredKeep4
+        let totals = Dictionary(grouping: visible, by: \.theme).mapValues(\.count)
         var seen: [String: Int] = [:]
-        return keep4.map { p in
+        return visible.map { p in
             seen[p.theme, default: 0] += 1
             let title = (totals[p.theme] ?? 1) > 1 ? "\(p.theme) #\(seen[p.theme]!)" : p.theme
             return (p, title)
@@ -107,10 +122,12 @@ struct BrowseView: View {
 
     private func card(keep4 p: Keep4Puzzle, title: String) -> some View {
         DailyGameCard(formatName: "K4C4", symbol: p.sport.symbol, sport: p.sport,
-                      title: title, subtitle: "\(p.players.count) seasons · archive",
+                      title: title, subtitle: "\(p.players.count) \(p.puzzleGrain().countNoun) · archive",
+                      scoring: p.scoringKind(), grain: p.puzzleGrain(),
                       completed: false, accent: .accentFill, onAccent: .onAccent) {
             activeKeep4 = p
         }
+        secondaryAction: { shareTarget = SharablePuzzle(keep4: p) }
     }
 
     /// Who Am I? has no title (revealing one would spoil the answer) — show a neutral numbered label.
@@ -120,19 +137,16 @@ struct BrowseView: View {
                       completed: false, accent: .voltFill, onAccent: .onVolt) {
             activeWhoAmI = p
         }
+        secondaryAction: { shareTarget = SharablePuzzle(whoAmI: p) }
     }
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "tray.full")
-                .font(.system(size: 40)).foregroundStyle(Color.textMuted)
-            Text("Nothing here yet").font(.heading).foregroundStyle(Color.textPrimary)
-            Text("Daily puzzles will fill this archive.")
-                .font(.body14).foregroundStyle(Color.textMuted)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
+        let filtersActive = format == .keep4 && (decadeFilter != .all || !searchText.isEmpty)
+        return EmptyStateView(symbol: filtersActive ? "line.3.horizontal.decrease.circle" : "tray.full",
+                              title: filtersActive ? "No puzzles match" : "Nothing here yet",
+                              message: filtersActive
+                                  ? "Try a different search or decade."
+                                  : "Daily puzzles will fill this archive.")
     }
 
     // MARK: - Data
@@ -144,6 +158,10 @@ struct BrowseView: View {
             keep4 = await container.puzzles.allKeep4(for: sportFilter)
         } else {
             whoami = await container.puzzles.allWhoAmI(for: sportFilter)
+        }
+        if let query = DebugLaunch.searchQuery { searchText = query }
+        if DebugLaunch.autoOpenShare, shareTarget == nil, let first = filteredKeep4.first {
+            shareTarget = SharablePuzzle(keep4: first)
         }
     }
 }

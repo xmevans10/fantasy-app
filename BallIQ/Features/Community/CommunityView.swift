@@ -8,7 +8,10 @@ struct CommunityView: View {
     @State private var format: CommunityFormat = .keep4
     @State private var sort: CommunitySort = .recent
     @State private var sportFilter: SportFilter = .all
+    @State private var searchText = ""
+    @State private var searchExpanded = false
     @State private var items: [CommunitySummary] = []
+    @State private var authors: [String: String] = [:]   // author_id → username
     @State private var loading = false
     @State private var loadFailed = false
 
@@ -16,6 +19,14 @@ struct CommunityView: View {
     @State private var activeKeep4: Keep4Puzzle?
     @State private var activeWhoAmI: WhoAmIPuzzle?
     @State private var pendingID: String?      // community id for the open game
+    @State private var pendingAuthor: String?  // its author's username (for the explainer)
+
+    @State private var menuTarget: CommunitySummary?   // card whose overflow menu is open
+    @State private var showCardMenu = false
+    @State private var shareTarget: SharablePuzzle?
+    @State private var reportTarget: CommunitySummary?
+    @State private var showReportDialog = false
+    @State private var showReportSent = false
 
     enum CommunityFormat: String, CaseIterable { case keep4, whoami
         var title: String { self == .keep4 ? "K4C4" : "Who Am I?" }
@@ -32,7 +43,7 @@ struct CommunityView: View {
             .navigationTitle("Community")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) { Wordmark(size: 22) }
+                ToolbarItem(placement: .topBarLeading) { Wordmark(size: 22) }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showCreate = true } label: { Image(systemName: "plus.circle.fill") }
                         .accessibilityLabel("Create puzzle")
@@ -44,53 +55,81 @@ struct CommunityView: View {
                 CreateView().environmentObject(container)
             }
             .fullScreenCover(item: $activeKeep4) { p in
-                Keep4GameView(puzzle: p, ranked: false, communityID: pendingID)
+                Keep4GameView(puzzle: p, ranked: false, communityID: pendingID,
+                              authorName: pendingAuthor)
                     .environmentObject(container)
             }
             .fullScreenCover(item: $activeWhoAmI) { p in
                 WhoAmIGameView(puzzle: p, ranked: false, communityID: pendingID)
                     .environmentObject(container)
             }
+            .confirmationDialog("Puzzle options", isPresented: $showCardMenu) {
+                Button("Share puzzle") {
+                    if let item = menuTarget { shareTarget = SharablePuzzle(community: item) }
+                }
+                Button("Report puzzle", role: .destructive) {
+                    reportTarget = menuTarget
+                    showReportDialog = true
+                }
+                Button("Cancel", role: .cancel) {}
+            }
+            .sheet(item: $shareTarget) { target in
+                PuzzleShareSheet(puzzle: target, surface: "puzzle_community")
+                    .environmentObject(container)
+            }
+            .reportReasonDialog(isPresented: $showReportDialog) { reason in report(reason: reason) }
+            .alert("Report sent", isPresented: $showReportSent) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Thanks — we'll take a look.")
+            }
         }
     }
 
-    private var refreshKey: String { "\(format.rawValue)-\(sort == .popular)-\(sportFilter.rawValue)" }
+    /// Fires the report, gives haptic + confirmation feedback, and resets the picker state.
+    /// Best-effort (matches `reportCommunity`'s own `try?` fire-and-forget), so the confirmation
+    /// fires optimistically rather than waiting on a success signal that doesn't exist.
+    private func report(reason: String) {
+        guard let item = reportTarget else { return }
+        reportTarget = nil
+        Task {
+            await container.reportCommunity(id: item.id, reason: reason)
+            Haptics.success()
+            showReportSent = true
+        }
+    }
+
+    private var refreshKey: String { "\(format.rawValue)-\(sort)-\(sportFilter.rawValue)" }
+
+    private func sortTitle(_ s: CommunitySort) -> String {
+        switch s {
+        case .recent: return "New"
+        case .popular: return "Popular"
+        case .week: return "This Week"
+        }
+    }
 
     // MARK: - Controls
 
+    /// One collapsed control row instead of a stack of always-expanded chip rows: Format/
+    /// Sport/Sort are `PrimeDropdown`s (native `Menu`), search collapses to an icon until
+    /// tapped — mirrors Browse's redesigned row so the two browsing surfaces feel like one
+    /// system.
     private var controls: some View {
-        VStack(spacing: 10) {
-            Picker("Format", selection: $format) {
-                ForEach(CommunityFormat.allCases, id: \.self) { Text($0.title).tag($0) }
-            }
-            .pickerStyle(.segmented)
-
-            HStack(spacing: 8) {
-                ForEach(SportFilter.allCases) { f in
-                    pill(f.title, active: sportFilter == f) { sportFilter = f }
-                }
-                Spacer()
-                pill(sort == .recent ? "New" : "Popular", active: false, systemImage: "arrow.up.arrow.down") {
-                    sort = sort == .recent ? .popular : .recent
-                }
+        HStack(spacing: 8) {
+            if searchExpanded {
+                PrimeExpandingSearch(placeholder: "Search titles", text: $searchText, isExpanded: $searchExpanded)
+            } else {
+                PrimeDropdown(options: CommunityFormat.allCases, selection: $format,
+                             title: \.title, isDefault: { _ in false })
+                PrimeDropdown(options: SportFilter.allCases, selection: $sportFilter, title: \.title)
+                PrimeDropdown(options: [CommunitySort.recent, .popular, .week], selection: $sort,
+                             title: sortTitle, isDefault: { $0 == .recent })
+                Spacer(minLength: 0)
+                PrimeExpandingSearch(placeholder: "Search titles", text: $searchText, isExpanded: $searchExpanded)
             }
         }
         .padding(16)
-    }
-
-    private func pill(_ title: String, active: Bool, systemImage: String? = nil,
-                      action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                if let systemImage { Image(systemName: systemImage).font(.system(size: 11)) }
-                Text(title.uppercased()).font(.label12)
-            }
-            .foregroundStyle(active ? Color.onAccent : Color.textPrimary)
-            .padding(.horizontal, 14).padding(.vertical, 8)
-            .background(active ? Color.accentFill : Color.surfaceMuted)
-            .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Content
@@ -102,23 +141,44 @@ struct CommunityView: View {
             errorState
         } else if items.isEmpty {
             emptyState
+        } else if visibleItems.isEmpty {
+            EmptyStateView(symbol: "line.3.horizontal.decrease.circle",
+                           title: "No puzzles match",
+                           message: "Try a different search.")
         } else {
             ScrollView {
                 LazyVStack(spacing: 12) {
                     if loadFailed { failedBanner }
-                    ForEach(items) { item in
-                        DailyGameCard(
-                            formatName: item.format == "keep4" ? "K4C4" : "Who Am I?",
-                            symbol: item.sport.symbol, sport: item.sport,
-                            title: item.title,
-                            subtitle: "\(item.playCount) plays · community",
-                            completed: false, accent: .voltFill, onAccent: .onVolt
-                        ) { Task { await open(item) } }
-                    }
+                    ForEach(visibleItems) { item in communityCard(item) }
                 }
                 .padding(16)
             }
         }
+    }
+
+    /// The fetched feed narrowed by the search field (client-side — see `PuzzleSearch`).
+    private var visibleItems: [CommunitySummary] {
+        items.filter { PuzzleSearch.matches(query: searchText, community: $0) }
+    }
+
+    /// A community feed card. Human-made puzzles get the warm treatment — a warm-orange header
+    /// band and a soft warm body tint vs the daily cards' cool blue/white — plus the grading
+    /// badge (K4C4 only) and the author's name, so "someone's opinion" reads at a glance.
+    private func communityCard(_ item: CommunitySummary) -> some View {
+        let author = authors[item.authorId].map { "by @\($0)" } ?? "community"
+        let plays = item.playCount == 1 ? "1 play" : "\(item.playCount) plays"
+        return DailyGameCard(
+            formatName: item.format == "keep4" ? "K4C4" : "Who Am I?",
+            symbol: item.sport.symbol, sport: item.sport,
+            title: item.title,
+            subtitle: "\(plays) · \(author)",
+            description: item.description,
+            scoring: item.format == "keep4" ? item.scoringKind : nil,
+            grain: item.format == "keep4" ? item.grainKind : nil,
+            completed: false, accent: .warningFill, onAccent: .onWarning,
+            bodyFill: .warningBg
+        ) { Task { await open(item) } }
+        secondaryAction: { menuTarget = item; showCardMenu = true }
     }
 
     /// Subtle banner over a still-populated list: the last refresh failed but we kept the prior items.
@@ -139,37 +199,17 @@ struct CommunityView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "square.stack.3d.up.slash")
-                .font(.system(size: 40)).foregroundStyle(Color.textMuted)
-            Text("No community puzzles yet").font(.heading).foregroundStyle(Color.textPrimary)
-            Text("Be the first — tap ＋ to cook one up.")
-                .font(.body14).foregroundStyle(Color.textMuted)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
+        EmptyStateView(symbol: "square.stack.3d.up.slash",
+                       title: "No community puzzles yet",
+                       message: "Be the first — tap ＋ to cook one up.")
     }
 
     /// Shown only when we have *no* puzzles to fall back on and the fetch failed.
     private var errorState: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "wifi.exclamationmark")
-                .font(.system(size: 40)).foregroundStyle(Color.textMuted)
-            Text("Couldn't load community").font(.heading).foregroundStyle(Color.textPrimary)
-            Text("Check your connection and try again.")
-                .font(.body14).foregroundStyle(Color.textMuted)
-            Button { Task { await load() } } label: {
-                Text("Retry").font(.label12).foregroundStyle(Color.onAccent)
-                    .padding(.horizontal, 20).padding(.vertical, 10)
-                    .background(Color.accentFill)
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
+        EmptyStateView(symbol: "wifi.exclamationmark",
+                       title: "Couldn't load community",
+                       message: "Check your connection and try again.",
+                       actionTitle: "Retry") { Task { await load() } }
     }
 
     // MARK: - Data
@@ -179,12 +219,22 @@ struct CommunityView: View {
         loading = true
         defer { loading = false }
         do {
-            let fetched = try await community.feed(format: format.rawValue,
+            var fetched = try await community.feed(format: format.rawValue,
                                                    sport: sportFilter.sport, sort: sort)
+            if sort == .week, let counts = try? await community.weeklyPlayCounts() {
+                // RPC not deployed / transient failure → keep the fetched recent order.
+                fetched = CommunityTrending.sorted(items: fetched, weeklyPlays: counts)
+            }
             items = Self.merge(prior: items, fetched: fetched)
             loadFailed = false
+            let missing = Set(items.map(\.authorId)).subtracting(authors.keys)
+            authors.merge(await community.authorNames(ids: missing)) { _, new in new }
+        } catch is CancellationError {
+            // SwiftUI cancelled this load (e.g. a `.refreshable` gesture torn down mid-flight)
+            // rather than the request actually failing — leave the prior state untouched.
         } catch {
             // Transient failure: keep the last good list and surface a retry, never blank it.
+            print("CommunityView.load failed: \(error)")
             items = Self.merge(prior: items, fetched: nil)
             loadFailed = true
         }
@@ -198,7 +248,9 @@ struct CommunityView: View {
 
     private func open(_ item: CommunitySummary) async {
         guard let community = container.community else { return }
+        container.track(.communityPuzzlePlayed, ["source": "community", "puzzle_id": item.id])
         pendingID = item.id
+        pendingAuthor = authors[item.authorId]
         if item.format == "keep4" {
             activeKeep4 = await community.keep4(id: item.id)
         } else {

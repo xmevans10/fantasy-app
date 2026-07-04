@@ -1,21 +1,29 @@
 import SwiftUI
 
-/// Build a K4C4 from real player-seasons. Three decoupled axes — *how it's scored* (a
-/// composable rule), *who's in the pool* (free discovery facets), and *the 8 picks* — with a
-/// live answer preview. Discovery facets never touch the selection: the creator curates the
+/// Build a K4C4 from real player-seasons. Three decoupled axes — *how it's scored* (PPR / Half
+/// PPR / Standard / Vibes), *who's in the pool* (free discovery facets), and *the 8 picks* — with
+/// a live answer preview. Discovery facets never touch the selection: the creator curates the
 /// pool to fit their theme; the UI doesn't filter for them.
 struct CreateKeep4View: View {
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
 
     @State private var title = ""
+    @State private var description = ""
     @State private var query = CatalogQuery(sport: .nfl)
     @State private var scoringSport: Sport = .nfl
-    @State private var terms: [ScoringRule.Term] = CreateKeep4View.integerized(ScoringRule.preset("nfl_skill_ppr")!.terms)
-    /// The active preset's 0–100 display bounds — `terms` alone doesn't carry this, so it must
-    /// be tracked alongside whenever a preset is selected (see `applyPreset`).
-    @State private var displayScale: ScoringRule.FixedScale? = ScoringRule.preset("nfl_skill_ppr")!.displayScale
+    @State private var scoringChoice: ScoringChoice = .ppr
+    /// Era-adjust lever for the three fantasy-points choices (irrelevant for Vibes, which has
+    /// no formula at all).
     @State private var eraAdjusted = false
+    /// Daily-theme template in effect (M10 unification). While set, the published card's
+    /// stat columns come from the theme — exactly what the daily pipeline bakes — instead
+    /// of being derived from the scoring preset. Cleared by any manual scoring change.
+    @State private var activeTheme: Keep4Theme?
+    /// Season-grain themes with an app-mirrored scale, from the bundled keep4_themes.json.
+    private let themes: [Keep4Theme] = Keep4Theme.bundled.filter(\.isCreatable)
+    /// The 8 picks. Order is meaningless for the three fantasy-points choices (the preview
+    /// sorts by grade) but IS the ranking itself for Vibes — drag to reorder there.
     @State private var selected: [CatalogSeason] = []
     @State private var results: [CatalogSeason] = []
     @State private var searching = false
@@ -24,45 +32,29 @@ struct CreateKeep4View: View {
     @State private var error: String?
 
     private let target = 8
-    private var rule: ScoringRule { ScoringRule(terms: terms, displayScale: displayScale).eraAdjusted(eraAdjusted) }
-    /// A fantasy-points rule (coefficients in `perUnit`, no editable weights/era-adjust).
-    private var isPointsRule: Bool { ScoringRule(terms: terms).isPoints }
+    private var isVibes: Bool { scoringChoice == .vibes }
+    /// nil for Vibes (no formula) or if a preset key can't be resolved.
+    private var rule: ScoringRule? {
+        guard !isVibes else { return nil }
+        guard let key = activeTheme?.scale ?? scoringChoice.presetKey(for: scoringSport),
+              let preset = ScoringRule.preset(key) else { return nil }
+        return preset.eraAdjusted(eraAdjusted)
+    }
     private var bounds: ClosedRange<Int> { container.catalog.yearBounds }
     private var canPublish: Bool {
-        selected.count == target && !terms.isEmpty &&
-            !title.trimmingCharacters(in: .whitespaces).isEmpty
+        guard selected.count == target, !title.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        return isVibes || rule != nil
     }
 
-    private func grade(_ s: CatalogSeason) -> Double { rule.grade(s, baselines: container.baselines) }
-
-    /// Each term's share of the total weight, e.g. "57%". The composite normalizes by the sum.
-    private func pct(_ i: Int) -> String {
-        let sum = terms.reduce(0) { $0 + $1.weight }
-        guard sum > 0 else { return "0%" }
-        return "\(Int((terms[i].weight / sum * 100).rounded()))%"
-    }
-
-    /// Presets store fractional weights (0.60/0.25/0.15); convert to clean 1–5 "importance"
-    /// integers (preserving rank order) so the stepper reads sensibly. The percentage readout
-    /// then shows each term's real share.
-    private static func integerized(_ terms: [ScoringRule.Term]) -> [ScoringRule.Term] {
-        // Points rules carry their coefficients in `perUnit`, not the 1–5 weight — leave them be.
-        if terms.contains(where: { if case .points = $0.norm { return true } else { return false } }) {
-            return terms
-        }
-        guard let minW = terms.map(\.weight).filter({ $0 > 0 }).min(), minW > 0 else { return terms }
-        return terms.map { t in
-            let w = min(5, max(1, (t.weight / minW).rounded()))
-            return .init(stat: t.stat, weight: w, higherWins: t.higherWins, norm: t.norm)
-        }
-    }
+    private func grade(_ s: CatalogSeason) -> Double? { rule?.grade(s, baselines: container.baselines) }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 titleField
+                if !themes.isEmpty { templateSection }
                 scoringSection
-                preview
+                previewSection
                 discoverySection
                 resultsSection
             }
@@ -78,137 +70,165 @@ struct CreateKeep4View: View {
                     .fontWeight(.semibold)
             }
         }
-        .task { await runSearch() }
+        .task {
+            if let key = DebugLaunch.createTemplateKey, let theme = themes.first(where: { $0.key == key }) {
+                apply(theme)
+            }
+            await runSearch()
+        }
         .onChange(of: query) { Task { await runSearch() } }
         .alert("Couldn't publish", isPresented: .constant(error != nil)) {
             Button("OK") { error = nil }
         } message: { Text(error ?? "") }
-        .sheet(item: $published) { p in PublishedSheet(shareID: p.id) { dismiss() } }
+        .sheet(item: $published) { p in
+            PublishedSheet(shareID: p.id) { dismiss() }.environmentObject(container)
+        }
     }
 
     // MARK: - Title
 
     private var titleField: some View {
-        field("Title") {
-            TextField("e.g. One-hit wonders: 2010s WRs", text: $title)
-                .textInputAutocapitalization(.words)
-                .padding(.horizontal, 12).padding(.vertical, 11)
-                .background(Color.surfaceMuted)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+        VStack(alignment: .leading, spacing: 12) {
+            field("Title") {
+                TextField("e.g. One-hit wonders: 2010s WRs", text: $title)
+                    .textInputAutocapitalization(.words)
+                    .padding(.horizontal, 12).padding(.vertical, 11)
+                    .background(Color.surfaceMuted)
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+            }
+            field("Description (optional)") {
+                TextField("A brief note about this puzzle", text: $description, axis: .vertical)
+                    .lineLimit(2...4)
+                    .padding(.horizontal, 12).padding(.vertical, 11)
+                    .background(Color.surfaceMuted)
+                    .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+            }
         }
+    }
+
+    // MARK: - Templates (daily themes as creation starting points)
+
+    /// Pick a daily theme to start from: sets the exact scoring rule, position filters, and
+    /// card stat columns the pipeline uses, so the published puzzle matches daily rows in
+    /// structure. The author still curates the 8 picks; facet search stays for discovery.
+    private var templateSection: some View {
+        sectionCard("Start from a daily theme", systemImage: "sparkles") {
+            VStack(alignment: .leading, spacing: 10) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(themes) { theme in
+                            PrimeChip(label: theme.title, active: activeTheme?.key == theme.key) {
+                                if activeTheme?.key == theme.key {
+                                    clearTemplate()          // back to free-form
+                                } else {
+                                    apply(theme)
+                                }
+                            }
+                        }
+                    }
+                }
+                Text(activeTheme.map {
+                        let noun = PuzzleGrain(rawValue: $0.grain)?.countNoun ?? "seasons"
+                        return "Cards will show \($0.title)'s exact stat columns, scored like the daily puzzle. Search below is scoped to \(noun) only." }
+                     ?? "Templates copy a daily theme's scoring and card layout; you pick the 8 seasons.")
+                    .font(.label11).foregroundStyle(Color.textMuted)
+            }
+        }
+    }
+
+    /// Adopt a theme template: same scale, sport, and discovery positions as the pipeline.
+    /// A career-grain theme also scopes search to career-only rows (never mixing career
+    /// aggregates with season rows in one pool).
+    private func apply(_ theme: Keep4Theme) {
+        guard theme.scoringRule != nil else { return }
+        activeTheme = theme
+        scoringSport = theme.sport
+        scoringChoice = .ppr
+        eraAdjusted = theme.eraAdjusted
+        query = CatalogQuery(sport: theme.sport, positions: theme.positions, career: theme.grain == "career")
+        Haptics.tap()
+    }
+
+    /// Leave any active theme template and drop its career-only search scope — free-form
+    /// creation never offers career rows (no per-position career scale without a template).
+    private func clearTemplate() {
+        activeTheme = nil
+        query.career = false
     }
 
     // MARK: - Scoring (the answer axis)
 
     private var scoringSection: some View {
-        sectionCard("How it's scored", systemImage: "slider.horizontal.3") {
+        sectionCard("Scoring", systemImage: "slider.horizontal.3") {
             VStack(alignment: .leading, spacing: 12) {
                 sportToggle(selection: scoringSport) { setScoringSport($0) }
-                presetChips
-                if isPointsRule {
-                    fantasyFormula
+                scoringChips
+                if isVibes {
+                    Text("Vibes — you rank the 8 yourself, no formula, no scores. Players will " +
+                         "see this labeled as your call, not a stat line.")
+                        .font(.label11).foregroundStyle(Color.textMuted)
                 } else {
-                    ForEach(Array(terms.enumerated()), id: \.offset) { i, _ in termRow(i) }
-                    Button { addTerm() } label: {
-                        Label("Add stat", systemImage: "plus").font(.bodyStrong)
-                            .foregroundStyle(Color.accentText)
-                    }
-                    .disabled(terms.count >= 4)
+                    eraToggle
                 }
             }
         }
     }
 
-    private var presetChips: some View {
+    private var scoringChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(presets(for: scoringSport), id: \.1) { name, key in
-                    chip(name, selected: false) {
-                        let preset = ScoringRule.preset(key)!
-                        terms = Self.integerized(preset.terms)
-                        displayScale = preset.displayScale
-                        Haptics.tap()
+                ForEach(ScoringChoice.available(for: scoringSport)) { choice in
+                    PrimeChip(label: choice.label(for: scoringSport),
+                             active: scoringChoice == choice && activeTheme == nil) {
+                        scoringChoice = choice
+                        clearTemplate()    // manual scoring choice leaves the template
                     }
                 }
             }
         }
     }
 
-    private func termRow(_ i: Int) -> some View {
-        let term = terms[i]
-        let stat = ScoringStat.find(term.stat, sport: scoringSport)
-        return HStack(spacing: 8) {
-            Menu {
-                ForEach(ScoringStat.catalog(for: scoringSport)) { s in
-                    Button(s.label) { setStat(i, s) }
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Text(stat?.label ?? term.stat).font(.bodyStrong).foregroundStyle(Color.textPrimary)
-                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10)).foregroundStyle(Color.textMuted)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            Button { toggleDirection(i) } label: {
-                Image(systemName: term.higherWins ? "arrow.up" : "arrow.down")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color.accentText)
-                    .frame(width: 30, height: 30).background(Color.accentBg).clipShape(Circle())
-            }
-            Stepper("weight", value: weightBinding(i), in: 1...5)
-                .labelsHidden()
-            Text(pct(i)).font(.label12).foregroundStyle(Color.textMuted).frame(width: 36)
-            Button { removeTerm(i) } label: {
-                Image(systemName: "minus.circle.fill").foregroundStyle(Color.dangerText)
-            }
-            .disabled(terms.count <= 1)
-        }
-        .padding(10).background(Color.surfaceMuted)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-    }
-
-    /// Read-only summary of a fantasy-points preset: each stat and its point coefficient. The
-    /// formula is fixed (not term-editable) — pick a different preset chip to switch scoring.
-    private var fantasyFormula: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(Array(terms.enumerated()), id: \.offset) { _, term in
-                if case .points(let perUnit) = term.norm {
-                    let stat = ScoringStat.find(term.stat, sport: scoringSport)
-                    HStack {
-                        Text(stat?.label ?? term.stat).font(.bodyStrong).foregroundStyle(Color.textPrimary)
-                        Spacer()
-                        Text(Self.coeffLabel(perUnit)).font(.label12).foregroundStyle(Color.textMuted)
-                    }
-                    .padding(.horizontal, 10).padding(.vertical, 8).background(Color.surfaceMuted)
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-                }
-            }
-            Text("Ranked by true fantasy points; the grade shown is normalized to 0–100.")
+    /// Era-adjust lever for the fantasy-points choices (M10): the season's point total × its
+    /// era's volume index, so the same production is worth more in a scarcer era. Not shown
+    /// for Vibes, which has no formula to adjust.
+    private var eraToggle: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Toggle("Era-adjust scoring", isOn: eraBinding)
+                .font(.bodyStrong)
+                .tint(Color.accentFill)
+            Text("Multiplies each season's points by its era's league volume — a 2002 stat line can outrank a bigger modern one.")
                 .font(.label11).foregroundStyle(Color.textMuted)
         }
     }
 
-    /// Format a points coefficient as "×1", "×0.1", "×−2".
-    private static func coeffLabel(_ v: Double) -> String {
-        let s = v == v.rounded() ? String(Int(v)) : String(format: "%g", v)
-        return "×\(s)".replacingOccurrences(of: "-", with: "−")
+    /// Toggling era by hand is a scoring change: leave the template unless it matches the theme.
+    private var eraBinding: Binding<Bool> {
+        Binding(get: { eraAdjusted }, set: { on in
+            eraAdjusted = on
+            if let theme = activeTheme, theme.eraAdjusted != on { clearTemplate() }
+            Haptics.tap()
+        })
     }
 
     // MARK: - Live answer preview
 
-    @ViewBuilder private var preview: some View {
+    @ViewBuilder private var previewSection: some View {
         if !selected.isEmpty {
-            let graded = selected.sorted { grade($0) > grade($1) }
-            sectionCard("Answer preview · \(selected.count)/\(target)", systemImage: "eye") {
-                VStack(spacing: 6) {
-                    ForEach(Array(graded.enumerated()), id: \.element.id) { i, s in
-                        previewRow(rank: i, season: s, keep: i < 4)
-                    }
-                    if selected.count != target {
-                        Text("Add \(target - selected.count) more to publish.")
-                            .font(.label11).foregroundStyle(Color.textMuted)
-                            .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 2)
-                    }
+            if isVibes { vibesOrderSection } else { pprPreview }
+        }
+    }
+
+    private var pprPreview: some View {
+        let graded = selected.sorted { (grade($0) ?? 0) > (grade($1) ?? 0) }
+        return sectionCard("Answer preview · \(selected.count)/\(target)", systemImage: "eye") {
+            VStack(spacing: 6) {
+                ForEach(Array(graded.enumerated()), id: \.element.id) { i, s in
+                    previewRow(rank: i, season: s, keep: i < 4)
+                }
+                if selected.count != target {
+                    Text("Add \(target - selected.count) more to publish.")
+                        .font(.label11).foregroundStyle(Color.textMuted)
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 2)
                 }
             }
         }
@@ -225,11 +245,60 @@ struct CreateKeep4View: View {
             Text(season.name).font(.bodyStrong).foregroundStyle(Color.textPrimary).lineLimit(1)
             Text(season.subtitle).font(.label11).foregroundStyle(Color.textMuted).lineLimit(1)
             Spacer(minLength: 2)
-            Text("\(Int(grade(season).rounded()))").font(.hero(15)).foregroundStyle(Color.textPrimary)
+            Text("\(Int((grade(season) ?? 0).rounded()))").font(.hero(15)).foregroundStyle(Color.textPrimary)
             Button { toggle(season) } label: {
                 Image(systemName: "minus.circle.fill").foregroundStyle(Color.dangerText)
             }
         }
+    }
+
+    /// Vibes has no formula, so the "preview" is the ranking itself — drag the 8 picks into
+    /// the order you'd keep them. Top 4 become KEEP, bottom 4 become CUT. No numbers anywhere.
+    private var vibesOrderSection: some View {
+        sectionCard("Your ranking · \(selected.count)/\(target)", systemImage: "hand.draw") {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(selected.count == target
+                     ? "Drag into the order you'd keep them — top 4 are KEEP, bottom 4 are CUT."
+                     : "Add \(target - selected.count) more, then drag them into your order.")
+                    .font(.label11).foregroundStyle(Color.textMuted)
+                List {
+                    ForEach(Array(selected.enumerated()), id: \.element.id) { i, s in
+                        vibesRow(rank: i, season: s)
+                            .listRowInsets(EdgeInsets())
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                    }
+                    .onMove { indices, newOffset in
+                        selected.move(fromOffsets: indices, toOffset: newOffset)
+                        Haptics.tap()
+                    }
+                }
+                .listStyle(.plain)
+                .scrollDisabled(true)
+                .environment(\.editMode, .constant(.active))
+                .frame(height: CGFloat(selected.count) * 44)
+            }
+        }
+    }
+
+    private func vibesRow(rank: Int, season: CatalogSeason) -> some View {
+        let team = TeamColors.palette(sport: season.sport, abbr: season.teamAbbr)
+        let keep = rank < 4
+        return HStack(spacing: 8) {
+            Text("\(rank + 1)").font(.hero(15)).foregroundStyle(Color.textMuted).frame(width: 22)
+            Text(keep ? "KEEP" : "CUT")
+                .font(.custom(FontName.condBlack, size: 11))
+                .foregroundStyle(keep ? Color.successText : Color.dangerText)
+                .frame(width: 40, alignment: .leading)
+            RoundedRectangle(cornerRadius: 3).fill(team.primary).frame(width: 9, height: 16)
+            Text(season.name).font(.bodyStrong).foregroundStyle(Color.textPrimary).lineLimit(1)
+            Text(season.subtitle).font(.label11).foregroundStyle(Color.textMuted).lineLimit(1)
+            Spacer(minLength: 2)
+            Button { toggle(season) } label: {
+                Image(systemName: "minus.circle.fill").foregroundStyle(Color.dangerText)
+            }
+        }
+        .padding(.vertical, 6)
     }
 
     // MARK: - Discovery (the pool — never constrains the answer)
@@ -241,18 +310,22 @@ struct CreateKeep4View: View {
                 positionChips
                 eraRow
                 facetField("Team", text: teamBinding, placeholder: "e.g. KC")
-                facetField("Name", text: $query.name, placeholder: "Search a player")
+                PrimeSearchField(placeholder: "Search a player", text: $query.name)
                 if searching { ProgressView() }
             }
         }
     }
 
     private var anySportToggle: some View {
-        HStack(spacing: 8) {
-            chip("Any", selected: query.sport == nil) { query.sport = nil; query.positions = [] }
-            ForEach(Sport.allCases) { s in
-                chip(s.displayName, selected: query.sport == s) {
-                    query.sport = s; query.positions = []
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                PrimeChip(label: "Any", active: query.sport == nil) {
+                    query.sport = nil; query.positions = []
+                }
+                ForEach(Sport.allCases) { s in
+                    PrimeChip(label: s.displayName, active: query.sport == s) {
+                        query.sport = s; query.positions = []
+                    }
                 }
             }
         }
@@ -262,7 +335,7 @@ struct CreateKeep4View: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(positions(for: query.sport), id: \.self) { pos in
-                    chip(pos, selected: query.positions.contains(pos)) { togglePosition(pos) }
+                    PrimeChip(label: pos, active: query.positions.contains(pos)) { togglePosition(pos) }
                 }
             }
         }
@@ -282,7 +355,7 @@ struct CreateKeep4View: View {
     // MARK: - Results
 
     private var resultsSection: some View {
-        let ranked = results.sorted { grade($0) > grade($1) }
+        let ranked = isVibes ? results : results.sorted { (grade($0) ?? 0) > (grade($1) ?? 0) }
         return LazyVStack(spacing: 6) {
             ForEach(ranked) { s in resultRow(s) }
             if ranked.isEmpty && !searching {
@@ -304,7 +377,9 @@ struct CreateKeep4View: View {
                     Text(s.subtitle).font(.label12).foregroundStyle(Color.textMuted)
                 }
                 Spacer()
-                Text("\(Int(grade(s).rounded()))").font(.hero(16)).foregroundStyle(Color.textMuted)
+                if let g = grade(s) {
+                    Text("\(Int(g.rounded()))").font(.hero(16)).foregroundStyle(Color.textMuted)
+                }
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "plus.circle")
                     .foregroundStyle(isSelected ? Color.successText : Color.accentText)
             }
@@ -343,21 +418,13 @@ struct CreateKeep4View: View {
         .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
     }
 
-    private func chip(_ label: String, selected: Bool, _ action: @escaping () -> Void) -> some View {
-        Button(action: { action(); Haptics.tap() }) {
-            Text(label)
-                .font(.custom(selected ? FontName.condBlack : FontName.condBold, size: 14))
-                .foregroundStyle(selected ? Color.onAccent : Color.textPrimary)
-                .padding(.horizontal, 14).padding(.vertical, 8)
-                .background(selected ? Color.accentFill : Color.surfaceMuted)
-                .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
-    }
-
     private func sportToggle(selection: Sport, _ pick: @escaping (Sport) -> Void) -> some View {
-        HStack(spacing: 8) {
-            ForEach(Sport.allCases) { s in chip(s.displayName, selected: selection == s) { pick(s) } }
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(Sport.allCases) { s in
+                    PrimeChip(label: s.displayName, active: selection == s) { pick(s) }
+                }
+            }
         }
     }
 
@@ -372,43 +439,17 @@ struct CreateKeep4View: View {
     private var maxYearBinding: Binding<Int> {
         Binding(get: { query.maxYear ?? bounds.upperBound }, set: { query.maxYear = $0 })
     }
-    private func weightBinding(_ i: Int) -> Binding<Int> {
-        Binding(get: { Int(terms[i].weight) }, set: { setWeight(i, Double($0)) })
-    }
 
     // MARK: - Mutations
 
     private func setScoringSport(_ s: Sport) {
         guard s != scoringSport else { return }
         scoringSport = s
-        let preset = ScoringRule.preset(s == .nfl ? "nfl_skill_ppr" : "nba_fantasy")!
-        terms = Self.integerized(preset.terms)
-        displayScale = preset.displayScale
+        // Half PPR / Standard are NFL-only concepts (they're both just "Fantasy" on NBA).
+        if scoringChoice == .halfPPR || scoringChoice == .standard { scoringChoice = .ppr }
         eraAdjusted = false
+        clearTemplate()    // manual scoring choice leaves the template
         Haptics.tap()
-    }
-
-    private func setStat(_ i: Int, _ s: ScoringStat) {
-        terms[i] = s.term(weight: terms[i].weight)
-    }
-    private func toggleDirection(_ i: Int) {
-        let t = terms[i]
-        terms[i] = .init(stat: t.stat, weight: t.weight, higherWins: !t.higherWins, norm: t.norm)
-        Haptics.tap()
-    }
-    private func setWeight(_ i: Int, _ w: Double) {
-        let t = terms[i]
-        terms[i] = .init(stat: t.stat, weight: w, higherWins: t.higherWins, norm: t.norm)
-    }
-    private func removeTerm(_ i: Int) {
-        guard terms.count > 1 else { return }
-        terms.remove(at: i); Haptics.tap()
-    }
-    private func addTerm() {
-        let used = Set(terms.map(\.stat))
-        if let next = ScoringStat.catalog(for: scoringSport).first(where: { !used.contains($0.key) }) {
-            terms.append(next.term())
-        }
     }
 
     private func togglePosition(_ pos: String) {
@@ -426,16 +467,12 @@ struct CreateKeep4View: View {
         switch sport {
         case .nfl: return ["QB", "RB", "WR", "TE"]
         case .nba: return ["G", "F", "C"]
-        case nil:  return ["QB", "RB", "WR", "TE", "G", "F", "C"]
+        case .baseball: return ["H", "P"]
+        case .soccer: return ["FW", "MF", "DF", "GK"]
+        case .tennis: return ["Player"]
+        case nil:
+            return ["QB", "RB", "WR", "TE", "G", "F", "C", "H", "P", "FW", "MF", "DF", "GK", "Player"]
         }
-    }
-
-    /// Fantasy points is the one shipped scoring mechanism (NFL skill PPR + QB fantasy; NBA DK).
-    /// The legacy fixed 0–100 scales and the era-adjust lever stay in the model but off the surface.
-    private func presets(for sport: Sport) -> [(String, String)] {
-        sport == .nfl
-            ? [("Fantasy (PPR)", "nfl_skill_ppr"), ("QB Fantasy", "nfl_qb_fantasy")]
-            : [("Fantasy", "nba_fantasy")]
     }
 
     // MARK: - Actions
@@ -445,25 +482,53 @@ struct CreateKeep4View: View {
         results = await container.catalog.search(query)
         searching = false
         if DebugLaunch.autoOpenCreateKeep4 && selected.isEmpty {
-            selected = Array(results.sorted { grade($0) > grade($1) }.prefix(target))
+            selected = Array(results.sorted { (grade($0) ?? 0) > (grade($1) ?? 0) }.prefix(target))
             if title.isEmpty { title = "One-hit wonders: 2010s WRs" }
         }
     }
 
-    /// Build the puzzle cards: grade from the rule (baked at publish), display columns from the
-    /// scored stats, each formatted via its `ScoringStat`. Sport = the modal sport of the picks.
+    /// Default card stat lines for Vibes (no scoring terms to derive from — just a few
+    /// informative headline stats for the sport).
+    private func defaultStatLines(_ s: CatalogSeason) -> [PlayerSeason.StatLine] {
+        ScoringStat.catalog(for: s.sport).prefix(3).map { stat in
+            let value = s.stats[stat.key] ?? 0
+            return .init(label: stat.label, value: stat.format(value))
+        }
+    }
+
+    /// Build the puzzle cards. Vibes bakes the grade as a descending rank (the drag order —
+    /// never shown to players) so `Keep4Puzzle.correctKeepIDs`' top-4/bottom-4 math works
+    /// unchanged. Otherwise the grade is the rule's real fantasy total. Display columns come
+    /// from the active theme template when one is set, otherwise the rule's own terms (or, for
+    /// Vibes, a few generic headline stats). Sport = modal sport of picks.
     private func cards() -> [PlayerSeason] {
+        if isVibes {
+            let n = selected.count
+            return selected.enumerated().map { i, s in
+                PlayerSeason(id: s.id, name: s.name, teamAbbr: s.teamAbbr,
+                            seasonYear: s.seasonYear, stats: defaultStatLines(s),
+                            grade: Double(n - i), headshot: s.headshot,
+                            firstYear: s.firstYear, lastYear: s.lastYear)
+            }
+        }
         let r = rule
         return selected.map { s in
-            let lines = terms.prefix(3).map { term -> PlayerSeason.StatLine in
-                let stat = ScoringStat.find(term.stat, sport: s.sport)
-                let value = s.stats[term.stat] ?? 0
-                return .init(label: stat?.label ?? term.stat,
-                             value: stat?.format(value) ?? "\(Int(value.rounded()))")
+            let lines: [PlayerSeason.StatLine]
+            if let theme = activeTheme {
+                lines = theme.cardStats(for: s.stats, position: s.position)
+            } else {
+                lines = (r?.terms ?? []).prefix(3).map { term in
+                    let stat = ScoringStat.find(term.stat, sport: s.sport)
+                    let value = s.stats[term.stat] ?? 0
+                    return .init(label: stat?.label ?? term.stat,
+                                 value: stat?.format(value) ?? "\(Int(value.rounded()))")
+                }
             }
             return PlayerSeason(id: s.id, name: s.name, teamAbbr: s.teamAbbr,
-                                seasonYear: s.seasonYear, stats: Array(lines),
-                                grade: r.grade(s, baselines: container.baselines))
+                                seasonYear: s.seasonYear, stats: lines,
+                                grade: r?.grade(s, baselines: container.baselines) ?? 0,
+                                headshot: s.headshot,
+                                firstYear: s.firstYear, lastYear: s.lastYear)
         }
     }
 
@@ -478,13 +543,59 @@ struct CreateKeep4View: View {
         defer { publishing = false }
         let sport = primarySport
         let id = container.newCommunityID()
-        let puzzle = Keep4Puzzle(id: id, theme: title, sport: sport, players: cards())
+        let trimmedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
+        let scoring: ScoringKind = isVibes ? .vibes : (rule.map(ScoringKind.init(rule:)) ?? .ppr)
+        // Bakes the active template's grain (season/career, M17); "season" when no
+        // template is active (free-form creation only ever offers season rows to pick).
+        let puzzle = Keep4Puzzle(id: id, theme: title, sport: sport, players: cards(),
+                                 description: trimmedDescription.isEmpty ? nil : trimmedDescription,
+                                 scoring: scoring, grain: activeTheme?.grain ?? "season")
         do {
             _ = try await container.publish(id: id, sport: sport, format: "keep4",
                                             title: title, content: puzzle)
             published = PublishedPuzzle(id: id)
         } catch {
             self.error = String(describing: error)
+        }
+    }
+}
+
+/// The four selectable scoring philosophies. PPR/Half PPR/Standard are objective fantasy-point
+/// formulas that only differ in reception credit (an NFL distinction — NBA has no receptions, so
+/// it only ever offers "Fantasy" + "Vibes"); Vibes has no formula at all.
+private enum ScoringChoice: String, CaseIterable, Identifiable {
+    case ppr, halfPPR, standard, vibes
+    var id: String { rawValue }
+
+    static func available(for sport: Sport) -> [ScoringChoice] {
+        sport == .nfl ? [.ppr, .halfPPR, .standard, .vibes] : [.ppr, .vibes]
+    }
+
+    func label(for sport: Sport) -> String {
+        switch self {
+        case .ppr:      return sport == .nfl ? "PPR" : "Fantasy"
+        case .halfPPR:  return "Half PPR"
+        case .standard: return "Standard"
+        case .vibes:    return "Vibes"
+        }
+    }
+
+    /// The `ScoringRule.presets` key this choice resolves to, or nil for Vibes (no rule).
+    ///
+    /// Baseball/soccer default to their *hitter*/*attacker* scale here — free-form creation
+    /// has no per-position scale to pick from without a template; picking one of this
+    /// sport's bundled themes (`templateSection`) applies the right position-specific
+    /// scale (e.g. pitcher/defender) instead of this fallback.
+    func presetKey(for sport: Sport) -> String? {
+        switch (self, sport) {
+        case (.vibes, _):         return nil
+        case (_, .nba):           return "nba_fantasy"
+        case (_, .baseball):      return "baseball_hitter_fantasy"
+        case (_, .soccer):        return "soccer_attacker_fantasy"
+        case (_, .tennis):        return "tennis_fantasy"
+        case (.ppr, .nfl):        return "nfl_fantasy"
+        case (.halfPPR, .nfl):    return "nfl_fantasy_half"
+        case (.standard, .nfl):   return "nfl_fantasy_standard"
         }
     }
 }
@@ -496,6 +607,7 @@ struct PublishedPuzzle: Identifiable { let id: String }
 struct PublishedSheet: View {
     let shareID: String
     let onDone: () -> Void
+    @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
 
     private var shareURL: URL { URL(string: "balliq://play/\(shareID)")! }
@@ -511,14 +623,16 @@ struct PublishedSheet: View {
                 .padding(12).frame(maxWidth: .infinity).background(Color.surfaceMuted)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.control))
             ShareLink(item: shareURL) {
-                Text("Share").font(.heading).foregroundStyle(Color.onAccent)
-                    .frame(maxWidth: .infinity).padding(.vertical, 14)
-                    .background(Color.accentFill)
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.control))
+                Text("SHARE").ctaLabel()
             }
+            .buttonStyle(PrimePressStyle())
+            // ShareLink has no tap callback — a simultaneous gesture is the standard hook.
+            .simultaneousGesture(TapGesture().onEnded {
+                container.track(.shareTapped, ["surface": "publish_link"])
+            })
             Button("Done") { dismiss(); onDone() }.foregroundStyle(Color.textMuted)
         }
-        .padding(24)
+        .padding(16)
         .presentationDetents([.medium])
     }
 }

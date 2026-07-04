@@ -1,10 +1,10 @@
-# BallIQ — M8: Single-game grading (net-new milestone)
+# Playbook — M8: Single-game grading (net-new milestone)
 
 Self-contained prompt for a fresh agent. Read [prompts/README.md](README.md) and
 [docs/scoring-and-grading.md](../docs/scoring-and-grading.md) first — the grading model is the heart
 of this one. Assumes the repo as of **2026-06-29**.
 
-`fantasy-app` is **BallIQ**, a native SwiftUI iOS sports-trivia app. The entire data model today is
+`fantasy-app` is **Playbook**, a native SwiftUI iOS sports-trivia app. The entire data model today is
 **season-level only** (`RawSeason`, `player_seasons`, NFL season totals / NBA per-game averages).
 There is no box-score / per-game concept anywhere (grep `tools/ingest` for `week`/`game_id` → nothing).
 

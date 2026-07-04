@@ -1,4 +1,4 @@
-# BallIQ — Scoring & Grading Reference
+# Playbook — Scoring & Grading Reference
 
 The authoritative explanation of how a player-season earns its **grade** (the hidden 0–100 number
 that defines the "true" Keep/Cut ranking) and how that relates to the **game score** the player sees.

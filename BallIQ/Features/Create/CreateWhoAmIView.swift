@@ -34,9 +34,8 @@ struct CreateWhoAmIView: View {
             VStack(alignment: .leading, spacing: 16) {
                 field("Title") { plain("e.g. AI legends", text: $title) }
                 field("Sport") {
-                    Picker("Sport", selection: $sport) {
-                        ForEach(Sport.allCases) { Text($0.displayName).tag($0) }
-                    }.pickerStyle(.segmented)
+                    PrimeSegmentedControl(options: Sport.allCases.map { ($0.displayName, $0) },
+                                          selection: $sport)
                 }
                 field("Answer (full name)") { plain("Allen Iverson", text: $canonical) }
                 field("Also accept (comma-separated)") { plain("ai, the answer", text: $aliases) }
@@ -60,7 +59,9 @@ struct CreateWhoAmIView: View {
         .alert("Couldn't publish", isPresented: .constant(error != nil)) {
             Button("OK") { error = nil }
         } message: { Text(error ?? "") }
-        .sheet(item: $published) { p in PublishedSheet(shareID: p.id) { dismiss() } }
+        .sheet(item: $published) { p in
+            PublishedSheet(shareID: p.id) { dismiss() }.environmentObject(container)
+        }
     }
 
     private func clueField(_ kind: ClueKind) -> some View {

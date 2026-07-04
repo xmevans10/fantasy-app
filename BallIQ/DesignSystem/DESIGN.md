@@ -1,6 +1,6 @@
-# BallIQ design system — "Prime Time"
+# Playbook design system — "Prime Time"
 
-BallIQ's look is **arcade-pop energy with sports-broadcast athleticism** (ESPN-not-Vox). Bright,
+Playbook's look is **arcade-pop energy with sports-broadcast athleticism** (ESPN-not-Vox). Bright,
 loud, high-contrast, kinetic — a game, not a dashboard. This deliberately *replaces* the earlier
 CDS-flat aesthetic, which read as generic "AI slop" (the exact failure mode Anthropic's
 frontend-design guidance warns about). The fix it prescribes — and what we do here — is to **commit

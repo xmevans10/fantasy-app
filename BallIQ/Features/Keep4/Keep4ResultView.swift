@@ -7,6 +7,7 @@ struct Keep4ResultView: View {
     var rewards: RepositoryContainer.SessionRewards? = nil
     let onDone: () -> Void
 
+    @EnvironmentObject private var container: RepositoryContainer
     @State private var confetti = 0
 
     private var heroFill: Color { result.isPerfect ? .voltFill : .accentFill }
@@ -65,7 +66,9 @@ struct Keep4ResultView: View {
                           sport: puzzle.sport,
                           assignment: placement[top.id],
                           revealCorrect: result.correctness[top.id],
-                          foil: true) { _ in }
+                          foil: true,
+                          gradeUnit: puzzle.scoringKind().gradeUnit,
+                          showGrade: puzzle.scoringKind() != .vibes) { _ in }
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -120,9 +123,16 @@ struct Keep4ResultView: View {
                     .foregroundStyle(Color.textMuted)
             }
             Spacer(minLength: 2)
-            Text("\(Int(player.grade.rounded()))")
-                .font(.hero(15))
-                .foregroundStyle(Color.textPrimary)
+            if puzzle.scoringKind() != .vibes {
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text("\(Int(player.grade.rounded()))")
+                        .font(.hero(15))
+                        .foregroundStyle(Color.textPrimary)
+                    Text(puzzle.scoringKind().gradeUnit)
+                        .font(.label11)
+                        .foregroundStyle(Color.textMuted)
+                }
+            }
             Image(systemName: correct ? "checkmark" : "xmark")
                 .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(correct ? Color.successText : Color.dangerText)
@@ -146,15 +156,14 @@ struct Keep4ResultView: View {
         let card = ShareCardView(puzzle: puzzle, placement: placement, result: result)
         return VStack(spacing: 12) {
             ShareLink(item: card.rendered(),
-                      preview: SharePreview("My BallIQ result", image: card.rendered())) {
-                Label("SHARE RESULT", systemImage: "square.and.arrow.up")
-                    .font(.heading)
-                    .foregroundStyle(Color.onAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 15)
-                    .background(Color.accentFill)
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+                      preview: SharePreview("My Playbook result", image: card.rendered())) {
+                Label("SHARE RESULT", systemImage: "square.and.arrow.up").ctaLabel()
             }
+            .buttonStyle(PrimePressStyle())
+            // ShareLink has no tap callback — a simultaneous gesture is the standard hook.
+            .simultaneousGesture(TapGesture().onEnded {
+                container.track(.shareTapped, ["surface": "result"])
+            })
         }
     }
 

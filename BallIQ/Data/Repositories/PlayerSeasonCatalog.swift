@@ -11,6 +11,10 @@ struct CatalogQuery: Equatable {
     var maxYear: Int?
     var team: String?
     var name: String = ""
+    /// true → only career-aggregate rows; false (default) → only season rows. Always
+    /// applied (never "any") so a season template's pool never accidentally mixes in a
+    /// career aggregate's wildly different stat magnitudes, and vice versa (M17).
+    var career: Bool = false
 
     static let empty = CatalogQuery()
 }
@@ -47,8 +51,10 @@ final class PlayerSeasonCatalog {
     private func fetchRemote(_ q: CatalogQuery, limit: Int) async -> [CatalogSeason]? {
         guard let client else { return nil }
         var items = [
-            URLQueryItem(name: "select", value: "id,sport,name,team_abbr,season_year,position,stats"),
+            URLQueryItem(name: "select", value: "id,sport,name,team_abbr,season_year,position,stats,"
+                         + "headshot,career,first_year,last_year"),
             URLQueryItem(name: "limit", value: "\(limit * 3)"),   // over-fetch; we re-rank client-side
+            URLQueryItem(name: "career", value: "eq.\(q.career)"),
         ]
         if let sport = q.sport {
             items.append(URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)"))
@@ -86,6 +92,7 @@ final class PlayerSeasonCatalog {
                 && (q.maxYear == nil || s.seasonYear <= q.maxYear!)
                 && (team == nil || team!.isEmpty || s.teamAbbr.lowercased().contains(team!))
                 && (name.isEmpty || s.name.lowercased().contains(name))
+                && s.isCareer == q.career
         }
     }
 

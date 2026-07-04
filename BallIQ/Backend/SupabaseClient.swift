@@ -99,6 +99,11 @@ final class SupabaseClient {
         let response: URLResponse
         do {
             (data, response) = try await session.data(for: request)
+        } catch let error as URLError where error.code == .cancelled {
+            // The caller's Task was cancelled (e.g. SwiftUI tore down a `.refreshable`
+            // gesture mid-flight) — not a real connectivity failure, so callers can
+            // tell it apart from one and skip surfacing an error to the user.
+            throw CancellationError()
         } catch {
             throw SupabaseError.transport(error.localizedDescription)
         }
@@ -144,6 +149,13 @@ final class SupabaseClient {
         let req = restRequest(table: table, method: "POST", query: query, body: body,
                               prefer: "resolution=merge-duplicates,return=minimal")
         try await perform(req)
+    }
+
+    /// Calls a Postgres function via PostgREST (`POST /rest/v1/rpc/<fn>`).
+    @discardableResult
+    func rpc<Args: Encodable>(_ function: String, args: Args) async throws -> Data {
+        let body = try JSONEncoder.supabase.encode(args)
+        return try await perform(restRequest(table: "rpc/\(function)", method: "POST", body: body))
     }
 
     func decode<T: Decodable>(_ data: Data) throws -> T {

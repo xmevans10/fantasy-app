@@ -1,4 +1,4 @@
-# BallIQ — M7: Content scale + automation
+# Playbook — M7: Content scale + automation
 
 Self-contained prompt for a fresh agent. Read [prompts/README.md](README.md) for shared context
 (build/test commands, architecture, secrets policy). Assumes the repo **as of 2026-06-29 after M6
@@ -6,7 +6,7 @@ Phase A + the ESPN swap**: the project is now a git repo; NBA data comes **keyle
 (`tools/ingest/providers/espn_nba.py` is primary, balldontlie + `nba_seed.csv` are fallbacks); the
 daily-puzzle fetch is deterministic (`order=id`); grades display 0–100. Both suites green.
 
-`fantasy-app` is **BallIQ**, a native SwiftUI iOS sports-trivia app. Supabase project
+`fantasy-app` is **Playbook**, a native SwiftUI iOS sports-trivia app. Supabase project
 `nhccgufqwndtoasdbkhc` (MCP connected). Pipeline runs `python3 -m tools.ingest.main [...]`.
 
 The theme of M7 is **breadth + letting the engine run on its own** — today every puzzle pool is tiny

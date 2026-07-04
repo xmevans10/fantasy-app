@@ -13,11 +13,28 @@ struct PlayerSeason: Identifiable, Codable, Equatable {
     /// Optional player headshot URL (nflverse / ESPN); nil for older/seed seasons. Additive +
     /// optional so existing baked content (no key) decodes unchanged.
     var headshot: String? = nil
+    /// Single-game grain (nil for season cards). Both set together — see assemble.py
+    /// `_player_content`. Additive + optional so season-only content decodes unchanged.
+    var week: Int? = nil
+    var opponent: String? = nil
+    /// Career grain (nil for season/single-game cards). Both set together — see
+    /// assemble.py `_player_content`; `seasonYear` holds the player's LAST season for
+    /// this row, `firstYear`/`lastYear` give the full span for display.
+    var firstYear: Int? = nil
+    var lastYear: Int? = nil
 
     struct StatLine: Codable, Equatable, Hashable {
         let label: String
         let value: String
     }
 
-    var subtitle: String { "\(teamAbbr) · \(seasonYear)" }
+    var subtitle: String {
+        if let week, let opponent {
+            return "vs \(opponent) · Wk \(week) · \(seasonYear)"
+        }
+        if let firstYear, let lastYear {
+            return lastYear != firstYear ? "\(teamAbbr) · \(firstYear)-\(lastYear)" : "\(teamAbbr) · \(firstYear)"
+        }
+        return "\(teamAbbr) · \(seasonYear)"
+    }
 }

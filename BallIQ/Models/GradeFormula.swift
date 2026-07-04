@@ -49,12 +49,13 @@ enum GradeFormula {
         ],
     ]
 
-    /// Fantasy-point scales (mirror grade.py `_FANTASY`): (statKey, perUnit). The raw total
-    /// (`Σ value × perUnit`) is then min-maxed into 0–100 via `fantasyBounds` — a strict
-    /// monotonic transform, so ranking is unchanged from raw points; only the displayed number
-    /// reads on the same familiar scale as every other formula. A penalty's sign lives in its
+    /// Fantasy-point scales (mirror grade.py `_FANTASY`): (statKey, perUnit). The grade IS the
+    /// raw total (`Σ value × perUnit`) — no normalization. A penalty's sign lives in its
     /// coefficient (interceptions at −2).
     private static let fantasy: [String: [(String, Double)]] = [
+        "nfl_fantasy": [("passing_yards", 0.04), ("passing_tds", 4.0), ("interceptions", -2.0),
+                        ("receptions", 1.0), ("receiving_yards", 0.1), ("receiving_tds", 6.0),
+                        ("rushing_yards", 0.1), ("rushing_tds", 6.0)],
         "nfl_skill_ppr": [("receptions", 1.0), ("receiving_yards", 0.1), ("receiving_tds", 6.0),
                           ("rushing_yards", 0.1), ("rushing_tds", 6.0)],
         "nfl_qb_fantasy": [("passing_yards", 0.04), ("passing_tds", 4.0), ("interceptions", -2.0),
@@ -62,26 +63,17 @@ enum GradeFormula {
         "nba_fantasy": [("ppg", 1.0), ("rpg", 1.2), ("apg", 1.5), ("spg", 3.0), ("bpg", 3.0)],
     ]
 
-    /// Display bounds (lo, hi) per fantasy scale — mirrors grade.py `_FANTASY_BOUNDS` exactly.
-    /// See grade.py's docstring for how these were anchored to real catalog percentiles.
-    private static let fantasyBounds: [String: (lo: Double, hi: Double)] = [
-        "nfl_skill_ppr": (40.0, 450.0),
-        "nfl_qb_fantasy": (100.0, 450.0),
-        "nba_fantasy": (15.0, 75.0),
-    ]
-
     private static func component(_ value: Double, _ c: Component) -> Double {
         let frac = c.invert ? (c.hi - value) / (c.hi - c.lo) : (value - c.lo) / (c.hi - c.lo)
         return 100.0 * min(1.0, max(0.0, frac))
     }
 
-    /// Map a player-season's raw `stats` to a 0–100 quality score for the given scale (fixed or
-    /// fantasy-points — both now read on the same scale).
+    /// Map a player-season's raw `stats` to a quality score for the given scale: the raw
+    /// fantasy-point total for a `_FANTASY` scale, or a 0–100 weighted score for a fixed one.
     static func grade(_ stats: [String: Double], scale: String) -> Double {
-        if let terms = fantasy[scale], let bounds = fantasyBounds[scale] {
+        if let terms = fantasy[scale] {
             let raw = terms.reduce(0.0) { sum, t in sum + (stats[t.0] ?? 0) * t.1 }
-            let frac = min(1.0, max(0.0, (raw - bounds.lo) / (bounds.hi - bounds.lo)))
-            return (100.0 * frac * 10).rounded() / 10   // 1-decimal, matches Python round(x, 1)
+            return (raw * 10).rounded() / 10   // 1-decimal, matches Python round(x, 1)
         }
         guard let components = scales[scale] else { return 0 }
         let total = components.reduce(0.0) { sum, c in
@@ -101,16 +93,36 @@ struct CatalogSeason: Identifiable, Codable, Equatable {
     let seasonYear: Int
     let position: String
     let stats: [String: Double]
+    /// Optional player headshot URL, mirrors `RawSeason.headshot` (M16) — carried through
+    /// so community puzzles built from the catalog can show the same photo as daily cards.
+    var headshot: String? = nil
+    /// Career-grain aggregate (M17), mirrors `RawSeason.career` — nil/false for a season
+    /// row. Optional (not a plain `Bool`) so legacy bundled catalog rows with no "career"
+    /// key at all still decode. `firstYear`/`lastYear` (present only when `isCareer`) give
+    /// the full span; `seasonYear` holds the player's LAST season, same convention as
+    /// `PlayerSeason.firstYear`/`lastYear`.
+    var career: Bool? = nil
+    var firstYear: Int? = nil
+    var lastYear: Int? = nil
 
-    var subtitle: String { "\(teamAbbr) · \(seasonYear)" }
+    var isCareer: Bool { career == true }
+
+    var subtitle: String {
+        if let firstYear, let lastYear {
+            return lastYear != firstYear ? "\(teamAbbr) · \(firstYear)-\(lastYear)" : "\(teamAbbr) · \(firstYear)"
+        }
+        return "\(teamAbbr) · \(seasonYear)"
+    }
 
     // Explicit keys so this decodes with a PLAIN JSONDecoder — `stats` dict keys
     // (e.g. "rushing_yards") must stay snake_case for GradeFormula, so we must not
     // use the shared `.convertFromSnakeCase` decoder here.
     enum CodingKeys: String, CodingKey {
-        case id, sport, name, position, stats
+        case id, sport, name, position, stats, headshot, career
         case teamAbbr = "team_abbr"
         case seasonYear = "season_year"
+        case firstYear = "first_year"
+        case lastYear = "last_year"
     }
 }
 

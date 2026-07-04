@@ -2,10 +2,15 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject private var container: RepositoryContainer
+    /// Root tab selection (0 Home…4 Profile) — the formats grid uses this to jump to the
+    /// Versus tab, since Versus is a full tab/repository, not a sheet Home can present itself.
+    @Binding var selectedTab: Int
     @State private var keep4: Keep4Puzzle?
     @State private var whoami: WhoAmIPuzzle?
     @State private var activePuzzle: Keep4Puzzle?
     @State private var activeWhoAmI: WhoAmIPuzzle?
+    @State private var showBrowse = false
+    @State private var shareTarget: SharablePuzzle?
 
     private let gridColumns = [GridItem(.flexible(), spacing: 12),
                                GridItem(.flexible(), spacing: 12)]
@@ -17,11 +22,8 @@ struct HomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    StreakBar(streak: container.streak, playedToday: container.hasPlayedToday())
-                        .heroReveal(0)
-
                     SportFilterBar(selection: $container.sportFilter)
-                        .heroReveal(1)
+                        .heroReveal(0)
 
                     section("Today's daily games") {
                         VStack(spacing: 14) {
@@ -30,11 +32,14 @@ struct HomeView: View {
                                               symbol: "rectangle.stack.fill",
                                               sport: puzzle.sport,
                                               title: puzzle.theme,
-                                              subtitle: "\(puzzle.players.count) seasons",
-                                              completed: container.hasPlayedToday(),
+                                              subtitle: "\(puzzle.players.count) \(puzzle.puzzleGrain().countNoun)",
+                                              scoring: puzzle.scoringKind(),
+                                              grain: puzzle.puzzleGrain(),
+                                              completed: container.hasCompletedToday(.keep4),
                                               accent: .accentFill, onAccent: .onAccent) {
                                     activePuzzle = puzzle
                                 }
+                                secondaryAction: { shareTarget = SharablePuzzle(keep4: puzzle) }
                             }
                             if let puzzle = whoami {
                                 DailyGameCard(formatName: "Who am I?",
@@ -42,17 +47,19 @@ struct HomeView: View {
                                               sport: puzzle.sport,
                                               title: "Guess today's mystery player",
                                               subtitle: "\(puzzle.clues.count) clues",
-                                              completed: container.hasPlayedToday(),
+                                              completed: container.hasCompletedToday(.whoAmI),
                                               accent: .voltFill, onAccent: .onVolt) {
                                     activeWhoAmI = puzzle
                                 }
+                                secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }
                             }
                         }
                     }
-                    .heroReveal(2)
+                    .heroReveal(1)
 
-                    NavigationLink { BrowseView().environmentObject(container) } label: { browseRow }
-                        .heroReveal(3)
+                    Button { showBrowse = true } label: { browseRow }
+                        .buttonStyle(PrimePressStyle())
+                        .heroReveal(2)
 
                     section("Game formats") {
                         LazyVGrid(columns: gridColumns, spacing: 12) {
@@ -61,25 +68,34 @@ struct HomeView: View {
                             }
                         }
                     }
-                    .heroReveal(4)
+                    .heroReveal(3)
 
                     section("Your rank") {
-                        RankWidget(rating: container.rating(for: rankSport))
+                        RankWidget(sport: rankSport, rating: container.rating(for: rankSport))
                     }
-                    .heroReveal(5)
+                    .heroReveal(4)
                 }
                 .padding(16)
             }
             .background(Color.appBackground)
             .navigationTitle("")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { Wordmark() }
+                ToolbarItem(placement: .topBarLeading) {
+                    StreakFlair(streak: container.streak)
+                }
+            }
+            .navigationDestination(isPresented: $showBrowse) {
+                BrowseView().environmentObject(container)
             }
             .fullScreenCover(item: $activePuzzle) { puzzle in
                 Keep4GameView(puzzle: puzzle).environmentObject(container)
             }
             .fullScreenCover(item: $activeWhoAmI) { puzzle in
                 WhoAmIGameView(puzzle: puzzle).environmentObject(container)
+            }
+            .sheet(item: $shareTarget) { target in
+                PuzzleShareSheet(puzzle: target, surface: "puzzle_home")
+                    .environmentObject(container)
             }
             .task(id: container.sportFilter) { await loadDaily() }
         }
@@ -107,6 +123,7 @@ struct HomeView: View {
         switch format.id {
         case "keep4": activePuzzle = keep4
         case "whoami": activeWhoAmI = whoami
+        case "versus": selectedTab = 2
         default: break
         }
     }
@@ -118,6 +135,8 @@ struct HomeView: View {
             activeWhoAmI = whoami
         } else if DebugLaunch.autoOpenGame, activePuzzle == nil {
             activePuzzle = keep4
+        } else if DebugLaunch.autoOpenBrowse {
+            showBrowse = true
         }
     }
 
@@ -135,5 +154,5 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView().environmentObject(RepositoryContainer.make())
+    HomeView(selectedTab: .constant(0)).environmentObject(RepositoryContainer.make())
 }

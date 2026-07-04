@@ -7,7 +7,8 @@ final class CommunityFeedTests: XCTestCase {
 
     private func summary(_ id: String) -> CommunitySummary {
         CommunitySummary(id: id, authorId: "author", sport: .nfl, format: "keep4",
-                         title: "Title \(id)", playCount: 0, createdAt: "2026-06-29T00:00:00Z")
+                         title: "Title \(id)", playCount: 0, createdAt: "2026-06-29T00:00:00Z",
+                         description: nil, scoring: nil, grain: nil, visibility: nil)
     }
 
     func testFailedFetchKeepsPriorItems() {

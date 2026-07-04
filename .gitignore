@@ -21,5 +21,9 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Release pipeline — App Store Connect API key + credentials
+tools/release/.env
+tools/release/private_keys/
+
 # Claude Code local settings
 .claude/settings.local.json

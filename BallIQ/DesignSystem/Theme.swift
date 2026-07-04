@@ -146,15 +146,15 @@ extension View {
 }
 
 // MARK: - Wordmark
-/// "ball" + bold "IQ" in heavy condensed caps — broadcast bug.
+/// "play" + bold "book" in heavy condensed caps — broadcast bug.
 struct Wordmark: View {
     var size: CGFloat = 26
     var body: some View {
         HStack(spacing: 0) {
-            Text("ball")
+            Text("play")
                 .font(.custom(FontName.condBold, size: size))
                 .foregroundStyle(Color.textPrimary)
-            Text("IQ")
+            Text("book")
                 .font(.custom(FontName.condBlack, size: size))
                 .foregroundStyle(Color.accentFill)
         }
