@@ -1,4 +1,22 @@
-# BallIQ Privacy Policy
+# BallIQ Support & Privacy
+
+## Support
+
+Need help, found a bug, or have feedback on BallIQ? Email **xmevans10@gmail.com** and we'll
+get back to you as soon as we can.
+
+**Common questions**
+
+- *How do I delete my account?* Email us at the address above and we'll remove your account
+  and associated data.
+- *A puzzle looks wrong / a stat seems off.* Let us know which puzzle (sport, date, or title)
+  and we'll take a look.
+- *I want to report inappropriate Community content.* Use the report option on the puzzle in
+  the app, or email us directly.
+
+---
+
+# Privacy Policy
 
 _Last updated: July 4, 2026_
 
