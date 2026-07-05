@@ -34,3 +34,22 @@ fair game to just run; destructive ones are not.
 **Why this rule exists:** established 2026-07-04 after the user said "execute any DB
 functions via CLI, service role key is in .env" while closing out M17 (community career-grain
 creation) — don't make them re-authorize this every session.
+
+## Git/GitHub CLI operations — use the PAT in `.env`, not the `gh`-managed OAuth token
+
+The repo now has a real GitHub remote: `github.com/xmevans10/fantasy-app` (public). `gh auth
+status`'s default OAuth token only has `repo`/`read:org`/`gist` scopes — it will be **rejected**
+by GitHub on any push that touches `.github/workflows/*.yml` (this repo has one,
+`ingest.yml`, from M7), because that requires the `workflow` scope.
+
+For `git push`/other authenticated git operations, use the PAT in gitignored root `.env`
+(`GITHUB_TOKEN=...`) instead — confirmed as of 2026-07-04 to carry `repo` + `workflow` (and
+several broader admin scopes the user should consider narrowing down later, but it works).
+Example: `source .env && git push "https://x-access-token:${GITHUB_TOKEN}@github.com/xmevans10/fantasy-app.git" main`.
+Don't embed the token literally in a command — always reference `$GITHUB_TOKEN` after
+sourcing `.env`, so it never lands in shell history/process-list snapshots in plaintext.
+
+**Why this rule exists:** established 2026-07-04 — the first push attempt using `gh`'s own
+token was rejected for exactly this reason (`refusing to allow an OAuth App to create or
+update workflow ... without workflow scope`), and the user supplied this PAT specifically to
+unblock it.
