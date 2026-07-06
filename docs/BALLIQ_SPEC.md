@@ -285,9 +285,10 @@ manual-signing workaround from scratch, it's already documented.
 **Open items / hand-offs**
 1. **M5 monetization (Pro/StoreKit)** is the only fully-unstarted milestone. **M14** Spanish
    localization is the other real gap. Both are pure app-code, independently scoped — see §9.
-2. **Per-format daily completion bug:** `RepositoryContainer.hasPlayedToday` is one flag for
-   the whole day, so finishing K4C4 marks the Who Am I? card DONE too (and vice versa).
-   Un-fixed; needs a per-format completion set instead of a single day-string.
+2. ~~**Per-format daily completion bug**~~ — fixed (shipped in the 2026-07-04 commit): the two
+   Home cards now check `hasCompletedToday(_ card:)` backed by a per-day
+   `completedCardsToday: Set<DailyCard>`; `hasPlayedToday` remains "played anything" and
+   still drives streak/first-play XP. Covered by `ProgressRepositoryTests`.
 3. **No Leagues season/cohort exists yet in production** — `weekly-cohort-rollover` bootstraps
    one on first run; it hasn't been triggered (mutates real user rating/cohort state, so it
    needs an explicit go-ahead rather than being treated as a no-op). Fires naturally next

@@ -37,6 +37,43 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     /// `load_tennis` docstring), so card UI should render a country flag in the logo slot rather
     /// than attempting a team lookup/logo fetch that can never resolve.
     var hasTeams: Bool { self != .tennis }
+
+    /// ESPN CDN league slug used for team-logo lookups; nil for teamless sports (tennis).
+    /// Each sport MUST map to its own slug — sharing one (e.g. defaulting non-NFL to "nba")
+    /// silently pulls the wrong league's crest for shared city codes (MLB "HOU" → the NBA
+    /// Rockets instead of the Astros).
+    var espnLeagueSlug: String? {
+        switch self {
+        case .nfl: return "nfl"
+        case .nba: return "nba"
+        case .baseball: return "mlb"
+        case .soccer: return "soccer"
+        case .tennis: return nil
+        }
+    }
+
+    /// ESPN keys soccer crests by numeric team id, not the club abbreviation our catalog
+    /// carries, so soccer abbreviations must be translated (US-league logos resolve directly
+    /// from the lowercased abbreviation). Covers every club currently in the catalog.
+    private static let soccerESPNTeamID: [String: String] = [
+        "AVL": "362", "BAY": "132", "BUR": "379", "CHE": "363", "FCB": "83",
+        "LIV": "364", "MCI": "382", "MUN": "360", "PSG": "160", "RMA": "86", "TOT": "367",
+    ]
+
+    /// Team-crest URL on the ESPN CDN for a club abbreviation, or nil when the sport is
+    /// teamless, the abbreviation is empty, or (soccer only) the club isn't mapped. Callers
+    /// render a neutral fallback on nil rather than a broken image.
+    func teamLogoURL(forAbbr abbr: String) -> URL? {
+        guard let league = espnLeagueSlug, !abbr.isEmpty else { return nil }
+        let key: String
+        if self == .soccer {
+            guard let id = Sport.soccerESPNTeamID[abbr.uppercased()] else { return nil }
+            key = id
+        } else {
+            key = abbr.lowercased()
+        }
+        return URL(string: "https://a.espncdn.com/i/teamlogos/\(league)/500/\(key).png")
+    }
 }
 
 /// Home-screen sport filter — "All" plus each concrete sport.

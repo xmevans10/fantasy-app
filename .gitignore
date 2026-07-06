@@ -27,3 +27,6 @@ tools/release/private_keys/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# GitHub PAT for git CLI operations (workflow-scope push, etc.)
+/.env

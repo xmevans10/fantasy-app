@@ -86,7 +86,7 @@ final class ScoringKindTests: XCTestCase {
     func testBadgeLabelIsSportAware() {
         // "PPR" is an NFL term; NBA fantasy scoring isn't PPR.
         XCTAssertEqual(ScoringKind.ppr.badgeLabel(for: .nfl), "PPR")
-        XCTAssertEqual(ScoringKind.ppr.badgeLabel(for: .nba), "FANTASY PTS")
+        XCTAssertEqual(ScoringKind.ppr.badgeLabel(for: .nba), "FANTASY")
         XCTAssertEqual(ScoringKind.vibes.badgeLabel(for: .nfl), "VIBES")
     }
 

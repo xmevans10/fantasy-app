@@ -38,11 +38,12 @@ enum ScoringKind: String, Codable {
         }
     }
 
-    /// Short ALL-CAPS badge text for puzzle cards. PPR is an NFL term; NBA uses the
-    /// generic fantasy label.
+    /// Short ALL-CAPS badge text for puzzle cards. PPR is an NFL term; other sports use the
+    /// generic fantasy label — kept to one word so the card header's format name doesn't
+    /// truncate next to the grain + sport chips (the explainer chip carries the full copy).
     func badgeLabel(for sport: Sport) -> String {
         switch self {
-        case .ppr:    return sport == .nfl ? "PPR" : "FANTASY PTS"
+        case .ppr:    return sport == .nfl ? "PPR" : "FANTASY"
         case .era:    return "ERA-ADJUSTED"
         case .vibes:  return "VIBES"
         }

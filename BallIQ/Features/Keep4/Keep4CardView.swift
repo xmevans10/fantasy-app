@@ -98,13 +98,10 @@ struct Keep4CardView: View {
         .background(team.primary)
     }
 
-    /// ESPN team-logo CDN, keyed by sport + lowercase abbreviation (all our abbrs resolve).
-    private var teamLogoURL: URL? {
-        let abbr = player.teamAbbr.lowercased()
-        guard !abbr.isEmpty else { return nil }
-        let league = sport == .nfl ? "nfl" : "nba"
-        return URL(string: "https://a.espncdn.com/i/teamlogos/\(league)/500/\(abbr).png")
-    }
+    /// ESPN team-logo CDN, resolved per-sport (see `Sport.teamLogoURL`); nil for teamless
+    /// sports, unmapped soccer clubs, or defunct teams ESPN no longer hosts — those fall
+    /// back to the abbreviation badge in `teamLogoView`.
+    private var teamLogoURL: URL? { sport.teamLogoURL(forAbbr: player.teamAbbr) }
 
     /// Team logo for sports with real clubs; a country flag badge for sports without one
     /// (tennis — `teamAbbr` holds a country code there, see `Sport.hasTeams`).
@@ -117,16 +114,22 @@ struct Keep4CardView: View {
     }
 
     @ViewBuilder private var teamLogoView: some View {
-        if let url = teamLogoURL {
-            AsyncImage(url: url) { phase in
-                if let img = phase.image { img.resizable().scaledToFit() } else { Color.clear }
+        Group {
+            if let url = teamLogoURL {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let img): img.resizable().scaledToFit()
+                    // 404s (e.g. defunct teams like the Sonics) degrade to the abbr badge,
+                    // never an empty disc.
+                    case .failure: abbrBadgeText
+                    default: Color.clear
+                    }
+                }
+            } else {
+                abbrBadgeText
             }
-            .frame(width: 40, height: 40)
-            .background(Color.white.opacity(0.15))   // faint disc, not a heavy white badge
-            .clipShape(Circle())
-            .overlay(Circle().strokeBorder(team.onPrimary.opacity(0.35), lineWidth: 1))
-            .accessibilityHidden(true)   // decorative — team is already read via player.subtitle
         }
+        .modifier(LogoDisc(ring: team.onPrimary))
     }
 
     /// Country flag emoji in the same disc treatment as `teamLogoView`; falls back to the
@@ -136,16 +139,16 @@ struct Keep4CardView: View {
             if let flag = CountryFlags.flag(for: player.teamAbbr) {
                 Text(flag).font(.system(size: 24))
             } else {
-                Text(player.teamAbbr.uppercased())
-                    .font(.custom(FontName.condBlack, size: 12))
-                    .foregroundStyle(team.onPrimary)
+                abbrBadgeText
             }
         }
-        .frame(width: 40, height: 40)
-        .background(Color.white.opacity(0.15))
-        .clipShape(Circle())
-        .overlay(Circle().strokeBorder(team.onPrimary.opacity(0.35), lineWidth: 1))
-        .accessibilityHidden(true)   // decorative — country is already read via player.subtitle
+        .modifier(LogoDisc(ring: team.onPrimary))
+    }
+
+    private var abbrBadgeText: some View {
+        Text(player.teamAbbr.uppercased())
+            .font(.custom(FontName.condBlack, size: 12))
+            .foregroundStyle(team.onPrimary)
     }
 
     /// Player headshot (nflverse/ESPN) in a team-tinted circle; falls back to a glyph when absent.
@@ -271,5 +274,18 @@ struct Keep4CardView: View {
                 }
                 dragX = 0
             }
+    }
+}
+
+/// The shared 40pt faint-disc treatment behind the team logo / country flag / abbr badge.
+private struct LogoDisc: ViewModifier {
+    let ring: Color
+    func body(content: Content) -> some View {
+        content
+            .frame(width: 40, height: 40)
+            .background(Color.white.opacity(0.15))   // faint disc, not a heavy white badge
+            .clipShape(Circle())
+            .overlay(Circle().strokeBorder(ring.opacity(0.35), lineWidth: 1))
+            .accessibilityHidden(true)   // decorative — team/country is already read via player.subtitle
     }
 }
