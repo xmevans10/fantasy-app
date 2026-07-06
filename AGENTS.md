@@ -129,3 +129,39 @@ flag in that same shape (`-browseSport`) rather than reaching for simulator UI a
 a bespoke debug hook. The same goes for provider caching (`providers/http.py`'s shared
 on-disk cache + TTL), theme/column tables, and design tokens (`DesignSystem/Theme.swift`'s
 `cardSurface`/`blockCard`/color roles) — grep for the existing mechanism first.
+
+## 11. The decision ladder — write the least code necessary (Ponytail discipline)
+
+Adopted from [ponytail.dev](https://ponytail.dev/); its actual plugin isn't installed in this
+repo (installing a marketplace/plugin means letting a third-party GitHub repo's code execute
+in the agent's environment — that's a deliberate call for a human to make, not something to
+wave through on an AI's own judgment; see the note at the bottom of this section). The
+*ruleset* is adopted directly as text here instead, so it governs regardless of which tool or
+harness is running — this is really just a sharper restatement of CLAUDE.md's own "don't add
+features/refactor/abstractions beyond what the task requires," made into a concrete, ordered
+checklist.
+
+**Before writing any code, work through these in order — stop at the first one that fits:**
+
+1. **Does this need to exist at all?** (YAGNI) — if the task doesn't actually require it, skip it.
+2. **Is it already in this codebase?** — reuse existing code (§4/§10 above are this rung applied
+   to sport/position tables and debug flags specifically).
+3. **Does the standard library do it?** — Python stdlib / Foundation / SwiftUI before a helper.
+4. **Is there a native platform feature?** — a SwiftUI modifier, a PostgREST filter, a stdlib
+   `datetime`, before hand-rolling the equivalent.
+5. **Is it an already-installed dependency?** — e.g. reach for `ConfettiSwiftUI` (already
+   vendored) rather than a second confetti implementation.
+6. **Can it be a one-liner?** — write the one-liner.
+7. **Only then**, write the minimum custom implementation the problem actually needs.
+
+The ladder activates *after* you've read the affected code and traced the real data flow
+(§3 above) — this is "lazy about solutions, never about reading." It does not relax
+trust-boundary validation, data-loss handling, security, or accessibility; those stay
+mandatory regardless of which rung you land on.
+
+**Note on the plugin itself:** if you want the actual `/ponytail-review`, `/ponytail-audit`,
+and `/ponytail-debt` slash commands (diff-scoped over-engineering scans, a repo-wide audit, a
+deferred-simplification ledger), install it yourself — `claude plugin marketplace add
+DietrichGebert/ponytail` then `claude plugin install ponytail@ponytail` — after reviewing what
+it does; an agent shouldn't add third-party plugin sources to your Claude Code config on your
+behalf even when asked to, the same way it shouldn't `curl | sh` an unreviewed script.
