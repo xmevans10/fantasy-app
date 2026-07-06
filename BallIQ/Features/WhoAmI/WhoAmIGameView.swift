@@ -239,7 +239,7 @@ struct WhoAmIGameView: View {
         Task { @MainActor in
             let rw = await container.complete(format: .whoAmI, sport: puzzle.sport,
                                               performance: r.performance, perfect: perfect,
-                                              ranked: ranked)
+                                              puzzleID: puzzle.id, ranked: ranked)
             rewards = rw
             if let communityID { await container.recordCommunityPlay(id: communityID) }
             withAnimation(Motion.easeOut) { result = r }

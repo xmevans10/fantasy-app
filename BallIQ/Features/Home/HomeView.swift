@@ -25,6 +25,8 @@ struct HomeView: View {
                     SportFilterBar(selection: $container.sportFilter)
                         .heroReveal(0)
 
+                    streakRow
+
                     section("Today's daily games") {
                         VStack(spacing: 14) {
                             if let puzzle = keep4 {
@@ -35,8 +37,7 @@ struct HomeView: View {
                                               subtitle: "\(puzzle.players.count) \(puzzle.puzzleGrain().countNoun)",
                                               scoring: puzzle.scoringKind(),
                                               grain: puzzle.puzzleGrain(),
-                                              completed: container.hasCompletedToday(.keep4),
-                                              accent: .accentFill, onAccent: .onAccent) {
+                                              completed: container.hasCompletedToday(puzzleID: puzzle.id)) {
                                     activePuzzle = puzzle
                                 }
                                 secondaryAction: { shareTarget = SharablePuzzle(keep4: puzzle) }
@@ -47,8 +48,8 @@ struct HomeView: View {
                                               sport: puzzle.sport,
                                               title: "Guess today's mystery player",
                                               subtitle: "\(puzzle.clues.count) clues",
-                                              completed: container.hasCompletedToday(.whoAmI),
-                                              accent: .voltFill, onAccent: .onVolt) {
+                                              completed: container.hasCompletedToday(puzzleID: puzzle.id),
+                                              typeColor: .voltFill, onTypeColor: .onVolt) {
                                     activeWhoAmI = puzzle
                                 }
                                 secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }
@@ -79,11 +80,6 @@ struct HomeView: View {
             }
             .background(Color.appBackground)
             .navigationTitle("")
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    StreakFlair(streak: container.streak)
-                }
-            }
             .navigationDestination(isPresented: $showBrowse) {
                 BrowseView().environmentObject(container)
             }
@@ -98,6 +94,19 @@ struct HomeView: View {
                     .environmentObject(container)
             }
             .task(id: container.sportFilter) { await loadDaily() }
+        }
+    }
+
+    /// Current streak, shown inline in the page body (not a nav-bar icon — that read as a
+    /// broken logo on other tabs since each tab's toolbar item meant something different).
+    private var streakRow: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "flame.fill")
+                .font(.system(size: 15, weight: .black))
+                .foregroundStyle(container.streak > 0 ? Color.warningFill : Color.textMuted)
+            Text(container.streak == 1 ? "1 day streak" : "\(container.streak) day streak")
+                .font(.label12)
+                .foregroundStyle(Color.textPrimary)
         }
     }
 

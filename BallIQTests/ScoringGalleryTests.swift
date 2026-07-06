@@ -22,7 +22,7 @@ final class ScoringGalleryTests: XCTestCase {
                           subtitle: "12 plays · by @gridironguru",
                           description: "Seasons nobody saw coming.",
                           scoring: .vibes, completed: false,
-                          accent: .warningFill, onAccent: .onWarning,
+                          typeColor: .warningFill, onTypeColor: .onWarning,
                           bodyFill: .warningBg) {}
             ScoringNoteChip(kind: .ppr, sport: .nfl)
             ScoringNoteChip(kind: .era, sport: .nfl)

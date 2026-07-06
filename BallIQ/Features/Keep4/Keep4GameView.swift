@@ -270,7 +270,7 @@ struct Keep4GameView: View {
         Task { @MainActor in
             let rw = await container.complete(format: mode.formatKind, sport: puzzle.sport,
                                               performance: performance, perfect: r.isPerfect,
-                                              ranked: ranked)
+                                              puzzleID: puzzle.id, ranked: ranked)
             rewards = rw
             if let communityID { await container.recordCommunityPlay(id: communityID) }
             if let versusChallengeID { await container.submitVersusResult(challengeID: versusChallengeID, performance: performance) }

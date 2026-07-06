@@ -88,10 +88,12 @@ final class RepositoryContainer: ObservableObject {
     var xp: Int { progressSnapshot.xp }
     var level: Int { progressSnapshot.level }
     func hasPlayedToday(_ date: Date = Date()) -> Bool { progressSnapshot.hasPlayed(on: date) }
-    /// Per-card completion for the two Home DailyGameCards (Keep4 vs Who Am I?) — distinct from
-    /// `hasPlayedToday`, which is "played anything" and still drives streak/first-play XP.
-    func hasCompletedToday(_ card: DailyCard, date: Date = Date()) -> Bool {
-        progressSnapshot.hasCompletedToday(card, on: date)
+    /// Was this *specific* puzzle (by id) completed today? Distinct from `hasPlayedToday`, which
+    /// is "played anything" and still drives streak/first-play XP. Keyed by id rather than just
+    /// format+day so a stale completion can't leak onto a different puzzle served under the same
+    /// daily slot (e.g. the daily-puzzle content rotating underneath an already-completed flag).
+    func hasCompletedToday(puzzleID: String, date: Date = Date()) -> Bool {
+        progressSnapshot.hasCompletedToday(puzzleID: puzzleID, on: date)
     }
     func rating(for sport: Sport) -> Int { ratings[sport] ?? RatingEngine.startingRating }
     func ratingHistory(for sport: Sport) async -> [RatingPoint] { await localRating.history(for: sport) }
@@ -111,8 +113,8 @@ final class RepositoryContainer: ObservableObject {
     /// `ranked` defaults to true (daily play). Community puzzles pass `ranked: false`:
     /// XP and streak still count, but competitive rating is untouched (and no rating
     /// history is pushed), so easy user-made puzzles can't farm the ladder.
-    func complete(format: GameFormatKind, sport: Sport, performance: Double,
-                  perfect: Bool, ranked: Bool = true, date: Date = Date()) async -> SessionRewards {
+    func complete(format: GameFormatKind, sport: Sport, performance: Double, perfect: Bool,
+                  puzzleID: String, ranked: Bool = true, date: Date = Date()) async -> SessionRewards {
         let before = progressSnapshot
         let firstPlay = !before.hasPlayed(on: date)
         let beforeLevel = before.level
@@ -135,7 +137,8 @@ final class RepositoryContainer: ObservableObject {
             xp += min(willStreak, 30) * 25             // streak continuation, capped at day 30
         }
 
-        let snap = await localProgress.recordCompletion(format: format, awardingXP: xp, date: date)
+        let snap = await localProgress.recordCompletion(format: format, puzzleID: puzzleID,
+                                                         awardingXP: xp, date: date)
         let change: RatingChange
         if ranked {
             change = await localRating.apply(

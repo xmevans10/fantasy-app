@@ -5,10 +5,12 @@ struct ProgressSnapshot: Equatable {
     var streak: Int = 0
     var xp: Int = 0
     var lastPlayedDay: String = ""   // "yyyy-MM-dd" in local time
-    /// Which Home daily cards were completed today. Local-UI-only (not synced to the server —
-    /// it's a same-device checkmark, not competitive state); always empty unless it was just
-    /// populated for today, since `LocalProgressRepository.load()` day-gates it on read.
-    var completedCardsToday: Set<DailyCard> = []
+    /// Which specific puzzles (by id) were completed today. Local-UI-only (not synced to the
+    /// server — it's a same-device checkmark, not competitive state); always empty unless it was
+    /// just populated for today, since `LocalProgressRepository.load()` day-gates it on read.
+    /// Keyed by puzzle id (not just format) so a stale completion can't leak onto a different
+    /// puzzle later served under the same daily slot.
+    var completedPuzzleIDsToday: Set<String> = []
 
     var level: Int { LevelCurve.level(forXP: xp) }
 }
@@ -17,7 +19,7 @@ struct ProgressSnapshot: Equatable {
 protocol ProgressRepository {
     func load() async -> ProgressSnapshot
     /// Record a completed daily game, awarding XP and advancing the streak. Returns the new snapshot.
-    func recordCompletion(format: GameFormatKind, awardingXP xp: Int, date: Date) async -> ProgressSnapshot
+    func recordCompletion(format: GameFormatKind, puzzleID: String, awardingXP xp: Int, date: Date) async -> ProgressSnapshot
 }
 
 /// UserDefaults-backed. Reuses the v0 keys so existing installs don't reset on upgrade.
@@ -45,13 +47,13 @@ final class LocalProgressRepository: ProgressRepository {
 
     func load() async -> ProgressSnapshot {
         let today = Self.dayString(Date())
-        let cards: Set<DailyCard> = defaults.string(forKey: Key.completedCardsDay) == today
-            ? Set((defaults.stringArray(forKey: Key.completedCards) ?? []).compactMap(DailyCard.init))
+        let ids: Set<String> = defaults.string(forKey: Key.completedCardsDay) == today
+            ? Set(defaults.stringArray(forKey: Key.completedCards) ?? [])
             : []
         return ProgressSnapshot(streak: defaults.integer(forKey: Key.streak),
                                 xp: defaults.integer(forKey: Key.xp),
                                 lastPlayedDay: defaults.string(forKey: Key.lastPlayed) ?? "",
-                                completedCardsToday: cards)
+                                completedPuzzleIDsToday: ids)
     }
 
     /// Overwrite the cached snapshot (used by sync when the server is authoritative). Per-card
@@ -63,7 +65,7 @@ final class LocalProgressRepository: ProgressRepository {
         defaults.set(snapshot.lastPlayedDay, forKey: Key.lastPlayed)
     }
 
-    func recordCompletion(format: GameFormatKind, awardingXP xp: Int, date: Date) async -> ProgressSnapshot {
+    func recordCompletion(format: GameFormatKind, puzzleID: String, awardingXP xp: Int, date: Date) async -> ProgressSnapshot {
         var snap = await load()
         let today = Self.dayFormatter.string(from: date)
 
@@ -77,13 +79,13 @@ final class LocalProgressRepository: ProgressRepository {
             snap.lastPlayedDay = today
         }
         snap.xp += xp
-        snap.completedCardsToday.insert(format.dailyCard)
+        snap.completedPuzzleIDsToday.insert(puzzleID)
 
         defaults.set(snap.streak, forKey: Key.streak)
         defaults.set(snap.xp, forKey: Key.xp)
         defaults.set(snap.lastPlayedDay, forKey: Key.lastPlayed)
         defaults.set(today, forKey: Key.completedCardsDay)
-        defaults.set(snap.completedCardsToday.map(\.rawValue), forKey: Key.completedCards)
+        defaults.set(Array(snap.completedPuzzleIDsToday), forKey: Key.completedCards)
         return snap
     }
 }
@@ -92,9 +94,9 @@ extension ProgressSnapshot {
     func hasPlayed(on date: Date = Date()) -> Bool {
         lastPlayedDay == LocalProgressRepository.dayString(date)
     }
-    /// Card-specific: was `card` completed today specifically (not "was anything played").
-    func hasCompletedToday(_ card: DailyCard, on date: Date = Date()) -> Bool {
-        lastPlayedDay == LocalProgressRepository.dayString(date) && completedCardsToday.contains(card)
+    /// Was this *specific* puzzle completed today (not "was anything played").
+    func hasCompletedToday(puzzleID: String, on date: Date = Date()) -> Bool {
+        lastPlayedDay == LocalProgressRepository.dayString(date) && completedPuzzleIDsToday.contains(puzzleID)
     }
 }
 

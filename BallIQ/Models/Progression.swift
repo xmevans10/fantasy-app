@@ -24,21 +24,6 @@ enum GameFormatKind: String, Codable, CaseIterable {
         }
     }
 
-    /// Which Home daily-card this format's completion should mark done. Keep4 Normal and Hard
-    /// collapse to the same card — completing either clears the one K4C4 tile.
-    var dailyCard: DailyCard {
-        switch self {
-        case .keep4Normal, .keep4Hard: return .keep4
-        case .whoAmI: return .whoAmI
-        }
-    }
-}
-
-/// The two Home daily-game cards. Distinct from `GameFormatKind` (which also tracks Keep4's
-/// Normal/Hard difficulty split for rating/XP) — completion tracking only cares which card.
-enum DailyCard: String, Codable, CaseIterable {
-    case keep4
-    case whoAmI
 }
 
 /// The result of one completed session, fed to the rating engine.
