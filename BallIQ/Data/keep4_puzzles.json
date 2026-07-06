@@ -65,64 +65,64 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/tfuj9njqdw2dovkwhryc"
       },
       {
-        "id": "julio-jones-2015",
-        "name": "Julio Jones",
-        "teamAbbr": "ATL",
-        "seasonYear": 2015,
-        "grade": 371.1,
+        "id": "cooper-kupp-2021",
+        "name": "Cooper Kupp",
+        "teamAbbr": "LA",
+        "seasonYear": 2021,
+        "grade": 437.5,
         "stats": [
           {
             "label": "Rec Yds",
-            "value": "1,871"
+            "value": "1,947"
           },
           {
             "label": "Rec",
-            "value": "136"
+            "value": "145"
           },
           {
             "label": "Rec TD",
-            "value": "8"
+            "value": "16"
           },
           {
             "label": "Yds/Rec",
-            "value": "13.8"
+            "value": "13.4"
           },
           {
             "label": "Tgts",
-            "value": "203"
+            "value": "191"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/omrddf2phtyztzx2nup1"
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bkahtsjkvnom1sbnb6xm"
       },
       {
-        "id": "justin-jefferson-2022",
-        "name": "Justin Jefferson",
-        "teamAbbr": "MIN",
-        "seasonYear": 2022,
-        "grade": 365.3,
+        "id": "ja-marr-chase-2024",
+        "name": "Ja'Marr Chase",
+        "teamAbbr": "CIN",
+        "seasonYear": 2024,
+        "grade": 403.0,
         "stats": [
           {
             "label": "Rec Yds",
-            "value": "1,809"
+            "value": "1,708"
           },
           {
             "label": "Rec",
-            "value": "128"
+            "value": "127"
           },
           {
             "label": "Rec TD",
-            "value": "8"
+            "value": "17"
           },
           {
             "label": "Yds/Rec",
-            "value": "14.1"
+            "value": "13.4"
           },
           {
             "label": "Tgts",
-            "value": "184"
+            "value": "175"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zdstmm4sloqnichybgja"
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/qkcb3qt2fhasfgtfuprd"
       },
       {
         "id": "marvin-harrison-2002",
@@ -561,36 +561,6 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zwmgw2gmnn2kch4nquft"
       },
       {
-        "id": "daunte-culpepper-2004",
-        "name": "Daunte Culpepper",
-        "teamAbbr": "MIN",
-        "seasonYear": 2004,
-        "grade": 375.3,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,717"
-          },
-          {
-            "label": "Pass TD",
-            "value": "39"
-          },
-          {
-            "label": "INT",
-            "value": "11"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "406"
-          },
-          {
-            "label": "Rush TD",
-            "value": "2"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vmvl5xojgtwm6jadhy7l"
-      },
-      {
         "id": "drew-brees-2011",
         "name": "Drew Brees",
         "teamAbbr": "NO",
@@ -649,6 +619,36 @@
           }
         ],
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ghmmndgjefpxziks7ntf"
+      },
+      {
+        "id": "lamar-jackson-2024",
+        "name": "Lamar Jackson",
+        "teamAbbr": "BAL",
+        "seasonYear": 2024,
+        "grade": 438.4,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "4,172"
+          },
+          {
+            "label": "Pass TD",
+            "value": "41"
+          },
+          {
+            "label": "INT",
+            "value": "4"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "915"
+          },
+          {
+            "label": "Rush TD",
+            "value": "4"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p"
       },
       {
         "id": "patrick-mahomes-2018",
@@ -929,31 +929,31 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ad68dbv2eqakttaqwppv"
       },
       {
-        "id": "lamar-jackson-2019",
+        "id": "lamar-jackson-2024",
         "name": "Lamar Jackson",
         "teamAbbr": "BAL",
-        "seasonYear": 2019,
-        "grade": 419.7,
+        "seasonYear": 2024,
+        "grade": 438.4,
         "stats": [
           {
             "label": "Rush Yds",
-            "value": "1,206"
+            "value": "915"
           },
           {
             "label": "Rush TD",
-            "value": "7"
+            "value": "4"
           },
           {
             "label": "Pass Yds",
-            "value": "3,127"
+            "value": "4,172"
           },
           {
             "label": "Pass TD",
-            "value": "36"
+            "value": "41"
           },
           {
             "label": "INT",
-            "value": "6"
+            "value": "4"
           }
         ],
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p"
@@ -1575,27 +1575,27 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
       },
       {
-        "id": "lamar-jackson-2019",
+        "id": "lamar-jackson-2024",
         "name": "Lamar Jackson",
         "teamAbbr": "BAL",
-        "seasonYear": 2019,
-        "grade": 419.7,
+        "seasonYear": 2024,
+        "grade": 438.4,
         "stats": [
           {
             "label": "Pass Yds",
-            "value": "3,127"
+            "value": "4,172"
           },
           {
             "label": "Pass TD",
-            "value": "36"
+            "value": "41"
           },
           {
             "label": "Rush Yds",
-            "value": "1,206"
+            "value": "915"
           },
           {
             "label": "Rush TD",
-            "value": "7"
+            "value": "4"
           }
         ],
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p"
@@ -1729,7 +1729,7 @@
         "name": "CeeDee Lamb",
         "teamAbbr": "DAL",
         "seasonYear": 2023,
-        "grade": 424.1,
+        "grade": 423.6,
         "stats": [
           {
             "label": "Rec",
@@ -1751,7 +1751,7 @@
         "name": "Christian McCaffrey",
         "teamAbbr": "CAR",
         "seasonYear": 2019,
-        "grade": 443.3,
+        "grade": 443.4,
         "stats": [
           {
             "label": "Rush Yds",
@@ -1781,7 +1781,7 @@
         "name": "Cooper Kupp",
         "teamAbbr": "LA",
         "seasonYear": 2021,
-        "grade": 438.6,
+        "grade": 438.1,
         "stats": [
           {
             "label": "Rec",
@@ -1803,7 +1803,7 @@
         "name": "Daunte Culpepper",
         "teamAbbr": "MIN",
         "seasonYear": 2000,
-        "grade": 417.0,
+        "grade": 418.7,
         "stats": [
           {
             "label": "Pass Yds",
@@ -1829,7 +1829,7 @@
         "name": "LaDainian Tomlinson",
         "teamAbbr": "LAC",
         "seasonYear": 2006,
-        "grade": 444.2,
+        "grade": 444.3,
         "stats": [
           {
             "label": "Rush Yds",
@@ -1889,7 +1889,7 @@
         "name": "Priest Holmes",
         "teamAbbr": "KC",
         "seasonYear": 2003,
-        "grade": 441.5,
+        "grade": 441.6,
         "stats": [
           {
             "label": "Rush Yds",
@@ -1919,7 +1919,7 @@
         "name": "Tom Brady",
         "teamAbbr": "NE",
         "seasonYear": 2007,
-        "grade": 450.9,
+        "grade": 452.7,
         "stats": [
           {
             "label": "Pass Yds",
@@ -3713,32 +3713,32 @@
         "opponent": "MIN"
       },
       {
-        "id": "chris-johnson-2009-wk02",
-        "name": "Chris Johnson",
-        "teamAbbr": "TEN",
-        "seasonYear": 2009,
-        "grade": 55.4,
+        "id": "dalvin-cook-2020-wk08",
+        "name": "Dalvin Cook",
+        "teamAbbr": "MIN",
+        "seasonYear": 2020,
+        "grade": 48.6,
         "stats": [
           {
             "label": "Rush Yds",
-            "value": "197"
+            "value": "163"
           },
           {
             "label": "Rush TD",
-            "value": "2"
+            "value": "3"
           },
           {
             "label": "Yds/Carry",
-            "value": "12.3"
+            "value": "5.4"
           },
           {
             "label": "Rec Yds",
-            "value": "87"
+            "value": "63"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryf9nc84eovvdbf0cz79",
-        "week": 2,
-        "opponent": "HOU"
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/uurolop9ktcloxqh4fid",
+        "week": 8,
+        "opponent": "GB"
       },
       {
         "id": "devon-achane-2023-wk03",
@@ -3797,34 +3797,6 @@
         "opponent": "LV"
       },
       {
-        "id": "jerome-harrison-2009-wk15",
-        "name": "Jerome Harrison",
-        "teamAbbr": "CLE",
-        "seasonYear": 2009,
-        "grade": 49.8,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "286"
-          },
-          {
-            "label": "Rush TD",
-            "value": "3"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "8.4"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "12"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lmnola0pmzwchwanxapy",
-        "week": 15,
-        "opponent": "KC"
-      },
-      {
         "id": "joe-mixon-2022-wk09",
         "name": "Joe Mixon",
         "teamAbbr": "CIN",
@@ -3881,6 +3853,34 @@
         "opponent": "BUF"
       },
       {
+        "id": "josh-jacobs-2022-wk12",
+        "name": "Josh Jacobs",
+        "teamAbbr": "LV",
+        "seasonYear": 2022,
+        "grade": 48.3,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "229"
+          },
+          {
+            "label": "Rush TD",
+            "value": "2"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "6.9"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "74"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/ksdusqxnwqtnph0htcfx",
+        "week": 12,
+        "opponent": "SEA"
+      },
+      {
         "id": "le-veon-bell-2016-wk14",
         "name": "Le'Veon Bell",
         "teamAbbr": "PIT",
@@ -3917,6 +3917,34 @@
     "sport": "nfl",
     "players": [
       {
+        "id": "amari-cooper-2018-wk14",
+        "name": "Amari Cooper",
+        "teamAbbr": "DAL",
+        "seasonYear": 2018,
+        "grade": 49.7,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "217"
+          },
+          {
+            "label": "Rec",
+            "value": "10"
+          },
+          {
+            "label": "Rec TD",
+            "value": "3"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "21.7"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/zmtzqznqui37unmo5xv9",
+        "week": 14,
+        "opponent": "PHI"
+      },
+      {
         "id": "andre-johnson-2013-wk09",
         "name": "Andre Johnson",
         "teamAbbr": "HOU",
@@ -3942,34 +3970,6 @@
         ],
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iavrftkbpw4bekzl7zfv",
         "week": 9,
-        "opponent": "IND"
-      },
-      {
-        "id": "brandon-marshall-2009-wk14",
-        "name": "Brandon Marshall",
-        "teamAbbr": "DEN",
-        "seasonYear": 2009,
-        "grade": 53.0,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "200"
-          },
-          {
-            "label": "Rec",
-            "value": "21"
-          },
-          {
-            "label": "Rec TD",
-            "value": "2"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "9.5"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jhziqh0scfksvxen6f3s",
-        "week": 14,
         "opponent": "IND"
       },
       {
@@ -4261,19 +4261,19 @@
         "opponent": "NYG"
       },
       {
-        "id": "mike-vick-2010-wk10",
-        "name": "Mike Vick",
-        "teamAbbr": "PHI",
-        "seasonYear": 2010,
-        "grade": 49.3,
+        "id": "josh-allen-2024-wk14",
+        "name": "Josh Allen",
+        "teamAbbr": "BUF",
+        "seasonYear": 2024,
+        "grade": 51.9,
         "stats": [
           {
             "label": "Pass Yds",
-            "value": "333"
+            "value": "342"
           },
           {
             "label": "Pass TD",
-            "value": "4"
+            "value": "3"
           },
           {
             "label": "INT",
@@ -4281,12 +4281,12 @@
           },
           {
             "label": "Rush Yds",
-            "value": "80"
+            "value": "82"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/hrg4riwhpjbijfovsjrk",
-        "week": 10,
-        "opponent": "WAS"
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/lq4ezafbszwwt2qsvhqv",
+        "week": 14,
+        "opponent": "LA"
       },
       {
         "id": "mitchell-trubisky-2018-wk04",
@@ -5712,20 +5712,20 @@
         "id": "aaron-rodgers-career",
         "name": "Aaron Rodgers",
         "teamAbbr": "NYJ",
-        "seasonYear": 2023,
-        "grade": 4609.2,
+        "seasonYear": 2024,
+        "grade": 4865.8,
         "stats": [
           {
             "label": "Pass Yds",
-            "value": "59,048"
+            "value": "62,945"
           },
           {
             "label": "Pass TD",
-            "value": "475"
+            "value": "503"
           },
           {
             "label": "Rush Yds",
-            "value": "3,454"
+            "value": "3,561"
           },
           {
             "label": "Rush TD",
@@ -5734,7 +5734,7 @@
         ],
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/jdcb4nomlc4rd6k5l6to",
         "firstYear": 2005,
-        "lastYear": 2023
+        "lastYear": 2024
       },
       {
         "id": "ben-roethlisberger-career",
@@ -6724,6 +6724,502 @@
     "grain": "career"
   },
   {
+    "id": "gen-qb-2000-ancient-00",
+    "theme": "2000s Ageless-wonder QB seasons (36+)",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "brett-favre-2009",
+        "name": "Brett Favre",
+        "teamAbbr": "MIN",
+        "seasonYear": 2009,
+        "grade": 286.8,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "4,202"
+          },
+          {
+            "label": "Pass TD",
+            "value": "33"
+          },
+          {
+            "label": "INT",
+            "value": "7"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "7"
+          },
+          {
+            "label": "Rush TD",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/m3sggjgdqlp4jqpxktvr"
+      },
+      {
+        "id": "chris-chandler-2001",
+        "name": "Chris Chandler",
+        "teamAbbr": "ATL",
+        "seasonYear": 2001,
+        "grade": 158.3,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "2,847"
+          },
+          {
+            "label": "Pass TD",
+            "value": "16"
+          },
+          {
+            "label": "INT",
+            "value": "14"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "84"
+          },
+          {
+            "label": "Rush TD",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/yrkv7xnpwcfljbhpgz6w"
+      },
+      {
+        "id": "doug-flutie-2001",
+        "name": "Doug Flutie",
+        "teamAbbr": "LAC",
+        "seasonYear": 2001,
+        "grade": 187.8,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "3,464"
+          },
+          {
+            "label": "Pass TD",
+            "value": "15"
+          },
+          {
+            "label": "INT",
+            "value": "18"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "192"
+          },
+          {
+            "label": "Rush TD",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/unmsud4qh5emea93d31q"
+      },
+      {
+        "id": "jeff-garcia-2008",
+        "name": "Jeff Garcia",
+        "teamAbbr": "TB",
+        "seasonYear": 2008,
+        "grade": 165.6,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "2,712"
+          },
+          {
+            "label": "Pass TD",
+            "value": "12"
+          },
+          {
+            "label": "INT",
+            "value": "6"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "151"
+          },
+          {
+            "label": "Rush TD",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bysr1fkpqdhljtvlkcrm"
+      },
+      {
+        "id": "kerry-collins-2008",
+        "name": "Kerry Collins",
+        "teamAbbr": "TEN",
+        "seasonYear": 2008,
+        "grade": 146.1,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "2,681"
+          },
+          {
+            "label": "Pass TD",
+            "value": "12"
+          },
+          {
+            "label": "INT",
+            "value": "7"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "49"
+          },
+          {
+            "label": "Rush TD",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jse9o88qf7weuicc1wwz"
+      },
+      {
+        "id": "kurt-warner-2008",
+        "name": "Kurt Warner",
+        "teamAbbr": "ARI",
+        "seasonYear": 2008,
+        "grade": 275.1,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "4,582"
+          },
+          {
+            "label": "Pass TD",
+            "value": "30"
+          },
+          {
+            "label": "INT",
+            "value": "14"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "-2"
+          },
+          {
+            "label": "Rush TD",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xlgzhoozvi1agd8hn4kk"
+      },
+      {
+        "id": "rich-gannon-2002",
+        "name": "Rich Gannon",
+        "teamAbbr": "LV",
+        "seasonYear": 2002,
+        "grade": 305.2,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "4,689"
+          },
+          {
+            "label": "Pass TD",
+            "value": "26"
+          },
+          {
+            "label": "INT",
+            "value": "10"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "156"
+          },
+          {
+            "label": "Rush TD",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wy2haknzelfdpaxh0pig"
+      },
+      {
+        "id": "vinny-testaverde-2000",
+        "name": "Vinny Testaverde",
+        "teamAbbr": "NYJ",
+        "seasonYear": 2000,
+        "grade": 188.9,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "3,692"
+          },
+          {
+            "label": "Pass TD",
+            "value": "21"
+          },
+          {
+            "label": "INT",
+            "value": "23"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "32"
+          },
+          {
+            "label": "Rush TD",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/yebpzovaiscoksnjnq6x"
+      }
+    ],
+    "grain": "season"
+  },
+  {
+    "id": "gen-qb-2000-day2-00",
+    "theme": "2000s Day-2 QB finds (rounds 2–4)",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "aaron-brooks-2002",
+        "name": "Aaron Brooks",
+        "teamAbbr": "NO",
+        "seasonYear": 2002,
+        "grade": 258.2,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "3,572"
+          },
+          {
+            "label": "Pass TD",
+            "value": "27"
+          },
+          {
+            "label": "INT",
+            "value": "15"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "253"
+          },
+          {
+            "label": "Rush TD",
+            "value": "2"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/hmlvskmkxcrzwzxker5b"
+      },
+      {
+        "id": "brett-favre-2009",
+        "name": "Brett Favre",
+        "teamAbbr": "MIN",
+        "seasonYear": 2009,
+        "grade": 286.8,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "4,202"
+          },
+          {
+            "label": "Pass TD",
+            "value": "33"
+          },
+          {
+            "label": "INT",
+            "value": "7"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "7"
+          },
+          {
+            "label": "Rush TD",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/m3sggjgdqlp4jqpxktvr"
+      },
+      {
+        "id": "david-garrard-2009",
+        "name": "David Garrard",
+        "teamAbbr": "JAX",
+        "seasonYear": 2009,
+        "grade": 234.2,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "3,597"
+          },
+          {
+            "label": "Pass TD",
+            "value": "15"
+          },
+          {
+            "label": "INT",
+            "value": "10"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "323"
+          },
+          {
+            "label": "Rush TD",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ogcdepv291fwwguy3zho"
+      },
+      {
+        "id": "drew-brees-2009",
+        "name": "Drew Brees",
+        "teamAbbr": "NO",
+        "seasonYear": 2009,
+        "grade": 304.8,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "4,388"
+          },
+          {
+            "label": "Pass TD",
+            "value": "34"
+          },
+          {
+            "label": "INT",
+            "value": "11"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "33"
+          },
+          {
+            "label": "Rush TD",
+            "value": "2"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i20xlpzdmn7xubotijjd"
+      },
+      {
+        "id": "jake-plummer-2004",
+        "name": "Jake Plummer",
+        "teamAbbr": "DEN",
+        "seasonYear": 2004,
+        "grade": 259.1,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "4,089"
+          },
+          {
+            "label": "Pass TD",
+            "value": "27"
+          },
+          {
+            "label": "INT",
+            "value": "20"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "215"
+          },
+          {
+            "label": "Rush TD",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iurwxdpuwvijm50vhwt9"
+      },
+      {
+        "id": "kordell-stewart-2001",
+        "name": "Kordell Stewart",
+        "teamAbbr": "PIT",
+        "seasonYear": 2001,
+        "grade": 242.1,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "3,109"
+          },
+          {
+            "label": "Pass TD",
+            "value": "14"
+          },
+          {
+            "label": "INT",
+            "value": "11"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "537"
+          },
+          {
+            "label": "Rush TD",
+            "value": "5"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wyel70n1iopggkgtup2x"
+      },
+      {
+        "id": "matt-schaub-2009",
+        "name": "Matt Schaub",
+        "teamAbbr": "HOU",
+        "seasonYear": 2009,
+        "grade": 282.9,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "4,770"
+          },
+          {
+            "label": "Pass TD",
+            "value": "29"
+          },
+          {
+            "label": "INT",
+            "value": "15"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "61"
+          },
+          {
+            "label": "Rush TD",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mj2kh2nddxnw04ludcx0"
+      },
+      {
+        "id": "rich-gannon-2002",
+        "name": "Rich Gannon",
+        "teamAbbr": "LV",
+        "seasonYear": 2002,
+        "grade": 305.2,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "4,689"
+          },
+          {
+            "label": "Pass TD",
+            "value": "26"
+          },
+          {
+            "label": "INT",
+            "value": "10"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "156"
+          },
+          {
+            "label": "Rush TD",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wy2haknzelfdpaxh0pig"
+      }
+    ],
+    "grain": "season"
+  },
+  {
     "id": "gen-qb-2000-day3-00",
     "theme": "2000s Day-3 QB steals (round 5+)",
     "sport": "nfl",
@@ -7220,6 +7716,1246 @@
     "grain": "season"
   },
   {
+    "id": "gen-qb-all-heavyweight-00",
+    "theme": "Bruiser QB seasons",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "byron-leftwich-2004",
+        "name": "Byron Leftwich",
+        "teamAbbr": "JAX",
+        "seasonYear": 2004,
+        "grade": 184.4,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "2,941"
+          },
+          {
+            "label": "Pass TD",
+            "value": "15"
+          },
+          {
+            "label": "INT",
+            "value": "10"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "148"
+          },
+          {
+            "label": "Rush TD",
+            "value": "2"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zmv2cxypb5s0nhtpq3nq"
+      },
+      {
+        "id": "cam-newton-2015",
+        "name": "Cam Newton",
+        "teamAbbr": "CAR",
+        "seasonYear": 2015,
+        "grade": 397.1,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "3,837"
+          },
+          {
+            "label": "Pass TD",
+            "value": "35"
+          },
+          {
+            "label": "INT",
+            "value": "10"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "636"
+          },
+          {
+            "label": "Rush TD",
+            "value": "10"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zwmgw2gmnn2kch4nquft"
+      },
+      {
+        "id": "daunte-culpepper-2004",
+        "name": "Daunte Culpepper",
+        "teamAbbr": "MIN",
+        "seasonYear": 2004,
+        "grade": 375.3,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "4,717"
+          },
+          {
+            "label": "Pass TD",
+            "value": "39"
+          },
+          {
+            "label": "INT",
+            "value": "11"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "406"
+          },
+          {
+            "label": "Rush TD",
+            "value": "2"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vmvl5xojgtwm6jadhy7l"
+      },
+      {
+        "id": "jamarcus-russell-2008",
+        "name": "JaMarcus Russell",
+        "teamAbbr": "LV",
+        "seasonYear": 2008,
+        "grade": 151.6,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "2,423"
+          },
+          {
+            "label": "Pass TD",
+            "value": "13"
+          },
+          {
+            "label": "INT",
+            "value": "8"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "127"
+          },
+          {
+            "label": "Rush TD",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/j9utxwp9846osapesksk"
+      },
+      {
+        "id": "joe-flacco-2014",
+        "name": "Joe Flacco",
+        "teamAbbr": "BAL",
+        "seasonYear": 2014,
+        "grade": 262.4,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "3,986"
+          },
+          {
+            "label": "Pass TD",
+            "value": "27"
+          },
+          {
+            "label": "INT",
+            "value": "12"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "70"
+          },
+          {
+            "label": "Rush TD",
+            "value": "2"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/dwsbpmlhoqud0puidizt"
+      },
+      {
+        "id": "kerry-collins-2000",
+        "name": "Kerry Collins",
+        "teamAbbr": "NYG",
+        "seasonYear": 2000,
+        "grade": 219.5,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "3,576"
+          },
+          {
+            "label": "Pass TD",
+            "value": "22"
+          },
+          {
+            "label": "INT",
+            "value": "12"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "65"
+          },
+          {
+            "label": "Rush TD",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jse9o88qf7weuicc1wwz"
+      },
+      {
+        "id": "matt-schaub-2009",
+        "name": "Matt Schaub",
+        "teamAbbr": "HOU",
+        "seasonYear": 2009,
+        "grade": 282.9,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "4,770"
+          },
+          {
+            "label": "Pass TD",
+            "value": "29"
+          },
+          {
+            "label": "INT",
+            "value": "15"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "61"
+          },
+          {
+            "label": "Rush TD",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mj2kh2nddxnw04ludcx0"
+      },
+      {
+        "id": "trent-dilfer-2005",
+        "name": "Trent Dilfer",
+        "teamAbbr": "CLE",
+        "seasonYear": 2005,
+        "grade": 117.4,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "2,321"
+          },
+          {
+            "label": "Pass TD",
+            "value": "11"
+          },
+          {
+            "label": "INT",
+            "value": "12"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "46"
+          },
+          {
+            "label": "Rush TD",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ssbi0ektdltubjtxsbvv"
+      }
+    ],
+    "grain": "season"
+  },
+  {
+    "id": "gen-rb-2010-lightweight-00",
+    "theme": "2010s Lightweight RB seasons",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "andre-ellington-2014",
+        "name": "Andre Ellington",
+        "teamAbbr": "ARI",
+        "seasonYear": 2014,
+        "grade": 181.5,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "660"
+          },
+          {
+            "label": "Rush TD",
+            "value": "3"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "3.3"
+          },
+          {
+            "label": "Rec",
+            "value": "46"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "395"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/seb6k3tjdcgi8tqmzt2z"
+      },
+      {
+        "id": "c-j-spiller-2012",
+        "name": "C.J. Spiller",
+        "teamAbbr": "BUF",
+        "seasonYear": 2012,
+        "grade": 261.3,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,244"
+          },
+          {
+            "label": "Rush TD",
+            "value": "6"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "6.0"
+          },
+          {
+            "label": "Rec",
+            "value": "43"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "459"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jqbnrdpq9c2nbchzntxt"
+      },
+      {
+        "id": "darren-sproles-2011",
+        "name": "Darren Sproles",
+        "teamAbbr": "NO",
+        "seasonYear": 2011,
+        "grade": 271.4,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "604"
+          },
+          {
+            "label": "Rush TD",
+            "value": "2"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "6.9"
+          },
+          {
+            "label": "Rec",
+            "value": "86"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "710"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/gvj5ng27blmwuz170aeo"
+      },
+      {
+        "id": "dion-lewis-2017",
+        "name": "Dion Lewis",
+        "teamAbbr": "NE",
+        "seasonYear": 2017,
+        "grade": 197.0,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "896"
+          },
+          {
+            "label": "Rush TD",
+            "value": "6"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.0"
+          },
+          {
+            "label": "Rec",
+            "value": "32"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "214"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/erzmtaaz3eimbg998hyq"
+      },
+      {
+        "id": "jamaal-charles-2013",
+        "name": "Jamaal Charles",
+        "teamAbbr": "KC",
+        "seasonYear": 2013,
+        "grade": 382.0,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,287"
+          },
+          {
+            "label": "Rush TD",
+            "value": "12"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.0"
+          },
+          {
+            "label": "Rec",
+            "value": "70"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "693"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mdrlzgankwwjldxllgcx"
+      },
+      {
+        "id": "justin-forsett-2014",
+        "name": "Justin Forsett",
+        "teamAbbr": "BAL",
+        "seasonYear": 2014,
+        "grade": 244.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,266"
+          },
+          {
+            "label": "Rush TD",
+            "value": "8"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.4"
+          },
+          {
+            "label": "Rec",
+            "value": "44"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "263"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/o86dvbcs8dcubcpj6fnu"
+      },
+      {
+        "id": "matt-breida-2018",
+        "name": "Matt Breida",
+        "teamAbbr": "SF",
+        "seasonYear": 2018,
+        "grade": 164.5,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "814"
+          },
+          {
+            "label": "Rush TD",
+            "value": "3"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.3"
+          },
+          {
+            "label": "Rec",
+            "value": "27"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "261"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/rc4m1xw0xmtsrxswd0bg"
+      },
+      {
+        "id": "phillip-lindsay-2018",
+        "name": "Phillip Lindsay",
+        "teamAbbr": "DEN",
+        "seasonYear": 2018,
+        "grade": 222.8,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,037"
+          },
+          {
+            "label": "Rush TD",
+            "value": "9"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.4"
+          },
+          {
+            "label": "Rec",
+            "value": "35"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "241"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/soywd4cnq19pigrwabb5"
+      }
+    ],
+    "grain": "season"
+  },
+  {
+    "id": "gen-rb-all-mr-irrelevant-00",
+    "theme": "Late-round-flier RB seasons",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "ahmad-bradshaw-2010",
+        "name": "Ahmad Bradshaw",
+        "teamAbbr": "NYG",
+        "seasonYear": 2010,
+        "grade": 249.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,235"
+          },
+          {
+            "label": "Rush TD",
+            "value": "8"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "4.5"
+          },
+          {
+            "label": "Rec",
+            "value": "47"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "314"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vlgcz2so2urjgowxz3tz"
+      },
+      {
+        "id": "chester-taylor-2006",
+        "name": "Chester Taylor",
+        "teamAbbr": "MIN",
+        "seasonYear": 2006,
+        "grade": 228.2,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,214"
+          },
+          {
+            "label": "Rush TD",
+            "value": "6"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "4.0"
+          },
+          {
+            "label": "Rec",
+            "value": "42"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "288"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ay2c42ghmrgmxqcdsmdi"
+      },
+      {
+        "id": "chris-carson-2019",
+        "name": "Chris Carson",
+        "teamAbbr": "SEA",
+        "seasonYear": 2019,
+        "grade": 240.6,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,230"
+          },
+          {
+            "label": "Rush TD",
+            "value": "7"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "4.4"
+          },
+          {
+            "label": "Rec",
+            "value": "37"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "266"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zxjqunrgf4j8p2eg4xyl"
+      },
+      {
+        "id": "derrick-ward-2008",
+        "name": "Derrick Ward",
+        "teamAbbr": "NYG",
+        "seasonYear": 2008,
+        "grade": 193.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,025"
+          },
+          {
+            "label": "Rush TD",
+            "value": "2"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.6"
+          },
+          {
+            "label": "Rec",
+            "value": "41"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "384"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/alp1lllkthvns8nnaul0"
+      },
+      {
+        "id": "isiah-pacheco-2023",
+        "name": "Isiah Pacheco",
+        "teamAbbr": "KC",
+        "seasonYear": 2023,
+        "grade": 215.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "935"
+          },
+          {
+            "label": "Rush TD",
+            "value": "7"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "4.6"
+          },
+          {
+            "label": "Rec",
+            "value": "44"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "244"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/rzr8nxjunjeiv8bjir59"
+      },
+      {
+        "id": "jamal-anderson-2000",
+        "name": "Jamal Anderson",
+        "teamAbbr": "ATL",
+        "seasonYear": 2000,
+        "grade": 215.8,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,013"
+          },
+          {
+            "label": "Rush TD",
+            "value": "6"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "3.6"
+          },
+          {
+            "label": "Rec",
+            "value": "41"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "375"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/faws2enuknhawnowkns0"
+      },
+      {
+        "id": "justin-forsett-2014",
+        "name": "Justin Forsett",
+        "teamAbbr": "BAL",
+        "seasonYear": 2014,
+        "grade": 244.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,266"
+          },
+          {
+            "label": "Rush TD",
+            "value": "8"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.4"
+          },
+          {
+            "label": "Rec",
+            "value": "44"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "263"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/o86dvbcs8dcubcpj6fnu"
+      },
+      {
+        "id": "peyton-hillis-2010",
+        "name": "Peyton Hillis",
+        "teamAbbr": "CLE",
+        "seasonYear": 2010,
+        "grade": 304.4,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,177"
+          },
+          {
+            "label": "Rush TD",
+            "value": "11"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "4.4"
+          },
+          {
+            "label": "Rec",
+            "value": "61"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "477"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/uy3jtiwamtomkrodvnl9"
+      }
+    ],
+    "grain": "season"
+  },
+  {
+    "id": "gen-rb-2000-prime-00",
+    "theme": "2000s Prime-years (27–30) RB seasons",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "brian-westbrook-2007",
+        "name": "Brian Westbrook",
+        "teamAbbr": "PHI",
+        "seasonYear": 2007,
+        "grade": 372.4,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,333"
+          },
+          {
+            "label": "Rush TD",
+            "value": "7"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "4.8"
+          },
+          {
+            "label": "Rec",
+            "value": "90"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "771"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xerjzdet52uvvhqovape"
+      },
+      {
+        "id": "charlie-garner-2002",
+        "name": "Charlie Garner",
+        "teamAbbr": "LV",
+        "seasonYear": 2002,
+        "grade": 347.3,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "962"
+          },
+          {
+            "label": "Rush TD",
+            "value": "7"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.3"
+          },
+          {
+            "label": "Rec",
+            "value": "91"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "941"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i6vgoizxzlnf1ecxnzbq"
+      },
+      {
+        "id": "ladainian-tomlinson-2006",
+        "name": "LaDainian Tomlinson",
+        "teamAbbr": "LAC",
+        "seasonYear": 2006,
+        "grade": 474.3,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,815"
+          },
+          {
+            "label": "Rush TD",
+            "value": "28"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.2"
+          },
+          {
+            "label": "Rec",
+            "value": "56"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "508"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
+      },
+      {
+        "id": "larry-johnson-2006",
+        "name": "Larry Johnson",
+        "teamAbbr": "KC",
+        "seasonYear": 2006,
+        "grade": 374.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,789"
+          },
+          {
+            "label": "Rush TD",
+            "value": "17"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "4.3"
+          },
+          {
+            "label": "Rec",
+            "value": "41"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "410"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mzwxygpnqm65aj1w1qyr"
+      },
+      {
+        "id": "marshall-faulk-2000",
+        "name": "Marshall Faulk",
+        "teamAbbr": "LA",
+        "seasonYear": 2000,
+        "grade": 449.5,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,341"
+          },
+          {
+            "label": "Rush TD",
+            "value": "18"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.4"
+          },
+          {
+            "label": "Rec",
+            "value": "79"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "804"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
+      },
+      {
+        "id": "priest-holmes-2003",
+        "name": "Priest Holmes",
+        "teamAbbr": "KC",
+        "seasonYear": 2003,
+        "grade": 447.0,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,420"
+          },
+          {
+            "label": "Rush TD",
+            "value": "27"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "4.4"
+          },
+          {
+            "label": "Rec",
+            "value": "74"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "690"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
+      },
+      {
+        "id": "shaun-alexander-2005",
+        "name": "Shaun Alexander",
+        "teamAbbr": "SEA",
+        "seasonYear": 2005,
+        "grade": 378.8,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,880"
+          },
+          {
+            "label": "Rush TD",
+            "value": "27"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.1"
+          },
+          {
+            "label": "Rec",
+            "value": "15"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "78"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q6aogsngaiaq2yr1sgyv"
+      },
+      {
+        "id": "tiki-barber-2005",
+        "name": "Tiki Barber",
+        "teamAbbr": "NYG",
+        "seasonYear": 2005,
+        "grade": 359.0,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,860"
+          },
+          {
+            "label": "Rush TD",
+            "value": "9"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.2"
+          },
+          {
+            "label": "Rec",
+            "value": "54"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "530"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/envscajcftvy5low6aod"
+      }
+    ],
+    "grain": "season"
+  },
+  {
+    "id": "gen-rb-2000-rookie-year-00",
+    "theme": "2000s Rookie-season RB breakouts",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "adrian-peterson-2007",
+        "name": "Adrian Peterson",
+        "teamAbbr": "MIN",
+        "seasonYear": 2007,
+        "grade": 257.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,341"
+          },
+          {
+            "label": "Rush TD",
+            "value": "12"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.6"
+          },
+          {
+            "label": "Rec",
+            "value": "19"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "268"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ug2ua3skqc9f6vkbowxc"
+      },
+      {
+        "id": "chris-johnson-2008",
+        "name": "Chris Johnson",
+        "teamAbbr": "TEN",
+        "seasonYear": 2008,
+        "grade": 251.8,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,228"
+          },
+          {
+            "label": "Rush TD",
+            "value": "9"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "4.9"
+          },
+          {
+            "label": "Rec",
+            "value": "43"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "260"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryf9nc84eovvdbf0cz79"
+      },
+      {
+        "id": "clinton-portis-2002",
+        "name": "Clinton Portis",
+        "teamAbbr": "DEN",
+        "seasonYear": 2002,
+        "grade": 322.2,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,508"
+          },
+          {
+            "label": "Rush TD",
+            "value": "15"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.5"
+          },
+          {
+            "label": "Rec",
+            "value": "33"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "364"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/nuj4tdazwyxp6cfhac7h"
+      },
+      {
+        "id": "ladainian-tomlinson-2001",
+        "name": "LaDainian Tomlinson",
+        "teamAbbr": "LAC",
+        "seasonYear": 2001,
+        "grade": 279.3,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,236"
+          },
+          {
+            "label": "Rush TD",
+            "value": "10"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "3.6"
+          },
+          {
+            "label": "Rec",
+            "value": "59"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "367"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
+      },
+      {
+        "id": "matt-forte-2008",
+        "name": "Matt Forte",
+        "teamAbbr": "CHI",
+        "seasonYear": 2008,
+        "grade": 307.5,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,231"
+          },
+          {
+            "label": "Rush TD",
+            "value": "8"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "3.9"
+          },
+          {
+            "label": "Rec",
+            "value": "64"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "484"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/olqssssjykcx7tx7xsy3"
+      },
+      {
+        "id": "maurice-jones-drew-2006",
+        "name": "Maurice Jones-Drew",
+        "teamAbbr": "JAX",
+        "seasonYear": 2006,
+        "grade": 273.7,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "941"
+          },
+          {
+            "label": "Rush TD",
+            "value": "13"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.7"
+          },
+          {
+            "label": "Rec",
+            "value": "46"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "436"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/imza3kc0cmkjaym7sjsn"
+      },
+      {
+        "id": "mike-anderson-2000",
+        "name": "Mike Anderson",
+        "teamAbbr": "DEN",
+        "seasonYear": 2000,
+        "grade": 279.0,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,491"
+          },
+          {
+            "label": "Rush TD",
+            "value": "15"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.1"
+          },
+          {
+            "label": "Rec",
+            "value": "23"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "169"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/u233mhiu14upds1god2j"
+      },
+      {
+        "id": "steve-slaton-2008",
+        "name": "Steve Slaton",
+        "teamAbbr": "HOU",
+        "seasonYear": 2008,
+        "grade": 275.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,282"
+          },
+          {
+            "label": "Rush TD",
+            "value": "9"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "4.8"
+          },
+          {
+            "label": "Rec",
+            "value": "50"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "377"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/o7d06in3cz3cm51iivg0"
+      }
+    ],
+    "grain": "season"
+  },
+  {
     "id": "gen-rb-2000-sub6-00",
     "theme": "2000s Sub-6-foot RB seasons",
     "sport": "nfl",
@@ -7468,1737 +9204,249 @@
     "grain": "season"
   },
   {
-    "id": "gen-qb-2000-towering-00",
-    "theme": "2000s Towering (6'5\"+) QB seasons",
+    "id": "gen-wr-2000-top10-pick-00",
+    "theme": "2000s Top-10-pick WR phenoms",
     "sport": "nfl",
     "players": [
       {
-        "id": "ben-roethlisberger-2009",
-        "name": "Ben Roethlisberger",
-        "teamAbbr": "PIT",
-        "seasonYear": 2009,
-        "grade": 273.0,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,328"
-          },
-          {
-            "label": "Pass TD",
-            "value": "26"
-          },
-          {
-            "label": "INT",
-            "value": "12"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "79"
-          },
-          {
-            "label": "Rush TD",
-            "value": "2"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vziogpnyp9d0xtpiuqhr"
-      },
-      {
-        "id": "carson-palmer-2005",
-        "name": "Carson Palmer",
-        "teamAbbr": "CIN",
-        "seasonYear": 2005,
-        "grade": 267.8,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "3,836"
-          },
-          {
-            "label": "Pass TD",
-            "value": "32"
-          },
-          {
-            "label": "INT",
-            "value": "12"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "44"
-          },
-          {
-            "label": "Rush TD",
-            "value": "1"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/belgna3tokxga0gjjmwk"
-      },
-      {
-        "id": "derek-anderson-2007",
-        "name": "Derek Anderson",
-        "teamAbbr": "CLE",
-        "seasonYear": 2007,
-        "grade": 255.1,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "3,786"
-          },
-          {
-            "label": "Pass TD",
-            "value": "29"
-          },
-          {
-            "label": "INT",
-            "value": "19"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "77"
-          },
-          {
-            "label": "Rush TD",
-            "value": "3"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/w191gsxivnqgdwgydka6"
-      },
-      {
-        "id": "drew-bledsoe-2002",
-        "name": "Drew Bledsoe",
-        "teamAbbr": "BUF",
-        "seasonYear": 2002,
-        "grade": 259.1,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,359"
-          },
-          {
-            "label": "Pass TD",
-            "value": "24"
-          },
-          {
-            "label": "INT",
-            "value": "15"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "67"
-          },
-          {
-            "label": "Rush TD",
-            "value": "2"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/asbipakyrn90khbmi7xo"
-      },
-      {
-        "id": "eli-manning-2009",
-        "name": "Eli Manning",
-        "teamAbbr": "NYG",
-        "seasonYear": 2009,
-        "grade": 247.3,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,021"
-          },
-          {
-            "label": "Pass TD",
-            "value": "27"
-          },
-          {
-            "label": "INT",
-            "value": "14"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "65"
-          },
-          {
-            "label": "Rush TD",
-            "value": "0"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/w51tf8uedjftbr4qpaex"
-      },
-      {
-        "id": "matt-schaub-2009",
-        "name": "Matt Schaub",
+        "id": "andre-johnson-2008",
+        "name": "Andre Johnson",
         "teamAbbr": "HOU",
-        "seasonYear": 2009,
-        "grade": 282.9,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,770"
-          },
-          {
-            "label": "Pass TD",
-            "value": "29"
-          },
-          {
-            "label": "INT",
-            "value": "15"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "61"
-          },
-          {
-            "label": "Rush TD",
-            "value": "0"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mj2kh2nddxnw04ludcx0"
-      },
-      {
-        "id": "peyton-manning-2004",
-        "name": "Peyton Manning",
-        "teamAbbr": "IND",
-        "seasonYear": 2004,
-        "grade": 362.1,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,557"
-          },
-          {
-            "label": "Pass TD",
-            "value": "49"
-          },
-          {
-            "label": "INT",
-            "value": "10"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "38"
-          },
-          {
-            "label": "Rush TD",
-            "value": "0"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xpcd6auodk3w0vda6jal"
-      },
-      {
-        "id": "philip-rivers-2008",
-        "name": "Philip Rivers",
-        "teamAbbr": "LAC",
         "seasonYear": 2008,
-        "grade": 282.6,
+        "grade": 320.5,
         "stats": [
           {
-            "label": "Pass Yds",
-            "value": "4,004"
+            "label": "Rec Yds",
+            "value": "1,575"
           },
           {
-            "label": "Pass TD",
-            "value": "34"
-          },
-          {
-            "label": "INT",
-            "value": "11"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "84"
-          },
-          {
-            "label": "Rush TD",
-            "value": "0"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/voakyrtj34sghkwxaxxf"
-      }
-    ],
-    "grain": "season"
-  },
-  {
-    "id": "gen-qb-2000-undrafted-00",
-    "theme": "2000s Undrafted QB gems",
-    "sport": "nfl",
-    "players": [
-      {
-        "id": "billy-volek-2004",
-        "name": "Billy Volek",
-        "teamAbbr": "TEN",
-        "seasonYear": 2004,
-        "grade": 162.4,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "2,485"
-          },
-          {
-            "label": "Pass TD",
-            "value": "18"
-          },
-          {
-            "label": "INT",
-            "value": "10"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "50"
-          },
-          {
-            "label": "Rush TD",
-            "value": "1"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jei3uos0woj4u7exp8ih"
-      },
-      {
-        "id": "jake-delhomme-2004",
-        "name": "Jake Delhomme",
-        "teamAbbr": "CAR",
-        "seasonYear": 2004,
-        "grade": 254.5,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "3,886"
-          },
-          {
-            "label": "Pass TD",
-            "value": "29"
-          },
-          {
-            "label": "INT",
-            "value": "15"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "71"
-          },
-          {
-            "label": "Rush TD",
-            "value": "1"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/k5ovzylfya7c86x91067"
-      },
-      {
-        "id": "jay-fiedler-2001",
-        "name": "Jay Fiedler",
-        "teamAbbr": "MIA",
-        "seasonYear": 2001,
-        "grade": 228.0,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "3,248"
-          },
-          {
-            "label": "Pass TD",
-            "value": "20"
-          },
-          {
-            "label": "INT",
-            "value": "19"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "321"
-          },
-          {
-            "label": "Rush TD",
-            "value": "4"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fplaj9oxvmgrampjqywq"
-      },
-      {
-        "id": "jeff-garcia-2000",
-        "name": "Jeff Garcia",
-        "teamAbbr": "SF",
-        "seasonYear": 2000,
-        "grade": 339.8,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,238"
-          },
-          {
-            "label": "Pass TD",
-            "value": "31"
-          },
-          {
-            "label": "INT",
-            "value": "9"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "403"
-          },
-          {
-            "label": "Rush TD",
-            "value": "4"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bysr1fkpqdhljtvlkcrm"
-      },
-      {
-        "id": "jon-kitna-2006",
-        "name": "Jon Kitna",
-        "teamAbbr": "DET",
-        "seasonYear": 2006,
-        "grade": 235.9,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,208"
-          },
-          {
-            "label": "Pass TD",
-            "value": "21"
-          },
-          {
-            "label": "INT",
-            "value": "22"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "156"
-          },
-          {
-            "label": "Rush TD",
-            "value": "2"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/rxrfxfbom7grkpnv94cp"
-      },
-      {
-        "id": "kurt-warner-2001",
-        "name": "Kurt Warner",
-        "teamAbbr": "LA",
-        "seasonYear": 2001,
-        "grade": 299.2,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,830"
-          },
-          {
-            "label": "Pass TD",
-            "value": "36"
-          },
-          {
-            "label": "INT",
-            "value": "22"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "60"
-          },
-          {
-            "label": "Rush TD",
-            "value": "0"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xlgzhoozvi1agd8hn4kk"
-      },
-      {
-        "id": "shaun-hill-2008",
-        "name": "Shaun Hill",
-        "teamAbbr": "SF",
-        "seasonYear": 2008,
-        "grade": 145.3,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "2,046"
-          },
-          {
-            "label": "Pass TD",
-            "value": "14"
-          },
-          {
-            "label": "INT",
-            "value": "8"
-          },
-          {
-            "label": "Rush Yds",
+            "label": "Rec",
             "value": "115"
           },
           {
-            "label": "Rush TD",
-            "value": "2"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dn42ccbwrshm7uksyphy"
-      },
-      {
-        "id": "tony-romo-2007",
-        "name": "Tony Romo",
-        "teamAbbr": "DAL",
-        "seasonYear": 2007,
-        "grade": 299.6,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,211"
-          },
-          {
-            "label": "Pass TD",
-            "value": "36"
-          },
-          {
-            "label": "INT",
-            "value": "19"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "132"
-          },
-          {
-            "label": "Rush TD",
-            "value": "2"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/rdgaxf7djip2ovlkeqjk"
-      }
-    ],
-    "grain": "season"
-  },
-  {
-    "id": "gen-qb-2000-vet-00",
-    "theme": "2000s Age-33+ QB seasons",
-    "sport": "nfl",
-    "players": [
-      {
-        "id": "brett-favre-2009",
-        "name": "Brett Favre",
-        "teamAbbr": "MIN",
-        "seasonYear": 2009,
-        "grade": 286.8,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,202"
-          },
-          {
-            "label": "Pass TD",
-            "value": "33"
-          },
-          {
-            "label": "INT",
-            "value": "7"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "7"
-          },
-          {
-            "label": "Rush TD",
-            "value": "0"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/m3sggjgdqlp4jqpxktvr"
-      },
-      {
-        "id": "donovan-mcnabb-2009",
-        "name": "Donovan McNabb",
-        "teamAbbr": "PHI",
-        "seasonYear": 2009,
-        "grade": 236.2,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "3,553"
-          },
-          {
-            "label": "Pass TD",
-            "value": "22"
-          },
-          {
-            "label": "INT",
-            "value": "10"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "141"
-          },
-          {
-            "label": "Rush TD",
-            "value": "2"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wd6jjtwdweq7v3ya2pet"
-      },
-      {
-        "id": "jeff-garcia-2003",
-        "name": "Jeff Garcia",
-        "teamAbbr": "SF",
-        "seasonYear": 2003,
-        "grade": 228.7,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "2,704"
-          },
-          {
-            "label": "Pass TD",
-            "value": "18"
-          },
-          {
-            "label": "INT",
-            "value": "13"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "325"
-          },
-          {
-            "label": "Rush TD",
-            "value": "7"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bysr1fkpqdhljtvlkcrm"
-      },
-      {
-        "id": "jon-kitna-2006",
-        "name": "Jon Kitna",
-        "teamAbbr": "DET",
-        "seasonYear": 2006,
-        "grade": 235.9,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,208"
-          },
-          {
-            "label": "Pass TD",
-            "value": "21"
-          },
-          {
-            "label": "INT",
-            "value": "22"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "156"
-          },
-          {
-            "label": "Rush TD",
-            "value": "2"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/rxrfxfbom7grkpnv94cp"
-      },
-      {
-        "id": "kurt-warner-2008",
-        "name": "Kurt Warner",
-        "teamAbbr": "ARI",
-        "seasonYear": 2008,
-        "grade": 275.1,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,582"
-          },
-          {
-            "label": "Pass TD",
-            "value": "30"
-          },
-          {
-            "label": "INT",
-            "value": "14"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "-2"
-          },
-          {
-            "label": "Rush TD",
-            "value": "0"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xlgzhoozvi1agd8hn4kk"
-      },
-      {
-        "id": "peyton-manning-2009",
-        "name": "Peyton Manning",
-        "teamAbbr": "IND",
-        "seasonYear": 2009,
-        "grade": 278.7,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,500"
-          },
-          {
-            "label": "Pass TD",
-            "value": "33"
-          },
-          {
-            "label": "INT",
-            "value": "16"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "-13"
-          },
-          {
-            "label": "Rush TD",
-            "value": "0"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xpcd6auodk3w0vda6jal"
-      },
-      {
-        "id": "rich-gannon-2002",
-        "name": "Rich Gannon",
-        "teamAbbr": "LV",
-        "seasonYear": 2002,
-        "grade": 305.2,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,689"
-          },
-          {
-            "label": "Pass TD",
-            "value": "26"
-          },
-          {
-            "label": "INT",
-            "value": "10"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "156"
-          },
-          {
-            "label": "Rush TD",
-            "value": "3"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wy2haknzelfdpaxh0pig"
-      },
-      {
-        "id": "trent-green-2004",
-        "name": "Trent Green",
-        "teamAbbr": "KC",
-        "seasonYear": 2004,
-        "grade": 266.1,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "4,589"
-          },
-          {
-            "label": "Pass TD",
-            "value": "27"
-          },
-          {
-            "label": "INT",
-            "value": "17"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "85"
-          },
-          {
-            "label": "Rush TD",
-            "value": "0"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pwsxlc2rah1aqy1tnbsb"
-      }
-    ],
-    "grain": "season"
-  },
-  {
-    "id": "gen-rb-2000-young-00",
-    "theme": "2000s Under-24 RB seasons",
-    "sport": "nfl",
-    "players": [
-      {
-        "id": "ahman-green-2000",
-        "name": "Ahman Green",
-        "teamAbbr": "GB",
-        "seasonYear": 2000,
-        "grade": 321.2,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,170"
-          },
-          {
-            "label": "Rush TD",
-            "value": "10"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.5"
-          },
-          {
-            "label": "Rec",
-            "value": "72"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "542"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jywr5x0yw6oryiiaikbp"
-      },
-      {
-        "id": "clinton-portis-2002",
-        "name": "Clinton Portis",
-        "teamAbbr": "DEN",
-        "seasonYear": 2002,
-        "grade": 322.2,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,508"
-          },
-          {
-            "label": "Rush TD",
-            "value": "15"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "5.5"
-          },
-          {
-            "label": "Rec",
-            "value": "33"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "364"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/nuj4tdazwyxp6cfhac7h"
-      },
-      {
-        "id": "edgerrin-james-2000",
-        "name": "Edgerrin James",
-        "teamAbbr": "IND",
-        "seasonYear": 2000,
-        "grade": 396.1,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,690"
-          },
-          {
-            "label": "Rush TD",
-            "value": "13"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.4"
-          },
-          {
-            "label": "Rec",
-            "value": "61"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "581"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g7i6v01dasbvebawxwdm"
-      },
-      {
-        "id": "frank-gore-2006",
-        "name": "Frank Gore",
-        "teamAbbr": "SF",
-        "seasonYear": 2006,
-        "grade": 333.0,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,695"
-          },
-          {
-            "label": "Rush TD",
+            "label": "Rec TD",
             "value": "8"
           },
           {
-            "label": "Yds/Carry",
-            "value": "5.4"
+            "label": "Yds/Rec",
+            "value": "13.7"
           },
           {
-            "label": "Rec",
-            "value": "61"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "485"
+            "label": "Tgts",
+            "value": "115"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lxxkhd2suyalrbruzut7"
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iavrftkbpw4bekzl7zfv"
       },
       {
-        "id": "ladainian-tomlinson-2002",
-        "name": "LaDainian Tomlinson",
-        "teamAbbr": "LAC",
-        "seasonYear": 2002,
-        "grade": 386.2,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,683"
-          },
-          {
-            "label": "Rush TD",
-            "value": "14"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.5"
-          },
-          {
-            "label": "Rec",
-            "value": "79"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "489"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
-      },
-      {
-        "id": "matt-forte-2008",
-        "name": "Matt Forte",
-        "teamAbbr": "CHI",
-        "seasonYear": 2008,
-        "grade": 307.5,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,231"
-          },
-          {
-            "label": "Rush TD",
-            "value": "8"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "3.9"
-          },
-          {
-            "label": "Rec",
-            "value": "64"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "484"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/olqssssjykcx7tx7xsy3"
-      },
-      {
-        "id": "ray-rice-2009",
-        "name": "Ray Rice",
-        "teamAbbr": "BAL",
-        "seasonYear": 2009,
-        "grade": 330.1,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,339"
-          },
-          {
-            "label": "Rush TD",
-            "value": "7"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "5.3"
-          },
-          {
-            "label": "Rec",
-            "value": "78"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "702"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/qjmvqdjdtrycr4zixl2v"
-      },
-      {
-        "id": "steven-jackson-2006",
-        "name": "Steven Jackson",
-        "teamAbbr": "LA",
-        "seasonYear": 2006,
-        "grade": 419.4,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,528"
-          },
-          {
-            "label": "Rush TD",
-            "value": "13"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.4"
-          },
-          {
-            "label": "Rec",
-            "value": "90"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "806"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/abl5wejuf448xw3jtphm"
-      }
-    ],
-    "grain": "season"
-  },
-  {
-    "id": "gen-rb-2000-day3-00",
-    "theme": "2000s Day-3 RB steals (round 5+)",
-    "sport": "nfl",
-    "players": [
-      {
-        "id": "ahmad-bradshaw-2009",
-        "name": "Ahmad Bradshaw",
-        "teamAbbr": "NYG",
-        "seasonYear": 2009,
-        "grade": 161.5,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "778"
-          },
-          {
-            "label": "Rush TD",
-            "value": "7"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.8"
-          },
-          {
-            "label": "Rec",
-            "value": "21"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "207"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vlgcz2so2urjgowxz3tz"
-      },
-      {
-        "id": "chester-taylor-2006",
-        "name": "Chester Taylor",
-        "teamAbbr": "MIN",
-        "seasonYear": 2006,
-        "grade": 228.2,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,214"
-          },
-          {
-            "label": "Rush TD",
-            "value": "6"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.0"
-          },
-          {
-            "label": "Rec",
-            "value": "42"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "288"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ay2c42ghmrgmxqcdsmdi"
-      },
-      {
-        "id": "derrick-ward-2008",
-        "name": "Derrick Ward",
-        "teamAbbr": "NYG",
-        "seasonYear": 2008,
-        "grade": 193.9,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,025"
-          },
-          {
-            "label": "Rush TD",
-            "value": "2"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "5.6"
-          },
-          {
-            "label": "Rec",
-            "value": "41"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "384"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/alp1lllkthvns8nnaul0"
-      },
-      {
-        "id": "jamal-anderson-2000",
-        "name": "Jamal Anderson",
-        "teamAbbr": "ATL",
-        "seasonYear": 2000,
-        "grade": 215.8,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,013"
-          },
-          {
-            "label": "Rush TD",
-            "value": "6"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "3.6"
-          },
-          {
-            "label": "Rec",
-            "value": "41"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "375"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/faws2enuknhawnowkns0"
-      },
-      {
-        "id": "jerome-harrison-2009",
-        "name": "Jerome Harrison",
+        "id": "braylon-edwards-2007",
+        "name": "Braylon Edwards",
         "teamAbbr": "CLE",
-        "seasonYear": 2009,
-        "grade": 184.2,
+        "seasonYear": 2007,
+        "grade": 304.9,
         "stats": [
           {
-            "label": "Rush Yds",
-            "value": "862"
-          },
-          {
-            "label": "Rush TD",
-            "value": "5"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.4"
+            "label": "Rec Yds",
+            "value": "1,289"
           },
           {
             "label": "Rec",
-            "value": "34"
+            "value": "80"
           },
           {
-            "label": "Rec Yds",
-            "value": "220"
+            "label": "Rec TD",
+            "value": "16"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "16.1"
+          },
+          {
+            "label": "Tgts",
+            "value": "80"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lmnola0pmzwchwanxapy"
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryuel7mxiqtyhyqn4lyn"
       },
       {
-        "id": "justin-forsett-2009",
-        "name": "Justin Forsett",
-        "teamAbbr": "SEA",
-        "seasonYear": 2009,
-        "grade": 167.9,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "619"
-          },
-          {
-            "label": "Rush TD",
-            "value": "4"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "5.4"
-          },
-          {
-            "label": "Rec",
-            "value": "41"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "350"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/o86dvbcs8dcubcpj6fnu"
-      },
-      {
-        "id": "michael-turner-2008",
-        "name": "Michael Turner",
-        "teamAbbr": "ATL",
+        "id": "calvin-johnson-2008",
+        "name": "Calvin Johnson",
+        "teamAbbr": "DET",
         "seasonYear": 2008,
-        "grade": 282.0,
+        "grade": 283.0,
         "stats": [
           {
-            "label": "Rush Yds",
-            "value": "1,699"
-          },
-          {
-            "label": "Rush TD",
-            "value": "17"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.5"
+            "label": "Rec Yds",
+            "value": "1,331"
           },
           {
             "label": "Rec",
-            "value": "6"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "41"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mdaldbfqcpsnwhilwldj"
-      },
-      {
-        "id": "mike-anderson-2000",
-        "name": "Mike Anderson",
-        "teamAbbr": "DEN",
-        "seasonYear": 2000,
-        "grade": 279.0,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,491"
-          },
-          {
-            "label": "Rush TD",
-            "value": "15"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "5.1"
-          },
-          {
-            "label": "Rec",
-            "value": "23"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "169"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/u233mhiu14upds1god2j"
-      }
-    ],
-    "grain": "season"
-  },
-  {
-    "id": "gen-rb-2000-first-round-00",
-    "theme": "2000s First-round RB seasons",
-    "sport": "nfl",
-    "players": [
-      {
-        "id": "chris-johnson-2009",
-        "name": "Chris Johnson",
-        "teamAbbr": "TEN",
-        "seasonYear": 2009,
-        "grade": 396.9,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "2,006"
-          },
-          {
-            "label": "Rush TD",
-            "value": "14"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "5.6"
-          },
-          {
-            "label": "Rec",
-            "value": "50"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "503"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryf9nc84eovvdbf0cz79"
-      },
-      {
-        "id": "edgerrin-james-2000",
-        "name": "Edgerrin James",
-        "teamAbbr": "IND",
-        "seasonYear": 2000,
-        "grade": 396.1,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,690"
-          },
-          {
-            "label": "Rush TD",
-            "value": "13"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.4"
-          },
-          {
-            "label": "Rec",
-            "value": "61"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "581"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g7i6v01dasbvebawxwdm"
-      },
-      {
-        "id": "ladainian-tomlinson-2006",
-        "name": "LaDainian Tomlinson",
-        "teamAbbr": "LAC",
-        "seasonYear": 2006,
-        "grade": 474.3,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,815"
-          },
-          {
-            "label": "Rush TD",
-            "value": "28"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "5.2"
-          },
-          {
-            "label": "Rec",
-            "value": "56"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "508"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
-      },
-      {
-        "id": "larry-johnson-2006",
-        "name": "Larry Johnson",
-        "teamAbbr": "KC",
-        "seasonYear": 2006,
-        "grade": 374.9,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,789"
-          },
-          {
-            "label": "Rush TD",
-            "value": "17"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.3"
-          },
-          {
-            "label": "Rec",
-            "value": "41"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "410"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mzwxygpnqm65aj1w1qyr"
-      },
-      {
-        "id": "marshall-faulk-2000",
-        "name": "Marshall Faulk",
-        "teamAbbr": "LA",
-        "seasonYear": 2000,
-        "grade": 449.5,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,341"
-          },
-          {
-            "label": "Rush TD",
-            "value": "18"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "5.4"
-          },
-          {
-            "label": "Rec",
-            "value": "79"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "804"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
-      },
-      {
-        "id": "ricky-williams-2002",
-        "name": "Ricky Williams",
-        "teamAbbr": "MIA",
-        "seasonYear": 2002,
-        "grade": 370.6,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,853"
-          },
-          {
-            "label": "Rush TD",
-            "value": "16"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.8"
-          },
-          {
-            "label": "Rec",
-            "value": "47"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "363"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/buhodr9dphf3lf0nazql"
-      },
-      {
-        "id": "shaun-alexander-2005",
-        "name": "Shaun Alexander",
-        "teamAbbr": "SEA",
-        "seasonYear": 2005,
-        "grade": 378.8,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,880"
-          },
-          {
-            "label": "Rush TD",
-            "value": "27"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "5.1"
-          },
-          {
-            "label": "Rec",
-            "value": "15"
-          },
-          {
-            "label": "Rec Yds",
             "value": "78"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q6aogsngaiaq2yr1sgyv"
-      },
-      {
-        "id": "steven-jackson-2006",
-        "name": "Steven Jackson",
-        "teamAbbr": "LA",
-        "seasonYear": 2006,
-        "grade": 419.4,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,528"
           },
           {
-            "label": "Rush TD",
-            "value": "13"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.4"
-          },
-          {
-            "label": "Rec",
-            "value": "90"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "806"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/abl5wejuf448xw3jtphm"
-      }
-    ],
-    "grain": "season"
-  },
-  {
-    "id": "gen-rb-2010-sub6-00",
-    "theme": "2010s Sub-6-foot RB seasons",
-    "sport": "nfl",
-    "players": [
-      {
-        "id": "aaron-jones-2019",
-        "name": "Aaron Jones",
-        "teamAbbr": "GB",
-        "seasonYear": 2019,
-        "grade": 318.8,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,084"
-          },
-          {
-            "label": "Rush TD",
-            "value": "16"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.6"
-          },
-          {
-            "label": "Rec",
-            "value": "49"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "474"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/bktkfvgfwujkdbzkcfim"
-      },
-      {
-        "id": "alvin-kamara-2018",
-        "name": "Alvin Kamara",
-        "teamAbbr": "NO",
-        "seasonYear": 2018,
-        "grade": 348.2,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "883"
-          },
-          {
-            "label": "Rush TD",
-            "value": "14"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.6"
-          },
-          {
-            "label": "Rec",
-            "value": "81"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "709"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/tl9enad6kiwv6cukf4vt"
-      },
-      {
-        "id": "christian-mccaffrey-2019",
-        "name": "Christian McCaffrey",
-        "teamAbbr": "CAR",
-        "seasonYear": 2019,
-        "grade": 469.2,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,387"
-          },
-          {
-            "label": "Rush TD",
-            "value": "15"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.8"
-          },
-          {
-            "label": "Rec",
-            "value": "116"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "1,005"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/umiv5sn2xxrjdjwjtkqm"
-      },
-      {
-        "id": "devonta-freeman-2015",
-        "name": "Devonta Freeman",
-        "teamAbbr": "ATL",
-        "seasonYear": 2015,
-        "grade": 320.4,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,056"
-          },
-          {
-            "label": "Rush TD",
-            "value": "11"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.0"
-          },
-          {
-            "label": "Rec",
-            "value": "73"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "578"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vjhvfwypu1byxfo2uvki"
-      },
-      {
-        "id": "doug-martin-2012",
-        "name": "Doug Martin",
-        "teamAbbr": "TB",
-        "seasonYear": 2012,
-        "grade": 313.6,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,454"
-          },
-          {
-            "label": "Rush TD",
-            "value": "11"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.6"
-          },
-          {
-            "label": "Rec",
-            "value": "49"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "472"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lhazttk4tjpi7ggf7du4"
-      },
-      {
-        "id": "jamaal-charles-2013",
-        "name": "Jamaal Charles",
-        "teamAbbr": "KC",
-        "seasonYear": 2013,
-        "grade": 382.0,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,287"
-          },
-          {
-            "label": "Rush TD",
+            "label": "Rec TD",
             "value": "12"
           },
           {
-            "label": "Yds/Carry",
-            "value": "5.0"
+            "label": "Yds/Rec",
+            "value": "17.1"
+          },
+          {
+            "label": "Tgts",
+            "value": "78"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/z6dxib9sientn4m9cljh"
+      },
+      {
+        "id": "cris-carter-2000",
+        "name": "Cris Carter",
+        "teamAbbr": "MIN",
+        "seasonYear": 2000,
+        "grade": 277.4,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,274"
           },
           {
             "label": "Rec",
-            "value": "70"
+            "value": "96"
           },
           {
-            "label": "Rec Yds",
-            "value": "693"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mdrlzgankwwjldxllgcx"
-      },
-      {
-        "id": "lesean-mccoy-2013",
-        "name": "LeSean McCoy",
-        "teamAbbr": "PHI",
-        "seasonYear": 2013,
-        "grade": 332.6,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,607"
-          },
-          {
-            "label": "Rush TD",
+            "label": "Rec TD",
             "value": "9"
           },
           {
-            "label": "Yds/Carry",
-            "value": "5.1"
+            "label": "Yds/Rec",
+            "value": "13.3"
+          },
+          {
+            "label": "Tgts",
+            "value": "158"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/tb52fk83tmdpmbzwliuk"
+      },
+      {
+        "id": "david-boston-2001",
+        "name": "David Boston",
+        "teamAbbr": "ARI",
+        "seasonYear": 2001,
+        "grade": 309.3,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,598"
           },
           {
             "label": "Rec",
-            "value": "52"
+            "value": "98"
           },
           {
-            "label": "Rec Yds",
-            "value": "539"
+            "label": "Rec TD",
+            "value": "8"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "16.3"
+          },
+          {
+            "label": "Tgts",
+            "value": "175"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/cpc1a2dgivdyevuncz7p"
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/efvdgyy0lnmdok7k2us0"
       },
       {
-        "id": "ray-rice-2011",
-        "name": "Ray Rice",
-        "teamAbbr": "BAL",
-        "seasonYear": 2011,
-        "grade": 372.8,
+        "id": "joey-galloway-2005",
+        "name": "Joey Galloway",
+        "teamAbbr": "TB",
+        "seasonYear": 2005,
+        "grade": 272.1,
         "stats": [
           {
-            "label": "Rush Yds",
-            "value": "1,364"
+            "label": "Rec Yds",
+            "value": "1,287"
           },
           {
-            "label": "Rush TD",
+            "label": "Rec",
+            "value": "83"
+          },
+          {
+            "label": "Rec TD",
+            "value": "10"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "15.5"
+          },
+          {
+            "label": "Tgts",
+            "value": "83"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pfioccpzeifhnunjtdy2"
+      },
+      {
+        "id": "larry-fitzgerald-2008",
+        "name": "Larry Fitzgerald",
+        "teamAbbr": "ARI",
+        "seasonYear": 2008,
+        "grade": 311.4,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,434"
+          },
+          {
+            "label": "Rec",
+            "value": "96"
+          },
+          {
+            "label": "Rec TD",
             "value": "12"
           },
           {
-            "label": "Yds/Carry",
-            "value": "4.7"
+            "label": "Yds/Rec",
+            "value": "14.9"
+          },
+          {
+            "label": "Tgts",
+            "value": "96"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ycgjjaad5un42gy4pnga"
+      },
+      {
+        "id": "torry-holt-2003",
+        "name": "Torry Holt",
+        "teamAbbr": "LA",
+        "seasonYear": 2003,
+        "grade": 359.1,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,696"
           },
           {
             "label": "Rec",
-            "value": "76"
+            "value": "117"
           },
           {
-            "label": "Rec Yds",
-            "value": "704"
+            "label": "Rec TD",
+            "value": "12"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "14.5"
+          },
+          {
+            "label": "Tgts",
+            "value": "117"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/qjmvqdjdtrycr4zixl2v"
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/y7nfvf7fw2xznh3e1rbt"
       }
     ],
     "grain": "season"
@@ -10196,80 +10444,140 @@
     "grain": "season"
   },
   {
-    "id": "gen-te-2000-day3-00",
-    "theme": "2000s Day-3 TE steals (round 5+)",
+    "id": "gen-wr-2000-ancient-00",
+    "theme": "2000s Ageless-wonder WR seasons (36+)",
     "sport": "nfl",
     "players": [
       {
-        "id": "billy-miller-2002",
-        "name": "Billy Miller",
-        "teamAbbr": "HOU",
-        "seasonYear": 2002,
-        "grade": 130.3,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "613"
-          },
-          {
-            "label": "Rec",
-            "value": "51"
-          },
-          {
-            "label": "Rec TD",
-            "value": "3"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "12.0"
-          },
-          {
-            "label": "Tgts",
-            "value": "80"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bhqkzrqlqbyqy1ktwq60"
-      },
-      {
-        "id": "brent-celek-2009",
-        "name": "Brent Celek",
-        "teamAbbr": "PHI",
-        "seasonYear": 2009,
-        "grade": 221.1,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "971"
-          },
-          {
-            "label": "Rec",
-            "value": "76"
-          },
-          {
-            "label": "Rec TD",
-            "value": "8"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "12.8"
-          },
-          {
-            "label": "Tgts",
-            "value": "112"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mit6ahic4gkdhy1hkejt"
-      },
-      {
-        "id": "byron-chamberlain-2001",
-        "name": "Byron Chamberlain",
+        "id": "cris-carter-2001",
+        "name": "Cris Carter",
         "teamAbbr": "MIN",
         "seasonYear": 2001,
-        "grade": 141.6,
+        "grade": 196.5,
         "stats": [
           {
             "label": "Rec Yds",
-            "value": "666"
+            "value": "871"
+          },
+          {
+            "label": "Rec",
+            "value": "73"
+          },
+          {
+            "label": "Rec TD",
+            "value": "6"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "11.9"
+          },
+          {
+            "label": "Tgts",
+            "value": "130"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/tb52fk83tmdpmbzwliuk"
+      },
+      {
+        "id": "isaac-bruce-2008",
+        "name": "Isaac Bruce",
+        "teamAbbr": "SF",
+        "seasonYear": 2008,
+        "grade": 185.0,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "833"
+          },
+          {
+            "label": "Rec",
+            "value": "60"
+          },
+          {
+            "label": "Rec TD",
+            "value": "7"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "13.9"
+          },
+          {
+            "label": "Tgts",
+            "value": "60"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/txgl2lvmyu3m28cltnib"
+      },
+      {
+        "id": "jerry-rice-2002",
+        "name": "Jerry Rice",
+        "teamAbbr": "LV",
+        "seasonYear": 2002,
+        "grade": 257.1,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,211"
+          },
+          {
+            "label": "Rec",
+            "value": "92"
+          },
+          {
+            "label": "Rec TD",
+            "value": "7"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "13.2"
+          },
+          {
+            "label": "Tgts",
+            "value": "150"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g1vjcnbryx3nmg0ppsnl"
+      },
+      {
+        "id": "jimmy-smith-2005",
+        "name": "Jimmy Smith",
+        "teamAbbr": "JAX",
+        "seasonYear": 2005,
+        "grade": 208.3,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,023"
+          },
+          {
+            "label": "Rec",
+            "value": "70"
+          },
+          {
+            "label": "Rec TD",
+            "value": "6"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "14.6"
+          },
+          {
+            "label": "Tgts",
+            "value": "70"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zgvlthadzlf0q6thnktj"
+      },
+      {
+        "id": "joey-galloway-2007",
+        "name": "Joey Galloway",
+        "teamAbbr": "TB",
+        "seasonYear": 2007,
+        "grade": 194.5,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,014"
           },
           {
             "label": "Rec",
@@ -10277,93 +10585,93 @@
           },
           {
             "label": "Rec TD",
-            "value": "3"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "11.7"
-          },
-          {
-            "label": "Tgts",
-            "value": "80"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wei7lijftagcldtpstmp"
-      },
-      {
-        "id": "desmond-clark-2001",
-        "name": "Desmond Clark",
-        "teamAbbr": "DEN",
-        "seasonYear": 2001,
-        "grade": 143.6,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "566"
-          },
-          {
-            "label": "Rec",
-            "value": "51"
-          },
-          {
-            "label": "Rec TD",
             "value": "6"
           },
           {
             "label": "Yds/Rec",
-            "value": "11.1"
+            "value": "17.8"
           },
           {
             "label": "Tgts",
-            "value": "77"
+            "value": "57"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g9lsnunxeacqezoeq7pk"
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pfioccpzeifhnunjtdy2"
       },
       {
-        "id": "donald-lee-2007",
-        "name": "Donald Lee",
-        "teamAbbr": "GB",
-        "seasonYear": 2007,
-        "grade": 141.5,
+        "id": "marvin-harrison-2008",
+        "name": "Marvin Harrison",
+        "teamAbbr": "IND",
+        "seasonYear": 2008,
+        "grade": 153.6,
         "stats": [
           {
             "label": "Rec Yds",
-            "value": "575"
+            "value": "636"
           },
           {
             "label": "Rec",
-            "value": "48"
+            "value": "60"
           },
           {
             "label": "Rec TD",
-            "value": "6"
+            "value": "5"
           },
           {
             "label": "Yds/Rec",
-            "value": "12.0"
+            "value": "10.6"
           },
           {
             "label": "Tgts",
-            "value": "48"
+            "value": "60"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xxaj9gnomfvyvyqksvfx"
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fni7z2tqhhaq5kbe5a0s"
       },
       {
-        "id": "eric-johnson-2004",
-        "name": "Eric Johnson",
-        "teamAbbr": "SF",
-        "seasonYear": 2004,
-        "grade": 176.5,
+        "id": "terrell-owens-2009",
+        "name": "Terrell Owens",
+        "teamAbbr": "BUF",
+        "seasonYear": 2009,
+        "grade": 179.3,
         "stats": [
           {
             "label": "Rec Yds",
-            "value": "825"
+            "value": "829"
           },
           {
             "label": "Rec",
-            "value": "82"
+            "value": "55"
+          },
+          {
+            "label": "Rec TD",
+            "value": "5"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "15.1"
+          },
+          {
+            "label": "Tgts",
+            "value": "109"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/c41avnwoegxy9nnwmgbo"
+      },
+      {
+        "id": "tim-brown-2002",
+        "name": "Tim Brown",
+        "teamAbbr": "LV",
+        "seasonYear": 2002,
+        "grade": 187.9,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "930"
+          },
+          {
+            "label": "Rec",
+            "value": "81"
           },
           {
             "label": "Rec TD",
@@ -10371,322 +10679,14 @@
           },
           {
             "label": "Yds/Rec",
-            "value": "10.1"
+            "value": "11.5"
           },
           {
             "label": "Tgts",
-            "value": "82"
+            "value": "127"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/nzmj7kfpoxygzf2r2ult"
-      },
-      {
-        "id": "frank-wycheck-2000",
-        "name": "Frank Wycheck",
-        "teamAbbr": "TEN",
-        "seasonYear": 2000,
-        "grade": 153.0,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "610"
-          },
-          {
-            "label": "Rec",
-            "value": "68"
-          },
-          {
-            "label": "Rec TD",
-            "value": "4"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "9.0"
-          },
-          {
-            "label": "Tgts",
-            "value": "107"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/in369qjr6yktjab7p5dv"
-      },
-      {
-        "id": "shannon-sharpe-2003",
-        "name": "Shannon Sharpe",
-        "teamAbbr": "DEN",
-        "seasonYear": 2003,
-        "grade": 187.0,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "770"
-          },
-          {
-            "label": "Rec",
-            "value": "62"
-          },
-          {
-            "label": "Rec TD",
-            "value": "8"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "12.4"
-          },
-          {
-            "label": "Tgts",
-            "value": "62"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pl9dwxqbdarzuirkjeri"
-      }
-    ],
-    "grain": "season"
-  },
-  {
-    "id": "gen-wr-2000-first-round-00",
-    "theme": "2000s First-round WR seasons",
-    "sport": "nfl",
-    "players": [
-      {
-        "id": "andre-johnson-2008",
-        "name": "Andre Johnson",
-        "teamAbbr": "HOU",
-        "seasonYear": 2008,
-        "grade": 320.5,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "1,575"
-          },
-          {
-            "label": "Rec",
-            "value": "115"
-          },
-          {
-            "label": "Rec TD",
-            "value": "8"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "13.7"
-          },
-          {
-            "label": "Tgts",
-            "value": "115"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iavrftkbpw4bekzl7zfv"
-      },
-      {
-        "id": "braylon-edwards-2007",
-        "name": "Braylon Edwards",
-        "teamAbbr": "CLE",
-        "seasonYear": 2007,
-        "grade": 304.9,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "1,289"
-          },
-          {
-            "label": "Rec",
-            "value": "80"
-          },
-          {
-            "label": "Rec TD",
-            "value": "16"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "16.1"
-          },
-          {
-            "label": "Tgts",
-            "value": "80"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryuel7mxiqtyhyqn4lyn"
-      },
-      {
-        "id": "david-boston-2001",
-        "name": "David Boston",
-        "teamAbbr": "ARI",
-        "seasonYear": 2001,
-        "grade": 309.3,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "1,598"
-          },
-          {
-            "label": "Rec",
-            "value": "98"
-          },
-          {
-            "label": "Rec TD",
-            "value": "8"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "16.3"
-          },
-          {
-            "label": "Tgts",
-            "value": "175"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/efvdgyy0lnmdok7k2us0"
-      },
-      {
-        "id": "larry-fitzgerald-2008",
-        "name": "Larry Fitzgerald",
-        "teamAbbr": "ARI",
-        "seasonYear": 2008,
-        "grade": 311.4,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "1,434"
-          },
-          {
-            "label": "Rec",
-            "value": "96"
-          },
-          {
-            "label": "Rec TD",
-            "value": "12"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "14.9"
-          },
-          {
-            "label": "Tgts",
-            "value": "96"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ycgjjaad5un42gy4pnga"
-      },
-      {
-        "id": "marvin-harrison-2002",
-        "name": "Marvin Harrison",
-        "teamAbbr": "IND",
-        "seasonYear": 2002,
-        "grade": 382.2,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "1,722"
-          },
-          {
-            "label": "Rec",
-            "value": "143"
-          },
-          {
-            "label": "Rec TD",
-            "value": "11"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "12.0"
-          },
-          {
-            "label": "Tgts",
-            "value": "205"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fni7z2tqhhaq5kbe5a0s"
-      },
-      {
-        "id": "randy-moss-2007",
-        "name": "Randy Moss",
-        "teamAbbr": "NE",
-        "seasonYear": 2007,
-        "grade": 385.3,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "1,493"
-          },
-          {
-            "label": "Rec",
-            "value": "98"
-          },
-          {
-            "label": "Rec TD",
-            "value": "23"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "15.2"
-          },
-          {
-            "label": "Tgts",
-            "value": "98"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/udotyrimbuirasxxkd8p"
-      },
-      {
-        "id": "reggie-wayne-2007",
-        "name": "Reggie Wayne",
-        "teamAbbr": "IND",
-        "seasonYear": 2007,
-        "grade": 315.4,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "1,510"
-          },
-          {
-            "label": "Rec",
-            "value": "104"
-          },
-          {
-            "label": "Rec TD",
-            "value": "10"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "14.5"
-          },
-          {
-            "label": "Tgts",
-            "value": "104"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xcs1zrjpz03nualfwfts"
-      },
-      {
-        "id": "torry-holt-2003",
-        "name": "Torry Holt",
-        "teamAbbr": "LA",
-        "seasonYear": 2003,
-        "grade": 359.1,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "1,696"
-          },
-          {
-            "label": "Rec",
-            "value": "117"
-          },
-          {
-            "label": "Rec TD",
-            "value": "12"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "14.5"
-          },
-          {
-            "label": "Tgts",
-            "value": "117"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/y7nfvf7fw2xznh3e1rbt"
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ra9kiq4ocliinelsnhlw"
       }
     ],
     "grain": "season"

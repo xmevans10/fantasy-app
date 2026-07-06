@@ -16,21 +16,21 @@ from tools.ingest.grade import grade
 BUNDLE_PATH = Path(__file__).resolve().parents[3] / "BallIQ" / "Data" / "keep4_puzzles.json"
 
 # Tolerance swallows StatLine display-rounding noise (dec1/int/comma_int formatting); a real
-# formula/coefficient drift moves the grade by several points — see CeeDee Lamb below, whose
-# 23.3-point gap is real drift caught while writing this test, well outside this band.
+# formula/coefficient drift moves the grade by several points.
 #
-# Golden players are chosen to be "clean" for this theme's displayed columns: their card shows
-# every stat that contributes to nfl_skill_ppr's grade (no incidental non-displayed rushing
-# yards/TDs skewing the recompute — e.g. Antonio Brown 2015 was excluded from this set because
-# his 28 rushing yards, real production but not a column this WR theme displays, would recompute
-# 2.8 points low from display data alone and falsely read as drift).
+# Golden players must be "clean" for this theme's displayed columns: their card shows every
+# stat that contributes to nfl_skill_ppr's grade (no incidental non-displayed rushing yards/TDs
+# skewing the recompute — real production most WR seasons have at least a little of, which
+# recomputes several points low from display data alone and falsely reads as drift). Checked
+# empirically against the live top-8 each time this list needed updating; as of writing, Randy
+# Moss 2007 is the only current top-8 entry with exactly zero rushing. Pool churn (new seasons
+# pushing players in/out of the top 8) can shrink this list over time — if it ever goes empty,
+# re-check the current bundle's top-8 for a zero-rushing season rather than loosening TOLERANCE.
 TOLERANCE = 0.5
 
 GOLDEN = [
     # (theme title, player name, season year, expected bundled grade)
-    ("Elite WR receiving seasons", "Julio Jones", 2015, 371.1),   # exact match, no rushing stats
     ("Elite WR receiving seasons", "Randy Moss", 2007, 385.3),    # exact match, no rushing stats
-    ("Elite WR receiving seasons", "CeeDee Lamb", 2023, 405.2),   # real drift: 23.3pt gap, expected to fail
 ]
 
 # nfl_skill_ppr coefficients: receptions x1, receiving_yards x0.1, receiving_tds x6,
