@@ -37,6 +37,9 @@ def field_value(season, field_name: str) -> object:
         return season.season_year
     if field_name == "decade":
         return (season.season_year // 10) * 10
+    if field_name == "is_rookie_season":
+        rookie_year = season.meta.get("rookie_season")
+        return rookie_year is not None and str(season.season_year) == str(rookie_year)
     if field_name == "position":
         return season.position
     if field_name == "team":

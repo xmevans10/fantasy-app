@@ -208,11 +208,15 @@ def build_rows(seasons: list[RawSeason]) -> tuple[list[PuzzleRow], list[PuzzleRo
 
 
 def assign_active_dates(rows: list[PuzzleRow], backfill_days: int) -> None:
-    """Spread rows across the trailing `backfill_days` so the archive isn't empty.
-    The client selects daily by index over the pool; active_date is archival."""
+    """Spread rows across the trailing `backfill_days` so the archive isn't empty. Deliberately
+    never stamps *today* (offset starts at 1, not 0) — today's exact date is reserved for
+    daily_puzzle.py's single guaranteed-novel pick, which the client (RemotePuzzleRepository)
+    trusts as an exact `active_date` match to mean "the puzzle for today." Every other row's
+    active_date stays archival/informational, same as before."""
     today = dt.date.today()
     for i, row in enumerate(rows):
-        row.active_date = (today - dt.timedelta(days=i % max(1, backfill_days))).isoformat()
+        offset = (i % max(1, backfill_days)) + 1
+        row.active_date = (today - dt.timedelta(days=offset)).isoformat()
 
 
 def catalog_rows(seasons: list[RawSeason]) -> list[dict]:

@@ -9,9 +9,17 @@ Pure given a fixed `seasons` list, so the daily archive is reproducible.
 """
 from __future__ import annotations
 
+import itertools
+
 from . import assemble, curation
 from .models import RawSeason
 from .themes import Filter, Theme
+
+
+def _quirk_filters(q: curation.Quirk, spec: curation.PositionSpec) -> tuple[Filter, ...]:
+    """A quirk's real filter set — weight-class quirks are position-relative and carry
+    empty placeholder filters on the Quirk itself (see curation.weight_filters)."""
+    return curation.weight_filters(spec).get(q.key, q.filters)
 
 
 def _theme(key: str, title: str, spec: curation.PositionSpec,
@@ -30,7 +38,7 @@ def _theme(key: str, title: str, spec: curation.PositionSpec,
 
 
 def _candidates() -> list[Theme]:
-    """Every theme we'll *try* — viability is checked separately."""
+    """Every single-quirk theme we'll *try* — viability is checked separately."""
     out: list[Theme] = []
     for spec in curation.POSITIONS.values():
         for decade in curation.DECADES:
@@ -42,11 +50,41 @@ def _candidates() -> list[Theme]:
                 if key in curation.DENYLIST:
                     continue
                 title = prefix + q.title.format(pos=spec.label)
-                out.append(_theme(key, title, spec, dfilter + q.filters))
+                out.append(_theme(key, title, spec, dfilter + _quirk_filters(q, spec)))
     # NOTE: single-first-name Keep4 themes (curation.NAME_VARIANTS) were evaluated and
     # dropped — exact-name pools rarely field 8 *recognizable*, close-graded seasons, so they
     # produced obscure puzzles. That hyper-niche single-name hook belongs in WhoAmI (the
     # NAME_VARIANTS config is retained there for a future niche-WhoAmI generator).
+    return out
+
+
+def _combo_title(prefix: str, q1: curation.Quirk, q2: curation.Quirk, label: str) -> str:
+    frag = f"{q1.adjective}, {q2.adjective} {label} seasons"
+    if not prefix:
+        frag = frag[0].upper() + frag[1:]
+    return prefix + frag
+
+
+def _pairwise_candidates() -> list[Theme]:
+    """Two-quirk combos (undrafted+sub-6-foot, first-round+under-24, …) — a much bigger,
+    more specific niche space than any single quirk alone. Uncapped and not fed into the
+    balanced/capped `generate_themes()` picker used by the daily bulk-refresh job; this is
+    for the daily novel-puzzle picker (see daily_puzzle.py) to search over, since that job
+    wants the full space so it can pick something never served before, not a fixed pool."""
+    out: list[Theme] = []
+    for spec in curation.POSITIONS.values():
+        for decade in curation.DECADES:
+            dfilter = () if decade is None else (Filter("decade", "eq", decade),)
+            prefix = curation.decade_prefix(decade)
+            for q1, q2 in itertools.combinations(curation.QUIRKS, 2):
+                if curation.redundant_pair(q1, q2):
+                    continue
+                key = f"gen2-{spec.pos}-{decade or 'all'}-{q1.key}-{q2.key}".lower()
+                if key in curation.DENYLIST:
+                    continue
+                title = _combo_title(prefix, q1, q2, spec.label)
+                filters = dfilter + _quirk_filters(q1, spec) + _quirk_filters(q2, spec)
+                out.append(_theme(key, title, spec, filters))
     return out
 
 
@@ -94,3 +132,12 @@ def generate_themes(seasons: list[RawSeason]) -> list[Theme]:
             if len(picked) >= curation.MAX_GENERATED:
                 break
     return picked
+
+
+def all_niche_candidates(seasons: list[RawSeason]) -> list[Theme]:
+    """Every viable niche theme — single-quirk *and* pairwise combos, uncapped. Unlike
+    `generate_themes()` (capped at MAX_GENERATED for the daily bulk-refresh pool), this is
+    for the daily novel-puzzle picker (daily_puzzle.py), which wants the full candidate
+    space so it can find something never served before rather than a fixed balanced set."""
+    candidates = _candidates() + _pairwise_candidates()
+    return [t for t in candidates if _is_viable(t, seasons)]

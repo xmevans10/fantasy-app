@@ -100,10 +100,14 @@ def _windows(ranked: list[tuple[RawSeason, float]], max_variants: int) -> list[l
 
 
 def build_keep4_rows(theme: Theme, seasons: list[RawSeason],
-                     baselines: BaselineTable | None = None) -> list[PuzzleRow]:
+                     baselines: BaselineTable | None = None,
+                     max_variants: int | None = None) -> list[PuzzleRow]:
+    """`max_variants` overrides `theme.max_variants` for callers that want to see every
+    distinct player-set window a theme can produce (the daily novel-puzzle picker) rather
+    than the one variant curated content ships with."""
     ranked = grade_pool(theme, seasons, baselines)
     rows: list[PuzzleRow] = []
-    for variant, window in enumerate(_windows(ranked, theme.max_variants)):
+    for variant, window in enumerate(_windows(ranked, max_variants or theme.max_variants)):
         # Store players in a stable, non-grade order so the JSON doesn't leak the answer.
         players = sorted(
             (_player_content(theme, s, g) for s, g in window),

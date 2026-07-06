@@ -37,6 +37,16 @@ final class PuzzleStore {
         return (dayOfYearUTC(date) - 1) % count
     }
 
+    /// UTC calendar day as "yyyy-MM-dd" (matches Postgres `date` JSON serialization and the
+    /// UTC day the ingest pipeline stamps `active_date` with). Used to find *the* puzzle
+    /// minted for today, rather than a modulo pick that can land on any day's puzzle.
+    static func todayUTCString(_ date: Date = Date()) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "UTC")!
+        return formatter.string(from: date)
+    }
+
     /// Today's puzzle for a given sport (falls back to the global daily puzzle).
     func todaysPuzzle(for sport: Sport? = nil, date: Date = Date()) -> Keep4Puzzle? {
         let pool = sport.map { s in puzzles.filter { $0.sport == s } } ?? puzzles

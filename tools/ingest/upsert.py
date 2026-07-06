@@ -63,3 +63,25 @@ def upsert(rows: list[PuzzleRow]) -> int:
 def upsert_catalog(rows: list[dict]) -> int:
     """Upsert real player-seasons into `player_seasons` (the creation catalog)."""
     return _upsert_table("player_seasons", rows)
+
+
+def fetch_history_signatures() -> set[str]:
+    """Every puzzle signature ever served by the daily novel-puzzle picker (see
+    daily_puzzle.py) — a small, service-role-only table, so a full pull is fine."""
+    base, key = _require_env()
+    endpoint = f"{base}/rest/v1/puzzle_history?select=signature"
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    req = urllib.request.Request(endpoint, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            rows = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as err:
+        body = err.read().decode("utf-8", "ignore")
+        raise RuntimeError(f"puzzle_history fetch failed ({err.code}): {body}") from err
+    return {r["signature"] for r in rows}
+
+
+def upsert_history(rows: list[dict]) -> int:
+    """Record newly-served puzzle signatures into `puzzle_history` (on_conflict=signature —
+    a signature can never legitimately recur, but re-running the same day's pick is safe)."""
+    return _upsert_table("puzzle_history", rows, conflict="signature")

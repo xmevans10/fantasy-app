@@ -1,7 +1,7 @@
 """Tests for filter/grain handling in assemble + the generator viability gate.
 
 Synthetic seasons only (no network)."""
-from tools.ingest import assemble
+from tools.ingest import assemble, curation, generate
 from tools.ingest.models import RawSeason
 from tools.ingest.themes import Filter, StatColumn, Theme
 
@@ -68,3 +68,60 @@ def test_default_max_variants_is_one():
     seasons = [_wr(f"Player {i}", 1000 + i * 30) for i in range(40)]
     rows = assemble.build_keep4_rows(_theme(), seasons)
     assert len(rows) == 1
+
+
+def test_max_variants_override_returns_distinct_windows():
+    # The daily novel-puzzle picker asks for many windows per theme; each must be a genuinely
+    # distinct player set, not the same 8 players repeated.
+    seasons = [_wr(f"Player {i}", 1000 + i * 30) for i in range(40)]
+    rows = assemble.build_keep4_rows(_theme(), seasons, max_variants=5)
+    assert len(rows) == 5
+    signatures = {tuple(sorted(p["id"] for p in r.content["players"])) for r in rows}
+    assert len(signatures) == 5
+
+
+def test_max_variants_override_none_falls_back_to_theme_default():
+    seasons = [_wr(f"Player {i}", 1000 + i * 30) for i in range(40)]
+    rows = assemble.build_keep4_rows(_theme(), seasons, max_variants=None)
+    assert len(rows) == 1
+
+
+# ── Niche generator: bio quirks + pairwise combos ────────────────────────────────
+
+def test_redundant_pair_rejects_same_axis_combos():
+    by_key = {q.key: q for q in curation.QUIRKS}
+    assert curation.redundant_pair(by_key["young"], by_key["vet"])          # both age
+    assert curation.redundant_pair(by_key["undrafted"], by_key["day3"])     # both draft
+    assert curation.redundant_pair(by_key["sub6"], by_key["towering"])      # both size
+    assert not curation.redundant_pair(by_key["undrafted"], by_key["sub6"])  # draft x size
+
+
+def test_pairwise_candidates_skip_redundant_quirk_pairs():
+    keys = {t.key for t in generate._pairwise_candidates()}
+    assert not any(k.endswith("-young-vet") for k in keys)
+    assert not any(k.endswith("-undrafted-day3") for k in keys)
+    assert any(k.endswith("-undrafted-sub6") for k in keys)
+
+
+def test_weight_filters_are_position_relative():
+    wr = curation.weight_filters(curation.POSITIONS["WR"])["lightweight"][0]
+    qb = curation.weight_filters(curation.POSITIONS["QB"])["lightweight"][0]
+    assert wr.value != qb.value
+
+
+def _bio_wr(name: str, yards: float, *, undrafted: bool = True, height_in: int = 70):
+    meta: dict[str, str] = {"height_in": str(height_in)}
+    if not undrafted:
+        meta["draft_round"] = "3"
+    return RawSeason(name=name, team_abbr="X", season_year=2015, sport="nfl", position="WR",
+                     stats={"receiving_yards": yards, "receptions": 80.0, "receiving_tds": 8.0},
+                     headshot="h", meta=meta)
+
+
+def test_all_niche_candidates_finds_a_viable_pairwise_combo():
+    # 10 undrafted, sub-6-foot WRs, well above the WR floor (600 yds) and each other's
+    # neighbor by a clean margin → both quirks match everyone, so the AND'd pool is a fair
+    # 8-close-seasons puzzle and the combo should survive the viability gate.
+    seasons = [_bio_wr(f"Player {i}", 1200 - i * 40) for i in range(10)]
+    niche = generate.all_niche_candidates(seasons)
+    assert any(t.key == "gen2-wr-all-undrafted-sub6" for t in niche)

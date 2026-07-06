@@ -1,0 +1,29 @@
+name: daily-puzzle
+
+on:
+  schedule:
+    - cron: "0 0 * * *"     # 00:00 UTC daily — mint tonight's guaranteed-novel puzzle
+  workflow_dispatch:        # allow manual runs
+
+jobs:
+  mint:
+    runs-on: ubuntu-latest
+    env:
+      BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Same cache as ingest.yml — daily_puzzle.py pulls the same live provider data
+      # (gather_seasons), so a warm cache avoids re-fetching everything from scratch.
+      - uses: actions/cache@v4
+        with:
+          path: tools/ingest/.cache
+          key: ingest-cache-${{ github.run_id }}
+          restore-keys: |
+            ingest-cache-
+      - run: pip install -r tools/ingest/requirements.txt
+      - run: python -m tools.ingest.daily_puzzle --upsert

@@ -49,6 +49,21 @@ create table if not exists public.puzzles (
   active_date date
 );
 
+-- Every puzzle signature ever served by the daily novel-puzzle picker
+-- (tools/ingest/daily_puzzle.py) — service-role-only, no client read needed. Guarantees the
+-- picker never re-serves the same theme+player-set combo, no matter how the candidate pool
+-- shifts day to day.
+create table if not exists public.puzzle_history (
+  signature   text primary key,   -- theme_key || '|' || sorted player ids
+  theme_key   text not null,
+  sport       text not null,
+  format      text not null default 'keep4',
+  puzzle_id   text not null,
+  served_date date not null
+);
+alter table public.puzzle_history enable row level security;
+-- no policies -> service-role only
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Row Level Security
 -- ─────────────────────────────────────────────────────────────────────────────
