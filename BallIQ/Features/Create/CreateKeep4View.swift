@@ -487,10 +487,12 @@ struct CreateKeep4View: View {
         }
     }
 
-    /// Default card stat lines for Vibes (no scoring terms to derive from — just a few
-    /// informative headline stats for the sport).
+    /// Default card stat lines for Vibes (no scoring terms to derive from — a few
+    /// informative headline stats for the sport, sliced to the season's own position via
+    /// `ScoringStat.displayColumns` so a free-form pool mixing positions — e.g. a QB
+    /// alongside WRs — never bakes a stat family the QB's card doesn't record.
     private func defaultStatLines(_ s: CatalogSeason) -> [PlayerSeason.StatLine] {
-        ScoringStat.catalog(for: s.sport).prefix(3).map { stat in
+        ScoringStat.displayColumns(sport: s.sport, position: s.position).map { stat in
             let value = s.stats[stat.key] ?? 0
             return .init(label: stat.label, value: stat.format(value))
         }
@@ -517,11 +519,14 @@ struct CreateKeep4View: View {
             if let theme = activeTheme {
                 lines = theme.cardStats(for: s.stats, position: s.position)
             } else {
-                lines = (r?.terms ?? []).prefix(3).map { term in
-                    let stat = ScoringStat.find(term.stat, sport: s.sport)
-                    let value = s.stats[term.stat] ?? 0
-                    return .init(label: stat?.label ?? term.stat,
-                                 value: stat?.format(value) ?? "\(Int(value.rounded()))")
+                // Prefer the rule's own terms (display should reflect what's scored), but
+                // slice to the season's position first — a QB in a mixed pool under a
+                // skill-position rule would otherwise show its (all-zero) receiving terms.
+                let preferredKeys = (r?.terms ?? []).map(\.stat)
+                lines = ScoringStat.displayColumns(sport: s.sport, position: s.position,
+                                                   preferredKeys: preferredKeys).map { stat in
+                    let value = s.stats[stat.key] ?? 0
+                    return .init(label: stat.label, value: stat.format(value))
                 }
             }
             return PlayerSeason(id: s.id, name: s.name, teamAbbr: s.teamAbbr,

@@ -29,53 +29,43 @@ struct DailyGameCard: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 0) {
-                // Colored header band. The info portion (icon/format/badges) is combined into
-                // one VoiceOver stop; the overflow button stays a separate, independently
-                // reachable element rather than getting swallowed into that combined label.
-                HStack(spacing: 8) {
+                // Colored header band, two rows so it never breaks regardless of sport or
+                // scoring kind: the format name (row 1) is never a compression target, and
+                // the badge row (row 2) scrolls instead of truncating. A single-row layout
+                // with the badges inline used to starve the format name of width whenever a
+                // badge's text ran long (era-adjusted's badge is ~3x PPR's) — it would
+                // compress the format name down past legibility into a bare "…". Two fixed
+                // rows are the template every sport/kind combination shares, present and
+                // future, with no per-case tuning.
+                VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 8) {
                         Image(systemName: symbol)
                         Text(formatName.uppercased())
                             .font(.heading)
-                            .lineLimit(1).minimumScaleFactor(0.7)
-                        Spacer()
-                        if let scoring {
-                            HStack(spacing: 4) {
-                                Image(systemName: scoring.symbol).font(.system(size: 9, weight: .bold))
-                                Text(scoring.badgeLabel(for: sport)).font(.label11).lineLimit(1)
+                            .lineLimit(1)
+                        Spacer(minLength: 8)
+                        if let secondaryAction {
+                            Button(action: secondaryAction) {
+                                Image(systemName: "ellipsis.circle.fill")
+                                    .font(.system(size: 16, weight: .bold))
                             }
-                            .fixedSize()   // never wrap mid-capsule; the title compresses instead
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(onAccent.opacity(0.18))
-                            .clipShape(Capsule())
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("More options")
                         }
-                        if let grain {
-                            HStack(spacing: 4) {
-                                Image(systemName: grain.symbol).font(.system(size: 9, weight: .bold))
-                                Text(grain.badgeLabel).font(.label11).lineLimit(1)
-                            }
-                            .fixedSize()
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(onAccent.opacity(0.18))
-                            .clipShape(Capsule())
-                        }
-                        Text(sport.displayName)
-                            .font(.label11)
-                            .fixedSize()
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(onAccent.opacity(0.18))
-                            .clipShape(Capsule())
                     }
-                    .accessibilityElement(children: .combine)
-                    if let secondaryAction {
-                        Button(action: secondaryAction) {
-                            Image(systemName: "ellipsis.circle.fill")
-                                .font(.system(size: 16, weight: .bold))
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            if let scoring {
+                                badge(symbol: scoring.symbol, text: scoring.badgeLabel(for: sport))
+                            }
+                            if let grain {
+                                badge(symbol: grain.symbol, text: grain.badgeLabel)
+                            }
+                            badge(symbol: nil, text: sport.displayName.uppercased())
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("More options")
                     }
                 }
+                .accessibilityElement(children: .combine)
                 .foregroundStyle(onAccent)
                 .padding(.horizontal, 14).padding(.vertical, 10)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -126,5 +116,21 @@ struct DailyGameCard: View {
             .shadow(color: Color.black.opacity(0.14), radius: 0, x: 0, y: 4)
         }
         .buttonStyle(PrimePressStyle())
+    }
+
+    /// One header-band badge (scoring / grain / sport) — same capsule for all three instead
+    /// of a copy-pasted literal per badge, so a fourth kind (if one's ever added) is a
+    /// one-line call, not a fourth near-identical block.
+    private func badge(symbol: String?, text: String) -> some View {
+        HStack(spacing: 4) {
+            if let symbol {
+                Image(systemName: symbol).font(.system(size: 9, weight: .bold))
+            }
+            Text(text).font(.label11).lineLimit(1)
+        }
+        .fixedSize()   // never wrap mid-capsule — the scroll view absorbs overflow instead
+        .padding(.horizontal, 8).padding(.vertical, 3)
+        .background(onAccent.opacity(0.18))
+        .clipShape(Capsule())
     }
 }

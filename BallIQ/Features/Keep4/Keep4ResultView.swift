@@ -57,9 +57,18 @@ struct Keep4ResultView: View {
         puzzle.players.max { $0.grade < $1.grade }
     }
 
+    /// Grain-aware header: a career puzzle's best card is a career, not a season.
+    private var topCardTitle: String {
+        switch puzzle.puzzleGrain() {
+        case .season:     return "TOP SEASON"
+        case .singleGame: return "TOP GAME"
+        case .career:     return "TOP CAREER"
+        }
+    }
+
     private func foilCard(_ top: PlayerSeason) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("TOP SEASON")
+            Text(topCardTitle)
                 .font(.heading)
                 .foregroundStyle(Color.textPrimary)
             Keep4CardView(player: top,

@@ -103,4 +103,33 @@ extension ScoringStat {
     static func find(_ key: String, sport: Sport) -> ScoringStat? {
         catalog(for: sport).first { $0.key == key }
     }
+
+    /// The best 3 display stats for a season at `position` — free-form creation's answer to
+    /// `Keep4Theme.columns(for:)`, sharing the same `Sport.positionStatFamilies` table so a
+    /// Vibes puzzle or a custom-rule pool never shows a card a stat family its position
+    /// doesn't record (a QB's "Rec Yds", a pitcher's "AVG", a keeper's "Goals").
+    ///
+    /// `preferredKeys` (a scoring rule's own terms, when one is active) are tried first —
+    /// display should reflect what's actually being scored — filtered to the position's
+    /// families; only once that's under 3 does it fall back to the position's generic
+    /// defaults, and finally to the sport's unfiltered top 3.
+    static func displayColumns(sport: Sport, position: String?,
+                              preferredKeys: [String] = []) -> [ScoringStat] {
+        let all = catalog(for: sport)
+        // minimum: 0 — trust the position filter even if it empties the preferred set out
+        // entirely (e.g. an NFL-QB rule's terms against a WR card); falling back to the
+        // *unfiltered* preferred keys here would resurrect the exact bug this exists to fix.
+        let preferred = sport.sliceForPosition(
+            preferredKeys.compactMap { key in all.first { $0.key == key } },
+            position: position, minimum: 0, statKey: \.key)
+        if preferred.count >= 3 { return Array(preferred.prefix(3)) }
+
+        // Position-relevant stats first (however many exist — a soccer goalkeeper's family
+        // is only 2 wide), padded with the sport's remaining stats in catalog order. Never
+        // falls back to the *unsliced* set outright: that would let position-irrelevant
+        // stats (a keeper's goals/assists) back in ahead of ones that do apply.
+        let relevant = sport.sliceForPosition(all, position: position, minimum: 0, statKey: \.key)
+        let padding = all.filter { !relevant.contains($0) }
+        return Array((relevant + padding).prefix(3))
+    }
 }

@@ -38,6 +38,13 @@ TEAM_ABBR: dict[int, str] = {
 # Rate-limit courtesy, not necessity — MLB's API is keyless and generous.
 _RATE_DELAY = 0.2
 
+# Year-by-year career lines are effectively static (a retired player's past seasons
+# never change; an active player's only grow in-season), and the pool is now hundreds of
+# players — so cache each career for a week rather than the default day. Combined with CI
+# persisting `.cache/`, this keeps the daily ingest from re-pulling the whole MLB pool
+# every run. `stats=yearByYear` still reflects the current season on the weekly refresh.
+_CAREER_TTL_HOURS = 24.0 * 7
+
 
 def available() -> bool:
     return True  # no key required
@@ -166,7 +173,8 @@ def fetch_by_ids(id_to_name: dict[str, str]) -> list[RawSeason]:
         for group in ("hitting", "pitching"):
             try:
                 data = fetch_json(_STATS.format(id=pid, group=group),
-                                  cache_key=f"mlb_stats_{pid}_{group}.json")
+                                  cache_key=f"mlb_stats_{pid}_{group}.json",
+                                  ttl_hours=_CAREER_TTL_HOURS)
                 out += parse_seasons(name, data, group, headshot)
                 time.sleep(_RATE_DELAY)
             except Exception as err:  # noqa: BLE001

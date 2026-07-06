@@ -74,6 +74,48 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         }
         return URL(string: "https://a.espncdn.com/i/teamlogos/\(league)/500/\(key).png")
     }
+
+    // MARK: - Position stat families
+
+    /// Stat-key prefixes a position actually produces, keyed by sport then position —
+    /// mirrors `tools/ingest/themes.py`'s `_NFL_POSITION_STATS`, generalized to every sport
+    /// with position-disjoint stats. Used to slice display columns for any cross-position
+    /// pool (a daily cross-position theme, a Vibes community puzzle mixing positions, a
+    /// custom scoring rule applied to a mixed pool) so a card never shows a stat family its
+    /// position doesn't record — a QB's "Rec Yds", a pitcher's "AVG", a keeper's "Goals".
+    /// NBA and tennis are omitted: their stats (PPG/RPG/APG/…, Wins/Titles/…) apply broadly
+    /// regardless of position, so there's nothing to slice.
+    static let positionStatFamilies: [Sport: [String: [String]]] = [
+        .nfl: [
+            "QB": ["passing_", "rushing_", "interceptions", "completions", "attempts", "completion_pct"],
+            "RB": ["rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr"],
+            "FB": ["rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr"],
+            "WR": ["receiving_", "receptions", "targets", "ypr"],
+            "TE": ["receiving_", "receptions", "targets", "ypr"],
+        ],
+        .baseball: [
+            "H": ["hits", "doubles", "triples", "home_runs", "runs", "rbi", "base_on_balls",
+                  "stolen_bases", "avg", "obp", "slg", "ops"],
+            "P": ["innings_pitched", "wins", "saves", "strike_outs", "earned_runs", "era", "whip"],
+        ],
+        .soccer: [
+            "GK": ["clean_sheets", "appearances"],
+            "DF": ["clean_sheets", "appearances", "goals", "assists"],
+            "FW": ["appearances", "goals", "assists"],
+            "MF": ["appearances", "goals", "assists"],
+        ],
+    ]
+
+    /// Slice a stat-keyed sequence (theme columns, `ScoringStat`s, …) down to `position`'s
+    /// families for this sport. Returns `columns` unchanged if the sport/position has no
+    /// family entry, or if slicing would leave fewer than `minimum` — a too-aggressive slice
+    /// reading worse than the unfiltered set.
+    func sliceForPosition<T>(_ columns: [T], position: String?, minimum: Int = 3,
+                             statKey: (T) -> String) -> [T] {
+        guard let position, let prefixes = Sport.positionStatFamilies[self]?[position] else { return columns }
+        let sliced = columns.filter { col in prefixes.contains { statKey(col).hasPrefix($0) } }
+        return sliced.count >= minimum ? sliced : columns
+    }
 }
 
 /// Home-screen sport filter — "All" plus each concrete sport.

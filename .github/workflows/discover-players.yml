@@ -1,0 +1,63 @@
+name: discover-players
+
+# Weekly player-discovery sweep: refreshes the NBA/MLB "notable player" id pools
+# (tools/ingest/providers/espn_nba_pool.py, mlb_pool.py) that the daily ingest.yml run reads
+# but never refreshes itself, so a player who becomes notable this season (a rookie who
+# breaks out, a call-up who leads a category) doesn't just sit outside the pool forever.
+# NFL needs no equivalent step — nfl_nflverse.fetch_years already pulls every player for a
+# given season, so a new NFL season/rookie is picked up automatically once nflverse
+# publishes it (tools/ingest/main.py's DEFAULT_NFL_YEARS is computed from today's date for
+# exactly this reason).
+#
+# Runs discovery, commits any newly-discovered ids straight to main (pure data files, zero
+# behavior risk, trivially revertable — same "additive changes are fair game" precedent as
+# the daily ingest.yml's own automated Supabase upsert), then immediately ingests so new
+# players don't wait for the next scheduled daily run. `--upsert`'s on_conflict=id +
+# merge-duplicates (see upsert.py) already means "insert if we don't have this player,
+# update if we do" — no separate existence check is needed.
+on:
+  schedule:
+    - cron: "0 10 * * 0"    # weekly, Sunday 10:00 UTC — offset from ingest.yml's daily 09:00 UTC
+  workflow_dispatch:         # manual/on-demand refresh
+
+permissions:
+  contents: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    env:
+      BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Shared with ingest.yml's cache (same key prefix) — MLB career lines are cached a
+      # week (see mlb_stats.py), so a restored cache lets both workflows skip re-pulling
+      # careers that haven't changed.
+      - uses: actions/cache@v4
+        with:
+          path: tools/ingest/.cache
+          key: ingest-cache-${{ github.run_id }}
+          restore-keys: |
+            ingest-cache-
+      - run: pip install -r tools/ingest/requirements.txt
+      # pyespn is intentionally NOT in requirements.txt (see its comment there) — the daily
+      # ingest.yml stays stdlib-only, and only this weekly discovery step needs it.
+      - run: pip install "pyespn>=0.3.3"
+      - name: Refresh NBA player-id pool
+        run: python -m tools.ingest.providers.espn_nba_pool
+      - name: Refresh MLB player-id pool
+        run: python -m tools.ingest.providers.mlb_pool
+      - name: Commit newly discovered player ids
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tools/ingest/data/nba_player_ids.json tools/ingest/data/mlb_player_ids.json
+          git diff --cached --quiet || git commit -m "Refresh discovered NBA/MLB player-id pools (automated)"
+          git push
+      - name: Ingest newly discovered players into Supabase
+        run: python -m tools.ingest.main --backfill 30 --upsert --catalog

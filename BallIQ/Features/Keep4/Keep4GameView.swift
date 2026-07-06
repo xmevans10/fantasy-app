@@ -168,7 +168,13 @@ struct Keep4GameView: View {
                 }
                 VStack(spacing: 6) {
                     scoringNote
-                    GrainChip(grain: puzzle.puzzleGrain())
+                    // Season is the default grain — only the exceptions (career totals,
+                    // single game) earn a second explainer chip. Stacking "ranked by real
+                    // fantasy points" over "ranked by real single-season stats" on every
+                    // ordinary daily read as redundant copy.
+                    if puzzle.puzzleGrain() != .season {
+                        GrainChip(grain: puzzle.puzzleGrain())
+                    }
                 }
             }
 

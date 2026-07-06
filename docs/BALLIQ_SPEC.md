@@ -1,6 +1,6 @@
 # Playbook — Product & Technical Spec (single source of truth)
 
-**Status date: 2026-07-05.** This document supersedes the status columns in
+**Status date: 2026-07-06.** This document supersedes the status columns in
 [prompts/README.md](../prompts/README.md); the prompt files remain as historical milestone
 briefs. Update THIS file when behavior, contracts, or status change. For a narrative account of
 what changed most recently (DB hand-offs, TestFlight, App Store submission), see
@@ -81,16 +81,25 @@ python3 -m tools.ingest.main [--dry-run] [--write-fallback] [--write-themes]
                               [--backfill N] [--nfl-years Y...] [--game-years Y...]
 ```
 
-- **Providers** (`providers/`, shared 24h on-disk cache in `.cache/`):
-  `nfl_nflverse` (season aggregates, 1999–present) + `nfl_nflverse_games` (weekly grain,
-  bounded by `--game-years` — weekly files are heavy) + `nfl_players` (bio join: draft
-  round, height, age — powers the niche-theme quirks below); `espn_nba_pool`/`espn_nba`
+- **Providers** (`providers/`, shared 24h on-disk cache in `.cache/`, MLB careers cached a
+  week — see `mlb_stats.py`):
+  `nfl_nflverse` (season aggregates, 1999–present, year range **computed from today's date**
+  in `main.py` so it never goes stale — `fetch_years` skips any year not yet published) +
+  `nfl_nflverse_games` (weekly grain, bounded by `--game-years`, same dynamic-year
+  treatment) + `nfl_players` (bio join: draft round, height, age); `espn_nba_pool`/`espn_nba`
   (853-player keyless ESPN pool, ~1993–2026, the **primary** NBA source since M7) with
   `nba_balldontlie` (needs `BALLDONTLIE_API_KEY`) and a curated `seed.py`/`data/nba_seed.csv`
   as fallbacks when ESPN is unreachable; `mlb_stats` (keyless MLB Stats API, primary baseball
-  source, verified live) with `seed.py`/`data/baseball_seed.csv` as fallback. **Soccer and
+  source) driven by `mlb_pool` (2026-07-06: swept 1975–present stat-leaders across 19
+  hitting/pitching categories → **3,298-player id pool**, ≥3 top-50 category-seasons each,
+  up from 23 hardcoded ids — live `player_seasons` baseball rows went 280 → 38,704) with
+  `seed.py`/`data/baseball_seed.csv` as fallback. Both pools are refreshed weekly by
+  [.github/workflows/discover-players.yml](../.github/workflows/discover-players.yml)
+  (Sundays 10:00 UTC), which commits the updated id-map JSON then upserts immediately so a
+  newly-discovered player doesn't wait for the next daily `ingest.yml` run. **Soccer and
   tennis are seed-only** (`data/soccer_seed.csv`/`data/tennis_seed.csv`, curated from
-  well-documented record seasons) — no live source checked out on testing; see
+  well-documented record seasons, 17/19 live rows respectively) — no reachable keyless
+  historical source found (Jeff Sackmann's ATP dataset 404s from this environment); see
   `tools/ingest/README.md` for what was tried.
 - **Themes** (`themes.py` `KEEP4_THEMES`): the ONE template shape — sport, grade `scale`,
   positions, `min_stats` floors, on-card `columns` (stat/label/fmt), `pool_cap`, `grain`
@@ -301,6 +310,28 @@ manual-signing workaround from scratch, it's already documented.
    Developer portal) and set as Edge Function secrets. External hand-off.
 6. Two pre-raw-PPR community rows (published before M9) keep their baked 0–100 grades by
    design (content immutability, §4) — cosmetic, optional to fix.
+
+**Shipped 2026-07-06 (data coverage + card-template hardening):**
+- Baseball catalog broadened via `mlb_pool` (§3): 280 → 38,704 live rows. NFL/NBA/MLB year
+  ranges now computed from today's date instead of hardcoded literals (§3) — was silently
+  missing the 2024 NFL season. New weekly `discover-players.yml` keeps the NBA/MLB pools
+  growing without manual re-runs.
+- Fixed a cross-position stat-column bug: a free-form (Vibes or custom-rule) Keep4 puzzle
+  mixing positions in one pool baked the sport's generic top-3 stats onto every card
+  regardless of the season's actual position (a QB card reading "Rec Yds 0 / Rec TD 0 / Rec
+  0"). `Sport.positionStatFamilies` is now the one shared table both the daily pipeline's
+  theme-column slicing (`Keep4Theme.columns(for:)`) and free-form creation
+  (`ScoringStat.displayColumns`) draw from — covers NFL QB/RB/WR/TE, baseball H/P, and soccer
+  GK/DF/FW/MF. Covered by `ScoringStatTests`.
+- Fixed `DailyGameCard`'s header band (the Home/Browse/Community "puzzle brief" row): a long
+  badge string (era-adjusted's badge is ~3x PPR's) starved the format-name label of width
+  down to a bare "…". Header is now two rows — format name never compresses; badges scroll
+  instead of truncating — a template every sport/scoring-kind shares without per-case tuning.
+  Also fixed the sport-name badge (Soccer/Tennis) not being forced uppercase like every other
+  chip in that row (NFL/NBA/MLB happened to already be all-caps strings, masking the bug).
+- Per-sport ESPN team-logo resolution (`Sport.teamLogoURL`) and per-sport fantasy-badge copy
+  (tennis reads "POINTS"/résumé copy, not fabricated "fantasy points" language) shipped
+  earlier the same day — see git history for detail.
 
 ## 9. Roadmap — remaining milestones
 

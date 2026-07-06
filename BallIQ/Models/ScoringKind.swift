@@ -38,12 +38,19 @@ enum ScoringKind: String, Codable {
         }
     }
 
-    /// Short ALL-CAPS badge text for puzzle cards. PPR is an NFL term; other sports use the
-    /// generic fantasy label — kept to one word so the card header's format name doesn't
-    /// truncate next to the grain + sport chips (the explainer chip carries the full copy).
+    /// Short ALL-CAPS badge text for puzzle cards. PPR is an NFL term; tennis has no fantasy
+    /// game (its scale is a points résumé — see `explainer`), so it gets the neutral POINTS;
+    /// other sports use the generic fantasy label. All kept to one word so the card header's
+    /// format name doesn't truncate next to the grain + sport chips (the explainer chip
+    /// carries the full copy).
     func badgeLabel(for sport: Sport) -> String {
         switch self {
-        case .ppr:    return sport == .nfl ? "PPR" : "FANTASY"
+        case .ppr:
+            switch sport {
+            case .nfl:    return "PPR"
+            case .tennis: return "POINTS"
+            default:      return "FANTASY"
+            }
         case .era:    return "ERA-ADJUSTED"
         case .vibes:  return "VIBES"
         }
@@ -51,11 +58,17 @@ enum ScoringKind: String, Codable {
 
     /// 1–2 line scoring-method explainer shown above the first card in the play flow.
     /// `author` (community username) personalizes the vibes copy when available.
+    /// Copy is per-sport where "fantasy points" would ring false: tennis has no fantasy
+    /// game — its scale is a résumé formula (wins + titles + Slams, see grade.py) — so it
+    /// says what's actually counted. Soccer's scale IS FPL-style, so "fantasy points" stands.
     func explainer(sport: Sport, author: String? = nil) -> String {
         switch self {
         case .ppr:
-            return sport == .nfl ? "Ranked by real PPR fantasy points"
-                                 : "Ranked by real fantasy points"
+            switch sport {
+            case .nfl:    return "Ranked by real PPR fantasy points"
+            case .tennis: return "Ranked by real season résumés — wins, titles, Slams"
+            default:      return "Ranked by real fantasy points"
+            }
         case .era:
             return "Ranked by era-adjusted fantasy points — scarcer eras count for more"
         case .vibes:

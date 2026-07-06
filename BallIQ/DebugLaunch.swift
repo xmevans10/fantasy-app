@@ -25,6 +25,12 @@ enum DebugLaunch {
         guard let i = args.firstIndex(of: "-searchQuery"), i + 1 < args.count else { return nil }
         return args[i + 1]
     }
+    /// Preselect Browse's sport dropdown (simctl can't tap it): `-browseSport soccer`.
+    static var browseSport: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-browseSport"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
     /// Auto-apply a Create-flow theme template by key (simctl can't tap chips):
     /// `-screenshotCreateTheme nba-career-fantasy`.
     static var createTemplateKey: String? {
@@ -52,6 +58,7 @@ enum DebugLaunch {
     static let autoOpenModeration = false
     static let autoOpenShare = false
     static let searchQuery: String? = nil
+    static let browseSport: String? = nil
     static let createTemplateKey: String? = nil
     static let openURL: URL? = nil
     #endif

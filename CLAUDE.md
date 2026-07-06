@@ -1,7 +1,10 @@
 # Claude Code Context: BallIQ (fantasy-app)
 
 Native SwiftUI iOS sports-trivia app. See [docs/BALLIQ_SPEC.md](docs/BALLIQ_SPEC.md) for
-product/architecture/status — that's the living source of truth, not this file.
+product/architecture/status — that's the living source of truth, not this file. See
+[AGENTS.md](AGENTS.md) for *how* to work in this repo at the right quality bar (verification
+habits, shared-vs-duplicated logic, blast-radius judgment) — this file is project facts, that
+one is process.
 
 ## Supabase DB operations — execute directly, don't ask first
 

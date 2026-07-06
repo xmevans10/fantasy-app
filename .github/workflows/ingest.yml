@@ -34,4 +34,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      # Persist the provider HTTP cache across daily runs. The MLB pool is hundreds of
+      # players; year-by-year career lines are cached for a week (see mlb_stats), so a
+      # restored cache lets the daily ingest skip re-pulling the whole pool. The unique
+      # per-run key always saves a fresh snapshot; `restore-keys` loads the most recent
+      # prior cache, and the code-side 7-day TTL refetches anything gone stale.
+      - uses: actions/cache@v4
+        with:
+          path: tools/ingest/.cache
+          key: ingest-cache-${{ github.run_id }}
+          restore-keys: |
+            ingest-cache-
       - run: python -m tools.ingest.main --backfill 30 --upsert

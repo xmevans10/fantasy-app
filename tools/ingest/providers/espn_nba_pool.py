@@ -13,6 +13,7 @@ Run:  python -m tools.ingest.providers.espn_nba_pool  [--from 2003 --to 2025]
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
 from pathlib import Path
 
@@ -21,8 +22,11 @@ POOL_PATH = DATA_DIR / "nba_player_ids.json"
 
 # Stat-leader seasons to sweep. ESPN's per-game leaders exist 2003-04 → present; each
 # season returns ~16 categories × ~25 players, which dedupes to the era's real stars.
+# DEFAULT_TO is today's year, not a literal — see mlb_pool.py's identical rationale: a
+# fixed year quietly stops covering new seasons the moment that year ends, and `discover`
+# already tolerates a season with no leaders yet (logs "skipped", keeps going).
 DEFAULT_FROM = 2003
-DEFAULT_TO = 2025
+DEFAULT_TO = dt.date.today().year
 
 
 def discover(year_from: int = DEFAULT_FROM, year_to: int = DEFAULT_TO) -> dict[str, str]:

@@ -25,6 +25,7 @@ from .models import RawSeason
 from .providers import (
     espn_nba,
     espn_nba_pool,
+    mlb_pool,
     mlb_stats,
     nba_balldontlie,
     nfl_nflverse,
@@ -44,15 +45,23 @@ FALLBACK_BASELINES = ROOT / "BallIQ" / "Data" / "stat_baselines.json"
 FALLBACK_THEMES = ROOT / "BallIQ" / "Data" / "keep4_themes.json"
 CONTENT_HEALTH = Path(__file__).resolve().parent / "content_health.json"
 
-DEFAULT_NFL_YEARS = list(range(1999, 2024))  # nflverse's full player-stats history (1999+)
+# Computed from today's date, not a hardcoded literal, so this never silently goes stale —
+# a fixed `range(1999, 2024)` quietly stopped covering new seasons the moment 2024 shipped.
+# `nfl_nflverse.fetch_years` already skips any year whose file 404s (e.g. the current season
+# before nflverse has published its aggregate), so reaching one year past "now" is safe: it
+# costs one skipped request until the data exists, then picks it up with no code change.
+_CURRENT_YEAR = dt.date.today().year
+DEFAULT_NFL_YEARS = list(range(1999, _CURRENT_YEAR + 1))  # nflverse's full history (1999+)
 # Weekly files are ~17k rows/season (vs. one row/season-aggregate), so game grain is
 # bounded to a recent window by default to keep cache/fetch time sane.
-DEFAULT_GAME_YEARS = list(range(2009, 2024))
+DEFAULT_GAME_YEARS = list(range(_CURRENT_YEAR - 15, _CURRENT_YEAR + 1))
 
 # NBA seasons to refresh live (the curated seed defines the target player-seasons).
 NBA_LIVE_TARGETS = [(r.name, r.season_year) for r in seed.load_nba()]
 
-# MLB person ids to pull live (verified against statsapi.mlb.com this session).
+# MLB person ids to always pull live (verified against statsapi.mlb.com), regardless of
+# whether the discovered pool (`mlb_player_ids.json`) is present — these guarantee the
+# marquee current stars are covered. The broad pool is unioned on top when available.
 # fetch_by_ids pulls a player's FULL career (hitting + pitching) in one shot per
 # group, so this list only needs one id per player, not one per season.
 MLB_LIVE_TARGETS: dict[str, str] = {
@@ -143,10 +152,14 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
         nba = seed.load_nba()
     print(f"[nba] {len(nba)} player-seasons")
 
-    # MLB Stats API (keyless, verified live this session) is primary; seed is the
-    # fallback so the pipeline still yields real content if the API is unreachable.
-    print(f"[baseball] fetching {len(MLB_LIVE_TARGETS)} players from MLB Stats API …")
-    baseball = mlb_stats.fetch_by_ids(MLB_LIVE_TARGETS)
+    # MLB Stats API (keyless, verified live) is primary; the committed leader-swept pool
+    # (`mlb_player_ids.json`, refreshed occasionally via providers.mlb_pool) broadens it
+    # from the ~2 dozen marquee ids to hundreds of real stars. Union guarantees the
+    # hardcoded current stars are always in. Seed is the offline fallback.
+    mlb_ids = {**mlb_pool.load_pool(), **MLB_LIVE_TARGETS}
+    print(f"[baseball] fetching {len(mlb_ids)} players from MLB Stats API "
+          f"({len(mlb_pool.load_pool())} pooled + {len(MLB_LIVE_TARGETS)} marquee) …")
+    baseball = mlb_stats.fetch_by_ids(mlb_ids)
     if not baseball:
         print("[baseball] MLB Stats API empty — using curated real-stat seed (data/baseball_seed.csv)")
         baseball = seed.load_baseball()

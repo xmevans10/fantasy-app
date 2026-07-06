@@ -42,23 +42,13 @@ struct Keep4Theme: Codable, Equatable, Identifiable {
 
     // MARK: - Card building (mirrors themes.py format_columns / _fmt_value exactly)
 
-    /// Stat families an NFL position produces — mirrors themes.py `_NFL_POSITION_STATS` for
-    /// per-position column selection on cross-position themes.
-    private static let nflPositionStats: [String: [String]] = [
-        "QB": ["passing_", "rushing_", "interceptions", "completions", "attempts", "completion_pct"],
-        "RB": ["rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr"],
-        "FB": ["rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr"],
-        "WR": ["receiving_", "receptions", "targets", "ypr"],
-        "TE": ["receiving_", "receptions", "targets", "ypr"],
-    ]
-
     /// Card columns for a season at `position` — mirrors themes.py `columns_for`: cross-position
-    /// NFL themes slice to the position's stat families (min 3, else full set).
+    /// themes slice to the position's stat families (min 3, else full set). Family table lives
+    /// on `Sport` so every consumer (theme templates here, free-form Vibes/rule-based creation
+    /// in `ScoringStat`) shares one definition instead of re-deriving it per call site.
     func columns(for position: String?) -> [Column] {
-        guard let position, sport == .nfl, positions.count > 1,
-              let prefixes = Self.nflPositionStats[position] else { return columns }
-        let sliced = columns.filter { col in prefixes.contains { col.stat.hasPrefix($0) } }
-        return sliced.count >= 3 ? sliced : columns
+        guard positions.count > 1 else { return columns }
+        return sport.sliceForPosition(columns, position: position, statKey: \.stat)
     }
 
     /// The card `stats` array for a season's raw stats — same labels, order, and formatting

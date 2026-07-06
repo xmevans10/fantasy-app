@@ -160,6 +160,9 @@ struct BrowseView: View {
             whoami = await container.puzzles.allWhoAmI(for: sportFilter)
         }
         if let query = DebugLaunch.searchQuery { searchText = query }
+        if let sport = DebugLaunch.browseSport, let filter = SportFilter(rawValue: sport) {
+            sportFilter = filter
+        }
         if DebugLaunch.autoOpenShare, shareTarget == nil, let first = filteredKeep4.first {
             shareTarget = SharablePuzzle(keep4: first)
         }
