@@ -1,8 +1,10 @@
 # Playbook — Product & Technical Spec (single source of truth)
 
-**Status date: 2026-07-02.** This document supersedes the status columns in
+**Status date: 2026-07-05.** This document supersedes the status columns in
 [prompts/README.md](../prompts/README.md); the prompt files remain as historical milestone
-briefs. Update THIS file when behavior, contracts, or status change.
+briefs. Update THIS file when behavior, contracts, or status change. For a narrative account of
+what changed most recently (DB hand-offs, TestFlight, App Store submission), see
+[prompts/HANDOFF-next-agent-2026-07-05.md](../prompts/HANDOFF-next-agent-2026-07-05.md).
 
 ---
 
@@ -53,10 +55,17 @@ unranked (XP only).
   the client can't do itself — `weekly-cohort-rollover` (closes/opens Leagues seasons),
   `versus-timeout` (forfeits expired 24h challenges via `resolve_versus_challenge` RPC),
   `notify-streak-risk`, `notify-season-end`, `notify-versus-challenge` (push copy, call
-  `_shared/apns.ts`). **Hand-offs, not yet done:** none of the five are scheduled — each
-  needs `pg_cron`/`pg_net` wiring (see inline comments per function for cadence); `apns.ts`'s
-  `sendApnsPush` is stubbed pending a real APNs key (`APNS_KEY_ID`/`APNS_TEAM_ID`/
-  `APNS_PRIVATE_KEY`/`APNS_BUNDLE_ID` as Edge Function secrets).
+  `_shared/apns.ts`). **Deployed and scheduled as of 2026-07-05**: all five are live on
+  Supabase; the four cron-driven ones (`weekly-cohort-rollover` Mondays 05:00 UTC,
+  `versus-timeout` every 15 min, `notify-streak-risk` hourly, `notify-season-end` 3x/day) show
+  `active: true` in `cron.job`. `notify-versus-challenge` is deployed but its DB webhook trigger
+  (Database → Webhooks on `versus_challenges` INSERT) still needs manual setup in the Supabase
+  dashboard — no API path found for that. `apns.ts`'s `sendApnsPush` is still stubbed pending a
+  real APNs key (`APNS_KEY_ID`/`APNS_TEAM_ID`/`APNS_PRIVATE_KEY`/`APNS_BUNDLE_ID` as Edge
+  Function secrets) — until then it logs instead of sending. No Leagues season/cohort exists
+  yet either — `weekly-cohort-rollover` bootstraps one on first run, which hasn't happened; it
+  fires naturally next Monday, or needs an explicit user go-ahead to trigger sooner (it
+  mutates real rating-based cohort assignments for every rated user, not a no-op).
 - **Design system "Prime Time"** ([DESIGN.md](../BallIQ/DesignSystem/DESIGN.md)): arcade-pop ×
   sports-broadcast. Anton + Saira (OFL, runtime-registered), electric-blue dominant + volt
   accent, ink outlines + hard ledge shadows (`cardSurface`/`blockCard`), one orchestrated
@@ -248,63 +257,59 @@ One template definition, consumed by both sides:
   `ImageRenderer` inside a hosted XCTest instead — see `ScoringGalleryTests`.
 - Era analysis (findings in §4): `python3 -m tools.ingest.era_analysis`.
 
-## 8. Milestone status (2026-07-02)
+## 8. Milestone status (2026-07-05)
 
 | Milestone | Status |
 |-----------|--------|
-| M1–M4 core app, backend, social retention | ✅ shipped (Leagues/Versus/Stats/push all live, not stubs) |
+| M1–M4 core app, backend, social retention | ✅ shipped. M4's backend tables (`seasons`/`cohorts`/`versus_*`/`device_tokens`/`notification_settings`) were missing from production until 2026-07-05 despite the app-side feature being live the whole time — now applied, see below |
 | M5 breadth/scoring | ✅ breadth shipped; **monetization (Pro/StoreKit) not started — no code exists yet** |
 | M6 community fixes + hardening | ✅ shipped |
 | M7 content scale + CI | ✅ shipped |
 | M8 single-game grain | ✅ shipped |
-| M9 raw-PPR scoring + polish | ✅ shipped (scoring gap below is closed) |
-| M10 era analysis + template unification | ✅ shipped — theme templates, era index, per-position columns, **scoring-kind indicator** (§4) all landed and tested |
+| M9 raw-PPR scoring + polish | ✅ shipped |
+| M10 era analysis + template unification | ✅ shipped — theme templates, era index, per-position columns, scoring-kind indicator (§4) |
+| M11 production hardening | ✅ shipped; edge functions now actually deployed + cron-scheduled (2026-07-05, see §2) |
+| M12 trust & safety | ✅ shipped; `is_admin`/review RLS applied live (2026-07-05) |
+| M13 discovery & growth | ✅ shipped; `weekly_play_counts` RPC applied live (2026-07-05) |
+| M14 accessibility & localization | 🟧 VoiceOver shipped; **Spanish localization untouched** |
+| M15 analytics & content health | ✅ shipped; `events` table + RLS applied live (2026-07-05) |
+| M16 headshot coverage | ✅ shipped (all 5 sports, 100% coverage) |
+| M17 puzzle grain + community career creation | ✅ shipped, including the live catalog migration/backfill |
 
-**Note on working-tree state:** M8–M10 plus this session's scoring-kind work are complete
-in the working tree but sit **uncommitted** on top of the M7 commit (`a470bf8`) — `git log`
-undercounts shipped work; trust this file and `git status`, not commit history, for what's
-actually built. Commit when ready to checkpoint.
+**Release status (new as of 2026-07-05):** a TestFlight build is live for external testers
+(join link in [prompts/HANDOFF-next-agent-2026-07-05.md](../prompts/HANDOFF-next-agent-2026-07-05.md)),
+and the app has been submitted for full App Store review. See that handoff and `CLAUDE.md`'s
+"App Store Connect / TestFlight" section for the release pipeline mechanics — don't rebuild the
+manual-signing workaround from scratch, it's already documented.
 
 **Open items / hand-offs**
-1. ~~Content↔code scoring gap~~ — **closed.** The bundled fallback (`keep4_puzzles.json`)
-   now carries raw-PPR grades (verified: e.g. grade `382.2`, not a 0–100 value). The Supabase
-   daily rows still need the same regeneration pushed live: run
-   `python3 -m tools.ingest.main --backfill 30 --upsert --catalog` with the user's approval
-   (service-role key required — cannot be done from here).
-2. Two pre-raw-PPR community rows (published before M9) keep their baked 0–100 grades by
-   design (content immutability, §4) — they display a small "SCORE" number via the
-   scoring-kind fallback, which is honest but small. Optional cosmetic fix if it bothers
-   users in practice.
-3. M10 carry-over: description-field and scoring-kind end-to-end (create→publish→feed→
-   in-game) need a signed-in account to exercise the publish leg — verified via unit +
-   render tests (`ScoringKindTests`, `ScoringGalleryTests`) and live community-feed reads,
-   not a real publish, since no test account is configured.
-4. **Per-format daily completion bug:** `RepositoryContainer.hasPlayedToday` is one flag for
+1. **M5 monetization (Pro/StoreKit)** is the only fully-unstarted milestone. **M14** Spanish
+   localization is the other real gap. Both are pure app-code, independently scoped — see §9.
+2. **Per-format daily completion bug:** `RepositoryContainer.hasPlayedToday` is one flag for
    the whole day, so finishing K4C4 marks the Who Am I? card DONE too (and vice versa).
    Un-fixed; needs a per-format completion set instead of a single day-string.
-5. **Edge functions deployed but not scheduled:** all five `supabase/functions/` jobs
-   (§2) need `pg_cron` wiring; `apns.ts` push delivery is stubbed pending a real APNs key.
-   Neither blocks daily play — Versus/Leagues work without them, just without the
-   auto-forfeit/rollover/push automation.
-6. M5 monetization (Pro/StoreKit) is the next fully-unstarted milestone; see §9 for it plus
-   five newly-planned milestones (M11–M15).
+3. **No Leagues season/cohort exists yet in production** — `weekly-cohort-rollover` bootstraps
+   one on first run; it hasn't been triggered (mutates real user rating/cohort state, so it
+   needs an explicit go-ahead rather than being treated as a no-op). Fires naturally next
+   Monday 05:00 UTC either way.
+4. **`notify-versus-challenge`'s DB webhook isn't wired** (Database → Webhooks in the Supabase
+   dashboard — no API path found for this step). The function is deployed and correct; nothing
+   calls it yet.
+5. **Real APNs credentials don't exist yet** — push sends log instead of calling Apple until
+   `APNS_KEY_ID`/`APNS_TEAM_ID`/`APNS_PRIVATE_KEY`/`APNS_BUNDLE_ID` are generated (Apple
+   Developer portal) and set as Edge Function secrets. External hand-off.
+6. Two pre-raw-PPR community rows (published before M9) keep their baked 0–100 grades by
+   design (content immutability, §4) — cosmetic, optional to fix.
 
-## 9. Roadmap — planned milestones
+## 9. Roadmap — remaining milestones
 
-Full briefs live in `prompts/` (same self-contained format as M3–M10: goal, why-now, current
-state, scope, key decisions, deliverables, verification, hand-offs). Suggested sequencing
-and rationale are in [prompts/README.md](../prompts/README.md).
+Full briefs live in `prompts/` (same self-contained format: goal, why-now, current state,
+scope, key decisions, deliverables, verification, hand-offs).
 
 | Milestone | Theme | One-line scope |
 |-----------|-------|-----------------|
 | **M5** | Monetization + breadth | Pro/StoreKit, format packs, 3 new formats, seasons (spec exists, unstarted) |
-| **M11** | Production hardening | Close every open hand-off from §8 that's pure code: per-format completion bug, `pg_cron` scheduling, APNs signing, content-drift regression guard |
-| **M12** | Trust & safety | Wire the already-built-but-unused community report flow to real UI; auto-hide threshold; minimal review surface |
-| **M13** | Discovery & growth | Text search (Browse/Community have none today); pre-play puzzle sharing; recency-aware trending |
-| **M14** | Accessibility & localization | VoiceOver + Dynamic Type audit (zero infrastructure today); first non-English locale (Spanish) |
-| **M15** | Analytics & content health | First-party event pipeline (no analytics exist today); pipeline content-coverage artifact; documented funnel/retention queries |
+| **M14** | Accessibility & localization | VoiceOver shipped; first non-English locale (Spanish) is the remaining piece |
 
-**Why these five:** each addresses a gap confirmed against the actual codebase this session
-(zero search UI, zero analytics, zero accessibility/localization infrastructure, an unused
-report pipeline, unscheduled automation) rather than speculative scope — see each prompt
-file's "Current state to build on" section for the specific evidence.
+Every other previously-planned milestone (M11–M13, M15–M17) has shipped, app-side and
+backend both — see the table in §8. These two are what's actually left to build.
