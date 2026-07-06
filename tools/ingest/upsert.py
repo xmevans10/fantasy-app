@@ -85,3 +85,22 @@ def upsert_history(rows: list[dict]) -> int:
     """Record newly-served puzzle signatures into `puzzle_history` (on_conflict=signature —
     a signature can never legitimately recur, but re-running the same day's pick is safe)."""
     return _upsert_table("puzzle_history", rows, conflict="signature")
+
+
+def fetch_todays_keep4_id(active_date: str) -> str | None:
+    """The id of the keep4 row already minted for `active_date`, if any. Lets daily_puzzle.py
+    stay idempotent per day — a retried/re-dispatched run shouldn't mint a second competing
+    puzzle for a date that already has one (two rows sharing one active_date makes the
+    client's "today" pick ambiguous)."""
+    base, key = _require_env()
+    endpoint = (f"{base}/rest/v1/puzzles?select=id&format=eq.keep4"
+                f"&active_date=eq.{active_date}&limit=1")
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    req = urllib.request.Request(endpoint, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            rows = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as err:
+        body = err.read().decode("utf-8", "ignore")
+        raise RuntimeError(f"puzzles lookup failed ({err.code}): {body}") from err
+    return rows[0]["id"] if rows else None

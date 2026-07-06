@@ -80,13 +80,21 @@ def main() -> int:
     ingest_main.load_dotenv()
     today = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
 
+    from .upsert import fetch_history_signatures, fetch_todays_keep4_id, upsert, upsert_history
+    if args.upsert:
+        existing = fetch_todays_keep4_id(today.isoformat())
+        if existing:
+            print(f"[daily] {today.isoformat()} already has a puzzle ({existing}) — "
+                  "skipping (idempotent; a retried/re-dispatched run shouldn't mint a second "
+                  "one and make the client's 'today' pick ambiguous)")
+            return 0
+
     seasons = ingest_main.gather_seasons(ingest_main.DEFAULT_NFL_YEARS, ingest_main.DEFAULT_GAME_YEARS)
     baselines = BaselineTable(compute_baselines(seasons))
 
     candidates = build_candidates(seasons, baselines)
     print(f"[daily] {len(candidates)} candidate (theme, variant) pairs built for {today.isoformat()}")
 
-    from .upsert import fetch_history_signatures, upsert, upsert_history
     if args.upsert:
         served = fetch_history_signatures()
         print(f"[daily] {len(served)} signatures already served (puzzle_history)")
