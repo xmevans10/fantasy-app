@@ -161,21 +161,23 @@ struct CommunityView: View {
         items.filter { PuzzleSearch.matches(query: searchText, community: $0) }
     }
 
-    /// A community feed card. Human-made puzzles get the warm treatment — a warm-orange header
-    /// band and a soft warm body tint vs the daily cards' cool blue/white — plus the grading
+    /// A community feed card. The header band is colored by sport, same as daily cards; human-made
+    /// puzzles get a soft warm body tint instead (vs the daily cards' white) plus the grading
     /// badge (K4C4 only) and the author's name, so "someone's opinion" reads at a glance.
     private func communityCard(_ item: CommunitySummary) -> some View {
         let author = authors[item.authorId].map { "by @\($0)" } ?? "community"
         let plays = item.playCount == 1 ? "1 play" : "\(item.playCount) plays"
+        let isKeep4 = item.format == "keep4"
         return DailyGameCard(
-            formatName: item.format == "keep4" ? "K4C4" : "Who Am I?",
-            symbol: item.sport.symbol, sport: item.sport,
+            formatName: isKeep4 ? "K4C4" : "Who Am I?",
+            symbol: isKeep4 ? "rectangle.stack.fill" : "questionmark.circle.fill", sport: item.sport,
             title: item.title,
             subtitle: "\(plays) · \(author)",
             description: item.description,
-            scoring: item.format == "keep4" ? item.scoringKind : nil,
-            grain: item.format == "keep4" ? item.grainKind : nil,
-            completed: false, accent: .warningFill, onAccent: .onWarning,
+            scoring: isKeep4 ? item.scoringKind : nil,
+            grain: isKeep4 ? item.grainKind : nil,
+            completed: false,
+            typeColor: isKeep4 ? .accentFill : .voltFill, onTypeColor: isKeep4 ? .onAccent : .onVolt,
             bodyFill: .warningBg
         ) { Task { await open(item) } }
         secondaryAction: { menuTarget = item; showCardMenu = true }

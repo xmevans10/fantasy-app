@@ -27,9 +27,10 @@ struct ProfileView: View {
                     statRow.heroReveal(1)
                     statsRow.heroReveal(2)
                     ratingsCard.heroReveal(3)
-                    if auth.isSignedIn { notificationsCard.heroReveal(4) }
-                    if container.isAdmin { moderationRow.heroReveal(5) }
-                    accountCard.heroReveal(6)
+                    if auth.isSignedIn { favoriteTeamsCard.heroReveal(4) }
+                    if auth.isSignedIn { notificationsCard.heroReveal(5) }
+                    if container.isAdmin { moderationRow.heroReveal(6) }
+                    accountCard.heroReveal(7)
                 }
                 .padding(16)
             }
@@ -90,6 +91,54 @@ struct ProfileView: View {
             .cardSurface()
         }
         .buttonStyle(PrimePressStyle())
+    }
+
+    // MARK: - Favorite teams
+
+    private var favoriteTeamsCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("FAVORITE TEAMS").font(.label12).foregroundStyle(Color.textMuted)
+            ForEach(Sport.allCases.filter(\.hasTeams)) { favoriteTeamRow($0) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .cardSurface()
+    }
+
+    private func favoriteTeamRow(_ sport: Sport) -> some View {
+        let selected = container.favoriteTeams.team(for: sport)
+        return HStack(spacing: 12) {
+            Image(systemName: sport.symbol).font(.system(size: 14)).foregroundStyle(sport.cardFill)
+            Text(sport.displayName).font(.body14).foregroundStyle(Color.textPrimary)
+            Spacer()
+            Menu {
+                Button("None") { setFavoriteTeam(nil, for: sport) }
+                ForEach(container.catalog.teams(for: sport), id: \.self) { abbr in
+                    Button(abbr) { setFavoriteTeam(abbr, for: sport) }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    if let selected, let url = sport.teamLogoURL(forAbbr: selected) {
+                        AsyncImage(url: url) { phase in
+                            if let img = phase.image { img.resizable().scaledToFit() }
+                        }
+                        .frame(width: 18, height: 18)
+                    }
+                    Text(selected ?? "Pick a team").font(.label12)
+                        .foregroundStyle(selected == nil ? Color.textMuted : Color.textPrimary)
+                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10)).foregroundStyle(Color.textMuted)
+                }
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background(Color.surfaceMuted)
+                .clipShape(Capsule())
+            }
+        }
+    }
+
+    private func setFavoriteTeam(_ abbr: String?, for sport: Sport) {
+        var updated = container.favoriteTeams
+        updated.setTeam(abbr, for: sport)
+        Task { await container.saveFavoriteTeams(updated) }
     }
 
     // MARK: - Notifications

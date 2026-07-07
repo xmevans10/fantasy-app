@@ -120,6 +120,10 @@ def build_keep4_rows(theme: Theme, seasons: list[RawSeason],
             "sport": theme.sport,
             "players": players,
             "grain": theme.grain,
+            # The grade scale that ranked this pool — lets the app show the exact formula
+            # (generated themes aren't in keep4_themes.json, so a title match can't recover
+            # it client-side). Mirrors Keep4Puzzle.scale.
+            "scale": theme.scale,
         }
         rows.append(PuzzleRow(id=row_id, sport=theme.sport, format="keep4", content=content))
     return rows

@@ -121,10 +121,11 @@ struct BrowseView: View {
     }
 
     private func card(keep4 p: Keep4Puzzle, title: String) -> some View {
-        DailyGameCard(formatName: "K4C4", symbol: p.sport.symbol, sport: p.sport,
+        DailyGameCard(formatName: "K4C4", symbol: "rectangle.stack.fill", sport: p.sport,
                       title: title, subtitle: "\(p.players.count) \(p.puzzleGrain().countNoun) · archive",
                       scoring: p.scoringKind(), grain: p.puzzleGrain(),
-                      completed: false, accent: .accentFill, onAccent: .onAccent) {
+                      completed: false,
+                      favoriteTeamMatch: container.favoriteTeams.team(for: p.sport).map(p.features(teamAbbr:)) ?? false) {
             activeKeep4 = p
         }
         secondaryAction: { shareTarget = SharablePuzzle(keep4: p) }
@@ -132,9 +133,9 @@ struct BrowseView: View {
 
     /// Who Am I? has no title (revealing one would spoil the answer) — show a neutral numbered label.
     private func card(whoAmI p: WhoAmIPuzzle, number: Int) -> some View {
-        DailyGameCard(formatName: "Who am I?", symbol: p.sport.symbol, sport: p.sport,
+        DailyGameCard(formatName: "Who am I?", symbol: "questionmark.circle.fill", sport: p.sport,
                       title: "Mystery player #\(number)", subtitle: "\(p.clues.count) clues · archive",
-                      completed: false, accent: .voltFill, onAccent: .onVolt) {
+                      completed: false, typeColor: .voltFill, onTypeColor: .onVolt) {
             activeWhoAmI = p
         }
         secondaryAction: { shareTarget = SharablePuzzle(whoAmI: p) }

@@ -32,6 +32,30 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// Header-band fill for puzzle cards — cards are colored by sport (not puzzle type), so a
+    /// user can tell "this is an NBA puzzle" at a glance across Keep4/Who Am I/Community.
+    /// Puzzle type gets its own chip instead (see `DailyGameCard`'s `typeColor`).
+    var cardFill: Color {
+        switch self {
+        case .nfl: return .sportNFLFill
+        case .nba: return .sportNBAFill
+        case .baseball: return .sportMLBFill
+        case .soccer: return .sportSoccerFill
+        case .tennis: return .sportTennisFill
+        }
+    }
+
+    /// Foreground color for text/icons drawn on `cardFill`.
+    var onCardFill: Color {
+        switch self {
+        case .nfl: return .onSportNFL
+        case .nba: return .onSportNBA
+        case .baseball: return .onSportMLB
+        case .soccer: return .onSportSoccer
+        case .tennis: return .onSportTennis
+        }
+    }
+
     /// Whether `PlayerSeason.teamAbbr` names a real club/franchise for this sport. Tennis has
     /// no team — `teamAbbr` holds the player's country code instead (see `providers/seed.py`'s
     /// `load_tennis` docstring), so card UI should render a country flag in the logo slot rather

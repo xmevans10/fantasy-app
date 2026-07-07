@@ -26,6 +26,10 @@ final class RepositoryContainer: ObservableObject {
     @Published private(set) var ratings: [Sport: Int] = [:]
     /// Operator flag (`profiles.is_admin`) — gates the moderation review surface in Profile.
     @Published private(set) var isAdmin = false
+    /// One team per sport the user follows (`profiles.favorite_teams`) — cached here (rather
+    /// than re-fetched per view) so Home/Browse/Community can synchronously badge a puzzle
+    /// whose cards feature the user's team.
+    @Published private(set) var favoriteTeams = FavoriteTeams.empty
     @Published var sportFilter: SportFilter {
         didSet { UserDefaults.standard.set(sportFilter.rawValue, forKey: "sportFilter") }
     }
@@ -67,9 +71,10 @@ final class RepositoryContainer: ObservableObject {
         await refreshFromLocal()
         await pushPendingDeviceTokenIfNeeded()
         isAdmin = await community?.isAdmin(userID: uid) ?? false
+        favoriteTeams = await loadFavoriteTeams()
     }
 
-    func handleSignedOut() { sync = nil; isAdmin = false }
+    func handleSignedOut() { sync = nil; isAdmin = false; favoriteTeams = .empty }
 
     private func refreshFromLocal() async {
         progressSnapshot = await localProgress.load()
@@ -270,5 +275,24 @@ final class RepositoryContainer: ObservableObject {
             values: Row(userId: uid, streakAtRisk: settings.streakAtRisk, leaguePosition: settings.leaguePosition,
                        versusChallenge: settings.versusChallenge, seasonEnd: settings.seasonEnd),
             onConflict: "user_id")
+    }
+
+    // MARK: - Favorite teams
+
+    func loadFavoriteTeams() async -> FavoriteTeams {
+        guard let client, let uid = auth.userID else { return .empty }
+        struct Row: Decodable { let favoriteTeams: [String: String] }
+        let items = [URLQueryItem(name: "id", value: "eq.\(uid)"),
+                     URLQueryItem(name: "select", value: "favorite_teams"), URLQueryItem(name: "limit", value: "1")]
+        let rows: [Row]? = try? await client.select("profiles", query: items)
+        return rows?.first.map { FavoriteTeams(teams: $0.favoriteTeams) } ?? .empty
+    }
+
+    func saveFavoriteTeams(_ favoriteTeams: FavoriteTeams) async {
+        self.favoriteTeams = favoriteTeams
+        guard let client, let uid = auth.userID else { return }
+        struct Row: Encodable { let id: String; let favoriteTeams: [String: String] }
+        try? await client.upsert("profiles",
+            values: Row(id: uid, favoriteTeams: favoriteTeams.teams), onConflict: "id")
     }
 }

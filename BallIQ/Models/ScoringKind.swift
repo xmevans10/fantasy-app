@@ -109,6 +109,9 @@ struct ScoringNoteChip: View {
     let kind: ScoringKind
     let sport: Sport
     var author: String? = nil
+    /// Renders a trailing info glyph — set where the chip is a button opening
+    /// `ScoringDetailSheet` (the Keep4 pre-game header), so the tap-through is discoverable.
+    var tappable: Bool = false
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
@@ -116,6 +119,11 @@ struct ScoringNoteChip: View {
             Text(kind.explainer(sport: sport, author: author))
                 .font(.label11)
                 .multilineTextAlignment(.leading)
+            if tappable {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 11, weight: .bold))
+                    .opacity(0.75)
+            }
         }
         .foregroundStyle(kind.tint)
         .padding(.horizontal, 12).padding(.vertical, 7)

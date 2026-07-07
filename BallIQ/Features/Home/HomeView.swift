@@ -37,7 +37,9 @@ struct HomeView: View {
                                               subtitle: "\(puzzle.players.count) \(puzzle.puzzleGrain().countNoun)",
                                               scoring: puzzle.scoringKind(),
                                               grain: puzzle.puzzleGrain(),
-                                              completed: container.hasCompletedToday(puzzleID: puzzle.id)) {
+                                              completed: container.hasCompletedToday(puzzleID: puzzle.id),
+                                              favoriteTeamMatch: container.favoriteTeams.team(for: puzzle.sport)
+                                                  .map(puzzle.features(teamAbbr:)) ?? false) {
                                     activePuzzle = puzzle
                                 }
                                 secondaryAction: { shareTarget = SharablePuzzle(keep4: puzzle) }

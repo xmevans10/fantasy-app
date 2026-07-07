@@ -12,6 +12,10 @@ create table if not exists public.profiles (
   primary_sport text,
   created_at    timestamptz not null default now()
 );
+-- One team per sport a user follows, e.g. {"nfl": "KC", "nba": "DEN"} — keyed by
+-- Sport.rawValue, value is player_seasons.team_abbr. Powers the Profile team picker and
+-- client-side "your team's in today's puzzle" badges (no dedicated teams catalog table).
+alter table public.profiles add column if not exists favorite_teams jsonb not null default '{}'::jsonb;
 
 -- one row per user per sport
 create table if not exists public.ratings (

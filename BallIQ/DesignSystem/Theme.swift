@@ -78,6 +78,23 @@ extension Color {
     static let proText  = dynamic(light: Color(hex: 0x5A2CD6), dark: Color(hex: 0xB9A0FF))
     static let proBg     = dynamic(light: Color(hex: 0xEBE3FE), dark: Color(hex: 0x251744))
 
+    // MARK: sport — one hue per sport, used for puzzle-card header bands (cards are colored
+    // by sport now, not puzzle type — see Sport.swift's `cardFill`/`onCardFill`). None of these
+    // reuse accentFill/voltFill: those are reserved for the puzzle-TYPE chip (K4C4/Who Am I),
+    // which sits inside the header band — if a sport shared the chip's color, the chip would
+    // vanish into the band for that sport (NFL, the most common one, hit exactly this before
+    // gridiron green replaced the blue it originally aliased from accentFill).
+    static let sportNFLFill    = Color(hex: 0x1B7A43)
+    static let onSportNFL      = Color.white
+    static let sportNBAFill    = Color(hex: 0xFF5A1E)
+    static let onSportNBA      = Color.white
+    static let sportMLBFill    = Color(hex: 0xD62839)
+    static let onSportMLB      = Color.white
+    static let sportSoccerFill = Color(hex: 0x0EA5A4)
+    static let onSportSoccer   = Color.white
+    static let sportTennisFill = Color(hex: 0xE8B400)
+    static let onSportTennis   = Color(hex: 0x15120B)
+
     // MARK: aliases kept for source compatibility
     static let brandBlue    = accentFill
     static let streakAmber  = warningFill

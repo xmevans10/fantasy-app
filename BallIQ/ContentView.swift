@@ -5,10 +5,13 @@ struct ContentView: View {
 
     // Deep-link / share-link play (balliq://play/<id>). Requires the URL scheme to be
     // registered in Info.plist; the in-app feed works regardless.
-    @State private var linkKeep4: Keep4Puzzle?
-    @State private var linkWhoAmI: WhoAmIPuzzle?
-    @State private var linkID: String?
-    @State private var linkAuthor: String?   // creator's username, for the scoring explainer
+    //
+    // The puzzle, its community id, and its author travel in ONE presentation item: when they
+    // were sibling @State vars, the fullScreenCover content closure evaluated with a stale
+    // snapshot where the extras were still nil — every deep-linked community puzzle presented
+    // with communityID nil (play never logged, report action hidden, author uncredited).
+    @State private var linkKeep4: LinkedPlay<Keep4Puzzle>?
+    @State private var linkWhoAmI: LinkedPlay<WhoAmIPuzzle>?
     @State private var debugCreate = false
     @State private var selectedTab = 0
 
@@ -41,6 +44,7 @@ struct ContentView: View {
             if let url = DebugLaunch.openURL { Task { await handle(url) } }
             if DebugLaunch.autoOpenCreateKeep4 { debugCreate = true }
             if DebugLaunch.autoOpenStats { selectedTab = 4 }   // Profile tab; it auto-pushes Stats
+            if DebugLaunch.autoOpenProfile { selectedTab = 4 }
             if DebugLaunch.autoOpenModeration { selectedTab = 4 }   // ditto for the review queue
             if DebugLaunch.autoOpenLeagues { selectedTab = 1 }
             if DebugLaunch.autoOpenVersus { selectedTab = 2 }
@@ -49,12 +53,14 @@ struct ContentView: View {
         .sheet(isPresented: $debugCreate) {
             NavigationStack { CreateKeep4View().environmentObject(container) }
         }
-        .fullScreenCover(item: $linkKeep4) { p in
-            Keep4GameView(puzzle: p, ranked: false, communityID: linkID, authorName: linkAuthor)
+        .fullScreenCover(item: $linkKeep4) { link in
+            Keep4GameView(puzzle: link.puzzle, ranked: false, communityID: link.communityID,
+                          authorName: link.author)
                 .environmentObject(container)
         }
-        .fullScreenCover(item: $linkWhoAmI) { p in
-            WhoAmIGameView(puzzle: p, ranked: false, communityID: linkID).environmentObject(container)
+        .fullScreenCover(item: $linkWhoAmI) { link in
+            WhoAmIGameView(puzzle: link.puzzle, ranked: false, communityID: link.communityID)
+                .environmentObject(container)
         }
     }
 
@@ -65,22 +71,30 @@ struct ContentView: View {
               let id = url.pathComponents.last, !id.isEmpty else { return }
         container.track(.communityPuzzlePlayed, ["source": "link", "puzzle_id": id])
         if let community = container.community {
-            linkID = id
             switch await community.load(id: id) {
-            case .keep4(let p, let author): linkAuthor = author; linkKeep4 = p; return
-            case .whoAmI(let p): linkWhoAmI = p; return
+            case .keep4(let p, let author):
+                linkKeep4 = LinkedPlay(puzzle: p, communityID: id, author: author); return
+            case .whoAmI(let p):
+                linkWhoAmI = LinkedPlay(puzzle: p, communityID: id); return
             case .none: break
             }
         }
-        // Not a community id: nil out linkID so the game view doesn't log a community play.
-        linkID = nil
-        linkAuthor = nil
+        // Not a community id: nil communityID so the game view doesn't log a community play.
         if let p = await container.puzzles.allKeep4(for: .all).first(where: { $0.id == id }) {
-            linkKeep4 = p
+            linkKeep4 = LinkedPlay(puzzle: p)
         } else if let p = await container.puzzles.allWhoAmI(for: .all).first(where: { $0.id == id }) {
-            linkWhoAmI = p
+            linkWhoAmI = LinkedPlay(puzzle: p)
         }
     }
+}
+
+/// A deep-linked puzzle plus its presentation context, kept together so the fullScreenCover
+/// closure never reads sibling state (see the stale-snapshot note on `linkKeep4`).
+private struct LinkedPlay<P: Identifiable>: Identifiable where P.ID == String {
+    let puzzle: P
+    var communityID: String? = nil
+    var author: String? = nil
+    var id: String { puzzle.id }
 }
 
 /// Decides between splash, onboarding, and the main app.

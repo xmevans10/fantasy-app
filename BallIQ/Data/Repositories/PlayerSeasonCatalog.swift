@@ -96,6 +96,15 @@ final class PlayerSeasonCatalog {
         }
     }
 
+    /// Distinct team abbreviations for `sport`, sorted alphabetically — powers the favorite-team
+    /// picker. Bundled-derived (same offline-first rationale as `yearBounds`): no network call,
+    /// no separate teams catalog to maintain. Empty for teamless sports (tennis).
+    func teams(for sport: Sport) -> [String] {
+        guard sport.hasTeams else { return [] }
+        let abbrs = bundled.filter { $0.sport == sport }.map(\.teamAbbr)
+        return Array(Set(abbrs)).sorted()
+    }
+
     /// The catalog's overall season-year span, for sizing era controls. Bundled-derived
     /// (good enough; the remote span is a superset and the UI clamps either way).
     var yearBounds: ClosedRange<Int> {

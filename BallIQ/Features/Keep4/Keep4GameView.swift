@@ -22,6 +22,7 @@ struct Keep4GameView: View {
     @State private var mode: Keep4Mode = .normal
     @State private var showReportDialog = false
     @State private var showReportSent = false
+    @State private var showScoringInfo = false
 
     private let pileLimit = 4
 
@@ -59,6 +60,7 @@ struct Keep4GameView: View {
                                                "community": "\(communityID != nil)"])
             }
             if DebugLaunch.autoSubmitResult { autoFillForScreenshot() }
+            if DebugLaunch.autoOpenScoringInfo { showScoringInfo = true }
         }
         .reportReasonDialog(isPresented: $showReportDialog) { reason in report(reason: reason) }
         .alert("Report sent", isPresented: $showReportSent) {
@@ -219,10 +221,23 @@ struct Keep4GameView: View {
     }
 
     /// How this puzzle's hidden ranking was produced (PPR / era-adjusted / author's custom
-    /// rule) — the pre-game scoring explainer, always visible above the deck.
+    /// rule) — the pre-game scoring explainer, always visible above the deck. Tapping it
+    /// opens the full formula sheet.
     private var scoringNote: some View {
-        ScoringNoteChip(kind: puzzle.scoringKind(), sport: puzzle.sport, author: authorName)
-            .padding(.top, 2)
+        Button {
+            Haptics.tap()
+            showScoringInfo = true
+        } label: {
+            ScoringNoteChip(kind: puzzle.scoringKind(), sport: puzzle.sport,
+                            author: authorName, tappable: true)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Shows the exact scoring formula")
+        .padding(.top, 2)
+        .sheet(isPresented: $showScoringInfo) {
+            ScoringDetailSheet(puzzle: puzzle, author: authorName,
+                               isCommunity: communityID != nil)
+        }
     }
 
     private var modePicker: some View {

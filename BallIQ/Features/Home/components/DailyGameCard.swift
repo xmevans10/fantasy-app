@@ -15,8 +15,14 @@ struct DailyGameCard: View {
     /// Who Am I? cards, which have no grain concept.
     var grain: PuzzleGrain? = nil
     let completed: Bool
-    var accent: Color = .accentFill
-    var onAccent: Color = .onAccent
+    /// True when one of this puzzle's cards belongs to the signed-in user's favorite team for
+    /// `sport` — surfaces as a "YOUR TEAM" badge. Only Keep4 puzzles carry structured
+    /// `teamAbbr` data per card today; Who Am I's clues are free text, so it's always false there.
+    var favoriteTeamMatch: Bool = false
+    /// Puzzle-type signifier chip color (e.g. blue for K4C4, volt for Who Am I) — the header
+    /// band itself is colored by `sport` (see `Sport.cardFill`), not by type.
+    var typeColor: Color = .accentFill
+    var onTypeColor: Color = .onAccent
     /// Card body fill — community cards pass a warm tint to read "hand-made" vs the daily white.
     var bodyFill: Color = .surface1
     let action: () -> Void
@@ -39,8 +45,8 @@ struct DailyGameCard: View {
                 // future, with no per-case tuning.
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 8) {
-                        Image(systemName: symbol)
-                        Text(formatName.uppercased())
+                        Image(systemName: sport.symbol)
+                        Text(sport.displayName.uppercased())
                             .font(.heading)
                             .lineLimit(1)
                         Spacer(minLength: 8)
@@ -55,21 +61,26 @@ struct DailyGameCard: View {
                     }
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 6) {
+                            // Puzzle-TYPE signifier — its own solid-color chip since the header
+                            // band itself is now colored by sport, not type.
+                            badge(symbol: symbol, text: formatName.uppercased(), fill: typeColor, foreground: onTypeColor)
                             if let scoring {
                                 badge(symbol: scoring.symbol, text: scoring.badgeLabel(for: sport))
                             }
                             if let grain {
                                 badge(symbol: grain.symbol, text: grain.badgeLabel)
                             }
-                            badge(symbol: nil, text: sport.displayName.uppercased())
+                            if favoriteTeamMatch {
+                                badge(symbol: "star.fill", text: "YOUR TEAM")
+                            }
                         }
                     }
                 }
                 .accessibilityElement(children: .combine)
-                .foregroundStyle(onAccent)
+                .foregroundStyle(sport.onCardFill)
                 .padding(.horizontal, 14).padding(.vertical, 10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(accent)
+                .background(sport.cardFill)
 
                 // Body
                 HStack(alignment: .bottom) {
@@ -118,10 +129,12 @@ struct DailyGameCard: View {
         .buttonStyle(PrimePressStyle())
     }
 
-    /// One header-band badge (scoring / grain / sport) — same capsule for all three instead
+    /// One header-band badge (type / scoring / grain) — same capsule for all three instead
     /// of a copy-pasted literal per badge, so a fourth kind (if one's ever added) is a
-    /// one-line call, not a fourth near-identical block.
-    private func badge(symbol: String?, text: String) -> some View {
+    /// one-line call, not a fourth near-identical block. `fill`/`foreground` default to a
+    /// translucent tint of the header ink; the type badge overrides both with a solid color
+    /// since it's the puzzle-type signifier and needs to read at a glance, not blend in.
+    private func badge(symbol: String?, text: String, fill: Color? = nil, foreground: Color? = nil) -> some View {
         HStack(spacing: 4) {
             if let symbol {
                 Image(systemName: symbol).font(.system(size: 9, weight: .bold))
@@ -130,7 +143,8 @@ struct DailyGameCard: View {
         }
         .fixedSize()   // never wrap mid-capsule — the scroll view absorbs overflow instead
         .padding(.horizontal, 8).padding(.vertical, 3)
-        .background(onAccent.opacity(0.18))
+        .foregroundStyle(foreground ?? sport.onCardFill)
+        .background(fill ?? sport.onCardFill.opacity(0.18))
         .clipShape(Capsule())
     }
 }

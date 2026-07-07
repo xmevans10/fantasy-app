@@ -151,6 +151,20 @@ themes, and legacy community rows — is `ppr`. The community feed reads the bad
 `ScoringKindTests`; visual variants rendered by `ScoringGalleryTests` (writes
 `scoring_gallery.png` to the app tmp dir).
 
+**Scoring-formula explainer (2026-07-07):** the pre-game chip is now a button opening
+`ScoringDetailSheet` (`Features/Keep4/ScoringDetailSheet.swift`) — the actual point table
+(`ScoringBreakdown` reads `ScoringRule.presets`, never re-hardcoded copy), an era-index card
+for `.era`, a warm "no formula" panel for vibes, and an honest provenance footnote per scale
+(full-PPR = real industry standard; NBA = "DraftKings-style, simplified"; soccer =
+"FPL-inspired"; tennis + era index = BallIQ's own). Formula resolution: baked `content.scale`
+(now written by `assemble.py` AND at community publish — backfilled across live `puzzles`
+2026-07-07) → theme-title match → sport-default formulas with a hedged footnote (legacy
+community NFL rows may be Half-PPR/Standard). Locked by `ScoringBreakdownTests` (including
+"every bundled theme scale resolves"); screenshot flag `-screenshotScoringInfo`. Fixing this
+surfaced a deep-link bug: `ContentView`'s fullScreenCover closures captured stale sibling
+state, so link-opened community puzzles presented with `communityID` nil (plays unlogged,
+author uncredited) — presentation context now travels inside the cover item (`LinkedPlay`).
+
 Scales (`grade.py` `_FANTASY`, mirrored byte-for-byte by `GradeFormula.swift` and
 `ScoringRule.presets`):
 - `nfl_fantasy` (the unified any-position axis): pass yds ×0.04, pass TD ×4, INT ×−2,

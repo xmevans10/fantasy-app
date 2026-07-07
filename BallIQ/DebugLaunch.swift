@@ -12,6 +12,7 @@ enum DebugLaunch {
     static var autoSubmitResult: Bool { has("-screenshotResult") || has("-screenshotWhoAmIResult") }
     static var autoOpenCreateKeep4: Bool { has("-screenshotCreate") }
     static var autoOpenStats: Bool { has("-screenshotStats") }
+    static var autoOpenProfile: Bool { has("-screenshotProfile") }
     static var autoOpenLeagues: Bool { has("-screenshotLeagues") }
     static var autoOpenVersus: Bool { has("-screenshotVersus") }
     static var autoOpenCommunity: Bool { has("-screenshotCommunity") }
@@ -19,6 +20,8 @@ enum DebugLaunch {
     static var autoOpenModeration: Bool { has("-screenshotModeration") }
     /// Browse: auto-open the pre-play share sheet for the first archive puzzle.
     static var autoOpenShare: Bool { has("-screenshotShare") }
+    /// Keep4 game: auto-open the scoring-formula sheet (simctl can't tap the chip).
+    static var autoOpenScoringInfo: Bool { has("-screenshotScoringInfo") }
     /// Prefill the Browse search field (simctl can't type): `-searchQuery lamb`.
     static var searchQuery: String? {
         let args = ProcessInfo.processInfo.arguments
@@ -51,12 +54,14 @@ enum DebugLaunch {
     static let autoSubmitResult = false
     static let autoOpenCreateKeep4 = false
     static let autoOpenStats = false
+    static let autoOpenProfile = false
     static let autoOpenLeagues = false
     static let autoOpenVersus = false
     static let autoOpenCommunity = false
     static let autoOpenBrowse = false
     static let autoOpenModeration = false
     static let autoOpenShare = false
+    static let autoOpenScoringInfo = false
     static let searchQuery: String? = nil
     static let browseSport: String? = nil
     static let createTemplateKey: String? = nil

@@ -35,10 +35,13 @@ struct CreateKeep4View: View {
     private var isVibes: Bool { scoringChoice == .vibes }
     /// nil for Vibes (no formula) or if a preset key can't be resolved.
     private var rule: ScoringRule? {
-        guard !isVibes else { return nil }
-        guard let key = activeTheme?.scale ?? scoringChoice.presetKey(for: scoringSport),
-              let preset = ScoringRule.preset(key) else { return nil }
+        guard let key = scaleKey, let preset = ScoringRule.preset(key) else { return nil }
         return preset.eraAdjusted(eraAdjusted)
+    }
+    /// The grade-scale key behind `rule` — baked into the published puzzle so the scoring
+    /// explainer can show the exact formula (Half PPR vs full, pitcher vs hitter).
+    private var scaleKey: String? {
+        isVibes ? nil : (activeTheme?.scale ?? scoringChoice.presetKey(for: scoringSport))
     }
     private var bounds: ClosedRange<Int> { container.catalog.yearBounds }
     private var canPublish: Bool {
@@ -554,7 +557,8 @@ struct CreateKeep4View: View {
         // template is active (free-form creation only ever offers season rows to pick).
         let puzzle = Keep4Puzzle(id: id, theme: title, sport: sport, players: cards(),
                                  description: trimmedDescription.isEmpty ? nil : trimmedDescription,
-                                 scoring: scoring, grain: activeTheme?.grain ?? "season")
+                                 scoring: scoring, grain: activeTheme?.grain ?? "season",
+                                 scale: rule == nil ? nil : scaleKey)
         do {
             _ = try await container.publish(id: id, sport: sport, format: "keep4",
                                             title: title, content: puzzle)

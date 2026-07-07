@@ -18,11 +18,21 @@ struct Keep4Puzzle: Identifiable, Codable, Equatable {
     /// resolved by `puzzleGrain(themes:)`. Additive + optional so existing baked content
     /// decodes unchanged.
     var grain: String? = nil
+    /// The grade-scale key the puzzle was scored with (e.g. "nfl_fantasy_half"), baked at
+    /// community publish so `ScoringBreakdown` can show the exact formula. nil for daily
+    /// content (recovered via the theme title) and legacy rows. Additive + optional so
+    /// existing baked content decodes unchanged.
+    var scale: String? = nil
 
     /// Player ids that belong in the correct Keep pile (the 4 highest grades).
     var correctKeepIDs: Set<String> {
         let topFour = players.sorted { $0.grade > $1.grade }.prefix(4)
         return Set(topFour.map(\.id))
+    }
+
+    /// True if any card belongs to `teamAbbr` — powers the "YOUR TEAM" favorite-team badge.
+    func features(teamAbbr: String) -> Bool {
+        players.contains { $0.teamAbbr == teamAbbr }
     }
 }
 
