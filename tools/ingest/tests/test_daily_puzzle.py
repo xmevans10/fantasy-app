@@ -2,7 +2,7 @@
 import datetime as dt
 
 from tools.ingest.assemble import PuzzleRow
-from tools.ingest.daily_puzzle import _signature, pick_novel_puzzle
+from tools.ingest.daily_puzzle import _signature, mint_batch, pick_novel_puzzle
 from tools.ingest.themes import Theme
 
 TODAY = dt.date(2026, 1, 1)
@@ -64,3 +64,35 @@ def test_pick_novel_puzzle_is_deterministic_for_the_same_date():
     pick_a = pick_novel_puzzle(candidates, set(), TODAY)
     pick_b = pick_novel_puzzle(candidates, set(), TODAY)
     assert pick_a[2] == pick_b[2]
+
+
+def test_mint_batch_never_repeats_a_signature_within_the_same_batch():
+    theme = _theme("gen-wr-test")
+    rows = [_row(f"r{i}", [f"p{i}-{j}" for j in range(8)]) for i in range(20)]
+    candidates = [(theme, r) for r in rows]
+    dates = [TODAY + dt.timedelta(days=i) for i in range(5)]
+    minted = mint_batch(candidates, set(), dates)
+    sigs = [sig for _, _, _, sig in minted]
+    assert len(minted) == 5
+    assert len(set(sigs)) == 5   # every date in the batch got a distinct signature
+
+
+def test_mint_batch_stops_early_when_candidate_space_runs_out():
+    theme = _theme("gen-wr-test")
+    rows = [_row(f"r{i}", [f"p{i}-{j}" for j in range(8)]) for i in range(3)]
+    candidates = [(theme, r) for r in rows]
+    dates = [TODAY + dt.timedelta(days=i) for i in range(10)]
+    minted = mint_batch(candidates, set(), dates)
+    assert len(minted) == 3   # only 3 distinct signatures exist to give out
+
+
+def test_mint_batch_respects_signatures_served_before_the_batch_started():
+    theme = _theme("gen-wr-test")
+    rows = [_row(f"r{i}", [f"p{i}-{j}" for j in range(8)]) for i in range(5)]
+    candidates = [(theme, r) for r in rows]
+    pre_served = {_signature(theme.key, rows[i]) for i in range(3)}
+    dates = [TODAY + dt.timedelta(days=i) for i in range(2)]
+    minted = mint_batch(candidates, set(pre_served), dates)
+    assert len(minted) == 2
+    for _, _, _, sig in minted:
+        assert sig not in pre_served

@@ -1,14 +1,23 @@
-"""Mint exactly one guaranteed-novel Keep4 puzzle for today from real stats.
+"""Mint one (or many) guaranteed-novel Keep4 puzzle(s) from real stats.
 
 Searches the full curated + generated (single- and pairwise-quirk) theme space across every
 distinct player-set window each theme can produce, excludes every signature ever served
-(the `puzzle_history` table), and upserts the first unused one as today's `active_date` row.
-Meant to run once a night (see .github/workflows/daily-puzzle.yml). The existing `main.py`
-ingest job is unaffected — it keeps refreshing the broader stable pool on its own schedule.
+(the `puzzle_history` table), and upserts the first unused one as `active_date`'s row. Meant
+to run once a night (see .github/workflows/daily-puzzle.yml). The existing `main.py` ingest
+job is unaffected — it keeps refreshing the broader stable pool on its own schedule.
+
+`--count N` mints N consecutive days starting at `--date` (default today) in a single run,
+sharing one `gather_seasons()` pull across all of them instead of repeating it per puzzle —
+that live pull is ~25-30min and dwarfs everything else this module does, so minting a batch
+by invoking this once per day (the naive approach) costs N x that, when the underlying stats
+data is identical across a same-session batch. Each date's pick still excludes every
+signature served *within this same batch* as it goes (not just history from before the run
+started), so a batch can never mint two of its own dates the same puzzle either.
 
 Examples:
     python -m tools.ingest.daily_puzzle --dry-run
     python -m tools.ingest.daily_puzzle --upsert
+    python -m tools.ingest.daily_puzzle --upsert --count 30   # backfill the next 30 days
 """
 from __future__ import annotations
 
@@ -67,33 +76,74 @@ def pick_novel_puzzle(
     return None
 
 
+def _finalize_row(date: dt.date, theme: Theme, row: PuzzleRow) -> PuzzleRow:
+    """Stamp a picked (theme, row) with its date-specific id and active_date."""
+    row.id = f"{row.id}-daily-{date:%Y%m%d}"
+    row.content["id"] = row.id
+    row.active_date = date.isoformat()
+    return row
+
+
+def mint_batch(
+    candidates: list[tuple[Theme, PuzzleRow]], served: set[str], dates: list[dt.date],
+) -> list[tuple[dt.date, Theme, PuzzleRow, str]]:
+    """Pick a novel puzzle for each of `dates` in order, mutating `served` in place as it goes
+    so a later date in the same batch can never reuse a signature an earlier one just picked —
+    not just signatures from before this call. Stops early (returns fewer than len(dates)) if
+    the candidate space is exhausted."""
+    minted: list[tuple[dt.date, Theme, PuzzleRow, str]] = []
+    for date in dates:
+        pick = pick_novel_puzzle(candidates, served, date)
+        if pick is None:
+            break
+        theme, row, sig = pick
+        served.add(sig)
+        minted.append((date, theme, _finalize_row(date, theme, row), sig))
+    return minted
+
+
+def _print_pick(date: dt.date, theme: Theme, row: PuzzleRow) -> None:
+    print(f"\n── {date.isoformat()} ── {theme.title}  ({row.id})")
+    for n, p in enumerate(sorted(row.content["players"], key=lambda p: -p["grade"])):
+        pile = "KEEP" if n < 4 else "cut "
+        print(f"   {pile} {p['grade']:5.1f}  {p['name']} ({p['teamAbbr']} {p['seasonYear']})")
+
+
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Mint today's guaranteed-novel Keep4 puzzle")
-    ap.add_argument("--upsert", action="store_true", help="write the pick to Supabase")
+    ap = argparse.ArgumentParser(description="Mint one or more guaranteed-novel Keep4 puzzles")
+    ap.add_argument("--upsert", action="store_true", help="write the pick(s) to Supabase")
     ap.add_argument("--dry-run", action="store_true", help="build + pick + print, no writes")
     ap.add_argument("--date", type=str, default=None,
-                    help="override today's date (YYYY-MM-DD), for testing")
+                    help="start date override (YYYY-MM-DD), for testing/backfill")
+    ap.add_argument("--count", type=int, default=1,
+                    help="mint this many consecutive days starting at --date, sharing one "
+                         "provider pull instead of repeating it per puzzle")
     args = ap.parse_args()
     if not args.upsert and not args.dry_run:
         args.dry_run = True
 
     ingest_main.load_dotenv()
-    today = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
+    start = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
+    target_dates = [start + dt.timedelta(days=i) for i in range(args.count)]
 
     from .upsert import fetch_history_signatures, fetch_todays_keep4_id, upsert, upsert_history
     if args.upsert:
-        existing = fetch_todays_keep4_id(today.isoformat())
-        if existing:
-            print(f"[daily] {today.isoformat()} already has a puzzle ({existing}) — "
-                  "skipping (idempotent; a retried/re-dispatched run shouldn't mint a second "
-                  "one and make the client's 'today' pick ambiguous)")
+        already = {d: fetch_todays_keep4_id(d.isoformat()) for d in target_dates}
+        already = {d: pid for d, pid in already.items() if pid}
+        for d, pid in already.items():
+            print(f"[daily] {d.isoformat()} already has a puzzle ({pid}) — skipping (idempotent; "
+                  "a retried/re-dispatched run shouldn't mint a second one and make the "
+                  "client's 'today' pick ambiguous)")
+        target_dates = [d for d in target_dates if d not in already]
+        if not target_dates:
             return 0
 
     seasons = ingest_main.gather_seasons(ingest_main.DEFAULT_NFL_YEARS, ingest_main.DEFAULT_GAME_YEARS)
     baselines = BaselineTable(compute_baselines(seasons))
 
     candidates = build_candidates(seasons, baselines)
-    print(f"[daily] {len(candidates)} candidate (theme, variant) pairs built for {today.isoformat()}")
+    print(f"[daily] {len(candidates)} candidate (theme, variant) pairs built, "
+          f"minting {len(target_dates)} puzzle(s) from {target_dates[0].isoformat()}")
 
     if args.upsert:
         served = fetch_history_signatures()
@@ -102,28 +152,23 @@ def main() -> int:
         served = set()
         print("[daily] --dry-run: skipping the puzzle_history lookup (starting from empty history)")
 
-    pick = pick_novel_puzzle(candidates, served, today)
-    if pick is None:
-        print("[daily] FATAL: entire candidate space already served — no novel puzzle available today")
+    minted = mint_batch(candidates, served, target_dates)
+    for date, theme, row, _ in minted:
+        _print_pick(date, theme, row)
+    if len(minted) < len(target_dates):
+        print(f"[daily] entire candidate space exhausted — minted {len(minted)}/"
+              f"{len(target_dates)} requested")
+
+    if not minted:
         return 1
-    theme, row, sig = pick
-
-    row.id = f"{row.id}-daily-{today:%Y%m%d}"
-    row.content["id"] = row.id
-    row.active_date = today.isoformat()
-
-    print(f"\n── today's pick ── {theme.title}  ({row.id})")
-    for n, p in enumerate(sorted(row.content["players"], key=lambda p: -p["grade"])):
-        pile = "KEEP" if n < 4 else "cut "
-        print(f"   {pile} {p['grade']:5.1f}  {p['name']} ({p['teamAbbr']} {p['seasonYear']})")
 
     if args.upsert:
-        sent = upsert([row])
-        print(f"\n[daily] upserted {sent} puzzle row")
+        sent = upsert([row for _, _, row, _ in minted])
+        print(f"\n[daily] upserted {sent} puzzle row(s)")
         hist_sent = upsert_history([{
             "signature": sig, "theme_key": theme.key, "sport": theme.sport,
-            "format": "keep4", "puzzle_id": row.id, "served_date": today.isoformat(),
-        }])
+            "format": "keep4", "puzzle_id": row.id, "served_date": date.isoformat(),
+        } for date, theme, row, sig in minted])
         print(f"[daily] recorded {hist_sent} history row(s)")
     else:
         print("\n(--dry-run: not written to Supabase)")

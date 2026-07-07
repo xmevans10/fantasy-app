@@ -3,7 +3,19 @@ name: daily-puzzle
 on:
   schedule:
     - cron: "0 0 * * *"     # 00:00 UTC daily — mint tonight's guaranteed-novel puzzle
-  workflow_dispatch:        # allow manual runs
+  workflow_dispatch:        # allow manual runs, optionally backfilling many days at once —
+                            # the live provider pull (~25-30min) is the same regardless of
+                            # count, so minting N days in one dispatched run is far cheaper
+                            # than N separate runs.
+    inputs:
+      count:
+        description: "How many consecutive days to mint (starting at start-date, or today)"
+        required: false
+        default: "1"
+      start_date:
+        description: "First date to mint, YYYY-MM-DD (blank = today)"
+        required: false
+        default: ""
 
 jobs:
   mint:
@@ -26,4 +38,7 @@ jobs:
           restore-keys: |
             ingest-cache-
       - run: pip install -r tools/ingest/requirements.txt
-      - run: python -m tools.ingest.daily_puzzle --upsert
+      - run: |
+          python -m tools.ingest.daily_puzzle --upsert \
+            --count "${{ github.event.inputs.count || '1' }}" \
+            ${{ github.event.inputs.start_date != '' && format('--date {0}', github.event.inputs.start_date) || '' }}
