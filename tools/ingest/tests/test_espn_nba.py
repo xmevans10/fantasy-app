@@ -1,5 +1,6 @@
 """ESPN NBA parser tests — pure (no network), against a captured payload shape."""
-from tools.ingest.providers.espn_nba import _attempted, parse_seasons
+from tools.ingest.providers import espn_nba
+from tools.ingest.providers.espn_nba import _attempted, fetch_by_ids, parse_seasons
 
 _NAMES = [
     "gamesPlayed", "gamesStarted", "avgMinutes",
@@ -57,3 +58,27 @@ def test_multi_team_season_keeps_more_games():
 def test_attempted_parses_made_attempted_pair():
     assert _attempted("7.9-18.9") == 18.9
     assert _attempted("garbage") == 0.0
+
+
+def test_fetch_by_ids_skips_the_rate_limit_delay_on_a_cache_hit(monkeypatch):
+    # The delay only exists to protect the live API — a warm-cache run (e.g. a same-day
+    # re-run, or CI restoring last run's cache) shouldn't pay it at all.
+    monkeypatch.setattr(espn_nba, "fetch_json", lambda *a, **k: _payload([]))
+    monkeypatch.setattr(espn_nba, "is_cached", lambda *a, **k: True)
+    slept = []
+    monkeypatch.setattr(espn_nba.time, "sleep", lambda s: slept.append(s))
+
+    fetch_by_ids({"123": "Some Player"})
+
+    assert slept == []
+
+
+def test_fetch_by_ids_still_delays_on_a_real_fetch(monkeypatch):
+    monkeypatch.setattr(espn_nba, "fetch_json", lambda *a, **k: _payload([]))
+    monkeypatch.setattr(espn_nba, "is_cached", lambda *a, **k: False)
+    slept = []
+    monkeypatch.setattr(espn_nba.time, "sleep", lambda s: slept.append(s))
+
+    fetch_by_ids({"123": "Some Player"})
+
+    assert len(slept) == 1

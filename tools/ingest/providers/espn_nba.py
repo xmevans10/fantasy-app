@@ -16,7 +16,7 @@ import time
 import urllib.parse
 
 from ..models import RawSeason, slug
-from .http import fetch_json
+from .http import fetch_json, is_cached
 
 _SEARCH = "https://site.web.api.espn.com/apis/search/v2"
 _STATS = "https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/{id}/stats"
@@ -153,20 +153,26 @@ def fetch_targets(targets: list[tuple[str, int]]) -> list[RawSeason]:
 
     out: list[RawSeason] = []
     for name, years in by_name.items():
+        # Two calls per player (search, then stats) — the delay after this iteration
+        # only needs to fire if at least one of them actually hit the network.
+        search_cached = is_cached(f"espn_nba_search_{slug(name)}.json")
         try:
             aid = _search_athlete_id(name)
             if not aid:
                 print(f"[espn] no athlete match: {name}")
                 continue
+            stats_cache_key = f"espn_nba_stats_{aid}.json"
+            stats_cached = is_cached(stats_cache_key)
             seasons = parse_seasons(name, fetch_json(_STATS.format(id=aid),
-                                                     cache_key=f"espn_nba_stats_{aid}.json"),
+                                                     cache_key=stats_cache_key),
                                      athlete_id=aid)
             for year in years:
                 if season := seasons.get(year):
                     out.append(season)
                 else:
                     print(f"[espn] no {year} season for {name}")
-            time.sleep(_RATE_DELAY)
+            if not (search_cached and stats_cached):
+                time.sleep(_RATE_DELAY)
         except Exception as err:  # noqa: BLE001
             print(f"[espn] skipping {name}: {err}")
     return out
@@ -181,11 +187,13 @@ def fetch_by_ids(id_to_name: dict[str, str]) -> list[RawSeason]:
     """
     out: list[RawSeason] = []
     for aid, name in id_to_name.items():
+        cache_key = f"espn_nba_stats_{aid}.json"
+        was_cached = is_cached(cache_key)
         try:
-            data = fetch_json(_STATS.format(id=aid),
-                              cache_key=f"espn_nba_stats_{aid}.json")
+            data = fetch_json(_STATS.format(id=aid), cache_key=cache_key)
             out += parse_seasons(name, data, athlete_id=aid).values()
-            time.sleep(_RATE_DELAY)
+            if not was_cached:
+                time.sleep(_RATE_DELAY)
         except Exception as err:  # noqa: BLE001
             print(f"[espn] skipping id {aid} ({name}): {err}")
     return out

@@ -20,16 +20,26 @@ def _cache_path(key: str) -> Path:
     return CACHE_DIR / key
 
 
+def is_cached(cache_key: str | None, ttl_hours: float = 24.0) -> bool:
+    """Would `fetch_text`/`fetch_json` serve this from disk right now, with no network call?
+    Callers that rate-limit-delay themselves between requests (mlb_stats, espn_nba) use this
+    to skip the delay on a cache hit — the delay only exists to protect the live API, so
+    paying it on every loop iteration regardless of whether a request actually happened
+    turns a warm-cache run into just-as-slow-as-cold for no reason."""
+    if not cache_key or ttl_hours <= 0:
+        return False
+    path = _cache_path(cache_key)
+    return path.exists() and (time.time() - path.stat().st_mtime) < ttl_hours * 3600
+
+
 def fetch_text(url: str, *, cache_key: str | None = None, ttl_hours: float = 24.0) -> str:
     """GET a URL as text, caching the body on disk under .cache/.
 
     `ttl_hours <= 0` disables caching (always refetch). Used for the large, slow
     nflverse season CSVs so repeated runs don't re-download.
     """
-    if cache_key and ttl_hours > 0:
-        path = _cache_path(cache_key)
-        if path.exists() and (time.time() - path.stat().st_mtime) < ttl_hours * 3600:
-            return path.read_text(encoding="utf-8")
+    if is_cached(cache_key, ttl_hours):
+        return _cache_path(cache_key).read_text(encoding="utf-8")
 
     body = _get(url)
 
@@ -42,10 +52,8 @@ def fetch_text(url: str, *, cache_key: str | None = None, ttl_hours: float = 24.
 
 def fetch_json(url: str, *, headers: dict[str, str] | None = None,
                cache_key: str | None = None, ttl_hours: float = 24.0) -> dict:
-    if cache_key and ttl_hours > 0:
-        path = _cache_path(cache_key)
-        if path.exists() and (time.time() - path.stat().st_mtime) < ttl_hours * 3600:
-            return json.loads(path.read_text(encoding="utf-8"))
+    if is_cached(cache_key, ttl_hours):
+        return json.loads(_cache_path(cache_key).read_text(encoding="utf-8"))
 
     body = _get(url, headers=headers)
 

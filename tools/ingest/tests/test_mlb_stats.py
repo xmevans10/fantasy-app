@@ -1,9 +1,11 @@
 """MLB Stats API parser tests — pure (no network), against a captured payload shape
 (verified live against statsapi.mlb.com this session — see providers/mlb_stats.py)."""
+from tools.ingest.providers import mlb_stats
 from tools.ingest.providers.mlb_stats import (
     HEADSHOT_URL,
     _parse_avg,
     _parse_innings_pitched,
+    fetch_by_ids,
     parse_seasons,
 )
 
@@ -100,3 +102,27 @@ def test_parse_seasons_attaches_headshot_to_every_row():
 def test_parse_seasons_defaults_to_no_headshot():
     rows = parse_seasons("Aaron Judge", _payload([_hitting_split(2022, 147)]), "hitting")
     assert rows[0].headshot == ""
+
+
+def test_fetch_by_ids_skips_the_rate_limit_delay_on_a_cache_hit(monkeypatch):
+    # The delay only exists to protect the live API — a warm-cache run (e.g. a same-day
+    # re-run, or CI restoring last run's cache) shouldn't pay it at all.
+    monkeypatch.setattr(mlb_stats, "fetch_json", lambda *a, **k: _payload([]))
+    monkeypatch.setattr(mlb_stats, "is_cached", lambda *a, **k: True)
+    slept = []
+    monkeypatch.setattr(mlb_stats.time, "sleep", lambda s: slept.append(s))
+
+    fetch_by_ids({"592450": "Aaron Judge"})
+
+    assert slept == []
+
+
+def test_fetch_by_ids_still_delays_on_a_real_fetch(monkeypatch):
+    monkeypatch.setattr(mlb_stats, "fetch_json", lambda *a, **k: _payload([]))
+    monkeypatch.setattr(mlb_stats, "is_cached", lambda *a, **k: False)
+    slept = []
+    monkeypatch.setattr(mlb_stats.time, "sleep", lambda s: slept.append(s))
+
+    fetch_by_ids({"592450": "Aaron Judge"})
+
+    assert len(slept) == 2   # one per group (hitting, pitching)

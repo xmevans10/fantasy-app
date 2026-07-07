@@ -61,3 +61,30 @@ def test_get_fails_fast_on_non_429_4xx(monkeypatch):
     except urllib.error.HTTPError as err:
         assert err.code == 401
     assert len(calls) == 1  # no wasted retries on a permanent error
+
+
+def test_is_cached_false_when_no_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(http, "CACHE_DIR", tmp_path)
+    assert http.is_cached("missing.json", 24.0) is False
+
+
+def test_is_cached_true_for_a_fresh_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(http, "CACHE_DIR", tmp_path)
+    (tmp_path / "fresh.json").write_text("{}")
+    assert http.is_cached("fresh.json", 24.0) is True
+
+
+def test_is_cached_false_for_a_stale_file(tmp_path, monkeypatch):
+    import os
+    import time as time_module
+    monkeypatch.setattr(http, "CACHE_DIR", tmp_path)
+    path = tmp_path / "stale.json"
+    path.write_text("{}")
+    old = time_module.time() - 25 * 3600   # older than a 24h ttl
+    os.utime(path, (old, old))
+    assert http.is_cached("stale.json", 24.0) is False
+
+
+def test_is_cached_false_when_ttl_disabled_or_no_key():
+    assert http.is_cached(None, 24.0) is False
+    assert http.is_cached("x.json", 0) is False

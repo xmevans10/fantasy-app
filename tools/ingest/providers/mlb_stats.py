@@ -13,7 +13,7 @@ from __future__ import annotations
 import time
 
 from ..models import RawSeason
-from .http import fetch_json
+from .http import fetch_json, is_cached
 
 _STATS = "https://statsapi.mlb.com/api/v1/people/{id}/stats?stats=yearByYear&group={group}"
 
@@ -171,12 +171,16 @@ def fetch_by_ids(id_to_name: dict[str, str]) -> list[RawSeason]:
     for pid, name in id_to_name.items():
         headshot = HEADSHOT_URL.format(id=pid)
         for group in ("hitting", "pitching"):
+            cache_key = f"mlb_stats_{pid}_{group}.json"
+            was_cached = is_cached(cache_key, _CAREER_TTL_HOURS)
             try:
                 data = fetch_json(_STATS.format(id=pid, group=group),
-                                  cache_key=f"mlb_stats_{pid}_{group}.json",
-                                  ttl_hours=_CAREER_TTL_HOURS)
+                                  cache_key=cache_key, ttl_hours=_CAREER_TTL_HOURS)
                 out += parse_seasons(name, data, group, headshot)
-                time.sleep(_RATE_DELAY)
+                # The delay only exists to be polite to the *live* API — paying it on a
+                # cache hit just makes a warm-cache run as slow as a cold one for nothing.
+                if not was_cached:
+                    time.sleep(_RATE_DELAY)
             except Exception as err:  # noqa: BLE001
                 print(f"[mlb] skipping id {pid} ({name}, {group}): {err}")
     return out
