@@ -23,6 +23,7 @@ from .career import build_career_rows
 from .grade import BaselineTable, grade
 from .models import RawSeason
 from .providers import (
+    api_football,
     espn_nba,
     espn_nba_pool,
     mlb_pool,
@@ -165,10 +166,16 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
         baseball = seed.load_baseball()
     print(f"[baseball] {len(baseball)} player-seasons")
 
-    # Soccer and tennis: seed-only for now — no live club-stats/historical source
-    # was verified working this session (see providers/seed.py's module docstring).
-    soccer = seed.load_soccer()
-    print(f"[soccer] {len(soccer)} player-seasons (seed only)")
+    # Soccer: API-Football's leaderboard sweep (providers/api_football.py, refreshed
+    # occasionally via that module's own budget-limited __main__, same split as the
+    # MLB/NBA pools) covers attacker output (goals/assists) for top leagues; it has no
+    # source for clean sheets, so defenders/keepers always come from the hand-curated
+    # seed. Tennis: still seed-only — no live source was verified working this session
+    # (see providers/seed.py's module docstring).
+    soccer_live = api_football.load_pool()
+    soccer_seed = seed.load_soccer()
+    soccer = api_football.merge_with_seed(soccer_live, soccer_seed)
+    print(f"[soccer] {len(soccer_live)} live + {len(soccer_seed)} seed → {len(soccer)} player-seasons")
     tennis = seed.load_tennis()
     print(f"[tennis] {len(tennis)} player-seasons (seed only)")
 

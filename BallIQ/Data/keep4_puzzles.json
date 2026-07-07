@@ -245,7 +245,8 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/gdwjlpbkenmnsibawkht"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "nfl-rb-workhorse-00",
@@ -493,7 +494,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/abl5wejuf448xw3jtphm"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "nfl-qb-mvp-00",
@@ -741,7 +743,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q7dpdlxyu5rs05rgh1le"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_qb_fantasy"
   },
   {
     "id": "nfl-qb-dual-00",
@@ -989,7 +992,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/gebzv2aljujgleboe4ns"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_qb_fantasy"
   },
   {
     "id": "nfl-rb-receiving-00",
@@ -1237,7 +1241,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/abl5wejuf448xw3jtphm"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "nfl-wr-deep-00",
@@ -1485,7 +1490,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lsszbdnkusxc7mduw5be"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "nfl-total-fantasy-00",
@@ -1717,7 +1723,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/abl5wejuf448xw3jtphm"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_fantasy"
   },
   {
     "id": "nfl-total-fantasy-era-00",
@@ -1941,7 +1948,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q7dpdlxyu5rs05rgh1le"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_fantasy"
   },
   {
     "id": "nfl-te-mismatch-00",
@@ -2189,7 +2197,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/t7my0kesdhb2iefvempm"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "nba-scorers-00",
@@ -2437,7 +2446,8 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nba_fantasy"
   },
   {
     "id": "nba-bigs-00",
@@ -2685,7 +2695,8 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nba_fantasy"
   },
   {
     "id": "nba-playmakers-00",
@@ -2933,7 +2944,8 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nba_fantasy"
   },
   {
     "id": "nba-rim-protectors-00",
@@ -3181,7 +3193,8 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/5104157.png"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nba_fantasy"
   },
   {
     "id": "nba-two-way-guards-00",
@@ -3429,7 +3442,8 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4278073.png"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nba_fantasy"
   },
   {
     "id": "nba-double-double-00",
@@ -3677,7 +3691,8 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nba_fantasy"
   },
   {
     "id": "nfl-game-rb-explosion-00",
@@ -3909,7 +3924,8 @@
         "opponent": "BUF"
       }
     ],
-    "grain": "game"
+    "grain": "game",
+    "scale": "nfl_skill_ppr_game"
   },
   {
     "id": "nfl-game-wr-explosion-00",
@@ -4141,7 +4157,8 @@
         "opponent": "BUF"
       }
     ],
-    "grain": "game"
+    "grain": "game",
+    "scale": "nfl_skill_ppr_game"
   },
   {
     "id": "nfl-game-qb-explosion-00",
@@ -4373,7 +4390,8 @@
         "opponent": "BAL"
       }
     ],
-    "grain": "game"
+    "grain": "game",
+    "scale": "nfl_qb_fantasy_game"
   },
   {
     "id": "baseball-power-hitters-00",
@@ -4621,7 +4639,8 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/660271/headshot/67/current"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "baseball_hitter_fantasy"
   },
   {
     "id": "baseball-ace-pitchers-00",
@@ -4869,7 +4888,8 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/111119/headshot/67/current"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "baseball_pitcher_fantasy"
   },
   {
     "id": "soccer-attackers-00",
@@ -4899,33 +4919,11 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Cristiano_Ronaldo_2275_%28cropped%29.jpg/330px-Cristiano_Ronaldo_2275_%28cropped%29.jpg"
       },
       {
-        "id": "erling-haaland-2023",
-        "name": "Erling Haaland",
-        "teamAbbr": "MCI",
-        "seasonYear": 2023,
-        "grade": 239.0,
-        "stats": [
-          {
-            "label": "Goals",
-            "value": "36"
-          },
-          {
-            "label": "Assists",
-            "value": "8"
-          },
-          {
-            "label": "Apps",
-            "value": "35"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Erling_Haaland_Morocco_v_Norway_7_June_2026-51.jpg/330px-Erling_Haaland_Morocco_v_Norway_7_June_2026-51.jpg"
-      },
-      {
-        "id": "harry-kane-2018",
-        "name": "Harry Kane",
+        "id": "harry-edward-kane-2022",
+        "name": "Harry Edward Kane",
         "teamAbbr": "TOT",
-        "seasonYear": 2018,
-        "grade": 193.0,
+        "seasonYear": 2022,
+        "grade": 197.0,
         "stats": [
           {
             "label": "Goals",
@@ -4933,21 +4931,21 @@
           },
           {
             "label": "Assists",
-            "value": "2"
+            "value": "3"
           },
           {
             "label": "Apps",
-            "value": "37"
+            "value": "38"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Harry_Kane_England_v_Ghana_23_June_2026-219_%28cropped%29.jpg/330px-Harry_Kane_England_v_Ghana_23_June_2026-219_%28cropped%29.jpg"
+        "headshot": "https://media.api-sports.io/football/players/184.png"
       },
       {
-        "id": "karim-benzema-2022",
-        "name": "Karim Benzema",
-        "teamAbbr": "RMA",
+        "id": "hugo-jean-marc-cuypers-2022",
+        "name": "Hugo Jean-Marc Cuypers",
+        "teamAbbr": "GEN",
         "seasonYear": 2022,
-        "grade": 203.0,
+        "grade": 198.0,
         "stats": [
           {
             "label": "Goals",
@@ -4955,14 +4953,14 @@
           },
           {
             "label": "Assists",
-            "value": "12"
+            "value": "8"
           },
           {
             "label": "Apps",
-            "value": "32"
+            "value": "39"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Karim_Benzema_Pick.jpg/330px-Karim_Benzema_Pick.jpg"
+        "headshot": "https://media.api-sports.io/football/players/27104.png"
       },
       {
         "id": "kylian-mbappe-2019",
@@ -5051,9 +5049,32 @@
           }
         ],
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg/330px-2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg"
+      },
+      {
+        "id": "viktor-einar-gyokeres-2024",
+        "name": "Viktor Einar Gyökeres",
+        "teamAbbr": "SC",
+        "seasonYear": 2024,
+        "grade": 249.0,
+        "stats": [
+          {
+            "label": "Goals",
+            "value": "39"
+          },
+          {
+            "label": "Assists",
+            "value": "7"
+          },
+          {
+            "label": "Apps",
+            "value": "33"
+          }
+        ],
+        "headshot": "https://media.api-sports.io/football/players/18979.png"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "soccer_attacker_fantasy"
   },
   {
     "id": "soccer-defenders-00",
@@ -5269,7 +5290,8 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/20160604_AUT_NED_8876_%28cropped%29.jpg/330px-20160604_AUT_NED_8876_%28cropped%29.jpg"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "soccer_defender_fantasy"
   },
   {
     "id": "tennis-tour-dominance-00",
@@ -5485,7 +5507,8 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/330px-Roger_Federer_2015_%28cropped%29.jpg"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "tennis_fantasy"
   },
   {
     "id": "tennis-grand-slam-00",
@@ -5701,7 +5724,8 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/330px-Roger_Federer_2015_%28cropped%29.jpg"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "tennis_fantasy"
   },
   {
     "id": "nfl-career-fantasy-00",
@@ -5929,7 +5953,8 @@
         "lastYear": 2022
       }
     ],
-    "grain": "career"
+    "grain": "career",
+    "scale": "nfl_fantasy"
   },
   {
     "id": "nba-career-fantasy-00",
@@ -6193,7 +6218,8 @@
         "lastYear": 2026
       }
     ],
-    "grain": "career"
+    "grain": "career",
+    "scale": "nba_fantasy"
   },
   {
     "id": "baseball-career-hitters-00",
@@ -6457,7 +6483,8 @@
         "lastYear": 2003
       }
     ],
-    "grain": "career"
+    "grain": "career",
+    "scale": "baseball_hitter_fantasy"
   },
   {
     "id": "baseball-career-pitchers-00",
@@ -6721,7 +6748,8 @@
         "lastYear": 1986
       }
     ],
-    "grain": "career"
+    "grain": "career",
+    "scale": "baseball_pitcher_fantasy"
   },
   {
     "id": "gen-qb-2000-ancient-00",
@@ -6969,7 +6997,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/yebpzovaiscoksnjnq6x"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_qb_fantasy"
   },
   {
     "id": "gen-qb-2000-day2-00",
@@ -7217,7 +7246,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wy2haknzelfdpaxh0pig"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_qb_fantasy"
   },
   {
     "id": "gen-qb-2000-day3-00",
@@ -7465,7 +7495,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pwsxlc2rah1aqy1tnbsb"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_qb_fantasy"
   },
   {
     "id": "gen-qb-2000-first-round-00",
@@ -7713,7 +7744,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/voakyrtj34sghkwxaxxf"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_qb_fantasy"
   },
   {
     "id": "gen-qb-all-heavyweight-00",
@@ -7961,7 +7993,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ssbi0ektdltubjtxsbvv"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_qb_fantasy"
   },
   {
     "id": "gen-rb-2010-lightweight-00",
@@ -8209,7 +8242,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/soywd4cnq19pigrwabb5"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "gen-rb-all-mr-irrelevant-00",
@@ -8457,7 +8491,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/uy3jtiwamtomkrodvnl9"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "gen-rb-2000-prime-00",
@@ -8705,7 +8740,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/envscajcftvy5low6aod"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "gen-rb-2000-rookie-year-00",
@@ -8953,7 +8989,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/o7d06in3cz3cm51iivg0"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "gen-rb-2000-sub6-00",
@@ -9201,7 +9238,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/envscajcftvy5low6aod"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "gen-wr-2000-top10-pick-00",
@@ -9449,7 +9487,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/y7nfvf7fw2xznh3e1rbt"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "gen-te-2000-towering-00",
@@ -9697,7 +9736,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zzyshc4yuvfrkkbacm07"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "gen-te-2010-undrafted-00",
@@ -9945,7 +9985,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dv5nojtrswp6cprkwn2y"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "gen-te-2010-vet-00",
@@ -10193,7 +10234,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/so5ywayfeeu4zeijln5m"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "gen-te-2000-young-00",
@@ -10441,7 +10483,8 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zzyshc4yuvfrkkbacm07"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   },
   {
     "id": "gen-wr-2000-ancient-00",
@@ -10689,6 +10732,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ra9kiq4ocliinelsnhlw"
       }
     ],
-    "grain": "season"
+    "grain": "season",
+    "scale": "nfl_skill_ppr"
   }
 ]

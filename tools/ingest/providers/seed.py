@@ -117,7 +117,15 @@ def load_soccer() -> list[RawSeason]:
     """Seed-only (no live provider — see module docstring). Hand-curated from
     well-documented Golden Boot/Golden Glove/record seasons. `headshot` is a real
     Wikimedia Commons image URL, resolved once per player against Wikipedia's summary
-    API while writing this CSV (not fetched live by this loader — see `models.py`)."""
+    API while writing this CSV (not fetched live by this loader — see `models.py`).
+
+    A couple of these rows' seasons (Haaland 2023, Benzema 2022) now also get pulled
+    live by providers/api_football.py — kept here anyway (not pruned) because the
+    puzzle-generation tests pin specific names/counts against this seed *alone* as the
+    no-live-data fallback pool. api_football.merge_with_seed() is responsible for
+    deduping the overlap when both are present; see that function's docstring for why
+    it compares by last name rather than the full string (api-football's full legal
+    name, e.g. "Karim Mostafa Benzema", never matches this CSV's casual one)."""
     path = DATA_DIR / "soccer_seed.csv"
     out: list[RawSeason] = []
     with path.open(encoding="utf-8") as f:

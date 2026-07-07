@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-06T22:46:54+00:00",
+  "generated_at": "2026-07-07T18:21:37+00:00",
   "totals": {
     "themes": 44,
     "themes_below_pool_floor": 0,
@@ -313,10 +313,10 @@
       "title": "Elite goal-scoring seasons",
       "sport": "soccer",
       "grain": "season",
-      "eligible_seasons": 9,
-      "excluded_by_min_stats": 0,
+      "eligible_seasons": 1225,
+      "excluded_by_min_stats": 229,
       "excluded_by_filters": 0,
-      "pool_size": 9,
+      "pool_size": 24,
       "pool_cap": 24,
       "puzzle_capable": true,
       "era_adjusted": false,

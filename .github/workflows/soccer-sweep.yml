@@ -1,0 +1,42 @@
+name: soccer-sweep
+
+# Daily API-Football sweep (tools/ingest/providers/api_football.py). The free tier is
+# 100 req/day and the curated league/competition/season matrix runs to a few hundred
+# combos, so this deliberately runs *daily* (not weekly like discover-players.yml) to
+# spend as much of the free daily allowance as possible until the backfill completes —
+# after that, re-runs are nearly free since already-covered combos are skipped, so
+# leaving it daily is harmless.
+#
+# Kept separate from discover-players.yml on purpose: that workflow's final step re-runs
+# the full heavy NFL/NBA/MLB pipeline (~20-50min), which the daily ingest.yml already
+# does — doubling that every day here for no benefit. This workflow only commits the
+# refreshed soccer_live.json; ingest.yml's next 9am UTC run picks it up automatically via
+# main.py's api_football.load_pool() call, no separate upsert needed here.
+on:
+  schedule:
+    - cron: "0 6 * * *"      # daily 06:00 UTC — spaced from ingest.yml (09:00) and
+                              # daily-puzzle.yml (00:00)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    env:
+      API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Sweep API-Football leaderboards
+        run: python -m tools.ingest.providers.api_football --max-requests 90
+      - name: Commit refreshed soccer pool
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tools/ingest/data/soccer_live.json tools/ingest/data/api_football_progress.json
+          git diff --cached --quiet || git commit -m "Refresh API-Football soccer pool (automated)"
+          git push

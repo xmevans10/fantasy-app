@@ -11963,19 +11963,579 @@
     "last_year": null
   },
   {
-    "id": "erling-haaland-2023",
+    "id": "harry-edward-kane-2022",
     "sport": "soccer",
-    "name": "Erling Haaland",
-    "team_abbr": "MCI",
+    "name": "Harry Edward Kane",
+    "team_abbr": "TOT",
+    "season_year": 2022,
+    "position": "FW",
+    "stats": {
+      "appearances": 38.0,
+      "goals": 30.0,
+      "assists": 3.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/184.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "cole-jermaine-palmer-2023",
+    "sport": "soccer",
+    "name": "Cole Jermaine Palmer",
+    "team_abbr": "CHE",
+    "season_year": 2023,
+    "position": "MF",
+    "stats": {
+      "appearances": 33.0,
+      "goals": 22.0,
+      "assists": 11.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/152982.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "alexander-isak-2024",
+    "sport": "soccer",
+    "name": "Alexander Isak",
+    "team_abbr": "NEW",
+    "season_year": 2024,
+    "position": "FW",
+    "stats": {
+      "appearances": 34.0,
+      "goals": 23.0,
+      "assists": 6.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/2864.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "artem-dovbyk-2023",
+    "sport": "soccer",
+    "name": "Artem Dovbyk",
+    "team_abbr": "GIR",
     "season_year": 2023,
     "position": "FW",
     "stats": {
-      "appearances": 35.0,
-      "goals": 36.0,
-      "assists": 8.0,
-      "clean_sheets": 0.0
+      "appearances": 36.0,
+      "goals": 24.0,
+      "assists": 8.0
     },
-    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Erling_Haaland_Morocco_v_Norway_7_June_2026-51.jpg/330px-Erling_Haaland_Morocco_v_Norway_7_June_2026-51.jpg",
+    "headshot": "https://media.api-sports.io/football/players/15811.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "alexander-srloth-2023",
+    "sport": "soccer",
+    "name": "Alexander Sørloth",
+    "team_abbr": "VIL",
+    "season_year": 2023,
+    "position": "FW",
+    "stats": {
+      "appearances": 34.0,
+      "goals": 23.0,
+      "assists": 6.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/8492.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "serhou-yadaly-guirassy-2023",
+    "sport": "soccer",
+    "name": "Serhou Yadaly Guirassy",
+    "team_abbr": "VS",
+    "season_year": 2023,
+    "position": "FW",
+    "stats": {
+      "appearances": 28.0,
+      "goals": 28.0,
+      "assists": 3.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/21393.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "ikoma-lois-openda-2023",
+    "sport": "soccer",
+    "name": "Ikoma-Loïs Openda",
+    "team_abbr": "RL",
+    "season_year": 2023,
+    "position": "FW",
+    "stats": {
+      "appearances": 34.0,
+      "goals": 24.0,
+      "assists": 7.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/86.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "lautaro-javier-martinez-2023",
+    "sport": "soccer",
+    "name": "Lautaro Javier Martínez",
+    "team_abbr": "INT",
+    "season_year": 2023,
+    "position": "FW",
+    "stats": {
+      "appearances": 33.0,
+      "goals": 24.0,
+      "assists": 3.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/217.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "mateo-retegui-2024",
+    "sport": "soccer",
+    "name": "Mateo Retegui",
+    "team_abbr": "ATA",
+    "season_year": 2024,
+    "position": "FW",
+    "stats": {
+      "appearances": 36.0,
+      "goals": 25.0,
+      "assists": 8.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/6420.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "alexandre-armand-lacazette-2022",
+    "sport": "soccer",
+    "name": "Alexandre Armand Lacazette",
+    "team_abbr": "LYO",
+    "season_year": 2022,
+    "position": "FW",
+    "stats": {
+      "appearances": 35.0,
+      "goals": 27.0,
+      "assists": 5.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/1467.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "jonathan-christian-david-2022",
+    "sport": "soccer",
+    "name": "Jonathan Christian David",
+    "team_abbr": "LIL",
+    "season_year": 2022,
+    "position": "FW",
+    "stats": {
+      "appearances": 37.0,
+      "goals": 24.0,
+      "assists": 4.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/8489.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "viktor-einar-gyokeres-2024",
+    "sport": "soccer",
+    "name": "Viktor Einar Gyökeres",
+    "team_abbr": "SC",
+    "season_year": 2024,
+    "position": "FW",
+    "stats": {
+      "appearances": 33.0,
+      "goals": 39.0,
+      "assists": 7.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/18979.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "vangelis-pavlidis-2023",
+    "sport": "soccer",
+    "name": "Vangelis Pavlidis",
+    "team_abbr": "AA",
+    "season_year": 2023,
+    "position": "FW",
+    "stats": {
+      "appearances": 34.0,
+      "goals": 29.0,
+      "assists": 4.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/36798.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "santiago-tomas-gimenez-2023",
+    "sport": "soccer",
+    "name": "Santiago Tomás Giménez",
+    "team_abbr": "FEY",
+    "season_year": 2023,
+    "position": "FW",
+    "stats": {
+      "appearances": 30.0,
+      "goals": 23.0,
+      "assists": 6.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/94562.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "sem-steijn-2024",
+    "sport": "soccer",
+    "name": "Sem Steijn",
+    "team_abbr": "TWE",
+    "season_year": 2024,
+    "position": "MF",
+    "stats": {
+      "appearances": 35.0,
+      "goals": 27.0,
+      "assists": 7.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/37784.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "sebastian-driussi-2022",
+    "sport": "soccer",
+    "name": "Sebastián Driussi",
+    "team_abbr": "AUS",
+    "season_year": 2022,
+    "position": "FW",
+    "stats": {
+      "appearances": 37.0,
+      "goals": 25.0,
+      "assists": 3.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/1222.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "daniel-gazdag-2022",
+    "sport": "soccer",
+    "name": "Dániel Gazdag",
+    "team_abbr": "PU",
+    "season_year": 2022,
+    "position": "MF",
+    "stats": {
+      "appearances": 37.0,
+      "goals": 24.0,
+      "assists": 5.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/28423.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "hany-abubakr-mukhtar-2022",
+    "sport": "soccer",
+    "name": "Hany Abubakr Mukhtar",
+    "team_abbr": "NS",
+    "season_year": 2022,
+    "position": "MF",
+    "stats": {
+      "appearances": 34.0,
+      "goals": 23.0,
+      "assists": 7.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/15885.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "denis-athanase-bouanga-2023",
+    "sport": "soccer",
+    "name": "Dénis Athanase Bouanga",
+    "team_abbr": "LAF",
+    "season_year": 2023,
+    "position": "FW",
+    "stats": {
+      "appearances": 36.0,
+      "goals": 25.0,
+      "assists": 6.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/21437.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "juan-camilo-hernandez-suarez-2023",
+    "sport": "soccer",
+    "name": "Juan Camilo Hernández Suárez",
+    "team_abbr": "CC",
+    "season_year": 2023,
+    "position": "FW",
+    "stats": {
+      "appearances": 33.0,
+      "goals": 21.0,
+      "assists": 8.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/47582.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "luciano-federico-acosta-2023",
+    "sport": "soccer",
+    "name": "Luciano Federico Acosta",
+    "team_abbr": "FC",
+    "season_year": 2023,
+    "position": "MF",
+    "stats": {
+      "appearances": 36.0,
+      "goals": 19.0,
+      "assists": 12.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/50763.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "luis-alberto-suarez-diaz-2024",
+    "sport": "soccer",
+    "name": "Luis Alberto Suárez Díaz",
+    "team_abbr": "IM",
+    "season_year": 2024,
+    "position": "FW",
+    "stats": {
+      "appearances": 30.0,
+      "goals": 21.0,
+      "assists": 9.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/157.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "denis-athanase-bouanga-2024",
+    "sport": "soccer",
+    "name": "Dénis Athanase Bouanga",
+    "team_abbr": "LAF",
+    "season_year": 2024,
+    "position": "FW",
+    "stats": {
+      "appearances": 36.0,
+      "goals": 21.0,
+      "assists": 7.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/21437.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "gabriel-fortes-chaves-2024",
+    "sport": "soccer",
+    "name": "Gabriel Fortes Chaves",
+    "team_abbr": "LAG",
+    "season_year": 2024,
+    "position": "FW",
+    "stats": {
+      "appearances": 38.0,
+      "goals": 19.0,
+      "assists": 14.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/143367.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "german-ezequiel-cano-recalde-2022",
+    "sport": "soccer",
+    "name": "Germán Ezequiel Cano Recalde",
+    "team_abbr": "FLU",
+    "season_year": 2022,
+    "position": "FW",
+    "stats": {
+      "appearances": 38.0,
+      "goals": 26.0,
+      "assists": 3.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/13523.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "mauro-emanuel-icardi-rivero-2023",
+    "sport": "soccer",
+    "name": "Mauro Emanuel Icardi Rivero",
+    "team_abbr": "GAL",
+    "season_year": 2023,
+    "position": "FW",
+    "stats": {
+      "appearances": 34.0,
+      "goals": 25.0,
+      "assists": 8.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/216.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "victor-james-osimhen-2024",
+    "sport": "soccer",
+    "name": "Victor James Osimhen",
+    "team_abbr": "GAL",
+    "season_year": 2024,
+    "position": "FW",
+    "stats": {
+      "appearances": 29.0,
+      "goals": 26.0,
+      "assists": 5.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/2780.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "hugo-jean-marc-cuypers-2022",
+    "sport": "soccer",
+    "name": "Hugo Jean-Marc Cuypers",
+    "team_abbr": "GEN",
+    "season_year": 2022,
+    "position": "FW",
+    "stats": {
+      "appearances": 39.0,
+      "goals": 27.0,
+      "assists": 8.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/27104.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "enner-remberto-valencia-lastra-2022",
+    "sport": "soccer",
+    "name": "Enner Remberto Valencia Lastra",
+    "team_abbr": "FEN",
+    "season_year": 2022,
+    "position": "FW",
+    "stats": {
+      "appearances": 31.0,
+      "goals": 29.0,
+      "assists": 5.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/35533.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "mbaye-diagne-2022",
+    "sport": "soccer",
+    "name": "Mbaye Diagne",
+    "team_abbr": "FK",
+    "season_year": 2022,
+    "position": "FW",
+    "stats": {
+      "appearances": 33.0,
+      "goals": 23.0,
+      "assists": 5.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/458.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "kyogo-furuhashi-2022",
+    "sport": "soccer",
+    "name": "Kyogo Furuhashi",
+    "team_abbr": "CEL",
+    "season_year": 2022,
+    "position": "FW",
+    "stats": {
+      "appearances": 36.0,
+      "goals": 27.0,
+      "assists": 2.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/33253.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "kevin-van-veen-2022",
+    "sport": "soccer",
+    "name": "Kevin van Veen",
+    "team_abbr": "MOT",
+    "season_year": 2022,
+    "position": "FW",
+    "stats": {
+      "appearances": 38.0,
+      "goals": 25.0,
+      "assists": 2.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/20480.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "lawrence-shankland-2022",
+    "sport": "soccer",
+    "name": "Lawrence Shankland",
+    "team_abbr": "HOM",
+    "season_year": 2022,
+    "position": "FW",
+    "stats": {
+      "appearances": 37.0,
+      "goals": 24.0,
+      "assists": 4.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/45175.png",
+    "career": false,
+    "first_year": null,
+    "last_year": null
+  },
+  {
+    "id": "lawrence-shankland-2023",
+    "sport": "soccer",
+    "name": "Lawrence Shankland",
+    "team_abbr": "HOM",
+    "season_year": 2023,
+    "position": "FW",
+    "stats": {
+      "appearances": 36.0,
+      "goals": 23.0,
+      "assists": 4.0
+    },
+    "headshot": "https://media.api-sports.io/football/players/45175.png",
     "career": false,
     "first_year": null,
     "last_year": null
@@ -12071,24 +12631,6 @@
     "last_year": null
   },
   {
-    "id": "kevin-de-bruyne-2020",
-    "sport": "soccer",
-    "name": "Kevin De Bruyne",
-    "team_abbr": "MCI",
-    "season_year": 2020,
-    "position": "MF",
-    "stats": {
-      "appearances": 35.0,
-      "goals": 8.0,
-      "assists": 20.0,
-      "clean_sheets": 0.0
-    },
-    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Kevin_De_Bruyne_USMNT_v_Belgium_Mar_28_2026-64_%28cropped%29.jpg/330px-Kevin_De_Bruyne_USMNT_v_Belgium_Mar_28_2026-64_%28cropped%29.jpg",
-    "career": false,
-    "first_year": null,
-    "last_year": null
-  },
-  {
     "id": "harry-kane-2018",
     "sport": "soccer",
     "name": "Harry Kane",
@@ -12102,24 +12644,6 @@
       "clean_sheets": 0.0
     },
     "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Harry_Kane_England_v_Ghana_23_June_2026-219_%28cropped%29.jpg/330px-Harry_Kane_England_v_Ghana_23_June_2026-219_%28cropped%29.jpg",
-    "career": false,
-    "first_year": null,
-    "last_year": null
-  },
-  {
-    "id": "karim-benzema-2022",
-    "sport": "soccer",
-    "name": "Karim Benzema",
-    "team_abbr": "RMA",
-    "season_year": 2022,
-    "position": "FW",
-    "stats": {
-      "appearances": 32.0,
-      "goals": 27.0,
-      "assists": 12.0,
-      "clean_sheets": 0.0
-    },
-    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Karim_Benzema_Pick.jpg/330px-Karim_Benzema_Pick.jpg",
     "career": false,
     "first_year": null,
     "last_year": null
