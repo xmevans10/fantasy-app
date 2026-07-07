@@ -4,23 +4,35 @@ import XCTest
 /// Regression coverage for the bug where a free-form (Vibes or custom-rule) Keep4 mixing
 /// positions in one pool baked the sport's generic top-3 stats onto every card regardless
 /// of the season's actual position — a QB card reading "Rec Yds 0 / Rec TD 0 / Rec 0"
-/// because the NFL catalog's first three entries are receiving stats. `displayColumns`
-/// shares `Sport.positionStatFamilies` with `Keep4Theme.columns(for:)` so both the
-/// theme-templated and free-form creation paths get the same guarantee.
+/// because the NFL catalog's first three entries are receiving stats, or a workhorse RB's
+/// card leading with a near-empty receiving line ahead of the rushing yards that actually
+/// defined the season. `displayColumns` now fills from `Sport.positionStatTemplates` — an
+/// explicit default stat sheet per position — before ever falling back to the sport's
+/// generic top-3 slice.
 final class ScoringStatTests: XCTestCase {
 
     func testQBGetsPassingStatsNotReceiving() {
         let cols = ScoringStat.displayColumns(sport: .nfl, position: "QB")
-        XCTAssertEqual(cols.count, 3)
+        XCTAssertEqual(cols.map(\.key),
+                       ["passing_yards", "passing_tds", "rushing_yards", "rushing_tds",
+                        "completions", "attempts", "completion_pct"])
         for col in cols {
             XCTAssertFalse(col.key.hasPrefix("receiving"), "QB card should never show \(col.key)")
         }
-        XCTAssertTrue(cols.contains { $0.key.hasPrefix("passing_") })
     }
 
     func testWRStillGetsReceivingStats() {
         let cols = ScoringStat.displayColumns(sport: .nfl, position: "WR")
-        XCTAssertEqual(cols.map(\.key), ["receiving_yards", "receiving_tds", "receptions"])
+        XCTAssertEqual(cols.map(\.key),
+                       ["receiving_yards", "receiving_tds", "receptions", "targets", "ypr"])
+    }
+
+    /// The actual bug behind "community puzzles don't show the relevant stats": a workhorse
+    /// RB's card used to lead with receiving stats (0-ish for a pure rusher) because the NFL
+    /// catalog lists receiving before rushing. The template leads with rushing for RBs.
+    func testRBLeadsWithRushingNotReceiving() {
+        let cols = ScoringStat.displayColumns(sport: .nfl, position: "RB")
+        XCTAssertEqual(cols.map(\.key).prefix(2), ["rushing_yards", "rushing_tds"])
     }
 
     func testBaseballPitcherGetsPitchingStatsNotHitting() {
@@ -31,14 +43,11 @@ final class ScoringStatTests: XCTestCase {
         }
     }
 
-    /// Goalkeeper's own family (appearances, clean_sheets) is only 2 stats wide — the third
-    /// slot pads from the sport's remaining stats rather than reverting to the unsliced
-    /// catalog outright, so clean_sheets still outranks goals/assists on a keeper's card.
+    /// Goalkeeper's explicit template is only 2 stats wide (clean sheets, appearances) — no
+    /// padding with an irrelevant third stat like goals/assists.
     func testSoccerGoalkeeperGetsCleanSheetsNotGoals() {
         let cols = ScoringStat.displayColumns(sport: .soccer, position: "GK")
-        XCTAssertEqual(cols.count, 3)
-        XCTAssertTrue(cols.contains { $0.key == "clean_sheets" })
-        XCTAssertTrue(cols.contains { $0.key == "appearances" })
+        XCTAssertEqual(cols.map(\.key), ["clean_sheets", "appearances"])
     }
 
     func testUnknownPositionFallsBackToSportGeneric() {

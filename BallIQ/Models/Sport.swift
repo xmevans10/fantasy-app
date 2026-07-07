@@ -130,6 +130,35 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         ],
     ]
 
+    /// Explicit default stat sheet per position — the headline counting stats a fan would
+    /// expect for that position, in display order. Unlike `positionStatFamilies` (a
+    /// membership test used to slice an arbitrary column list), this is itself the column
+    /// list: free-form/Vibes community creation fills these keys in directly for a card
+    /// instead of deriving an order from `ScoringStat`'s own catalog declaration order. Runs
+    /// longer than 3 for positions where that's the natural stat line (QB, RB) — Keep4CardView's
+    /// stat grid wraps a fuller line. NBA/tennis omitted for the same reason as
+    /// `positionStatFamilies` — their stats apply broadly regardless of position.
+    static let positionStatTemplates: [Sport: [String: [String]]] = [
+        .nfl: [
+            "QB": ["passing_yards", "passing_tds", "rushing_yards", "rushing_tds",
+                   "completions", "attempts", "completion_pct"],
+            "RB": ["rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds", "ypc"],
+            "FB": ["rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds", "ypc"],
+            "WR": ["receiving_yards", "receiving_tds", "receptions", "targets", "ypr"],
+            "TE": ["receiving_yards", "receiving_tds", "receptions", "targets", "ypr"],
+        ],
+        .baseball: [
+            "H": ["home_runs", "rbi", "avg", "hits", "runs"],
+            "P": ["wins", "era", "strike_outs", "whip", "innings_pitched"],
+        ],
+        .soccer: [
+            "GK": ["clean_sheets", "appearances"],
+            "DF": ["clean_sheets", "appearances", "goals", "assists"],
+            "FW": ["goals", "assists", "appearances"],
+            "MF": ["goals", "assists", "appearances"],
+        ],
+    ]
+
     /// Slice a stat-keyed sequence (theme columns, `ScoringStat`s, …) down to `position`'s
     /// families for this sport. Returns `columns` unchanged if the sport/position has no
     /// family entry, or if slicing would leave fewer than `minimum` — a too-aggressive slice

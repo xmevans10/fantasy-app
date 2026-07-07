@@ -45,6 +45,7 @@ extension ScoringStat {
             ScoringStat(key: "receiving_tds",   label: "Rec TD",  sport: .nfl, lo: 3,   hi: 19,   higherWins: true, fmt: .int),
             ScoringStat(key: "receptions",      label: "Rec",     sport: .nfl, lo: 60,  hi: 145,  higherWins: true, fmt: .int),
             ScoringStat(key: "targets",         label: "Tgts",    sport: .nfl, lo: 60,  hi: 180,  higherWins: true, fmt: .int),
+            ScoringStat(key: "ypr",             label: "Yds/Rec", sport: .nfl, lo: 8,   hi: 18,   higherWins: true, fmt: .dec1),
             ScoringStat(key: "rushing_yards",   label: "Rush Yds", sport: .nfl, lo: 850, hi: 2100, higherWins: true, fmt: .commaInt),
             ScoringStat(key: "rushing_tds",     label: "Rush TD", sport: .nfl, lo: 4,   hi: 28,   higherWins: true, fmt: .int),
             ScoringStat(key: "ypc",             label: "YPC",     sport: .nfl, lo: 3.5, hi: 6.2,  higherWins: true, fmt: .dec1),
@@ -53,6 +54,8 @@ extension ScoringStat {
             ScoringStat(key: "passing_tds",     label: "Pass TD", sport: .nfl, lo: 18,  hi: 55,   higherWins: true, fmt: .int),
             ScoringStat(key: "interceptions",   label: "INT",     sport: .nfl, lo: 4,   hi: 24,   higherWins: false, fmt: .int),
             ScoringStat(key: "completion_pct",  label: "Cmp%",    sport: .nfl, lo: 55,  hi: 72,   higherWins: true, fmt: .dec1),
+            ScoringStat(key: "completions",     label: "Cmp",     sport: .nfl, lo: 200, hi: 450,  higherWins: true, fmt: .int),
+            ScoringStat(key: "attempts",        label: "Att",     sport: .nfl, lo: 300, hi: 700,  higherWins: true, fmt: .int),
         ],
         .nba: [
             ScoringStat(key: "ppg",    label: "PPG", sport: .nba, lo: 12.0,  hi: 37.0,  higherWins: true, fmt: .dec1),
@@ -104,15 +107,14 @@ extension ScoringStat {
         catalog(for: sport).first { $0.key == key }
     }
 
-    /// The best 3 display stats for a season at `position` — free-form creation's answer to
-    /// `Keep4Theme.columns(for:)`, sharing the same `Sport.positionStatFamilies` table so a
-    /// Vibes puzzle or a custom-rule pool never shows a card a stat family its position
-    /// doesn't record (a QB's "Rec Yds", a pitcher's "AVG", a keeper's "Goals").
+    /// The display stats for a season at `position` — free-form creation's answer to
+    /// `Keep4Theme.columns(for:)`.
     ///
     /// `preferredKeys` (a scoring rule's own terms, when one is active) are tried first —
     /// display should reflect what's actually being scored — filtered to the position's
-    /// families; only once that's under 3 does it fall back to the position's generic
-    /// defaults, and finally to the sport's unfiltered top 3.
+    /// families; only once that's under 3 does it fall back to `Sport.positionStatTemplates`,
+    /// the position's explicit default stat sheet (a QB's Pass Yds/Pass TD/…, not a WR's Rec
+    /// Yds), and finally to the sport's unfiltered top 3 for positions with no template.
     static func displayColumns(sport: Sport, position: String?,
                               preferredKeys: [String] = []) -> [ScoringStat] {
         let all = catalog(for: sport)
@@ -124,6 +126,9 @@ extension ScoringStat {
             position: position, minimum: 0, statKey: \.key)
         if preferred.count >= 3 { return Array(preferred.prefix(3)) }
 
+        let templated = template(sport: sport, position: position)
+        if !templated.isEmpty { return templated }
+
         // Position-relevant stats first (however many exist — a soccer goalkeeper's family
         // is only 2 wide), padded with the sport's remaining stats in catalog order. Never
         // falls back to the *unsliced* set outright: that would let position-irrelevant
@@ -131,5 +136,13 @@ extension ScoringStat {
         let relevant = sport.sliceForPosition(all, position: position, minimum: 0, statKey: \.key)
         let padding = all.filter { !relevant.contains($0) }
         return Array((relevant + padding).prefix(3))
+    }
+
+    /// `position`'s explicit default stat sheet (`Sport.positionStatTemplates`), resolved to
+    /// full `ScoringStat`s in template order — empty if the sport/position has no template.
+    static func template(sport: Sport, position: String?) -> [ScoringStat] {
+        guard let position, let keys = Sport.positionStatTemplates[sport]?[position] else { return [] }
+        let byKey = Dictionary(uniqueKeysWithValues: catalog(for: sport).map { ($0.key, $0) })
+        return keys.compactMap { byKey[$0] }
     }
 }
