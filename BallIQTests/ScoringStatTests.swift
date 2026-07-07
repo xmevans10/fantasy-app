@@ -23,8 +23,7 @@ final class ScoringStatTests: XCTestCase {
 
     func testWRStillGetsReceivingStats() {
         let cols = ScoringStat.displayColumns(sport: .nfl, position: "WR")
-        XCTAssertEqual(cols.map(\.key),
-                       ["receiving_yards", "receptions", "receiving_tds", "ypr", "targets"])
+        XCTAssertEqual(cols.map(\.key), ["receiving_yards", "receptions", "receiving_tds"])
     }
 
     /// The actual bug behind "community puzzles don't show the relevant stats": a workhorse
@@ -46,13 +45,13 @@ final class ScoringStatTests: XCTestCase {
         }
     }
 
-    /// Goalkeeper shares DF's exact 4-column template (clean sheets, apps, goals, assists),
-    /// clean sheets first — matching the daily pipeline's `soccer-defenders` theme, which
-    /// never slices by position at all (only NFL themes do); inventing a keeper-specific
-    /// 2-column subset would diverge from what a daily puzzle actually shows.
+    /// Goalkeeper gets its own narrower template than DF — clean sheets + appearances only.
+    /// Goals/assists are never an obvious keeper stat even though the daily pipeline's
+    /// `soccer-defenders` theme (which covers both DF and GK, since only NFL themes slice by
+    /// position at all) shows all 4 columns to both.
     func testSoccerGoalkeeperGetsCleanSheetsNotGoals() {
         let cols = ScoringStat.displayColumns(sport: .soccer, position: "GK")
-        XCTAssertEqual(cols.map(\.key), ["clean_sheets", "appearances", "goals", "assists"])
+        XCTAssertEqual(cols.map(\.key), ["clean_sheets", "appearances"])
     }
 
     func testUnknownPositionFallsBackToSportGeneric() {

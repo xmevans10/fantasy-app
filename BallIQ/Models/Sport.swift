@@ -130,37 +130,35 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         ],
     ]
 
-    /// Explicit default stat sheet per position — the headline counting stats a fan would
-    /// expect for that position, in display order. Unlike `positionStatFamilies` (a
+    /// Explicit default stat sheet per position — the obvious, prominent counting stats a
+    /// fan would expect for that position, nothing more. Unlike `positionStatFamilies` (a
     /// membership test used to slice an arbitrary column list), this is itself the column
     /// list: free-form/Vibes community creation fills these keys in directly for a card
     /// instead of deriving an order from `ScoringStat`'s own catalog declaration order.
-    /// Mirrors `tools/ingest/themes.py`'s own per-position theme column lists (the daily
-    /// pipeline's actual "prominent stats" definitions) merged across that sport's
-    /// dedicated single-position themes, so a free-form pool reads like a daily puzzle would
-    /// — QB pulls from `nfl-qb-mvp`/`nfl-qb-dual` (both show interceptions), RB from
-    /// `nfl-rb-workhorse`/`nfl-rb-receiving` (both show receptions), soccer GK/DF share
-    /// `soccer-defenders`' 4 columns verbatim since the daily pipeline never slices
-    /// non-NFL themes by position at all (`themes.py`'s `columns_for` only slices when
-    /// `theme.sport == "nfl"`). Runs longer than 3 for positions where that's the natural
-    /// stat line (QB, RB) — Keep4CardView's stat grid wraps a fuller line. NBA/tennis
-    /// omitted for the same reason as `positionStatFamilies` — their stats apply broadly
-    /// regardless of position.
+    /// Each list is the position's real-world "stat line" (the standard passing line for a
+    /// QB, the receiving line for a WR/TE, the old-school hitting/pitching "triple crown"
+    /// categories for baseball) — not a mechanical port of any one daily-pipeline theme's
+    /// column count, which can include secondary/advanced stats (targets, YPR, WHIP, OPS)
+    /// that overcomplicate a default card. Soccer GK gets its own narrower list than DF
+    /// (clean sheets + appearances only) since goals/assists aren't an obvious keeper stat
+    /// even though the daily pipeline's `soccer-defenders` theme shows all 4 to both.
+    /// NBA/tennis omitted for the same reason as `positionStatFamilies` — their stats apply
+    /// broadly regardless of position.
     static let positionStatTemplates: [Sport: [String: [String]]] = [
         .nfl: [
             "QB": ["passing_yards", "passing_tds", "interceptions", "rushing_yards", "rushing_tds",
                    "completions", "attempts", "completion_pct"],
             "RB": ["rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds", "receptions", "ypc"],
             "FB": ["rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds", "receptions", "ypc"],
-            "WR": ["receiving_yards", "receptions", "receiving_tds", "ypr", "targets"],
-            "TE": ["receiving_yards", "receptions", "receiving_tds", "ypr", "targets"],
+            "WR": ["receiving_yards", "receptions", "receiving_tds"],
+            "TE": ["receiving_yards", "receptions", "receiving_tds"],
         ],
         .baseball: [
-            "H": ["home_runs", "rbi", "avg", "ops", "runs"],
-            "P": ["strike_outs", "wins", "era", "whip", "innings_pitched"],
+            "H": ["home_runs", "rbi", "avg"],
+            "P": ["wins", "era", "strike_outs"],
         ],
         .soccer: [
-            "GK": ["clean_sheets", "appearances", "goals", "assists"],
+            "GK": ["clean_sheets", "appearances"],
             "DF": ["clean_sheets", "appearances", "goals", "assists"],
             "FW": ["goals", "assists", "appearances"],
             "MF": ["goals", "assists", "appearances"],
