@@ -134,25 +134,33 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     /// expect for that position, in display order. Unlike `positionStatFamilies` (a
     /// membership test used to slice an arbitrary column list), this is itself the column
     /// list: free-form/Vibes community creation fills these keys in directly for a card
-    /// instead of deriving an order from `ScoringStat`'s own catalog declaration order. Runs
-    /// longer than 3 for positions where that's the natural stat line (QB, RB) — Keep4CardView's
-    /// stat grid wraps a fuller line. NBA/tennis omitted for the same reason as
-    /// `positionStatFamilies` — their stats apply broadly regardless of position.
+    /// instead of deriving an order from `ScoringStat`'s own catalog declaration order.
+    /// Mirrors `tools/ingest/themes.py`'s own per-position theme column lists (the daily
+    /// pipeline's actual "prominent stats" definitions) merged across that sport's
+    /// dedicated single-position themes, so a free-form pool reads like a daily puzzle would
+    /// — QB pulls from `nfl-qb-mvp`/`nfl-qb-dual` (both show interceptions), RB from
+    /// `nfl-rb-workhorse`/`nfl-rb-receiving` (both show receptions), soccer GK/DF share
+    /// `soccer-defenders`' 4 columns verbatim since the daily pipeline never slices
+    /// non-NFL themes by position at all (`themes.py`'s `columns_for` only slices when
+    /// `theme.sport == "nfl"`). Runs longer than 3 for positions where that's the natural
+    /// stat line (QB, RB) — Keep4CardView's stat grid wraps a fuller line. NBA/tennis
+    /// omitted for the same reason as `positionStatFamilies` — their stats apply broadly
+    /// regardless of position.
     static let positionStatTemplates: [Sport: [String: [String]]] = [
         .nfl: [
-            "QB": ["passing_yards", "passing_tds", "rushing_yards", "rushing_tds",
+            "QB": ["passing_yards", "passing_tds", "interceptions", "rushing_yards", "rushing_tds",
                    "completions", "attempts", "completion_pct"],
-            "RB": ["rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds", "ypc"],
-            "FB": ["rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds", "ypc"],
-            "WR": ["receiving_yards", "receiving_tds", "receptions", "targets", "ypr"],
-            "TE": ["receiving_yards", "receiving_tds", "receptions", "targets", "ypr"],
+            "RB": ["rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds", "receptions", "ypc"],
+            "FB": ["rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds", "receptions", "ypc"],
+            "WR": ["receiving_yards", "receptions", "receiving_tds", "ypr", "targets"],
+            "TE": ["receiving_yards", "receptions", "receiving_tds", "ypr", "targets"],
         ],
         .baseball: [
-            "H": ["home_runs", "rbi", "avg", "hits", "runs"],
-            "P": ["wins", "era", "strike_outs", "whip", "innings_pitched"],
+            "H": ["home_runs", "rbi", "avg", "ops", "runs"],
+            "P": ["strike_outs", "wins", "era", "whip", "innings_pitched"],
         ],
         .soccer: [
-            "GK": ["clean_sheets", "appearances"],
+            "GK": ["clean_sheets", "appearances", "goals", "assists"],
             "DF": ["clean_sheets", "appearances", "goals", "assists"],
             "FW": ["goals", "assists", "appearances"],
             "MF": ["goals", "assists", "appearances"],

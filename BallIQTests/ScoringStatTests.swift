@@ -14,7 +14,7 @@ final class ScoringStatTests: XCTestCase {
     func testQBGetsPassingStatsNotReceiving() {
         let cols = ScoringStat.displayColumns(sport: .nfl, position: "QB")
         XCTAssertEqual(cols.map(\.key),
-                       ["passing_yards", "passing_tds", "rushing_yards", "rushing_tds",
+                       ["passing_yards", "passing_tds", "interceptions", "rushing_yards", "rushing_tds",
                         "completions", "attempts", "completion_pct"])
         for col in cols {
             XCTAssertFalse(col.key.hasPrefix("receiving"), "QB card should never show \(col.key)")
@@ -24,15 +24,18 @@ final class ScoringStatTests: XCTestCase {
     func testWRStillGetsReceivingStats() {
         let cols = ScoringStat.displayColumns(sport: .nfl, position: "WR")
         XCTAssertEqual(cols.map(\.key),
-                       ["receiving_yards", "receiving_tds", "receptions", "targets", "ypr"])
+                       ["receiving_yards", "receptions", "receiving_tds", "ypr", "targets"])
     }
 
     /// The actual bug behind "community puzzles don't show the relevant stats": a workhorse
     /// RB's card used to lead with receiving stats (0-ish for a pure rusher) because the NFL
-    /// catalog lists receiving before rushing. The template leads with rushing for RBs.
+    /// catalog lists receiving before rushing. The template leads with rushing for RBs, and
+    /// (matching the daily pipeline's own RB themes) includes receptions, not just yards/TDs.
     func testRBLeadsWithRushingNotReceiving() {
         let cols = ScoringStat.displayColumns(sport: .nfl, position: "RB")
-        XCTAssertEqual(cols.map(\.key).prefix(2), ["rushing_yards", "rushing_tds"])
+        XCTAssertEqual(cols.map(\.key),
+                       ["rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds",
+                        "receptions", "ypc"])
     }
 
     func testBaseballPitcherGetsPitchingStatsNotHitting() {
@@ -43,11 +46,13 @@ final class ScoringStatTests: XCTestCase {
         }
     }
 
-    /// Goalkeeper's explicit template is only 2 stats wide (clean sheets, appearances) — no
-    /// padding with an irrelevant third stat like goals/assists.
+    /// Goalkeeper shares DF's exact 4-column template (clean sheets, apps, goals, assists),
+    /// clean sheets first — matching the daily pipeline's `soccer-defenders` theme, which
+    /// never slices by position at all (only NFL themes do); inventing a keeper-specific
+    /// 2-column subset would diverge from what a daily puzzle actually shows.
     func testSoccerGoalkeeperGetsCleanSheetsNotGoals() {
         let cols = ScoringStat.displayColumns(sport: .soccer, position: "GK")
-        XCTAssertEqual(cols.map(\.key), ["clean_sheets", "appearances"])
+        XCTAssertEqual(cols.map(\.key), ["clean_sheets", "appearances", "goals", "assists"])
     }
 
     func testUnknownPositionFallsBackToSportGeneric() {
