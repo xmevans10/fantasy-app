@@ -37,4 +37,12 @@ struct PlayerSeason: Identifiable, Codable, Equatable {
         }
         return "\(teamAbbr) · \(seasonYear)"
     }
+
+    /// The revealed grade, shown at the formula's full 1-decimal precision with grouping
+    /// ("4,713.8", "435.7") — the tenths digit is real scoring signal, so the reveal
+    /// never rounds it away.
+    var gradeText: String {
+        let tenths = Int((grade * 10).rounded())
+        return "\(Keep4Theme.commaGrouped(tenths / 10)).\(abs(tenths % 10))"
+    }
 }

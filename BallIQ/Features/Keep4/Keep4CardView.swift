@@ -176,8 +176,10 @@ struct Keep4CardView: View {
     private var gradeChip: some View {
         let onSecondary: Color = team.onPrimary == .white ? Color(hex: 0x15120B) : .white
         return VStack(spacing: 0) {
-            Text("\(Int(player.grade.rounded()))")
+            Text(player.gradeText)
                 .font(.hero(24))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)   // "4,713.8" (NBA season totals) must fit the chip
                 .foregroundStyle(onSecondary)
             Text(gradeUnit)
                 .font(.custom(FontName.condBold, size: 9))

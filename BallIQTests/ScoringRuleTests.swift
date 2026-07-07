@@ -32,7 +32,8 @@ final class ScoringRuleTests: XCTestCase {
                                          "rushing_yards": 800, "rushing_tds": 8]),
             ("nfl_skill_ppr", .nfl, 2021, ["receptions": 145, "receiving_yards": 1947, "receiving_tds": 16]),
             ("nfl_qb_fantasy", .nfl, 2018, ["passing_yards": 4800, "passing_tds": 40, "interceptions": 6]),
-            ("nba_fantasy", .nba, 1987, ["ppg": 37.1, "rpg": 5.2, "apg": 4.6, "spg": 2.9, "bpg": 1.5]),
+            ("nba_fantasy", .nba, 1987, ["points": 3042, "rebounds": 426, "assists": 377,
+                                         "steals": 238, "blocks": 123]),
         ]
         for (key, sport, year, stats) in cases {
             let rule = ScoringRule.preset(key)!

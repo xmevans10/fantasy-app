@@ -72,8 +72,9 @@ struct Keep4Theme: Codable, Equatable, Identifiable {
         }
     }
 
-    /// Locale-independent thousands grouping (Python's f"{n:,}").
-    private static func commaGrouped(_ n: Int) -> String {
+    /// Locale-independent thousands grouping (Python's f"{n:,}"). Internal — also the
+    /// grouping behind `PlayerSeason.gradeText`, so cards and grades format identically.
+    static func commaGrouped(_ n: Int) -> String {
         let sign = n < 0 ? "-" : ""
         let digits = Array(String(n.magnitude))
         var out: [Character] = []

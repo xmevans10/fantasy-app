@@ -35,8 +35,8 @@ seasons (e.g. Antonio Brown 2018 ranked #39 by grade but #26 by PPR):
 
 The grade *is* the raw fantasy total — no min-max normalization. The app displays this
 number as-is (with a note that it's PPR/fantasy scoring) instead of squashing it onto an
-artificial 0-100 band; a sport's typical magnitude (an NFL season ~330, an NBA per-game
-~63) is part of what the number means. The sign of a penalty (e.g. interceptions) lives
+artificial 0-100 band; a sport's typical magnitude (an NFL season ~330, an NBA season
+~5,000) is part of what the number means. The sign of a penalty (e.g. interceptions) lives
 in its coefficient. The Swift ports (`GradeFormula`, `ScoringRule`) mirror this
 byte-for-byte.
 """
@@ -112,13 +112,16 @@ _FANTASY: dict[str, list[tuple[str, float]]] = {
         ("rushing_yards", 0.1),
         ("rushing_tds", 6.0),
     ],
-    # NBA — DraftKings-ish per-game (no TOV in the data).
+    # NBA — season totals at DraftKings-ish per-stat rates (no TOV in the data). The
+    # totals are derived at ingest from the per-game averages ESPN serves
+    # (main.derive_nba_totals: total = round(per_game × games)) so NBA ranks by
+    # season-long production like every other sport's scale.
     "nba_fantasy": [
-        ("ppg", 1.0),
-        ("rpg", 1.2),
-        ("apg", 1.5),
-        ("spg", 3.0),
-        ("bpg", 3.0),
+        ("points", 1.0),
+        ("rebounds", 1.2),
+        ("assists", 1.5),
+        ("steals", 3.0),
+        ("blocks", 3.0),
     ],
     # Baseball hitters — total-bases-derived points (hit=1, +1/+2/+3 per extra base,
     # matching standard points-league scoring) plus runs/RBI/walks/steals.

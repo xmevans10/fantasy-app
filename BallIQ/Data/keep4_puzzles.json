@@ -2210,7 +2210,7 @@
         "name": "David Robinson",
         "teamAbbr": "SA",
         "seasonYear": 1994,
-        "grade": 64.8,
+        "grade": 5187.2,
         "stats": [
           {
             "label": "PPG",
@@ -2236,83 +2236,83 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
       },
       {
-        "id": "giannis-antetokounmpo-2024",
-        "name": "Giannis Antetokounmpo",
-        "teamAbbr": "MIL",
-        "seasonYear": 2024,
-        "grade": 60.8,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "30.4"
-          },
-          {
-            "label": "RPG",
-            "value": "11.5"
-          },
-          {
-            "label": "APG",
-            "value": "6.5"
-          },
-          {
-            "label": "SPG",
-            "value": "1.2"
-          },
-          {
-            "label": "TS%",
-            "value": "64.7"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3032977.png"
-      },
-      {
-        "id": "james-harden-2019",
+        "id": "james-harden-2017",
         "name": "James Harden",
         "teamAbbr": "HOU",
-        "seasonYear": 2019,
-        "grade": 63.4,
+        "seasonYear": 2017,
+        "grade": 4990.7,
         "stats": [
           {
             "label": "PPG",
-            "value": "36.1"
+            "value": "29.1"
           },
           {
             "label": "RPG",
-            "value": "6.6"
+            "value": "8.1"
           },
           {
             "label": "APG",
-            "value": "7.5"
+            "value": "11.2"
           },
           {
             "label": "SPG",
-            "value": "2.0"
+            "value": "1.5"
           },
           {
             "label": "TS%",
-            "value": "61.5"
+            "value": "61.4"
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png"
       },
       {
-        "id": "luka-doncic-2024",
-        "name": "Luka Doncic",
-        "teamAbbr": "DAL",
-        "seasonYear": 2024,
-        "grade": 65.3,
+        "id": "kobe-bryant-2003",
+        "name": "Kobe Bryant",
+        "teamAbbr": "LAL",
+        "seasonYear": 2003,
+        "grade": 4603.2,
         "stats": [
           {
             "label": "PPG",
-            "value": "33.9"
+            "value": "30.0"
           },
           {
             "label": "RPG",
-            "value": "9.2"
+            "value": "6.9"
           },
           {
             "label": "APG",
-            "value": "9.8"
+            "value": "5.9"
+          },
+          {
+            "label": "SPG",
+            "value": "2.2"
+          },
+          {
+            "label": "TS%",
+            "value": "54.9"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/110.png"
+      },
+      {
+        "id": "lebron-james-2018",
+        "name": "LeBron James",
+        "teamAbbr": "CLE",
+        "seasonYear": 2018,
+        "grade": 4787.0,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "27.5"
+          },
+          {
+            "label": "RPG",
+            "value": "8.6"
+          },
+          {
+            "label": "APG",
+            "value": "9.1"
           },
           {
             "label": "SPG",
@@ -2320,67 +2320,67 @@
           },
           {
             "label": "TS%",
-            "value": "61.8"
+            "value": "62.0"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3945274.png"
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1966.png"
       },
       {
-        "id": "michael-jordan-1989",
+        "id": "michael-jordan-1988",
         "name": "Michael Jordan",
         "teamAbbr": "CHI",
-        "seasonYear": 1989,
-        "grade": 65.2,
+        "seasonYear": 1988,
+        "grade": 5316.2,
         "stats": [
           {
             "label": "PPG",
-            "value": "32.5"
+            "value": "35.0"
           },
           {
             "label": "RPG",
-            "value": "8.0"
+            "value": "5.5"
           },
           {
             "label": "APG",
-            "value": "8.0"
+            "value": "5.9"
           },
           {
             "label": "SPG",
-            "value": "2.9"
+            "value": "3.2"
           },
           {
             "label": "TS%",
-            "value": "61.3"
+            "value": "60.3"
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png"
       },
       {
-        "id": "nikola-jokic-2025",
+        "id": "nikola-jokic-2024",
         "name": "Nikola Jokic",
         "teamAbbr": "DEN",
-        "seasonYear": 2025,
-        "grade": 67.3,
+        "seasonYear": 2024,
+        "grade": 4874.5,
         "stats": [
           {
             "label": "PPG",
-            "value": "29.6"
+            "value": "26.4"
           },
           {
             "label": "RPG",
-            "value": "12.7"
+            "value": "12.4"
           },
           {
             "label": "APG",
-            "value": "10.2"
+            "value": "9.0"
           },
           {
             "label": "SPG",
-            "value": "1.8"
+            "value": "1.4"
           },
           {
             "label": "TS%",
-            "value": "66.3"
+            "value": "65.0"
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png"
@@ -2390,7 +2390,7 @@
         "name": "Russell Westbrook",
         "teamAbbr": "OKC",
         "seasonYear": 2017,
-        "grade": 66.0,
+        "grade": 5349.4,
         "stats": [
           {
             "label": "PPG",
@@ -2420,7 +2420,7 @@
         "name": "Shaquille O'Neal",
         "teamAbbr": "LAL",
         "seasonYear": 2000,
-        "grade": 62.2,
+        "grade": 4915.8,
         "stats": [
           {
             "label": "PPG",
@@ -2455,41 +2455,11 @@
     "sport": "nba",
     "players": [
       {
-        "id": "anthony-davis-2019",
-        "name": "Anthony Davis",
-        "teamAbbr": "NO",
-        "seasonYear": 2019,
-        "grade": 58.1,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "25.9"
-          },
-          {
-            "label": "RPG",
-            "value": "12.0"
-          },
-          {
-            "label": "BPG",
-            "value": "2.4"
-          },
-          {
-            "label": "APG",
-            "value": "3.9"
-          },
-          {
-            "label": "TS%",
-            "value": "59.7"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/6583.png"
-      },
-      {
         "id": "david-robinson-1994",
         "name": "David Robinson",
         "teamAbbr": "SA",
         "seasonYear": 1994,
-        "grade": 64.8,
+        "grade": 5187.2,
         "stats": [
           {
             "label": "PPG",
@@ -2515,41 +2485,41 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
       },
       {
-        "id": "demarcus-cousins-2018",
-        "name": "DeMarcus Cousins",
-        "teamAbbr": "NO",
-        "seasonYear": 2018,
-        "grade": 58.4,
+        "id": "domantas-sabonis-2024",
+        "name": "Domantas Sabonis",
+        "teamAbbr": "SAC",
+        "seasonYear": 2024,
+        "grade": 4315.6,
         "stats": [
           {
             "label": "PPG",
-            "value": "25.2"
+            "value": "19.4"
           },
           {
             "label": "RPG",
-            "value": "12.9"
+            "value": "13.7"
           },
           {
             "label": "BPG",
-            "value": "1.6"
+            "value": "0.6"
           },
           {
             "label": "APG",
-            "value": "5.4"
+            "value": "8.2"
           },
           {
             "label": "TS%",
-            "value": "58.3"
+            "value": "63.6"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4258.png"
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3155942.png"
       },
       {
         "id": "giannis-antetokounmpo-2024",
         "name": "Giannis Antetokounmpo",
         "teamAbbr": "MIL",
         "seasonYear": 2024,
-        "grade": 60.8,
+        "grade": 4442.0,
         "stats": [
           {
             "label": "PPG",
@@ -2575,41 +2545,41 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3032977.png"
       },
       {
-        "id": "joel-embiid-2023",
-        "name": "Joel Embiid",
-        "teamAbbr": "PHI",
-        "seasonYear": 2023,
-        "grade": 59.7,
+        "id": "karl-malone-1990",
+        "name": "Karl Malone",
+        "teamAbbr": "UTAH",
+        "seasonYear": 1990,
+        "grade": 4495.0,
         "stats": [
           {
             "label": "PPG",
-            "value": "33.1"
+            "value": "31.0"
           },
           {
             "label": "RPG",
-            "value": "10.2"
+            "value": "11.1"
           },
           {
             "label": "BPG",
-            "value": "1.7"
+            "value": "0.6"
           },
           {
             "label": "APG",
-            "value": "4.2"
+            "value": "2.8"
           },
           {
             "label": "TS%",
-            "value": "65.5"
+            "value": "62.8"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3059318.png"
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/501.png"
       },
       {
         "id": "kevin-garnett-2004",
         "name": "Kevin Garnett",
         "teamAbbr": "MIN",
         "seasonYear": 2004,
-        "grade": 59.5,
+        "grade": 4876.0,
         "stats": [
           {
             "label": "PPG",
@@ -2635,31 +2605,31 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png"
       },
       {
-        "id": "nikola-jokic-2025",
+        "id": "nikola-jokic-2024",
         "name": "Nikola Jokic",
         "teamAbbr": "DEN",
-        "seasonYear": 2025,
-        "grade": 67.3,
+        "seasonYear": 2024,
+        "grade": 4874.5,
         "stats": [
           {
             "label": "PPG",
-            "value": "29.6"
+            "value": "26.4"
           },
           {
             "label": "RPG",
-            "value": "12.7"
+            "value": "12.4"
           },
           {
             "label": "BPG",
-            "value": "0.6"
+            "value": "0.9"
           },
           {
             "label": "APG",
-            "value": "10.2"
+            "value": "9.0"
           },
           {
             "label": "TS%",
-            "value": "66.3"
+            "value": "65.0"
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png"
@@ -2669,7 +2639,7 @@
         "name": "Shaquille O'Neal",
         "teamAbbr": "LAL",
         "seasonYear": 2000,
-        "grade": 62.2,
+        "grade": 4915.8,
         "stats": [
           {
             "label": "PPG",
@@ -2693,6 +2663,36 @@
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
+      },
+      {
+        "id": "tim-duncan-2002",
+        "name": "Tim Duncan",
+        "teamAbbr": "SA",
+        "seasonYear": 2002,
+        "grade": 4580.7,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "25.5"
+          },
+          {
+            "label": "RPG",
+            "value": "12.7"
+          },
+          {
+            "label": "BPG",
+            "value": "2.5"
+          },
+          {
+            "label": "APG",
+            "value": "3.7"
+          },
+          {
+            "label": "TS%",
+            "value": "57.8"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/215.png"
       }
     ],
     "grain": "season",
@@ -2704,41 +2704,41 @@
     "sport": "nba",
     "players": [
       {
-        "id": "allen-iverson-2005",
-        "name": "Allen Iverson",
-        "teamAbbr": "PHI",
-        "seasonYear": 2005,
-        "grade": 54.9,
+        "id": "domantas-sabonis-2024",
+        "name": "Domantas Sabonis",
+        "teamAbbr": "SAC",
+        "seasonYear": 2024,
+        "grade": 4315.6,
         "stats": [
           {
             "label": "PPG",
-            "value": "30.7"
+            "value": "19.4"
           },
           {
             "label": "APG",
-            "value": "7.9"
+            "value": "8.2"
           },
           {
             "label": "RPG",
-            "value": "4.0"
+            "value": "13.7"
           },
           {
             "label": "SPG",
-            "value": "2.4"
+            "value": "0.9"
           },
           {
             "label": "TS%",
-            "value": "53.3"
+            "value": "63.6"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/366.png"
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3155942.png"
       },
       {
         "id": "dwyane-wade-2009",
         "name": "Dwyane Wade",
         "teamAbbr": "MIA",
         "seasonYear": 2009,
-        "grade": 58.0,
+        "grade": 4579.0,
         "stats": [
           {
             "label": "PPG",
@@ -2764,61 +2764,61 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1987.png"
       },
       {
-        "id": "james-harden-2019",
+        "id": "james-harden-2017",
         "name": "James Harden",
         "teamAbbr": "HOU",
-        "seasonYear": 2019,
-        "grade": 63.4,
+        "seasonYear": 2017,
+        "grade": 4990.7,
         "stats": [
           {
             "label": "PPG",
-            "value": "36.1"
+            "value": "29.1"
           },
           {
             "label": "APG",
-            "value": "7.5"
+            "value": "11.2"
           },
           {
             "label": "RPG",
-            "value": "6.6"
+            "value": "8.1"
           },
           {
             "label": "SPG",
-            "value": "2.0"
+            "value": "1.5"
           },
           {
             "label": "TS%",
-            "value": "61.5"
+            "value": "61.4"
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png"
       },
       {
-        "id": "lebron-james-2010",
+        "id": "lebron-james-2018",
         "name": "LeBron James",
         "teamAbbr": "CLE",
-        "seasonYear": 2010,
-        "grade": 59.2,
+        "seasonYear": 2018,
+        "grade": 4787.0,
         "stats": [
           {
             "label": "PPG",
-            "value": "29.7"
+            "value": "27.5"
           },
           {
             "label": "APG",
-            "value": "8.6"
+            "value": "9.1"
           },
           {
             "label": "RPG",
-            "value": "7.3"
+            "value": "8.6"
           },
           {
             "label": "SPG",
-            "value": "1.6"
+            "value": "1.4"
           },
           {
             "label": "TS%",
-            "value": "60.4"
+            "value": "62.0"
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1966.png"
@@ -2828,7 +2828,7 @@
         "name": "Luka Doncic",
         "teamAbbr": "DAL",
         "seasonYear": 2024,
-        "grade": 65.3,
+        "grade": 4573.8,
         "stats": [
           {
             "label": "PPG",
@@ -2858,7 +2858,7 @@
         "name": "Michael Jordan",
         "teamAbbr": "CHI",
         "seasonYear": 1989,
-        "grade": 65.2,
+        "grade": 5281.6,
         "stats": [
           {
             "label": "PPG",
@@ -2884,31 +2884,31 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png"
       },
       {
-        "id": "nikola-jokic-2025",
+        "id": "nikola-jokic-2024",
         "name": "Nikola Jokic",
         "teamAbbr": "DEN",
-        "seasonYear": 2025,
-        "grade": 67.3,
+        "seasonYear": 2024,
+        "grade": 4874.5,
         "stats": [
           {
             "label": "PPG",
-            "value": "29.6"
+            "value": "26.4"
           },
           {
             "label": "APG",
-            "value": "10.2"
+            "value": "9.0"
           },
           {
             "label": "RPG",
-            "value": "12.7"
+            "value": "12.4"
           },
           {
             "label": "SPG",
-            "value": "1.8"
+            "value": "1.4"
           },
           {
             "label": "TS%",
-            "value": "66.3"
+            "value": "65.0"
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png"
@@ -2918,7 +2918,7 @@
         "name": "Russell Westbrook",
         "teamAbbr": "OKC",
         "seasonYear": 2017,
-        "grade": 66.0,
+        "grade": 5349.4,
         "stats": [
           {
             "label": "PPG",
@@ -2953,71 +2953,41 @@
     "sport": "nba",
     "players": [
       {
-        "id": "anthony-davis-2019",
+        "id": "anthony-davis-2018",
         "name": "Anthony Davis",
         "teamAbbr": "NO",
-        "seasonYear": 2019,
-        "grade": 58.1,
+        "seasonYear": 2018,
+        "grade": 4285.4,
         "stats": [
           {
             "label": "BPG",
-            "value": "2.4"
+            "value": "2.6"
           },
           {
             "label": "RPG",
-            "value": "12.0"
+            "value": "11.1"
           },
           {
             "label": "PPG",
-            "value": "25.9"
+            "value": "28.1"
           },
           {
             "label": "SPG",
-            "value": "1.6"
+            "value": "1.5"
           },
           {
             "label": "TS%",
-            "value": "59.7"
+            "value": "61.0"
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/6583.png"
-      },
-      {
-        "id": "chris-webber-1999",
-        "name": "Chris Webber",
-        "teamAbbr": "SAC",
-        "seasonYear": 1999,
-        "grade": 52.2,
-        "stats": [
-          {
-            "label": "BPG",
-            "value": "2.1"
-          },
-          {
-            "label": "RPG",
-            "value": "13.0"
-          },
-          {
-            "label": "PPG",
-            "value": "20.0"
-          },
-          {
-            "label": "SPG",
-            "value": "1.4"
-          },
-          {
-            "label": "TS%",
-            "value": "49.3"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/897.png"
       },
       {
         "id": "david-robinson-1994",
         "name": "David Robinson",
         "teamAbbr": "SA",
         "seasonYear": 1994,
-        "grade": 64.8,
+        "grade": 5187.2,
         "stats": [
           {
             "label": "BPG",
@@ -3047,7 +3017,7 @@
         "name": "Dwight Howard",
         "teamAbbr": "ORL",
         "seasonYear": 2011,
-        "grade": 53.3,
+        "grade": 4157.5,
         "stats": [
           {
             "label": "BPG",
@@ -3073,11 +3043,41 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/2384.png"
       },
       {
+        "id": "elton-brand-2006",
+        "name": "Elton Brand",
+        "teamAbbr": "LAC",
+        "seasonYear": 2006,
+        "grade": 4037.5,
+        "stats": [
+          {
+            "label": "BPG",
+            "value": "2.5"
+          },
+          {
+            "label": "RPG",
+            "value": "10.0"
+          },
+          {
+            "label": "PPG",
+            "value": "24.7"
+          },
+          {
+            "label": "SPG",
+            "value": "1.0"
+          },
+          {
+            "label": "TS%",
+            "value": "57.8"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/91.png"
+      },
+      {
         "id": "kevin-garnett-2004",
         "name": "Kevin Garnett",
         "teamAbbr": "MIN",
         "seasonYear": 2004,
-        "grade": 59.5,
+        "grade": 4876.0,
         "stats": [
           {
             "label": "BPG",
@@ -3107,7 +3107,7 @@
         "name": "Shaquille O'Neal",
         "teamAbbr": "LAL",
         "seasonYear": 2000,
-        "grade": 62.2,
+        "grade": 4915.8,
         "stats": [
           {
             "label": "BPG",
@@ -3137,7 +3137,7 @@
         "name": "Tim Duncan",
         "teamAbbr": "SA",
         "seasonYear": 2002,
-        "grade": 55.9,
+        "grade": 4580.7,
         "stats": [
           {
             "label": "BPG",
@@ -3163,31 +3163,31 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/215.png"
       },
       {
-        "id": "victor-wembanyama-2025",
+        "id": "victor-wembanyama-2024",
         "name": "Victor Wembanyama",
         "teamAbbr": "SA",
-        "seasonYear": 2025,
-        "grade": 57.8,
+        "seasonYear": 2024,
+        "grade": 3861.1,
         "stats": [
           {
             "label": "BPG",
-            "value": "3.8"
+            "value": "3.6"
           },
           {
             "label": "RPG",
-            "value": "11.0"
+            "value": "10.6"
           },
           {
             "label": "PPG",
-            "value": "24.3"
+            "value": "21.4"
           },
           {
             "label": "SPG",
-            "value": "1.1"
+            "value": "1.2"
           },
           {
             "label": "TS%",
-            "value": "59.5"
+            "value": "56.4"
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/5104157.png"
@@ -3202,41 +3202,11 @@
     "sport": "nba",
     "players": [
       {
-        "id": "allen-iverson-2005",
-        "name": "Allen Iverson",
-        "teamAbbr": "PHI",
-        "seasonYear": 2005,
-        "grade": 54.9,
-        "stats": [
-          {
-            "label": "SPG",
-            "value": "2.4"
-          },
-          {
-            "label": "PPG",
-            "value": "30.7"
-          },
-          {
-            "label": "APG",
-            "value": "7.9"
-          },
-          {
-            "label": "RPG",
-            "value": "4.0"
-          },
-          {
-            "label": "TS%",
-            "value": "53.3"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/366.png"
-      },
-      {
         "id": "chris-paul-2009",
         "name": "Chris Paul",
         "teamAbbr": "NO",
         "seasonYear": 2009,
-        "grade": 54.6,
+        "grade": 4257.8,
         "stats": [
           {
             "label": "SPG",
@@ -3266,7 +3236,7 @@
         "name": "Dwyane Wade",
         "teamAbbr": "MIA",
         "seasonYear": 2009,
-        "grade": 58.0,
+        "grade": 4579.0,
         "stats": [
           {
             "label": "SPG",
@@ -3292,11 +3262,41 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1987.png"
       },
       {
+        "id": "gary-payton-2000",
+        "name": "Gary Payton",
+        "teamAbbr": "SEA",
+        "seasonYear": 2000,
+        "grade": 4234.6,
+        "stats": [
+          {
+            "label": "SPG",
+            "value": "1.9"
+          },
+          {
+            "label": "PPG",
+            "value": "24.2"
+          },
+          {
+            "label": "APG",
+            "value": "8.9"
+          },
+          {
+            "label": "RPG",
+            "value": "6.5"
+          },
+          {
+            "label": "TS%",
+            "value": "53.6"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/640.png"
+      },
+      {
         "id": "james-harden-2019",
         "name": "James Harden",
         "teamAbbr": "HOU",
         "seasonYear": 2019,
-        "grade": 63.4,
+        "grade": 4944.5,
         "stats": [
           {
             "label": "SPG",
@@ -3322,113 +3322,53 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png"
       },
       {
-        "id": "luka-doncic-2025",
-        "name": "Luka Doncic",
-        "teamAbbr": "",
-        "seasonYear": 2025,
-        "grade": 56.2,
+        "id": "john-stockton-1989",
+        "name": "John Stockton",
+        "teamAbbr": "UTAH",
+        "seasonYear": 1989,
+        "grade": 4203.7,
         "stats": [
           {
             "label": "SPG",
-            "value": "1.8"
+            "value": "3.2"
           },
           {
             "label": "PPG",
-            "value": "28.2"
+            "value": "17.1"
           },
           {
             "label": "APG",
-            "value": "7.7"
+            "value": "13.6"
           },
           {
             "label": "RPG",
-            "value": "8.2"
+            "value": "3.0"
           },
           {
             "label": "TS%",
-            "value": "58.8"
+            "value": "62.3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3945274.png"
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/812.png"
       },
       {
-        "id": "michael-jordan-1989",
+        "id": "michael-jordan-1988",
         "name": "Michael Jordan",
         "teamAbbr": "CHI",
-        "seasonYear": 1989,
-        "grade": 65.2,
+        "seasonYear": 1988,
+        "grade": 5316.2,
         "stats": [
           {
             "label": "SPG",
-            "value": "2.9"
+            "value": "3.2"
           },
           {
             "label": "PPG",
-            "value": "32.5"
+            "value": "35.0"
           },
           {
             "label": "APG",
-            "value": "8.0"
-          },
-          {
-            "label": "RPG",
-            "value": "8.0"
-          },
-          {
-            "label": "TS%",
-            "value": "61.3"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png"
-      },
-      {
-        "id": "russell-westbrook-2019",
-        "name": "Russell Westbrook",
-        "teamAbbr": "OKC",
-        "seasonYear": 2019,
-        "grade": 59.5,
-        "stats": [
-          {
-            "label": "SPG",
-            "value": "1.9"
-          },
-          {
-            "label": "PPG",
-            "value": "22.9"
-          },
-          {
-            "label": "APG",
-            "value": "10.7"
-          },
-          {
-            "label": "RPG",
-            "value": "11.1"
-          },
-          {
-            "label": "TS%",
-            "value": "49.9"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png"
-      },
-      {
-        "id": "shai-gilgeous-alexander-2024",
-        "name": "Shai Gilgeous-Alexander",
-        "teamAbbr": "OKC",
-        "seasonYear": 2024,
-        "grade": 54.7,
-        "stats": [
-          {
-            "label": "SPG",
-            "value": "2.0"
-          },
-          {
-            "label": "PPG",
-            "value": "30.1"
-          },
-          {
-            "label": "APG",
-            "value": "6.2"
+            "value": "5.9"
           },
           {
             "label": "RPG",
@@ -3436,10 +3376,70 @@
           },
           {
             "label": "TS%",
-            "value": "63.7"
+            "value": "60.3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4278073.png"
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png"
+      },
+      {
+        "id": "russell-westbrook-2018",
+        "name": "Russell Westbrook",
+        "teamAbbr": "OKC",
+        "seasonYear": 2018,
+        "grade": 4741.6,
+        "stats": [
+          {
+            "label": "SPG",
+            "value": "1.8"
+          },
+          {
+            "label": "PPG",
+            "value": "25.4"
+          },
+          {
+            "label": "APG",
+            "value": "10.3"
+          },
+          {
+            "label": "RPG",
+            "value": "10.1"
+          },
+          {
+            "label": "TS%",
+            "value": "52.4"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png"
+      },
+      {
+        "id": "stephen-curry-2016",
+        "name": "Stephen Curry",
+        "teamAbbr": "GS",
+        "seasonYear": 2016,
+        "grade": 4229.9,
+        "stats": [
+          {
+            "label": "SPG",
+            "value": "2.1"
+          },
+          {
+            "label": "PPG",
+            "value": "30.1"
+          },
+          {
+            "label": "APG",
+            "value": "6.7"
+          },
+          {
+            "label": "RPG",
+            "value": "5.4"
+          },
+          {
+            "label": "TS%",
+            "value": "67.1"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3975.png"
       }
     ],
     "grain": "season",
@@ -3451,41 +3451,11 @@
     "sport": "nba",
     "players": [
       {
-        "id": "anthony-davis-2019",
-        "name": "Anthony Davis",
-        "teamAbbr": "NO",
-        "seasonYear": 2019,
-        "grade": 58.1,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "25.9"
-          },
-          {
-            "label": "RPG",
-            "value": "12.0"
-          },
-          {
-            "label": "APG",
-            "value": "3.9"
-          },
-          {
-            "label": "BPG",
-            "value": "2.4"
-          },
-          {
-            "label": "TS%",
-            "value": "59.7"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/6583.png"
-      },
-      {
         "id": "david-robinson-1994",
         "name": "David Robinson",
         "teamAbbr": "SA",
         "seasonYear": 1994,
-        "grade": 64.8,
+        "grade": 5187.2,
         "stats": [
           {
             "label": "PPG",
@@ -3511,41 +3481,41 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
       },
       {
-        "id": "demarcus-cousins-2018",
-        "name": "DeMarcus Cousins",
-        "teamAbbr": "NO",
-        "seasonYear": 2018,
-        "grade": 58.4,
+        "id": "domantas-sabonis-2024",
+        "name": "Domantas Sabonis",
+        "teamAbbr": "SAC",
+        "seasonYear": 2024,
+        "grade": 4315.6,
         "stats": [
           {
             "label": "PPG",
-            "value": "25.2"
+            "value": "19.4"
           },
           {
             "label": "RPG",
-            "value": "12.9"
+            "value": "13.7"
           },
           {
             "label": "APG",
-            "value": "5.4"
+            "value": "8.2"
           },
           {
             "label": "BPG",
-            "value": "1.6"
+            "value": "0.6"
           },
           {
             "label": "TS%",
-            "value": "58.3"
+            "value": "63.6"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4258.png"
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3155942.png"
       },
       {
         "id": "giannis-antetokounmpo-2024",
         "name": "Giannis Antetokounmpo",
         "teamAbbr": "MIL",
         "seasonYear": 2024,
-        "grade": 60.8,
+        "grade": 4442.0,
         "stats": [
           {
             "label": "PPG",
@@ -3571,41 +3541,41 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3032977.png"
       },
       {
-        "id": "joel-embiid-2023",
-        "name": "Joel Embiid",
-        "teamAbbr": "PHI",
-        "seasonYear": 2023,
-        "grade": 59.7,
+        "id": "karl-malone-1990",
+        "name": "Karl Malone",
+        "teamAbbr": "UTAH",
+        "seasonYear": 1990,
+        "grade": 4495.0,
         "stats": [
           {
             "label": "PPG",
-            "value": "33.1"
+            "value": "31.0"
           },
           {
             "label": "RPG",
-            "value": "10.2"
+            "value": "11.1"
           },
           {
             "label": "APG",
-            "value": "4.2"
+            "value": "2.8"
           },
           {
             "label": "BPG",
-            "value": "1.7"
+            "value": "0.6"
           },
           {
             "label": "TS%",
-            "value": "65.5"
+            "value": "62.8"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3059318.png"
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/501.png"
       },
       {
         "id": "kevin-garnett-2004",
         "name": "Kevin Garnett",
         "teamAbbr": "MIN",
         "seasonYear": 2004,
-        "grade": 59.5,
+        "grade": 4876.0,
         "stats": [
           {
             "label": "PPG",
@@ -3631,31 +3601,31 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png"
       },
       {
-        "id": "nikola-jokic-2025",
+        "id": "nikola-jokic-2024",
         "name": "Nikola Jokic",
         "teamAbbr": "DEN",
-        "seasonYear": 2025,
-        "grade": 67.3,
+        "seasonYear": 2024,
+        "grade": 4874.5,
         "stats": [
           {
             "label": "PPG",
-            "value": "29.6"
+            "value": "26.4"
           },
           {
             "label": "RPG",
-            "value": "12.7"
+            "value": "12.4"
           },
           {
             "label": "APG",
-            "value": "10.2"
+            "value": "9.0"
           },
           {
             "label": "BPG",
-            "value": "0.6"
+            "value": "0.9"
           },
           {
             "label": "TS%",
-            "value": "66.3"
+            "value": "65.0"
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png"
@@ -3665,7 +3635,7 @@
         "name": "Shaquille O'Neal",
         "teamAbbr": "LAL",
         "seasonYear": 2000,
-        "grade": 62.2,
+        "grade": 4915.8,
         "stats": [
           {
             "label": "PPG",
@@ -3689,6 +3659,36 @@
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
+      },
+      {
+        "id": "tim-duncan-2002",
+        "name": "Tim Duncan",
+        "teamAbbr": "SA",
+        "seasonYear": 2002,
+        "grade": 4580.7,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "25.5"
+          },
+          {
+            "label": "RPG",
+            "value": "12.7"
+          },
+          {
+            "label": "APG",
+            "value": "3.7"
+          },
+          {
+            "label": "BPG",
+            "value": "2.5"
+          },
+          {
+            "label": "TS%",
+            "value": "57.8"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/215.png"
       }
     ],
     "grain": "season",
@@ -5962,55 +5962,55 @@
     "sport": "nba",
     "players": [
       {
-        "id": "anthony-davis-career",
-        "name": "Anthony Davis",
-        "teamAbbr": "DAL",
-        "seasonYear": 2026,
-        "grade": 51.5,
+        "id": "john-stockton-career",
+        "name": "John Stockton",
+        "teamAbbr": "UTAH",
+        "seasonYear": 2003,
+        "grade": 59122.1,
         "stats": [
           {
             "label": "PPG",
-            "value": "24.0"
+            "value": "13.1"
           },
           {
             "label": "RPG",
-            "value": "10.7"
+            "value": "2.7"
           },
           {
             "label": "APG",
-            "value": "2.6"
+            "value": "10.5"
           },
           {
             "label": "SPG",
-            "value": "1.3"
+            "value": "2.2"
           },
           {
             "label": "BPG",
-            "value": "2.3"
+            "value": "0.2"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/6583.png",
-        "firstYear": 2013,
-        "lastYear": 2026
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/812.png",
+        "firstYear": 1985,
+        "lastYear": 2003
       },
       {
-        "id": "david-robinson-career",
-        "name": "David Robinson",
-        "teamAbbr": "SA",
-        "seasonYear": 2003,
-        "grade": 50.7,
+        "id": "karl-malone-career",
+        "name": "Karl Malone",
+        "teamAbbr": "LAL",
+        "seasonYear": 2004,
+        "grade": 72495.7,
         "stats": [
           {
             "label": "PPG",
-            "value": "21.1"
+            "value": "25.0"
           },
           {
             "label": "RPG",
-            "value": "10.6"
+            "value": "10.1"
           },
           {
             "label": "APG",
-            "value": "2.5"
+            "value": "3.6"
           },
           {
             "label": "SPG",
@@ -6018,59 +6018,27 @@
           },
           {
             "label": "BPG",
-            "value": "3.0"
+            "value": "0.8"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png",
-        "firstYear": 1990,
-        "lastYear": 2003
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/501.png",
+        "firstYear": 1986,
+        "lastYear": 2004
       },
       {
-        "id": "giannis-antetokounmpo-career",
-        "name": "Giannis Antetokounmpo",
-        "teamAbbr": "MIL",
-        "seasonYear": 2026,
-        "grade": 50.5,
+        "id": "kevin-garnett-career",
+        "name": "Kevin Garnett",
+        "teamAbbr": "MIN",
+        "seasonYear": 2016,
+        "grade": 63582.1,
         "stats": [
           {
             "label": "PPG",
-            "value": "24.1"
+            "value": "17.8"
           },
           {
             "label": "RPG",
-            "value": "9.9"
-          },
-          {
-            "label": "APG",
-            "value": "5.0"
-          },
-          {
-            "label": "SPG",
-            "value": "1.1"
-          },
-          {
-            "label": "BPG",
-            "value": "1.2"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3032977.png",
-        "firstYear": 2014,
-        "lastYear": 2026
-      },
-      {
-        "id": "joel-embiid-career",
-        "name": "Joel Embiid",
-        "teamAbbr": "PHI",
-        "seasonYear": 2026,
-        "grade": 53.6,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "27.6"
-          },
-          {
-            "label": "RPG",
-            "value": "10.8"
+            "value": "10.0"
           },
           {
             "label": "APG",
@@ -6078,23 +6046,55 @@
           },
           {
             "label": "SPG",
-            "value": "0.9"
+            "value": "1.3"
           },
           {
             "label": "BPG",
-            "value": "1.6"
+            "value": "1.4"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3059318.png",
-        "firstYear": 2017,
-        "lastYear": 2026
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png",
+        "firstYear": 1996,
+        "lastYear": 2016
+      },
+      {
+        "id": "kobe-bryant-career",
+        "name": "Kobe Bryant",
+        "teamAbbr": "LAL",
+        "seasonYear": 2016,
+        "grade": 59264.6,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "25.0"
+          },
+          {
+            "label": "RPG",
+            "value": "5.2"
+          },
+          {
+            "label": "APG",
+            "value": "4.7"
+          },
+          {
+            "label": "SPG",
+            "value": "1.4"
+          },
+          {
+            "label": "BPG",
+            "value": "0.5"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/110.png",
+        "firstYear": 1997,
+        "lastYear": 2016
       },
       {
         "id": "lebron-james-career",
         "name": "LeBron James",
         "teamAbbr": "LAL",
         "seasonYear": 2026,
-        "grade": 53.5,
+        "grade": 86760.2,
         "stats": [
           {
             "label": "PPG",
@@ -6122,100 +6122,100 @@
         "lastYear": 2026
       },
       {
-        "id": "luka-doncic-career",
-        "name": "Luka Doncic",
-        "teamAbbr": "LAL",
+        "id": "russell-westbrook-career",
+        "name": "Russell Westbrook",
+        "teamAbbr": "SAC",
         "seasonYear": 2026,
-        "grade": 57.0,
+        "grade": 60963.1,
         "stats": [
           {
             "label": "PPG",
-            "value": "29.2"
+            "value": "20.9"
           },
           {
             "label": "RPG",
-            "value": "8.5"
+            "value": "6.9"
           },
           {
             "label": "APG",
-            "value": "8.2"
+            "value": "8.0"
           },
           {
             "label": "SPG",
-            "value": "1.3"
+            "value": "1.6"
           },
           {
             "label": "BPG",
-            "value": "0.4"
+            "value": "0.3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3945274.png",
-        "firstYear": 2019,
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png",
+        "firstYear": 2009,
         "lastYear": 2026
       },
       {
-        "id": "michael-jordan-career",
-        "name": "Michael Jordan",
-        "teamAbbr": "WSH",
-        "seasonYear": 2003,
-        "grade": 55.0,
+        "id": "shaquille-o-neal-career",
+        "name": "Shaquille O'Neal",
+        "teamAbbr": "BOS",
+        "seasonYear": 2011,
+        "grade": 59243.9,
         "stats": [
           {
             "label": "PPG",
-            "value": "30.1"
+            "value": "23.7"
           },
           {
             "label": "RPG",
-            "value": "6.2"
+            "value": "10.9"
           },
           {
             "label": "APG",
-            "value": "5.3"
+            "value": "2.5"
           },
           {
             "label": "SPG",
-            "value": "2.4"
+            "value": "0.6"
           },
           {
             "label": "BPG",
-            "value": "0.8"
+            "value": "2.3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png",
-        "firstYear": 1985,
-        "lastYear": 2003
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png",
+        "firstYear": 1993,
+        "lastYear": 2011
       },
       {
-        "id": "nikola-jokic-career",
-        "name": "Nikola Jokic",
-        "teamAbbr": "DEN",
-        "seasonYear": 2026,
-        "grade": 52.9,
+        "id": "tim-duncan-career",
+        "name": "Tim Duncan",
+        "teamAbbr": "SA",
+        "seasonYear": 2016,
+        "grade": 63111.1,
         "stats": [
           {
             "label": "PPG",
-            "value": "22.2"
+            "value": "19.0"
           },
           {
             "label": "RPG",
-            "value": "11.1"
+            "value": "10.8"
           },
           {
             "label": "APG",
-            "value": "7.5"
+            "value": "3.0"
           },
           {
             "label": "SPG",
-            "value": "1.3"
-          },
-          {
-            "label": "BPG",
             "value": "0.7"
+          },
+          {
+            "label": "BPG",
+            "value": "2.2"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png",
-        "firstYear": 2016,
-        "lastYear": 2026
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/215.png",
+        "firstYear": 1998,
+        "lastYear": 2016
       }
     ],
     "grain": "career",

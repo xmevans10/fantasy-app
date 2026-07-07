@@ -81,8 +81,34 @@ def test_fantasy_qb_interceptions_penalize():
 
 
 def test_fantasy_nba_exact_grade():
-    jordan = {"ppg": 37.1, "rpg": 5.2, "apg": 4.6, "spg": 2.9, "bpg": 1.5}
-    assert grade(jordan, "nba_fantasy") == 63.4   # 37.1 + 6.24 + 6.9 + 8.7 + 4.5
+    # 1986-87 Jordan season TOTALS as ingest derives them (per-game × 82 games,
+    # see main.derive_nba_totals): NBA grades are season-long like every other sport.
+    jordan = {"points": 3042, "rebounds": 426, "assists": 377, "steals": 238, "blocks": 123}
+    assert grade(jordan, "nba_fantasy") == 5201.7   # 3042 + 511.2 + 565.5 + 714 + 369
+
+
+def test_fantasy_nba_reads_totals_not_averages():
+    # The scale must ignore per-game keys entirely — a row with only averages grades 0,
+    # which is exactly the loud failure we want if ingest ever stops deriving totals.
+    averages_only = {"ppg": 37.1, "rpg": 5.2, "apg": 4.6, "spg": 2.9, "bpg": 1.5}
+    assert grade(averages_only, "nba_fantasy") == 0.0
+
+
+def test_derive_nba_totals_bakes_season_totals():
+    from tools.ingest.main import derive_nba_totals
+    from tools.ingest.models import RawSeason
+    jordan = RawSeason(name="Michael Jordan", team_abbr="CHI", season_year=1987,
+                       sport="nba", position="G",
+                       stats={"games": 82, "ppg": 37.1, "rpg": 5.2, "apg": 4.6,
+                              "spg": 2.9, "bpg": 1.5})
+    other = RawSeason(name="Justin Jefferson", team_abbr="MIN", season_year=2022,
+                      sport="nfl", position="WR", stats={"receiving_yards": 1809})
+    derive_nba_totals([jordan, other])
+    assert jordan.stats["points"] == 3042 and jordan.stats["rebounds"] == 426
+    assert jordan.stats["assists"] == 377 and jordan.stats["steals"] == 238
+    assert jordan.stats["blocks"] == 123
+    assert grade(jordan.stats, "nba_fantasy") == 5201.7
+    assert "points" not in other.stats   # non-NBA rows untouched
 
 
 def test_baseball_hitter_exact_grade():

@@ -123,6 +123,23 @@ def merge_nfl_bio(seasons: list[RawSeason]) -> None:
           f"({headshots_backfilled} headshots backfilled from the bio registry)")
 
 
+def derive_nba_totals(seasons: list[RawSeason]) -> None:
+    """Bake NBA season totals (points/rebounds/assists/steals/blocks) from the per-game
+    averages every NBA source serves: total = round(per_game × games). The `nba_fantasy`
+    grade scale reads these totals so NBA ranks by season-long production like every
+    other sport (a 60-game heater no longer outranks a full 82 at a slightly lower rate);
+    the per-game averages stay untouched for card display. Derived rather than fetched so
+    the displayed averages and the graded totals can never contradict each other."""
+    per_game_to_total = {"ppg": "points", "rpg": "rebounds", "apg": "assists",
+                         "spg": "steals", "bpg": "blocks"}
+    for s in seasons:
+        if s.sport != "nba":
+            continue
+        games = s.stats.get("games", 0.0)
+        for pg, total in per_game_to_total.items():
+            s.stats[total] = float(round(s.stats.get(pg, 0.0) * games))
+
+
 def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) -> list[RawSeason]:
     seasons: list[RawSeason] = []
     print(f"[nfl] fetching nflverse seasons {nfl_years[0]}–{nfl_years[-1]} …")
@@ -180,6 +197,9 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
     print(f"[tennis] {len(tennis)} player-seasons (seed only)")
 
     all_seasons = seasons + nba + baseball + soccer + tennis
+    # Bake NBA season totals BEFORE career aggregation so career rows sum real season
+    # totals (a counting stat) instead of re-deriving from career-averaged rates.
+    derive_nba_totals(all_seasons)
     # Career grain (M17): one aggregate row per (sport, position, player) summing every
     # real season above. Built from season-grain rows only (game rows are single
     # performances, not seasons); soccer/tennis are seed-only with ~1 season per player

@@ -134,8 +134,10 @@ struct Keep4ResultView: View {
             Spacer(minLength: 2)
             if puzzle.scoringKind() != .vibes {
                 VStack(alignment: .trailing, spacing: 0) {
-                    Text("\(Int(player.grade.rounded()))")
+                    Text(player.gradeText)
                         .font(.hero(15))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                         .foregroundStyle(Color.textPrimary)
                     Text(puzzle.scoringKind().gradeUnit)
                         .font(.label11)

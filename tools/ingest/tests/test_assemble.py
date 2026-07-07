@@ -14,8 +14,17 @@ DATA = Path(__file__).resolve().parents[1] / "data"
 NBA_THEMES = [t for t in KEEP4_THEMES if t.sport == "nba" and t.grain == "season"]
 
 
-def test_keep4_rows_are_valid_and_clustered():
+def _nba_seasons():
+    """Seed rows with season totals derived, in the same order gather_seasons does it —
+    nba_fantasy grades totals, so raw seed rows (averages only) would all grade 0."""
+    from tools.ingest.main import derive_nba_totals
     seasons = seed.load_nba()
+    derive_nba_totals(seasons)
+    return seasons
+
+
+def test_keep4_rows_are_valid_and_clustered():
+    seasons = _nba_seasons()
     produced = 0
     for theme in NBA_THEMES:
         rows = assemble.build_keep4_rows(theme, seasons)
@@ -23,14 +32,16 @@ def test_keep4_rows_are_valid_and_clustered():
         for row in rows:
             validate(row)  # 8 players, unambiguous boundary, shape OK
             grades = sorted((p["grade"] for p in row.content["players"]), reverse=True)
-            # clustered: full spread across 8 cards stays tight
-            assert grades[0] - grades[-1] < 45
+            # clustered: full spread across 8 cards stays tight RELATIVE to the window's
+            # magnitude (grades are season totals ~5,000 now, so an absolute bound like
+            # the old `< 45` is meaningless; seed pool worst case measures ~29%).
+            assert grades[0] - grades[-1] < 0.35 * grades[0]
             produced += 1
     assert produced >= len(NBA_THEMES)
 
 
 def test_keep4_top4_matches_grade_ranking():
-    seasons = seed.load_nba()
+    seasons = _nba_seasons()
     theme = next(t for t in NBA_THEMES if t.key == "nba-scorers")
     row = assemble.build_keep4_rows(theme, seasons)[0]
     players = row.content["players"]
@@ -40,7 +51,7 @@ def test_keep4_top4_matches_grade_ranking():
 
 
 def test_variants_have_unique_ids():
-    seasons = seed.load_nba()
+    seasons = _nba_seasons()
     ids = []
     for theme in NBA_THEMES:
         ids += [r.id for r in assemble.build_keep4_rows(theme, seasons)]
@@ -49,7 +60,7 @@ def test_variants_have_unique_ids():
 
 def test_catalog_rows_dedupe_and_shape():
     from tools.ingest.main import catalog_rows
-    seasons = seed.load_nba()
+    seasons = _nba_seasons()
     rows = catalog_rows(seasons + seasons)   # duplicates collapse by id
     ids = [r["id"] for r in rows]
     assert len(ids) == len(set(ids))
@@ -59,7 +70,7 @@ def test_catalog_rows_dedupe_and_shape():
 
 
 def test_keep4_rows_bake_grain_field():
-    seasons = seed.load_nba()
+    seasons = _nba_seasons()
     theme = next(t for t in NBA_THEMES if t.key == "nba-scorers")
     row = assemble.build_keep4_rows(theme, seasons)[0]
     assert row.content["grain"] == "season"

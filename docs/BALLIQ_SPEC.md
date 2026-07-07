@@ -171,7 +171,12 @@ Scales (`grade.py` `_FANTASY`, mirrored byte-for-byte by `GradeFormula.swift` an
   rec ×1, rec yds ×0.1, rec TD ×6, rush yds ×0.1, rush TD ×6.
 - `nfl_skill_ppr`, `nfl_qb_fantasy` — subsets for single-position themes; `*_game` variants
   reuse the same coefficients at game grain.
-- `nba_fantasy` (per-game, DK-ish): PPG ×1, RPG ×1.2, APG ×1.5, SPG ×3, BPG ×3.
+- `nba_fantasy` (season totals at DK-ish rates, 2026-07-07 — was per-game before): points ×1,
+  rebounds ×1.2, assists ×1.5, steals ×3, blocks ×3, over TOTALS derived at ingest
+  (`main.derive_nba_totals`: per-game average × games, baked into every NBA row's stats
+  alongside the averages, career rows sum season totals). NBA now ranks by season-long
+  production like every other sport; typical elite magnitude ~5,000, and the reveal shows
+  grades at full 1-decimal precision with grouping (`PlayerSeason.gradeText`, all sports).
 
 **Parity rule:** any scoring change lands in `grade.py` + `GradeFormula.swift` +
 `ScoringRule.swift` together, with locked-value tests in all three

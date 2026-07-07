@@ -9,7 +9,11 @@ enum DebugLaunch {
     }
     static var autoOpenGame: Bool { has("-screenshotGame") || has("-screenshotResult") }
     static var autoOpenWhoAmI: Bool { has("-screenshotWhoAmI") || has("-screenshotWhoAmIResult") }
-    static var autoSubmitResult: Bool { has("-screenshotResult") || has("-screenshotWhoAmIResult") }
+    /// `-autoSubmit` alone works with `-openURL` (deep-linked game → result) without also
+    /// auto-opening the daily the way `-screenshotResult` does.
+    static var autoSubmitResult: Bool {
+        has("-screenshotResult") || has("-screenshotWhoAmIResult") || has("-autoSubmit")
+    }
     static var autoOpenCreateKeep4: Bool { has("-screenshotCreate") }
     static var autoOpenStats: Bool { has("-screenshotStats") }
     static var autoOpenProfile: Bool { has("-screenshotProfile") }

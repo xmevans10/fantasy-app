@@ -60,7 +60,10 @@ enum GradeFormula {
                           ("rushing_yards", 0.1), ("rushing_tds", 6.0)],
         "nfl_qb_fantasy": [("passing_yards", 0.04), ("passing_tds", 4.0), ("interceptions", -2.0),
                            ("rushing_yards", 0.1), ("rushing_tds", 6.0)],
-        "nba_fantasy": [("ppg", 1.0), ("rpg", 1.2), ("apg", 1.5), ("spg", 3.0), ("bpg", 3.0)],
+        // NBA grades season TOTALS (derived at ingest: per-game × games) at DK-ish rates,
+        // so NBA ranks by season-long production like every other sport's scale.
+        "nba_fantasy": [("points", 1.0), ("rebounds", 1.2), ("assists", 1.5),
+                        ("steals", 3.0), ("blocks", 3.0)],
     ]
 
     private static func component(_ value: Double, _ c: Component) -> Double {

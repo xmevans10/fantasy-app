@@ -91,7 +91,7 @@ struct ScoringBreakdown: Equatable {
             "interceptions": "Interception thrown", "receptions": "Reception",
             "receiving_yards": "Receiving yards", "receiving_tds": "Receiving TD",
             "rushing_yards": "Rushing yards", "rushing_tds": "Rushing TD",
-            "ppg": "Point", "rpg": "Rebound", "apg": "Assist", "spg": "Steal", "bpg": "Block",
+            "points": "Point", "rebounds": "Rebound", "steals": "Steal", "blocks": "Block",
             "hits": "Hit", "doubles": "Double", "triples": "Triple", "home_runs": "Home run",
             "runs": "Run scored", "rbi": "RBI", "stolen_bases": "Stolen base",
             "innings_pitched": "Inning pitched", "strike_outs": "Strikeout",
@@ -107,8 +107,6 @@ struct ScoringBreakdown: Equatable {
 
     private static func caption(for scale: String) -> String? {
         switch scale {
-        case "nba_fantasy":
-            return "Applied to the season's per-game averages."
         case "baseball_hitter_fantasy":
             return "Extra-base points stack on the hit itself — a home run nets +4 in total."
         default:
@@ -339,7 +337,7 @@ struct ScoringDetailSheet: View {
         case "nfl_fantasy_standard":
             return "Standard (non-PPR) scoring — receptions themselves score nothing."
         case "nba_fantasy":
-            return "Modeled on DraftKings-style fantasy scoring, lightly simplified."
+            return "DraftKings-style per-stat rates, lightly simplified and applied to full-season totals."
         case "baseball_hitter_fantasy", "baseball_pitcher_fantasy":
             return "Classic points-league baseball scoring convention."
         case "soccer_attacker_fantasy", "soccer_defender_fantasy":

@@ -66,8 +66,18 @@ final class GradeFormulaTests: XCTestCase {
     }
 
     func testFantasyNbaExactGrade() {
-        let jordan = ["ppg": 37.1, "rpg": 5.2, "apg": 4.6, "spg": 2.9, "bpg": 1.5]
-        XCTAssertEqual(GradeFormula.grade(jordan, scale: "nba_fantasy"), 63.4, accuracy: 0.001)
+        // 1986-87 Jordan season TOTALS as ingest derives them (per-game × 82 games) —
+        // NBA grades are season-long like every other sport. Mirrors test_grade.py.
+        let jordan = ["points": 3042.0, "rebounds": 426, "assists": 377,
+                      "steals": 238, "blocks": 123]
+        XCTAssertEqual(GradeFormula.grade(jordan, scale: "nba_fantasy"), 5201.7, accuracy: 0.001)
+    }
+
+    func testFantasyNbaIgnoresPerGameAverages() {
+        // Averages-only stats grade 0 — the loud failure if a catalog row is missing
+        // its derived totals, rather than a silently per-game-scaled grade.
+        let averagesOnly = ["ppg": 37.1, "rpg": 5.2, "apg": 4.6, "spg": 2.9, "bpg": 1.5]
+        XCTAssertEqual(GradeFormula.grade(averagesOnly, scale: "nba_fantasy"), 0.0, accuracy: 0.001)
     }
 
     func testFantasyPprRewardsReceptionsAndTds() {
