@@ -126,15 +126,15 @@ def main() -> int:
     start = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
     target_dates = [start + dt.timedelta(days=i) for i in range(args.count)]
 
-    from .upsert import fetch_history_signatures, fetch_todays_keep4_id, upsert, upsert_history
+    from .upsert import fetch_history_signatures, fetch_served_dates, upsert, upsert_history
     if args.upsert:
-        already = {d: fetch_todays_keep4_id(d.isoformat()) for d in target_dates}
-        already = {d: pid for d, pid in already.items() if pid}
-        for d, pid in already.items():
-            print(f"[daily] {d.isoformat()} already has a puzzle ({pid}) — skipping (idempotent; "
-                  "a retried/re-dispatched run shouldn't mint a second one and make the "
-                  "client's 'today' pick ambiguous)")
-        target_dates = [d for d in target_dates if d not in already]
+        already = fetch_served_dates([d.isoformat() for d in target_dates])
+        for d in target_dates:
+            if d.isoformat() in already:
+                print(f"[daily] {d.isoformat()} already has a puzzle — skipping (idempotent; "
+                      "a retried/re-dispatched run shouldn't mint a second one and make the "
+                      "client's 'today' pick ambiguous)")
+        target_dates = [d for d in target_dates if d.isoformat() not in already]
         if not target_dates:
             return 0
 

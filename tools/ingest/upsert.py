@@ -87,14 +87,30 @@ def upsert_history(rows: list[dict]) -> int:
     return _upsert_table("puzzle_history", rows, conflict="signature")
 
 
-def fetch_todays_keep4_id(active_date: str) -> str | None:
-    """The id of the keep4 row already minted for `active_date`, if any. Lets daily_puzzle.py
-    stay idempotent per day — a retried/re-dispatched run shouldn't mint a second competing
-    puzzle for a date that already has one (two rows sharing one active_date makes the
-    client's "today" pick ambiguous)."""
+def fetch_served_dates(dates: list[str]) -> set[str]:
+    """Which of `dates` already have a daily_puzzle.py-minted keep4 pick, per `puzzle_history`
+    (served_date) — the picker's own exclusive bookkeeping. Lets daily_puzzle.py stay
+    idempotent per day: a retried/re-dispatched run shouldn't mint a second competing puzzle
+    for a date that already has one (two rows sharing one active_date makes the client's
+    "today" pick ambiguous).
+
+    Deliberately checks `puzzle_history`, NOT `puzzles.active_date`: the latter is *also*
+    stamped in bulk by main.py's `assign_active_dates` on every regular pipeline run, purely
+    for archival/informational spread across the trailing window (documented as tolerant of
+    multiple rows per day — Browse never reads it). Checking `puzzles` directly previously
+    let an unrelated archival row's incidental active_date collision false-positive this
+    check and silently skip a genuine daily mint. `puzzle_history` is written only here, so
+    it can't cross-contaminate. A `served_date, format` unique constraint (schema.sql) is the
+    hard backstop against the underlying race this replaces (two processes both passing this
+    read-then-act check before either writes) -- it turns a silent duplicate into a loud
+    upsert failure instead of leaving two puzzles live for the same day, which is exactly
+    what happened once in production before this fix (see BALLIQ_SPEC.md)."""
+    if not dates:
+        return set()
     base, key = _require_env()
-    endpoint = (f"{base}/rest/v1/puzzles?select=id&format=eq.keep4"
-                f"&active_date=eq.{active_date}&limit=1")
+    in_list = ",".join(dates)
+    endpoint = (f"{base}/rest/v1/puzzle_history?select=served_date&format=eq.keep4"
+                f"&served_date=in.({in_list})")
     headers = {"apikey": key, "Authorization": f"Bearer {key}"}
     req = urllib.request.Request(endpoint, headers=headers, method="GET")
     try:
@@ -102,5 +118,5 @@ def fetch_todays_keep4_id(active_date: str) -> str | None:
             rows = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as err:
         body = err.read().decode("utf-8", "ignore")
-        raise RuntimeError(f"puzzles lookup failed ({err.code}): {body}") from err
-    return rows[0]["id"] if rows else None
+        raise RuntimeError(f"puzzle_history lookup failed ({err.code}): {body}") from err
+    return {r["served_date"] for r in rows}

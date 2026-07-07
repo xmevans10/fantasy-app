@@ -65,6 +65,18 @@ create table if not exists public.puzzle_history (
   puzzle_id   text not null,
   served_date date not null
 );
+-- One minted pick per calendar day: daily_puzzle.py's own pre-check (fetch_served_dates) is
+-- the primary defense, but that's a read-then-act check, not atomic -- two concurrent/
+-- retried runs can both pass it before either writes. This constraint is the hard backstop:
+-- it turns that race into a loud upsert failure instead of two puzzles silently claiming the
+-- same day (exactly what happened once in production before this was added -- see
+-- BALLIQ_SPEC.md). Added after the fact, so wrap in a duplicate-safe DO block rather than a
+-- bare ALTER TABLE, which would fail outright if pre-existing rows already violate it.
+do $$ begin
+  alter table public.puzzle_history
+    add constraint puzzle_history_served_date_format_key unique (served_date, format);
+exception when duplicate_object then null;
+end $$;
 alter table public.puzzle_history enable row level security;
 -- no policies -> service-role only
 
