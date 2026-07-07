@@ -8,6 +8,11 @@ struct TeamPalette: Equatable {
     let primary: Color
     let secondary: Color
     let onPrimary: Color      // legible text/icon on `primary`
+    let onSecondary: Color    // legible text/icon on `secondary` — NOT always onPrimary's
+                              // inverse: several teams' secondary trends the same dark/light
+                              // direction as their primary (e.g. Carolina's teal primary +
+                              // near-black secondary both want white text), so this is its
+                              // own real luminance check, not a guessed opposite.
 }
 
 enum TeamColors {
@@ -16,13 +21,15 @@ enum TeamColors {
         guard let pair = table(for: sport)[key] else { return fallback }
         return TeamPalette(primary: Color(hex: pair.0),
                            secondary: Color(hex: pair.1),
-                           onPrimary: onColor(for: pair.0))
+                           onPrimary: onColor(for: pair.0),
+                           onSecondary: onColor(for: pair.1))
     }
 
     /// Neutral slate for unknown/old franchises — still on-brand, never a blank card.
     static let fallback = TeamPalette(primary: Color(hex: 0x2B2B2A),
                                       secondary: Color(hex: 0x1E50FF),
-                                      onPrimary: .white)
+                                      onPrimary: .white,
+                                      onSecondary: .white)
 
     // MARK: - Legibility
 

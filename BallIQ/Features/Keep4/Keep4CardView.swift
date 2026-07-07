@@ -174,16 +174,15 @@ struct Keep4CardView: View {
 
     /// The PPR/fantasy point total (the hidden sort number), shown only on reveal.
     private var gradeChip: some View {
-        let onSecondary: Color = team.onPrimary == .white ? Color(hex: 0x15120B) : .white
-        return VStack(spacing: 0) {
+        VStack(spacing: 0) {
             Text(player.gradeText)
                 .font(.hero(24))
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)   // "4,713.8" (NBA season totals) must fit the chip
-                .foregroundStyle(onSecondary)
+                .foregroundStyle(team.onSecondary)
             Text(gradeUnit)
                 .font(.custom(FontName.condBold, size: 9))
-                .foregroundStyle(onSecondary.opacity(0.8))
+                .foregroundStyle(team.onSecondary.opacity(0.8))
         }
         .padding(.horizontal, 9).padding(.vertical, 3)
         .background(team.secondary)
