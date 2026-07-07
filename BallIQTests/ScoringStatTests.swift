@@ -86,4 +86,28 @@ final class ScoringStatTests: XCTestCase {
                                               preferredKeys: ["passing_yards", "passing_tds", "interceptions"])
         XCTAssertEqual(cols.map(\.key), ["passing_yards", "passing_tds", "interceptions"])
     }
+
+    /// The same bug, reached through free-form creation's "PPR" preset instead of Vibes:
+    /// `nfl_fantasy` (the unified cross-position formula real puzzles use) declares its terms
+    /// receiving-before-rushing for scoring-parity with grade.py, not display prominence. A
+    /// PPR-scored workhorse RB used to show "Rec/Rec Yds/Rec TD" (its first 3 declared,
+    /// position-matching terms) instead of the rushing line that actually defined the season.
+    /// Scored terms must be re-ordered by the position's own template, not kept in raw
+    /// declaration order.
+    func testPPRPresetScoredRBLeadsWithRushingNotDeclarationOrder() {
+        let nflFantasyTerms = ["passing_yards", "passing_tds", "interceptions", "receptions",
+                               "receiving_yards", "receiving_tds", "rushing_yards", "rushing_tds"]
+        let cols = ScoringStat.displayColumns(sport: .nfl, position: "RB", preferredKeys: nflFantasyTerms)
+        XCTAssertEqual(cols.map(\.key), ["rushing_yards", "rushing_tds", "receiving_yards"])
+    }
+
+    /// Same preset, QB side: the rule scores passing/rushing/interceptions but not
+    /// completions/attempts/completion_pct, so those get dropped rather than padding the
+    /// card with unscored stats.
+    func testPPRPresetScoredQBShowsOnlyScoredStats() {
+        let nflFantasyTerms = ["passing_yards", "passing_tds", "interceptions", "receptions",
+                               "receiving_yards", "receiving_tds", "rushing_yards", "rushing_tds"]
+        let cols = ScoringStat.displayColumns(sport: .nfl, position: "QB", preferredKeys: nflFantasyTerms)
+        XCTAssertEqual(cols.map(\.key), ["passing_yards", "passing_tds", "interceptions"])
+    }
 }

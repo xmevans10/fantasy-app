@@ -110,29 +110,44 @@ extension ScoringStat {
     /// The display stats for a season at `position` — free-form creation's answer to
     /// `Keep4Theme.columns(for:)`.
     ///
-    /// `preferredKeys` (a scoring rule's own terms, when one is active) are tried first —
-    /// display should reflect what's actually being scored — filtered to the position's
-    /// families; only once that's under 3 does it fall back to `Sport.positionStatTemplates`,
-    /// the position's explicit default stat sheet (a QB's Pass Yds/Pass TD/…, not a WR's Rec
-    /// Yds), and finally to the sport's unfiltered top 3 for positions with no template.
+    /// When a scoring rule is active, its own terms (`preferredKeys`) constrain *which*
+    /// stats can show — display should reflect what's actually being scored — but a unified
+    /// cross-position formula like `nfl_fantasy` declares its terms in scoring-parity order
+    /// (receiving before rushing, mirroring `grade.py`), not display prominence. Ordering by
+    /// raw declaration order let a PPR-scored RB's card show "Rec/Rec Yds/Rec TD" ahead of
+    /// its rushing line — the same bug this whole mechanism exists to prevent, just via the
+    /// preset-scoring path instead of Vibes. So the scored terms are re-ordered by
+    /// `Sport.positionStatTemplates` (this position's own obvious stat sheet) whenever one
+    /// exists, keeping only the ones the active rule actually scores.
     static func displayColumns(sport: Sport, position: String?,
                               preferredKeys: [String] = []) -> [ScoringStat] {
         let all = catalog(for: sport)
+        let byKey = Dictionary(uniqueKeysWithValues: all.map { ($0.key, $0) })
         // minimum: 0 — trust the position filter even if it empties the preferred set out
         // entirely (e.g. an NFL-QB rule's terms against a WR card); falling back to the
         // *unfiltered* preferred keys here would resurrect the exact bug this exists to fix.
         let preferred = sport.sliceForPosition(
-            preferredKeys.compactMap { key in all.first { $0.key == key } },
+            preferredKeys.compactMap { byKey[$0] },
             position: position, minimum: 0, statKey: \.key)
-        if preferred.count >= 3 { return Array(preferred.prefix(3)) }
 
         let templated = template(sport: sport, position: position)
-        if !templated.isEmpty { return templated }
+        if !templated.isEmpty {
+            guard !preferred.isEmpty else { return templated }
+            let scoredKeys = Set(preferred.map(\.key))
+            let ordered = templated.filter { scoredKeys.contains($0.key) }
+            if ordered.count >= 3 { return Array(ordered.prefix(3)) }
+            // The rule scores too few of this position's template stats to fill a card —
+            // pad with whatever else it does score (already position-sliced).
+            let combined = ordered + preferred.filter { !ordered.contains($0) }
+            return combined.count >= 3 ? Array(combined.prefix(3)) : templated
+        }
 
-        // Position-relevant stats first (however many exist — a soccer goalkeeper's family
-        // is only 2 wide), padded with the sport's remaining stats in catalog order. Never
-        // falls back to the *unsliced* set outright: that would let position-irrelevant
-        // stats (a keeper's goals/assists) back in ahead of ones that do apply.
+        if preferred.count >= 3 { return Array(preferred.prefix(3)) }
+
+        // No template for this sport/position (NBA/tennis, or an unrecognized position) —
+        // position-relevant stats first (however many exist), padded with the sport's
+        // remaining stats in catalog order. Never falls back to the *unsliced* set outright:
+        // that would let position-irrelevant stats back in ahead of ones that do apply.
         let relevant = sport.sliceForPosition(all, position: position, minimum: 0, statKey: \.key)
         let padding = all.filter { !relevant.contains($0) }
         return Array((relevant + padding).prefix(3))
