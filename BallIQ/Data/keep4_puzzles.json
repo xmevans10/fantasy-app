@@ -4399,34 +4399,34 @@
     "sport": "baseball",
     "players": [
       {
-        "id": "alex-rodriguez-2007",
-        "name": "Alex Rodriguez",
+        "id": "babe-ruth-1921",
+        "name": "Babe Ruth",
         "teamAbbr": "NYY",
-        "seasonYear": 2007,
-        "grade": 818.0,
+        "seasonYear": 1921,
+        "grade": 984.0,
         "stats": [
           {
             "label": "HR",
-            "value": "54"
+            "value": "59"
           },
           {
             "label": "RBI",
-            "value": "156"
+            "value": "171"
           },
           {
             "label": "AVG",
-            "value": "0.314"
+            "value": "0.378"
           },
           {
             "label": "OPS",
-            "value": "1.067"
+            "value": "1.358"
           },
           {
             "label": "R",
-            "value": "143"
+            "value": "177"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121347/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121578/headshot/67/current"
       },
       {
         "id": "barry-bonds-2001",
@@ -4459,64 +4459,94 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/111188/headshot/67/current"
       },
       {
-        "id": "larry-walker-1997",
-        "name": "Larry Walker",
-        "teamAbbr": "COL",
-        "seasonYear": 1997,
-        "grade": 826.0,
+        "id": "hack-wilson-1930",
+        "name": "Hack Wilson",
+        "teamAbbr": "CHC",
+        "seasonYear": 1930,
+        "grade": 871.0,
         "stats": [
           {
             "label": "HR",
-            "value": "49"
+            "value": "56"
           },
           {
             "label": "RBI",
-            "value": "130"
+            "value": "191"
           },
           {
             "label": "AVG",
-            "value": "0.366"
+            "value": "0.356"
           },
           {
             "label": "OPS",
-            "value": "1.172"
+            "value": "1.177"
           },
           {
             "label": "R",
-            "value": "143"
+            "value": "146"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/123833/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/124412/headshot/67/current"
       },
       {
-        "id": "mark-mcgwire-1998",
-        "name": "Mark McGwire",
-        "teamAbbr": "STL",
-        "seasonYear": 1998,
-        "grade": 824.0,
+        "id": "jimmie-foxx-1932",
+        "name": "Jimmie Foxx",
+        "teamAbbr": "ATH",
+        "seasonYear": 1932,
+        "grade": 880.0,
         "stats": [
           {
             "label": "HR",
-            "value": "70"
+            "value": "58"
           },
           {
             "label": "RBI",
-            "value": "147"
+            "value": "169"
           },
           {
             "label": "AVG",
-            "value": "0.299"
+            "value": "0.364"
           },
           {
             "label": "OPS",
-            "value": "1.222"
+            "value": "1.218"
           },
           {
             "label": "R",
-            "value": "130"
+            "value": "151"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/118743/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/114367/headshot/67/current"
+      },
+      {
+        "id": "lou-gehrig-1931",
+        "name": "Lou Gehrig",
+        "teamAbbr": "NYY",
+        "seasonYear": 1931,
+        "grade": 908.0,
+        "stats": [
+          {
+            "label": "HR",
+            "value": "46"
+          },
+          {
+            "label": "RBI",
+            "value": "184"
+          },
+          {
+            "label": "AVG",
+            "value": "0.341"
+          },
+          {
+            "label": "OPS",
+            "value": "1.108"
+          },
+          {
+            "label": "R",
+            "value": "163"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/114680/headshot/67/current"
       },
       {
         "id": "ronald-acuna-jr-2023",
@@ -4549,36 +4579,6 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/660670/headshot/67/current"
       },
       {
-        "id": "sammy-sosa-2001",
-        "name": "Sammy Sosa",
-        "teamAbbr": "CHC",
-        "seasonYear": 2001,
-        "grade": 847.0,
-        "stats": [
-          {
-            "label": "HR",
-            "value": "64"
-          },
-          {
-            "label": "RBI",
-            "value": "160"
-          },
-          {
-            "label": "AVG",
-            "value": "0.328"
-          },
-          {
-            "label": "OPS",
-            "value": "1.174"
-          },
-          {
-            "label": "R",
-            "value": "146"
-          }
-        ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/122544/headshot/67/current"
-      },
-      {
         "id": "shohei-ohtani-2024",
         "name": "Shohei Ohtani",
         "teamAbbr": "LAD",
@@ -4609,34 +4609,34 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/660271/headshot/67/current"
       },
       {
-        "id": "ted-williams-1949",
-        "name": "Ted Williams",
-        "teamAbbr": "BOS",
-        "seasonYear": 1949,
-        "grade": 841.0,
+        "id": "ty-cobb-1911",
+        "name": "Ty Cobb",
+        "teamAbbr": "DET",
+        "seasonYear": 1911,
+        "grade": 851.0,
         "stats": [
           {
             "label": "HR",
-            "value": "43"
+            "value": "8"
           },
           {
             "label": "RBI",
-            "value": "159"
+            "value": "127"
           },
           {
             "label": "AVG",
-            "value": "0.343"
+            "value": "0.420"
           },
           {
             "label": "OPS",
-            "value": "1.140"
+            "value": "1.088"
           },
           {
             "label": "R",
-            "value": "150"
+            "value": "147"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/124341/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112431/headshot/67/current"
       }
     ],
     "grain": "season",
@@ -4648,45 +4648,105 @@
     "sport": "baseball",
     "players": [
       {
-        "id": "bob-gibson-1968",
-        "name": "Bob Gibson",
-        "teamAbbr": "STL",
-        "seasonYear": 1968,
-        "grade": 613.7,
+        "id": "bob-feller-1946",
+        "name": "Bob Feller",
+        "teamAbbr": "CLE",
+        "seasonYear": 1946,
+        "grade": 706.8,
         "stats": [
           {
             "label": "K",
-            "value": "268"
+            "value": "348"
           },
           {
             "label": "W",
-            "value": "22"
+            "value": "26"
           },
           {
             "label": "ERA",
-            "value": "1.12"
+            "value": "2.18"
           },
           {
             "label": "WHIP",
-            "value": "0.85"
+            "value": "1.16"
           },
           {
             "label": "IP",
-            "value": "304.7"
+            "value": "371.3"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/114756/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/114055/headshot/67/current"
       },
       {
-        "id": "denny-mclain-1968",
-        "name": "Denny McLain",
-        "teamAbbr": "DET",
-        "seasonYear": 1968,
-        "grade": 666.5,
+        "id": "christy-mathewson-1908",
+        "name": "Christy Mathewson",
+        "teamAbbr": "SF",
+        "seasonYear": 1908,
+        "grade": 781.7,
         "stats": [
           {
             "label": "K",
-            "value": "280"
+            "value": "259"
+          },
+          {
+            "label": "W",
+            "value": "37"
+          },
+          {
+            "label": "ERA",
+            "value": "1.43"
+          },
+          {
+            "label": "WHIP",
+            "value": "0.84"
+          },
+          {
+            "label": "IP",
+            "value": "390.7"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/118422/headshot/67/current"
+      },
+      {
+        "id": "ed-walsh-1908",
+        "name": "Ed Walsh",
+        "teamAbbr": "CWS",
+        "seasonYear": 1908,
+        "grade": 868.0,
+        "stats": [
+          {
+            "label": "K",
+            "value": "269"
+          },
+          {
+            "label": "W",
+            "value": "40"
+          },
+          {
+            "label": "ERA",
+            "value": "1.42"
+          },
+          {
+            "label": "WHIP",
+            "value": "0.86"
+          },
+          {
+            "label": "IP",
+            "value": "464.0"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/123878/headshot/67/current"
+      },
+      {
+        "id": "grover-alexander-1915",
+        "name": "Grover Alexander",
+        "teamAbbr": "PHI",
+        "seasonYear": 1915,
+        "grade": 707.3,
+        "stats": [
+          {
+            "label": "K",
+            "value": "241"
           },
           {
             "label": "W",
@@ -4694,29 +4754,59 @@
           },
           {
             "label": "ERA",
-            "value": "1.96"
+            "value": "1.22"
           },
           {
             "label": "WHIP",
-            "value": "0.90"
+            "value": "0.84"
           },
           {
             "label": "IP",
-            "value": "336.0"
+            "value": "376.3"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/118787/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/110127/headshot/67/current"
       },
       {
-        "id": "mickey-lolich-1971",
-        "name": "Mickey Lolich",
-        "teamAbbr": "DET",
-        "seasonYear": 1971,
-        "grade": 641.0,
+        "id": "jack-chesbro-1904",
+        "name": "Jack Chesbro",
+        "teamAbbr": "NYY",
+        "seasonYear": 1904,
+        "grade": 762.7,
         "stats": [
           {
             "label": "K",
-            "value": "308"
+            "value": "239"
+          },
+          {
+            "label": "W",
+            "value": "41"
+          },
+          {
+            "label": "ERA",
+            "value": "1.82"
+          },
+          {
+            "label": "WHIP",
+            "value": "0.94"
+          },
+          {
+            "label": "IP",
+            "value": "454.7"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112233/headshot/67/current"
+      },
+      {
+        "id": "rube-waddell-1904",
+        "name": "Rube Waddell",
+        "teamAbbr": "ATH",
+        "seasonYear": 1904,
+        "grade": 742.5,
+        "stats": [
+          {
+            "label": "K",
+            "value": "349"
           },
           {
             "label": "W",
@@ -4724,78 +4814,18 @@
           },
           {
             "label": "ERA",
-            "value": "2.92"
+            "value": "1.62"
           },
           {
             "label": "WHIP",
-            "value": "1.14"
+            "value": "1.04"
           },
           {
             "label": "IP",
-            "value": "376.0"
+            "value": "383.0"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/117875/headshot/67/current"
-      },
-      {
-        "id": "nolan-ryan-jr-1973",
-        "name": "Nolan Ryan Jr.",
-        "teamAbbr": "LAA",
-        "seasonYear": 1973,
-        "grade": 635.0,
-        "stats": [
-          {
-            "label": "K",
-            "value": "383"
-          },
-          {
-            "label": "W",
-            "value": "21"
-          },
-          {
-            "label": "ERA",
-            "value": "2.87"
-          },
-          {
-            "label": "WHIP",
-            "value": "1.23"
-          },
-          {
-            "label": "IP",
-            "value": "326.0"
-          }
-        ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121597/headshot/67/current"
-      },
-      {
-        "id": "randy-johnson-2001",
-        "name": "Randy Johnson",
-        "teamAbbr": "AZ",
-        "seasonYear": 2001,
-        "grade": 622.2,
-        "stats": [
-          {
-            "label": "K",
-            "value": "372"
-          },
-          {
-            "label": "W",
-            "value": "21"
-          },
-          {
-            "label": "ERA",
-            "value": "2.49"
-          },
-          {
-            "label": "WHIP",
-            "value": "1.01"
-          },
-          {
-            "label": "IP",
-            "value": "249.7"
-          }
-        ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/116615/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/123767/headshot/67/current"
       },
       {
         "id": "sandy-koufax-1965",
@@ -4828,64 +4858,34 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/117277/headshot/67/current"
       },
       {
-        "id": "steve-carlton-1972",
-        "name": "Steve Carlton",
-        "teamAbbr": "PHI",
-        "seasonYear": 1972,
-        "grade": 671.8,
+        "id": "walter-johnson-1912",
+        "name": "Walter Johnson",
+        "teamAbbr": "MIN",
+        "seasonYear": 1912,
+        "grade": 754.0,
         "stats": [
           {
             "label": "K",
-            "value": "310"
+            "value": "303"
           },
           {
             "label": "W",
-            "value": "27"
+            "value": "33"
           },
           {
             "label": "ERA",
-            "value": "1.97"
+            "value": "1.39"
           },
           {
             "label": "WHIP",
-            "value": "0.99"
+            "value": "0.91"
           },
           {
             "label": "IP",
-            "value": "346.3"
+            "value": "369.0"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112008/headshot/67/current"
-      },
-      {
-        "id": "vida-blue-1971",
-        "name": "Vida Blue",
-        "teamAbbr": "ATH",
-        "seasonYear": 1971,
-        "grade": 626.0,
-        "stats": [
-          {
-            "label": "K",
-            "value": "301"
-          },
-          {
-            "label": "W",
-            "value": "24"
-          },
-          {
-            "label": "ERA",
-            "value": "1.82"
-          },
-          {
-            "label": "WHIP",
-            "value": "0.95"
-          },
-          {
-            "label": "IP",
-            "value": "312.0"
-          }
-        ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/111119/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/116635/headshot/67/current"
       }
     ],
     "grain": "season",
@@ -4919,48 +4919,26 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Cristiano_Ronaldo_2275_%28cropped%29.jpg/330px-Cristiano_Ronaldo_2275_%28cropped%29.jpg"
       },
       {
-        "id": "harry-edward-kane-2022",
-        "name": "Harry Edward Kane",
-        "teamAbbr": "TOT",
-        "seasonYear": 2022,
-        "grade": 197.0,
+        "id": "cristiano-ronaldo-dos-santos-aveiro-2023",
+        "name": "Cristiano Ronaldo dos Santos Aveiro",
+        "teamAbbr": "AL-",
+        "seasonYear": 2023,
+        "grade": 239.0,
         "stats": [
           {
             "label": "Goals",
-            "value": "30"
+            "value": "35"
           },
           {
             "label": "Assists",
-            "value": "3"
+            "value": "11"
           },
           {
             "label": "Apps",
-            "value": "38"
+            "value": "31"
           }
         ],
-        "headshot": "https://media.api-sports.io/football/players/184.png"
-      },
-      {
-        "id": "hugo-jean-marc-cuypers-2022",
-        "name": "Hugo Jean-Marc Cuypers",
-        "teamAbbr": "GEN",
-        "seasonYear": 2022,
-        "grade": 198.0,
-        "stats": [
-          {
-            "label": "Goals",
-            "value": "27"
-          },
-          {
-            "label": "Assists",
-            "value": "8"
-          },
-          {
-            "label": "Apps",
-            "value": "39"
-          }
-        ],
-        "headshot": "https://media.api-sports.io/football/players/27104.png"
+        "headshot": "https://media.api-sports.io/football/players/874.png"
       },
       {
         "id": "kylian-mbappe-2019",
@@ -4983,6 +4961,28 @@
           }
         ],
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Kylian_Mbappe_France_v_Senegal_16_June_2026-391_%28cropped%29.jpg/330px-Kylian_Mbappe_France_v_Senegal_16_June_2026-391_%28cropped%29.jpg"
+      },
+      {
+        "id": "lei-wu-2024",
+        "name": "Lei Wu",
+        "teamAbbr": "SS",
+        "seasonYear": 2024,
+        "grade": 230.0,
+        "stats": [
+          {
+            "label": "Goals",
+            "value": "34"
+          },
+          {
+            "label": "Assists",
+            "value": "10"
+          },
+          {
+            "label": "Apps",
+            "value": "30"
+          }
+        ],
+        "headshot": "https://media.api-sports.io/football/players/47350.png"
       },
       {
         "id": "lionel-messi-2012",
@@ -5325,19 +5325,19 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Bjorn_Borg_en_2014.jpg/330px-Bjorn_Borg_en_2014.jpg"
       },
       {
-        "id": "ivan-lendl-1986",
-        "name": "Ivan Lendl",
-        "teamAbbr": "TCH",
-        "seasonYear": 1986,
-        "grade": 218.5,
+        "id": "guillermo-vilas-1977",
+        "name": "Guillermo Vilas",
+        "teamAbbr": "ARG",
+        "seasonYear": 1977,
+        "grade": 311.0,
         "stats": [
           {
             "label": "Wins",
-            "value": "90"
+            "value": "130"
           },
           {
             "label": "Titles",
-            "value": "9"
+            "value": "16"
           },
           {
             "label": "Slams",
@@ -5345,7 +5345,59 @@
           },
           {
             "label": "Losses",
-            "value": "7"
+            "value": "14"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Vilas-1975.jpg/330px-Vilas-1975.jpg"
+      },
+      {
+        "id": "ilie-nastase-1973",
+        "name": "Ilie Nastase",
+        "teamAbbr": "ROU",
+        "seasonYear": 1973,
+        "grade": 247.5,
+        "stats": [
+          {
+            "label": "Wins",
+            "value": "114"
+          },
+          {
+            "label": "Titles",
+            "value": "14"
+          },
+          {
+            "label": "Slams",
+            "value": "1"
+          },
+          {
+            "label": "Losses",
+            "value": "17"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Ilie_N%C4%83stase_2009_US_Open_02.jpg/330px-Ilie_N%C4%83stase_2009_US_Open_02.jpg"
+      },
+      {
+        "id": "ivan-lendl-1982",
+        "name": "Ivan Lendl",
+        "teamAbbr": "USA",
+        "seasonYear": 1982,
+        "grade": 222.5,
+        "stats": [
+          {
+            "label": "Wins",
+            "value": "107"
+          },
+          {
+            "label": "Titles",
+            "value": "15"
+          },
+          {
+            "label": "Slams",
+            "value": "0"
+          },
+          {
+            "label": "Losses",
+            "value": "9"
           }
         ],
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Ivan_Lendl_%28cropped%29.jpg/330px-Ivan_Lendl_%28cropped%29.jpg"
@@ -5427,58 +5479,6 @@
           }
         ],
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg/330px-Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg"
-      },
-      {
-        "id": "pete-sampras-1994",
-        "name": "Pete Sampras",
-        "teamAbbr": "USA",
-        "seasonYear": 1994,
-        "grade": 211.0,
-        "stats": [
-          {
-            "label": "Wins",
-            "value": "77"
-          },
-          {
-            "label": "Titles",
-            "value": "10"
-          },
-          {
-            "label": "Slams",
-            "value": "2"
-          },
-          {
-            "label": "Losses",
-            "value": "12"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Pete_Sampras_Champions_Shootout_2.jpg/330px-Pete_Sampras_Champions_Shootout_2.jpg"
-      },
-      {
-        "id": "rafael-nadal-2010",
-        "name": "Rafael Nadal",
-        "teamAbbr": "ESP",
-        "seasonYear": 2010,
-        "grade": 212.0,
-        "stats": [
-          {
-            "label": "Wins",
-            "value": "71"
-          },
-          {
-            "label": "Titles",
-            "value": "7"
-          },
-          {
-            "label": "Slams",
-            "value": "3"
-          },
-          {
-            "label": "Losses",
-            "value": "10"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Rafael_Nadal_en_2024_%28cropped%29.jpg/330px-Rafael_Nadal_en_2024_%28cropped%29.jpg"
       },
       {
         "id": "roger-federer-2006",
@@ -5542,6 +5542,32 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Bjorn_Borg_en_2014.jpg/330px-Bjorn_Borg_en_2014.jpg"
       },
       {
+        "id": "guillermo-vilas-1977",
+        "name": "Guillermo Vilas",
+        "teamAbbr": "ARG",
+        "seasonYear": 1977,
+        "grade": 311.0,
+        "stats": [
+          {
+            "label": "Slams",
+            "value": "2"
+          },
+          {
+            "label": "Titles",
+            "value": "16"
+          },
+          {
+            "label": "Wins",
+            "value": "130"
+          },
+          {
+            "label": "Losses",
+            "value": "14"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Vilas-1975.jpg/330px-Vilas-1975.jpg"
+      },
+      {
         "id": "ivan-lendl-1986",
         "name": "Ivan Lendl",
         "teamAbbr": "TCH",
@@ -5644,32 +5670,6 @@
           }
         ],
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg/330px-Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg"
-      },
-      {
-        "id": "pete-sampras-1994",
-        "name": "Pete Sampras",
-        "teamAbbr": "USA",
-        "seasonYear": 1994,
-        "grade": 211.0,
-        "stats": [
-          {
-            "label": "Slams",
-            "value": "2"
-          },
-          {
-            "label": "Titles",
-            "value": "10"
-          },
-          {
-            "label": "Wins",
-            "value": "77"
-          },
-          {
-            "label": "Losses",
-            "value": "12"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Pete_Sampras_Champions_Shootout_2.jpg/330px-Pete_Sampras_Champions_Shootout_2.jpg"
       },
       {
         "id": "rafael-nadal-2010",
@@ -6259,36 +6259,36 @@
         "lastYear": 2022
       },
       {
-        "id": "alex-rodriguez-career",
-        "name": "Alex Rodriguez",
-        "teamAbbr": "NYY",
-        "seasonYear": 2016,
-        "grade": 11916.0,
+        "id": "babe-ruth-career",
+        "name": "Babe Ruth",
+        "teamAbbr": "ATL",
+        "seasonYear": 1935,
+        "grade": 12488.0,
         "stats": [
           {
             "label": "HR",
-            "value": "696"
+            "value": "714"
           },
           {
             "label": "RBI",
-            "value": "2,086"
+            "value": "2,213"
           },
           {
             "label": "AVG",
-            "value": "0.295"
+            "value": "0.342"
           },
           {
             "label": "OPS",
-            "value": "0.930"
+            "value": "1.164"
           },
           {
             "label": "R",
-            "value": "2,021"
+            "value": "2,174"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121347/headshot/67/current",
-        "firstYear": 1994,
-        "lastYear": 2016
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121578/headshot/67/current",
+        "firstYear": 1914,
+        "lastYear": 1935
       },
       {
         "id": "barry-bonds-career",
@@ -6419,36 +6419,36 @@
         "lastYear": 2003
       },
       {
-        "id": "stan-musial-career",
-        "name": "Stan Musial",
-        "teamAbbr": "STL",
-        "seasonYear": 1963,
-        "grade": 11789.0,
+        "id": "ty-cobb-career",
+        "name": "Ty Cobb",
+        "teamAbbr": "ATH",
+        "seasonYear": 1928,
+        "grade": 13076.0,
         "stats": [
           {
             "label": "HR",
-            "value": "475"
+            "value": "117"
           },
           {
             "label": "RBI",
-            "value": "1,951"
+            "value": "1,938"
           },
           {
             "label": "AVG",
-            "value": "0.331"
+            "value": "0.367"
           },
           {
             "label": "OPS",
-            "value": "0.976"
+            "value": "0.946"
           },
           {
             "label": "R",
-            "value": "1,949"
+            "value": "2,246"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/119602/headshot/67/current",
-        "firstYear": 1941,
-        "lastYear": 1963
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112431/headshot/67/current",
+        "firstYear": 1905,
+        "lastYear": 1928
       },
       {
         "id": "willie-mays-career",
@@ -6716,36 +6716,36 @@
         "lastYear": 1988
       },
       {
-        "id": "tom-seaver-career",
-        "name": "Tom Seaver",
-        "teamAbbr": "BOS",
-        "seasonYear": 1986,
-        "grade": 7767.7,
+        "id": "walter-johnson-career",
+        "name": "Walter Johnson",
+        "teamAbbr": "MIN",
+        "seasonYear": 1927,
+        "grade": 9605.8,
         "stats": [
           {
             "label": "K",
-            "value": "3,640"
+            "value": "3,508"
           },
           {
             "label": "W",
-            "value": "311"
+            "value": "417"
           },
           {
             "label": "ERA",
-            "value": "2.86"
+            "value": "2.17"
           },
           {
             "label": "WHIP",
-            "value": "1.12"
+            "value": "1.06"
           },
           {
             "label": "IP",
-            "value": "4,783"
+            "value": "5,914"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121961/headshot/67/current",
-        "firstYear": 1967,
-        "lastYear": 1986
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/116635/headshot/67/current",
+        "firstYear": 1907,
+        "lastYear": 1927
       }
     ],
     "grain": "career",

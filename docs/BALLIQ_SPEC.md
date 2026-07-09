@@ -869,6 +869,15 @@ scoring audit, second data wave):** same-day follow-up to four explicit user ask
   needed — a frozen dataset can't drift; 2019+ keeps flowing from the curated seed, which
   wins any (player, year) collision. Soccer stays at its documented free-tier ceiling
   (the incremental league×season sweep cron already covers the whole reachable matrix).
+- **Live verified after the wave's final push (107,404 catalog rows upserted):** baseball
+  35,432 → 62,283 season rows / 3,280 → 6,304 players (min year 1957 → 1885); tennis
+  20 → 3,925 season rows / 13 → 545 players (1968–2023) — a spun tennis round now deals a
+  real multi-player country-year roster (verified in-sim: CRO 2018 → Cilic 19-8, Karlovic,
+  Coric, real photos) where it previously always had exactly one hand-curated player;
+  soccer 1,244 → 2,374 rows / 895 → 1,705 players (the daily sweep cron's own
+  accumulation, landed by the same push). One Wikipedia-politeness lesson baked into the
+  provider: burst-calling their REST API with no delay gets 429-throttled within ~20
+  requests — `_WIKI_DELAY` (0.35s, cache-miss only) keeps the sweep legal.
 
 ## 9. Roadmap — remaining milestones
 

@@ -34,6 +34,7 @@ from .providers import (
     nfl_nflverse_games,
     nfl_players,
     seed,
+    tennis_atp,
 )
 from .themes import KEEP4_THEMES, export_themes
 from .validate import validate
@@ -206,8 +207,16 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
     soccer_seed = seed.load_soccer()
     soccer = api_football.merge_with_seed(soccer_live, soccer_seed)
     print(f"[soccer] {len(soccer_live)} live + {len(soccer_seed)} seed → {len(soccer)} player-seasons")
-    tennis = seed.load_tennis()
-    print(f"[tennis] {len(tennis)} player-seasons (seed only)")
+    # Tennis: the committed ATP sweep (1968–2018 full tour history, photo-verified —
+    # see providers/tennis_atp.py) under the hand-curated seed, deduped by player_id
+    # with the seed winning (its rows carry individually verified stats and cover 2019+,
+    # which the frozen snapshot can't).
+    tennis_by_id = {s.player_id: s for s in tennis_atp.load_seasons()}
+    tennis_seed = seed.load_tennis()
+    tennis_by_id.update({s.player_id: s for s in tennis_seed})
+    tennis = list(tennis_by_id.values())
+    print(f"[tennis] {len(tennis)} player-seasons "
+          f"({len(tennis) - len(tennis_seed)} ATP sweep + {len(tennis_seed)} seed)")
 
     all_seasons = seasons + nba + baseball + soccer + tennis
     # Bake NBA season totals BEFORE career aggregation so career rows sum real season
