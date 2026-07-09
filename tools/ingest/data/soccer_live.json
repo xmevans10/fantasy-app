@@ -39130,5 +39130,4415 @@
     "opponent": "",
     "career": false,
     "meta": {}
+  },
+  {
+    "name": "Bruno dos Santos Naz\u00e1rio",
+    "team_abbr": "HJ",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 27.0,
+      "goals": 8.0,
+      "assists": 10.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/10144.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jean Evrard Kouassi",
+    "team_abbr": "HG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 22.0,
+      "goals": 5.0,
+      "assists": 8.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/13065.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "S\u00e9rgio Ant\u00f4nio Soler de Oliveira J\u00fanior",
+    "team_abbr": "CY",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 24.0,
+      "goals": 8.0,
+      "assists": 7.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/33083.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Dun Ba",
+    "team_abbr": "TT",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 30.0,
+      "goals": 2.0,
+      "assists": 7.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/12658.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Viv Efosa Solomon-Otabor",
+    "team_abbr": "SHI",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 29.0,
+      "goals": 6.0,
+      "assists": 6.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/19872.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "R\u00f4mulo Jos\u00e9 Pacheco da Silva",
+    "team_abbr": "CBC",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 23.0,
+      "goals": 5.0,
+      "assists": 6.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/34173.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Pengfei Xie",
+    "team_abbr": "SS",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 26.0,
+      "goals": 4.0,
+      "assists": 6.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/12792.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Leonardo Cittadini",
+    "team_abbr": "SS",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 27.0,
+      "goals": 3.0,
+      "assists": 6.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/10129.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Rodrigo Henrique Santana da Silva",
+    "team_abbr": "MK",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 20.0,
+      "goals": 2.0,
+      "assists": 6.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/11121.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Xizhe Zhang",
+    "team_abbr": "BG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 19.0,
+      "goals": 1.0,
+      "assists": 6.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/12670.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Agostinho Crist\u00f3v\u00e3o Paci\u00eancia",
+    "team_abbr": "AI",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 32.0,
+      "goals": 16.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/73818.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ahmed Mostafa Mohamed Sayed",
+    "team_abbr": "ZS",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 34.0,
+      "goals": 13.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16871.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Hamdy Zaki",
+    "team_abbr": "AS",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 28.0,
+      "goals": 12.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17081.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Sherif Mohamed Ragaei Bakr",
+    "team_abbr": "AA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 28.0,
+      "goals": 11.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16820.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Fagrie Lakay",
+    "team_abbr": "PF",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 30.0,
+      "goals": 10.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/46258.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ahmed El Sheikh",
+    "team_abbr": "GEM",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 33.0,
+      "goals": 10.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17271.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Hossam Ashraf Mahmoud Ahmed Elagamy",
+    "team_abbr": "ZS",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 22.0,
+      "goals": 10.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/269277.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mostafa Mohamed Fathi Abdel Hameid Mohamed Abdelha",
+    "team_abbr": "PF",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 32.0,
+      "goals": 9.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16862.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Ahmed Said Youssef",
+    "team_abbr": "NBO",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 28.0,
+      "goals": 9.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16994.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "John Okoli",
+    "team_abbr": "EM",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 34.0,
+      "goals": 9.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/297440.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Samir Fekri Mohamed Ahmed",
+    "team_abbr": "ED",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 33.0,
+      "goals": 9.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17299.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Abdel Latif",
+    "team_abbr": "AM",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 32.0,
+      "goals": 9.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16900.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Benjamin Boateng",
+    "team_abbr": "SS",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 30.0,
+      "goals": 7.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/229857.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Hossam Hassan",
+    "team_abbr": "SS",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 15.0,
+      "goals": 7.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17083.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Youssef Mohamed Ibrahim Morsy Fayed",
+    "team_abbr": "PF",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 13.0,
+      "goals": 7.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16869.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Karim Tarek",
+    "team_abbr": "EG",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 29.0,
+      "goals": 6.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17187.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Shady Hussein Mohamed Gamal Eldin",
+    "team_abbr": "AA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 22.0,
+      "goals": 6.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/295236.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mostafa Mohamed Zaki Abdelraouf",
+    "team_abbr": "HEH",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 32.0,
+      "goals": 6.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/395075.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Helal",
+    "team_abbr": "NBO",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 28.0,
+      "goals": 6.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17142.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ashraf Magdy",
+    "team_abbr": "SS",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 19.0,
+      "goals": 2.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/64008.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Magdi Mohamed Moursy",
+    "team_abbr": "AA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 9.0,
+      "goals": 1.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16843.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Hussein Faisal",
+    "team_abbr": "SS",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 1.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/198468.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Walid El Karti",
+    "team_abbr": "PF",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 0.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2714.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ilies Jelassi",
+    "team_abbr": "AM",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 31.0,
+      "goals": 5.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/49617.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Abdelrahman Hassan El Banouby",
+    "team_abbr": "ED",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 18.0,
+      "goals": 3.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/312843.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Aliou Dieng",
+    "team_abbr": "AA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 9.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/4458.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Omar Omar Tarek Daoud",
+    "team_abbr": "EM",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 23.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16956.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ahmed Madbouly Ali Abdel Rahman",
+    "team_abbr": "IS",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16870.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Islam Issa Elsayed Mohamed Ateya",
+    "team_abbr": "PF",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 28.0,
+      "goals": 5.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16901.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Omar Fathi Saviola",
+    "team_abbr": "EM",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 28.0,
+      "goals": 5.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17242.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Wessam Haissam Abou Ali",
+    "team_abbr": "AA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 19.0,
+      "goals": 18.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/15731.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Fiston Kalala Mayele",
+    "team_abbr": "PF",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 27.0,
+      "goals": 14.0,
+      "assists": 4.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/179699.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Hossam Ashraf Mahmoud Ahmed Elagamy",
+    "team_abbr": "BAM",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 32.0,
+      "goals": 14.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/269277.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Hossam Hassan",
+    "team_abbr": "SS",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 30.0,
+      "goals": 12.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17083.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mostafa Mohamed Zaki Abdelraouf",
+    "team_abbr": "MAS",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 33.0,
+      "goals": 12.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/395075.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Sodiq Ougola",
+    "team_abbr": "CC",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 28.0,
+      "goals": 11.0,
+      "assists": 6.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/342755.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Salem",
+    "team_abbr": "EM",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 29.0,
+      "goals": 11.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17320.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Agostinho Crist\u00f3v\u00e3o Paci\u00eancia",
+    "team_abbr": "AI",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 25.0,
+      "goals": 11.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/73818.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ahmed Mostafa Mohamed Sayed",
+    "team_abbr": "ZS",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 19.0,
+      "goals": 9.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16871.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Fakhreddine Ben Youssef",
+    "team_abbr": "AM",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 28.0,
+      "goals": 8.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/44587.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Yaw Annor",
+    "team_abbr": "NBO",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 20.0,
+      "goals": 8.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/119966.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Youssef Mohamed Ibrahim Morsy Fayed",
+    "team_abbr": "ZS",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 21.0,
+      "goals": 8.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16869.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Fagrie Lakay",
+    "team_abbr": "PF",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 23.0,
+      "goals": 8.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/46258.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Emam Ashour Metwally Abdelghany",
+    "team_abbr": "AA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 19.0,
+      "goals": 8.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17269.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ahmed Belhadji Saidi",
+    "team_abbr": "EGF",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 9.0,
+      "goals": 7.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/159169.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ahmed Amin",
+    "team_abbr": "ENP",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 24.0,
+      "goals": 7.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/295633.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Ahmed Said Youssef",
+    "team_abbr": "NBO",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 28.0,
+      "goals": 7.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16994.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Walid El Karti",
+    "team_abbr": "PF",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 23.0,
+      "goals": 1.0,
+      "assists": 6.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2714.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Hussein Aly El Shahat Aly Hassan",
+    "team_abbr": "AA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 18.0,
+      "goals": 3.0,
+      "assists": 5.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16811.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Ibrahim",
+    "team_abbr": "CC",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 23.0,
+      "goals": 2.0,
+      "assists": 5.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16868.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Abdelkabir El Ouadi",
+    "team_abbr": "FF",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 23.0,
+      "goals": 5.0,
+      "assists": 4.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/36597.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ayman Mohamed Saad",
+    "team_abbr": "EGF",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 30.0,
+      "goals": 4.0,
+      "assists": 4.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/440247.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ibrahim Blati Tour\u00e9",
+    "team_abbr": "PF",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 24.0,
+      "goals": 1.0,
+      "assists": 4.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/47204.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ahmed Madbouly Ali Abdel Rahman",
+    "team_abbr": "NBO",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 23.0,
+      "goals": 1.0,
+      "assists": 4.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16870.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Emam Ashour Metwally Abdelghany",
+    "team_abbr": "AA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 15.0,
+      "goals": 12.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17269.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Osama Faisal Ahmed Abdelhady El Traawy",
+    "team_abbr": "NBO",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 23.0,
+      "goals": 12.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/269275.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Nasser Mansy Dessouky Ahmed El Sayed",
+    "team_abbr": "ZS",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 17.0,
+      "goals": 9.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16848.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ibrahim Adel Ali Mohamed Hassan",
+    "team_abbr": "PF",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 21.0,
+      "goals": 8.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/70535.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mahmoud Abdel Hafiz Mohamed",
+    "team_abbr": "CC",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 22.0,
+      "goals": 8.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/390210.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Fiston Kalala Mayele",
+    "team_abbr": "PF",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 14.0,
+      "goals": 8.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/179699.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Amr Nasser",
+    "team_abbr": "PHA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 24.0,
+      "goals": 8.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16936.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Yaw Annor",
+    "team_abbr": "NBO",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 12.0,
+      "goals": 7.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/119966.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Wessam Haissam Abou Ali",
+    "team_abbr": "AA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 9.0,
+      "goals": 7.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/15731.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Islam Issa Elsayed Mohamed Ateya",
+    "team_abbr": "CC",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 25.0,
+      "goals": 7.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16901.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ahmed Belhadji Saidi",
+    "team_abbr": "CC",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 23.0,
+      "goals": 6.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/159169.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mostafa Mohamed Fathi Abdel Hameid Mohamed Abdelha",
+    "team_abbr": "PF",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 20.0,
+      "goals": 6.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16862.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Godwin Chika Okwara",
+    "team_abbr": "EG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 14.0,
+      "goals": 6.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/292994.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ahmed Sherif Mostafa Kamal",
+    "team_abbr": "PHA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 23.0,
+      "goals": 5.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/269951.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Marwan Hamdi",
+    "team_abbr": "IS",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 12.0,
+      "goals": 5.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/353348.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Helal",
+    "team_abbr": "FF",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 14.0,
+      "goals": 5.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17142.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Ali Ben Hammouda",
+    "team_abbr": "GEM",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 14.0,
+      "goals": 5.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/151745.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Abdalla Mahmoud El Said Bekhit",
+    "team_abbr": "ZS",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 16.0,
+      "goals": 5.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16838.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Nejc Gradi\u0161ar",
+    "team_abbr": "AA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 10.0,
+      "goals": 4.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/265817.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Marwan Hamdy Mehany",
+    "team_abbr": "PF",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 10.0,
+      "goals": 4.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16970.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Fagrie Lakay",
+    "team_abbr": "CC",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 22.0,
+      "goals": 3.0,
+      "assists": 5.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/46258.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Gabrila Chukwudi",
+    "team_abbr": "PET",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 19.0,
+      "goals": 2.0,
+      "assists": 4.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/409853.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ahmed Kendouci",
+    "team_abbr": "CC",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 9.0,
+      "goals": 2.0,
+      "assists": 4.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/4496.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Hussein Aly El Shahat Aly Hassan",
+    "team_abbr": "AA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 15.0,
+      "goals": 1.0,
+      "assists": 4.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16811.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Rashad Metwally",
+    "team_abbr": "PET",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 19.0,
+      "goals": 4.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/303216.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Sodiq Ougola",
+    "team_abbr": "PF",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 16.0,
+      "goals": 3.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/342755.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Khalied Alnabrisi",
+    "team_abbr": "IS",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 15.0,
+      "goals": 2.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/311959.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Fawzi El Henawi",
+    "team_abbr": "HEH",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 13.0,
+      "goals": 1.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17011.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mostafa Mohamed Zaki Abdelraouf",
+    "team_abbr": "MAS",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 13.0,
+      "goals": 3.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/395075.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Magdi Mohamed Moursy",
+    "team_abbr": "AA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 15.0,
+      "goals": 2.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/16843.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Mohamed Shehata Mahmoud",
+    "team_abbr": "ZS",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 14.0,
+      "goals": 2.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/182021.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Sayed Makhlouf",
+    "team_abbr": "AM",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 14.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17309.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Kylian Mbapp\u00e9 Lottin",
+    "team_abbr": "FRA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 8.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/278.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Lionel Andr\u00e9s Messi Cuccittini",
+    "team_abbr": "ARG",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 7.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/154.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Juli\u00e1n \u00c1lvarez",
+    "team_abbr": "ARG",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 4.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/6009.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Olivier Jonathan Giroud",
+    "team_abbr": "FRA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 4.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2295.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Gon\u00e7alo Matias Ramos",
+    "team_abbr": "POR",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 3.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/41585.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "\u00c1lvaro Borja Morata Mart\u00edn",
+    "team_abbr": "SPA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 3.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/59.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Marcus Rashford",
+    "team_abbr": "ENG",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/909.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Cody Math\u00e8s Gakpo",
+    "team_abbr": "NET",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/247.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Bukayo Ayoyinka Temidayo Saka",
+    "team_abbr": "ENG",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/1460.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Richarlison de Andrade",
+    "team_abbr": "BRA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2413.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Enner Remberto Valencia Lastra",
+    "team_abbr": "ECU",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/35533.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Niclas F\u00fcllkrug",
+    "team_abbr": "GER",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/25391.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Vincent Aboubakar",
+    "team_abbr": "CAM",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/386.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Andrej Kramari\u0107",
+    "team_abbr": "CRO",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/726.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Youssef En-Nesyri",
+    "team_abbr": "MOR",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/47422.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Rafael Alexandre da Concei\u00e7\u00e3o Le\u00e3o",
+    "team_abbr": "POR",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/22236.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Wout Weghorst",
+    "team_abbr": "NET",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/25416.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ritsu D\u014dan",
+    "team_abbr": "JAP",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2598.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Gue-Sung Cho",
+    "team_abbr": "SK",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/34211.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Breel Donald Embolo",
+    "team_abbr": "SWI",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/421.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Harry Edward Kane",
+    "team_abbr": "ENG",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/184.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Bruno Miguel Borges Fernandes",
+    "team_abbr": "POR",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 2.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/1485.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ivan Peri\u0161i\u0107",
+    "team_abbr": "CRO",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 1.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/207.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Antoine Griezmann",
+    "team_abbr": "FRA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 0.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/56.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mislav Or\u0161i\u0107",
+    "team_abbr": "CRO",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/1330.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Denzel Justus Morris Dumfries",
+    "team_abbr": "NET",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/226.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Davy Klaassen",
+    "team_abbr": "NET",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/25321.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Philip Walter Foden",
+    "team_abbr": "ENG",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/631.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Vin\u00edcius Jos\u00e9 Paix\u00e3o de Oliveira J\u00fanior",
+    "team_abbr": "BRA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/762.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Christian Mate Puli\u0161i\u0107",
+    "team_abbr": "USA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jo\u00e3o F\u00e9lix Sequeira",
+    "team_abbr": "POR",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/583.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Masour Ousmane Demb\u00e9l\u00e9",
+    "team_abbr": "FRA",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/153.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Andrija \u017divkovi\u0107",
+    "team_abbr": "SER",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/579.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Du\u0161an Tadi\u0107",
+    "team_abbr": "SER",
+    "season_year": 2022,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/554.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Daniel Olmo Carvajal",
+    "team_abbr": "SPA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 3.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/1323.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Cody Math\u00e8s Gakpo",
+    "team_abbr": "NET",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 3.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/247.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jamal Musiala",
+    "team_abbr": "GER",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/181812.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ivan Schranz",
+    "team_abbr": "SLO",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/15328.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Harry Edward Kane",
+    "team_abbr": "ENG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/184.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Georges Mikautadze",
+    "team_abbr": "GEO",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 3.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/180496.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Fabi\u00e1n Ruiz Pe\u00f1a",
+    "team_abbr": "SPA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/328.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jude Victor William Bellingham",
+    "team_abbr": "ENG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/129718.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Nicholas Williams Arthuer",
+    "team_abbr": "SPA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/183799.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Niclas F\u00fcllkrug",
+    "team_abbr": "GER",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/25391.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Florian Richard Wirtz",
+    "team_abbr": "GER",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/203224.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Breel Donald Embolo",
+    "team_abbr": "SWI",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/421.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Donyell Malen",
+    "team_abbr": "NET",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/249.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "R\u0103zvan Gabriel Marin",
+    "team_abbr": "ROM",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2118.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Kai Lukas Havertz",
+    "team_abbr": "GER",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/978.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Lamine Yamal Nasraoui Ebana",
+    "team_abbr": "SPA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 1.0,
+      "assists": 4.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/386828.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Xavier Quentin Shay Simons",
+    "team_abbr": "NET",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 1.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/162016.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Arda G\u00fcler",
+    "team_abbr": "T\u00dcR",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/291964.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Remo Marco Freuler",
+    "team_abbr": "SWI",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2807.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Michel Aebischer",
+    "team_abbr": "SWI",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/951.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Orkun Ko\u0308k\u00e7u\u0308",
+    "team_abbr": "T\u00dcR",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/37155.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Dennis Man",
+    "team_abbr": "ROM",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/43036.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mikel Oyarzabal Ugarte",
+    "team_abbr": "SPA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/47323.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "\u00c1lvaro Borja Morata Mart\u00edn",
+    "team_abbr": "SPA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/59.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Wout Weghorst",
+    "team_abbr": "NET",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/25416.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Memphis Depay",
+    "team_abbr": "NET",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/667.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Cole Jermaine Palmer",
+    "team_abbr": "ENG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/152982.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Lautaro Javier Mart\u00ednez",
+    "team_abbr": "ARG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 5.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/217.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jos\u00e9 Salom\u00f3n Rond\u00f3n Gim\u00e9nez",
+    "team_abbr": "VEN",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 3.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2461.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jhon Andr\u00e9s C\u00f3rdoba Copete",
+    "team_abbr": "COL",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/24810.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Maximiliano Javier Ara\u00fajo Vilches",
+    "team_abbr": "URU",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/51776.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Rodrigo Bentancur Colm\u00e1n",
+    "team_abbr": "URU",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/863.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Juli\u00e1n \u00c1lvarez",
+    "team_abbr": "ARG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/6009.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jonathan Christian David",
+    "team_abbr": "CAN",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/8489.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Darwin Gabriel N\u00fa\u00f1ez Ribeiro",
+    "team_abbr": "URU",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/51617.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jefferson Andr\u00e9s Lerma Sol\u00eds",
+    "team_abbr": "COL",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2490.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Eduard Alexander Bello Gil",
+    "team_abbr": "VEN",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/11765.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jos\u00e9 Fajardo Nelson",
+    "team_abbr": "PAN",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2983.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Folarin Jerry Balogun",
+    "team_abbr": "USA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/138835.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Vin\u00edcius Jos\u00e9 Paix\u00e3o de Oliveira J\u00fanior",
+    "team_abbr": "BRA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/762.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Luis Fernando D\u00edaz Marulanda",
+    "team_abbr": "COL",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2489.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jacob Everett Shaffelburg",
+    "team_abbr": "CAN",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/50826.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Facundo Pellistri Rebollo",
+    "team_abbr": "URU",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/70078.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Lionel Andr\u00e9s Messi Cuccittini",
+    "team_abbr": "ARG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/154.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ram\u00f3n Sosa Acosta",
+    "team_abbr": "PAR",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/196298.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "James David Rodr\u00edguez Rubio",
+    "team_abbr": "COL",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 1.0,
+      "assists": 6.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/517.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Alexis Mac Allister",
+    "team_abbr": "ARG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/6716.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Enzo Jerem\u00edas Fern\u00e1ndez",
+    "team_abbr": "ARG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/5996.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Diego Nicol\u00e1s de la Cruz Arcosa",
+    "team_abbr": "URU",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/5995.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Christian Mate Puli\u0161i\u0107",
+    "team_abbr": "USA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/17.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Lucas Tolentino Coelho de Lima",
+    "team_abbr": "BRA",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/1646.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Giovani Lo Celso",
+    "team_abbr": "ARG",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 0.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/1578.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Giorgian Daniel de Arrascaeta Benedetti",
+    "team_abbr": "URU",
+    "season_year": 2024,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 0.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2612.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Emilio Nsue L\u00f3pez",
+    "team_abbr": "EG",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 5.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/15283.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jacinto Muondo Dala",
+    "team_abbr": "ANG",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 4.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/3325.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Lu\u00eds Leal dos Anjos",
+    "team_abbr": "STA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 4.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/6361.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Louis Didace Mafouta",
+    "team_abbr": "CAR",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 4.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/85558.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mostafa Mohamed Ahmed Abdallah",
+    "team_abbr": "EGY",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 4.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2668.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ademola Lookman Olajade Alade Aylola Lookman",
+    "team_abbr": "NIG",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 3.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/18767.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Lassine Sinayoko",
+    "team_abbr": "MAL",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/90617.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jorge Fernando Barbosa \u00cdntima",
+    "team_abbr": "GUI",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/3447.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Tito Odong Okello Lazarus",
+    "team_abbr": "SS",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/291437.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Baghdad Bounedjah",
+    "team_abbr": "ALG",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/3176.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Lyle Brent Foster",
+    "team_abbr": "SA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 2.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/98936.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohamed Lamine Bayo",
+    "team_abbr": "GUI",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/24288.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Agostinho Crist\u00f3v\u00e3o Paci\u00eancia",
+    "team_abbr": "ANG",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/73818.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Bertrand Isidore Traor\u00e9",
+    "team_abbr": "BF",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/671.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Themba Zwane",
+    "team_abbr": "SA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/3289.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Augustus Kargbo",
+    "team_abbr": "SL",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/30998.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Youssouf Yacoub M'Changama",
+    "team_abbr": "COM",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/20754.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Daniel Sosah",
+    "team_abbr": "NIG",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/294349.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Katleho Makateng",
+    "team_abbr": "LES",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/360475.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Sadio Man\u00e9",
+    "team_abbr": "SEN",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 1.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/304.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Alfredo Kulembe Ribeiro",
+    "team_abbr": "ANG",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 0.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/49986.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jos\u00e9 Ndong Mach\u00edn Dicombo",
+    "team_abbr": "EG",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 0.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/31024.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Georges-K\u00e9vin Nkoudou Mbida",
+    "team_abbr": "CAM",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 0.0,
+      "assists": 3.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/113.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Simon Adingra",
+    "team_abbr": "IC",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/301771.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mahmoud Ahmed Ibrahim Hassan",
+    "team_abbr": "EGY",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2664.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Isma\u00efla Sarr",
+    "team_abbr": "SEN",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 1.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2218.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Kamory Doumbia",
+    "team_abbr": "MAL",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/326068.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Franck Yannick Kessi\u00e9",
+    "team_abbr": "IC",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/1642.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Teboho Mokoena",
+    "team_abbr": "SA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/3287.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ryan Isaac Mendes da Gra\u00e7a",
+    "team_abbr": "CVI",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/50270.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jordan Pierre Ayew",
+    "team_abbr": "GHA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/3428.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Meschack Elia Lina",
+    "team_abbr": "CD",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/3034.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Sekotori Evidence Makgopa",
+    "team_abbr": "SA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/201354.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Seko Mohamed Fofana",
+    "team_abbr": "IC",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/30807.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Victor James Osimhen",
+    "team_abbr": "NIG",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2780.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Gilson Benchimol Tavares",
+    "team_abbr": "CVI",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/309182.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jes\u00fas David Ferreira Castro",
+    "team_abbr": "USA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 7.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/51142.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Shamar Amaro Nicholson",
+    "team_abbr": "JAM",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 4.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/105873.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Brandon V\u00e1zquez Toledo",
+    "team_abbr": "USA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 3.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/50893.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Demarai Ramelle Gray",
+    "team_abbr": "JAM",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/18781.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Henry Josu\u00e9 Mart\u00edn Mex",
+    "team_abbr": "MEX",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/35603.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Luis Gerardo Ch\u00e1vez Magall\u00f3n",
+    "team_abbr": "MEX",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/35690.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Luis Francisco Romo Barr\u00f3n",
+    "team_abbr": "MEX",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/35970.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Cecilio Alfonso Waterman Ru\u00edz",
+    "team_abbr": "PAN",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/51648.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Jos\u00e9 Fajardo Nelson",
+    "team_abbr": "PAN",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2983.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Djordje Aleksandar Mihailovi\u0107",
+    "team_abbr": "USA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/50913.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ange-Freddy Plumain",
+    "team_abbr": "GUA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/87320.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Matthias Jean Pha\u00ebton",
+    "team_abbr": "GUA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/87308.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Frantzdy Pierrot",
+    "team_abbr": "HAI",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 2.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/8601.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Daniel Anthony Johnson",
+    "team_abbr": "JAM",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/19451.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ismael D\u00edaz de Le\u00f3n",
+    "team_abbr": "PAN",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/96615.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Duckens Moses Nazon",
+    "team_abbr": "HAI",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 3.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/45020.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Cade Dylan Cowell",
+    "team_abbr": "USA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 1.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/51186.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Cyril Paul Mandouki",
+    "team_abbr": "MAR",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/20607.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Adalberto Eli\u00e9cer Carrasquilla Alc\u00e1zar",
+    "team_abbr": "PAN",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 0.0,
+      "assists": 2.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/57807.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Nathaniel Otis M\u00e9ndez-Laing",
+    "team_abbr": "GUA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 1.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/19008.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Ahmed Fathi Abdoun",
+    "team_abbr": "QAT",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 7.0,
+      "goals": 0.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2539.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Santiago Tom\u00e1s Gim\u00e9nez",
+    "team_abbr": "MEX",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 4.0,
+      "goals": 0.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/94562.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Darwin Gregorio Lom Moscoso",
+    "team_abbr": "GUA",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 2.0,
+      "goals": 0.0,
+      "assists": 1.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/181885.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Liam Scott Fraser",
+    "team_abbr": "CAN",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 1.0,
+      "goals": 1.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/50815.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Edson Omar \u00c1lvarez Vel\u00e1zquez",
+    "team_abbr": "MEX",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "MF",
+    "stats": {
+      "appearances": 6.0,
+      "goals": 0.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/2869.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
+  },
+  {
+    "name": "Mohammed Muntari",
+    "team_abbr": "QAT",
+    "season_year": 2023,
+    "sport": "soccer",
+    "position": "FW",
+    "stats": {
+      "appearances": 5.0,
+      "goals": 0.0,
+      "assists": 0.0
+    },
+    "source": "api-football",
+    "headshot": "https://media.api-sports.io/football/players/42089.png",
+    "week": null,
+    "opponent": "",
+    "career": false,
+    "meta": {}
   }
 ]
