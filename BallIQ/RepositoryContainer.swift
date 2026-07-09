@@ -1,4 +1,6 @@
 import SwiftUI
+import Combine
+import StoreKit
 
 /// Single observable entry point the views depend on. Local stores are the working source
 /// (instant, offline); when signed in, `RemoteSync` mirrors progress/rating to Supabase.
@@ -13,6 +15,9 @@ final class RepositoryContainer: ObservableObject {
     let versus: VersusRepository?
     /// Era-adjustment baselines for composable scoring (bundled; empty until the pipeline ships them).
     let baselines: StatBaselines = .loadBundled()
+    /// StoreKit 2 product catalog + purchase/restore (M5). `entitlements` below mirrors its
+    /// published state so views only ever read `RepositoryContainer`, never this directly.
+    let store = StoreService()
 
     private let client: SupabaseClient?
     /// First-party funnel events (M15). Nil when local-only; every call is fire-and-forget.
@@ -21,6 +26,7 @@ final class RepositoryContainer: ObservableObject {
     private let localRating = LocalRatingRepository()
     private var sync: RemoteSync?
     private var pendingDeviceToken: String?
+    private var storeCancellable: AnyCancellable?
 
     @Published private(set) var progressSnapshot = ProgressSnapshot()
     @Published private(set) var ratings: [Sport: Int] = [:]
@@ -30,6 +36,14 @@ final class RepositoryContainer: ObservableObject {
     /// than re-fetched per view) so Home/Browse/Community can synchronously badge a puzzle
     /// whose cards feature the user's team.
     @Published private(set) var favoriteTeams = FavoriteTeams.empty
+    /// What the current user can access (Pro/packs) — the union of the on-device StoreKit read
+    /// (`store.entitlements`, instant but only ever reflects what's local) and the server's
+    /// verified `entitlements` table (`serverEntitlements`, synced on sign-in — the belt to the
+    /// device read's suspenders, covering reinstalls/other devices). Either source proving
+    /// entitlement is enough; neither alone is treated as more authoritative than the other.
+    @Published private(set) var entitlements: Entitlements = .free
+    private var deviceEntitlements: Entitlements = .free
+    private var serverEntitlements: Entitlements = .free
     @Published var sportFilter: SportFilter {
         didSet { UserDefaults.standard.set(sportFilter.rawValue, forKey: "sportFilter") }
     }
@@ -45,6 +59,18 @@ final class RepositoryContainer: ObservableObject {
         self.analytics = client.map { AnalyticsClient(client: $0) }
         let raw = UserDefaults.standard.string(forKey: "sportFilter") ?? SportFilter.all.rawValue
         self.sportFilter = SportFilter(rawValue: raw) ?? .all
+        storeCancellable = store.$entitlements.sink { [weak self] value in
+            guard let self else { return }
+            self.deviceEntitlements = value
+            self.recomputeEntitlements()
+        }
+    }
+
+    private func recomputeEntitlements() {
+        entitlements = Entitlements(
+            isPro: deviceEntitlements.isPro || serverEntitlements.isPro,
+            unlockedPacks: deviceEntitlements.unlockedPacks.union(serverEntitlements.unlockedPacks),
+            isAdmin: isAdmin)
     }
 
     /// Wires auth + optional Supabase client (nil → local-only). Used at launch and in previews.
@@ -72,9 +98,15 @@ final class RepositoryContainer: ObservableObject {
         await pushPendingDeviceTokenIfNeeded()
         isAdmin = await community?.isAdmin(userID: uid) ?? false
         favoriteTeams = await loadFavoriteTeams()
+        serverEntitlements = await mirror.pullEntitlements()
+        recomputeEntitlements()
     }
 
-    func handleSignedOut() { sync = nil; isAdmin = false; favoriteTeams = .empty }
+    func handleSignedOut() {
+        sync = nil; isAdmin = false; favoriteTeams = .empty
+        serverEntitlements = .free
+        recomputeEntitlements()
+    }
 
     private func refreshFromLocal() async {
         progressSnapshot = await localProgress.load()
@@ -276,6 +308,23 @@ final class RepositoryContainer: ObservableObject {
                        versusChallenge: settings.versusChallenge, seasonEnd: settings.seasonEnd),
             onConflict: "user_id")
     }
+
+    // MARK: - Store (M5 — StoreKit 2 monetization)
+
+    var products: [Product] { store.products }
+    var isLoadingProducts: Bool { store.isLoadingProducts }
+
+    @discardableResult
+    func purchase(_ product: Product) async throws -> Bool {
+        let appAccountToken = auth.userID.flatMap(UUID.init(uuidString:))
+        let purchased = try await store.purchase(product, appAccountToken: appAccountToken)
+        if purchased {
+            track(.purchaseCompleted, ["product_id": product.id])
+        }
+        return purchased
+    }
+
+    func restorePurchases() async { await store.restore() }
 
     // MARK: - Favorite teams
 

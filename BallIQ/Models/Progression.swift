@@ -5,13 +5,23 @@ enum GameFormatKind: String, Codable, CaseIterable {
     case keep4Normal
     case keep4Hard
     case whoAmI
+    case overUnder
+    /// Always played `ranked: false` (see `DraftSpinView`) — `ratingWeight` is declared for
+    /// completeness but never actually consulted, since unranked sessions skip rating math.
+    case draftSpin
+    /// Pro-only, 9-guess board (M5 Phase E) — the hardest daily format, so it outranks
+    /// Who Am I? exactly as this file's own comment long anticipated.
+    case grid
 
-    /// Relative difficulty weight (Keep4 Normal < Keep4 Hard < Who Am I?). Grid will exceed these later.
+    /// Relative difficulty weight (Keep4 Normal < Keep4 Hard < Who Am I? < Grid).
     var ratingWeight: Double {
         switch self {
         case .keep4Normal: return 1.0
         case .keep4Hard:   return 1.4
         case .whoAmI:      return 1.6
+        case .overUnder:   return 1.0
+        case .draftSpin:   return 1.0
+        case .grid:        return 2.0
         }
     }
 
@@ -21,6 +31,9 @@ enum GameFormatKind: String, Codable, CaseIterable {
         case .keep4Normal: return 100
         case .keep4Hard:   return 150
         case .whoAmI:      return 100
+        case .overUnder:   return 100
+        case .grid:        return 200
+        case .draftSpin:   return 100
         }
     }
 

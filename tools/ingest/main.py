@@ -26,6 +26,7 @@ from .providers import (
     api_football,
     espn_nba,
     espn_nba_pool,
+    hoopr_nba,
     mlb_pool,
     mlb_stats,
     nba_balldontlie,
@@ -168,6 +169,18 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
     if not nba:                       # ESPN unreachable → keep the pipeline real but offline
         print("[nba] ESPN empty — using curated real-stat seed (data/nba_seed.csv)")
         nba = seed.load_nba()
+    # M18: union the committed hoopR full-league sweep (every player who appeared,
+    # 2002+) under the star pool. Dedupe by player_id — one entry per player-season,
+    # or Keep4 candidate pools would carry the same season twice. The live ESPN row
+    # wins a collision (it can be fresher for the in-progress season); hoopR fills
+    # everything the leader-based pool never discovered (bench/role players).
+    hoopr = hoopr_nba.load_seasons()
+    if hoopr:
+        by_id = {s.player_id: s for s in hoopr}
+        by_id.update({s.player_id: s for s in nba})
+        print(f"[nba] hoopR full-league sweep: {len(hoopr)} rows "
+              f"(+{len(by_id) - len(nba)} beyond the star pool)")
+        nba = list(by_id.values())
     print(f"[nba] {len(nba)} player-seasons")
 
     # MLB Stats API (keyless, verified live) is primary; the committed leader-swept pool
@@ -230,7 +243,13 @@ def build_rows(seasons: list[RawSeason]) -> tuple[list[PuzzleRow], list[PuzzleRo
     entries = assemble.load_whoami_entries(DATA_DIR / "whoami_facts.json")
     whoami = [assemble.build_whoami_row(e) for e in entries]
     print(f"  whoami: {len(whoami)} puzzle(s)")
-    report = health.build_report(theme_stats, keep4_built, whoami_count=len(whoami))
+    catalog_depth = health.catalog_depth_report(seasons)
+    for c in catalog_depth:
+        if not c["draft_slot_viable"]:
+            print(f"  [health] WARNING: {c['sport']}/{c['position']} has only "
+                  f"{c['season_rows']} season rows — Draft & Spin can't deal 3 distinct candidates")
+    report = health.build_report(theme_stats, keep4_built, whoami_count=len(whoami),
+                                 catalog_depth=catalog_depth)
     return keep4, whoami, report
 
 
@@ -267,7 +286,7 @@ def catalog_rows(seasons: list[RawSeason]) -> list[dict]:
     return list(by_id.values())
 
 
-def write_catalog_fallback(seasons: list[RawSeason], per_theme: int = 40) -> None:
+def write_catalog_fallback(seasons: list[RawSeason], per_theme: int = 200) -> None:
     """Trimmed bundled catalog so the Keep4 create flow works before the table is populated:
     the top `per_theme` graded seasons of each theme (union), in the camelCase-keyed shape
     the Swift `CatalogSeason` decodes (team_abbr/season_year stay snake_case).
@@ -307,6 +326,47 @@ def write_themes_fallback() -> None:
     FALLBACK_THEMES.write_text(
         json.dumps(export_themes(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"[themes] wrote {len(KEEP4_THEMES)} themes → BallIQ/Data/keep4_themes.json")
+
+
+def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
+    """Generate today's Grid puzzle for each requested sport directly from the live
+    `player_seasons` catalog (not the nflverse/provider gather pipeline — Grid's data need,
+    team x decade slicing, is already satisfied by that table). Standalone branch, same
+    early-return posture as --write-themes: skips the heavy season pull entirely."""
+    from . import grid
+    from .models import RawSeason
+    from .upsert import fetch_player_seasons
+
+    load_dotenv()
+    today = dt.date.today().isoformat()
+    rows: list[dict] = []
+    for sport in sports:
+        raw = fetch_player_seasons(sport)
+        seasons = [
+            RawSeason(name=r["name"], team_abbr=r["team_abbr"], season_year=r["season_year"],
+                     sport=r["sport"], position=r["position"], stats=r.get("stats") or {})
+            for r in raw
+        ]
+        puzzle = grid.generate_grid(seasons, sport=sport, date=today)
+        if puzzle is None:
+            print(f"[grid] {sport}: no viable grid from {len(seasons)} seasons — skipped")
+            continue
+        content = grid.to_content(puzzle)
+        print(f"[grid] {sport}: rows={puzzle.row_teams} cols={puzzle.col_decades} "
+              f"rarity={[c.rarity_stars for c in puzzle.cells]}")
+        rows.append({
+            "id": grid.puzzle_id(sport, today), "sport": sport, "format": "grid",
+            "content": content, "active_date": today,
+        })
+
+    if dry_run or not upsert:
+        print(f"\n(grid: {len(rows)} puzzle(s) built" + ("" if upsert else ", pass --upsert to write") + ")")
+        return 0
+
+    from .upsert import upsert_grid
+    sent = upsert_grid(rows)
+    print(f"[upsert] sent {sent} grid puzzle rows to Supabase")
+    return 0
 
 
 def write_fallback(keep4: list[PuzzleRow], whoami: list[PuzzleRow]) -> None:
@@ -356,11 +416,17 @@ def main() -> int:
     ap.add_argument("--write-themes", action="store_true",
                     help="rewrite BallIQ/Data/keep4_themes.json only (no data pull)")
     ap.add_argument("--dry-run", action="store_true", help="build + validate + print, no writes")
+    ap.add_argument("--grid", nargs="+", choices=["nfl", "nba", "baseball", "soccer", "tennis"],
+                    help="generate today's Grid puzzle for the given sport(s) from the live "
+                         "player_seasons catalog (standalone — skips the season gather pull)")
     args = ap.parse_args()
 
     if args.write_themes and not (args.upsert or args.write_fallback or args.dry_run):
         write_themes_fallback()      # standalone: themes are static, skip the data pull
         return 0
+
+    if args.grid:
+        return run_grid(args.grid, upsert=args.upsert, dry_run=args.dry_run)
 
     load_dotenv()
     seasons = gather_seasons(args.nfl_years, args.game_years)

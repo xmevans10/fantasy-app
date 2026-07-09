@@ -12,6 +12,7 @@ enum AnalyticsEvent: String {
     case communityPuzzlePlayed = "community_puzzle_played"
     case shareTapped           = "share_tapped"
     case reportFiled           = "report_filed"
+    case purchaseCompleted     = "purchase_completed"
 }
 
 /// First-party, fire-and-forget event logging to the `events` table. Mirrors

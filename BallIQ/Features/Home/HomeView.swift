@@ -10,6 +10,10 @@ struct HomeView: View {
     @State private var activePuzzle: Keep4Puzzle?
     @State private var activeWhoAmI: WhoAmIPuzzle?
     @State private var showBrowse = false
+    @State private var showPaywall = false
+    @State private var showOverUnder = false
+    @State private var showDraftSpin = false
+    @State private var showGrid = false
     @State private var shareTarget: SharablePuzzle?
 
     private let gridColumns = [GridItem(.flexible(), spacing: 12),
@@ -22,7 +26,8 @@ struct HomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    SportFilterBar(selection: $container.sportFilter)
+                    SportFilterBar(selection: gatedSportFilter,
+                                   locked: { !container.entitlements.canSelect($0) })
                         .heroReveal(0)
 
                     streakRow
@@ -60,7 +65,10 @@ struct HomeView: View {
                     }
                     .heroReveal(1)
 
-                    Button { showBrowse = true } label: { browseRow }
+                    Button {
+                        if container.entitlements.canAccessArchive { showBrowse = true }
+                        else { showPaywall = true }
+                    } label: { browseRow }
                         .buttonStyle(PrimePressStyle())
                         .heroReveal(2)
 
@@ -91,12 +99,39 @@ struct HomeView: View {
             .fullScreenCover(item: $activeWhoAmI) { puzzle in
                 WhoAmIGameView(puzzle: puzzle).environmentObject(container)
             }
+            .fullScreenCover(isPresented: $showOverUnder) {
+                OverUnderGameView().environmentObject(container)
+            }
+            .fullScreenCover(isPresented: $showDraftSpin) {
+                DraftSpinView().environmentObject(container)
+            }
+            .fullScreenCover(isPresented: $showGrid) {
+                GridGameView().environmentObject(container)
+            }
             .sheet(item: $shareTarget) { target in
                 PuzzleShareSheet(puzzle: target, surface: "puzzle_home")
                     .environmentObject(container)
             }
+            .sheet(isPresented: $showPaywall) {
+                PaywallView().environmentObject(container)
+            }
             .task(id: container.sportFilter) { await loadDaily() }
         }
+    }
+
+    /// Intercepts a locked-sport selection with the paywall instead of applying it — the sport
+    /// filter chips stay a plain `Binding` from `SportFilterBar`'s point of view.
+    private var gatedSportFilter: Binding<SportFilter> {
+        Binding(
+            get: { container.sportFilter },
+            set: { newValue in
+                if container.entitlements.canSelect(newValue) {
+                    container.sportFilter = newValue
+                } else {
+                    showPaywall = true
+                }
+            }
+        )
     }
 
     /// Current streak, shown inline in the page body (not a nav-bar icon — that read as a
@@ -112,7 +147,8 @@ struct HomeView: View {
         }
     }
 
-    /// Entry point to the full archive (every daily puzzle, not just today's).
+    /// Entry point to the full archive (every daily puzzle, not just today's). Pro-gated —
+    /// tapping while locked opens the paywall instead (see `HomeView.body`'s Button action).
     private var browseRow: some View {
         HStack(spacing: 12) {
             Image(systemName: "square.grid.2x2.fill")
@@ -122,6 +158,14 @@ struct HomeView: View {
                 Text("REPLAY THE FULL ARCHIVE").font(.label11).foregroundStyle(Color.textMuted)
             }
             Spacer()
+            if !container.entitlements.canAccessArchive {
+                Text("PRO")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color.proText)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(Color.proBg)
+                    .clipShape(Capsule())
+            }
             Image(systemName: "chevron.right")
                 .font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)
         }
@@ -135,6 +179,10 @@ struct HomeView: View {
         case "keep4": activePuzzle = keep4
         case "whoami": activeWhoAmI = whoami
         case "versus": selectedTab = 2
+        case "overunder": showOverUnder = true
+        case "draft": showDraftSpin = true
+        case "grid":
+            if container.entitlements.canPlayGrid() { showGrid = true } else { showPaywall = true }
         default: break
         }
     }
@@ -148,6 +196,12 @@ struct HomeView: View {
             activePuzzle = keep4
         } else if DebugLaunch.autoOpenBrowse {
             showBrowse = true
+        } else if DebugLaunch.autoOpenOverUnder {
+            showOverUnder = true
+        } else if DebugLaunch.autoOpenDraftSpin {
+            showDraftSpin = true
+        } else if DebugLaunch.autoOpenGrid {
+            showGrid = true
         }
     }
 

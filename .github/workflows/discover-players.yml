@@ -45,19 +45,25 @@ jobs:
           restore-keys: |
             ingest-cache-
       - run: pip install -r tools/ingest/requirements.txt
-      # pyespn is intentionally NOT in requirements.txt (see its comment there) — the daily
-      # ingest.yml stays stdlib-only, and only this weekly discovery step needs it.
-      - run: pip install "pyespn>=0.3.3"
+      # pyespn/pyarrow are intentionally NOT in requirements.txt (see the comments there) —
+      # the daily ingest.yml stays stdlib-only, and only this weekly discovery step needs them.
+      - run: pip install "pyespn>=0.3.3" "pyarrow>=16.0"
       - name: Refresh NBA player-id pool
         run: python -m tools.ingest.providers.espn_nba_pool
+      - name: Refresh NBA full-league season sweep (hoopR)
+        # M18: regenerates data/nba_hoopr_seasons.csv — the current season's per-game
+        # averages keep moving while it's in progress, so the committed sweep needs the
+        # same weekly refresh the id pools get.
+        run: python -m tools.ingest.providers.hoopr_nba
       - name: Refresh MLB player-id pool
         run: python -m tools.ingest.providers.mlb_pool
       - name: Commit newly discovered player ids
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add tools/ingest/data/nba_player_ids.json tools/ingest/data/mlb_player_ids.json
-          git diff --cached --quiet || git commit -m "Refresh discovered NBA/MLB player-id pools (automated)"
+          git add tools/ingest/data/nba_player_ids.json tools/ingest/data/mlb_player_ids.json \
+                  tools/ingest/data/nba_hoopr_seasons.csv
+          git diff --cached --quiet || git commit -m "Refresh discovered NBA/MLB player pools + hoopR sweep (automated)"
           git push
       - name: Ingest newly discovered players into Supabase
         run: python -m tools.ingest.main --backfill 30 --upsert --catalog

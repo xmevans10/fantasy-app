@@ -47,8 +47,8 @@ create table if not exists public.progress (
 -- (same shape the app's Codable models decode — see Models/Keep4Puzzle.swift, WhoAmIPuzzle.swift).
 create table if not exists public.puzzles (
   id          text primary key,
-  sport       text not null,                 -- 'nfl' | 'nba'
-  format      text not null,                 -- 'keep4' | 'whoami'
+  sport       text not null,                 -- 'nfl' | 'nba' | 'baseball' | 'soccer' | 'tennis'
+  format      text not null,                 -- 'keep4' | 'whoami' | 'grid'
   content     jsonb not null,
   active_date date
 );
@@ -639,3 +639,31 @@ begin
   return ch_id;
 end;
 $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- M5 monetization (StoreKit 2 entitlements)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Server-verified entitlement state, one row per (user, product). Written only by the
+-- `app-store-notifications` Edge Function (service_role) after verifying Apple's signed
+-- payload — never directly by the client. The client's on-device `Transaction
+-- .currentEntitlements` read (`StoreService`) is the instant-UX path; this table is the
+-- belt-and-suspenders source of truth that syncs Pro state across devices/reinstalls.
+create table if not exists public.entitlements (
+  user_id                 uuid not null references auth.users(id) on delete cascade,
+  product_id              text not null,
+  status                  text not null default 'active',  -- 'active' | 'expired' | 'revoked'
+  original_transaction_id text not null,
+  expires_at              timestamptz,   -- null for non-consumable packs (never expire)
+  updated_at              timestamptz not null default now(),
+  primary key (user_id, product_id)
+);
+create index if not exists entitlements_original_transaction_idx
+  on public.entitlements (original_transaction_id);
+
+alter table public.entitlements enable row level security;
+drop policy if exists "entitlements own read" on public.entitlements;
+create policy "entitlements own read" on public.entitlements
+  for select using (auth.uid() = user_id);
+-- No insert/update/delete policy for authenticated users — writes are service_role-only
+-- (`app-store-notifications`), so a client can never grant itself an entitlement.

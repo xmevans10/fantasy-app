@@ -1,0 +1,100 @@
+{
+  "identifier" : "5F3D1A7B-88C4-4E4A-9C1D-0A6B2E9F3C10",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "PACK_DRAFTSPIN",
+      "localizations" : [
+        {
+          "description" : "Permanently unlock Draft & Spin.",
+          "displayName" : "Draft & Spin Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.balliqfantasy.app.pack.draftspin",
+      "referenceName" : "Draft & Spin Pack",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : false,
+      "internalID" : "PACK_GRID",
+      "localizations" : [
+        {
+          "description" : "Permanently unlock The Grid.",
+          "displayName" : "The Grid Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.balliqfantasy.app.pack.grid",
+      "referenceName" : "The Grid Pack",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_disableDialogView" : false,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : []
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "0F1A2B3C-4D5E-6F70-8192-A3B4C5D6E7F8",
+      "localizations" : [],
+      "name" : "Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "PRO_MONTHLY",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Every format, every sport, every day.",
+              "displayName" : "Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.balliqfantasy.app.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Pro Monthly",
+          "subscriptionGroupID" : "0F1A2B3C-4D5E-6F70-8192-A3B4C5D6E7F8",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "34.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "PRO_YEARLY",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Every format, every sport, every day — best value.",
+              "displayName" : "Pro Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.balliqfantasy.app.pro.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Pro Yearly",
+          "subscriptionGroupID" : "0F1A2B3C-4D5E-6F70-8192-A3B4C5D6E7F8",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

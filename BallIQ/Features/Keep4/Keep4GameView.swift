@@ -23,6 +23,7 @@ struct Keep4GameView: View {
     @State private var showReportDialog = false
     @State private var showReportSent = false
     @State private var showScoringInfo = false
+    @State private var showPaywall = false
 
     private let pileLimit = 4
 
@@ -67,6 +68,9 @@ struct Keep4GameView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Thanks — we'll take a look.")
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView().environmentObject(container)
         }
     }
 
@@ -240,10 +244,28 @@ struct Keep4GameView: View {
         }
     }
 
+    /// Hard mode is Pro-gated: selecting it while locked opens the paywall and leaves `mode`
+    /// unchanged instead of silently reverting (less confusing than a picker that "snaps back").
     private var modePicker: some View {
-        PrimeSegmentedControl(options: Keep4Mode.allCases.map { ($0.title, $0) },
-                              selection: $mode)
+        let hardLocked = !container.entitlements.canPlayHardMode
+        let options: [(title: String, value: Keep4Mode)] = Keep4Mode.allCases.map { m in
+            (title: (m == .hard && hardLocked) ? "\(m.title) · Pro" : m.title, value: m)
+        }
+        return PrimeSegmentedControl(options: options, selection: gatedMode)
             .frame(maxWidth: 220)
+    }
+
+    private var gatedMode: Binding<Keep4Mode> {
+        Binding(
+            get: { mode },
+            set: { newValue in
+                if newValue == .hard && !container.entitlements.canPlayHardMode {
+                    showPaywall = true
+                } else {
+                    mode = newValue
+                }
+            }
+        )
     }
 
     private func tally(label: String, count: Int, color: Color) -> some View {
@@ -310,18 +332,13 @@ struct Keep4GameView: View {
 
     /// Same serve order for everyone, stable per puzzle, and not grade-sorted (so order doesn't leak the answer).
     static func blindOrder(for puzzle: Keep4Puzzle) -> [PlayerSeason] {
-        var gen = SeededGenerator(seed: stableHash(puzzle.id))
+        var gen = SeededGenerator(seed: SeededGenerator.stableHash(puzzle.id))
         return puzzle.players.shuffled(using: &gen)
-    }
-
-    private static func stableHash(_ s: String) -> UInt64 {
-        var h: UInt64 = 0xcbf29ce484222325
-        for b in s.utf8 { h = (h ^ UInt64(b)) &* 0x100000001b3 }
-        return h
     }
 }
 
-/// Deterministic RNG (SplitMix64) so the blind serve order is reproducible across devices.
+/// Deterministic RNG (SplitMix64) — used anywhere content must be reproducible across devices
+/// from a stable string seed (Keep4's blind serve order; Over/Under's daily round generation).
 struct SeededGenerator: RandomNumberGenerator {
     private var state: UInt64
     init(seed: UInt64) { state = seed == 0 ? 0x9E3779B97F4A7C15 : seed }
@@ -331,5 +348,13 @@ struct SeededGenerator: RandomNumberGenerator {
         z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
         z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
         return z ^ (z >> 31)
+    }
+
+    /// FNV-1a hash of a string into a `UInt64` seed — stable across devices/OS versions
+    /// (unlike `String.hashValue`, which is randomized per-process).
+    static func stableHash(_ s: String) -> UInt64 {
+        var h: UInt64 = 0xcbf29ce484222325
+        for b in s.utf8 { h = (h ^ UInt64(b)) &* 0x100000001b3 }
+        return h
     }
 }

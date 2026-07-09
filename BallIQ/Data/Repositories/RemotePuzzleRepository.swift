@@ -50,6 +50,15 @@ final class RemotePuzzleRepository: PuzzleRepository {
         return await fallback.allWhoAmI(for: filter)
     }
 
+    /// Grid has no bundled offline fallback (see protocol doc comment) — nil when the table
+    /// has nothing for `filter`'s sport today, rather than falling through to anything local.
+    func gridPuzzle(for filter: SportFilter, date: Date) async -> GridPuzzle? {
+        guard let rows = await fetch(format: "grid", filter: filter, as: GridPuzzle.self), !rows.isEmpty else {
+            return nil
+        }
+        return pick(rows, date: date)
+    }
+
     /// Prefer the row minted for this exact UTC day (`active_date`, written by
     /// tools/ingest/daily_puzzle.py) — every day gets its own genuinely new puzzle. Falls back
     /// to the old modulo pick over the full ordered pool when no row matches today (a day

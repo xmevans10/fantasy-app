@@ -86,21 +86,37 @@ python3 -m tools.ingest.main [--dry-run] [--write-fallback] [--write-themes]
   `nfl_nflverse` (season aggregates, 1999–present, year range **computed from today's date**
   in `main.py` so it never goes stale — `fetch_years` skips any year not yet published) +
   `nfl_nflverse_games` (weekly grain, bounded by `--game-years`, same dynamic-year
-  treatment) + `nfl_players` (bio join: draft round, height, age); `espn_nba_pool`/`espn_nba`
-  (853-player keyless ESPN pool, ~1993–2026, the **primary** NBA source since M7) with
-  `nba_balldontlie` (needs `BALLDONTLIE_API_KEY`) and a curated `seed.py`/`data/nba_seed.csv`
-  as fallbacks when ESPN is unreachable; `mlb_stats` (keyless MLB Stats API, primary baseball
-  source) driven by `mlb_pool` (2026-07-06: swept 1975–present stat-leaders across 19
-  hitting/pitching categories → **3,298-player id pool**, ≥3 top-50 category-seasons each,
-  up from 23 hardcoded ids — live `player_seasons` baseball rows went 280 → 38,704) with
-  `seed.py`/`data/baseball_seed.csv` as fallback. Both pools are refreshed weekly by
+  treatment) + `nfl_players` (bio join: draft round, height, age); NBA is
+  `espn_nba_pool`/`espn_nba` (853-player keyless ESPN star pool, ~1993–2026, primary since
+  M7) **unioned with `hoopr_nba` (M18, 2026-07-09): a committed full-league sweep
+  (`data/nba_hoopr_seasons.csv`, ~12,400 rows) of sportsdataverse hoopR's parquet
+  republication of ESPN's own player-season averages — every player who appeared in a
+  season (~530/season), 2002–present**, deduped by `player_id` with the live ESPN row
+  winning (fresher mid-season); `nba_balldontlie` (needs `BALLDONTLIE_API_KEY`) and a
+  curated `seed.py`/`data/nba_seed.csv` remain fallbacks when ESPN is unreachable;
+  `mlb_stats` (keyless MLB Stats API, primary baseball source) driven by `mlb_pool`
+  (2026-07-06: swept 1975–present stat-leaders across 19 hitting/pitching categories →
+  3,298-player id pool, ≥3 top-50 category-seasons each, up from 23 hardcoded ids — live
+  `player_seasons` baseball rows went 280 → 38,704; **M18 widened the sweep to
+  1955–present → 4,362 ids**, filling the previously thin pre-1976 team-years) with
+  `seed.py`/`data/baseball_seed.csv` as fallback. The id pools *and* the hoopR sweep CSV
+  are refreshed weekly by
   [.github/workflows/discover-players.yml](../.github/workflows/discover-players.yml)
-  (Sundays 10:00 UTC), which commits the updated id-map JSON then upserts immediately so a
-  newly-discovered player doesn't wait for the next daily `ingest.yml` run. **Soccer and
-  tennis are seed-only** (`data/soccer_seed.csv`/`data/tennis_seed.csv`, curated from
-  well-documented record seasons, 17/19 live rows respectively) — no reachable keyless
-  historical source found (Jeff Sackmann's ATP dataset 404s from this environment); see
-  `tools/ingest/README.md` for what was tried.
+  (Sundays 10:00 UTC; pyespn + pyarrow live only there, never in the daily stdlib path),
+  which commits the updated data files then upserts immediately so a newly-discovered
+  player doesn't wait for the next daily `ingest.yml` run. **Soccer and tennis have a hard
+  data-availability ceiling — verified three times (2026-07-08 twice, re-affirmed M18
+  2026-07-09), do not re-investigate without a genuinely new candidate source:** soccer's
+  only live provider (`api_football.py`, budget-limited leaderboard sweep) serves the top
+  ~20 scorers/assists per league-season — never a full squad — and has no clean-sheets
+  field, so GK/DF stay permanently hand-curated (`data/soccer_seed.csv`; FBref has the
+  stat but no API and scraping-hostile ToS, football-data.org has no player-season stats,
+  Understat is xG-only). Tennis is permanently seed-only (`data/tennis_seed.csv`) — Jeff
+  Sackmann's `tennis_atp` repo (the canonical free bulk source) is gone and a live GitHub
+  search found no maintained mirror. Consequence: "every team roster for all years" is
+  achievable for NFL/NBA/MLB but **not** for soccer/tennis without a paid/different
+  source; Draft & Spin's soccer formation and tennis 3-round shape are sized to this
+  ceiling by design (see §8 M5 Phase D notes).
 - **Themes** (`themes.py` `KEEP4_THEMES`): the ONE template shape — sport, grade `scale`,
   positions, `min_stats` floors, on-card `columns` (stat/label/fmt), `pool_cap`, `grain`
   (season|game), `era_adjusted`. 24 curated themes today (18 NFL/NBA + 2 each for baseball,
@@ -290,7 +306,7 @@ One template definition, consumed by both sides:
 | Milestone | Status |
 |-----------|--------|
 | M1–M4 core app, backend, social retention | ✅ shipped. M4's backend tables (`seasons`/`cohorts`/`versus_*`/`device_tokens`/`notification_settings`) were missing from production until 2026-07-05 despite the app-side feature being live the whole time — now applied, see below |
-| M5 breadth/scoring | ✅ breadth shipped; **monetization (Pro/StoreKit) not started — no code exists yet** |
+| M5 breadth/scoring | ✅ breadth shipped; monetization in progress — StoreKit 2 foundation + gating, server-validated entitlements (2026-07-07), and Over/Under + Draft & Spin + The Grid (2026-07-08) all shipped (see below); only the 8-week rating-season structure (Phase F) still open |
 | M6 community fixes + hardening | ✅ shipped |
 | M7 content scale + CI | ✅ shipped |
 | M8 single-game grain | ✅ shipped |
@@ -317,10 +333,10 @@ manual-signing workaround from scratch, it's already documented.
    Home cards now check `hasCompletedToday(_ card:)` backed by a per-day
    `completedCardsToday: Set<DailyCard>`; `hasPlayedToday` remains "played anything" and
    still drives streak/first-play XP. Covered by `ProgressRepositoryTests`.
-3. **No Leagues season/cohort exists yet in production** — `weekly-cohort-rollover` bootstraps
-   one on first run; it hasn't been triggered (mutates real user rating/cohort state, so it
-   needs an explicit go-ahead rather than being treated as a no-op). Fires naturally next
-   Monday 05:00 UTC either way.
+3. ~~**No Leagues season/cohort exists yet in production**~~ — resolved: `weekly-cohort-rollover`
+   fired on schedule Monday 2026-07-06 05:00 UTC and bootstrapped season 1 (active through
+   2026-07-13 05:00 UTC, 1 cohort, 1 member — verified live via MCP 2026-07-07). No further
+   action needed; it will keep rolling over weekly on its own.
 4. **`notify-versus-challenge`'s DB webhook isn't wired** (Database → Webhooks in the Supabase
    dashboard — no API path found for this step). The function is deployed and correct; nothing
    calls it yet.
@@ -329,6 +345,12 @@ manual-signing workaround from scratch, it's already documented.
    Developer portal) and set as Edge Function secrets. External hand-off.
 6. Two pre-raw-PPR community rows (published before M9) keep their baked 0–100 grades by
    design (content immutability, §4) — cosmetic, optional to fix.
+7. **M5 Phase B (`app-store-notifications`) is deployed but inert** — needs, all external
+   hand-offs: the Paid Applications agreement (App Store Connect → Business), the Pro/pack
+   products actually created in ASC, the production notifications URL pointed at this
+   function, and `APPLE_ROOT_CA_PEM` (Apple's Root CA — G3, publicly published on Apple's PKI
+   page) set as an Edge Function secret. Until then it 500s "not configured" by design rather
+   than silently no-op-ing — verified live 2026-07-07.
 
 **Shipped 2026-07-06 (data coverage + card-template hardening):**
 - Baseball catalog broadened via `mlb_pool` (§3): 280 → 38,704 live rows. NFL/NBA/MLB year
@@ -351,6 +373,452 @@ manual-signing workaround from scratch, it's already documented.
 - Per-sport ESPN team-logo resolution (`Sport.teamLogoURL`) and per-sport fantasy-badge copy
   (tennis reads "POINTS"/résumé copy, not fabricated "fantasy points" language) shipped
   earlier the same day — see git history for detail.
+
+**Shipped 2026-07-07 (M5 Phase A — StoreKit 2 foundation + gating):**
+- `BallIQ/Store/`: `StoreProduct` (product ID catalog: `pro.monthly`/`pro.yearly`/
+  `pack.draftspin`/`pack.grid`), `Entitlements` (pure derivation, locked by
+  `EntitlementsTests`), `StoreService` (StoreKit 2 — products, purchase, restore,
+  `Transaction.currentEntitlements`/`.updates` listener). `Products.storekit` attached to the
+  scheme's Launch Action for Xcode-run simulator testing (see M5 hand-off note below re: CLI
+  `simctl launch` limitations).
+- `RepositoryContainer` mirrors `store.entitlements` into its own `@Published entitlements` —
+  views read the container, never `StoreService` directly (repository-seam constraint).
+- Existing live surfaces gated: Keep4 hard mode (`Keep4GameView`'s mode picker shows
+  "Hard · Pro" and opens `PaywallView` instead of switching when locked), Browse archive
+  (Home's row shows a PRO badge; tap opens the paywall), the sport filter (`SportFilterBar`
+  shows a lock glyph on MLB/Soccer/Tennis chips for free users — NFL/NBA/All stay free).
+  `PaywallView` (Prime Time style) is the one paywall every locked touchpoint routes through.
+- **Known verification gap:** `xcrun simctl launch` (this repo's established CLI-only
+  screenshot workflow, AGENTS.md §5) does not attach the scheme's `.storekit` config — only
+  an actual Xcode Run does — so the paywall's product list can't be exercised end-to-end
+  without either running via Xcode directly or a one-time user-approved pbxproj edit to link
+  `StoreKitTest.framework` for an in-process `SKTestSession` (attempted, reverted — this repo
+  forbids hand-editing the pbxproj without explicit sign-off). The gating logic itself
+  (lock glyphs, paywall routing, `Entitlements` derivation) is fully verified via
+  `EntitlementsTests` + simulator screenshots; only the live purchase button flow is unverified
+  in this environment.
+
+**Shipped 2026-07-07 (M5 Phase B — server-validated entitlements):**
+- `public.entitlements` table (additive migration, applied live to `nhccgufqwndtoasdbkhc`):
+  one row per (user, product), RLS own-read only — writes are service-role-only, so a client
+  can never grant itself an entitlement.
+- `supabase/functions/app-store-notifications` (deployed live, `verify_jwt: false` — matches
+  the existing `notify-versus-challenge` precedent, since Apple's POST can't carry a Supabase
+  JWT; the payload's own signature *is* the auth boundary): receives App Store Server
+  Notifications V2, verifies the JWS's x5c certificate chain against a pinned trusted root
+  (`APPLE_ROOT_CA_PEM` secret — not yet set, see hand-off H3 below), then upserts
+  `entitlements` keyed by `appAccountToken` (our own uuid, set at purchase time via
+  `Product.PurchaseOption.appAccountToken` — `StoreService.purchase` now threads the signed-in
+  user's uuid through every purchase call so the webhook can attribute it).
+- `supabase/functions/_shared/app_store_notifications.ts`: JWS decode + chain verification
+  (`verifyAppleSignedPayload`) + pure entitlement-status derivation
+  (`deriveEntitlementStatus`), locked by 9 Deno tests in `app_store_notifications.test.ts`
+  using a self-generated root→intermediate→leaf fixture chain (proves chain-walking,
+  root-pinning rejection, tampered-payload rejection, and rogue-key rejection all work
+  end-to-end with real crypto — not mocked). Uses `@peculiar/x509` (MIT, via esm.sh, same
+  import mechanism as the already-present `@supabase/supabase-js`) for X.509 parsing/chain
+  verification — a deliberate, user-confirmed exception to this repo's "hand-rolled crypto,
+  no external library" convention (see `apns.ts`'s own comment), because *verifying* a
+  certificate chain is a meaningfully harder and higher-stakes undertaking than the ES256 JWT
+  *signing* that convention was written for.
+- `RemoteSync.pullEntitlements()` + `RepositoryContainer` now union the on-device StoreKit read
+  (`store.entitlements`) with the server's verified table (`serverEntitlements`) on sign-in —
+  either source proving entitlement is sufficient; neither is treated as more authoritative.
+- **Scope note:** the "companion client-transaction verify via App Store Server API" belt (an
+  app-initiated verify path, on top of the ASN webhook) from the original plan was not built —
+  the webhook is the primary, standard mechanism and is fully implemented; the companion path
+  would mostly matter for closing a narrow race-condition window and is a reasonable fast-follow,
+  not a gap in the core design.
+- **Verified live:** `POST /functions/v1/app-store-notifications` returns `500 {"error":"not
+  configured"}` today (correct — `APPLE_ROOT_CA_PEM` isn't set yet per hand-off H3), confirming
+  the function is deployed and reachable without crashing.
+
+**Shipped 2026-07-08 (M5 Phase C — Over/Under):**
+- `BallIQ/Models/OverUnder.swift`: `OverUnderRound` (real player-season stat vs. a jittered
+  threshold — never exactly the true value), `OverUnderRoundGenerator` (client-side,
+  deterministic per date+sport+index off the existing `PlayerSeasonCatalog`/`ScoringStat`
+  catalog — no pipeline change, offline-capable via the catalog's existing bundled fallback),
+  `OverUnderScoring` (combo multiplier, capped at 2× after a 10-streak), `LivesBank` (pure,
+  clock-injected 3-lives/1-hour-regen mechanic). All locked by 18 new tests in
+  `OverUnderTests.swift` (generator determinism, threshold-never-ties, bounds-respecting
+  jitter, combo math, and — the brief's own called-out risk — full regen-timing coverage:
+  no-regen-under-an-hour, partial-hour-carries-forward, caps-at-max-and-clears-timestamp).
+- `SeededGenerator.stableHash` (previously private to `Keep4GameView`) promoted to a shared,
+  reusable static method on `SeededGenerator` itself rather than duplicated — same
+  deterministic-seeding tool now backs both Keep4's blind order and Over/Under's rounds.
+- `BallIQ/Data/Repositories/OverUnderStore.swift`: UserDefaults-backed lives + per-sport high
+  score, mirroring `LocalProgressRepository`'s shape.
+- `BallIQ/Features/OverUnder/`: `OverUnderGameView` (swipe *and* tap Over/Under, mirroring
+  Keep4's dual-input a11y pattern; live lives/score/combo header) + `OverUnderResultView`
+  (hero score card, `RewardsRow`, and — when not Pro — an "unlimited lives" paywall upsell
+  touchpoint). Wired into `GameFormat.all` (`isPlayable: true` now) and `HomeView`'s launch
+  dispatch; `-screenshotOverUnder`/`-screenshotOverUnderResult` debug flags added.
+- **Progression:** new `GameFormatKind.overUnder` case. First Over/Under session of a given day
+  is ranked (via the existing `hasCompletedToday(puzzleID:)` check against a synthesized daily
+  id); replays that day are XP-only — reuses the community `ranked: false` pattern rather than
+  a parallel mechanism.
+- **Discrepancy resolved:** the brief flagged a risk that `GameFormatKind` might need decode-
+  tolerance work for old app builds reading synced progress with an unknown raw value. Traced
+  the actual data flow first (AGENTS.md §3) — `GameFormatKind` is never decoded from any
+  stored/remote source in this codebase (only ever constructed in Swift code and consumed for
+  XP/rating computation or stringified for analytics); no decode-tolerance work was needed.
+- **Verified live in simulator:** game screen (real catalog data — e.g. "T.J. Yeldon, JAX ·
+  2016, RUSH TD 4, Over/Under") and the out-of-lives result screen (score 350, rewards row,
+  confetti, Pro upsell row) — both screenshotted via the new debug flags.
+
+**Shipped 2026-07-08 (M5 Phase D — Draft & Spin):**
+- `BallIQ/Models/DraftSpin.swift`: `DraftSpinConstraint` (today's featured sport is seeded by
+  date; lineup shape is fixed per sport — NFL QB/RB/WR/TE, baseball H/H/P, soccer GK/DF/FW/MF,
+  reusing `Sport.positionStatFamilies`'s position vocabulary; NBA/tennis get 3 unslotted picks,
+  since those sports' stats apply broadly regardless of position — same reasoning that table's
+  own comment already documents), `DraftSpinSimulator` (pure, deterministic 17-week season sim
+  seeded by date + the exact drafted lineup; `power(_:sport:)` derives a 0...1 "how good is this
+  season" proxy by normalizing every stat the season has against `ScoringStat`'s own reference
+  bounds — reusing the same fixed-scale normalization `ScoringRule` already uses rather than a
+  parallel one). 13 tests in `DraftSpinTests.swift`, including a locked-value regression pinning
+  one exact lineup+date+seed's output (wins/losses/points/outcome) so a future RNG/scoring
+  refactor can't silently drift it.
+- `BallIQ/Features/DraftSpin/`: `DraftSpinView` (spin → one-slot-at-a-time draft board, 3
+  candidates per slot, tap to pick) → `DraftSpinResultView` (record/points hero, drafted
+  lineup list, `RewardsRow`, share). `DraftSpinShareCardView` mirrors the M13
+  `ShareCardView`/`PuzzlePreviewCardView` share-card pattern (Prime Time frame,
+  `ImageRenderer`-backed `.rendered()`) rather than inventing a new one. Wired into
+  `GameFormat.all` + `HomeView`'s launch dispatch; `-screenshotDraftSpin`/
+  `-screenshotDraftSpinResult` debug flags added (auto-picks each slot's first candidate, since
+  simctl can't tap through the draft board).
+- **Decision applied: XP-only/unranked** (`complete(..., ranked: false)`, new
+  `GameFormatKind.draftSpin` case) — the sim is luck-dominant by design, so it must never move
+  the competitive ladder. Verified live: a completed session showed `Rating 1010 +0` (no
+  movement) alongside `XP +100` and streak advancing normally.
+- **Real bug caught and fixed during simulator verification, not left as a TODO:** the initial
+  implementation fetched one generic top-300-by-season-year catalog pool per sport and filtered
+  it client-side per position. Soccer's GK (7 rows) and DF (1 row) positions are so heavily
+  outnumbered by FW (979) and MF (507) that they never survived the sort-and-truncate-to-300 —
+  the GK/DF draft slots came up completely empty in the simulator (verified via screenshot,
+  not assumed). Fixed by querying the catalog once per distinct position needed
+  (`CatalogQuery(sport:positions:)`, already-existing infra) instead of one shared pool, so a
+  rare position's own candidates are never crowded out by a common one. Re-verified live:
+  the GK slot now shows 3 real candidates (Emiliano Martínez, Petr Čech, Thibaut Courtois).
+  A defensive auto-skip for a genuinely empty slot (0 catalog rows for that position) was also
+  added, though it shouldn't trigger for any sport in `DraftSpinConstraint.lineupSlots` today.
+- `SeededGenerator.stableHash` (already promoted to shared in Phase C) backs Draft & Spin's
+  sport-of-the-day pick, slot draws, and season sim seeding too — one deterministic-seeding
+  tool for every daily-content generator in the app now.
+
+**Shipped 2026-07-08 (M5 Phase E — The Grid, Pro-only):**
+- **Pipeline (Python):** `tools/ingest/grid.py` — a 3x3 team x decade board, generated
+  directly from the already-ingested `player_seasons` catalog (not a fresh nflverse pull —
+  Grid's data need, team+decade slicing, is fully satisfied by that table). Same
+  viability-gate philosophy as `generate.py`'s `_is_viable`: every one of the 9 cells must
+  have >=1 real valid answer, or the whole day's grid for that sport is skipped rather than
+  shipped broken. Rarity v1 is offline-deterministic (1-5 stars from the cell's own answer-pool
+  size at generation time), per the brief's explicit scope-down from a live per-guess rarity
+  table. 14 Python tests (`test_grid.py` + 2 in `test_upsert.py`), all against synthetic data.
+  Wired into `main.py` as a standalone `--grid <sports>` flag (own early-return branch, same
+  posture as `--write-themes` — never touches the scheduled nflverse gather pipeline).
+- **Real bugs caught during live verification against the actual Supabase project, not left
+  as TODOs:**
+  1. `fetch_player_seasons` requested `limit=20000` but PostgREST silently caps a single
+     response at its own configured max (Supabase's default: 1000 rows) regardless of the
+     requested limit — NFL alone has ~14k rows. Worse, with no explicit `order=`, *which*
+     1000-row slice came back wasn't even stable across calls, so the same (sport, date)
+     could go from a fully viable grid to "no viable grid" between two runs purely by luck of
+     which rows PostgREST happened to return. Fixed with real `Range`-header pagination +
+     `order=id` for a stable row set; locked with 2 tests simulating a low server-side cap.
+  2. Some NBA `player_seasons` rows have a blank `team_abbr` (unresolved provider data), which
+     the generator was happy to pick as a real "row team" label (a Grid row reading "" in the
+     UI). Fixed by excluding blank team_abbr from the candidate team set; locked with a test
+     across 20 seeded dates.
+  3. **Live re-verification after both fixes**, run twice back-to-back to confirm stability:
+     NFL → `CLE/SEA/LA x 1990s/2010s/2020s`, NBA → `DET/DAL/MIN x 1990s/2000s/2010s` (no more
+     blank team), baseball → `SD/LAD/SEA x 1970s/1980s/2010s`; soccer/tennis correctly skip
+     (too sparse — tennis's `team_abbr` is actually a country code, not a club, so team-based
+     slicing doesn't even conceptually apply there yet). 3 real puzzle rows upserted live to
+     `nhccgufqwndtoasdbkhc`, confirmed via direct query.
+- **Soccer/tennis Grid exclusion is a documented product decision, not a gap to close** (2026-07-08
+  follow-up): live query confirmed soccer is functionally *one* decade — 2020s 1,484 rows,
+  2010s 9, 2000s 1 — because API-Football's free tier only ever serves a rolling 2022-2024
+  window (verified live, see `providers/api_football.py`'s header) and defenders/keepers are
+  hand-curated-permanently (no clean-sheets field on that API). More sweeping adds *rows*,
+  never *decades*, so the "team x decade" concept can't be made to work for soccer by waiting
+  or by upgrading the API tier (~2 real decades even on a paid plan). The viability gate's
+  auto-skip stays the intended long-term behavior; if a soccer Grid is ever wanted, the axis
+  would need to become "team x season" (2022/23/24 — 258 teams, 3 seasons of live data
+  already support that shape) rather than decade. Tennis is conceptually out either way — its
+  `team_abbr` holds a country code, not a club.
+- **Client (Swift):** `GridPuzzle` model (+`isCorrect` reusing WhoAmI's existing
+  `AnswerMatcher` tolerant-match logic — case-insensitive, last-name, single-typo — rather
+  than a second free-text matcher) with a decode test against the pipeline's real content
+  shape. `PuzzleRepository.gridPuzzle(for:date:)` on both Local (no bundled fallback — Grid is
+  Pro-only content that needs the live pipeline regardless, a deliberate v1 scope line) and
+  Remote (same `fetch`/`pick` machinery as keep4/whoami, format="grid"). `GridGameView` (9-cell
+  board, one guess per cell — decisions final, same posture as Keep4) → `GridResultView`.
+  New `GameFormatKind.grid` (`ratingWeight: 2.0`, exceeding Who Am I?'s 1.6 exactly as
+  `Progression.swift`'s own long-standing comment anticipated). Gated via
+  `Entitlements.canPlayGrid()` (Pro or the Grid pack) at the Home launch point, opening the
+  paywall otherwise. `-screenshotGrid`/`-screenshotGridResult` debug flags (the latter
+  auto-answers every cell with its first valid answer, since simctl can't type into the guess
+  field). 7 new Swift tests (`GridPuzzleTests.swift`).
+- **Real bug caught in Swift too:** the game view resolved its *displayed* sport as
+  `sportFilter.sport ?? .nfl` but fetched content using the raw `sportFilter` itself — under
+  the default `.all` filter (no sport), the fetch pulled every sport's grid row and silently
+  returned whichever sorted first alphabetically by id, while the header independently
+  defaulted its label to "NFL legends". First screenshot caught it directly (header said NFL,
+  board showed baseball's SD/LAD/SEA). Fixed by resolving one concrete `SportFilter` from the
+  same displayed sport before fetching; re-verified live — board and header now agree.
+- **Verified live end-to-end:** a full 9/9 session against the real NFL grid scored 1,100
+  (900 base + 200 rarity bonus, matching the live puzzle's own rarity distribution exactly),
+  awarded `Rating 1081 +38` (ranked, confirming `ratingWeight: 2.0` is actually being used) and
+  `XP +275`, with the "IMMACULATE GRID" perfect-clear celebration firing.
+
+**Shipped 2026-07-08 (M5 Phase C/D/E follow-up — Draft & Spin per-sport seasons + soccer/tennis
+catalog depth):** built The Grid exposed two gaps in what Phases C-E shipped earlier the same
+day; this follow-up addresses both.
+- **Draft & Spin no longer hardcodes NFL's season shape onto every sport.**
+  `DraftSpinSimulator.seasonShape(for:)` replaces the old flat `weekCount`/`championshipWins`/
+  `playoffWins` constants with a per-sport table (NFL 17/12/9 unchanged; NBA 82/48/42; MLB
+  162/91/81; soccer 38/24/19; tennis 70/42/35). Thresholds are matched by *tier probability*
+  under a coin-flip week (NFL's real odds: champion tier ~7% of seasons, playoff tier ~50%) —
+  not by copying NFL's win ratio, which would make e.g. an 82-game NBA champion tier
+  probabilistically unreachable. `DraftSpinResult.Outcome.title(for:)` is now sport-parameterized
+  too: NFL/NBA/MLB keep CHAMPION/MADE THE PLAYOFFS/MISSED THE PLAYOFFS; soccer gets WON THE
+  LEAGUE/TOP FOUR/MID-TABLE; tennis gets YEAR-END No. 1/TOP 10 SEASON/TOUR GRIND. The NFL locked-
+  value regression test (`DraftSpinTests.swift`) was left untouched and still passes exactly as
+  before — proof the refactor didn't drift NFL's RNG output — plus a new locked-value test pins
+  soccer's output too. All 203 Swift tests pass.
+- **Soccer GK/DF and tennis seed CSVs expanded with real, individually-verified stat lines**
+  (not bulk/approximate data — every row's appearances + relevant stat was confirmed against a
+  primary Wikipedia career-statistics table before being added, several early candidate rows
+  were dropped rather than shipped when only a partial stat line could be verified, e.g. clean
+  sheets is rarely tabulated per-defender on Wikipedia even when appearances/goals are).
+  Soccer GK: 7 → 21 rows (added Reina, van der Sar, Hart, Szczesny, Courtois, Raya seasons
+  spanning 2006-2026, Premier League Golden Glove winners). Soccer DF: 1 → 2 rows (added John
+  Terry's 2004-05 Chelsea season, the Premier League's clean-sheets/goals-conceded record
+  season — still thin; defender clean-sheet data is inherently harder to source from Wikipedia
+  than goalkeeper data, since it's usually reported as a team stat, not tabulated per-player).
+  Tennis: 16 → 20 rows, including its **first women's rows ever** (Serena Williams 2002 —
+  56-5, 8 titles, 3 slams; Iga Świątek 2022 — 67-9, 8 titles, 2 slams) plus Andy Murray 2016 and
+  Carlos Alcaraz 2022. `tools/ingest/providers/api_football.py`'s `merge_with_seed()` last-name
+  dedup guarantee re-checked against the larger seed — no new surname collisions introduced.
+  **Scope note:** this fell short of an initial ~40-60 GK / ~20-30 DF / ~50-80 tennis target —
+  that target assumed bulk sourcing would be available; in practice each row needed individual
+  verification and many candidates (Cannavaro, Maldini, Xavi, Modrić, Graf, Barty) were dropped
+  when a full stat line couldn't be confirmed. DF and tennis depth remain a good candidate for a
+  dedicated follow-up pass against a proper stats database/API rather than more Wikipedia prose
+  mining.
+- **New health guard so this bug class can't recur silently:** `tools/ingest/health.py`'s
+  `catalog_depth_report()` computes season-grain row counts per (sport, position) and flags any
+  position a Draft & Spin lineup slot actually filters by (`DRAFT_SPIN_SLOT_POSITIONS`, hand-
+  mirroring `DraftSpinConstraint.lineupSlots` since one side is Swift and the other Python) that
+  has fewer than 3 rows — the exact threshold below which a slot can't deal 3 distinct daily
+  candidates. Wired into `main.py`'s `build_rows()`, prints a `[health] WARNING` during ingest
+  runs, and is now part of `content_health.json`'s `catalog_depth` array +
+  `totals.draft_slot_positions_too_thin`. 5 new pytest cases in `test_health.py`.
+- **Live re-verification (AGENTS.md §1):** re-queried `nhccgufqwndtoasdbkhc` after
+  `--upsert --catalog` (65,774 catalog rows total upserted this push). Soccer GK: 7→21
+  season rows (26 incl. 5 newly-unlocked career aggregates — expanding depth pushed Reina,
+  Hart, Cech, Courtois, and Raya each past `career.py`'s "≥2 real seasons" threshold, so
+  those players now also have a real career-aggregate puzzle row, a bonus this session didn't
+  explicitly set out to produce). Soccer DF: 1→2 season rows (no career unlock yet — both
+  players still have only 1 seed season each). Tennis: 16→20 season rows (23 total incl. the
+  3 pre-existing Big-3 career rows, unaffected). These are point-in-time counts — the daily
+  `soccer-sweep.yml`/`ingest.yml` jobs keep moving soccer's live FW/MF counts forward
+  independent of this session's GK/DF/tennis seed work.
+- **Real bug caught post-ship, not left as a TODO:** `Text("\(player.teamAbbr.uppercased()) ·
+  \(player.seasonYear)")`-shaped code in `OverUnderGameView`/`DraftSpinView`/
+  `DraftSpinResultView` rendered years like "2,023" instead of "2023" — SwiftUI's `Text(_:)`
+  string-literal initializer infers `LocalizedStringKey`, which applies locale-aware
+  thousands-grouping to any raw numeric interpolation, unlike a plain Swift `String`
+  interpolation. `Keep4ResultView` had already independently worked around this exact bug
+  (`String(format: "%02d", ...)`) — the 3 newer sites hadn't followed that precedent. Fixed by
+  wrapping every season-year interpolation in `String(...)` first; re-verified live via
+  screenshot (tennis lineup now reads "SRB · 2011", not "SRB · 2,011").
+- **Real bug caught by the user, not left as a TODO: Over/Under showed position-mismatched
+  stats** (e.g. an "Over/Under 3000 passing yards" round for a WR). Root cause traced (AGENTS.md
+  §3): `nfl_nflverse.py` gives every NFL row the full flat stat dict regardless of position
+  (a WR's `passing_yards` key exists, just zeroed), and `OverUnderRoundGenerator.round`
+  (`OverUnder.swift`) filtered `ScoringStat.catalog(for: sport)` only by key-presence, never by
+  position — the exact bug class `Sport.positionStatFamilies`/`sliceForPosition` was already
+  built to prevent elsewhere (AGENTS.md §4), just never adopted here. Fixed by position-scoping
+  candidate stats via `sport.sliceForPosition(...)` before the presence filter. Locked with a
+  200-iteration regression test (`testStatSelectionNeverCrossesPosition`) and re-verified live
+  (Donald Driver, GB 2001 → "REC 60", never a passing stat).
+- **New: a minimum-relevance floor for gameplay pools** (Over/Under's pool, Draft & Spin's
+  draft candidates) — both previously drew from an unranked/unfiltered catalog slice, so an
+  obscure single-digit-production season could appear as readily as a star season. Added
+  `PlayerRelevance.filter(_:sport:minimum:)` (`BallIQ/Models/PlayerRelevance.swift`), reusing
+  the existing `DraftSpinSimulator.power(_:sport:)` signal (already generic across every sport)
+  with a 0.15 floor — falls back to the unfiltered set when filtering would leave fewer than
+  `minimum` candidates, the same graceful-degradation shape as `sliceForPosition`, so an
+  already-thin position (soccer DF) never gets filtered to empty. Deliberately **not** applied
+  inside `PlayerSeasonCatalog.search()` itself — the Create-flow catalog browser is meant to
+  stay unconstrained (its own doc comment: "none of these constrain the final puzzle"); the
+  floor only applies at the two arcade-format call sites. 6 new Swift tests across
+  `PlayerRelevanceTests.swift` and `DraftSpinTests.swift`.
+- **Card-metadata parity: Over/Under and Draft & Spin now show the same headshot + team-logo
+  treatment as Keep4 cards**, per explicit user feedback that Keep4's card is "our best
+  feature" and every gameplay card should match it. Extracted `PlayerHeadshotBadge`/
+  `TeamLogoBadge` (`BallIQ/DesignSystem/PlayerMediaBadges.swift`) out of `Keep4CardView`'s
+  previously-private computed properties (AGENTS.md §4 — one shared implementation instead of
+  per-card copies); `Keep4CardView` itself now calls the shared components with identical visual
+  output. Wired into `OverUnderGameView`'s round card header, `DraftSpinView`'s candidate rows,
+  and `DraftSpinResultView`'s lineup list. Verified live via screenshot (Donald Driver's real
+  headshot + Packers logo on Over/Under; Petr Čech/David Raya real headshots on Draft & Spin's
+  GK slot).
+- All 209 Swift tests pass after this follow-up round; full suite re-run live in the simulator
+  after each fix, per AGENTS.md §7.
+
+**Shipped 2026-07-08 (Draft & Spin redesign — blind roster picks):** per explicit user
+feedback ("the draft and spin needs a major refactor... spin like a slot machine to give us a
+LEAGUE, YEAR, and TEAM... stats are hidden and the user must select a player from the provided
+roster"), replaced the old position-slotted draft (3 visible-stat candidates per QB/RB/WR/TE-
+style slot) with a blind team/year roster pick. Scoped down from the original ask via 3
+clarifying questions: **no new "league" concept** (dropped — NFL/NBA/MLB/tennis are already
+one league each; adding real soccer competitions would need a new schema column with no
+catalog support today, so this stays Year + Team only); **no roster-depth data expansion**
+(ships against today's already-curated catalog per team-year, typically a handful of real
+players, not a full 53-man roster — real names either way, just not exhaustive); **stats
+reveal after the pick**, feeding the existing season simulator exactly as before, rather than
+being a stats-free pure-trivia mode.
+- `DraftSpinSlot` (`BallIQ/Models/DraftSpin.swift`) now carries `team`/`year` instead of
+  `position`. `DraftSpinConstraint.rosterSlots(from:sport:date:)` replaces `slots(from:...)`:
+  groups the pool by every real (team, year) combo it actually contains (never a guessed
+  combo that might not exist), keeps only combos with a `PlayerRelevance`-passing candidate,
+  sorts into a fixed order, then seed-shuffles and takes as many as the sport's slot count
+  (`slotCounts`, same counts as the old per-sport position-slot lengths) — degrading
+  gracefully to fewer slots when a sport/pool doesn't have that many distinct viable
+  team-years, rather than crashing or repeating a roster. Sorting before the seeded shuffle
+  matters: `Dictionary` iteration order isn't stable across runs, so shuffling straight off it
+  would have silently broken the "same day → same spin on every install" determinism guarantee.
+- `DraftSpinView`: header now reads "PICK FROM: `TEAM` · `YEAR`"; each roster row shows only
+  headshot + name + position tag — no stat value, no team/year (redundant with the header) —
+  genuinely blind. `DraftSpinResultView`'s lineup list is the reveal moment: now shows each
+  picked player's real key stat (via the existing `ScoringStat.displayColumns` mechanism)
+  alongside team/year, the first time that information appears anywhere in the flow.
+- 8 new/rewritten Swift tests in `DraftSpinTests.swift` (determinism, candidates all match
+  their slot's team/year, no repeated team-year combo across slots, graceful degradation on a
+  thin catalog, empty-pool safety, relevance-floor fallback on an all-marginal roster). All
+  211 Swift tests pass.
+- **Verified live in the simulator:** NFL board showed "PICK FROM: KC · 2010" with Brodie
+  Croyle as the (only) real roster candidate, no stats visible; the result screen revealed a
+  real blind-drafted lineup (Tony Gonzalez 917 REC YDS, Tony McGee 148 REC YDS, Randy Moss
+  1,233 REC YDS, Drew Bledsoe 4,359 PASS YDS) with real headshots, matching the intended
+  spin → blind pick → reveal flow end to end.
+
+**Shipped 2026-07-08 (Draft & Spin v2 — real per-sport formations + a "juicy" spin, plus two
+correctness bugs the stress-test caught):** the roster-pick redesign above shipped with generic
+per-sport slot *counts* (4/3/4/3/3), not real lineup shapes. Per explicit follow-up feedback,
+replaced those with actual formations, added a slot-machine reveal animation, and — critically —
+stress-tested all 5 sports live, which surfaced two real bugs that generic counts alone had
+masked.
+- **Real formations, grounded in live-verified depth (AGENTS.md §1 — checked before designing,
+  not after):** NFL = QB, WR×2, RB×2, TE, FLEX(RB/WR/TE) — 7 slots, matching the user's own
+  spec. NBA = "Starting 5" as G×2/F×2/C — the catalog only distinguishes G/F/C (no PG/SG/SF/PF
+  split), so this is the truest realization of "Starting 5" the data can actually support, not
+  a made-up simplification. Soccer = GK/DF×2/MF×3/FW×2 (8 slots, the largest formation the data
+  can ever fill) — live-queried club-level depth shows only 2 clubs in the whole catalog
+  (Chelsea, Liverpool) have ever had a real DF row at all, so a literal 11-man "Starting XI"
+  is not achievable without fabricating data; unfillable roles (almost always DF) are skipped,
+  not faked. Baseball ("figure it out") = 4 Hitters + 2 Pitchers — the catalog only has H/P
+  granularity, no batting-order positions to build a literal lineup card from. Tennis ("figure
+  it out") = kept the prior per-round independent-spin design (3 rounds, no team/lineup
+  concept — verified live that a single country+year combo essentially never has >1 real
+  player, so a one-roster "lineup" doesn't exist for tennis at all).
+- **`DraftSpinConstraint.pickTeamYear`/`buildSlots`** (split out of the old single `rosterSlots`,
+  which is now a convenience wrapper for tests/tennis): allocates each formation role's shown
+  candidates with an explicit reservation count for remaining same-position slots, so an early
+  slot can no longer greedily claim a whole position's pool and starve a later slot or FLEX —
+  the first version of this allocation had exactly that bug, caught by a test with deliberately
+  tight fixture depth before it ever reached a device.
+- **Real bug caught only by stress-testing every sport live, not by unit tests alone:**
+  `PlayerSeasonCatalog.fetchRemote` had no `order=` clause and no pagination, so a big-sport
+  fetch (Draft & Spin, Over/Under) returned an arbitrary, possibly narrow slice regardless of
+  the requested `limit` — the exact bug class already caught once in the Python Grid pipeline,
+  just never ported to this Swift client. Verified live: NFL's LV/2000 has real QB:2/RB:5/WR:5/
+  TE:2 depth, yet the app's fetched sample only ever surfaced 4 of NFL's 7 formation roles for
+  it. Fixed with stable `order=id` plus real `Range`-header pagination in `SupabaseClient`
+  (mirrors the pipeline's own fix), and Draft & Spin's requested pool raised from 400 to 2000.
+- **Second bug, found by re-testing after the first fix:** even with a much better sample, a
+  *sample* dense enough to correctly identify the best (team, year) is not necessarily dense
+  enough to carry that team-year's *complete* roster — verified live: a sample correctly
+  picked MLB's TOR/2011 as the day's best-filled combo, but the sample only carried a handful
+  of its real 11 hitters/11 pitchers, so only 3 of 6 formation roles filled. Fixed by splitting
+  the fetch into two phases: `pickTeamYear` runs against the broad sample (discovery only), then
+  `DraftSpinView.load` re-fetches that exact (team, year)'s complete roster (bounded to one
+  season across the sport, comfortably small) before `buildSlots` runs against the real thing.
+- **New "juicy" slot-machine reveal** (`SpinRevealView.swift`): two decelerating reels (team,
+  year) cycle through decoy values before locking onto the real spun combo, with haptic ticks
+  and a scale/glow "LOCKED IN" landing — shown once per team-sport session, and re-shown each
+  round for tennis (whose rounds each spin an independent country/year). Skips straight to the
+  settled state under the `-screenshotDraftSpin*` debug flags so automated screenshots land
+  reliably on the draft board/result rather than mid-animation.
+- **Verified live across all 5 sports post-fix** (draft board + full result reveal, real data,
+  zero placeholders beyond the pre-existing headshot-coverage gaps M16 already documents):
+  NFL → DET/2020 7/7 slots filled (Stafford/Jones/Cephus/Johnson/Peterson/Hockenson, "MADE THE
+  PLAYOFFS" 10-7, 224 pts); NBA → DET/2022 5/5 slots (Diallo/Cunningham/Grant/Stewart/Garza,
+  "MISSED THE PLAYOFFS" 41-41, 1,221 pts); MLB → TOR/2011 6/6 slots; Soccer → ARS/2024 4/8 slots
+  (GK/MF/MF/FW — DF correctly absent, Arsenal has no real DF row; Raya/Ødegaard/Trossard/Saka,
+  "TOP FOUR" 23-15, 1,312 pts); Tennis → SRB/2021 3/3 rounds (Djokovic). 216 Swift tests pass.
+
+**Shipped 2026-07-09 (M18 — Draft & Spin per-round mechanic + full-roster data coverage):**
+the format's 4th and final mechanic iteration plus the data-depth work it exposed.
+
+- **Mechanic (v3→v4, landed 2026-07-09 pre-M18-session, documented here):** *every round*
+  spins its own (team, year) — not one spin for the whole lineup — with full player stats
+  **visible** (both confirmed against a user-supplied reference recording, superseding the
+  blind single-spin designs above); the second reel is an **exact single year**, not the
+  reference app's 5-year era buckets (explicit user correction overriding the video).
+  `DraftSpinConstraint.spinRound` discovers a viable combo per round from a broad sample
+  (seeded by date + round index + reroll count; only combos with ≥1 candidate fitting a
+  currently-open role are spinnable), one reroll per round; the round's complete roster is
+  re-fetched for the exact (team, year) before display (`DraftSpinView.loadRoundRoster` —
+  the sample-vs-complete-roster split that fixed the v2 bugs is load-bearing here too).
+  Browse is position-tabbed/grouped with tap-to-expand extra stats; tap a highlighted
+  lineup slot to assign; repeat until full, then the unchanged simulator/result flow runs.
+- **Re-verified post era→year swap (M18 step 1):** all 215 Swift tests green, plus the live
+  5-sport stress test (round-1 board + auto-played full result each): YEAR chip shows a
+  real single year everywhere; reroll intact; soccer (BAŞ 2023 MF/FW) and tennis
+  (TCH 1986 Lendl) still find viable combos post-swap.
+- **NBA coverage (the milestone's headline): full league rosters 2002+, not just stars.**
+  ESPN itself was a triple dead end for historical enumeration (verified live: the core
+  season-roster endpoint returns the *current* roster for any year — the "1985 Cavs"
+  contain Jarrett Allen; the athletes index only lists ~363 active players season-blind;
+  stats.nba.com hangs from both this environment and CI). The working source:
+  **sportsdataverse hoopR's data repo** republishes ESPN's player-season averages for
+  every player who appeared, 2002→present, one parquet/season — the NBA equivalent of
+  nflverse. New `providers/hoopr_nba.py` (refresh needs pyarrow, lazily imported — same
+  optional-dep contract as pyespn; runtime reads the committed
+  `data/nba_hoopr_seasons.csv` stdlib-only), pivoting hoopR's long rows through the exact
+  same normalization as `espn_nba.parse_seasons` (shared `_norm_position`/`_attempted`,
+  identical ts_pct derivation), static slug→abbr map that **fails loudly** on an unknown
+  franchise slug, traded players resolved to their most-games real-team stint (or kept
+  team-less when only a "Totals" line exists, matching the live ESPN path's convention).
+  8 new pytest cases (`test_hoopr_nba.py`). **Live verified (before → after):** NBA season
+  rows 8,199 → 13,152, distinct players 855 → 2,511, median team-year depth in the hoopR
+  era ~13–17 players (was ~7–11 avg) = 6 G / 6 F / 3 C at the median vs the G/G/F/F/C
+  formation — and the simulator board confirms it (NO 2020 round-1 showed 9 real guards
+  incl. bench players, vs 3 the day before). Pre-2002 stays star-pool-only — hoopR has no
+  earlier files; that's the documented floor, not an oversight.
+- **NFL width: verified uniform, nothing to do** — 485–611 rows in every year 1999–2024
+  (~16/team-year); 1999 is nflverse's hard floor (pre-1999 legends stay seed/career-only).
+- **MLB width: pre-1976 team-years were thin** (a career-reachback artifact of the
+  1975-start leader sweep: <6 players/team before 1969, vs ~23/team 1976+). `mlb_pool`'s
+  sweep extended 1975→**1955** (now also its committed default, so the weekly
+  discover-players.yml refresh can't silently regress the range): id pool 3,298 → 4,362.
+  **Live verified (before → after):** baseball season rows 35,432 → 45,196, distinct
+  players 3,280 → 4,333, catalog min year 1957 → 1939 (careers reach back); 1957 went
+  1 row → 363 (22.7/team), 1965 59 → 509, 1970 192 → 556 — the pre-1976 era now matches
+  modern-era depth (~23–26/team). Catalog upsert total this push: 82,608 rows.
+- **Weekly freshness:** discover-players.yml now also regenerates + commits the hoopR
+  sweep CSV (pip-installs pyarrow alongside pyespn — both stay out of requirements.txt so
+  the daily ingest.yml path remains stdlib-only).
+- **Still open (deliberately):** the reference video's pre-game setup screen (Roster
+  Both-sides/Offense-only ・ Teams All/One-team-lock ・ Season-Variations On/Prime-only).
+  Not built this session: the toggle *semantics* aren't derivable from the prompt's
+  shorthand alone (and NFL "Both sides" is impossible with real data — the catalog has no
+  defensive players at all), and this format's history is four rebuilds caused by exactly
+  this kind of guessed intent. Needs the user to confirm what each toggle should do before
+  it's built.
 
 ## 9. Roadmap — remaining milestones
 

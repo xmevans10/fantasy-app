@@ -7,6 +7,9 @@ protocol PuzzleRepository {
     /// The full pool (for the Browse/Archive surface), not just today's pick.
     func allKeep4(for filter: SportFilter) async -> [Keep4Puzzle]
     func allWhoAmI(for filter: SportFilter) async -> [WhoAmIPuzzle]
+    /// The Grid (M5 Phase E) — server-generated only, no bundled offline fallback (it's
+    /// Pro-gated content anyway; a signed-out/local-only session can't play it either way).
+    func gridPuzzle(for filter: SportFilter, date: Date) async -> GridPuzzle?
     var availableSports: [Sport] { get }
 }
 
@@ -37,6 +40,10 @@ final class LocalPuzzleRepository: PuzzleRepository {
 
     func allKeep4(for filter: SportFilter) async -> [Keep4Puzzle] { filtered(keep4, by: filter) }
     func allWhoAmI(for filter: SportFilter) async -> [WhoAmIPuzzle] { filtered(whoami, by: filter) }
+
+    /// No bundled Grid content in v1 (see protocol doc comment) — local-only sessions simply
+    /// can't play it, same as any other Pro-only surface without a network connection.
+    func gridPuzzle(for filter: SportFilter, date: Date) async -> GridPuzzle? { nil }
 
     // MARK: - Helpers
 

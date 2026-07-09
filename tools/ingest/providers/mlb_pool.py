@@ -40,12 +40,17 @@ PITCHING_CATS = [
     "wins", "earnedRunAverage", "strikeouts", "saves", "whip", "inningsPitched",
 ]
 
-# Live leaders exist deep into MLB history; default sweep covers the modern era fans
-# recognize while staying a manageable request count (~19 cats × span, mostly cached).
-# DEFAULT_TO is today's year, not a literal — a fixed year quietly stops covering new
-# seasons the moment that year ends. `discover` skips any (category, year) that errors
-# (see below), so sweeping the current season before it has standings is a harmless no-op.
-DEFAULT_FROM = 1975
+# Live leaders exist deep into MLB history; default sweep covers everything from the
+# late Mays/Aaron/Koufax era on while staying a manageable request count (~19 cats ×
+# span, mostly cached). Extended 1975 → 1955 in M18 (2026-07-09) to fill Draft & Spin's
+# thin pre-1976 team-years — the default matters because discover() rebuilds the pool
+# from scratch: if the weekly discover-players.yml swept a narrower range than the last
+# manual run, players whose careers ended before its start year would silently fall
+# back OUT of the pool. DEFAULT_TO is today's year, not a literal — a fixed year
+# quietly stops covering new seasons the moment that year ends. `discover` skips any
+# (category, year) that errors (see below), so sweeping the current season before it
+# has standings is a harmless no-op.
+DEFAULT_FROM = 1955
 DEFAULT_TO = dt.date.today().year
 
 # A player must rank in the top ~50 of at least this many (category, season) pairs to

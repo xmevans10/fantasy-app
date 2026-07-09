@@ -13,6 +13,26 @@ ever returned international-duty splits (not club-season stats) for the players
 tested, and the assumed tennis data-source repo doesn't exist under that account.
 These seed sets are small and hand-curated from well-documented record/award seasons;
 broadening them needs a real data source, not more manual rows.
+
+**Re-verified 2026-07-08** (a follow-up pass expanding soccer GK/DF and tennis
+depth, prompted by Draft & Spin's soccer DF slot only ever offering one candidate):
+the canonical Jeff Sackmann `tennis_atp` GitHub repo (the usual free bulk source for
+ATP match-level history) now 404s, and a live GitHub search over 246 repos matching
+"tennis_atp" found no maintained mirror — tennis stays seed-only, confirmed still
+correct, not just assumed. Soccer GK/DF live-source re-check: API-Football (this
+app's only live soccer provider, see `api_football.py`) is confirmed still lacking a
+clean-sheets field; FBref has the stat but no API and scraping-hostile ToS;
+football-data.org has no player-season stats; Understat is xG-only. The
+hand-curated-permanently decision for soccer GK/DF stands. That same 2026-07-08 pass
+expanded both CSVs (soccer GK 7→21 rows, DF 1→2, tennis 16→20 including its first
+women's rows) — every added row's stats were individually verified against a primary
+Wikipedia career-statistics table, not bulk-sourced, which is why the expansion
+undershot its original ~40-60/20-30/50-80 target: several strong candidates
+(Cannavaro, Maldini, Xavi, Modrić, Graf, Barty) were dropped rather than shipped when
+a full real stat line (especially per-defender clean sheets, which Wikipedia rarely
+tabulates per-player) couldn't be confirmed. Further DF/tennis depth is a good
+candidate for a dedicated pass against a real stats database/API instead of more
+manual Wikipedia lookups.
 """
 from __future__ import annotations
 

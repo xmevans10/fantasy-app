@@ -23,6 +23,15 @@ try from 2022 to 2024"}}`, HTTP 200 — a soft error, not a 4xx) — the allowed
 rolls forward over time, so `_season_window` is relative to today and out-of-window
 combos are just skipped, mirroring nflverse's "skip on 404" handling elsewhere.
 
+**Consequence confirmed live 2026-07-08:** because the window is always ~3 recent years,
+the live `player_seasons` table's soccer rows cluster almost entirely in one decade no
+matter how much of the league/season/kind matrix gets swept — at the time of checking,
+2020s had 1,484 rows vs. 9 in the 2010s and 1 in the 2000s. More sweeping adds *rows*
+within that window, never *decades*; a decade-spanning soccer catalog isn't reachable on
+this tier, full stop (a paid tier reaches further back but still only ~2 real decades).
+This is why The Grid's "team x decade" board deliberately excludes soccer/tennis — see
+`grid.py` and `docs/BALLIQ_SPEC.md`'s Phase E entry, not a gap to file a ticket against.
+
 Run:  python -m tools.ingest.providers.api_football  [--max-requests 80]
 """
 from __future__ import annotations

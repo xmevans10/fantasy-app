@@ -12,3 +12,8 @@ pytest>=8.0
 # (`python -m tools.ingest.providers.espn_nba_pool`). Imported lazily inside that
 # script, so the daily pipeline stays stdlib-only and never needs this installed.
 # pyespn>=0.3.3
+
+# OPTIONAL — only for refreshing the committed hoopR full-league NBA sweep
+# (`python -m tools.ingest.providers.hoopr_nba`, writes data/nba_hoopr_seasons.csv).
+# Same lazy-import contract: the daily pipeline reads the committed CSV stdlib-only.
+# pyarrow>=16.0

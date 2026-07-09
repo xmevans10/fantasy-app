@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var linkKeep4: LinkedPlay<Keep4Puzzle>?
     @State private var linkWhoAmI: LinkedPlay<WhoAmIPuzzle>?
     @State private var debugCreate = false
+    @State private var debugPaywall = false
     @State private var selectedTab = 0
 
     var body: some View {
@@ -49,9 +50,13 @@ struct ContentView: View {
             if DebugLaunch.autoOpenLeagues { selectedTab = 1 }
             if DebugLaunch.autoOpenVersus { selectedTab = 2 }
             if DebugLaunch.autoOpenCommunity { selectedTab = 3 }
+            if DebugLaunch.autoOpenPaywall { debugPaywall = true }
         }
         .sheet(isPresented: $debugCreate) {
             NavigationStack { CreateKeep4View().environmentObject(container) }
+        }
+        .sheet(isPresented: $debugPaywall) {
+            PaywallView().environmentObject(container)
         }
         .fullScreenCover(item: $linkKeep4) { link in
             Keep4GameView(puzzle: link.puzzle, ranked: false, communityID: link.communityID,

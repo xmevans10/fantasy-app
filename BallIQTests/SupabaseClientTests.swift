@@ -71,6 +71,20 @@ final class SupabaseClientTests: XCTestCase {
         XCTAssertEqual(req.value(forHTTPHeaderField: "Authorization"), "Bearer ANON123")
     }
 
+    /// PostgREST pagination — without this, a response is silently capped at the server's own
+    /// configured max regardless of `limit=`, the same bug the Grid pipeline already hit.
+    func testRestRequestSetsRangeHeaderForPagination() {
+        let client = makeClient()
+        let req = client.restRequest(table: "player_seasons", range: (1000, 1999))
+        XCTAssertEqual(req.value(forHTTPHeaderField: "Range"), "1000-1999")
+    }
+
+    func testRestRequestOmitsRangeHeaderWhenNotPaginating() {
+        let client = makeClient()
+        let req = client.restRequest(table: "player_seasons")
+        XCTAssertNil(req.value(forHTTPHeaderField: "Range"))
+    }
+
     func testBearerUsesUserTokenWhenSignedIn() {
         let client = makeClient()
         let token = StubToken("USER_JWT")

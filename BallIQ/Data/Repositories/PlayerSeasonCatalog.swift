@@ -48,12 +48,24 @@ final class PlayerSeasonCatalog {
 
     // MARK: - Remote
 
+    /// PostgREST's own server-configured response cap (this project: 1000 rows) applies
+    /// regardless of any `limit=` query param — the same limit the Python Grid pipeline's
+    /// `fetch_player_seasons` had to page around. A query with a narrow filter (position/team/
+    /// name) never approaches this, but an unfiltered sport-wide fetch (Draft & Spin, Over/Under)
+    /// easily does for a big sport, so `fetchRemote` pages in chunks of this size instead of
+    /// trusting a single request to return everything asked for.
+    private static let pageSize = 1000
+
     private func fetchRemote(_ q: CatalogQuery, limit: Int) async -> [CatalogSeason]? {
         guard let client else { return nil }
         var items = [
             URLQueryItem(name: "select", value: "id,sport,name,team_abbr,season_year,position,stats,"
                          + "headshot,career,first_year,last_year"),
-            URLQueryItem(name: "limit", value: "\(limit * 3)"),   // over-fetch; we re-rank client-side
+            // Stable order is required, not cosmetic: without it, *which* rows a capped response
+            // contains isn't even guaranteed consistent across calls (verified in the Grid
+            // pipeline bug) — a paginated fetch built on an unordered result could silently drop
+            // or duplicate rows between pages.
+            URLQueryItem(name: "order", value: "id"),
             URLQueryItem(name: "career", value: "eq.\(q.career)"),
         ]
         if let sport = q.sport {
@@ -75,9 +87,20 @@ final class PlayerSeasonCatalog {
         if !name.isEmpty {
             items.append(URLQueryItem(name: "name", value: "ilike.*\(name)*"))
         }
-        guard let rows: [CatalogSeason] = try? await client.select(
-            "player_seasons", query: items, decoder: decoder), !rows.isEmpty else { return nil }
-        return rows
+
+        let target = limit * 3   // over-fetch; we re-rank client-side
+        var rows: [CatalogSeason] = []
+        var offset = 0
+        while rows.count < target {
+            let want = min(Self.pageSize, target - rows.count)
+            guard let page: [CatalogSeason] = try? await client.select(
+                "player_seasons", query: items, range: (offset, offset + want - 1), decoder: decoder),
+                !page.isEmpty else { break }
+            rows += page
+            if page.count < want { break }   // fewer than requested — reached the end of the table
+            offset += page.count
+        }
+        return rows.isEmpty ? nil : rows
     }
 
     // MARK: - Bundled fallback

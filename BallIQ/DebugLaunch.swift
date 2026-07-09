@@ -22,6 +22,17 @@ enum DebugLaunch {
     static var autoOpenCommunity: Bool { has("-screenshotCommunity") }
     static var autoOpenBrowse: Bool { has("-screenshotBrowse") }
     static var autoOpenModeration: Bool { has("-screenshotModeration") }
+    static var autoOpenPaywall: Bool { has("-screenshotPaywall") }
+    static var autoOpenOverUnder: Bool { has("-screenshotOverUnder") || has("-screenshotOverUnderResult") }
+    /// Forces an immediate out-of-lives finish once the session loads (simctl can't play a real
+    /// round-by-round session): `-screenshotOverUnderResult`.
+    static var autoSubmitOverUnder: Bool { has("-screenshotOverUnderResult") }
+    static var autoOpenDraftSpin: Bool { has("-screenshotDraftSpin") || has("-screenshotDraftSpinResult") }
+    /// Auto-picks the first candidate in every slot (simctl can't tap through the draft board).
+    static var autoSubmitDraftSpin: Bool { has("-screenshotDraftSpinResult") }
+    static var autoOpenGrid: Bool { has("-screenshotGrid") || has("-screenshotGridResult") }
+    /// Auto-answers every cell with its first valid answer (simctl can't type into the guess field).
+    static var autoSubmitGrid: Bool { has("-screenshotGridResult") }
     /// Browse: auto-open the pre-play share sheet for the first archive puzzle.
     static var autoOpenShare: Bool { has("-screenshotShare") }
     /// Keep4 game: auto-open the scoring-formula sheet (simctl can't tap the chip).
@@ -45,6 +56,13 @@ enum DebugLaunch {
         guard let i = args.firstIndex(of: "-screenshotCreateTheme"), i + 1 < args.count else { return nil }
         return args[i + 1]
     }
+    /// Override Draft & Spin's date-seeded sport-of-the-day (simctl can't wait for a lucky
+    /// date to test a specific sport's season shape/outcome titles): `-draftSpinSport soccer`.
+    static var draftSpinSport: Sport? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-draftSpinSport"), i + 1 < args.count else { return nil }
+        return Sport(rawValue: args[i + 1])
+    }
     /// Feed a deep link straight to `ContentView.handle` (bypasses SpringBoard's
     /// "Open in …?" confirm, which automated runs can't tap): `-openURL balliq://play/<id>`.
     static var openURL: URL? {
@@ -64,11 +82,19 @@ enum DebugLaunch {
     static let autoOpenCommunity = false
     static let autoOpenBrowse = false
     static let autoOpenModeration = false
+    static let autoOpenPaywall = false
+    static let autoOpenOverUnder = false
+    static let autoSubmitOverUnder = false
+    static let autoOpenDraftSpin = false
+    static let autoSubmitDraftSpin = false
+    static let autoOpenGrid = false
+    static let autoSubmitGrid = false
     static let autoOpenShare = false
     static let autoOpenScoringInfo = false
     static let searchQuery: String? = nil
     static let browseSport: String? = nil
     static let createTemplateKey: String? = nil
     static let openURL: URL? = nil
+    static let draftSpinSport: Sport? = nil
     #endif
 }

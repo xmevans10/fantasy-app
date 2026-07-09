@@ -69,7 +69,9 @@ def _norm_position(raw: str) -> str:
     p = (raw or "").upper()
     if p in ("PG", "SG", "G", "GUARD"):
         return "G"
-    if p in ("SF", "PF", "F", "FORWARD"):
+    # "GF" (guard-forward tweener) shows up in hoopR's pre-2010 season files; F is the
+    # closer bucket for how those players are listed today (e.g. ESPN lists them as F).
+    if p in ("SF", "PF", "F", "GF", "FORWARD"):
         return "F"
     if p in ("C", "CENTER"):
         return "C"

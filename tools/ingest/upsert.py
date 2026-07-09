@@ -65,6 +65,12 @@ def upsert_catalog(rows: list[dict]) -> int:
     return _upsert_table("player_seasons", rows)
 
 
+def upsert_grid(rows: list[dict]) -> int:
+    """Upsert Grid puzzle rows (already-shaped id/sport/format/content/active_date dicts —
+    unlike `upsert()`, which takes `PuzzleRow` objects) into `puzzles`."""
+    return _upsert_table("puzzles", rows)
+
+
 def fetch_history_signatures() -> set[str]:
     """Every puzzle signature ever served by the daily novel-puzzle picker (see
     daily_puzzle.py) — a small, service-role-only table, so a full pull is fine."""
@@ -120,3 +126,38 @@ def fetch_served_dates(dates: list[str]) -> set[str]:
         body = err.read().decode("utf-8", "ignore")
         raise RuntimeError(f"puzzle_history lookup failed ({err.code}): {body}") from err
     return {r["served_date"] for r in rows}
+
+
+def fetch_player_seasons(sport: str, *, career: bool = False, page_size: int = 1000) -> list[dict]:
+    """Real season rows for `sport` from the live `player_seasons` catalog (populated by
+    `--catalog`) -- used by The Grid (grid.py), which generates content directly from this
+    already-ingested table instead of re-pulling raw provider data.
+
+    Paginates via the `Range` header rather than trusting a `limit` query param alone --
+    PostgREST caps a single response at its own configured max (Supabase's default is 1000
+    rows) regardless of a larger `limit`, so a naive single request silently truncates any
+    sport with >1000 rows (NFL has ~14k). Also orders by `id` for a stable row set across
+    calls -- without an explicit order, which rows land in an early page is not guaranteed
+    stable, which would make grid.py's "deterministic per (sport, date)" promise fragile in
+    practice even though the pure generator itself is deterministic given its input."""
+    base, key = _require_env()
+    endpoint = (f"{base}/rest/v1/player_seasons"
+                f"?select=name,team_abbr,season_year,sport,position,stats,career"
+                f"&sport=eq.{sport}&career=eq.{str(career).lower()}&order=id")
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    rows: list[dict] = []
+    start = 0
+    while True:
+        page_headers = {**headers, "Range-Unit": "items", "Range": f"{start}-{start + page_size - 1}"}
+        req = urllib.request.Request(endpoint, headers=page_headers, method="GET")
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                page = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as err:
+            body = err.read().decode("utf-8", "ignore")
+            raise RuntimeError(f"player_seasons fetch failed ({err.code}): {body}") from err
+        rows.extend(page)
+        if len(page) < page_size:
+            break
+        start += page_size
+    return rows

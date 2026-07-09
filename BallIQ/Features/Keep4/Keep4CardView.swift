@@ -77,7 +77,7 @@ struct Keep4CardView: View {
 
     private var teamBand: some View {
         HStack(alignment: .center, spacing: 11) {
-            headshotView
+            PlayerHeadshotBadge(headshot: player.headshot, tint: team.onPrimary)
             VStack(alignment: .leading, spacing: 3) {
                 Text(player.name.uppercased())
                     .font(.custom(FontName.condBlack, size: 21))
@@ -91,85 +91,15 @@ struct Keep4CardView: View {
             // Team logo (or country flag for teamless sports) during play; the grade (the
             // hidden sort number) replaces it on reveal — unless this is a vibes puzzle,
             // which never shows a number.
-            if isLocked && showGrade { gradeChip } else { logoSlot }
+            if isLocked && showGrade {
+                gradeChip
+            } else {
+                TeamLogoBadge(sport: sport, teamAbbr: player.teamAbbr, tint: team.onPrimary)
+            }
         }
         .padding(.horizontal, 14).padding(.vertical, 11)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(team.primary)
-    }
-
-    /// ESPN team-logo CDN, resolved per-sport (see `Sport.teamLogoURL`); nil for teamless
-    /// sports, unmapped soccer clubs, or defunct teams ESPN no longer hosts — those fall
-    /// back to the abbreviation badge in `teamLogoView`.
-    private var teamLogoURL: URL? { sport.teamLogoURL(forAbbr: player.teamAbbr) }
-
-    /// Team logo for sports with real clubs; a country flag badge for sports without one
-    /// (tennis — `teamAbbr` holds a country code there, see `Sport.hasTeams`).
-    @ViewBuilder private var logoSlot: some View {
-        if sport.hasTeams {
-            teamLogoView
-        } else {
-            countryBadgeView
-        }
-    }
-
-    @ViewBuilder private var teamLogoView: some View {
-        Group {
-            if let url = teamLogoURL {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let img): img.resizable().scaledToFit()
-                    // 404s (e.g. defunct teams like the Sonics) degrade to the abbr badge,
-                    // never an empty disc.
-                    case .failure: abbrBadgeText
-                    default: Color.clear
-                    }
-                }
-            } else {
-                abbrBadgeText
-            }
-        }
-        .modifier(LogoDisc(ring: team.onPrimary))
-    }
-
-    /// Country flag emoji in the same disc treatment as `teamLogoView`; falls back to the
-    /// plain code as text if the flag can't be resolved (never a blank/broken image).
-    private var countryBadgeView: some View {
-        Group {
-            if let flag = CountryFlags.flag(for: player.teamAbbr) {
-                Text(flag).font(.system(size: 24))
-            } else {
-                abbrBadgeText
-            }
-        }
-        .modifier(LogoDisc(ring: team.onPrimary))
-    }
-
-    private var abbrBadgeText: some View {
-        Text(player.teamAbbr.uppercased())
-            .font(.custom(FontName.condBlack, size: 12))
-            .foregroundStyle(team.onPrimary)
-    }
-
-    /// Player headshot (nflverse/ESPN) in a team-tinted circle; falls back to a glyph when absent.
-    private var headshotView: some View {
-        let fallback = Image(systemName: "person.fill")
-            .font(.system(size: 22))
-            .foregroundStyle(team.onPrimary.opacity(0.55))
-        return Group {
-            if let s = player.headshot, let url = URL(string: s) {
-                AsyncImage(url: url) { phase in
-                    if let img = phase.image { img.resizable().scaledToFill() } else { fallback }
-                }
-            } else {
-                fallback
-            }
-        }
-        .frame(width: 48, height: 48)
-        .background(team.onPrimary.opacity(0.15))
-        .clipShape(Circle())
-        .overlay(Circle().strokeBorder(team.onPrimary.opacity(0.25), lineWidth: 1))
-        .accessibilityHidden(true)   // decorative — the player's name is already read as text
     }
 
     /// The PPR/fantasy point total (the hidden sort number), shown only on reveal.
@@ -275,18 +205,5 @@ struct Keep4CardView: View {
                 }
                 dragX = 0
             }
-    }
-}
-
-/// The shared 40pt faint-disc treatment behind the team logo / country flag / abbr badge.
-private struct LogoDisc: ViewModifier {
-    let ring: Color
-    func body(content: Content) -> some View {
-        content
-            .frame(width: 40, height: 40)
-            .background(Color.white.opacity(0.15))   // faint disc, not a heavy white badge
-            .clipShape(Circle())
-            .overlay(Circle().strokeBorder(ring.opacity(0.35), lineWidth: 1))
-            .accessibilityHidden(true)   // decorative — team/country is already read via player.subtitle
     }
 }

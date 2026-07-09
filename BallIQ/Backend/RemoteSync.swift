@@ -27,6 +27,22 @@ final class RemoteSync {
         await pullRatings()
     }
 
+    /// Server-verified entitlement state (M5 Phase B — written only by the
+    /// `app-store-notifications` Edge Function). RLS already scopes rows to the caller, so no
+    /// explicit `user_id` filter is needed, matching `pullProgress`/`pullRatings`'s own pattern.
+    func pullEntitlements() async -> Entitlements {
+        struct Row: Decodable { let productId: String; let status: String }
+        let rows: [Row] = (try? await client.select(
+            "entitlements", query: [item("select", "product_id,status")])) ?? []
+        var isPro = false
+        var packs: Set<String> = []
+        for row in rows where row.status == "active" {
+            guard let product = StoreProduct(rawValue: row.productId) else { continue }
+            if product.isSubscription { isPro = true } else { packs.insert(product.rawValue) }
+        }
+        return Entitlements(isPro: isPro, unlockedPacks: packs)
+    }
+
     private func pullProgress() async {
         struct Row: Decodable { let streak: Int; let xp: Int; let lastPlayedDay: String? }
         do {

@@ -42,7 +42,7 @@ final class SupabaseClient {
 
     func restRequest(table: String, method: String = "GET",
                      query: [URLQueryItem] = [], body: Data? = nil,
-                     prefer: String? = nil) -> URLRequest {
+                     prefer: String? = nil, range: (Int, Int)? = nil) -> URLRequest {
         var comps = URLComponents(
             url: config.url.appendingPathComponent("rest/v1/\(table)"),
             resolvingAgainstBaseURL: false)!
@@ -55,6 +55,11 @@ final class SupabaseClient {
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
         if let prefer { req.setValue(prefer, forHTTPHeaderField: "Prefer") }
+        // PostgREST pagination (0-indexed, inclusive) — needed because PostgREST silently caps
+        // a single response at its own server-configured max (this project's default: 1000
+        // rows) regardless of any `limit=` query param, the same bug already caught and fixed
+        // in the Python Grid pipeline's `fetch_player_seasons`.
+        if let range { req.setValue("\(range.0)-\(range.1)", forHTTPHeaderField: "Range") }
         return req
     }
 
@@ -127,9 +132,9 @@ final class SupabaseClient {
 
     // MARK: - Typed helpers
 
-    func select<T: Decodable>(_ table: String, query: [URLQueryItem] = [],
+    func select<T: Decodable>(_ table: String, query: [URLQueryItem] = [], range: (Int, Int)? = nil,
                               decoder: JSONDecoder = .supabase, as type: T.Type = T.self) async throws -> T {
-        let data = try await perform(restRequest(table: table, query: query))
+        let data = try await perform(restRequest(table: table, query: query, range: range))
         do { return try decoder.decode(T.self, from: data) }
         catch { throw SupabaseError.decoding(String(describing: error)) }
     }
