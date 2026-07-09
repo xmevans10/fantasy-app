@@ -21,15 +21,29 @@ struct DraftSpinView: View {
     @State private var result: DraftSpinResult?
     @State private var rewards: RepositoryContainer.SessionRewards?
     @State private var loading = true
+    @State private var showingSetup = true
+    @State private var settings = DraftSpinSettings.default
+    /// One-team mode: the franchise locked by the first assigned pick, and the years
+    /// already spun for it (each later round must land on a fresh year — see `spinRound`).
+    @State private var lockedTeam: String?
+    @State private var usedLockedYears: Set<Int> = []
 
     private var picks: [CatalogSeason] { slots.compactMap(\.pick) }
     private var openSlots: [DraftSpinLineupSlot] { slots.filter { $0.pick == nil } }
+    /// Season variations OFF ("Prime only"): players already in the lineup can't reappear.
+    private var excludedNames: Set<String> {
+        settings.allowSeasonVariations ? [] : Set(picks.map(\.name))
+    }
 
     var body: some View {
         Group {
             if let result {
                 DraftSpinResultView(sport: sport, picks: picks, result: result, rewards: rewards,
                                     onDone: { dismiss() })
+            } else if showingSetup {
+                DraftSpinSetupView(sport: $sport, settings: $settings,
+                                   onStart: { Task { await startDraft() } },
+                                   onClose: { dismiss() })
             } else if loading {
                 ProgressView().tint(Color.accentText).frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showingReveal, let round = currentRound {
@@ -45,12 +59,31 @@ struct DraftSpinView: View {
     }
 
     private func load() async {
-        sport = DebugLaunch.draftSpinSport ?? DraftSpinConstraint.sportOfTheDay(Date())
+        // Default the picker: debug override, else the last sport played anywhere in the
+        // app, else this format's daily rotation. The setup screen owns the final choice.
+        sport = DebugLaunch.draftSpinSport
+            ?? container.sportFilter.sport
+            ?? DraftSpinConstraint.sportOfTheDay(Date())
+        loading = false
+        // Screenshot flows target the board/result, not the setup screen — skip straight in
+        // with default settings (except the flag that exists to capture setup itself).
+        if DebugLaunch.autoOpenDraftSpin && !DebugLaunch.holdDraftSpinSetup {
+            await startDraft()
+        }
+    }
+
+    private func startDraft() async {
+        showingSetup = false
+        loading = true
         slots = DraftSpinConstraint.lineupSlots(for: sport)
         // A broad sample — only used to *discover* a good (team, year) each round; the round's
         // complete roster is re-fetched separately once a combo is chosen (see spinNextRound).
         sample = await container.catalog.search(CatalogQuery(sport: sport), limit: 2000)
-        container.track(.gameStarted, ["format": "draftspin", "sport": sport.rawValue])
+        container.track(.gameStarted, [
+            "format": "draftspin", "sport": sport.rawValue,
+            "one_team": String(settings.lockToOneTeam),
+            "season_variations": String(settings.allowSeasonVariations),
+        ])
         loading = false
         await spinNextRound()
     }
@@ -58,9 +91,11 @@ struct DraftSpinView: View {
     private func spinNextRound() async {
         expandedPlayerID = nil
         rerollUsedThisRound = false
-        let openRoles = openSlots.map(\.role)
+        var rng = SystemRandomNumberGenerator()   // every spin is genuinely random
         guard let (team, year) = DraftSpinConstraint.spinRound(
-            from: sample, sport: sport, date: Date(), roundIndex: roundIndex, reroll: 0, openRoles: openRoles
+            from: sample, sport: sport, openRoles: openSlots.map(\.role),
+            lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
+            excludeNames: excludedNames, using: &rng
         ) else {
             finish()
             return
@@ -71,9 +106,11 @@ struct DraftSpinView: View {
     private func reroll() async {
         guard !rerollUsedThisRound else { return }
         rerollUsedThisRound = true
-        let openRoles = openSlots.map(\.role)
+        var rng = SystemRandomNumberGenerator()
         guard let (team, year) = DraftSpinConstraint.spinRound(
-            from: sample, sport: sport, date: Date(), roundIndex: roundIndex, reroll: 1, openRoles: openRoles
+            from: sample, sport: sport, openRoles: openSlots.map(\.role),
+            lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
+            excludeNames: excludedNames, using: &rng
         ) else { return }
         await loadRoundRoster(team: team, year: year)
     }
@@ -84,7 +121,9 @@ struct DraftSpinView: View {
     private func loadRoundRoster(team: String, year: Int) async {
         let fetched = await container.catalog.search(
             CatalogQuery(sport: sport, minYear: year, maxYear: year), limit: 1000)
-        let roster = fetched.filter { $0.teamAbbr == team }
+        // Excluded names (season variations OFF) are dropped from display too — `spinRound`
+        // already guaranteed at least one placeable candidate survives this filter.
+        let roster = fetched.filter { $0.teamAbbr == team && !excludedNames.contains($0.name) }
         currentRound = DraftSpinRound(team: team, year: year, roster: roster)
         expandedPlayerID = nil
         showingReveal = true
@@ -331,6 +370,12 @@ struct DraftSpinView: View {
         Haptics.tap()
         guard let index = slots.firstIndex(where: { $0.id == slot.id }) else { return }
         slots[index].pick = player
+        // One-team mode: the first assigned pick locks the franchise (so a round-1 reroll
+        // still changes it), and each locked round's year is burned for the rest of the draft.
+        if settings.lockToOneTeam, let round = currentRound {
+            if lockedTeam == nil { lockedTeam = round.team }
+            if round.team == lockedTeam { usedLockedYears.insert(round.year) }
+        }
         expandedPlayerID = nil
         currentRound = nil
         if openSlots.isEmpty {
@@ -342,7 +387,8 @@ struct DraftSpinView: View {
     }
 
     private func finish() {
-        let simulated = DraftSpinSimulator.simulate(lineup: picks, sport: sport, date: Date())
+        var rng = SystemRandomNumberGenerator()
+        let simulated = DraftSpinSimulator.simulate(lineup: picks, sport: sport, using: &rng)
         let dailyID = "draftspin-\(sport.rawValue)-\(OverUnderRoundGenerator.dayString(Date()))"
         let performance: Double
         switch simulated.outcome {

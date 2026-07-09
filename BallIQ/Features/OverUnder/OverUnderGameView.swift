@@ -23,11 +23,12 @@ struct OverUnderGameView: View {
     @State private var beatHighScore = false
     @State private var rewards: RepositoryContainer.SessionRewards?
     @State private var loading = true
+    @State private var showingSetup = true
+    @State private var sport: Sport = .nfl
 
     private let store = LocalOverUnderStore()
     private let commitThreshold: CGFloat = 70
 
-    private var sport: Sport { container.sportFilter.sport ?? .nfl }
     private var unlimitedLives: Bool { container.entitlements.hasUnlimitedOverUnderLives }
     private var dailyID: String { "overunder-\(sport.rawValue)-\(OverUnderRoundGenerator.dayString(Date()))" }
 
@@ -38,14 +39,23 @@ struct OverUnderGameView: View {
                                     wrongCount: wrongCount, highScore: store.highScore(for: sport),
                                     beatHighScore: beatHighScore, rewards: rewards,
                                     onDone: { dismiss() })
+            } else if showingSetup {
+                GameSetupScreen(formatName: "Over / Under", title: "Pick your sport",
+                                startLabel: "Start the streak", sport: $sport,
+                                onStart: { Task { await load() } },
+                                onClose: { dismiss() }) { EmptyView() }
             } else {
                 playBoard
             }
         }
         .background(Color.appBackground)
         .task {
-            await load()
-            if DebugLaunch.autoSubmitOverUnder { forceOutOfLivesForScreenshot() }
+            sport = container.sportFilter.sport ?? .nfl
+            // Screenshot flows target the board/result — skip the setup screen.
+            if DebugLaunch.autoOpenOverUnder {
+                await load()
+                if DebugLaunch.autoSubmitOverUnder { forceOutOfLivesForScreenshot() }
+            }
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView().environmentObject(container)
@@ -53,6 +63,7 @@ struct OverUnderGameView: View {
     }
 
     private func load() async {
+        showingSetup = false
         lives = store.loadLives()
         let fetched = await container.catalog.search(CatalogQuery(sport: sport), limit: 200)
         pool = PlayerRelevance.filter(fetched, sport: sport, minimum: 20)

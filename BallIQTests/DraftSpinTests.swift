@@ -63,47 +63,110 @@ final class DraftSpinTests: XCTestCase {
 
     // MARK: - spinRound
 
-    func testSpinRoundIsDeterministicForSameRoundAndReroll() {
-        let date = ISO8601DateFormatter().date(from: "2026-07-08T00:00:00Z")!
-        let a = DraftSpinConstraint.spinRound(from: richNFLRoster, sport: .nfl, date: date,
-                                              roundIndex: 0, reroll: 0, openRoles: ["QB", "RB", "WR", "TE", "FLEX", "FLEX"])
-        let b = DraftSpinConstraint.spinRound(from: richNFLRoster, sport: .nfl, date: date,
-                                              roundIndex: 0, reroll: 0, openRoles: ["QB", "RB", "WR", "TE", "FLEX", "FLEX"])
+    private func spinRNG(_ seed: String) -> SeededGenerator {
+        SeededGenerator(seed: SeededGenerator.stableHash(seed))
+    }
+
+    func testSpinRoundIsDeterministicForTheSameRNGSeed() {
+        var g1 = spinRNG("spin-seed")
+        var g2 = spinRNG("spin-seed")
+        let roles = ["QB", "RB", "WR", "TE", "FLEX", "FLEX"]
+        let a = DraftSpinConstraint.spinRound(from: richNFLRoster, sport: .nfl, openRoles: roles, using: &g1)
+        let b = DraftSpinConstraint.spinRound(from: richNFLRoster, sport: .nfl, openRoles: roles, using: &g2)
         XCTAssertNotNil(a)
         XCTAssertEqual(a?.team, b?.team)
         XCTAssertEqual(a?.year, b?.year)
     }
 
     func testSpinRoundOnlyPicksATeamYearWithARealCandidateForAnOpenRole() {
-        let date = ISO8601DateFormatter().date(from: "2026-07-08T00:00:00Z")!
-        // Only QBs exist; asking for a round where only RB/TE/FLEX are open must fail to spin —
+        // Only QBs exist; asking for a round where only RB/TE are open must fail to spin —
         // there is nothing real to place — rather than spin an unplaceable team/year.
         let qbOnly = (0..<3).map { season("qb\($0)", position: "QB", stats: ["passing_yards": 3800, "passing_tds": 28]) }
-        let picked = DraftSpinConstraint.spinRound(from: qbOnly, sport: .nfl, date: date,
-                                                   roundIndex: 0, reroll: 0, openRoles: ["RB", "TE"])
-        XCTAssertNil(picked)
+        var g = spinRNG("no-open-role")
+        XCTAssertNil(DraftSpinConstraint.spinRound(from: qbOnly, sport: .nfl, openRoles: ["RB", "TE"], using: &g))
     }
 
-    func testSpinRoundRerollCanChangeTheResult() {
-        // Two real, equally-viable team/years — across a spread of reroll values, at least one
-        // reroll should land on a different team than reroll 0 (proves reroll actually reseeds).
+    func testSpinRoundVariesAcrossRNGStreams() {
+        // Two real, equally-viable team/years — across a spread of RNG streams, at least one
+        // spin should land on a different team (spins are truly random now, not date-pinned).
         let pool = [
             season("qb-a", position: "QB", stats: ["passing_yards": 3800, "passing_tds": 28], team: "SF", year: 2020),
             season("qb-b", position: "QB", stats: ["passing_yards": 3900, "passing_tds": 29], team: "DAL", year: 2020),
         ]
-        let date = ISO8601DateFormatter().date(from: "2026-07-08T00:00:00Z")!
-        let first = DraftSpinConstraint.spinRound(from: pool, sport: .nfl, date: date, roundIndex: 0, reroll: 0, openRoles: ["QB"])
+        var g0 = spinRNG("stream-0")
+        let first = DraftSpinConstraint.spinRound(from: pool, sport: .nfl, openRoles: ["QB"], using: &g0)
         var sawDifferentTeam = false
-        for reroll in 1...5 {
-            let rerolled = DraftSpinConstraint.spinRound(from: pool, sport: .nfl, date: date, roundIndex: 0, reroll: reroll, openRoles: ["QB"])
-            if rerolled?.team != first?.team { sawDifferentTeam = true }
+        for i in 1...6 {
+            var g = spinRNG("stream-\(i)")
+            if DraftSpinConstraint.spinRound(from: pool, sport: .nfl, openRoles: ["QB"], using: &g)?.team != first?.team {
+                sawDifferentTeam = true
+            }
         }
-        XCTAssertTrue(sawDifferentTeam, "at least one reroll should change the spun team across 5 attempts")
+        XCTAssertTrue(sawDifferentTeam, "at least one RNG stream should spin the other team")
     }
 
     func testSpinRoundEmptyPoolReturnsNil() {
-        let date = ISO8601DateFormatter().date(from: "2026-07-08T00:00:00Z")!
-        XCTAssertNil(DraftSpinConstraint.spinRound(from: [], sport: .nfl, date: date, roundIndex: 0, reroll: 0, openRoles: ["QB"]))
+        var g = spinRNG("empty")
+        XCTAssertNil(DraftSpinConstraint.spinRound(from: [], sport: .nfl, openRoles: ["QB"], using: &g))
+    }
+
+    // MARK: - spinRound setup options (one-team lock, season variations)
+
+    private var twoTeamPool: [CatalogSeason] {
+        [
+            season("qb-sf19", position: "QB", stats: ["passing_yards": 3600, "passing_tds": 24], team: "SF", year: 2019),
+            season("qb-sf20", position: "QB", stats: ["passing_yards": 3800, "passing_tds": 28], team: "SF", year: 2020),
+            season("qb-dal", position: "QB", stats: ["passing_yards": 3900, "passing_tds": 29], team: "DAL", year: 2018),
+        ]
+    }
+
+    func testSpinRoundLockedTeamOnlySpinsThatFranchise() {
+        for i in 0...5 {
+            var g = spinRNG("lock-\(i)")
+            let spun = DraftSpinConstraint.spinRound(from: twoTeamPool, sport: .nfl, openRoles: ["QB"],
+                                                     lockedTeam: "SF", using: &g)
+            XCTAssertEqual(spun?.team, "SF", "stream \(i) escaped the one-team lock")
+        }
+    }
+
+    func testSpinRoundLockedTeamNeverRepeatsAUsedYear() {
+        var g = spinRNG("lock-used-year")
+        let spun = DraftSpinConstraint.spinRound(from: twoTeamPool, sport: .nfl, openRoles: ["QB"],
+                                                 lockedTeam: "SF", usedLockedYears: [2020], using: &g)
+        XCTAssertEqual(spun?.team, "SF")
+        XCTAssertEqual(spun?.year, 2019)
+    }
+
+    func testSpinRoundLockedTeamFallsBackWhenItsYearsAreExhausted() {
+        // SF has no fresh viable year left — the spin degrades to any team instead of dead-ending.
+        var g = spinRNG("lock-exhausted")
+        let spun = DraftSpinConstraint.spinRound(from: twoTeamPool, sport: .nfl, openRoles: ["QB"],
+                                                 lockedTeam: "SF", usedLockedYears: [2019, 2020], using: &g)
+        XCTAssertEqual(spun?.team, "DAL")
+    }
+
+    func testSpinRoundExcludedNamesRemoveAComboFromViability() {
+        // Season variations OFF: a combo whose only placeable candidate is already drafted
+        // must not spin. SF/2020's lone QB is excluded → only DAL/2018 remains viable.
+        let pool = [
+            season("qb-sf20", position: "QB", stats: ["passing_yards": 3800, "passing_tds": 28], team: "SF", year: 2020),
+            season("qb-dal", position: "QB", stats: ["passing_yards": 3900, "passing_tds": 29], team: "DAL", year: 2018),
+        ]
+        for i in 0...5 {
+            var g = spinRNG("exclude-\(i)")
+            let spun = DraftSpinConstraint.spinRound(from: pool, sport: .nfl, openRoles: ["QB"],
+                                                     excludeNames: ["Player qb-sf20"], using: &g)
+            XCTAssertEqual(spun?.team, "DAL", "stream \(i) spun a combo with no undrafted candidate")
+        }
+        var g = spinRNG("exclude-all")
+        XCTAssertNil(DraftSpinConstraint.spinRound(from: pool, sport: .nfl, openRoles: ["QB"],
+                                                   excludeNames: ["Player qb-sf20", "Player qb-dal"], using: &g))
+    }
+
+    func testDraftSpinSettingsDefaultsMatchLegacyBehavior() {
+        let defaults = DraftSpinSettings.default
+        XCTAssertFalse(defaults.lockToOneTeam)
+        XCTAssertTrue(defaults.allowSeasonVariations)
     }
 
     // MARK: - eligibleSlots
@@ -166,35 +229,78 @@ final class DraftSpinTests: XCTestCase {
         ]
     }
 
-    func testSimulationIsDeterministicForSameLineupAndDate() {
-        let date = ISO8601DateFormatter().date(from: "2026-07-08T00:00:00Z")!
-        let a = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, date: date)
-        let b = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, date: date)
-        XCTAssertEqual(a, b)
+    private func seededRNG(_ seed: String) -> SeededGenerator {
+        SeededGenerator(seed: SeededGenerator.stableHash(seed))
     }
 
-    func testSimulationDiffersAcrossDifferentDays() {
-        let day1 = ISO8601DateFormatter().date(from: "2026-07-08T00:00:00Z")!
-        let day2 = ISO8601DateFormatter().date(from: "2026-07-09T00:00:00Z")!
-        let a = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, date: day1)
-        let b = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, date: day2)
-        XCTAssertNotEqual(a, b)
+    func testSimulationIsDeterministicForSameSeed() {
+        var a = seededRNG("sim-seed")
+        var b = seededRNG("sim-seed")
+        XCTAssertEqual(DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, using: &a),
+                       DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, using: &b))
+    }
+
+    func testSimulationVariesAcrossRuns() {
+        // Truly-random gameplay: different RNG streams must be able to produce different
+        // seasons for the same lineup (the old same-day-same-result replay guarantee is gone
+        // by explicit product decision).
+        var a = seededRNG("sim-seed-1")
+        let first = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, using: &a)
+        var sawDifferent = false
+        for i in 2...6 {
+            var g = seededRNG("sim-seed-\(i)")
+            if DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, using: &g) != first {
+                sawDifferent = true
+            }
+        }
+        XCTAssertTrue(sawDifferent)
+    }
+
+    /// The 2026-07-09 scoring-audit invariant: draft quality must actually move the record.
+    /// (The pre-audit formula scaled the opponent by the player's own lineup power, making
+    /// every season a coin flip regardless of picks.) Averaged over many seeded seasons, a
+    /// clearly stronger lineup must win clearly more games than a clearly weaker one.
+    func testStrongerLineupWinsMoreOnAverage() {
+        let weak = [season("w1", position: "WR", stats: ["receiving_yards": 250, "receptions": 18]),
+                    season("w2", position: "RB", stats: ["rushing_yards": 180, "rushing_tds": 1])]
+        let strong = [season("s1", position: "WR", stats: ["receiving_yards": 1900, "receptions": 140]),
+                      season("s2", position: "RB", stats: ["rushing_yards": 2000, "rushing_tds": 24])]
+        var weakWins = 0, strongWins = 0
+        for i in 0..<60 {
+            var g1 = seededRNG("weak-\(i)"), g2 = seededRNG("strong-\(i)")
+            weakWins += DraftSpinSimulator.simulate(lineup: weak, sport: .nfl, using: &g1).wins
+            strongWins += DraftSpinSimulator.simulate(lineup: strong, sport: .nfl, using: &g2).wins
+        }
+        XCTAssertGreaterThan(strongWins, weakWins + 60,
+                             "a far stronger lineup should average clearly more wins per season")
+    }
+
+    func testWinProbabilityScalesAndClamps() {
+        XCTAssertEqual(DraftSpinSimulator.winProbability(power: DraftSpinSimulator.leagueBaselinePower),
+                       0.5, accuracy: 0.0001)
+        XCTAssertGreaterThan(DraftSpinSimulator.winProbability(power: 0.6),
+                             DraftSpinSimulator.winProbability(power: 0.4))
+        // Upper clamp binds within the real 0...1 power range; the lower one is a safety
+        // net that only binds below power 0 (power itself can't go negative).
+        XCTAssertEqual(DraftSpinSimulator.winProbability(power: 1.0), 0.90, accuracy: 0.0001)
+        XCTAssertEqual(DraftSpinSimulator.winProbability(power: 0.0), 0.14, accuracy: 0.0001)
+        XCTAssertEqual(DraftSpinSimulator.winProbability(power: -1.0), 0.10, accuracy: 0.0001)
     }
 
     func testWinsAndLossesAlwaysSumToSeasonLength() {
-        let date = ISO8601DateFormatter().date(from: "2026-07-08T00:00:00Z")!
         for sport in Sport.allCases {
-            let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: sport, date: date)
+            var g = seededRNG("sum-\(sport.rawValue)")
+            let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: sport, using: &g)
             XCTAssertEqual(result.wins + result.losses, DraftSpinSimulator.seasonShape(for: sport).gameCount,
                             "sport: \(sport.rawValue)")
         }
     }
 
     func testOutcomeTiersMatchWinThresholds() {
-        let date = ISO8601DateFormatter().date(from: "2026-07-08T00:00:00Z")!
         for sport in Sport.allCases {
             let shape = DraftSpinSimulator.seasonShape(for: sport)
-            let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: sport, date: date)
+            var g = seededRNG("tiers-\(sport.rawValue)")
+            let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: sport, using: &g)
             switch result.outcome {
             case .champion: XCTAssertGreaterThanOrEqual(result.wins, shape.championshipWins, "sport: \(sport.rawValue)")
             case .madePlayoffs:
@@ -216,34 +322,35 @@ final class DraftSpinTests: XCTestCase {
         }
     }
 
-    /// Locked-value regression: pins this exact lineup+date+seed sequence's output so a future
-    /// refactor of the RNG/scoring math can't silently drift the result.
-    func testLockedSimulationValueForFixedLineupAndDate() {
-        let date = ISO8601DateFormatter().date(from: "2026-07-08T00:00:00Z")!
-        let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, date: date)
-        XCTAssertEqual(result.wins, 4)
-        XCTAssertEqual(result.losses, 13)
-        XCTAssertEqual(result.totalPoints, 481)
+    /// Locked-value regression: pins this exact lineup+seed sequence's output so a future
+    /// refactor of the RNG/scoring math can't silently drift the result. (Values re-locked
+    /// 2026-07-09 when the audit replaced the coin-flip duel with `winProbability`.)
+    func testLockedSimulationValueForFixedLineupAndSeed() {
+        var g = seededRNG("draftspin-locked-nfl")
+        let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, using: &g)
+        XCTAssertEqual(result.wins, 7)
+        XCTAssertEqual(result.losses, 10)
+        XCTAssertEqual(result.totalPoints, 533)
         XCTAssertEqual(result.outcome, .missedPlayoffs)
     }
 
     func testEmptyLineupNeverCrashes() {
-        let date = Date()
         for sport in Sport.allCases {
-            let result = DraftSpinSimulator.simulate(lineup: [], sport: sport, date: date)
+            var g = SystemRandomNumberGenerator()
+            let result = DraftSpinSimulator.simulate(lineup: [], sport: sport, using: &g)
             XCTAssertEqual(result.wins + result.losses, DraftSpinSimulator.seasonShape(for: sport).gameCount,
                             "sport: \(sport.rawValue)")
         }
     }
 
     /// Locked-value regression for a non-NFL sport: pins soccer's exact output for this
-    /// lineup+date+seed so the per-sport `seasonShape` table can't silently drift either.
+    /// lineup+seed so the per-sport `seasonShape` table can't silently drift either.
     func testLockedSimulationValueForNonNFLSport() {
-        let date = ISO8601DateFormatter().date(from: "2026-07-08T00:00:00Z")!
-        let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .soccer, date: date)
-        XCTAssertEqual(result.wins, 22)
-        XCTAssertEqual(result.losses, 16)
-        XCTAssertEqual(result.totalPoints, 1115)
-        XCTAssertEqual(result.outcome, .madePlayoffs)
+        var g = seededRNG("draftspin-locked-soccer")
+        let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .soccer, using: &g)
+        XCTAssertEqual(result.wins, 15)
+        XCTAssertEqual(result.losses, 23)
+        XCTAssertEqual(result.totalPoints, 1120)
+        XCTAssertEqual(result.outcome, .missedPlayoffs)
     }
 }

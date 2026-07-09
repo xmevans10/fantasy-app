@@ -820,6 +820,56 @@ the format's 4th and final mechanic iteration plus the data-depth work it expose
   this kind of guessed intent. Needs the user to confirm what each toggle should do before
   it's built.
 
+**Shipped 2026-07-09 (M18 follow-up — per-game setup screens, casino spin, true randomness,
+scoring audit, second data wave):** same-day follow-up to four explicit user asks.
+
+- **Per-game setup screens replace the Home sport chips.** `SportFilterBar` is gone from
+  Home; every format now launches through a shared `GameSetupScreen` scaffold
+  (`Features/Home/components/GameSetupScreen.swift`: format label, SPORT picker with the
+  same Pro gating the chips had, format-specific `SetupOptionCard`/`SetupSegmentedControl`
+  rows, one big start button). Draft & Spin gets the reference video's rows — TEAMS
+  All/One-team (first assigned pick locks the franchise; later rounds spin fresh *years*
+  of it, falling back to other teams only when its years are exhausted) and SEASON
+  VARIATIONS On/Prime-only (Prime-only = each real player drafted at most once; excluded
+  players are invisible to both spin viability and rosters) — plus an NFL-only ROSTER row
+  honestly locked at "Offense only" (no defensive data exists). Over/Under and The Grid
+  gained sport-picker setups (their sport used to silently come from the now-dead filter);
+  Keep4/Who-Am-I launch through `DailyGameLaunchView` (setup → fetch that sport's daily →
+  play). The chosen sport persists to `container.sportFilter` so Home's daily previews and
+  rank widget follow the last sport actually played. This also closes the reported bug
+  where the NFL chip + Draft & Spin produced a soccer session — Draft & Spin ignored the
+  filter entirely (it used only its own sport-of-the-day rotation).
+- **Casino-grade spin reveal** (`SpinRevealView` rewrite): chasing marquee lights framing
+  two blockCard reels, rolling decoy transitions, **staggered stops** (team locks first,
+  year holds five extra anticipation ticks), volt glow + overshoot pulse on lock, tilted
+  "LOCKED IN" stamp, confetti burst, tap→commit→success haptic cadence. New
+  `-screenshotDraftSpinReveal` flag freezes the settled state for verification.
+- **Spins are truly random now** — explicit product decision replacing the launch design's
+  date-seeded "same spin on every install" determinism. `spinRound` and
+  `DraftSpinSimulator.simulate` take an injected `RandomNumberGenerator` (gameplay passes
+  `SystemRandomNumberGenerator`, tests pass `SeededGenerator`), so reproducibility moved
+  from the product into the tests where it belongs.
+- **Scoring audit found a real bug: draft quality never affected the record.** The duel
+  formula scaled the *opponent's* score by the player's own lineup power, so every season
+  was a coin flip regardless of picks. Replaced with an explicit per-game
+  `winProbability(power:)` (50% at `leagueBaselinePower` 0.40, ±9 pts of win chance per
+  0.1 of lineup power, clamped 10–90%) — locked-value tests re-pinned, plus a
+  distribution test asserting a far stronger lineup averages clearly more wins. Verified
+  live: an auto-picked bench-heavy NBA lineup went 21-61 ("MISSED THE PLAYOFFS").
+- **Second data wave ("we need a TON of data"):** MLB leader sweep widened again,
+  1955→**1901** (now the committed default): id pool 4,362 → 7,109 — the Ruth/Cobb/
+  Gehrig-era legends' full careers. **Tennis finally has a real bulk source**: new
+  `providers/tennis_atp.py` aggregates Jeff Sackmann's `tennis_atp` dataset (via the
+  `stakah/tennis_atp` GitHub snapshot — upstream is deleted; snapshot is frozen at 2018)
+  into per-(player, season) lines (matches won/lost, titles, Grand Slam titles),
+  1968–2018, ≥15 tour matches to qualify; every shipped row carries a real Wikipedia
+  thumbnail resolved once per player (tennis-context-verified, so a same-named
+  non-player's photo can never ship; photo-less players are dropped to keep the M16
+  bundle guard true by construction). Committed as `data/tennis_atp_seasons.csv`; no cron
+  needed — a frozen dataset can't drift; 2019+ keeps flowing from the curated seed, which
+  wins any (player, year) collision. Soccer stays at its documented free-tier ceiling
+  (the incremental league×season sweep cron already covers the whole reachable matrix).
+
 ## 9. Roadmap — remaining milestones
 
 Full briefs live in `prompts/` (same self-contained format: goal, why-now, current state,

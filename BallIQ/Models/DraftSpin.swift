@@ -37,6 +37,22 @@ private struct TeamYear: Hashable {
     let year: Int
 }
 
+/// Pre-game options chosen on the setup screen (reference app's config, mapped onto what
+/// this catalog can honestly support — its "Roster: Both sides" toggle is display-only
+/// here because the catalog carries no defensive players for any sport).
+struct DraftSpinSettings: Equatable {
+    /// false = every round spins any viable franchise; true = after the first round's spin,
+    /// every later round spins a different YEAR of that same franchise (falling back to any
+    /// team for a round where the locked team has no viable year left — never a dead spin).
+    var lockToOneTeam = false
+    /// true (reference "Season variations: On") = a player you already drafted can appear
+    /// again in a later round as a different season of themselves; false ("Prime only") =
+    /// each real player appears in your draft at most once.
+    var allowSeasonVariations = true
+
+    static let `default` = DraftSpinSettings()
+}
+
 /// Procedural draft: spin a (team, year) each round, browse that real roster with full visible
 /// stats, then assign your pick to whichever open lineup slot their position fits — spin again
 /// for the next slot. Repeats for the sport's lineup size.
@@ -81,21 +97,29 @@ enum DraftSpinConstraint {
         return sports[Int(gen.next() % UInt64(sports.count))]
     }
 
-    /// Spins a real (team, year) for this round from a *sample* pool — seeded by date + round
-    /// index + reroll count (so re-rolling changes the result but stays deterministic for the
-    /// same reroll count) — requiring at least one real candidate that fits one of the
-    /// *currently open* lineup roles, so a round can never spin a team/year where nothing is
-    /// placeable. The sample only needs to be broad enough to discover a good combo; the caller
-    /// re-fetches that exact (team, year)'s complete roster before showing it (see
-    /// `DraftSpinView.spinNextRound` — the same sample-vs-complete-roster distinction that
-    /// mattered for the single-spin design applies here too).
-    static func spinRound(from pool: [CatalogSeason], sport: Sport, date: Date, roundIndex: Int,
-                        reroll: Int, openRoles: [String]) -> (team: String, year: Int)? {
+    /// Spins a real (team, year) for this round from a *sample* pool — **truly random per
+    /// spin** (explicit product decision 2026-07-09, replacing the original date-seeded
+    /// same-spin-on-every-install design): the RNG is injected so gameplay uses the system
+    /// generator while tests stay reproducible with a `SeededGenerator`. Requires at least
+    /// one real candidate that fits one of the *currently open* lineup roles, so a round can
+    /// never spin a team/year where nothing is placeable. The sample only needs to be broad
+    /// enough to discover a good combo; the caller re-fetches that exact (team, year)'s
+    /// complete roster before showing it (see `DraftSpinView.spinNextRound` — the same
+    /// sample-vs-complete-roster distinction that mattered for the single-spin design).
+    /// `lockedTeam` (one-team mode) restricts the spin to that franchise's years; if the lock
+    /// leaves nothing viable the spin falls back to every team rather than dead-ending.
+    /// `excludeNames` (season-variations OFF) treats already-drafted players as absent when
+    /// judging a combo viable, so a spin can never land on a roster whose only placeable
+    /// candidates are players you already own.
+    static func spinRound(from pool: [CatalogSeason], sport: Sport, openRoles: [String],
+                        lockedTeam: String? = nil, usedLockedYears: Set<Int> = [],
+                        excludeNames: Set<String> = [],
+                        using gen: inout some RandomNumberGenerator) -> (team: String, year: Int)? {
         let openFilters = (formations[sport] ?? []).filter { openRoles.contains($0.role) }.map(\.filter)
         guard !openFilters.isEmpty else { return nil }
 
         var eligibleByCombo: [TeamYear: Bool] = [:]
-        for season in pool where !season.teamAbbr.isEmpty {
+        for season in pool where !season.teamAbbr.isEmpty && !excludeNames.contains(season.name) {
             let key = TeamYear(team: season.teamAbbr, year: season.seasonYear)
             if eligibleByCombo[key] == true { continue }
             eligibleByCombo[key] = openFilters.contains { $0.matches(season.position) }
@@ -104,14 +128,26 @@ enum DraftSpinConstraint {
         for (combo, isEligible) in eligibleByCombo where isEligible {
             viable.append(combo)
         }
+        if let lockedTeam {
+            // Different year each round for the locked franchise; fall back to other teams
+            // only when the lock has no fresh viable year left (never re-spin a used year).
+            let locked = viable.filter { $0.team == lockedTeam && !usedLockedYears.contains($0.year) }
+            if !locked.isEmpty {
+                viable = locked
+            } else {
+                viable.removeAll { $0.team == lockedTeam }
+            }
+        }
+        // Sorting before the draw still matters even with a random RNG: `Dictionary`
+        // iteration order varies run to run, so a seeded test generator would otherwise
+        // see a different candidate order (and thus a different pick) per run.
         viable.sort { lhs, rhs in
             lhs.team == rhs.team ? lhs.year < rhs.year : lhs.team < rhs.team
         }
         guard !viable.isEmpty else { return nil }
-
-        var gen = SeededGenerator(seed: SeededGenerator.stableHash(
-            "draftspin-round-\(sport.rawValue)-\(OverUnderRoundGenerator.dayString(date))-\(roundIndex)-\(reroll)"))
-        guard let chosen = viable.shuffled(using: &gen).first else { return nil }
+        // `next()` + modulo, not `randomElement(using:)` — same rationale as
+        // `sportOfTheDay`: randomElement is measurably biased under SeededGenerator.
+        let chosen = viable[Int(gen.next() % UInt64(viable.count))]
         return (chosen.team, chosen.year)
     }
 
@@ -163,10 +199,13 @@ struct DraftSpinResult: Equatable {
     let outcome: Outcome
 }
 
-/// Deterministic, pure season simulator — luck-dominant by design (the brief's own rationale
-/// for keeping Draft & Spin unranked/XP-only: it shouldn't move the competitive ladder).
-/// Seeded by date + the exact drafted lineup, so replaying the same picks on the same day
-/// always reproduces the same result, but a different lineup or a different day varies it.
+/// Pure season simulator, RNG-injected (system generator in gameplay — every run is a fresh
+/// season, matching the now-truly-random spins; seeded generator in tests). Still unranked/
+/// XP-only (a simulated season must never move the competitive ladder), but no longer
+/// pure-luck: the 2026-07-09 scoring audit found the original duel formula scaled the
+/// opponent's score by the player's own lineup power, so draft quality mathematically never
+/// affected the record — every lineup was a coin flip. Now lineup power sets the per-game
+/// win probability directly (see `winProbability`), so drafting well genuinely wins more.
 enum DraftSpinSimulator {
     /// A sport's season length and the win counts that separate its three outcome tiers.
     /// Thresholds are matched by *tier probability* under a coin-flip (50/50) week, not by
@@ -191,20 +230,32 @@ enum DraftSpinSimulator {
         }
     }
 
-    static func simulate(lineup: [CatalogSeason], sport: Sport, date: Date) -> DraftSpinResult {
-        let lineupKey = lineup.map(\.id).sorted().joined(separator: ",")
-        var gen = SeededGenerator(seed: SeededGenerator.stableHash(
-            "draftspin-sim-\(sport.rawValue)-\(OverUnderRoundGenerator.dayString(date))-\(lineupKey)"))
+    /// The lineup power at which a season is a coin flip. Calibrated against real drafts:
+    /// `power` normalizes each stat against `ScoringStat`'s reference bounds, so a lineup of
+    /// respectable-but-unspectacular seasons averages ≈0.4; stars push toward 0.6+.
+    static let leagueBaselinePower = 0.40
 
+    /// Per-game win chance from lineup power — linear around the baseline, clamped so no
+    /// season is ever a guaranteed sweep or wipeout (an all-star lineup can still miss, a
+    /// bad one can still shock): +0.1 lineup power ≈ +9 points of per-game win chance.
+    /// At the tiers' own thresholds: champion (e.g. NFL 12 of 17, ~71% wins) needs a
+    /// sustained ~0.7+ per-game chance ⇒ power ≈ 0.73 — a genuinely elite draft; playoffs
+    /// (~53%) ⇒ power ≈ 0.43 — a solid one. That's the audit's target shape: better drafts
+    /// win visibly more, luck still swings any single season.
+    static func winProbability(power: Double) -> Double {
+        min(max(0.5 + 0.9 * (power - leagueBaselinePower), 0.10), 0.90)
+    }
+
+    static func simulate(lineup: [CatalogSeason], sport: Sport,
+                         using gen: inout some RandomNumberGenerator) -> DraftSpinResult {
         let shape = seasonShape(for: sport)
         let basePower = lineup.isEmpty ? 0 : lineup.map { power($0, sport: sport) }.reduce(0, +) / Double(lineup.count)
+        let winChance = winProbability(power: basePower)
         var wins = 0
         var totalPoints = 0.0
         for _ in 0..<shape.gameCount {
-            let ourScore = basePower * 100 * Double.random(in: 0.7...1.3, using: &gen)
-            let opponentScore = basePower * 100 * Double.random(in: 0.7...1.3, using: &gen)
-            if ourScore > opponentScore { wins += 1 }
-            totalPoints += ourScore
+            if Double.random(in: 0..<1, using: &gen) < winChance { wins += 1 }
+            totalPoints += basePower * 100 * Double.random(in: 0.7...1.3, using: &gen)
         }
         let losses = shape.gameCount - wins
         let outcome: DraftSpinResult.Outcome = wins >= shape.championshipWins ? .champion

@@ -14,6 +14,8 @@ struct HomeView: View {
     @State private var showOverUnder = false
     @State private var showDraftSpin = false
     @State private var showGrid = false
+    @State private var showKeep4Launch = false
+    @State private var showWhoAmILaunch = false
     @State private var shareTarget: SharablePuzzle?
 
     private let gridColumns = [GridItem(.flexible(), spacing: 12),
@@ -26,11 +28,10 @@ struct HomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    SportFilterBar(selection: gatedSportFilter,
-                                   locked: { !container.entitlements.canSelect($0) })
-                        .heroReveal(0)
-
-                    streakRow
+                    // No sport chips here anymore (2026-07-09): sport is chosen per-game on
+                    // each format's own setup screen, which writes the choice back to
+                    // `container.sportFilter` so these daily previews follow the last pick.
+                    streakRow.heroReveal(0)
 
                     section("Today's daily games") {
                         VStack(spacing: 14) {
@@ -45,7 +46,7 @@ struct HomeView: View {
                                               completed: container.hasCompletedToday(puzzleID: puzzle.id),
                                               favoriteTeamMatch: container.favoriteTeams.team(for: puzzle.sport)
                                                   .map(puzzle.features(teamAbbr:)) ?? false) {
-                                    activePuzzle = puzzle
+                                    showKeep4Launch = true
                                 }
                                 secondaryAction: { shareTarget = SharablePuzzle(keep4: puzzle) }
                             }
@@ -57,7 +58,7 @@ struct HomeView: View {
                                               subtitle: "\(puzzle.clues.count) clues",
                                               completed: container.hasCompletedToday(puzzleID: puzzle.id),
                                               typeColor: .voltFill, onTypeColor: .onVolt) {
-                                    activeWhoAmI = puzzle
+                                    showWhoAmILaunch = true
                                 }
                                 secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }
                             }
@@ -108,6 +109,12 @@ struct HomeView: View {
             .fullScreenCover(isPresented: $showGrid) {
                 GridGameView().environmentObject(container)
             }
+            .fullScreenCover(isPresented: $showKeep4Launch) {
+                DailyGameLaunchView(format: .keep4).environmentObject(container)
+            }
+            .fullScreenCover(isPresented: $showWhoAmILaunch) {
+                DailyGameLaunchView(format: .whoAmI).environmentObject(container)
+            }
             .sheet(item: $shareTarget) { target in
                 PuzzleShareSheet(puzzle: target, surface: "puzzle_home")
                     .environmentObject(container)
@@ -117,21 +124,6 @@ struct HomeView: View {
             }
             .task(id: container.sportFilter) { await loadDaily() }
         }
-    }
-
-    /// Intercepts a locked-sport selection with the paywall instead of applying it — the sport
-    /// filter chips stay a plain `Binding` from `SportFilterBar`'s point of view.
-    private var gatedSportFilter: Binding<SportFilter> {
-        Binding(
-            get: { container.sportFilter },
-            set: { newValue in
-                if container.entitlements.canSelect(newValue) {
-                    container.sportFilter = newValue
-                } else {
-                    showPaywall = true
-                }
-            }
-        )
     }
 
     /// Current streak, shown inline in the page body (not a nav-bar icon — that read as a
@@ -176,8 +168,8 @@ struct HomeView: View {
 
     private func launch(_ format: GameFormat) {
         switch format.id {
-        case "keep4": activePuzzle = keep4
-        case "whoami": activeWhoAmI = whoami
+        case "keep4": showKeep4Launch = true
+        case "whoami": showWhoAmILaunch = true
         case "versus": selectedTab = 2
         case "overunder": showOverUnder = true
         case "draft": showDraftSpin = true

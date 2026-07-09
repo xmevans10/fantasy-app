@@ -18,7 +18,8 @@ struct GridGameView: View {
     @State private var result: (score: Int, correctCount: Int)?
     @State private var rewards: RepositoryContainer.SessionRewards?
 
-    private var sport: Sport { container.sportFilter.sport ?? .nfl }
+    @State private var showingSetup = true
+    @State private var sport: Sport = .nfl
     private var attemptedCount: Int { solved.count + wrong.count }
 
     var body: some View {
@@ -26,6 +27,11 @@ struct GridGameView: View {
             if let result {
                 GridResultView(sport: sport, score: result.score, correctCount: result.correctCount,
                                rewards: rewards, onDone: { dismiss() })
+            } else if showingSetup {
+                GameSetupScreen(formatName: "The Grid", title: "Pick your sport",
+                                startLabel: "Open the grid", sport: $sport,
+                                onStart: { Task { await load() } },
+                                onClose: { dismiss() }) { EmptyView() }
             } else if loading {
                 ProgressView().tint(Color.accentText).frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let puzzle {
@@ -37,7 +43,11 @@ struct GridGameView: View {
             }
         }
         .background(Color.appBackground)
-        .task { await load() }
+        .task {
+            sport = container.sportFilter.sport ?? .nfl
+            // Screenshot flows target the board/result — skip the setup screen.
+            if DebugLaunch.autoOpenGrid { await load() }
+        }
         .alert("Name that player", isPresented: Binding(get: { activeCell != nil }, set: { if !$0 { activeCell = nil } })) {
             TextField("Player name", text: $guessText)
                 .textInputAutocapitalization(.words)
@@ -51,10 +61,10 @@ struct GridGameView: View {
     }
 
     private func load() async {
-        // Must resolve to one concrete sport, not the raw `sportFilter` — `.all` carries no
-        // sport at all, which would fetch every sport's grid row and silently pick whichever
-        // sorts first (previously surfaced as a real bug: the header defaulted its own display
-        // to NFL while the board underneath showed a *different* sport's teams).
+        showingSetup = false
+        // The setup screen's pick is already one concrete sport — never `.all`, which
+        // carries no sport and would fetch every sport's grid row and silently pick
+        // whichever sorts first (a real bug the old filter-derived flow hit).
         let resolvedFilter = SportFilter(rawValue: sport.rawValue) ?? .nfl
         puzzle = await container.puzzles.gridPuzzle(for: resolvedFilter, date: Date())
         container.track(.gameStarted, ["format": "grid", "sport": sport.rawValue])

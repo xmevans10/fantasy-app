@@ -27,9 +27,18 @@ enum DebugLaunch {
     /// Forces an immediate out-of-lives finish once the session loads (simctl can't play a real
     /// round-by-round session): `-screenshotOverUnderResult`.
     static var autoSubmitOverUnder: Bool { has("-screenshotOverUnderResult") }
-    static var autoOpenDraftSpin: Bool { has("-screenshotDraftSpin") || has("-screenshotDraftSpinResult") }
+    static var autoOpenDraftSpin: Bool {
+        has("-screenshotDraftSpin") || has("-screenshotDraftSpinResult")
+            || has("-screenshotDraftSpinSetup") || has("-screenshotDraftSpinReveal")
+    }
     /// Auto-picks the first candidate in every slot (simctl can't tap through the draft board).
     static var autoSubmitDraftSpin: Bool { has("-screenshotDraftSpinResult") }
+    /// Stops on the pre-game setup screen instead of skipping into the board
+    /// (the other DraftSpin flags exist to capture the board/result, so they skip setup).
+    static var holdDraftSpinSetup: Bool { has("-screenshotDraftSpinSetup") }
+    /// Freezes the slot-machine reveal in its settled ("LOCKED IN") state instead of
+    /// advancing to the board, so the casino styling itself can be screenshot.
+    static var holdDraftSpinReveal: Bool { has("-screenshotDraftSpinReveal") }
     static var autoOpenGrid: Bool { has("-screenshotGrid") || has("-screenshotGridResult") }
     /// Auto-answers every cell with its first valid answer (simctl can't type into the guess field).
     static var autoSubmitGrid: Bool { has("-screenshotGridResult") }
@@ -87,6 +96,8 @@ enum DebugLaunch {
     static let autoSubmitOverUnder = false
     static let autoOpenDraftSpin = false
     static let autoSubmitDraftSpin = false
+    static let holdDraftSpinSetup = false
+    static let holdDraftSpinReveal = false
     static let autoOpenGrid = false
     static let autoSubmitGrid = false
     static let autoOpenShare = false
