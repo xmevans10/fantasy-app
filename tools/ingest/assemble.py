@@ -15,6 +15,10 @@ from .themes import Theme, format_columns
 
 KEEP_COUNT = 8
 
+# Sources whose photo-less rows are catalog/roster depth only, never puzzle cards
+# (see the gate in `grade_pool`). Their photo-CARRYING rows compete normally.
+DEPTH_ONLY_WITHOUT_PHOTO = {"bref", "pfr"}
+
 
 @dataclass
 class PuzzleRow:
@@ -69,6 +73,15 @@ def grade_pool(theme: Theme, seasons: list[RawSeason],
         if any(s.stats.get(k, 0.0) < v for k, v in theme.min_stats.items()):
             continue
         if not all(f.matches(s) for f in theme.filters):
+            continue
+        # M16, made structural (2026-07-10): the historical depth sweeps (bref = NBA
+        # 1950–2001, pfr = NFL 1970–1998) deliberately carry photo-less rows for
+        # catalog/roster depth (Draft & Spin, Create-search) — those rows must never
+        # become puzzle CARDS, or the bundle headshot guard trips on every refresh
+        # (caught live: Mark Clayton/James Wilder 1984). Scoped to those sources so the
+        # curated seed fallback (whose offline puzzles are the whole point) and test
+        # fixtures are untouched — every other source guarantees a headshot URL.
+        if not s.headshot and s.source in DEPTH_ONLY_WITHOUT_PHOTO:
             continue
         g = (grade_era(s.stats, theme.scale, s.sport, s.position, s.season_year, baselines)
              if use_era else grade(s.stats, theme.scale))

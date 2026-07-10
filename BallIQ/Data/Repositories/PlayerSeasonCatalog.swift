@@ -86,6 +86,13 @@ final class PlayerSeasonCatalog {
         Task { _ = await draftSpinSample(for: sport) }
     }
 
+    /// Every arcade format's session pool, served from the same cached broad sample Draft &
+    /// Spin discovers from — Over/Under's 200-row pool is just its prefix, so one warm fetch
+    /// (Home's prefetch, or either format's setup screen) makes BOTH formats open instantly.
+    func arcadePool(for sport: Sport, limit: Int) async -> [CatalogSeason] {
+        Array(await draftSpinSample(for: sport).prefix(limit))
+    }
+
     /// Complete roster for the team/year that the reel actually landed on. The exact server
     /// predicate is important: the previous sport+year fetch could return every franchise in
     /// that season and then filter locally.

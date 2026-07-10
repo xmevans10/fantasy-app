@@ -24,17 +24,20 @@ from .grade import BaselineTable, grade
 from .models import RawSeason
 from .providers import (
     api_football,
+    bref_nba,
     espn_nba,
     espn_nba_pool,
     hoopr_nba,
     mlb_pool,
     mlb_stats,
     nba_balldontlie,
+    nfl_history,
     nfl_nflverse,
     nfl_nflverse_games,
     nfl_players,
     seed,
     tennis_atp,
+    transfermarkt_soccer,
 )
 from .themes import KEEP4_THEMES, export_themes
 from .validate import validate
@@ -157,6 +160,17 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
 
     merge_nfl_bio(seasons)   # covers season + game rows alike (filters on sport=='nfl')
 
+    # Full-league NFL history 1970–1998 (committed PFR-derived sweep; nflverse's floor is
+    # 1999). Union under the live rows deduped by player_id — nflverse wins a collision
+    # (it never actually collides: the two sources' year ranges are disjoint by design,
+    # but the guard costs nothing and protects against a future range change).
+    history = nfl_history.load_seasons()
+    if history:
+        by_id = {s.player_id: s for s in history}
+        by_id.update({s.player_id: s for s in seasons})
+        print(f"[nfl] historical sweep: {len(history)} rows (1970–1998)")
+        seasons = list(by_id.values())
+
     # ESPN (keyless, historical) is primary; balldontlie (needs a key) then the curated
     # seed are fallbacks so the pipeline always yields real, factual NBA content.
     pool = espn_nba_pool.load_pool()  # {athlete_id: name}, refreshed via pyespn (occasional)
@@ -181,6 +195,15 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
         by_id.update({s.player_id: s for s in nba})
         print(f"[nba] hoopR full-league sweep: {len(hoopr)} rows "
               f"(+{len(by_id) - len(nba)} beyond the star pool)")
+        nba = list(by_id.values())
+    # Full-league NBA history 1950–2001 (committed Basketball-Reference-derived sweep;
+    # hoopR's floor is 2002). Deduped by player_id with the live/hoopR rows winning —
+    # the ESPN star pool overlaps 1985–2001 and its rows carry guaranteed headshots.
+    bref = bref_nba.load_seasons()
+    if bref:
+        by_id = {s.player_id: s for s in bref}
+        by_id.update({s.player_id: s for s in nba})
+        print(f"[nba] historical sweep: {len(bref)} rows (1950–2001)")
         nba = list(by_id.values())
     print(f"[nba] {len(nba)} player-seasons")
 
@@ -207,6 +230,21 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
     soccer_seed = seed.load_soccer()
     soccer = api_football.merge_with_seed(soccer_live, soccer_seed)
     print(f"[soccer] {len(soccer_live)} live + {len(soccer_seed)} seed → {len(soccer)} player-seasons")
+    # Full-squad depth 2013+ (committed Transfermarkt-derived sweep — the first source
+    # ever to carry real DF/GK rows at scale; see providers/transfermarkt_soccer.py).
+    # Union under seed+live deduped by player_id, existing rows winning; additionally
+    # drop sweep rows that duplicate a seed row's (last name, season) under a name
+    # variant ("Alisson Becker" vs the seed's "Alisson") — slug-based ids can't catch
+    # those and a star must never appear twice in one pool.
+    tm = transfermarkt_soccer.load_seasons()
+    if tm:
+        seed_last_names = {(s.name.split()[-1].lower(), s.season_year) for s in soccer_seed}
+        tm = [s for s in tm
+              if (s.name.split()[-1].lower(), s.season_year) not in seed_last_names]
+        by_id = {s.player_id: s for s in tm}
+        by_id.update({s.player_id: s for s in soccer})
+        print(f"[soccer] transfermarkt full-squad sweep: {len(tm)} rows")
+        soccer = list(by_id.values())
     # Tennis: the committed ATP sweep (1968–2018 full tour history, photo-verified —
     # see providers/tennis_atp.py) under the hand-curated seed, deduped by player_id
     # with the seed winning (its rows carry individually verified stats and cover 2019+,

@@ -125,6 +125,36 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/qkcb3qt2fhasfgtfuprd"
       },
       {
+        "id": "jerry-rice-1995",
+        "name": "Jerry Rice",
+        "teamAbbr": "SF",
+        "seasonYear": 1995,
+        "grade": 406.4,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,848"
+          },
+          {
+            "label": "Rec",
+            "value": "122"
+          },
+          {
+            "label": "Rec TD",
+            "value": "15"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "15.1"
+          },
+          {
+            "label": "Tgts",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg/330px-Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg"
+      },
+      {
         "id": "marvin-harrison-2002",
         "name": "Marvin Harrison",
         "teamAbbr": "IND",
@@ -153,36 +183,6 @@
           }
         ],
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fni7z2tqhhaq5kbe5a0s"
-      },
-      {
-        "id": "michael-thomas-2019",
-        "name": "Michael Thomas",
-        "teamAbbr": "NO",
-        "seasonYear": 2019,
-        "grade": 374.6,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "1,725"
-          },
-          {
-            "label": "Rec",
-            "value": "149"
-          },
-          {
-            "label": "Rec TD",
-            "value": "9"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "11.6"
-          },
-          {
-            "label": "Tgts",
-            "value": "185"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/sxldsbuw65hfmkzqhw96"
       },
       {
         "id": "randy-moss-2007",
@@ -344,34 +344,34 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/y7dtsyyjnoafefkbylbb"
       },
       {
-        "id": "edgerrin-james-2000",
-        "name": "Edgerrin James",
-        "teamAbbr": "IND",
-        "seasonYear": 2000,
-        "grade": 396.1,
+        "id": "emmitt-smith-1995",
+        "name": "Emmitt Smith",
+        "teamAbbr": "DAL",
+        "seasonYear": 1995,
+        "grade": 426.8,
         "stats": [
           {
             "label": "Rush Yds",
-            "value": "1,690"
+            "value": "1,773"
           },
           {
             "label": "Rush TD",
-            "value": "13"
+            "value": "25"
           },
           {
             "label": "Yds/Carry",
-            "value": "4.4"
+            "value": "4.7"
           },
           {
             "label": "Rec",
-            "value": "61"
+            "value": "62"
           },
           {
             "label": "Rec Yds",
-            "value": "581"
+            "value": "375"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g7i6v01dasbvebawxwdm"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg/330px-Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg"
       },
       {
         "id": "ladainian-tomlinson-2006",
@@ -962,34 +962,34 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p"
       },
       {
-        "id": "russell-wilson-2020",
-        "name": "Russell Wilson",
-        "teamAbbr": "SEA",
-        "seasonYear": 2020,
-        "grade": 365.8,
+        "id": "steve-young-1998",
+        "name": "Steve Young",
+        "teamAbbr": "SF",
+        "seasonYear": 1998,
+        "grade": 368.2,
         "stats": [
           {
             "label": "Rush Yds",
-            "value": "513"
+            "value": "454"
           },
           {
             "label": "Rush TD",
-            "value": "2"
+            "value": "6"
           },
           {
             "label": "Pass Yds",
-            "value": "4,212"
+            "value": "4,170"
           },
           {
             "label": "Pass TD",
-            "value": "40"
+            "value": "36"
           },
           {
             "label": "INT",
-            "value": "13"
+            "value": "12"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/gebzv2aljujgleboe4ns"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Steve_Young_%286837509849%29_%28cropped%29.jpg/330px-Steve_Young_%286837509849%29_%28cropped%29.jpg"
       }
     ],
     "grain": "season",
@@ -1250,36 +1250,6 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "andre-johnson-2009",
-        "name": "Andre Johnson",
-        "teamAbbr": "HOU",
-        "seasonYear": 2009,
-        "grade": 312.9,
-        "stats": [
-          {
-            "label": "Yds/Rec",
-            "value": "15.5"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "1,569"
-          },
-          {
-            "label": "Rec TD",
-            "value": "9"
-          },
-          {
-            "label": "Rec",
-            "value": "101"
-          },
-          {
-            "label": "Tgts",
-            "value": "171"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iavrftkbpw4bekzl7zfv"
-      },
-      {
         "id": "calvin-johnson-2011",
         "name": "Calvin Johnson",
         "teamAbbr": "DET",
@@ -1368,6 +1338,36 @@
           }
         ],
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/p1yjsqtqimjd6iazu3h9"
+      },
+      {
+        "id": "jerry-rice-1986",
+        "name": "Jerry Rice",
+        "teamAbbr": "SF",
+        "seasonYear": 1986,
+        "grade": 346.2,
+        "stats": [
+          {
+            "label": "Yds/Rec",
+            "value": "18.3"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "1,570"
+          },
+          {
+            "label": "Rec TD",
+            "value": "15"
+          },
+          {
+            "label": "Rec",
+            "value": "86"
+          },
+          {
+            "label": "Tgts",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg/330px-Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg"
       },
       {
         "id": "jordy-nelson-2014",
@@ -1551,6 +1551,36 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bkahtsjkvnom1sbnb6xm"
       },
       {
+        "id": "emmitt-smith-1995",
+        "name": "Emmitt Smith",
+        "teamAbbr": "DAL",
+        "seasonYear": 1995,
+        "grade": 426.8,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,773"
+          },
+          {
+            "label": "Rush TD",
+            "value": "25"
+          },
+          {
+            "label": "Rec",
+            "value": "62"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "375"
+          },
+          {
+            "label": "Rec TD",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg/330px-Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg"
+      },
+      {
         "id": "ladainian-tomlinson-2006",
         "name": "LaDainian Tomlinson",
         "teamAbbr": "LAC",
@@ -1691,36 +1721,6 @@
           }
         ],
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
-      },
-      {
-        "id": "steven-jackson-2006",
-        "name": "Steven Jackson",
-        "teamAbbr": "LA",
-        "seasonYear": 2006,
-        "grade": 419.4,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,528"
-          },
-          {
-            "label": "Rush TD",
-            "value": "13"
-          },
-          {
-            "label": "Rec",
-            "value": "90"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "806"
-          },
-          {
-            "label": "Rec TD",
-            "value": "3"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/abl5wejuf448xw3jtphm"
       }
     ],
     "grain": "season",
@@ -1732,220 +1732,240 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "ceedee-lamb-2023",
-        "name": "CeeDee Lamb",
-        "teamAbbr": "DAL",
-        "seasonYear": 2023,
-        "grade": 423.6,
-        "stats": [
-          {
-            "label": "Rec",
-            "value": "135"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "1,749"
-          },
-          {
-            "label": "Rec TD",
-            "value": "12"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/tfuj9njqdw2dovkwhryc"
-      },
-      {
-        "id": "christian-mccaffrey-2019",
-        "name": "Christian McCaffrey",
-        "teamAbbr": "CAR",
-        "seasonYear": 2019,
-        "grade": 443.4,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,387"
-          },
-          {
-            "label": "Rush TD",
-            "value": "15"
-          },
-          {
-            "label": "Rec",
-            "value": "116"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "1,005"
-          },
-          {
-            "label": "Rec TD",
-            "value": "4"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/umiv5sn2xxrjdjwjtkqm"
-      },
-      {
-        "id": "cooper-kupp-2021",
-        "name": "Cooper Kupp",
-        "teamAbbr": "LA",
-        "seasonYear": 2021,
-        "grade": 438.1,
-        "stats": [
-          {
-            "label": "Rec",
-            "value": "145"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "1,947"
-          },
-          {
-            "label": "Rec TD",
-            "value": "16"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bkahtsjkvnom1sbnb6xm"
-      },
-      {
-        "id": "daunte-culpepper-2000",
-        "name": "Daunte Culpepper",
+        "id": "chuck-foreman-1975",
+        "name": "Chuck Foreman",
         "teamAbbr": "MIN",
-        "seasonYear": 2000,
-        "grade": 418.7,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "3,924"
-          },
-          {
-            "label": "Pass TD",
-            "value": "33"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "442"
-          },
-          {
-            "label": "Rush TD",
-            "value": "7"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vmvl5xojgtwm6jadhy7l"
-      },
-      {
-        "id": "ladainian-tomlinson-2006",
-        "name": "LaDainian Tomlinson",
-        "teamAbbr": "LAC",
-        "seasonYear": 2006,
-        "grade": 444.3,
+        "seasonYear": 1975,
+        "grade": 473.6,
         "stats": [
           {
             "label": "Rush Yds",
-            "value": "1,815"
+            "value": "1,070"
           },
           {
             "label": "Rush TD",
-            "value": "28"
+            "value": "13"
           },
           {
             "label": "Rec",
-            "value": "56"
+            "value": "73"
           },
           {
             "label": "Rec Yds",
-            "value": "508"
-          },
-          {
-            "label": "Rec TD",
-            "value": "3"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
-      },
-      {
-        "id": "marshall-faulk-2001",
-        "name": "Marshall Faulk",
-        "teamAbbr": "LA",
-        "seasonYear": 2001,
-        "grade": 445.4,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,382"
-          },
-          {
-            "label": "Rush TD",
-            "value": "12"
-          },
-          {
-            "label": "Rec",
-            "value": "83"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "765"
+            "value": "691"
           },
           {
             "label": "Rec TD",
             "value": "9"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/6/6c/Chuck_Foreman%2C_1972.png"
       },
       {
-        "id": "priest-holmes-2003",
-        "name": "Priest Holmes",
-        "teamAbbr": "KC",
-        "seasonYear": 2003,
-        "grade": 441.6,
+        "id": "dan-marino-1986",
+        "name": "Dan Marino",
+        "teamAbbr": "MIA",
+        "seasonYear": 1986,
+        "grade": 454.8,
         "stats": [
           {
+            "label": "Pass Yds",
+            "value": "4,746"
+          },
+          {
+            "label": "Pass TD",
+            "value": "44"
+          },
+          {
             "label": "Rush Yds",
-            "value": "1,420"
+            "value": "-3"
           },
           {
             "label": "Rush TD",
-            "value": "27"
+            "value": "0"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Danmarino.jpg/330px-Danmarino.jpg"
+      },
+      {
+        "id": "emmitt-smith-1995",
+        "name": "Emmitt Smith",
+        "teamAbbr": "DAL",
+        "seasonYear": 1995,
+        "grade": 486.0,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,773"
+          },
+          {
+            "label": "Rush TD",
+            "value": "25"
           },
           {
             "label": "Rec",
-            "value": "74"
+            "value": "62"
           },
           {
             "label": "Rec Yds",
-            "value": "690"
+            "value": "375"
           },
           {
             "label": "Rec TD",
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg/330px-Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg"
       },
       {
-        "id": "tom-brady-2007",
-        "name": "Tom Brady",
-        "teamAbbr": "NE",
-        "seasonYear": 2007,
-        "grade": 452.7,
+        "id": "eric-dickerson-1983",
+        "name": "Eric Dickerson",
+        "teamAbbr": "RAM",
+        "seasonYear": 1983,
+        "grade": 437.7,
         "stats": [
           {
-            "label": "Pass Yds",
-            "value": "4,806"
-          },
-          {
-            "label": "Pass TD",
-            "value": "50"
-          },
-          {
             "label": "Rush Yds",
-            "value": "98"
+            "value": "1,808"
           },
           {
             "label": "Rush TD",
+            "value": "18"
+          },
+          {
+            "label": "Rec",
+            "value": "51"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "404"
+          },
+          {
+            "label": "Rec TD",
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q7dpdlxyu5rs05rgh1le"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Eric_Dickerson.jpg/330px-Eric_Dickerson.jpg"
+      },
+      {
+        "id": "marshall-faulk-1998",
+        "name": "Marshall Faulk",
+        "teamAbbr": "IND",
+        "seasonYear": 1998,
+        "grade": 450.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,319"
+          },
+          {
+            "label": "Rush TD",
+            "value": "6"
+          },
+          {
+            "label": "Rec",
+            "value": "86"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "908"
+          },
+          {
+            "label": "Rec TD",
+            "value": "4"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Marshall_Faulk_by_Gage_Skidmore.jpg/330px-Marshall_Faulk_by_Gage_Skidmore.jpg"
+      },
+      {
+        "id": "o-j-simpson-1975",
+        "name": "O.J. Simpson",
+        "teamAbbr": "BUF",
+        "seasonYear": 1975,
+        "grade": 485.0,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,817"
+          },
+          {
+            "label": "Rush TD",
+            "value": "16"
+          },
+          {
+            "label": "Rec",
+            "value": "28"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "426"
+          },
+          {
+            "label": "Rec TD",
+            "value": "7"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/O.J._Simpson_1990_%C2%B7_DN-ST-91-03444_crop.JPEG/330px-O.J._Simpson_1990_%C2%B7_DN-ST-91-03444_crop.JPEG"
+      },
+      {
+        "id": "terrell-davis-1998",
+        "name": "Terrell Davis",
+        "teamAbbr": "DEN",
+        "seasonYear": 1998,
+        "grade": 471.4,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "2,008"
+          },
+          {
+            "label": "Rush TD",
+            "value": "21"
+          },
+          {
+            "label": "Rec",
+            "value": "25"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "217"
+          },
+          {
+            "label": "Rec TD",
+            "value": "2"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Terrell_Davis_1-31-05_050131-N-8102J-020.jpg/330px-Terrell_Davis_1-31-05_050131-N-8102J-020.jpg"
+      },
+      {
+        "id": "walter-payton-1977",
+        "name": "Walter Payton",
+        "teamAbbr": "CHI",
+        "seasonYear": 1977,
+        "grade": 458.8,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "1,852"
+          },
+          {
+            "label": "Rush TD",
+            "value": "14"
+          },
+          {
+            "label": "Rec",
+            "value": "27"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "269"
+          },
+          {
+            "label": "Rec TD",
+            "value": "2"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/6/62/1986_Jeno%27s_Pizza_-_12_-_Walter_Payton_%28Walter_Payton_crop%29_%28cropped%29.jpg"
       }
     ],
     "grain": "season",
@@ -1956,36 +1976,6 @@
     "theme": "Mismatch TE seasons",
     "sport": "nfl",
     "players": [
-      {
-        "id": "dallas-clark-2009",
-        "name": "Dallas Clark",
-        "teamAbbr": "IND",
-        "seasonYear": 2009,
-        "grade": 271.7,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "1,106"
-          },
-          {
-            "label": "Rec",
-            "value": "100"
-          },
-          {
-            "label": "Rec TD",
-            "value": "10"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "11.1"
-          },
-          {
-            "label": "Tgts",
-            "value": "132"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/oqhmamvx6w1aetfoalpw"
-      },
       {
         "id": "darren-waller-2020",
         "name": "Darren Waller",
@@ -2045,6 +2035,36 @@
           }
         ],
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/h7xs06oj6g03mippwtse"
+      },
+      {
+        "id": "kellen-winslow-1980",
+        "name": "Kellen Winslow",
+        "teamAbbr": "SD",
+        "seasonYear": 1980,
+        "grade": 272.0,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "1,290"
+          },
+          {
+            "label": "Rec",
+            "value": "89"
+          },
+          {
+            "label": "Rec TD",
+            "value": "9"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "14.5"
+          },
+          {
+            "label": "Tgts",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/4/47/Kellen_Winslow_Sr_cropped.jpg"
       },
       {
         "id": "mark-andrews-2021",
@@ -2107,34 +2127,34 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/svpo7chliiymc0r7hegp"
       },
       {
-        "id": "tony-gonzalez-2004",
-        "name": "Tony Gonzalez",
-        "teamAbbr": "KC",
-        "seasonYear": 2004,
-        "grade": 270.3,
+        "id": "todd-christensen-1983",
+        "name": "Todd Christensen",
+        "teamAbbr": "RAI",
+        "seasonYear": 1983,
+        "grade": 288.7,
         "stats": [
           {
             "label": "Rec Yds",
-            "value": "1,258"
+            "value": "1,247"
           },
           {
             "label": "Rec",
-            "value": "102"
+            "value": "92"
           },
           {
             "label": "Rec TD",
-            "value": "7"
+            "value": "12"
           },
           {
             "label": "Yds/Rec",
-            "value": "12.3"
+            "value": "13.6"
           },
           {
             "label": "Tgts",
-            "value": "102"
+            "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/enbspvy0ahsyznomitre"
+        "headshot": "https://upload.wikimedia.org/wikipedia/en/a/ac/Todd_Christensen.jpg"
       },
       {
         "id": "travis-kelce-2022",
@@ -2206,6 +2226,36 @@
     "sport": "nba",
     "players": [
       {
+        "id": "bob-mcadoo-1975",
+        "name": "Bob McAdoo",
+        "teamAbbr": "BUF",
+        "seasonYear": 1975,
+        "grade": 5272.2,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "34.5"
+          },
+          {
+            "label": "RPG",
+            "value": "14.1"
+          },
+          {
+            "label": "APG",
+            "value": "2.2"
+          },
+          {
+            "label": "SPG",
+            "value": "1.1"
+          },
+          {
+            "label": "TS%",
+            "value": "56.9"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
+      },
+      {
         "id": "david-robinson-1994",
         "name": "David Robinson",
         "teamAbbr": "SA",
@@ -2234,6 +2284,36 @@
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
+      },
+      {
+        "id": "hakeem-olajuwon-1993",
+        "name": "Hakeem Olajuwon",
+        "teamAbbr": "HOU",
+        "seasonYear": 1993,
+        "grade": 5325.7,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "26.1"
+          },
+          {
+            "label": "RPG",
+            "value": "13.0"
+          },
+          {
+            "label": "APG",
+            "value": "3.5"
+          },
+          {
+            "label": "SPG",
+            "value": "1.8"
+          },
+          {
+            "label": "TS%",
+            "value": "57.7"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
       },
       {
         "id": "james-harden-2017",
@@ -2266,64 +2346,34 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png"
       },
       {
-        "id": "kobe-bryant-2003",
-        "name": "Kobe Bryant",
+        "id": "kareem-abdul-jabbar-1976",
+        "name": "Kareem Abdul-Jabbar",
         "teamAbbr": "LAL",
-        "seasonYear": 2003,
-        "grade": 4603.2,
+        "seasonYear": 1976,
+        "grade": 5926.2,
         "stats": [
           {
             "label": "PPG",
-            "value": "30.0"
+            "value": "27.7"
           },
           {
             "label": "RPG",
-            "value": "6.9"
+            "value": "16.9"
           },
           {
             "label": "APG",
-            "value": "5.9"
+            "value": "5.0"
           },
           {
             "label": "SPG",
-            "value": "2.2"
+            "value": "1.5"
           },
           {
             "label": "TS%",
-            "value": "54.9"
+            "value": "56.7"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/110.png"
-      },
-      {
-        "id": "lebron-james-2018",
-        "name": "LeBron James",
-        "teamAbbr": "CLE",
-        "seasonYear": 2018,
-        "grade": 4787.0,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "27.5"
-          },
-          {
-            "label": "RPG",
-            "value": "8.6"
-          },
-          {
-            "label": "APG",
-            "value": "9.1"
-          },
-          {
-            "label": "SPG",
-            "value": "1.4"
-          },
-          {
-            "label": "TS%",
-            "value": "62.0"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1966.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
       },
       {
         "id": "michael-jordan-1988",
@@ -2356,36 +2406,6 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png"
       },
       {
-        "id": "nikola-jokic-2024",
-        "name": "Nikola Jokic",
-        "teamAbbr": "DEN",
-        "seasonYear": 2024,
-        "grade": 4874.5,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "26.4"
-          },
-          {
-            "label": "RPG",
-            "value": "12.4"
-          },
-          {
-            "label": "APG",
-            "value": "9.0"
-          },
-          {
-            "label": "SPG",
-            "value": "1.4"
-          },
-          {
-            "label": "TS%",
-            "value": "65.0"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png"
-      },
-      {
         "id": "russell-westbrook-2017",
         "name": "Russell Westbrook",
         "teamAbbr": "OKC",
@@ -2416,34 +2436,34 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png"
       },
       {
-        "id": "shaquille-o-neal-2000",
-        "name": "Shaquille O'Neal",
-        "teamAbbr": "LAL",
-        "seasonYear": 2000,
-        "grade": 4915.8,
+        "id": "wilt-chamberlain-1962",
+        "name": "Wilt Chamberlain",
+        "teamAbbr": "PHW",
+        "seasonYear": 1962,
+        "grade": 6777.6,
         "stats": [
           {
             "label": "PPG",
-            "value": "29.7"
+            "value": "50.4"
           },
           {
             "label": "RPG",
-            "value": "13.6"
+            "value": "25.6"
           },
           {
             "label": "APG",
-            "value": "3.8"
+            "value": "2.4"
           },
           {
             "label": "SPG",
-            "value": "0.5"
+            "value": "0.0"
           },
           {
             "label": "TS%",
-            "value": "57.8"
+            "value": "53.6"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg/330px-Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg"
       }
     ],
     "grain": "season",
@@ -2454,6 +2474,36 @@
     "theme": "Dominant big-man seasons",
     "sport": "nba",
     "players": [
+      {
+        "id": "bob-mcadoo-1975",
+        "name": "Bob McAdoo",
+        "teamAbbr": "BUF",
+        "seasonYear": 1975,
+        "grade": 5272.2,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "34.5"
+          },
+          {
+            "label": "RPG",
+            "value": "14.1"
+          },
+          {
+            "label": "BPG",
+            "value": "2.1"
+          },
+          {
+            "label": "APG",
+            "value": "2.2"
+          },
+          {
+            "label": "TS%",
+            "value": "56.9"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
+      },
       {
         "id": "david-robinson-1994",
         "name": "David Robinson",
@@ -2485,94 +2535,64 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
       },
       {
-        "id": "domantas-sabonis-2024",
-        "name": "Domantas Sabonis",
-        "teamAbbr": "SAC",
-        "seasonYear": 2024,
-        "grade": 4315.6,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "19.4"
-          },
-          {
-            "label": "RPG",
-            "value": "13.7"
-          },
-          {
-            "label": "BPG",
-            "value": "0.6"
-          },
-          {
-            "label": "APG",
-            "value": "8.2"
-          },
-          {
-            "label": "TS%",
-            "value": "63.6"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3155942.png"
-      },
-      {
-        "id": "giannis-antetokounmpo-2024",
-        "name": "Giannis Antetokounmpo",
-        "teamAbbr": "MIL",
-        "seasonYear": 2024,
-        "grade": 4442.0,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "30.4"
-          },
-          {
-            "label": "RPG",
-            "value": "11.5"
-          },
-          {
-            "label": "BPG",
-            "value": "1.1"
-          },
-          {
-            "label": "APG",
-            "value": "6.5"
-          },
-          {
-            "label": "TS%",
-            "value": "64.7"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3032977.png"
-      },
-      {
-        "id": "karl-malone-1990",
-        "name": "Karl Malone",
-        "teamAbbr": "UTAH",
+        "id": "hakeem-olajuwon-1990",
+        "name": "Hakeem Olajuwon",
+        "teamAbbr": "HOU",
         "seasonYear": 1990,
-        "grade": 4495.0,
+        "grade": 5374.6,
         "stats": [
           {
             "label": "PPG",
-            "value": "31.0"
+            "value": "24.3"
           },
           {
             "label": "RPG",
-            "value": "11.1"
+            "value": "14.0"
           },
           {
             "label": "BPG",
-            "value": "0.6"
+            "value": "4.6"
           },
           {
             "label": "APG",
-            "value": "2.8"
+            "value": "2.9"
           },
           {
             "label": "TS%",
-            "value": "62.8"
+            "value": "54.1"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/501.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
+      },
+      {
+        "id": "kareem-abdul-jabbar-1976",
+        "name": "Kareem Abdul-Jabbar",
+        "teamAbbr": "LAL",
+        "seasonYear": 1976,
+        "grade": 5926.2,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "27.7"
+          },
+          {
+            "label": "RPG",
+            "value": "16.9"
+          },
+          {
+            "label": "BPG",
+            "value": "4.1"
+          },
+          {
+            "label": "APG",
+            "value": "5.0"
+          },
+          {
+            "label": "TS%",
+            "value": "56.7"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
       },
       {
         "id": "kevin-garnett-2004",
@@ -2605,34 +2625,34 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png"
       },
       {
-        "id": "nikola-jokic-2024",
-        "name": "Nikola Jokic",
-        "teamAbbr": "DEN",
-        "seasonYear": 2024,
-        "grade": 4874.5,
+        "id": "patrick-ewing-1990",
+        "name": "Patrick Ewing",
+        "teamAbbr": "NY",
+        "seasonYear": 1990,
+        "grade": 4917.8,
         "stats": [
           {
             "label": "PPG",
-            "value": "26.4"
+            "value": "28.6"
           },
           {
             "label": "RPG",
-            "value": "12.4"
+            "value": "10.9"
           },
           {
             "label": "BPG",
-            "value": "0.9"
+            "value": "4.0"
           },
           {
             "label": "APG",
-            "value": "9.0"
+            "value": "2.2"
           },
           {
             "label": "TS%",
-            "value": "65.0"
+            "value": "59.9"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Patrick_Ewing_2021_%28cropped%29.jpg/330px-Patrick_Ewing_2021_%28cropped%29.jpg"
       },
       {
         "id": "shaquille-o-neal-2000",
@@ -2665,34 +2685,34 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
       },
       {
-        "id": "tim-duncan-2002",
-        "name": "Tim Duncan",
-        "teamAbbr": "SA",
-        "seasonYear": 2002,
-        "grade": 4580.7,
+        "id": "wilt-chamberlain-1962",
+        "name": "Wilt Chamberlain",
+        "teamAbbr": "PHW",
+        "seasonYear": 1962,
+        "grade": 6777.6,
         "stats": [
           {
             "label": "PPG",
-            "value": "25.5"
+            "value": "50.4"
           },
           {
             "label": "RPG",
-            "value": "12.7"
+            "value": "25.6"
           },
           {
             "label": "BPG",
-            "value": "2.5"
+            "value": "0.0"
           },
           {
             "label": "APG",
-            "value": "3.7"
+            "value": "2.4"
           },
           {
             "label": "TS%",
-            "value": "57.8"
+            "value": "53.6"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/215.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg/330px-Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg"
       }
     ],
     "grain": "season",
@@ -2703,36 +2723,6 @@
     "theme": "Floor-general seasons",
     "sport": "nba",
     "players": [
-      {
-        "id": "domantas-sabonis-2024",
-        "name": "Domantas Sabonis",
-        "teamAbbr": "SAC",
-        "seasonYear": 2024,
-        "grade": 4315.6,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "19.4"
-          },
-          {
-            "label": "APG",
-            "value": "8.2"
-          },
-          {
-            "label": "RPG",
-            "value": "13.7"
-          },
-          {
-            "label": "SPG",
-            "value": "0.9"
-          },
-          {
-            "label": "TS%",
-            "value": "63.6"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3155942.png"
-      },
       {
         "id": "dwyane-wade-2009",
         "name": "Dwyane Wade",
@@ -2822,36 +2812,6 @@
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1966.png"
-      },
-      {
-        "id": "luka-doncic-2024",
-        "name": "Luka Doncic",
-        "teamAbbr": "DAL",
-        "seasonYear": 2024,
-        "grade": 4573.8,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "33.9"
-          },
-          {
-            "label": "APG",
-            "value": "9.8"
-          },
-          {
-            "label": "RPG",
-            "value": "9.2"
-          },
-          {
-            "label": "SPG",
-            "value": "1.4"
-          },
-          {
-            "label": "TS%",
-            "value": "61.8"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3945274.png"
       },
       {
         "id": "michael-jordan-1989",
@@ -2914,6 +2874,36 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png"
       },
       {
+        "id": "oscar-robertson-1962",
+        "name": "Oscar Robertson",
+        "teamAbbr": "CIN",
+        "seasonYear": 1962,
+        "grade": 4970.1,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "30.8"
+          },
+          {
+            "label": "APG",
+            "value": "11.4"
+          },
+          {
+            "label": "RPG",
+            "value": "12.5"
+          },
+          {
+            "label": "SPG",
+            "value": "0.0"
+          },
+          {
+            "label": "TS%",
+            "value": "55.4"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Oscar_Robertson_2024.jpg/330px-Oscar_Robertson_2024.jpg"
+      },
+      {
         "id": "russell-westbrook-2017",
         "name": "Russell Westbrook",
         "teamAbbr": "OKC",
@@ -2942,6 +2932,36 @@
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png"
+      },
+      {
+        "id": "wilt-chamberlain-1968",
+        "name": "Wilt Chamberlain",
+        "teamAbbr": "PHI",
+        "seasonYear": 1968,
+        "grade": 5392.9,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "24.3"
+          },
+          {
+            "label": "APG",
+            "value": "8.6"
+          },
+          {
+            "label": "RPG",
+            "value": "23.8"
+          },
+          {
+            "label": "SPG",
+            "value": "0.0"
+          },
+          {
+            "label": "TS%",
+            "value": "55.7"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg/330px-Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg"
       }
     ],
     "grain": "season",
@@ -2953,34 +2973,34 @@
     "sport": "nba",
     "players": [
       {
-        "id": "anthony-davis-2018",
-        "name": "Anthony Davis",
-        "teamAbbr": "NO",
-        "seasonYear": 2018,
-        "grade": 4285.4,
+        "id": "bob-mcadoo-1975",
+        "name": "Bob McAdoo",
+        "teamAbbr": "BUF",
+        "seasonYear": 1975,
+        "grade": 5272.2,
         "stats": [
           {
             "label": "BPG",
-            "value": "2.6"
+            "value": "2.1"
           },
           {
             "label": "RPG",
-            "value": "11.1"
+            "value": "14.1"
           },
           {
             "label": "PPG",
-            "value": "28.1"
+            "value": "34.5"
           },
           {
             "label": "SPG",
-            "value": "1.5"
+            "value": "1.1"
           },
           {
             "label": "TS%",
-            "value": "61.0"
+            "value": "56.9"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/6583.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
       },
       {
         "id": "david-robinson-1994",
@@ -3013,64 +3033,94 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
       },
       {
-        "id": "dwight-howard-2011",
-        "name": "Dwight Howard",
-        "teamAbbr": "ORL",
-        "seasonYear": 2011,
-        "grade": 4157.5,
+        "id": "elvin-hayes-1974",
+        "name": "Elvin Hayes",
+        "teamAbbr": "CAP",
+        "seasonYear": 1974,
+        "grade": 4731.2,
         "stats": [
           {
             "label": "BPG",
-            "value": "2.4"
+            "value": "3.0"
           },
           {
             "label": "RPG",
-            "value": "14.1"
+            "value": "18.1"
           },
           {
             "label": "PPG",
-            "value": "22.9"
+            "value": "21.4"
           },
           {
             "label": "SPG",
-            "value": "1.4"
+            "value": "1.1"
           },
           {
             "label": "TS%",
-            "value": "61.7"
+            "value": "47.0"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/2384.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Elvin_Hayes_1975.jpeg/330px-Elvin_Hayes_1975.jpeg"
       },
       {
-        "id": "elton-brand-2006",
-        "name": "Elton Brand",
-        "teamAbbr": "LAC",
-        "seasonYear": 2006,
-        "grade": 4037.5,
+        "id": "hakeem-olajuwon-1990",
+        "name": "Hakeem Olajuwon",
+        "teamAbbr": "HOU",
+        "seasonYear": 1990,
+        "grade": 5374.6,
         "stats": [
           {
             "label": "BPG",
-            "value": "2.5"
+            "value": "4.6"
           },
           {
             "label": "RPG",
-            "value": "10.0"
+            "value": "14.0"
           },
           {
             "label": "PPG",
-            "value": "24.7"
+            "value": "24.3"
           },
           {
             "label": "SPG",
-            "value": "1.0"
+            "value": "2.1"
           },
           {
             "label": "TS%",
-            "value": "57.8"
+            "value": "54.1"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/91.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
+      },
+      {
+        "id": "kareem-abdul-jabbar-1976",
+        "name": "Kareem Abdul-Jabbar",
+        "teamAbbr": "LAL",
+        "seasonYear": 1976,
+        "grade": 5926.2,
+        "stats": [
+          {
+            "label": "BPG",
+            "value": "4.1"
+          },
+          {
+            "label": "RPG",
+            "value": "16.9"
+          },
+          {
+            "label": "PPG",
+            "value": "27.7"
+          },
+          {
+            "label": "SPG",
+            "value": "1.5"
+          },
+          {
+            "label": "TS%",
+            "value": "56.7"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
       },
       {
         "id": "kevin-garnett-2004",
@@ -3103,6 +3153,36 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png"
       },
       {
+        "id": "patrick-ewing-1990",
+        "name": "Patrick Ewing",
+        "teamAbbr": "NY",
+        "seasonYear": 1990,
+        "grade": 4917.8,
+        "stats": [
+          {
+            "label": "BPG",
+            "value": "4.0"
+          },
+          {
+            "label": "RPG",
+            "value": "10.9"
+          },
+          {
+            "label": "PPG",
+            "value": "28.6"
+          },
+          {
+            "label": "SPG",
+            "value": "1.0"
+          },
+          {
+            "label": "TS%",
+            "value": "59.9"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Patrick_Ewing_2021_%28cropped%29.jpg/330px-Patrick_Ewing_2021_%28cropped%29.jpg"
+      },
+      {
         "id": "shaquille-o-neal-2000",
         "name": "Shaquille O'Neal",
         "teamAbbr": "LAL",
@@ -3131,66 +3211,6 @@
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
-      },
-      {
-        "id": "tim-duncan-2002",
-        "name": "Tim Duncan",
-        "teamAbbr": "SA",
-        "seasonYear": 2002,
-        "grade": 4580.7,
-        "stats": [
-          {
-            "label": "BPG",
-            "value": "2.5"
-          },
-          {
-            "label": "RPG",
-            "value": "12.7"
-          },
-          {
-            "label": "PPG",
-            "value": "25.5"
-          },
-          {
-            "label": "SPG",
-            "value": "0.7"
-          },
-          {
-            "label": "TS%",
-            "value": "57.8"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/215.png"
-      },
-      {
-        "id": "victor-wembanyama-2024",
-        "name": "Victor Wembanyama",
-        "teamAbbr": "SA",
-        "seasonYear": 2024,
-        "grade": 3861.1,
-        "stats": [
-          {
-            "label": "BPG",
-            "value": "3.6"
-          },
-          {
-            "label": "RPG",
-            "value": "10.6"
-          },
-          {
-            "label": "PPG",
-            "value": "21.4"
-          },
-          {
-            "label": "SPG",
-            "value": "1.2"
-          },
-          {
-            "label": "TS%",
-            "value": "56.4"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/5104157.png"
       }
     ],
     "grain": "season",
@@ -3232,6 +3252,36 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/2779.png"
       },
       {
+        "id": "clyde-drexler-1989",
+        "name": "Clyde Drexler",
+        "teamAbbr": "POR",
+        "seasonYear": 1989,
+        "grade": 4337.2,
+        "stats": [
+          {
+            "label": "SPG",
+            "value": "2.7"
+          },
+          {
+            "label": "PPG",
+            "value": "27.2"
+          },
+          {
+            "label": "APG",
+            "value": "5.8"
+          },
+          {
+            "label": "RPG",
+            "value": "7.9"
+          },
+          {
+            "label": "TS%",
+            "value": "55.5"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Clyde_Drexler_01.jpg/330px-Clyde_Drexler_01.jpg"
+      },
+      {
         "id": "dwyane-wade-2009",
         "name": "Dwyane Wade",
         "teamAbbr": "MIA",
@@ -3262,34 +3312,34 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1987.png"
       },
       {
-        "id": "gary-payton-2000",
-        "name": "Gary Payton",
-        "teamAbbr": "SEA",
-        "seasonYear": 2000,
-        "grade": 4234.6,
+        "id": "isiah-thomas-1985",
+        "name": "Isiah Thomas",
+        "teamAbbr": "DET",
+        "seasonYear": 1985,
+        "grade": 4472.8,
         "stats": [
           {
             "label": "SPG",
-            "value": "1.9"
+            "value": "2.3"
           },
           {
             "label": "PPG",
-            "value": "24.2"
+            "value": "21.2"
           },
           {
             "label": "APG",
-            "value": "8.9"
+            "value": "13.9"
           },
           {
             "label": "RPG",
-            "value": "6.5"
+            "value": "4.5"
           },
           {
             "label": "TS%",
-            "value": "53.6"
+            "value": "52.9"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/640.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Isiah_Thomas_2007_%28cropped%29.jpg/330px-Isiah_Thomas_2007_%28cropped%29.jpg"
       },
       {
         "id": "james-harden-2019",
@@ -3322,34 +3372,34 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png"
       },
       {
-        "id": "john-stockton-1989",
-        "name": "John Stockton",
-        "teamAbbr": "UTAH",
+        "id": "magic-johnson-1989",
+        "name": "Magic Johnson",
+        "teamAbbr": "LAL",
         "seasonYear": 1989,
-        "grade": 4203.7,
+        "grade": 4426.6,
         "stats": [
           {
             "label": "SPG",
-            "value": "3.2"
+            "value": "1.8"
           },
           {
             "label": "PPG",
-            "value": "17.1"
+            "value": "22.5"
           },
           {
             "label": "APG",
-            "value": "13.6"
+            "value": "12.8"
           },
           {
             "label": "RPG",
-            "value": "3.0"
+            "value": "7.9"
           },
           {
             "label": "TS%",
-            "value": "62.3"
+            "value": "62.5"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/812.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg/330px-Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg"
       },
       {
         "id": "michael-jordan-1988",
@@ -3410,36 +3460,6 @@
           }
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png"
-      },
-      {
-        "id": "stephen-curry-2016",
-        "name": "Stephen Curry",
-        "teamAbbr": "GS",
-        "seasonYear": 2016,
-        "grade": 4229.9,
-        "stats": [
-          {
-            "label": "SPG",
-            "value": "2.1"
-          },
-          {
-            "label": "PPG",
-            "value": "30.1"
-          },
-          {
-            "label": "APG",
-            "value": "6.7"
-          },
-          {
-            "label": "RPG",
-            "value": "5.4"
-          },
-          {
-            "label": "TS%",
-            "value": "67.1"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3975.png"
       }
     ],
     "grain": "season",
@@ -3450,6 +3470,36 @@
     "theme": "Double-double machine seasons",
     "sport": "nba",
     "players": [
+      {
+        "id": "bob-mcadoo-1975",
+        "name": "Bob McAdoo",
+        "teamAbbr": "BUF",
+        "seasonYear": 1975,
+        "grade": 5272.2,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "34.5"
+          },
+          {
+            "label": "RPG",
+            "value": "14.1"
+          },
+          {
+            "label": "APG",
+            "value": "2.2"
+          },
+          {
+            "label": "BPG",
+            "value": "2.1"
+          },
+          {
+            "label": "TS%",
+            "value": "56.9"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
+      },
       {
         "id": "david-robinson-1994",
         "name": "David Robinson",
@@ -3481,94 +3531,64 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
       },
       {
-        "id": "domantas-sabonis-2024",
-        "name": "Domantas Sabonis",
-        "teamAbbr": "SAC",
-        "seasonYear": 2024,
-        "grade": 4315.6,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "19.4"
-          },
-          {
-            "label": "RPG",
-            "value": "13.7"
-          },
-          {
-            "label": "APG",
-            "value": "8.2"
-          },
-          {
-            "label": "BPG",
-            "value": "0.6"
-          },
-          {
-            "label": "TS%",
-            "value": "63.6"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3155942.png"
-      },
-      {
-        "id": "giannis-antetokounmpo-2024",
-        "name": "Giannis Antetokounmpo",
-        "teamAbbr": "MIL",
-        "seasonYear": 2024,
-        "grade": 4442.0,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "30.4"
-          },
-          {
-            "label": "RPG",
-            "value": "11.5"
-          },
-          {
-            "label": "APG",
-            "value": "6.5"
-          },
-          {
-            "label": "BPG",
-            "value": "1.1"
-          },
-          {
-            "label": "TS%",
-            "value": "64.7"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3032977.png"
-      },
-      {
-        "id": "karl-malone-1990",
-        "name": "Karl Malone",
-        "teamAbbr": "UTAH",
+        "id": "hakeem-olajuwon-1990",
+        "name": "Hakeem Olajuwon",
+        "teamAbbr": "HOU",
         "seasonYear": 1990,
-        "grade": 4495.0,
+        "grade": 5374.6,
         "stats": [
           {
             "label": "PPG",
-            "value": "31.0"
+            "value": "24.3"
           },
           {
             "label": "RPG",
-            "value": "11.1"
+            "value": "14.0"
           },
           {
             "label": "APG",
-            "value": "2.8"
+            "value": "2.9"
           },
           {
             "label": "BPG",
-            "value": "0.6"
+            "value": "4.6"
           },
           {
             "label": "TS%",
-            "value": "62.8"
+            "value": "54.1"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/501.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
+      },
+      {
+        "id": "kareem-abdul-jabbar-1976",
+        "name": "Kareem Abdul-Jabbar",
+        "teamAbbr": "LAL",
+        "seasonYear": 1976,
+        "grade": 5926.2,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "27.7"
+          },
+          {
+            "label": "RPG",
+            "value": "16.9"
+          },
+          {
+            "label": "APG",
+            "value": "5.0"
+          },
+          {
+            "label": "BPG",
+            "value": "4.1"
+          },
+          {
+            "label": "TS%",
+            "value": "56.7"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
       },
       {
         "id": "kevin-garnett-2004",
@@ -3601,34 +3621,34 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png"
       },
       {
-        "id": "nikola-jokic-2024",
-        "name": "Nikola Jokic",
-        "teamAbbr": "DEN",
-        "seasonYear": 2024,
-        "grade": 4874.5,
+        "id": "patrick-ewing-1990",
+        "name": "Patrick Ewing",
+        "teamAbbr": "NY",
+        "seasonYear": 1990,
+        "grade": 4917.8,
         "stats": [
           {
             "label": "PPG",
-            "value": "26.4"
+            "value": "28.6"
           },
           {
             "label": "RPG",
-            "value": "12.4"
+            "value": "10.9"
           },
           {
             "label": "APG",
-            "value": "9.0"
+            "value": "2.2"
           },
           {
             "label": "BPG",
-            "value": "0.9"
+            "value": "4.0"
           },
           {
             "label": "TS%",
-            "value": "65.0"
+            "value": "59.9"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Patrick_Ewing_2021_%28cropped%29.jpg/330px-Patrick_Ewing_2021_%28cropped%29.jpg"
       },
       {
         "id": "shaquille-o-neal-2000",
@@ -3661,34 +3681,34 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
       },
       {
-        "id": "tim-duncan-2002",
-        "name": "Tim Duncan",
-        "teamAbbr": "SA",
-        "seasonYear": 2002,
-        "grade": 4580.7,
+        "id": "wilt-chamberlain-1962",
+        "name": "Wilt Chamberlain",
+        "teamAbbr": "PHW",
+        "seasonYear": 1962,
+        "grade": 6777.6,
         "stats": [
           {
             "label": "PPG",
-            "value": "25.5"
+            "value": "50.4"
           },
           {
             "label": "RPG",
-            "value": "12.7"
+            "value": "25.6"
           },
           {
             "label": "APG",
-            "value": "3.7"
+            "value": "2.4"
           },
           {
             "label": "BPG",
-            "value": "2.5"
+            "value": "0.0"
           },
           {
             "label": "TS%",
-            "value": "57.8"
+            "value": "53.6"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/215.png"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg/330px-Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg"
       }
     ],
     "grain": "season",
@@ -5789,6 +5809,34 @@
         "lastYear": 2021
       },
       {
+        "id": "brett-favre-career",
+        "name": "Brett Favre",
+        "teamAbbr": "MIN",
+        "seasonYear": 2010,
+        "grade": 4499.0,
+        "stats": [
+          {
+            "label": "Pass Yds",
+            "value": "71,767"
+          },
+          {
+            "label": "Pass TD",
+            "value": "508"
+          },
+          {
+            "label": "Rush Yds",
+            "value": "1,832"
+          },
+          {
+            "label": "Rush TD",
+            "value": "14"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/m3sggjgdqlp4jqpxktvr",
+        "firstYear": 1991,
+        "lastYear": 2010
+      },
+      {
         "id": "drew-brees-career",
         "name": "Drew Brees",
         "teamAbbr": "NO",
@@ -5817,6 +5865,30 @@
         "lastYear": 2020
       },
       {
+        "id": "jerry-rice-career",
+        "name": "Jerry Rice",
+        "teamAbbr": "SEA",
+        "seasonYear": 2004,
+        "grade": 5147.4,
+        "stats": [
+          {
+            "label": "Rec",
+            "value": "1548"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "22,881"
+          },
+          {
+            "label": "Rec TD",
+            "value": "197"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g1vjcnbryx3nmg0ppsnl",
+        "firstYear": 1985,
+        "lastYear": 2004
+      },
+      {
         "id": "larry-fitzgerald-career",
         "name": "Larry Fitzgerald",
         "teamAbbr": "ARI",
@@ -5841,51 +5913,23 @@
         "lastYear": 2020
       },
       {
-        "id": "matt-ryan-career",
-        "name": "Matt Ryan",
-        "teamAbbr": "IND",
-        "seasonYear": 2022,
-        "grade": 3909.1,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "62,792"
-          },
-          {
-            "label": "Pass TD",
-            "value": "381"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "1,539"
-          },
-          {
-            "label": "Rush TD",
-            "value": "13"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/s6zam4ekrrnonsck6vak",
-        "firstYear": 2008,
-        "lastYear": 2022
-      },
-      {
         "id": "peyton-manning-career",
         "name": "Peyton Manning",
         "teamAbbr": "DEN",
         "seasonYear": 2015,
-        "grade": 4498.7,
+        "grade": 4702.5,
         "stats": [
           {
             "label": "Pass Yds",
-            "value": "68,088"
+            "value": "71,827"
           },
           {
             "label": "Pass TD",
-            "value": "513"
+            "value": "539"
           },
           {
             "label": "Rush Yds",
-            "value": "584"
+            "value": "646"
           },
           {
             "label": "Rush TD",
@@ -5893,36 +5937,8 @@
           }
         ],
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xpcd6auodk3w0vda6jal",
-        "firstYear": 1999,
+        "firstYear": 1998,
         "lastYear": 2015
-      },
-      {
-        "id": "philip-rivers-career",
-        "name": "Philip Rivers",
-        "teamAbbr": "IND",
-        "seasonYear": 2020,
-        "grade": 3881.9,
-        "stats": [
-          {
-            "label": "Pass Yds",
-            "value": "63,434"
-          },
-          {
-            "label": "Pass TD",
-            "value": "421"
-          },
-          {
-            "label": "Rush Yds",
-            "value": "605"
-          },
-          {
-            "label": "Rush TD",
-            "value": "3"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/voakyrtj34sghkwxaxxf",
-        "firstYear": 2004,
-        "lastYear": 2020
       },
       {
         "id": "tom-brady-career",
@@ -5962,36 +5978,68 @@
     "sport": "nba",
     "players": [
       {
-        "id": "john-stockton-career",
-        "name": "John Stockton",
-        "teamAbbr": "UTAH",
-        "seasonYear": 2003,
-        "grade": 59122.1,
+        "id": "hakeem-olajuwon-career",
+        "name": "Hakeem Olajuwon",
+        "teamAbbr": "TOR",
+        "seasonYear": 2002,
+        "grade": 65990.4,
         "stats": [
           {
             "label": "PPG",
-            "value": "13.1"
+            "value": "21.8"
           },
           {
             "label": "RPG",
-            "value": "2.7"
+            "value": "11.1"
           },
           {
             "label": "APG",
-            "value": "10.5"
+            "value": "2.5"
           },
           {
             "label": "SPG",
-            "value": "2.2"
+            "value": "1.7"
           },
           {
             "label": "BPG",
-            "value": "0.2"
+            "value": "3.1"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/812.png",
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/619.png",
         "firstYear": 1985,
-        "lastYear": 2003
+        "lastYear": 2002
+      },
+      {
+        "id": "kareem-abdul-jabbar-career",
+        "name": "Kareem Abdul-Jabbar",
+        "teamAbbr": "LAL",
+        "seasonYear": 1989,
+        "grade": 80843.3,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "24.6"
+          },
+          {
+            "label": "RPG",
+            "value": "11.2"
+          },
+          {
+            "label": "APG",
+            "value": "3.6"
+          },
+          {
+            "label": "SPG",
+            "value": "0.7"
+          },
+          {
+            "label": "BPG",
+            "value": "2.0"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg",
+        "firstYear": 1970,
+        "lastYear": 1989
       },
       {
         "id": "karl-malone-career",
@@ -6055,38 +6103,6 @@
         ],
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png",
         "firstYear": 1996,
-        "lastYear": 2016
-      },
-      {
-        "id": "kobe-bryant-career",
-        "name": "Kobe Bryant",
-        "teamAbbr": "LAL",
-        "seasonYear": 2016,
-        "grade": 59264.6,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "25.0"
-          },
-          {
-            "label": "RPG",
-            "value": "5.2"
-          },
-          {
-            "label": "APG",
-            "value": "4.7"
-          },
-          {
-            "label": "SPG",
-            "value": "1.4"
-          },
-          {
-            "label": "BPG",
-            "value": "0.5"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/110.png",
-        "firstYear": 1997,
         "lastYear": 2016
       },
       {
@@ -6154,38 +6170,6 @@
         "lastYear": 2026
       },
       {
-        "id": "shaquille-o-neal-career",
-        "name": "Shaquille O'Neal",
-        "teamAbbr": "BOS",
-        "seasonYear": 2011,
-        "grade": 59243.9,
-        "stats": [
-          {
-            "label": "PPG",
-            "value": "23.7"
-          },
-          {
-            "label": "RPG",
-            "value": "10.9"
-          },
-          {
-            "label": "APG",
-            "value": "2.5"
-          },
-          {
-            "label": "SPG",
-            "value": "0.6"
-          },
-          {
-            "label": "BPG",
-            "value": "2.3"
-          }
-        ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png",
-        "firstYear": 1993,
-        "lastYear": 2011
-      },
-      {
         "id": "tim-duncan-career",
         "name": "Tim Duncan",
         "teamAbbr": "SA",
@@ -6216,6 +6200,38 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/215.png",
         "firstYear": 1998,
         "lastYear": 2016
+      },
+      {
+        "id": "wilt-chamberlain-career",
+        "name": "Wilt Chamberlain",
+        "teamAbbr": "LAL",
+        "seasonYear": 1973,
+        "grade": 64351.0,
+        "stats": [
+          {
+            "label": "PPG",
+            "value": "29.7"
+          },
+          {
+            "label": "RPG",
+            "value": "22.9"
+          },
+          {
+            "label": "APG",
+            "value": "4.5"
+          },
+          {
+            "label": "SPG",
+            "value": "0.0"
+          },
+          {
+            "label": "BPG",
+            "value": "0.0"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg/330px-Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg",
+        "firstYear": 1960,
+        "lastYear": 1973
       }
     ],
     "grain": "career",
@@ -9028,6 +9044,36 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xerjzdet52uvvhqovape"
       },
       {
+        "id": "charlie-garner-2002",
+        "name": "Charlie Garner",
+        "teamAbbr": "LV",
+        "seasonYear": 2002,
+        "grade": 347.3,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "962"
+          },
+          {
+            "label": "Rush TD",
+            "value": "7"
+          },
+          {
+            "label": "Yds/Carry",
+            "value": "5.3"
+          },
+          {
+            "label": "Rec",
+            "value": "91"
+          },
+          {
+            "label": "Rec Yds",
+            "value": "941"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i6vgoizxzlnf1ecxnzbq"
+      },
+      {
         "id": "chris-johnson-2009",
         "name": "Chris Johnson",
         "teamAbbr": "TEN",
@@ -9146,36 +9192,6 @@
           }
         ],
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
-      },
-      {
-        "id": "ricky-williams-2002",
-        "name": "Ricky Williams",
-        "teamAbbr": "MIA",
-        "seasonYear": 2002,
-        "grade": 370.6,
-        "stats": [
-          {
-            "label": "Rush Yds",
-            "value": "1,853"
-          },
-          {
-            "label": "Rush TD",
-            "value": "16"
-          },
-          {
-            "label": "Yds/Carry",
-            "value": "4.8"
-          },
-          {
-            "label": "Rec",
-            "value": "47"
-          },
-          {
-            "label": "Rec Yds",
-            "value": "363"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/buhodr9dphf3lf0nazql"
       },
       {
         "id": "shaun-alexander-2005",
@@ -9646,6 +9662,36 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/oe4d8uw9nbhjtivrsmgu"
       },
       {
+        "id": "kyle-brady-2000",
+        "name": "Kyle Brady",
+        "teamAbbr": "JAX",
+        "seasonYear": 2000,
+        "grade": 154.9,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "729"
+          },
+          {
+            "label": "Rec",
+            "value": "64"
+          },
+          {
+            "label": "Rec TD",
+            "value": "3"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "11.4"
+          },
+          {
+            "label": "Tgts",
+            "value": "94"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/cbfkt8kpdkyq9yikpooi"
+      },
+      {
         "id": "todd-heap-2005",
         "name": "Todd Heap",
         "teamAbbr": "BAL",
@@ -9704,36 +9750,6 @@
           }
         ],
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/enbspvy0ahsyznomitre"
-      },
-      {
-        "id": "zach-miller-2009",
-        "name": "Zach Miller",
-        "teamAbbr": "LV",
-        "seasonYear": 2009,
-        "grade": 164.5,
-        "stats": [
-          {
-            "label": "Rec Yds",
-            "value": "805"
-          },
-          {
-            "label": "Rec",
-            "value": "66"
-          },
-          {
-            "label": "Rec TD",
-            "value": "3"
-          },
-          {
-            "label": "Yds/Rec",
-            "value": "12.2"
-          },
-          {
-            "label": "Tgts",
-            "value": "100"
-          }
-        ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zzyshc4yuvfrkkbacm07"
       }
     ],
     "grain": "season",

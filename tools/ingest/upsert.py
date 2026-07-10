@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import urllib.error
 import urllib.request
 
@@ -40,12 +41,23 @@ def _upsert_table(table: str, payload: list[dict], *, conflict: str = "id",
         batch = payload[start:start + batch_size]
         data = json.dumps(batch).encode("utf-8")
         req = urllib.request.Request(endpoint, data=data, headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                resp.read()
-        except urllib.error.HTTPError as err:
-            body = err.read().decode("utf-8", "ignore")
-            raise RuntimeError(f"{table} upsert failed ({err.code}): {body}") from err
+        # A 130k-row catalog push is ~670 serial requests — long enough that one transient
+        # network/TLS blip (hit live 2026-07-10: SSLV3_ALERT_BAD_RECORD_MAC mid-push) is a
+        # matter of when, not if. Each batch is independently idempotent
+        # (merge-duplicates), so retrying just the failed batch is always safe. HTTP 4xx
+        # (a real payload/permission problem) still fails fast — retrying can't fix it.
+        for attempt in range(4):
+            try:
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    resp.read()
+                break
+            except urllib.error.HTTPError as err:
+                body = err.read().decode("utf-8", "ignore")
+                raise RuntimeError(f"{table} upsert failed ({err.code}): {body}") from err
+            except Exception as err:  # noqa: BLE001 — transient socket/TLS/timeout
+                if attempt == 3:
+                    raise RuntimeError(f"{table} upsert failed after 4 attempts: {err}") from err
+                time.sleep(1.5 * 2 ** attempt)
         sent += len(batch)
     return sent
 

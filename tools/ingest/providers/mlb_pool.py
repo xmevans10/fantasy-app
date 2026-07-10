@@ -50,10 +50,12 @@ PITCHING_CATS = [
 # quietly stops covering new seasons the moment that year ends. `discover` skips any
 # (category, year) that errors (see below), so sweeping the current season before it
 # has standings is a harmless no-op.
-# M18 follow-up (2026-07-09, "we need a TON of data"): 1955 → 1901 — MLB's leaders
-# endpoint serves the full modern era (verified live: 1901 and 1927 both return real
-# leader boards), pulling the Ruth/Cobb/Gehrig-era legends' full careers into the pool.
-DEFAULT_FROM = 1901
+# M18 follow-up (2026-07-09, "we need a TON of data"): 1955 → 1901 → 1876 — MLB's
+# leaders endpoint serves all the way back to the National League's founding (verified
+# live: 1890 returns Roger Connor). The weekly discover-players.yml sweep picks up the
+# widened range and pulls the newly-discovered 19th-century careers on its own — no
+# manual backfill needed.
+DEFAULT_FROM = 1876
 DEFAULT_TO = dt.date.today().year
 
 # A player must rank in the top ~50 of at least this many (category, season) pairs to

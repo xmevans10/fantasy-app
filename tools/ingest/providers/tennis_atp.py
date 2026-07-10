@@ -31,18 +31,16 @@ import argparse
 import collections
 import csv
 import io
-import time
-import urllib.parse
 from pathlib import Path
 
-from ..models import RawSeason, slug
-from .http import fetch_json, fetch_text, is_cached
+from ..models import RawSeason
+from .http import fetch_text
+from .wikimedia import headshot as wiki_headshot
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 CSV_PATH = DATA_DIR / "tennis_atp_seasons.csv"
 
 _MATCHES_URL = "https://raw.githubusercontent.com/stakah/tennis_atp/master/atp_matches_{year}.csv"
-_WIKI_SUMMARY = "https://en.wikipedia.org/api/rest_v1/page/summary/{title}"
 
 MIN_YEAR = 1968
 MAX_YEAR = 2018   # the snapshot's hard end — later seasons live in the curated seed
@@ -74,35 +72,9 @@ def _aggregate_year(year: int, text: str) -> dict[tuple[str, str], dict[str, flo
     return out
 
 
-# Politeness delay between UNCACHED Wikipedia calls — burst-calling their REST API with
-# no delay gets the client 429-throttled within a couple dozen requests (hit live on the
-# first sweep attempt), after which every call crawls through the retry backoff. ~3/sec
-# stays comfortably under their anonymous limit; cached hits skip the sleep entirely.
-_WIKI_DELAY = 0.35
-
-
 def _wiki_headshot(name: str) -> str:
-    """A real Wikipedia thumbnail for this player, or '' when there's no confident match.
-    Confidence = the page summary actually describes a tennis player — a same-named
-    politician's photo would be worse than no photo."""
-    title = urllib.parse.quote(name.replace(" ", "_"))
-    cache_key = f"wiki_summary_{slug(name)}.json"
-    was_cached = is_cached(cache_key, 24 * 90)
-    try:
-        data = fetch_json(_WIKI_SUMMARY.format(title=title),
-                          headers={"User-Agent": "balliq-ingest (data pipeline; contact: xmevans10@gmail.com)"},
-                          cache_key=cache_key,
-                          ttl_hours=24 * 90)
-    except Exception:  # noqa: BLE001 — 404/disambiguation/network: just no photo
-        if not was_cached:
-            time.sleep(_WIKI_DELAY)
-        return ""
-    if not was_cached:
-        time.sleep(_WIKI_DELAY)
-    blob = " ".join([data.get("description") or "", data.get("extract") or ""]).lower()
-    if "tennis" not in blob:
-        return ""
-    return ((data.get("thumbnail") or {}).get("source")) or ""
+    """Tennis-context Wikipedia thumbnail (shared mechanism: see `providers/wikimedia.py`)."""
+    return wiki_headshot(name, context="tennis")
 
 
 def refresh(year_from: int, year_to: int) -> None:

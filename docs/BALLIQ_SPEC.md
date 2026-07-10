@@ -899,15 +899,55 @@ scoring audit, second data wave):** same-day follow-up to four explicit user ask
   provider: burst-calling their REST API with no delay gets 429-throttled within ~20
   requests — `_WIKI_DELAY` (0.35s, cache-miss only) keeps the sweep legal.
 
-## 9. Roadmap — remaining milestones
+## 9. Roadmap — remaining milestones + product backlog (PM audit 2026-07-09)
 
 Full briefs live in `prompts/` (same self-contained format: goal, why-now, current state,
 scope, key decisions, deliverables, verification, hand-offs).
 
 | Milestone | Theme | One-line scope |
 |-----------|-------|-----------------|
-| **M5** | Monetization + breadth | Pro/StoreKit, format packs, 3 new formats, seasons (spec exists, unstarted) |
+| **M5** | Monetization + breadth | StoreKit foundation + gating shipped; **Phase F 8-week rating seasons** is the unbuilt piece |
 | **M14** | Accessibility & localization | VoiceOver shipped; first non-English locale (Spanish) is the remaining piece |
 
-Every other previously-planned milestone (M11–M13, M15–M17) has shipped, app-side and
-backend both — see the table in §8. These two are what's actually left to build.
+**Prioritized product backlog** (full-app audit against the §1 feedback themes; ordered by
+expected retention/quality impact per unit of effort):
+
+*P0 — the retention loop:*
+1. **Push notifications end-to-end** — all infrastructure exists (manager, edge functions,
+   cron); blocked only on real APNs key material (user hand-off, needs their Apple
+   Developer account). Streak-save + "today's puzzle is live" pushes are the single
+   biggest retention lever the app has already paid for but can't fire.
+2. **Post-completion daily loop** — after finishing both dailies, Home should sell
+   tomorrow (countdown to next daily, streak-at-stake framing) instead of showing two
+   completed cards; nudges arcade formats as the "while you wait" filler.
+3. **Cold-launch speed: persist the arcade pools to disk** — the in-memory
+   prefetch/caching added 2026-07-09 makes warm launches instant; a disk-backed cache
+   (TTL ~1 day, like the pipeline's own .cache) would make the FIRST launch of a session
+   instant too. Same shape for daily puzzles.
+
+*P1 — engagement depth:*
+4. **Daily Draft & Spin challenge** — spins are (correctly) fully random for free play,
+   but a parallel "Today's Challenge" mode that re-uses the retired date-seeded spin gives
+   every player the SAME rosters and makes scores comparable → shareable + leaderboard.
+   The seeding machinery still exists and is tested; this is a mode toggle, not a rebuild.
+5. **Arcade leaderboards** — Over/Under high score and Grid score are local-only today;
+   a `scores` table (same insert-only RLS shape as `events`) + a weekly board per sport
+   turns both into competitive loops.
+6. **Leagues season bootstrap** — the known open item from the 07-05 handoff: the first
+   real cohort season needs seeding so the tab shows a live race, not an empty state.
+
+*P2 — monetization (finish M5):*
+7. **Phase F rating seasons** (8-week cycles, placement, end-of-season rewards) — the
+   remaining M5 build; the paywall/entitlement rails it sells through are done.
+
+*P3 — quality/polish:*
+8. **Historical-era presentation** — the 1950–2001 NBA / 1970–1998 NFL catalogs (added
+   2026-07-09) surface defunct franchises (SYR, MNL, RAI, WSB …) that `TeamColors` doesn't
+   know → default styling. A small defunct-franchise palette + logo pass would make
+   old-team rosters feel as premium as current ones.
+9. **Widen historical headshot slices** — the new sweeps resolve Wikipedia photos for each
+   season's top ~40; widening to ~100/season (cheap, cached) upgrades deep-roster
+   Draft & Spin rounds from silhouette-heavy to mostly-real-photo.
+10. **M14 Spanish localization** — unblocks App Store featuring in LatAm; all-string work.
+11. **Content-drift guard** — M11's guard was left deliberately red on a real drift;
+    resolve the drift so the guard goes back to being a tripwire instead of noise.

@@ -51,11 +51,16 @@ struct OverUnderGameView: View {
         .background(Color.appBackground)
         .task {
             sport = container.sportFilter.sport ?? .nfl
+            container.catalog.prefetchDraftSpinSample(for: sport)
             // Screenshot flows target the board/result — skip the setup screen.
             if DebugLaunch.autoOpenOverUnder {
                 await load()
                 if DebugLaunch.autoSubmitOverUnder { forceOutOfLivesForScreenshot() }
             }
+        }
+        .onChange(of: sport) { _, selected in
+            // Warm the pool while the player is still on setup (same pattern as Draft & Spin).
+            if showingSetup { container.catalog.prefetchDraftSpinSample(for: selected) }
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView().environmentObject(container)
@@ -65,7 +70,9 @@ struct OverUnderGameView: View {
     private func load() async {
         showingSetup = false
         lives = store.loadLives()
-        let fetched = await container.catalog.search(CatalogQuery(sport: sport), limit: 200)
+        // Served from the shared cached arcade sample (see PlayerSeasonCatalog.arcadePool) —
+        // warm from Home's prefetch or this setup screen's own, so start is instant.
+        let fetched = await container.catalog.arcadePool(for: sport, limit: 200)
         pool = PlayerRelevance.filter(fetched, sport: sport, minimum: 20)
         container.track(.gameStarted, ["format": "overunder", "sport": sport.rawValue])
         nextRound()

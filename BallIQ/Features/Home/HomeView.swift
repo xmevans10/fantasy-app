@@ -46,7 +46,12 @@ struct HomeView: View {
                                               completed: container.hasCompletedToday(puzzleID: puzzle.id),
                                               favoriteTeamMatch: container.favoriteTeams.team(for: puzzle.sport)
                                                   .map(puzzle.features(teamAbbr:)) ?? false) {
-                                    showKeep4Launch = true
+                                    // The daily card IS the puzzle — it opens directly
+                                    // (explicit feedback: no intermediate setup screen when
+                                    // the puzzle is already loaded and shown on the card).
+                                    // The formats grid below still routes through setup,
+                                    // where picking a sport is the point.
+                                    activePuzzle = puzzle
                                 }
                                 secondaryAction: { shareTarget = SharablePuzzle(keep4: puzzle) }
                             }
@@ -58,7 +63,7 @@ struct HomeView: View {
                                               subtitle: "\(puzzle.clues.count) clues",
                                               completed: container.hasCompletedToday(puzzleID: puzzle.id),
                                               typeColor: .voltFill, onTypeColor: .onVolt) {
-                                    showWhoAmILaunch = true
+                                    activeWhoAmI = puzzle
                                 }
                                 secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }
                             }
@@ -184,6 +189,10 @@ struct HomeView: View {
         // round trip from Home's first meaningful paint.
         async let keep4Task = container.puzzles.keep4Puzzle(for: container.sportFilter, date: Date())
         async let whoAmITask = container.puzzles.whoAmIPuzzle(for: container.sportFilter, date: Date())
+        // Warm the arcade pool for the sport the player is most likely to spin next (their
+        // last-played sport) while they're still looking at Home — Draft & Spin and
+        // Over/Under then open with a hot cache instead of a first-fetch spinner.
+        container.catalog.prefetchDraftSpinSample(for: container.sportFilter.sport ?? .nfl)
         keep4 = await keep4Task
         whoami = await whoAmITask
         if DebugLaunch.autoOpenWhoAmI, activeWhoAmI == nil {
