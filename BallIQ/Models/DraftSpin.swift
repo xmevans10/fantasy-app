@@ -230,20 +230,23 @@ enum DraftSpinSimulator {
         }
     }
 
-    /// The lineup power at which a season is a coin flip. Calibrated against real drafts:
-    /// `power` normalizes each stat against `ScoringStat`'s reference bounds, so a lineup of
-    /// respectable-but-unspectacular seasons averages ≈0.4; stars push toward 0.6+.
-    static let leagueBaselinePower = 0.40
+    /// The lineup power at which a season is a coin flip. Recalibrated 2026-07-09 after
+    /// live feedback ("i never make the playoffs lol") proved the first pass too harsh:
+    /// `power` normalizes each stat against `ScoringStat`'s near-record reference bounds,
+    /// so even a *good* best-available draft off real rosters averages only ≈0.30 (star
+    /// seasons land ≈0.5–0.65, and every lineup carries role players because real rosters
+    /// do). The original 0.40 baseline made a good draft a sub-.500 team by construction.
+    static let leagueBaselinePower = 0.25
 
     /// Per-game win chance from lineup power — linear around the baseline, clamped so no
     /// season is ever a guaranteed sweep or wipeout (an all-star lineup can still miss, a
-    /// bad one can still shock): +0.1 lineup power ≈ +9 points of per-game win chance.
-    /// At the tiers' own thresholds: champion (e.g. NFL 12 of 17, ~71% wins) needs a
-    /// sustained ~0.7+ per-game chance ⇒ power ≈ 0.73 — a genuinely elite draft; playoffs
-    /// (~53%) ⇒ power ≈ 0.43 — a solid one. That's the audit's target shape: better drafts
-    /// win visibly more, luck still swings any single season.
+    /// bad one can still shock): +0.1 lineup power ≈ +11 points of per-game win chance.
+    /// Target feel after the recalibration: a decent draft (power ≈0.30 → ~55%) makes the
+    /// playoffs more often than not, a strong one (≈0.45 → ~72%) contends for the title,
+    /// a bad one (≈0.20 → ~44%) still misses. Better drafts win visibly more; luck still
+    /// swings any single season.
     static func winProbability(power: Double) -> Double {
-        min(max(0.5 + 0.9 * (power - leagueBaselinePower), 0.10), 0.90)
+        min(max(0.5 + 1.1 * (power - leagueBaselinePower), 0.15), 0.92)
     }
 
     static func simulate(lineup: [CatalogSeason], sport: Sport,

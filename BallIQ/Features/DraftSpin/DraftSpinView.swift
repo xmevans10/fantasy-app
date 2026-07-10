@@ -22,6 +22,7 @@ struct DraftSpinView: View {
     @State private var rewards: RepositoryContainer.SessionRewards?
     @State private var loading = true
     @State private var showingSetup = true
+    @State private var roundRosterReady = false
     @State private var settings = DraftSpinSettings.default
     /// One-team mode: the franchise locked by the first assigned pick, and the years
     /// already spun for it (each later round must land on a fresh year — see `spinRound`).
@@ -45,9 +46,11 @@ struct DraftSpinView: View {
                                    onStart: { Task { await startDraft() } },
                                    onClose: { dismiss() })
             } else if loading {
-                ProgressView().tint(Color.accentText).frame(maxWidth: .infinity, maxHeight: .infinity)
+                loadingScreen
             } else if showingReveal, let round = currentRound {
-                SpinRevealView(team: round.team, year: String(round.year)) {
+                SpinRevealView(team: round.team, year: String(round.year),
+                               roundLabel: "Round \(min(roundIndex + 1, slots.count)) of \(slots.count)",
+                               rosterReady: $roundRosterReady) {
                     withAnimation(Motion.snap) { showingReveal = false }
                 }
             } else {
@@ -56,6 +59,11 @@ struct DraftSpinView: View {
         }
         .background(Color.appBackground)
         .task { await load() }
+        .onChange(of: sport) { _, selectedSport in
+            // Warm the broad discovery pool while the player is still choosing settings.
+            // This changes no gameplay state—the eventual team/year remains a fresh random draw.
+            if showingSetup { container.catalog.prefetchDraftSpinSample(for: selectedSport) }
+        }
     }
 
     private func load() async {
@@ -65,6 +73,7 @@ struct DraftSpinView: View {
             ?? container.sportFilter.sport
             ?? DraftSpinConstraint.sportOfTheDay(Date())
         loading = false
+        if showingSetup { container.catalog.prefetchDraftSpinSample(for: sport) }
         // Screenshot flows target the board/result, not the setup screen — skip straight in
         // with default settings (except the flag that exists to capture setup itself).
         if DebugLaunch.autoOpenDraftSpin && !DebugLaunch.holdDraftSpinSetup {
@@ -78,11 +87,14 @@ struct DraftSpinView: View {
         slots = DraftSpinConstraint.lineupSlots(for: sport)
         // A broad sample — only used to *discover* a good (team, year) each round; the round's
         // complete roster is re-fetched separately once a combo is chosen (see spinNextRound).
-        sample = await container.catalog.search(CatalogQuery(sport: sport), limit: 2000)
+        let sampleStartedAt = Date()
+        sample = await container.catalog.draftSpinSample(for: sport)
+        let sampleLoadMilliseconds = Int(Date().timeIntervalSince(sampleStartedAt) * 1_000)
         container.track(.gameStarted, [
             "format": "draftspin", "sport": sport.rawValue,
             "one_team": String(settings.lockToOneTeam),
             "season_variations": String(settings.allowSeasonVariations),
+            "sample_load_ms": String(sampleLoadMilliseconds),
         ])
         loading = false
         await spinNextRound()
@@ -119,15 +131,41 @@ struct DraftSpinView: View {
     /// carry that combo's complete roster (the same sample-vs-complete gap the earlier
     /// single-spin design hit) — re-fetch the real thing before showing it.
     private func loadRoundRoster(team: String, year: Int) async {
-        let fetched = await container.catalog.search(
-            CatalogQuery(sport: sport, minYear: year, maxYear: year), limit: 1000)
+        // Start the reveal as soon as the random team/year is known. The reel gives the exact,
+        // narrow roster request time to complete instead of making the player stare at a spinner.
+        currentRound = DraftSpinRound(team: team, year: year, roster: [])
+        expandedPlayerID = nil
+        roundRosterReady = false
+        showingReveal = true
+
+        let fetched = await container.catalog.draftSpinRoster(sport: sport, team: team, year: year)
         // Excluded names (season variations OFF) are dropped from display too — `spinRound`
         // already guaranteed at least one placeable candidate survives this filter.
         let roster = fetched.filter { $0.teamAbbr == team && !excludedNames.contains($0.name) }
         currentRound = DraftSpinRound(team: team, year: year, roster: roster)
-        expandedPlayerID = nil
-        showingReveal = true
+        roundRosterReady = true
         if DebugLaunch.autoSubmitDraftSpin { autoPickForScreenshot(roster) }
+    }
+
+    private var loadingScreen: some View {
+        VStack(spacing: 18) {
+            Text("DRAFT & SPIN").font(.label12).kerning(2).foregroundStyle(Color.accentText)
+            Text("OPENING THE VAULT")
+                .font(.custom(FontName.condBlack, size: 32))
+                .foregroundStyle(Color.textPrimary)
+            HStack(spacing: 8) {
+                ForEach(0..<3, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(Color.voltFill)
+                        .frame(width: 14, height: 14)
+                }
+            }
+            .shadow(color: Color.voltFill.opacity(0.7), radius: 7)
+            Text("Finding real \(sport.displayName) rosters…")
+                .font(.body14).foregroundStyle(Color.textMuted)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.appBackground)
     }
 
     /// `-screenshotDraftSpinResult`: simctl can't tap through the roster/lineup UI, so pick the
@@ -167,7 +205,7 @@ struct DraftSpinView: View {
                     .font(.label12).foregroundStyle(Color.textMuted)
             }
             Text("DRAFT & SPIN").font(.label12).foregroundStyle(Color.accentText)
-            Text("Today's sport: \(sport.displayName)").font(.title).foregroundStyle(Color.textPrimary)
+            Text("Build your \(sport.displayName) squad").font(.title).foregroundStyle(Color.textPrimary)
             if let round = currentRound {
                 HStack(spacing: 10) {
                     chip(label: "TEAM", value: round.team.uppercased(), tint: .accentFill)
@@ -183,10 +221,10 @@ struct DraftSpinView: View {
                     .disabled(rerollUsedThisRound)
                 }
                 if let expandedPlayerID, let player = round.roster.first(where: { $0.id == expandedPlayerID }) {
-                    Text("Tap a highlighted slot to place \(player.name).")
+                    Text("PLACE \(player.name.uppercased()) IN A HIGHLIGHTED SLOT.")
                         .font(.label11).foregroundStyle(Color.accentText)
                 } else {
-                    Text("Select a player, then tap a highlighted slot.")
+                    Text("TAP A PLAYER FOR THEIR FULL STAT LINE.")
                         .font(.label11).foregroundStyle(Color.textMuted)
                 }
             }
@@ -275,8 +313,6 @@ struct DraftSpinView: View {
         let team = TeamColors.palette(sport: sport, abbr: player.teamAbbr)
         let expanded = expandedPlayerID == player.id
         let columns = ScoringStat.displayColumns(sport: sport, position: player.position)
-        let extraStats = sport.sliceForPosition(ScoringStat.catalog(for: sport), position: player.position,
-                                                minimum: 0, statKey: \.key)
         let eligible = expanded
             ? DraftSpinConstraint.eligibleSlots(for: player.position, in: openSlots, sport: sport) : []
 
@@ -302,18 +338,12 @@ struct DraftSpinView: View {
                     }
                 }
                 if expanded {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-                        ForEach(extraStats) { stat in
-                            if let value = player.stats[stat.key] {
-                                VStack(spacing: 0) {
-                                    Text(stat.format(value)).font(.custom(FontName.condBlack, size: 14)).foregroundStyle(Color.textPrimary)
-                                    Text(stat.label.uppercased()).font(.label11).foregroundStyle(Color.textMuted)
-                                }
-                            }
-                        }
-                    }
+                    PositionStatGrid(sport: sport, position: player.position, stats: player.stats)
                     if eligible.isEmpty {
                         Text("No open slot fits this position.").font(.label11).foregroundStyle(Color.dangerText)
+                    } else {
+                        Text("CHOOSE A HIGHLIGHTED LINEUP SLOT BELOW")
+                            .font(.label11).foregroundStyle(Color.accentText)
                     }
                 }
             }
@@ -333,9 +363,16 @@ struct DraftSpinView: View {
             Set(DraftSpinConstraint.eligibleSlots(for: $0.position, in: openSlots, sport: sport).map(\.id))
         } ?? []
 
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(slots) { slot in
+        return VStack(spacing: 0) {
+            if expandedPlayer != nil {
+                Text("PLACE PLAYER")
+                    .font(.label11).foregroundStyle(Color.accentText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16).padding(.top, 10)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(slots) { slot in
                     let highlighted = eligible.contains(slot.id)
                     Button {
                         guard highlighted, let player = expandedPlayer else { return }
@@ -357,8 +394,9 @@ struct DraftSpinView: View {
                     .buttonStyle(.plain)
                     .disabled(!highlighted)
                 }
+                }
+                .padding(.horizontal, 16).padding(.vertical, 12)
             }
-            .padding(.horizontal, 16).padding(.vertical, 12)
         }
         .background(Color.surface)
         .overlay(alignment: .top) { Rectangle().fill(Color.hairline).frame(height: Hairline.width) }

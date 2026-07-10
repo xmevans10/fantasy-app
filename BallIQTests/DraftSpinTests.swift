@@ -280,11 +280,13 @@ final class DraftSpinTests: XCTestCase {
                        0.5, accuracy: 0.0001)
         XCTAssertGreaterThan(DraftSpinSimulator.winProbability(power: 0.6),
                              DraftSpinSimulator.winProbability(power: 0.4))
+        // The recalibrated feel ("too harsh" feedback): a decent real draft (~0.30 power)
+        // must sit ABOVE .500, not below it.
+        XCTAssertGreaterThan(DraftSpinSimulator.winProbability(power: 0.30), 0.5)
         // Upper clamp binds within the real 0...1 power range; the lower one is a safety
-        // net that only binds below power 0 (power itself can't go negative).
-        XCTAssertEqual(DraftSpinSimulator.winProbability(power: 1.0), 0.90, accuracy: 0.0001)
-        XCTAssertEqual(DraftSpinSimulator.winProbability(power: 0.0), 0.14, accuracy: 0.0001)
-        XCTAssertEqual(DraftSpinSimulator.winProbability(power: -1.0), 0.10, accuracy: 0.0001)
+        // net (power can't go negative in practice).
+        XCTAssertEqual(DraftSpinSimulator.winProbability(power: 1.0), 0.92, accuracy: 0.0001)
+        XCTAssertEqual(DraftSpinSimulator.winProbability(power: -1.0), 0.15, accuracy: 0.0001)
     }
 
     func testWinsAndLossesAlwaysSumToSeasonLength() {
@@ -328,8 +330,8 @@ final class DraftSpinTests: XCTestCase {
     func testLockedSimulationValueForFixedLineupAndSeed() {
         var g = seededRNG("draftspin-locked-nfl")
         let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, using: &g)
-        XCTAssertEqual(result.wins, 7)
-        XCTAssertEqual(result.losses, 10)
+        XCTAssertEqual(result.wins, 8)
+        XCTAssertEqual(result.losses, 9)
         XCTAssertEqual(result.totalPoints, 533)
         XCTAssertEqual(result.outcome, .missedPlayoffs)
     }
@@ -348,9 +350,9 @@ final class DraftSpinTests: XCTestCase {
     func testLockedSimulationValueForNonNFLSport() {
         var g = seededRNG("draftspin-locked-soccer")
         let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .soccer, using: &g)
-        XCTAssertEqual(result.wins, 15)
-        XCTAssertEqual(result.losses, 23)
+        XCTAssertEqual(result.wins, 21)
+        XCTAssertEqual(result.losses, 17)
         XCTAssertEqual(result.totalPoints, 1120)
-        XCTAssertEqual(result.outcome, .missedPlayoffs)
+        XCTAssertEqual(result.outcome, .madePlayoffs)
     }
 }

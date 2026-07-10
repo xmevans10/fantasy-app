@@ -19,13 +19,35 @@ struct DraftSpinSetupView: View {
                         onStart: onStart,
                         onClose: onClose)
         {
+            SetupOptionCard(
+                title: "YOUR SQUAD",
+                caption: "Every spin lands on a real team-season roster. Draft the best player for each open spot.")
+            {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3), spacing: 6) {
+                    ForEach(DraftSpinConstraint.lineupSlots(for: sport)) { slot in
+                        Text(slot.role.uppercased())
+                            .font(.custom(FontName.condBlack, size: 13))
+                            .foregroundStyle(Color.accentText)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(Color.surfaceMuted)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    }
+                }
+            }
+
             if sport == .nfl {
                 SetupOptionCard(
                     title: "ROSTER",
                     caption: "Defensive player data isn't in the catalog yet — offense it is.")
                 {
-                    SetupSegmentedControl(options: ["OFFENSE ONLY", "BOTH SIDES"],
-                                          selectedIndex: 0, enabled: [true, false]) { _ in }
+                    Text("OFFENSE ONLY")
+                        .font(.custom(FontName.condBlack, size: 13))
+                        .foregroundStyle(Color.onAccent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.accentFill)
+                        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
                 }
             }
 

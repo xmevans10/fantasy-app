@@ -32,6 +32,26 @@ Home, not a tab.
 tiers (Bronze→…), XP/levels (`LevelCurve`), day streak. Community/archive/versus play is
 unranked (XP only).
 
+**Product feedback themes (distilled 2026-07-09 from the user's corrections across the
+M5/M18 sessions — treat as standing direction, apply proactively to new work):**
+1. **Best-surface parity.** K4C4's card is the quality bar ("our best feature"); every
+   format's player display must match it — real headshot, team badge, and the player's
+   FULL position-relevant stat line. Enforced by shared components, never per-format
+   copies: `PlayerMediaBadges`, `PositionStatGrid`, `GameSetupScreen`.
+2. **Per-game configuration, no global filters.** Every format opens with its own setup
+   screen (sport + format options); the last choice persists as the app default.
+3. **Casino-grade juice for arcade moments** — big type, marquee/glow/confetti/haptics,
+   and no dead space on hero screens — always inside Prime Time tokens, never off-brand.
+4. **Real randomness for arcade formats; determinism only for shared dailies.** RNG is
+   injected so tests stay seeded.
+5. **Outcomes must reward playing well.** Luck can flavor a result; it can never make
+   skill mathematically irrelevant (the Draft & Spin scoring-audit lesson).
+6. **Data maximalism with honesty.** Thin coverage gets fixed with real sources, wider
+   sweeps and git crons — never by fabricating data, shipping photo-less players (M16),
+   or quietly shrinking the game; hard ceilings get documented plainly.
+7. **Position-scoped stat correctness.** A surface may only ever show a player's own
+   position's stat family (`Sport.sliceForPosition` — the recurring bug class).
+
 ## 2. Architecture
 
 - **App:** SwiftUI, hand-written `.xcodeproj` with **synchronized file groups** (new files

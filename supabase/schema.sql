@@ -145,6 +145,10 @@ alter table public.player_seasons add column if not exists headshot   text not n
 alter table public.player_seasons add column if not exists career     boolean not null default false;
 alter table public.player_seasons add column if not exists first_year int;
 alter table public.player_seasons add column if not exists last_year  int;
+-- Draft & Spin lands on one real franchise season at a time. This keeps that narrow roster
+-- lookup indexed as the catalog grows, rather than scanning every player in a sport/year.
+create index if not exists player_seasons_roster_lookup_idx
+  on public.player_seasons (sport, career, team_abbr, season_year);
 
 -- User-authored puzzles, kept separate from `puzzles` so the daily rotation stays
 -- clean. `content` is the same camelCase Keep4Puzzle/WhoAmIPuzzle JSON the app decodes.

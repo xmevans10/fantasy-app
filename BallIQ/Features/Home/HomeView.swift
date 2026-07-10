@@ -180,8 +180,12 @@ struct HomeView: View {
     }
 
     private func loadDaily() async {
-        keep4 = await container.puzzles.keep4Puzzle(for: container.sportFilter, date: Date())
-        whoami = await container.puzzles.whoAmIPuzzle(for: container.sportFilter, date: Date())
+        // These are independent reads. Starting them together removes an avoidable network
+        // round trip from Home's first meaningful paint.
+        async let keep4Task = container.puzzles.keep4Puzzle(for: container.sportFilter, date: Date())
+        async let whoAmITask = container.puzzles.whoAmIPuzzle(for: container.sportFilter, date: Date())
+        keep4 = await keep4Task
+        whoami = await whoAmITask
         if DebugLaunch.autoOpenWhoAmI, activeWhoAmI == nil {
             activeWhoAmI = whoami
         } else if DebugLaunch.autoOpenGame, activePuzzle == nil {

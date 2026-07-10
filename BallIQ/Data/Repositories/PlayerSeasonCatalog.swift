@@ -10,6 +10,11 @@ struct CatalogQuery: Equatable {
     var minYear: Int?
     var maxYear: Int?
     var team: String?
+    /// An exact team abbreviation for game surfaces that already know the franchise (for
+    /// example Draft & Spin after its reel lands). Creation search keeps using `team`'s
+    /// forgiving substring match; game queries should not download every team in a season
+    /// only to discard them on-device.
+    var exactTeam: String?
     var name: String = ""
     /// true → only career-aggregate rows; false (default) → only season rows. Always
     /// applied (never "any") so a season template's pool never accidentally mixes in a
@@ -23,11 +28,20 @@ struct CatalogQuery: Equatable {
 /// `tools/ingest --catalog`). Backs the Keep4 creation picker. Falls back to the bundled
 /// `player_seasons.json` when the table is empty or the device is offline, so creation
 /// works before the catalog is populated.
+@MainActor
 final class PlayerSeasonCatalog {
     private let client: SupabaseClient?
     /// `stats` jsonb keys must stay snake_case for GradeFormula — plain decoder, no key strategy.
     private let decoder: JSONDecoder = JSONDecoder()
     private lazy var bundled: [CatalogSeason] = Self.loadBundle()
+    /// Draft & Spin has a very different access pattern from creation: it needs a broad
+    /// discovery pool once, then exact team-year rosters many times in one session. Retain
+    /// both in memory so every new round is one narrow request at most (and a reroll often
+    /// costs no network at all), without changing the randomness of the actual spin.
+    private var draftSpinSamples: [Sport: [CatalogSeason]] = [:]
+    private var draftSpinRosters: [String: [CatalogSeason]] = [:]
+    private var draftSpinSampleTasks: [Sport: Task<[CatalogSeason], Never>] = [:]
+    private var draftSpinRosterTasks: [String: Task<[CatalogSeason], Never>] = [:]
 
     init(client: SupabaseClient?) { self.client = client }
 
@@ -35,7 +49,10 @@ final class PlayerSeasonCatalog {
     /// candidates surface first — purely a display convenience, never a filter. Returns up to `limit`.
     func search(_ q: CatalogQuery, rank: ((CatalogSeason) -> Double)? = nil,
                 limit: Int = 80) async -> [CatalogSeason] {
-        let remote = await fetchRemote(q, limit: limit)
+        // Ranking needs a wider candidate set to remain meaningful. Plain discovery/search
+        // callers already receive the requested number of rows, so multiplying their request
+        // by three only adds serial PostgREST pages and launch latency.
+        let remote = await fetchRemote(q, limit: limit, overfetchForRanking: rank != nil)
         let pool = remote ?? filterBundled(q)
         let ordered: [CatalogSeason]
         if let rank {
@@ -44,6 +61,48 @@ final class PlayerSeasonCatalog {
             ordered = pool.sorted { ($0.seasonYear, $0.name) > ($1.seasonYear, $1.name) }
         }
         return Array(ordered.prefix(limit))
+    }
+
+    /// Broad, one-time pool used only to choose a viable team/year. This is deliberately
+    /// cached data, not a cached spin: `DraftSpinConstraint.spinRound` still draws from it
+    /// with a fresh system RNG for every user action.
+    func draftSpinSample(for sport: Sport) async -> [CatalogSeason] {
+        if let cached = draftSpinSamples[sport] { return cached }
+        if let task = draftSpinSampleTasks[sport] { return await task.value }
+        let task = Task<[CatalogSeason], Never> { [weak self] in
+            guard let self else { return [] }
+            return await self.search(CatalogQuery(sport: sport), limit: 2_000)
+        }
+        draftSpinSampleTasks[sport] = task
+        let seasons = await task.value
+        draftSpinSampleTasks[sport] = nil
+        draftSpinSamples[sport] = seasons
+        return seasons
+    }
+
+    /// Safe to call when a setup screen first appears or its sport changes. In-flight requests
+    /// are coalesced above, so pressing Start while this is still loading never doubles traffic.
+    func prefetchDraftSpinSample(for sport: Sport) {
+        Task { _ = await draftSpinSample(for: sport) }
+    }
+
+    /// Complete roster for the team/year that the reel actually landed on. The exact server
+    /// predicate is important: the previous sport+year fetch could return every franchise in
+    /// that season and then filter locally.
+    func draftSpinRoster(sport: Sport, team: String, year: Int) async -> [CatalogSeason] {
+        let key = "\(sport.rawValue)|\(team)|\(year)"
+        if let cached = draftSpinRosters[key] { return cached }
+        if let task = draftSpinRosterTasks[key] { return await task.value }
+        let task = Task<[CatalogSeason], Never> { [weak self] in
+            guard let self else { return [] }
+            return await self.search(CatalogQuery(sport: sport, minYear: year, maxYear: year,
+                                                  exactTeam: team), limit: 1_000)
+        }
+        draftSpinRosterTasks[key] = task
+        let roster = await task.value
+        draftSpinRosterTasks[key] = nil
+        draftSpinRosters[key] = roster
+        return roster
     }
 
     // MARK: - Remote
@@ -56,7 +115,8 @@ final class PlayerSeasonCatalog {
     /// trusting a single request to return everything asked for.
     private static let pageSize = 1000
 
-    private func fetchRemote(_ q: CatalogQuery, limit: Int) async -> [CatalogSeason]? {
+    private func fetchRemote(_ q: CatalogQuery, limit: Int,
+                             overfetchForRanking: Bool) async -> [CatalogSeason]? {
         guard let client else { return nil }
         var items = [
             URLQueryItem(name: "select", value: "id,sport,name,team_abbr,season_year,position,stats,"
@@ -80,7 +140,9 @@ final class PlayerSeasonCatalog {
         if let maxYear = q.maxYear {
             items.append(URLQueryItem(name: "season_year", value: "lte.\(maxYear)"))
         }
-        if let team = q.team, !team.isEmpty {
+        if let team = q.exactTeam, !team.isEmpty {
+            items.append(URLQueryItem(name: "team_abbr", value: "eq.\(team)"))
+        } else if let team = q.team, !team.isEmpty {
             items.append(URLQueryItem(name: "team_abbr", value: "ilike.*\(team)*"))
         }
         let name = q.name.trimmingCharacters(in: .whitespaces)
@@ -88,7 +150,7 @@ final class PlayerSeasonCatalog {
             items.append(URLQueryItem(name: "name", value: "ilike.*\(name)*"))
         }
 
-        let target = limit * 3   // over-fetch; we re-rank client-side
+        let target = limit * (overfetchForRanking ? 3 : 1)
         var rows: [CatalogSeason] = []
         var offset = 0
         while rows.count < target {
@@ -113,7 +175,8 @@ final class PlayerSeasonCatalog {
                 && (q.positions.isEmpty || q.positions.contains(s.position))
                 && (q.minYear == nil || s.seasonYear >= q.minYear!)
                 && (q.maxYear == nil || s.seasonYear <= q.maxYear!)
-                && (team == nil || team!.isEmpty || s.teamAbbr.lowercased().contains(team!))
+                && (q.exactTeam == nil || q.exactTeam!.isEmpty || s.teamAbbr == q.exactTeam!)
+                && (q.exactTeam != nil || team == nil || team!.isEmpty || s.teamAbbr.lowercased().contains(team!))
                 && (name.isEmpty || s.name.lowercased().contains(name))
                 && s.isCareer == q.career
         }
