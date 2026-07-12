@@ -11,7 +11,8 @@ export type NotificationCategory =
   | "streak_at_risk"
   | "league_position"
   | "versus_challenge"
-  | "season_end";
+  | "season_end"
+  | "friend_request";
 
 export interface PushPayload {
   category: NotificationCategory;
@@ -56,6 +57,15 @@ export function buildSeasonEndPayload(hoursRemaining: number): PushPayload {
     title: "Season ending soon",
     body: `Your league's season ends in ${hoursRemaining}h — make sure your XP is locked in.`,
     data: { tab: "leagues" },
+  };
+}
+
+export function buildFriendRequestPayload(requesterUsername: string): PushPayload {
+  return {
+    category: "friend_request",
+    title: "New friend request",
+    body: `${requesterUsername} wants to be friends on BallIQ.`,
+    data: { tab: "friends" },
   };
 }
 

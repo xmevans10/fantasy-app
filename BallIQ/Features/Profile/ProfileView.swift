@@ -232,6 +232,7 @@ struct ProfileView: View {
             notificationToggle("Streak at risk", \.streakAtRisk)
             notificationToggle("League position", \.leaguePosition)
             notificationToggle("Versus challenges", \.versusChallenge)
+            notificationToggle("Friend requests", \.friendRequest)
             notificationToggle("Season ending", \.seasonEnd)
             Button {
                 Task { await PushNotificationManager.requestAuthorizationAndRegister() }

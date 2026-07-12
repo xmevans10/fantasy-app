@@ -1,5 +1,5 @@
-// Triggered by a Supabase Database Webhook on INSERT to `versus_challenges` (hand-off: wire the
-// webhook in the dashboard — Database > Webhooks — pointing at this function's URL). Looks up the
+// Triggered by the `versus_challenges_notify` DB trigger (pg_net `net.http_post`, see
+// schema.sql — no dashboard webhook needed) on INSERT to `versus_challenges`. Looks up the
 // opponent's notification preference + device tokens and sends the "challenge received" push.
 import { serviceClient } from "../_shared/supabase.ts";
 import { buildVersusChallengePayload, sendApnsPush } from "../_shared/apns.ts";

@@ -1,5 +1,6 @@
 import { assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
+  buildFriendRequestPayload,
   buildLeaguePositionPayload,
   buildSeasonEndPayload,
   buildStreakAtRiskPayload,
@@ -181,4 +182,10 @@ Deno.test("league-position payload varies by zone", () => {
 Deno.test("season-end payload includes hours remaining", () => {
   const payload = buildSeasonEndPayload(18);
   assertStringIncludes(payload.body, "18h");
+});
+
+Deno.test("friend-request payload names the requester", () => {
+  const payload = buildFriendRequestPayload("xander");
+  assertStringIncludes(payload.body, "xander");
+  assertEquals(payload.data?.tab, "friends");
 });

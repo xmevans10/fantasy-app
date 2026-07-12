@@ -769,3 +769,72 @@ begin
       or (requester_id = p_other and addressee_id = auth.uid());
 end;
 $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- M20 social follow-through (friends leaderboard + friend-request push)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+alter table public.notification_settings
+  add column if not exists friend_request boolean not null default true;
+
+-- All accepted friends of the caller as public_profile projections, one round trip —
+-- powers the FRIENDS leaderboard scope without N per-friend RPC calls.
+create or replace function public.friend_profiles()
+returns jsonb
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select coalesce(jsonb_agg(public.public_profile(f.other)), '[]'::jsonb)
+  from (
+    select case when requester_id = auth.uid() then addressee_id else requester_id end as other
+    from public.friends
+    where status = 'accepted'
+      and (requester_id = auth.uid() or addressee_id = auth.uid())
+  ) f;
+$$;
+
+-- DB -> edge-function webhooks via pg_net (async fire-and-forget; an unreachable function
+-- never fails the insert). Replaces the dashboard-webhook hand-off for notify-versus-challenge.
+create or replace function public.notify_versus_challenge_webhook()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform net.http_post(
+    url := 'https://nhccgufqwndtoasdbkhc.supabase.co/functions/v1/notify-versus-challenge',
+    body := jsonb_build_object('record', jsonb_build_object(
+      'id', new.id, 'challenger_id', new.challenger_id, 'opponent_id', new.opponent_id)),
+    headers := '{"Content-Type": "application/json"}'::jsonb);
+  return new;
+end;
+$$;
+drop trigger if exists versus_challenges_notify on public.versus_challenges;
+create trigger versus_challenges_notify
+  after insert on public.versus_challenges
+  for each row execute function public.notify_versus_challenge_webhook();
+
+create or replace function public.notify_friend_request_webhook()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.status = 'pending' then
+    perform net.http_post(
+      url := 'https://nhccgufqwndtoasdbkhc.supabase.co/functions/v1/notify-friend-request',
+      body := jsonb_build_object('record', jsonb_build_object(
+        'requester_id', new.requester_id, 'addressee_id', new.addressee_id)),
+      headers := '{"Content-Type": "application/json"}'::jsonb);
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists friends_notify_request on public.friends;
+create trigger friends_notify_request
+  after insert on public.friends
+  for each row execute function public.notify_friend_request_webhook();

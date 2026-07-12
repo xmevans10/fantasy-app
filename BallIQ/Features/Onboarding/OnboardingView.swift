@@ -7,6 +7,12 @@ struct OnboardingView: View {
 
     @State private var currentNonce: String?
     @State private var error: String?
+    /// Gates the post-sign-in username claim prompt (M20): a brand-new account has no
+    /// `profiles.username` yet, so we interrupt onboarding once with `IdentityEditorSheet`
+    /// instead of leaving username claim buried in Profile where most people never find it.
+    /// Claiming is skippable — the sheet dismisses on save *or* cancel, either way we
+    /// proceed to `finish()`.
+    @State private var showIdentityClaim = false
 
     var body: some View {
         // Short screens (iPhone SE class) can't fit the full pitch without clipping the
@@ -62,6 +68,9 @@ struct OnboardingView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color.appBackground)
+        .sheet(isPresented: $showIdentityClaim, onDismiss: finish) {
+            IdentityEditorSheet().environmentObject(container)
+        }
     }
 
     /// Fills the space between the hero and the sign-in buttons with a value pitch in the
@@ -157,7 +166,7 @@ struct OnboardingView: View {
             try await container.auth.signInWithProvider("google")
             await container.syncIfSignedIn()
             container.track(.signInCompleted, ["provider": "google", "surface": "onboarding"])
-            finish()
+            finishOrClaimUsername()
         } catch {
             self.error = "Couldn't complete sign-in. Try again."
         }
@@ -178,7 +187,7 @@ struct OnboardingView: View {
                     try await container.auth.signInWithApple(identityToken: token, rawNonce: raw)
                     await container.syncIfSignedIn()
                     container.track(.signInCompleted, ["provider": "apple", "surface": "onboarding"])
-                    finish()
+                    finishOrClaimUsername()
                 } catch {
                     self.error = "Couldn't complete sign-in. Try again."
                 }
@@ -186,6 +195,18 @@ struct OnboardingView: View {
         case .failure:
             // User canceled or it failed — stay on the screen, no error noise for cancel.
             break
+        }
+    }
+
+    /// Called right after `syncIfSignedIn()` populates `container.identity` from either
+    /// sign-in path. A returning user (already has a username) skips straight to `finish()`
+    /// as before; a brand-new account gets one shot at claiming a username before landing
+    /// in the app — `finish()` itself is deferred to the sheet's `onDismiss`.
+    private func finishOrClaimUsername() {
+        if container.identity.username == nil {
+            showIdentityClaim = true
+        } else {
+            finish()
         }
     }
 

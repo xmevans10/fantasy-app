@@ -129,6 +129,17 @@ final class SocialRepository {
 
     // MARK: - Public profiles
 
+    /// Every accepted friend's public projection in one round trip (`friend_profiles` RPC) —
+    /// powers the FRIENDS leaderboard scope. The caller's own row is not included.
+    func friendProfiles() async -> [PublicProfile] {
+        struct NoArgs: Encodable {}
+        guard let data = try? await client.rpc("friend_profiles", args: NoArgs()),
+              !data.isEmpty else { return [] }
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return (try? decoder.decode([PublicProfile].self, from: data)) ?? []
+    }
+
     /// Another player's public projection via the `public_profile` RPC (see schema.sql —
     /// ratings/progress RLS stays own-only; this is the one sanctioned cross-user read).
     func publicProfile(userID: String) async -> PublicProfile? {
