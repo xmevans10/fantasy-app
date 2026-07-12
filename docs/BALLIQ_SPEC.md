@@ -339,6 +339,8 @@ One template definition, consumed by both sides:
 | M15 analytics & content health | ✅ shipped; `events` table + RLS applied live (2026-07-05) |
 | M16 headshot coverage | ✅ shipped (all 5 sports, 100% coverage) |
 | M17 puzzle grain + community career creation | ✅ shipped, including the live catalog migration/backfill |
+| M19 social layer (friends graph + public profiles) | ✅ shipped 2026-07-12; server side live-verified 16/16 (RLS negatives included); signed-in UI pass still needs two TestFlight accounts |
+| M20 social follow-through | ✅ shipped 2026-07-12 — FRIENDS leaderboard scope on Leagues (`friend_profiles` RPC), onboarding username claim, friend-request push (deployed + chain verified), pg_net DB triggers for both notify webhooks |
 
 **Release status (new as of 2026-07-05):** a TestFlight build is live for external testers
 (join link in [prompts/HANDOFF-next-agent-2026-07-05.md](../prompts/HANDOFF-next-agent-2026-07-05.md)),
@@ -357,9 +359,11 @@ manual-signing workaround from scratch, it's already documented.
    fired on schedule Monday 2026-07-06 05:00 UTC and bootstrapped season 1 (active through
    2026-07-13 05:00 UTC, 1 cohort, 1 member — verified live via MCP 2026-07-07). No further
    action needed; it will keep rolling over weekly on its own.
-4. **`notify-versus-challenge`'s DB webhook isn't wired** (Database → Webhooks in the Supabase
-   dashboard — no API path found for this step). The function is deployed and correct; nothing
-   calls it yet.
+4. ~~**`notify-versus-challenge`'s DB webhook isn't wired**~~ — resolved 2026-07-12: no
+   dashboard step needed after all; a `pg_net` AFTER INSERT trigger
+   (`versus_challenges_notify`, see schema.sql M20 section) now POSTs to the function
+   directly. Same pattern wired for `notify-friend-request` (`friends_notify_request`) and
+   verified live end-to-end (insert → trigger → function → `{"sent":1}`).
 5. **Real APNs credentials don't exist yet** — push sends log instead of calling Apple until
    `APNS_KEY_ID`/`APNS_TEAM_ID`/`APNS_PRIVATE_KEY`/`APNS_BUNDLE_ID` are generated (Apple
    Developer portal) and set as Edge Function secrets. External hand-off.
