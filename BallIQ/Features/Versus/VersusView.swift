@@ -90,10 +90,17 @@ struct VersusView: View {
             let played = c.hasPlayed(me: me)
             HStack(spacing: 12) {
                 Image(systemName: c.sport.symbol).font(.system(size: 18)).foregroundStyle(Color.accentText)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(row.opponentUsername ?? "Player").font(.bodyStrong).foregroundStyle(Color.textPrimary)
-                    Text(statusLine(c, me: me)).font(.label11).foregroundStyle(Color.textMuted)
+                // Only the name pushes to the profile — the row's own PLAY button needs its
+                // tap target intact, so this can't be a NavigationLink around the whole HStack.
+                NavigationLink {
+                    PublicProfileView(userID: c.opponentID(me: me), usernameHint: row.opponentUsername)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(row.opponentUsername ?? "Player").font(.bodyStrong).foregroundStyle(Color.textPrimary)
+                        Text(statusLine(c, me: me)).font(.label11).foregroundStyle(Color.textMuted)
+                    }
                 }
+                .buttonStyle(.plain)
                 Spacer()
                 if c.status == "completed" || c.status == "forfeited" {
                     if let won = c.won(me: me) {
@@ -149,6 +156,7 @@ struct VersusView: View {
 /// Challenge-a-friend sheet: username + sport, posts via `RepositoryContainer.createVersusChallenge`.
 private struct ChallengeSheet: View {
     @EnvironmentObject private var container: RepositoryContainer
+    @EnvironmentObject private var auth: AuthService
     @Environment(\.dismiss) private var dismiss
     let onSent: () async -> Void
 
@@ -156,6 +164,10 @@ private struct ChallengeSheet: View {
     @State private var sport: Sport = .nfl
     @State private var errorMessage: String?
     @State private var sending = false
+    /// Accepted friends, for the tap-to-fill chip row below the manual username field.
+    /// Best-effort — an empty/failed load just means the chip row doesn't appear and manual
+    /// entry (the pre-M19 behavior) still works untouched.
+    @State private var friends: [FriendRow] = []
 
     var body: some View {
         NavigationStack {
@@ -169,6 +181,10 @@ private struct ChallengeSheet: View {
                     .padding(12)
                     .background(Color.surfaceMuted)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+
+                if !friends.isEmpty {
+                    friendChipRow
+                }
 
                 if let errorMessage {
                     Text(errorMessage).font(.label12).foregroundStyle(Color.dangerText)
@@ -194,6 +210,42 @@ private struct ChallengeSheet: View {
                 }
             }
         }
+        .task { await loadFriends() }
+    }
+
+    /// Accepted friends as a horizontal chip row — tapping one fills the username field so a
+    /// challenge can skip typing entirely. Only shows friends with a resolved username (an
+    /// unresolved one can't be typed into the field anyway).
+    private var friendChipRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(friends) { friend in
+                    if let name = friend.username {
+                        Button {
+                            username = name
+                            Haptics.tap()
+                        } label: {
+                            HStack(spacing: 6) {
+                                Text(friend.avatar?.isEmpty == false ? friend.avatar! : "🏟️")
+                                    .font(.system(size: 14))
+                                Text(name).font(.label12)
+                            }
+                            .foregroundStyle(Color.textPrimary)
+                            .padding(.horizontal, 10).padding(.vertical, 7)
+                            .background(Color.surfaceMuted)
+                            .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private func loadFriends() async {
+        guard let social = container.social, let me = auth.userID else { return }
+        let rows = await social.friendRows(me: me)
+        friends = rows.filter(\.edge.isAccepted)
     }
 
     private func send() async {

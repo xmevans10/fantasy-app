@@ -13,6 +13,8 @@ final class RepositoryContainer: ObservableObject {
     let community: CommunityPuzzleRepository?
     let cohorts: CohortRepository?
     let versus: VersusRepository?
+    /// Friends graph + public profiles (M19). Nil when local-only — social is server-only.
+    let social: SocialRepository?
     /// Era-adjustment baselines for composable scoring (bundled; empty until the pipeline ships them).
     let baselines: StatBaselines = .loadBundled()
     /// StoreKit 2 product catalog + purchase/restore (M5). `entitlements` below mirrors its
@@ -36,6 +38,12 @@ final class RepositoryContainer: ObservableObject {
     /// than re-fetched per view) so Home/Browse/Community can synchronously badge a puzzle
     /// whose cards feature the user's team.
     @Published private(set) var favoriteTeams = FavoriteTeams.empty
+    /// The signed-in user's own `profiles.username`/`avatar` (M19) — cached like
+    /// `favoriteTeams` so Profile renders identity synchronously.
+    @Published private(set) var identity = ProfileIdentity.empty
+    /// Incoming pending friend-request count (M19) — badge fuel for Profile/Friends entry
+    /// points; refreshed on sign-in sync and after any friends mutation via `refreshFriendBadge()`.
+    @Published private(set) var pendingFriendRequests = 0
     /// What the current user can access (Pro/packs) — the union of the on-device StoreKit read
     /// (`store.entitlements`, instant but only ever reflects what's local) and the server's
     /// verified `entitlements` table (`serverEntitlements`, synced on sign-in — the belt to the
@@ -56,6 +64,7 @@ final class RepositoryContainer: ObservableObject {
         self.community = client.map { CommunityPuzzleRepository(client: $0) }
         self.cohorts = client.map { CohortRepository(client: $0) }
         self.versus = client.map { VersusRepository(client: $0) }
+        self.social = client.map { SocialRepository(client: $0) }
         self.analytics = client.map { AnalyticsClient(client: $0) }
         let raw = UserDefaults.standard.string(forKey: "sportFilter") ?? SportFilter.all.rawValue
         self.sportFilter = SportFilter(rawValue: raw) ?? .all
@@ -98,12 +107,15 @@ final class RepositoryContainer: ObservableObject {
         await pushPendingDeviceTokenIfNeeded()
         isAdmin = await community?.isAdmin(userID: uid) ?? false
         favoriteTeams = await loadFavoriteTeams()
+        identity = await loadIdentity()
+        await refreshFriendBadge()
         serverEntitlements = await mirror.pullEntitlements()
         recomputeEntitlements()
     }
 
     func handleSignedOut() {
         sync = nil; isAdmin = false; favoriteTeams = .empty
+        identity = .empty; pendingFriendRequests = 0
         serverEntitlements = .free
         recomputeEntitlements()
     }
@@ -343,5 +355,36 @@ final class RepositoryContainer: ObservableObject {
         struct Row: Encodable { let id: String; let favoriteTeams: [String: String] }
         try? await client.upsert("profiles",
             values: Row(id: uid, favoriteTeams: favoriteTeams.teams), onConflict: "id")
+    }
+
+    // MARK: - Identity & friends (M19)
+
+    func loadIdentity() async -> ProfileIdentity {
+        guard let client, let uid = auth.userID else { return .empty }
+        struct Row: Decodable { let username: String?; let avatar: String? }
+        let items = [URLQueryItem(name: "id", value: "eq.\(uid)"),
+                     URLQueryItem(name: "select", value: "username,avatar"),
+                     URLQueryItem(name: "limit", value: "1")]
+        let rows: [Row]? = try? await client.select("profiles", query: items)
+        return rows?.first.map { ProfileIdentity(username: $0.username, avatar: $0.avatar) } ?? .empty
+    }
+
+    /// Saves username/avatar. Throws on failure — `profiles.username` is UNIQUE, so a taken
+    /// name surfaces as `SupabaseError.http(status: 409, …)`; callers show "already taken".
+    /// On success the published `identity` updates so every surface re-renders at once.
+    func saveIdentity(username: String?, avatar: String?) async throws {
+        guard let client, let uid = auth.userID else { return }
+        struct Row: Encodable { let id: String; let username: String?; let avatar: String? }
+        try await client.upsert("profiles",
+            values: Row(id: uid, username: username, avatar: avatar), onConflict: "id")
+        identity = ProfileIdentity(username: username, avatar: avatar)
+    }
+
+    /// Recounts incoming pending friend requests (cheap: one filtered select). Call after
+    /// any friends mutation so badges stay honest without a realtime channel.
+    func refreshFriendBadge() async {
+        guard let social, let uid = auth.userID else { pendingFriendRequests = 0; return }
+        let edges = await social.edges(me: uid)
+        pendingFriendRequests = edges.filter { $0.isIncomingPending(me: uid) }.count
     }
 }

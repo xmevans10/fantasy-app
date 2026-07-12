@@ -163,24 +163,41 @@ struct CommunityView: View {
 
     /// A community feed card. The header band is colored by sport, same as daily cards; human-made
     /// puzzles get a soft warm body tint instead (vs the daily cards' white) plus the grading
-    /// badge (K4C4 only) and the author's name, so "someone's opinion" reads at a glance.
+    /// badge (K4C4 only). The author line sits below the card rather than inside it (M19):
+    /// `DailyGameCard`'s whole body is a single tap target for "play", so a second tappable
+    /// target for "view author" has to live outside it rather than nested inside.
     private func communityCard(_ item: CommunitySummary) -> some View {
-        let author = authors[item.authorId].map { "by @\($0)" } ?? "community"
         let plays = item.playCount == 1 ? "1 play" : "\(item.playCount) plays"
         let isKeep4 = item.format == "keep4"
-        return DailyGameCard(
-            formatName: isKeep4 ? "K4C4" : "Who Am I?",
-            symbol: isKeep4 ? "rectangle.stack.fill" : "questionmark.circle.fill", sport: item.sport,
-            title: item.title,
-            subtitle: "\(plays) · \(author)",
-            description: item.description,
-            scoring: isKeep4 ? item.scoringKind : nil,
-            grain: isKeep4 ? item.grainKind : nil,
-            completed: false,
-            typeColor: isKeep4 ? .accentFill : .voltFill, onTypeColor: isKeep4 ? .onAccent : .onVolt,
-            bodyFill: .warningBg
-        ) { Task { await open(item) } }
-        secondaryAction: { menuTarget = item; showCardMenu = true }
+        return VStack(alignment: .leading, spacing: 6) {
+            DailyGameCard(
+                formatName: isKeep4 ? "K4C4" : "Who Am I?",
+                symbol: isKeep4 ? "rectangle.stack.fill" : "questionmark.circle.fill", sport: item.sport,
+                title: item.title,
+                subtitle: plays,
+                description: item.description,
+                scoring: isKeep4 ? item.scoringKind : nil,
+                grain: isKeep4 ? item.grainKind : nil,
+                completed: false,
+                typeColor: isKeep4 ? .accentFill : .voltFill, onTypeColor: isKeep4 ? .onAccent : .onVolt,
+                bodyFill: .warningBg
+            ) { Task { await open(item) } }
+            secondaryAction: { menuTarget = item; showCardMenu = true }
+
+            NavigationLink {
+                PublicProfileView(userID: item.authorId, usernameHint: authors[item.authorId])
+            } label: {
+                Text(authorLine(item))
+                    .font(.label12)
+                    .foregroundStyle(Color.textMuted)
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, 6)
+        }
+    }
+
+    private func authorLine(_ item: CommunitySummary) -> String {
+        authors[item.authorId].map { "by @\($0)" } ?? "by community"
     }
 
     /// Subtle banner over a still-populated list: the last refresh failed but we kept the prior items.

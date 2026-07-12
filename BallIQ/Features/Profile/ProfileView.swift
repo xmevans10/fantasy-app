@@ -9,6 +9,8 @@ struct ProfileView: View {
     @State private var notificationSettings = NotificationSettings.allEnabled
     @State private var showStats = false
     @State private var showModeration = false
+    @State private var showIdentityEditor = false
+    @State private var showFriends = false
 
     /// The player's strongest sport headlines the hero (ties favor NFL — `allCases` order).
     private var bestSport: Sport {
@@ -23,14 +25,21 @@ struct ProfileView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    heroCard.heroReveal(0)
-                    statRow.heroReveal(1)
-                    statsRow.heroReveal(2)
-                    ratingsCard.heroReveal(3)
-                    if auth.isSignedIn { favoriteTeamsCard.heroReveal(4) }
-                    if auth.isSignedIn { notificationsCard.heroReveal(5) }
-                    if container.isAdmin { moderationRow.heroReveal(6) }
-                    accountCard.heroReveal(7)
+                    if auth.isSignedIn && container.identity.username == nil {
+                        claimUsernameCard.heroReveal(0)
+                    }
+                    heroCard.heroReveal(1)
+                    statRow.heroReveal(2)
+                    statsRow.heroReveal(3)
+                    if auth.isSignedIn { friendsRow.heroReveal(4) }
+                    ratingsCard.heroReveal(5)
+                    if auth.isSignedIn && container.identity.username != nil {
+                        shareCardRow.heroReveal(6)
+                    }
+                    if auth.isSignedIn { favoriteTeamsCard.heroReveal(7) }
+                    if auth.isSignedIn { notificationsCard.heroReveal(8) }
+                    if container.isAdmin { moderationRow.heroReveal(9) }
+                    accountCard.heroReveal(10)
                 }
                 .padding(16)
             }
@@ -43,6 +52,12 @@ struct ProfileView: View {
             .navigationDestination(isPresented: $showModeration) {
                 ModerationQueueView().environmentObject(container)
             }
+            .navigationDestination(isPresented: $showFriends) {
+                FriendsView().environmentObject(container).environmentObject(auth)
+            }
+        }
+        .sheet(isPresented: $showIdentityEditor) {
+            IdentityEditorSheet().environmentObject(container)
         }
         .task { if auth.isSignedIn { notificationSettings = await container.loadNotificationSettings() } }
         .onAppear {
@@ -70,6 +85,74 @@ struct ProfileView: View {
             .cardSurface()
         }
         .buttonStyle(PrimePressStyle())
+    }
+
+    /// Prompts a signed-in-but-anonymous player to claim `profiles.username` — without it,
+    /// Versus challenges and Friends have nothing to address the player by, so this is the
+    /// root of the identity loop the rest of M19 depends on.
+    private var claimUsernameCard: some View {
+        Button { showIdentityEditor = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "person.crop.circle.badge.plus")
+                    .font(.system(size: 26, weight: .black)).foregroundStyle(Color.onVolt)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("CLAIM YOUR USERNAME").font(.heading).foregroundStyle(Color.onVolt)
+                    Text("UNLOCKS VERSUS CHALLENGES & FRIENDS").font(.label11).foregroundStyle(Color.onVolt.opacity(0.75))
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold)).foregroundStyle(Color.onVolt.opacity(0.75))
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .blockCard(fill: .voltFill)
+        }
+        .buttonStyle(PrimePressStyle())
+    }
+
+    /// Entry to the friends hub — incoming requests, friends list, add-by-username.
+    private var friendsRow: some View {
+        Button { showFriends = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 20, weight: .bold)).foregroundStyle(Color.accentText)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Friends").font(.title).foregroundStyle(Color.textPrimary)
+                    Text("REQUESTS & CHALLENGES").font(.label11).foregroundStyle(Color.textMuted)
+                }
+                Spacer()
+                if container.pendingFriendRequests > 0 {
+                    Text("\(container.pendingFriendRequests)")
+                        .font(.label12).foregroundStyle(Color.onDanger)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Color.dangerFill)
+                        .clipShape(Capsule())
+                }
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .cardSurface()
+        }
+        .buttonStyle(PrimePressStyle())
+    }
+
+    /// Shareable identity card — only offered once a username exists, since `@nil` reads
+    /// poorly and the whole point is giving friends something to find you by.
+    private var shareCardRow: some View {
+        let card = ProfileShareCardView(
+            username: container.identity.username ?? "",
+            avatar: container.identity.avatar?.isEmpty == false ? container.identity.avatar! : "🏟️",
+            sport: bestSport, tier: tier, rating: rating,
+            streak: container.streak, level: container.level)
+        return ShareLink(item: card.rendered(), preview: SharePreview("My BallIQ profile", image: card.rendered())) {
+            Label("SHARE MY CARD", systemImage: "square.and.arrow.up").ctaLabel()
+        }
+        .buttonStyle(PrimePressStyle())
+        .simultaneousGesture(TapGesture().onEnded {
+            container.track(.shareTapped, ["surface": "profile_card"])
+        })
     }
 
     /// Entry to the moderation review queue — admin accounts only (`profiles.is_admin`).
@@ -180,6 +263,10 @@ struct ProfileView: View {
 
     private var heroCard: some View {
         VStack(spacing: 6) {
+            if auth.isSignedIn, let username = container.identity.username {
+                identityLine(username: username)
+                    .padding(.bottom, 4)
+            }
             Image(systemName: tier.symbol)
                 .font(.system(size: 40, weight: .black))
                 .foregroundStyle(tier.color)
@@ -192,6 +279,30 @@ struct ProfileView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
         .blockCard(fill: .accentFill)
+    }
+
+    /// Avatar + `@username` + pencil edit, shown atop the hero once identity is claimed.
+    private func identityLine(username: String) -> some View {
+        let avatar = container.identity.avatar?.isEmpty == false ? container.identity.avatar! : "🏟️"
+        return HStack(spacing: 8) {
+            Text(avatar)
+                .font(.system(size: 22))
+                .frame(width: 36, height: 36)
+                .background(Color.onAccent.opacity(0.14))
+                .clipShape(Circle())
+            Text("@\(username)")
+                .font(.custom(FontName.condBlack, size: 16))
+                .foregroundStyle(Color.onAccent)
+            Button { showIdentityEditor = true } label: {
+                Image(systemName: "pencil")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Color.onAccent.opacity(0.85))
+                    .padding(6)
+                    .background(Color.onAccent.opacity(0.14))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(PrimePressStyle())
+        }
     }
 
     private var statRow: some View {

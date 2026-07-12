@@ -69,15 +69,35 @@ struct LeaguesView: View {
         .blockCard(fill: .accentFill)
     }
 
+    @ViewBuilder
     private func standingRow(_ row: CohortStandingRow) -> some View {
+        // Everyone but "me" pushes to the public profile (M19) — my own row already has a
+        // dedicated Profile tab, so tapping it would just be a confusing self-link.
+        if row.isMe {
+            standingRowContent(row)
+        } else {
+            NavigationLink {
+                PublicProfileView(userID: row.userId, usernameHint: row.username)
+            } label: {
+                standingRowContent(row)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func standingRowContent(_ row: CohortStandingRow) -> some View {
         HStack(spacing: 12) {
             Text("\(row.rank)")
                 .font(.hero(18))
                 .foregroundStyle(zoneColor(row.zone))
                 .frame(width: 28, alignment: .leading)
-            Image(systemName: "person.crop.circle.fill")
-                .font(.system(size: 28))
-                .foregroundStyle(Color.textMuted)
+            if let avatar = row.avatar, !avatar.isEmpty {
+                Text(avatar).font(.system(size: 22)).frame(width: 28, height: 28)
+            } else {
+                Image(systemName: "person.crop.circle.fill")
+                    .font(.system(size: 28))
+                    .foregroundStyle(Color.textMuted)
+            }
             Text(row.displayName)
                 .font(row.isMe ? .bodyStrong : .body14)
                 .foregroundStyle(Color.textPrimary)

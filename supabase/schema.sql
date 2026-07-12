@@ -671,3 +671,101 @@ create policy "entitlements own read" on public.entitlements
   for select using (auth.uid() = user_id);
 -- No insert/update/delete policy for authenticated users — writes are service_role-only
 -- (`app-store-notifications`), so a client can never grant itself an entitlement.
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- M19 social layer (friends graph + public profiles)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- One row per friendship edge; requester sends, addressee accepts. A declined request is
+-- simply deleted (so it can be re-sent later). The least/greatest unique index blocks a
+-- reverse-direction duplicate edge (A->B and B->A can't both exist).
+create table if not exists public.friends (
+  requester_id uuid not null references auth.users(id) on delete cascade,
+  addressee_id uuid not null references auth.users(id) on delete cascade,
+  status       text not null default 'pending',   -- 'pending' | 'accepted'
+  created_at   timestamptz not null default now(),
+  responded_at timestamptz,
+  primary key (requester_id, addressee_id),
+  constraint friends_not_self check (requester_id <> addressee_id),
+  constraint friends_status_valid check (status in ('pending','accepted'))
+);
+create unique index if not exists friends_unique_pair
+  on public.friends (least(requester_id, addressee_id), greatest(requester_id, addressee_id));
+create index if not exists friends_addressee_idx on public.friends (addressee_id, status);
+
+alter table public.friends enable row level security;
+drop policy if exists "friends visible to participants" on public.friends;
+create policy "friends visible to participants" on public.friends
+  for select using (auth.uid() = requester_id or auth.uid() = addressee_id);
+drop policy if exists "friends request own" on public.friends;
+create policy "friends request own" on public.friends
+  for insert with check (auth.uid() = requester_id and status = 'pending');
+drop policy if exists "friends respond own" on public.friends;
+create policy "friends respond own" on public.friends
+  for update using (auth.uid() = addressee_id) with check (auth.uid() = addressee_id);
+drop policy if exists "friends delete own" on public.friends;
+create policy "friends delete own" on public.friends
+  for delete using (auth.uid() = requester_id or auth.uid() = addressee_id);
+
+-- Public-profile read: ratings/progress are own-only by RLS (correctly), so expose a
+-- deliberately-limited projection for viewing another player's profile. Everything here is
+-- leaderboard-grade data (username, avatar, per-sport ratings, streak, xp) — no email, no
+-- entitlements, no notification settings.
+create or replace function public.public_profile(target uuid)
+returns jsonb
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select jsonb_build_object(
+    'id', p.id,
+    'username', p.username,
+    'avatar', p.avatar,
+    'created_at', p.created_at,
+    'streak', coalesce(pr.streak, 0),
+    'xp', coalesce(pr.xp, 0),
+    'ratings', coalesce(
+      (select jsonb_object_agg(r.sport, r.rating) from public.ratings r where r.user_id = p.id),
+      '{}'::jsonb)
+  )
+  from public.profiles p
+  left join public.progress pr on pr.user_id = p.id
+  where p.id = target;
+$$;
+
+-- The app's PostgREST wrapper only speaks select/insert/upsert/rpc (no PATCH/DELETE), so
+-- responding to and removing friend edges go through RPCs. SECURITY INVOKER on purpose:
+-- the friends RLS policies (addressee may update, either participant may delete) are the
+-- authorization layer; these functions add no privilege.
+
+create or replace function public.respond_friend_request(p_requester uuid, p_accept boolean)
+returns void
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+  if p_accept then
+    update public.friends
+       set status = 'accepted', responded_at = now()
+     where requester_id = p_requester and addressee_id = auth.uid() and status = 'pending';
+  else
+    delete from public.friends
+     where requester_id = p_requester and addressee_id = auth.uid() and status = 'pending';
+  end if;
+end;
+$$;
+
+create or replace function public.remove_friend(p_other uuid)
+returns void
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+  delete from public.friends
+   where (requester_id = auth.uid() and addressee_id = p_other)
+      or (requester_id = p_other and addressee_id = auth.uid());
+end;
+$$;
