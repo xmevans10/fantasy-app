@@ -48,9 +48,16 @@ struct GameSetupScreen<Options: View>: View {
             }
 
             Button {
+                let filter = SportFilter(rawValue: sport.rawValue) ?? .all
+                // The picker's own default can seed a Pro-locked sport (date-seeded "sport of
+                // the day", or the last sport played before a Pro trial lapsed) without the
+                // user ever tapping a locked chip — that path skips the picker's own lock
+                // check entirely, so re-check here or Start would launch a real paid-tier
+                // session for free.
+                guard container.entitlements.canSelect(filter) else { showPaywall = true; return }
                 // Persist the choice as the app-wide default (rank widget, daily previews,
                 // and the next setup screen all follow the last sport actually played).
-                container.sportFilter = SportFilter(rawValue: sport.rawValue) ?? .all
+                container.sportFilter = filter
                 onStart()
             } label: {
                 Text(startLabel.uppercased())
@@ -65,9 +72,22 @@ struct GameSetupScreen<Options: View>: View {
             .padding(16)
         }
         .background(Color.appBackground)
+        .onAppear { correctLockedDefault() }
+        // Each format seeds `sport` asynchronously (last sport played / date-seeded "sport
+        // of the day" / debug override) with no entitlement check, and that seeding often
+        // lands *after* this screen's own `onAppear` already ran with the binding's initial
+        // value — so re-check on every change too, or a locked sport that arrives late still
+        // opens pre-selected as the active choice (confusing, and see the Start button's own
+        // guard for why that state is more than just cosmetic).
+        .onChange(of: sport) { _, _ in correctLockedDefault() }
         .sheet(isPresented: $showPaywall) {
             PaywallView().environmentObject(container)
         }
+    }
+
+    private func correctLockedDefault() {
+        let filter = SportFilter(rawValue: sport.rawValue) ?? .all
+        if !container.entitlements.canSelect(filter) { sport = .nfl }
     }
 
     /// Concrete sports only (no "All" — a game session is always one sport), same Pro

@@ -26,6 +26,7 @@ struct GridGameView: View {
         Group {
             if let result {
                 GridResultView(sport: sport, score: result.score, correctCount: result.correctCount,
+                               puzzle: puzzle, solved: solved,
                                rewards: rewards, onDone: { dismiss() })
             } else if showingSetup {
                 GameSetupScreen(formatName: "The Grid", title: "Pick your sport",
@@ -102,17 +103,29 @@ struct GridGameView: View {
         .overlay(alignment: .bottom) { Rectangle().fill(Color.hairline).frame(height: Hairline.width) }
     }
 
+    /// A single flat `ForEach` over every board slot (header row + label column + answer
+    /// cells), rather than nesting a `ForEach` inside another `ForEach` — `LazyVGrid` doesn't
+    /// reliably flatten that nested shape, which silently dropped all 9 answer cells (they
+    /// never appeared, even as zero-content placeholders — confirmed by temporarily forcing
+    /// their background to a debug color and seeing nothing render).
     private func gridLayout(_ puzzle: GridPuzzle) -> some View {
+        let cols = puzzle.colDecades.count
         let columns = [GridItem(.fixed(72))] + puzzle.colDecades.map { _ in GridItem(.flexible()) }
+        let totalSlots = (puzzle.rowTeams.count + 1) * (cols + 1)
         return LazyVGrid(columns: columns, spacing: 6) {
-            Color.clear.frame(height: 44)
-            ForEach(Array(puzzle.colDecades.enumerated()), id: \.offset) { _, decade in
-                labelCell("\(decade)s")
-            }
-            ForEach(Array(puzzle.rowTeams.enumerated()), id: \.offset) { row, team in
-                labelCell(team.uppercased())
-                ForEach(0..<puzzle.colDecades.count, id: \.self) { col in
-                    answerCell(puzzle, row: row, col: col)
+            ForEach(0..<totalSlots, id: \.self) { slot in
+                let row = slot / (cols + 1)
+                let col = slot % (cols + 1)
+                if row == 0 {
+                    if col == 0 {
+                        Color.clear.frame(height: 44)
+                    } else {
+                        labelCell("\(puzzle.colDecades[col - 1])s")
+                    }
+                } else if col == 0 {
+                    labelCell(puzzle.rowTeams[row - 1].uppercased())
+                } else {
+                    answerCell(puzzle, row: row - 1, col: col - 1)
                 }
             }
         }

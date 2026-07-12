@@ -12,13 +12,12 @@ struct DraftSpinResultView: View {
 
     private var heroFill: Color { result.outcome == .champion ? .voltFill : .accentFill }
     private var heroInk: Color { result.outcome == .champion ? .onVolt : .onAccent }
-    private var lineupPower: Double {
-        guard !picks.isEmpty else { return 0 }
-        return picks.map { DraftSpinSimulator.power($0, sport: sport) }.reduce(0, +) / Double(picks.count)
-    }
-    private var expectedWinRate: Double { DraftSpinSimulator.winProbability(power: lineupPower) }
-    private var projectedWins: Int {
-        Int((expectedWinRate * Double(DraftSpinSimulator.seasonShape(for: sport).gameCount)).rounded())
+
+    /// The single highest-power pick in the lineup — the "card of the round," highlighted
+    /// with the holographic foil treatment as the one orchestrated sparkle (matches the
+    /// Keep4 result screen's `topSeason` pattern).
+    private var topPick: CatalogSeason? {
+        picks.max { DraftSpinSimulator.power($0, sport: sport) < DraftSpinSimulator.power($1, sport: sport) }
     }
 
     var body: some View {
@@ -26,9 +25,10 @@ struct DraftSpinResultView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     scoreHeader.heroReveal(0)
-                    lineupList.heroReveal(1)
+                    if let top = topPick { topSeasonCard(top).heroReveal(1) }
                     if let rewards { RewardsRow(rewards: rewards).heroReveal(2) }
-                    shareCardPreview.heroReveal(3)
+                    lineupList.heroReveal(3)
+                    shareCardPreview.heroReveal(4)
                 }
                 .padding(16)
             }
@@ -48,14 +48,6 @@ struct DraftSpinResultView: View {
             Text("\(result.wins)-\(result.losses) RECORD")
                 .font(.label12)
                 .foregroundStyle(heroInk.opacity(0.75))
-            HStack(spacing: 8) {
-                resultMetric(label: "ROSTER POWER", value: "\(Int((lineupPower * 100).rounded()))")
-                resultMetric(label: "PROJECTED", value: "\(projectedWins) W")
-                resultMetric(label: "WIN RATE", value: "\(Int((expectedWinRate * 100).rounded()))%")
-            }
-            .padding(.top, 10)
-            Text("Your picks set the projection. The season adds the swings.")
-                .font(.label11).foregroundStyle(heroInk.opacity(0.72))
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 30)
@@ -63,15 +55,15 @@ struct DraftSpinResultView: View {
         .blockCard(fill: heroFill)
     }
 
-    private func resultMetric(label: String, value: String) -> some View {
-        VStack(spacing: 1) {
-            Text(value).font(.custom(FontName.condBlack, size: 17)).foregroundStyle(heroInk)
-            Text(label).font(.label11).foregroundStyle(heroInk.opacity(0.72))
+    private func topSeasonCard(_ player: CatalogSeason) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("TOP SEASON").font(.heading).foregroundStyle(Color.textPrimary)
+            pickRow(player)
+                .background(Color.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.borderInk, lineWidth: 2))
+                .foil(active: true, cornerRadius: 14)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 7)
-        .background(heroInk.opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private var lineupList: some View {
@@ -79,28 +71,7 @@ struct DraftSpinResultView: View {
             Text("YOUR LINEUP").font(.heading).foregroundStyle(Color.textPrimary)
             VStack(spacing: 0) {
                 ForEach(Array(picks.enumerated()), id: \.element.id) { i, player in
-                    let team = TeamColors.palette(sport: sport, abbr: player.teamAbbr)
-                    // The reveal moment shows the player's FULL position-relevant line
-                    // (explicit feedback: results must carry every stat that matters for
-                    // the position, via the same shared grid every format uses).
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 10) {
-                            PlayerHeadshotBadge(headshot: player.headshot, tint: team.primary, size: 32)
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(player.name).font(.custom(FontName.condBold, size: 14)).foregroundStyle(Color.textPrimary)
-                                Text("\(player.teamAbbr.uppercased()) · \(String(player.seasonYear))")
-                                    .font(.label11).foregroundStyle(Color.textMuted)
-                            }
-                            Spacer()
-                            VStack(alignment: .trailing, spacing: 1) {
-                                Text("\(Int((DraftSpinSimulator.power(player, sport: sport) * 100).rounded()))")
-                                    .font(.custom(FontName.condBlack, size: 16)).foregroundStyle(Color.accentText)
-                                Text("POWER").font(.label11).foregroundStyle(Color.textMuted)
-                            }
-                        }
-                        PositionStatGrid(sport: sport, position: player.position, stats: player.stats)
-                    }
-                    .padding(.horizontal, 12).padding(.vertical, 10)
+                    pickRow(player)
                     if i < picks.count - 1 { Rectangle().fill(Color.hairline).frame(height: Hairline.width) }
                 }
             }
@@ -108,6 +79,31 @@ struct DraftSpinResultView: View {
             .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Color.borderInk, lineWidth: 2))
         }
+    }
+
+    /// The reveal moment shows the player's FULL position-relevant line (explicit
+    /// feedback: results must carry every stat that matters for the position, via the
+    /// same shared grid every format uses).
+    private func pickRow(_ player: CatalogSeason) -> some View {
+        let team = TeamColors.palette(sport: sport, abbr: player.teamAbbr)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                PlayerHeadshotBadge(headshot: player.headshot, tint: team.primary, size: 32)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(player.name).font(.custom(FontName.condBold, size: 14)).foregroundStyle(Color.textPrimary)
+                    Text("\(player.teamAbbr.uppercased()) · \(String(player.seasonYear))")
+                        .font(.label11).foregroundStyle(Color.textMuted)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text("\(Int((DraftSpinSimulator.power(player, sport: sport) * 100).rounded()))")
+                        .font(.custom(FontName.condBlack, size: 16)).foregroundStyle(Color.accentText)
+                    Text("POWER").font(.label11).foregroundStyle(Color.textMuted)
+                }
+            }
+            PositionStatGrid(sport: sport, position: player.position, stats: player.stats)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
     }
 
     private var shareCardPreview: some View {

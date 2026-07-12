@@ -46,21 +46,34 @@ struct WhoAmIResultView: View {
         .blockCard(fill: heroFill)
     }
 
+    /// Header-band + headshot-badge shape (silhouette placeholder — WhoAmI's content has no
+    /// photo URL) so the reveal reads as the same "player card" language every other
+    /// minigame's result screen already uses, instead of plain stacked text.
     private var answerCard: some View {
-        VStack(spacing: 6) {
-            Text("THE ANSWER WAS")
-                .font(.label12)
-                .foregroundStyle(Color.textMuted)
-            Text(puzzle.answer.canonical)
-                .font(.title)
-                .foregroundStyle(Color.textPrimary)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 12) {
+                PlayerHeadshotBadge(headshot: nil, tint: Color.onAccent, size: 44)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("THE ANSWER WAS")
+                        .font(.label11)
+                        .foregroundStyle(Color.onAccent.opacity(0.75))
+                    Text(puzzle.answer.canonical)
+                        .font(.custom(FontName.condBlack, size: 20))
+                        .foregroundStyle(Color.onAccent)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(16)
+            .background(Color.accentFill)
             Text(puzzle.sport.displayName)
                 .font(.label11)
                 .foregroundStyle(Color.textMuted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16).padding(.vertical, 10)
+                .background(Color.surface)
         }
-        .frame(maxWidth: .infinity)
-        .padding(20)
-        .cardSurface()
+        .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Radius.card, style: .continuous).strokeBorder(Color.borderInk, lineWidth: 2))
     }
 
     private var doneBar: some View {

@@ -4917,6 +4917,28 @@
     "sport": "soccer",
     "players": [
       {
+        "id": "ciro-immobile-2020",
+        "name": "Ciro Immobile",
+        "teamAbbr": "LAZ",
+        "seasonYear": 2020,
+        "grade": 241.0,
+        "stats": [
+          {
+            "label": "Goals",
+            "value": "36"
+          },
+          {
+            "label": "Assists",
+            "value": "8"
+          },
+          {
+            "label": "Apps",
+            "value": "37"
+          }
+        ],
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/105521-1770718860.jpg?lm=1"
+      },
+      {
         "id": "cristiano-ronaldo-2015",
         "name": "Cristiano Ronaldo",
         "teamAbbr": "RMA",
@@ -4937,72 +4959,6 @@
           }
         ],
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Cristiano_Ronaldo_2275_%28cropped%29.jpg/330px-Cristiano_Ronaldo_2275_%28cropped%29.jpg"
-      },
-      {
-        "id": "cristiano-ronaldo-dos-santos-aveiro-2023",
-        "name": "Cristiano Ronaldo dos Santos Aveiro",
-        "teamAbbr": "AL-",
-        "seasonYear": 2023,
-        "grade": 239.0,
-        "stats": [
-          {
-            "label": "Goals",
-            "value": "35"
-          },
-          {
-            "label": "Assists",
-            "value": "11"
-          },
-          {
-            "label": "Apps",
-            "value": "31"
-          }
-        ],
-        "headshot": "https://media.api-sports.io/football/players/874.png"
-      },
-      {
-        "id": "kylian-mbappe-2019",
-        "name": "Kylian Mbappe",
-        "teamAbbr": "PSG",
-        "seasonYear": 2019,
-        "grade": 215.0,
-        "stats": [
-          {
-            "label": "Goals",
-            "value": "33"
-          },
-          {
-            "label": "Assists",
-            "value": "7"
-          },
-          {
-            "label": "Apps",
-            "value": "29"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Kylian_Mbappe_France_v_Senegal_16_June_2026-391_%28cropped%29.jpg/330px-Kylian_Mbappe_France_v_Senegal_16_June_2026-391_%28cropped%29.jpg"
-      },
-      {
-        "id": "lei-wu-2024",
-        "name": "Lei Wu",
-        "teamAbbr": "SS",
-        "seasonYear": 2024,
-        "grade": 230.0,
-        "stats": [
-          {
-            "label": "Goals",
-            "value": "34"
-          },
-          {
-            "label": "Assists",
-            "value": "10"
-          },
-          {
-            "label": "Apps",
-            "value": "30"
-          }
-        ],
-        "headshot": "https://media.api-sports.io/football/players/47350.png"
       },
       {
         "id": "lionel-messi-2012",
@@ -5027,26 +4983,26 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-055.jpg/330px-Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-055.jpg"
       },
       {
-        "id": "mohamed-salah-2018",
-        "name": "Mohamed Salah",
-        "teamAbbr": "LIV",
-        "seasonYear": 2018,
-        "grade": 226.0,
+        "id": "luis-suarez-2016",
+        "name": "Luis Suárez",
+        "teamAbbr": "FCB",
+        "seasonYear": 2016,
+        "grade": 289.0,
         "stats": [
           {
             "label": "Goals",
-            "value": "32"
+            "value": "40"
           },
           {
             "label": "Assists",
-            "value": "10"
+            "value": "18"
           },
           {
             "label": "Apps",
-            "value": "36"
+            "value": "35"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Mohamed_Salah_2018.jpg/330px-Mohamed_Salah_2018.jpg"
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/44352-1771695059.jpg?lm=1"
       },
       {
         "id": "robert-lewandowski-2021",
@@ -5091,6 +5047,50 @@
           }
         ],
         "headshot": "https://media.api-sports.io/football/players/18979.png"
+      },
+      {
+        "id": "viktor-gyokeres-2025",
+        "name": "Viktor Gyökeres",
+        "teamAbbr": "SPO",
+        "seasonYear": 2025,
+        "grade": 252.0,
+        "stats": [
+          {
+            "label": "Goals",
+            "value": "39"
+          },
+          {
+            "label": "Assists",
+            "value": "8"
+          },
+          {
+            "label": "Apps",
+            "value": "33"
+          }
+        ],
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/325443-1737581896.jpg?lm=1"
+      },
+      {
+        "id": "zlatan-ibrahimovic-2016",
+        "name": "Zlatan Ibrahimović",
+        "teamAbbr": "PSG",
+        "seasonYear": 2016,
+        "grade": 260.0,
+        "stats": [
+          {
+            "label": "Goals",
+            "value": "38"
+          },
+          {
+            "label": "Assists",
+            "value": "13"
+          },
+          {
+            "label": "Apps",
+            "value": "31"
+          }
+        ],
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/3455-1579506060.jpg?lm=1"
       }
     ],
     "grain": "season",
@@ -5102,41 +5102,41 @@
     "sport": "soccer",
     "players": [
       {
-        "id": "alisson-becker-2019",
-        "name": "Alisson Becker",
-        "teamAbbr": "LIV",
-        "seasonYear": 2019,
-        "grade": 103.0,
+        "id": "alejandro-grimaldo-2024",
+        "name": "Alejandro Grimaldo",
+        "teamAbbr": "LEV",
+        "seasonYear": 2024,
+        "grade": 185.5,
+        "stats": [
+          {
+            "label": "Clean Sheets",
+            "value": "16"
+          },
+          {
+            "label": "Apps",
+            "value": "33"
+          },
+          {
+            "label": "Goals",
+            "value": "10"
+          },
+          {
+            "label": "Assists",
+            "value": "15"
+          }
+        ],
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/193082-1689710805.jpg?lm=1"
+      },
+      {
+        "id": "alessandro-florenzi-2014",
+        "name": "Alessandro Florenzi",
+        "teamAbbr": "ROM",
+        "seasonYear": 2014,
+        "grade": 159.5,
         "stats": [
           {
             "label": "Clean Sheets",
             "value": "21"
-          },
-          {
-            "label": "Apps",
-            "value": "38"
-          },
-          {
-            "label": "Goals",
-            "value": "0"
-          },
-          {
-            "label": "Assists",
-            "value": "0"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Alisson_Becker_Brazil_V_Morocco_13_June_2026-117_%28cropped%29.jpg/330px-Alisson_Becker_Brazil_V_Morocco_13_June_2026-117_%28cropped%29.jpg"
-      },
-      {
-        "id": "david-raya-2026",
-        "name": "David Raya",
-        "teamAbbr": "ARS",
-        "seasonYear": 2026,
-        "grade": 94.5,
-        "stats": [
-          {
-            "label": "Clean Sheets",
-            "value": "19"
           },
           {
             "label": "Apps",
@@ -5144,103 +5144,77 @@
           },
           {
             "label": "Goals",
-            "value": "0"
+            "value": "6"
           },
           {
             "label": "Assists",
-            "value": "0"
+            "value": "7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/David_Raya_in_2025_%28cropped%29.jpg/330px-David_Raya_in_2025_%28cropped%29.jpg"
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/130365-1663574873.jpg?lm=1"
       },
       {
-        "id": "ederson-2019",
-        "name": "Ederson",
-        "teamAbbr": "MCI",
-        "seasonYear": 2019,
-        "grade": 97.0,
+        "id": "alex-telles-2020",
+        "name": "Alex Telles",
+        "teamAbbr": "POR",
+        "seasonYear": 2020,
+        "grade": 173.5,
         "stats": [
           {
             "label": "Clean Sheets",
-            "value": "20"
+            "value": "17"
           },
           {
             "label": "Apps",
-            "value": "34"
+            "value": "31"
           },
           {
             "label": "Goals",
-            "value": "0"
+            "value": "11"
           },
           {
             "label": "Assists",
-            "value": "0"
+            "value": "8"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Ederson_Brazil_V_Morocco_13_June_2026-14_%28cropped%29.jpg/330px-Ederson_Brazil_V_Morocco_13_June_2026-14_%28cropped%29.jpg"
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/255755-1659559306.jpg?lm=1"
       },
       {
-        "id": "edwin-van-der-sar-2009",
-        "name": "Edwin van der Sar",
-        "teamAbbr": "MUN",
-        "seasonYear": 2009,
-        "grade": 100.5,
+        "id": "federico-dimarco-2026",
+        "name": "Federico Dimarco",
+        "teamAbbr": "INT",
+        "seasonYear": 2026,
+        "grade": 177.5,
         "stats": [
           {
             "label": "Clean Sheets",
-            "value": "21"
+            "value": "16"
           },
           {
             "label": "Apps",
-            "value": "33"
+            "value": "35"
           },
           {
             "label": "Goals",
-            "value": "0"
+            "value": "7"
           },
           {
             "label": "Assists",
-            "value": "0"
+            "value": "18"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Edwin_van_der_Sar_2015.jpg/330px-Edwin_van_der_Sar_2015.jpg"
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/198116-1725531769.jpg?lm=1"
       },
       {
-        "id": "john-terry-2005",
-        "name": "John Terry",
-        "teamAbbr": "CHE",
-        "seasonYear": 2005,
-        "grade": 136.0,
+        "id": "james-tavernier-2024",
+        "name": "James Tavernier",
+        "teamAbbr": "RAN",
+        "seasonYear": 2024,
+        "grade": 214.5,
         "stats": [
           {
             "label": "Clean Sheets",
-            "value": "25"
-          },
-          {
-            "label": "Apps",
-            "value": "36"
-          },
-          {
-            "label": "Goals",
-            "value": "3"
-          },
-          {
-            "label": "Assists",
-            "value": "0"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/John_Terry_at_pro-am_Wentworth_golf_course_September_2023_%28cropped%29.jpg/330px-John_Terry_at_pro-am_Wentworth_golf_course_September_2023_%28cropped%29.jpg"
-      },
-      {
-        "id": "pepe-reina-2006",
-        "name": "Pepe Reina",
-        "teamAbbr": "LIV",
-        "seasonYear": 2006,
-        "grade": 96.5,
-        "stats": [
-          {
-            "label": "Clean Sheets",
-            "value": "20"
+            "value": "18"
           },
           {
             "label": "Apps",
@@ -5248,66 +5222,92 @@
           },
           {
             "label": "Goals",
-            "value": "0"
+            "value": "17"
           },
           {
             "label": "Assists",
-            "value": "0"
+            "value": "8"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Pepe_Reina_2017.jpg/330px-Pepe_Reina_2017.jpg"
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/62094-1663162918.jpg?lm=1"
       },
       {
-        "id": "petr-cech-2005",
-        "name": "Petr Cech",
-        "teamAbbr": "CHE",
-        "seasonYear": 2005,
-        "grade": 115.0,
+        "id": "jonathan-schmid-2013",
+        "name": "Jonathan Schmid",
+        "teamAbbr": "FRE",
+        "seasonYear": 2013,
+        "grade": 152.5,
         "stats": [
           {
             "label": "Clean Sheets",
-            "value": "24"
+            "value": "13"
           },
           {
             "label": "Apps",
-            "value": "38"
+            "value": "33"
           },
           {
             "label": "Goals",
-            "value": "0"
+            "value": "11"
           },
           {
             "label": "Assists",
-            "value": "0"
+            "value": "6"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/7/75/Arsenal_players_training_before_2019_UEFA_Europa_League_final_07_%28cropped%29.jpg"
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/70285-1658412605.jpg?lm=1"
       },
       {
-        "id": "virgil-van-dijk-2019",
-        "name": "Virgil van Dijk",
-        "teamAbbr": "LIV",
-        "seasonYear": 2019,
-        "grade": 105.0,
+        "id": "marcos-llorente-2021",
+        "name": "Marcos Llorente",
+        "teamAbbr": "ATM",
+        "seasonYear": 2021,
+        "grade": 195.5,
         "stats": [
           {
             "label": "Clean Sheets",
-            "value": "21"
+            "value": "18"
           },
           {
             "label": "Apps",
-            "value": "36"
+            "value": "37"
           },
           {
             "label": "Goals",
-            "value": "0"
+            "value": "12"
+          },
+          {
+            "label": "Assists",
+            "value": "11"
+          }
+        ],
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/282411-1773182531.jpg?lm=1"
+      },
+      {
+        "id": "sergio-ramos-2020",
+        "name": "Sergio Ramos",
+        "teamAbbr": "RMA",
+        "seasonYear": 2020,
+        "grade": 154.5,
+        "stats": [
+          {
+            "label": "Clean Sheets",
+            "value": "17"
+          },
+          {
+            "label": "Apps",
+            "value": "35"
+          },
+          {
+            "label": "Goals",
+            "value": "11"
           },
           {
             "label": "Assists",
             "value": "1"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/20160604_AUT_NED_8876_%28cropped%29.jpg/330px-20160604_AUT_NED_8876_%28cropped%29.jpg"
+        "headshot": "https://img.a.transfermarkt.technology/portrait/header/25557-1694502812.jpg?lm=1"
       }
     ],
     "grain": "season",
@@ -5319,19 +5319,45 @@
     "sport": "tennis",
     "players": [
       {
-        "id": "bjorn-borg-1978",
-        "name": "Bjorn Borg",
-        "teamAbbr": "SWE",
-        "seasonYear": 1978,
-        "grade": 258.5,
+        "id": "billie-jean-king-1971",
+        "name": "Billie Jean King",
+        "teamAbbr": "USA",
+        "seasonYear": 1971,
+        "grade": 272.5,
         "stats": [
           {
             "label": "Wins",
-            "value": "89"
+            "value": "114"
           },
           {
             "label": "Titles",
-            "value": "14"
+            "value": "17"
+          },
+          {
+            "label": "Slams",
+            "value": "1"
+          },
+          {
+            "label": "Losses",
+            "value": "15"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Billie_Jean_King_at_the_2026_Sundance_Film_Festival_02_%28crop_2%29.jpg/330px-Billie_Jean_King_at_the_2026_Sundance_Film_Festival_02_%28crop_2%29.jpg"
+      },
+      {
+        "id": "chris-evert-1975",
+        "name": "Chris Evert",
+        "teamAbbr": "USA",
+        "seasonYear": 1975,
+        "grade": 291.5,
+        "stats": [
+          {
+            "label": "Wins",
+            "value": "99"
+          },
+          {
+            "label": "Titles",
+            "value": "17"
           },
           {
             "label": "Slams",
@@ -5339,10 +5365,10 @@
           },
           {
             "label": "Losses",
-            "value": "5"
+            "value": "7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Bjorn_Borg_en_2014.jpg/330px-Bjorn_Borg_en_2014.jpg"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Chris_Evert.jpg/330px-Chris_Evert.jpg"
       },
       {
         "id": "guillermo-vilas-1977",
@@ -5371,58 +5397,6 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Vilas-1975.jpg/330px-Vilas-1975.jpg"
       },
       {
-        "id": "ilie-nastase-1973",
-        "name": "Ilie Nastase",
-        "teamAbbr": "ROU",
-        "seasonYear": 1973,
-        "grade": 247.5,
-        "stats": [
-          {
-            "label": "Wins",
-            "value": "114"
-          },
-          {
-            "label": "Titles",
-            "value": "14"
-          },
-          {
-            "label": "Slams",
-            "value": "1"
-          },
-          {
-            "label": "Losses",
-            "value": "17"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Ilie_N%C4%83stase_2009_US_Open_02.jpg/330px-Ilie_N%C4%83stase_2009_US_Open_02.jpg"
-      },
-      {
-        "id": "ivan-lendl-1982",
-        "name": "Ivan Lendl",
-        "teamAbbr": "USA",
-        "seasonYear": 1982,
-        "grade": 222.5,
-        "stats": [
-          {
-            "label": "Wins",
-            "value": "107"
-          },
-          {
-            "label": "Titles",
-            "value": "15"
-          },
-          {
-            "label": "Slams",
-            "value": "0"
-          },
-          {
-            "label": "Losses",
-            "value": "9"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Ivan_Lendl_%28cropped%29.jpg/330px-Ivan_Lendl_%28cropped%29.jpg"
-      },
-      {
         "id": "jimmy-connors-1974",
         "name": "Jimmy Connors",
         "teamAbbr": "USA",
@@ -5449,56 +5423,56 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Jimmy_Conners_1994.jpg/330px-Jimmy_Conners_1994.jpg"
       },
       {
-        "id": "john-mcenroe-1984",
-        "name": "John McEnroe",
-        "teamAbbr": "USA",
-        "seasonYear": 1984,
-        "grade": 244.5,
+        "id": "margaret-court-1970",
+        "name": "Margaret Court",
+        "teamAbbr": "AUS",
+        "seasonYear": 1970,
+        "grade": 409.0,
         "stats": [
           {
             "label": "Wins",
-            "value": "82"
+            "value": "116"
           },
           {
             "label": "Titles",
-            "value": "13"
+            "value": "22"
           },
           {
             "label": "Slams",
-            "value": "2"
-          },
-          {
-            "label": "Losses",
-            "value": "3"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/John_McEnroe_005.png/330px-John_McEnroe_005.png"
-      },
-      {
-        "id": "novak-djokovic-2015",
-        "name": "Novak Djokovic",
-        "teamAbbr": "SRB",
-        "seasonYear": 2015,
-        "grade": 257.0,
-        "stats": [
-          {
-            "label": "Wins",
-            "value": "82"
-          },
-          {
-            "label": "Titles",
-            "value": "11"
-          },
-          {
-            "label": "Slams",
-            "value": "3"
+            "value": "4"
           },
           {
             "label": "Losses",
             "value": "6"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg/330px-Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Margaret_Court.png/330px-Margaret_Court.png"
+      },
+      {
+        "id": "martina-navratilova-1983",
+        "name": "Martina Navratilova",
+        "teamAbbr": "USA",
+        "seasonYear": 1983,
+        "grade": 326.5,
+        "stats": [
+          {
+            "label": "Wins",
+            "value": "93"
+          },
+          {
+            "label": "Titles",
+            "value": "18"
+          },
+          {
+            "label": "Slams",
+            "value": "3"
+          },
+          {
+            "label": "Losses",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Martina_Navratilova_Eastbourne_2011.jpg/330px-Martina_Navratilova_Eastbourne_2011.jpg"
       },
       {
         "id": "roger-federer-2006",
@@ -5525,6 +5499,32 @@
           }
         ],
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/330px-Roger_Federer_2015_%28cropped%29.jpg"
+      },
+      {
+        "id": "steffi-graf-1989",
+        "name": "Steffi Graf",
+        "teamAbbr": "GER",
+        "seasonYear": 1989,
+        "grade": 289.0,
+        "stats": [
+          {
+            "label": "Wins",
+            "value": "88"
+          },
+          {
+            "label": "Titles",
+            "value": "14"
+          },
+          {
+            "label": "Slams",
+            "value": "3"
+          },
+          {
+            "label": "Losses",
+            "value": "2"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg/330px-Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg"
       }
     ],
     "grain": "season",
@@ -5536,11 +5536,11 @@
     "sport": "tennis",
     "players": [
       {
-        "id": "bjorn-borg-1978",
-        "name": "Bjorn Borg",
-        "teamAbbr": "SWE",
-        "seasonYear": 1978,
-        "grade": 258.5,
+        "id": "chris-evert-1975",
+        "name": "Chris Evert",
+        "teamAbbr": "USA",
+        "seasonYear": 1975,
+        "grade": 291.5,
         "stats": [
           {
             "label": "Slams",
@@ -5548,18 +5548,18 @@
           },
           {
             "label": "Titles",
-            "value": "14"
+            "value": "17"
           },
           {
             "label": "Wins",
-            "value": "89"
+            "value": "99"
           },
           {
             "label": "Losses",
-            "value": "5"
+            "value": "7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Bjorn_Borg_en_2014.jpg/330px-Bjorn_Borg_en_2014.jpg"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Chris_Evert.jpg/330px-Chris_Evert.jpg"
       },
       {
         "id": "guillermo-vilas-1977",
@@ -5588,32 +5588,6 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Vilas-1975.jpg/330px-Vilas-1975.jpg"
       },
       {
-        "id": "ivan-lendl-1986",
-        "name": "Ivan Lendl",
-        "teamAbbr": "TCH",
-        "seasonYear": 1986,
-        "grade": 218.5,
-        "stats": [
-          {
-            "label": "Slams",
-            "value": "2"
-          },
-          {
-            "label": "Titles",
-            "value": "9"
-          },
-          {
-            "label": "Wins",
-            "value": "90"
-          },
-          {
-            "label": "Losses",
-            "value": "7"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Ivan_Lendl_%28cropped%29.jpg/330px-Ivan_Lendl_%28cropped%29.jpg"
-      },
-      {
         "id": "jimmy-connors-1974",
         "name": "Jimmy Connors",
         "teamAbbr": "USA",
@@ -5640,63 +5614,37 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Jimmy_Conners_1994.jpg/330px-Jimmy_Conners_1994.jpg"
       },
       {
-        "id": "john-mcenroe-1984",
-        "name": "John McEnroe",
-        "teamAbbr": "USA",
-        "seasonYear": 1984,
-        "grade": 244.5,
+        "id": "margaret-court-1970",
+        "name": "Margaret Court",
+        "teamAbbr": "AUS",
+        "seasonYear": 1970,
+        "grade": 409.0,
         "stats": [
           {
             "label": "Slams",
-            "value": "2"
+            "value": "4"
           },
           {
             "label": "Titles",
-            "value": "13"
+            "value": "22"
           },
           {
             "label": "Wins",
-            "value": "82"
-          },
-          {
-            "label": "Losses",
-            "value": "3"
-          }
-        ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/John_McEnroe_005.png/330px-John_McEnroe_005.png"
-      },
-      {
-        "id": "novak-djokovic-2015",
-        "name": "Novak Djokovic",
-        "teamAbbr": "SRB",
-        "seasonYear": 2015,
-        "grade": 257.0,
-        "stats": [
-          {
-            "label": "Slams",
-            "value": "3"
-          },
-          {
-            "label": "Titles",
-            "value": "11"
-          },
-          {
-            "label": "Wins",
-            "value": "82"
+            "value": "116"
           },
           {
             "label": "Losses",
             "value": "6"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg/330px-Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Margaret_Court.png/330px-Margaret_Court.png"
       },
       {
-        "id": "rafael-nadal-2010",
-        "name": "Rafael Nadal",
-        "teamAbbr": "ESP",
-        "seasonYear": 2010,
-        "grade": 212.0,
+        "id": "martina-hingis-1997",
+        "name": "Martina Hingis",
+        "teamAbbr": "SUI",
+        "seasonYear": 1997,
+        "grade": 259.5,
         "stats": [
           {
             "label": "Slams",
@@ -5704,18 +5652,44 @@
           },
           {
             "label": "Titles",
-            "value": "7"
+            "value": "12"
           },
           {
             "label": "Wins",
-            "value": "71"
+            "value": "76"
           },
           {
             "label": "Losses",
-            "value": "10"
+            "value": "5"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Rafael_Nadal_en_2024_%28cropped%29.jpg/330px-Rafael_Nadal_en_2024_%28cropped%29.jpg"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Hingis_RG16_%2810%29_%2827331857371%29.jpg/330px-Hingis_RG16_%2810%29_%2827331857371%29.jpg"
+      },
+      {
+        "id": "martina-navratilova-1983",
+        "name": "Martina Navratilova",
+        "teamAbbr": "USA",
+        "seasonYear": 1983,
+        "grade": 326.5,
+        "stats": [
+          {
+            "label": "Slams",
+            "value": "3"
+          },
+          {
+            "label": "Titles",
+            "value": "18"
+          },
+          {
+            "label": "Wins",
+            "value": "93"
+          },
+          {
+            "label": "Losses",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Martina_Navratilova_Eastbourne_2011.jpg/330px-Martina_Navratilova_Eastbourne_2011.jpg"
       },
       {
         "id": "roger-federer-2006",
@@ -5742,6 +5716,32 @@
           }
         ],
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/330px-Roger_Federer_2015_%28cropped%29.jpg"
+      },
+      {
+        "id": "steffi-graf-1989",
+        "name": "Steffi Graf",
+        "teamAbbr": "GER",
+        "seasonYear": 1989,
+        "grade": 289.0,
+        "stats": [
+          {
+            "label": "Slams",
+            "value": "3"
+          },
+          {
+            "label": "Titles",
+            "value": "14"
+          },
+          {
+            "label": "Wins",
+            "value": "88"
+          },
+          {
+            "label": "Losses",
+            "value": "2"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg/330px-Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg"
       }
     ],
     "grain": "season",
