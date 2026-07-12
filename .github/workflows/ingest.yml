@@ -45,4 +45,4 @@ jobs:
           key: ingest-cache-${{ github.run_id }}
           restore-keys: |
             ingest-cache-
-      - run: python -m tools.ingest.main --backfill 30 --upsert
+      - run: python -m tools.ingest.main --backfill 30 --upsert --catalog

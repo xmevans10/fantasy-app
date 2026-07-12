@@ -77,6 +77,38 @@ def upsert_catalog(rows: list[dict]) -> int:
     return _upsert_table("player_seasons", rows)
 
 
+def fetch_existing_catalog_ids(sport: str, page_size: int = 1000) -> set[str]:
+    """Every `id` already stored in `player_seasons` for `sport` — lets the daily run skip
+    re-sending closed-season rows that can never change (see `main.filter_new_catalog_rows`),
+    instead of resending the full ~130k-row catalog on every single run regardless of what's
+    actually new."""
+    base, key = _require_env()
+    endpoint = f"{base}/rest/v1/player_seasons?select=id&sport=eq.{sport}"
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    ids: set[str] = set()
+    start = 0
+    while True:
+        page_headers = {**headers, "Range-Unit": "items", "Range": f"{start}-{start + page_size - 1}"}
+        req = urllib.request.Request(endpoint, headers=page_headers, method="GET")
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                page = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as err:
+            body = err.read().decode("utf-8", "ignore")
+            raise RuntimeError(f"player_seasons id fetch failed ({err.code}): {body}") from err
+        # Stop on an empty page, not `len(page) < page_size` — PostgREST/Supabase silently
+        # caps a single response at its own configured max (default 1000, see
+        # `fetch_player_seasons`'s docstring) regardless of a larger `Range` request, so a
+        # `page_size` above that cap made every page look "short" and the loop exited after
+        # page 1 every time — undercounting existing ids and defeating this function's whole
+        # point (caught live: only 973/~26,000 NFL ids matched on the first production run).
+        if not page:
+            break
+        ids.update(r["id"] for r in page)
+        start += page_size
+    return ids
+
+
 def upsert_grid(rows: list[dict]) -> int:
     """Upsert Grid puzzle rows (already-shaped id/sport/format/content/active_date dicts —
     unlike `upsert()`, which takes `PuzzleRow` objects) into `puzzles`."""

@@ -37,6 +37,8 @@ from .providers import (
     nfl_players,
     seed,
     tennis_atp,
+    tennis_recent,
+    tennis_wta,
     transfermarkt_soccer,
 )
 from .themes import KEEP4_THEMES, export_themes
@@ -245,16 +247,22 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
         by_id.update({s.player_id: s for s in soccer})
         print(f"[soccer] transfermarkt full-squad sweep: {len(tm)} rows")
         soccer = list(by_id.values())
-    # Tennis: the committed ATP sweep (1968–2018 full tour history, photo-verified —
-    # see providers/tennis_atp.py) under the hand-curated seed, deduped by player_id
-    # with the seed winning (its rows carry individually verified stats and cover 2019+,
-    # which the frozen snapshot can't).
-    tennis_by_id = {s.player_id: s for s in tennis_atp.load_seasons()}
+    # Tennis: ATP 1968–2018 (frozen snapshot) + ATP 2019–2025 (tennis_recent, fills the
+    # gap the frozen snapshot left) + WTA 1968–2025 (tennis_wta, first women's-tour
+    # coverage) under the hand-curated seed, deduped by player_id with the seed winning
+    # (its rows carry individually verified stats).
+    atp_seasons = tennis_atp.load_seasons()
+    recent_seasons = tennis_recent.load_seasons()
+    wta_seasons = tennis_wta.load_seasons()
     tennis_seed = seed.load_tennis()
+    tennis_by_id = {s.player_id: s for s in atp_seasons}
+    tennis_by_id.update({s.player_id: s for s in recent_seasons})
+    tennis_by_id.update({s.player_id: s for s in wta_seasons})
     tennis_by_id.update({s.player_id: s for s in tennis_seed})
     tennis = list(tennis_by_id.values())
     print(f"[tennis] {len(tennis)} player-seasons "
-          f"({len(tennis) - len(tennis_seed)} ATP sweep + {len(tennis_seed)} seed)")
+          f"({len(atp_seasons)} ATP sweep + {len(recent_seasons)} ATP recent + "
+          f"{len(wta_seasons)} WTA + {len(tennis_seed)} seed)")
 
     all_seasons = seasons + nba + baseball + soccer + tennis
     # Bake NBA season totals BEFORE career aggregation so career rows sum real season
@@ -331,6 +339,36 @@ def catalog_rows(seasons: list[RawSeason]) -> list[dict]:
             "last_year": int(s.meta["last_year"]) if s.career else None,
         }
     return list(by_id.values())
+
+
+def filter_new_catalog_rows(rows: list[dict]) -> list[dict]:
+    """Drop catalog rows that are already sitting in Supabase and can never change, so a
+    daily run upserts only real deltas instead of resending the entire ~130k-row catalog
+    every time (the actual thing that's "pointless to scan over and over").
+
+    Only closed-season rows are eligible to be skipped: a career aggregate's sums change
+    every time its player has a new season, and the current in-progress season's stats
+    change week to week — both must always be resent. A season is "closed" once
+    `season_year` is strictly before the current year (this year's season may still be
+    live when the pipeline runs)."""
+    from .upsert import fetch_existing_catalog_ids
+
+    current_year = dt.date.today().year
+    always_send = [r for r in rows if r["career"] or r["season_year"] >= current_year]
+    closed = [r for r in rows if not r["career"] and r["season_year"] < current_year]
+
+    by_sport: dict[str, list[dict]] = {}
+    for r in closed:
+        by_sport.setdefault(r["sport"], []).append(r)
+
+    new_closed: list[dict] = []
+    for sport, sport_rows in by_sport.items():
+        existing_ids = fetch_existing_catalog_ids(sport)
+        skipped = [r for r in sport_rows if r["id"] in existing_ids]
+        new_closed.extend(r for r in sport_rows if r["id"] not in existing_ids)
+        print(f"[catalog] {sport}: {len(skipped)} already stored, {len(sport_rows) - len(skipped)} new")
+
+    return always_send + new_closed
 
 
 def write_catalog_fallback(seasons: list[RawSeason], per_theme: int = 200) -> None:
@@ -503,8 +541,8 @@ def main() -> int:
         sent = upsert(all_rows)
         print(f"[upsert] sent {sent} puzzle rows to Supabase")
         if args.catalog:
-            rows = catalog_rows(seasons)
-            print(f"[upsert] sending {len(rows)} player_seasons …")
+            rows = filter_new_catalog_rows(catalog_rows(seasons))
+            print(f"[upsert] sending {len(rows)} new/changed player_seasons …")
             print(f"[upsert] sent {upsert_catalog(rows)} catalog rows")
     elif args.catalog and not args.dry_run:
         # --catalog without --upsert just refreshes the bundled fallbacks.
