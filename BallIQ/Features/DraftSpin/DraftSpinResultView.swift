@@ -5,6 +5,11 @@ struct DraftSpinResultView: View {
     let picks: [CatalogSeason]
     let result: DraftSpinResult
     var rewards: RepositoryContainer.SessionRewards? = nil
+    /// Backlog #4: Today's Challenge framing. `isOfficialChallengeRun` is only meaningful
+    /// when `isChallenge` is true — false means an earlier run today already locked in the
+    /// day's score, so this run is a replay (still XP via `rewards`, just not the scored one).
+    var isChallenge: Bool = false
+    var isOfficialChallengeRun: Bool = true
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
@@ -24,11 +29,15 @@ struct DraftSpinResultView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 18) {
-                    scoreHeader.heroReveal(0)
-                    if let top = topPick { topSeasonCard(top).heroReveal(1) }
-                    if let rewards { RewardsRow(rewards: rewards).heroReveal(2) }
-                    lineupList.heroReveal(3)
-                    shareCardPreview.heroReveal(4)
+                    // Shift every stagger index by one slot when the banner is present so the
+                    // reveal cadence still counts up cleanly instead of doubling up on 0.
+                    let offset = isChallenge ? 1 : 0
+                    if isChallenge { challengeBanner.heroReveal(0) }
+                    scoreHeader.heroReveal(offset)
+                    if let top = topPick { topSeasonCard(top).heroReveal(offset + 1) }
+                    if let rewards { RewardsRow(rewards: rewards).heroReveal(offset + 2) }
+                    lineupList.heroReveal(offset + 3)
+                    shareCardPreview.heroReveal(offset + 4)
                 }
                 .padding(16)
             }
@@ -37,6 +46,26 @@ struct DraftSpinResultView: View {
         .background(Color.appBackground)
         .celebrate(on: $confetti, intensity: result.outcome == .champion ? 90 : 40)
         .onAppear { if result.outcome == .champion { confetti += 1 } }
+    }
+
+    /// Sets the shared-rosters context up front — the whole reason a challenge score is
+    /// comparable is that every player drafted off the identical spins, so say so plainly
+    /// before the score itself lands.
+    private var challengeBanner: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("TODAY'S CHALLENGE").font(.label11).foregroundStyle(Color.onVolt.opacity(0.85))
+                Spacer()
+                Text(sport.displayName.uppercased()).font(.label11).foregroundStyle(Color.onVolt.opacity(0.85))
+            }
+            Text(isOfficialChallengeRun
+                 ? "Everyone gets these same rosters today — this run is your scored one."
+                 : "Practice replay — your official score today was already locked in.")
+                .font(.body14).foregroundStyle(Color.onVolt)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .blockCard(fill: .voltFill)
     }
 
     private var scoreHeader: some View {
@@ -107,7 +136,10 @@ struct DraftSpinResultView: View {
     }
 
     private var shareCardPreview: some View {
-        let card = DraftSpinShareCardView(sport: sport, picks: picks, result: result)
+        // A replay's card is still shareable, but it must not be captioned as the day's
+        // scored result if it isn't one.
+        let card = DraftSpinShareCardView(sport: sport, picks: picks, result: result,
+                                          isChallenge: isChallenge && isOfficialChallengeRun)
         return ShareLink(item: card.rendered(), preview: SharePreview("My Draft & Spin season", image: card.rendered())) {
             Label("SHARE RESULT", systemImage: "square.and.arrow.up").ctaLabel()
         }
@@ -137,6 +169,7 @@ struct DraftSpinShareCardView: View {
     let sport: Sport
     let picks: [CatalogSeason]
     let result: DraftSpinResult
+    var isChallenge: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -144,11 +177,16 @@ struct DraftSpinShareCardView: View {
                 HStack {
                     Wordmark(size: 20)
                     Spacer()
-                    Text("DRAFT & SPIN").font(.custom(FontName.condBlack, size: 14)).foregroundStyle(Color.onAccent.opacity(0.85))
+                    Text(isChallenge ? "TODAY'S CHALLENGE" : "DRAFT & SPIN")
+                        .font(.custom(FontName.condBlack, size: 14)).foregroundStyle(Color.onAccent.opacity(0.85))
                 }
                 Text(result.outcome.title(for: sport)).font(.custom(FontName.condBlack, size: 26)).foregroundStyle(Color.onAccent)
                 Text("\(result.wins)-\(result.losses) · \(result.totalPoints) PTS")
                     .font(.custom(FontName.condBold, size: 15)).foregroundStyle(Color.onAccent.opacity(0.85))
+                if isChallenge {
+                    Text("Same rosters as everyone, \(sport.displayName) · today")
+                        .font(.custom(FontName.condBold, size: 12)).foregroundStyle(Color.onAccent.opacity(0.7))
+                }
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)

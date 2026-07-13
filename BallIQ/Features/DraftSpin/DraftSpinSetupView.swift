@@ -5,20 +5,48 @@ import SwiftUI
 /// what the catalog can honestly support (see `DraftSpinSettings`). The Roster row only
 /// appears for NFL and is locked to "Offense only": the catalog carries no defensive
 /// players, and a control advertising data we don't have would be a lie.
+///
+/// Backlog #4: a MODE row (Free Play / Today's Challenge) sits above the rest. `GameSetupScreen`
+/// always renders its own SPORT grid regardless of mode, so "sport forced, not pickable" in
+/// challenge mode is enforced via `lockableSport`'s no-op setter rather than by hiding that
+/// grid — `GameSetupScreen` is a shared scaffold this view doesn't own.
 struct DraftSpinSetupView: View {
     @Binding var sport: Sport
     @Binding var settings: DraftSpinSettings
+    @Binding var isChallenge: Bool
     let onStart: () -> Void
     let onClose: () -> Void
+
+    /// Passed to `GameSetupScreen` instead of `$sport` directly: in challenge mode its getter
+    /// still reflects the live `sport` value (kept in sync with `sportOfTheDay` by the MODE
+    /// row's own toggle below) but the setter swallows any tap on a different sport, so the
+    /// picker renders normally yet can't actually change the forced sport.
+    private var lockableSport: Binding<Sport> {
+        Binding(get: { sport }, set: { newValue in if !isChallenge { sport = newValue } })
+    }
 
     var body: some View {
         GameSetupScreen(formatName: "Draft & Spin",
                         title: "Set your draft rules",
-                        startLabel: "Spin to draft",
-                        sport: $sport,
+                        startLabel: isChallenge ? "Start today's challenge" : "Spin to draft",
+                        sport: lockableSport,
                         onStart: onStart,
                         onClose: onClose)
         {
+            SetupOptionCard(
+                title: "MODE",
+                caption: isChallenge
+                    ? "Same \(sport.displayName) rosters as every other player today. One scored run per day — replays after that only earn XP."
+                    : "Fully random spins, any sport, anytime — practice or grind XP.")
+            {
+                SetupSegmentedControl(options: ["FREE PLAY", "TODAY'S CHALLENGE"],
+                                      selectedIndex: isChallenge ? 1 : 0)
+                { index in
+                    isChallenge = index == 1
+                    if isChallenge { sport = DraftSpinConstraint.sportOfTheDay(Date()) }
+                }
+            }
+
             SetupOptionCard(
                 title: "YOUR SQUAD",
                 caption: "Every spin lands on a real team-season roster. Draft the best player for each open spot.")

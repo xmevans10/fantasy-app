@@ -151,6 +151,24 @@ enum DraftSpinConstraint {
         return (chosen.team, chosen.year)
     }
 
+    /// Today's Challenge mode (backlog #4): every player who opens the challenge on the same
+    /// UTC day must see the identical round-1 (team, year) spin, so scores are comparable —
+    /// seeded by day + round index only, no reroll dimension (challenge mode has no reroll,
+    /// see `DraftSpinView`). This resurrects the *seed shape* of the original date-seeded
+    /// design (retired 2026-07-09 for free play — see git history on this file, commit
+    /// a3916fc — free play is truly random by explicit product decision and stays that way;
+    /// only this new challenge path is seeded again). **Determinism caveat, inherited from
+    /// that same retired design:** `spinRound`'s `excludeNames`/`lockedTeam`/`usedLockedYears`
+    /// arguments still shape the viable-combo pool, so once two players' prior picks diverge
+    /// (different players drafted into the same open role), a later round's spin can diverge
+    /// too even off the same seed. Same seed guarantees the same spin *given the same prior
+    /// picks* — not an unconditional guarantee across every possible play history.
+    static func challengeRoundGenerator(sport: Sport, date: Date, roundIndex: Int) -> SeededGenerator {
+        let day = OverUnderRoundGenerator.dayString(date)
+        return SeededGenerator(seed: SeededGenerator.stableHash(
+            "draftspin-challenge-\(sport.rawValue)-\(day)-\(roundIndex)"))
+    }
+
     /// Which of `openSlots` a real `position` can be assigned to.
     static func eligibleSlots(for position: String, in openSlots: [DraftSpinLineupSlot], sport: Sport) -> [DraftSpinLineupSlot] {
         let filtersByRole = Dictionary((formations[sport] ?? []).map { ($0.role, $0.filter) }, uniquingKeysWith: { a, _ in a })

@@ -6,6 +6,11 @@ import SwiftUI
 /// reveal a simulated season (length varies by sport — see `DraftSpinSimulator.seasonShape(for:)`).
 /// XP-only/unranked — the sim is luck-dominant by design, so it must never move the competitive
 /// ladder (`RepositoryContainer.complete(ranked: false)`, same posture as community puzzles).
+///
+/// Backlog #4 adds a second mode alongside free play: Today's Challenge forces `sport` to
+/// `sportOfTheDay` and re-seeds every spin from `challengeRoundGenerator` (day + round index)
+/// instead of the system RNG, so every player sees the same round-by-round rosters. Free play
+/// is untouched — same `SystemRandomNumberGenerator()` call as before this backlog item.
 struct DraftSpinView: View {
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
@@ -28,6 +33,13 @@ struct DraftSpinView: View {
     /// already spun for it (each later round must land on a fresh year — see `spinRound`).
     @State private var lockedTeam: String?
     @State private var usedLockedYears: Set<Int> = []
+    @State private var isChallenge = false
+    /// Whether this challenge run became the day's official score (see
+    /// `DraftSpinChallengeStore`) — false means an earlier run already locked one in today,
+    /// so this run is XP-only practice and must not overwrite it.
+    @State private var isOfficialChallengeRun = true
+    private let challengeStore = DraftSpinChallengeStore()
+    private var challengeDay: String { OverUnderRoundGenerator.dayString(Date()) }
 
     private var picks: [CatalogSeason] { slots.compactMap(\.pick) }
     private var openSlots: [DraftSpinLineupSlot] { slots.filter { $0.pick == nil } }
@@ -40,9 +52,10 @@ struct DraftSpinView: View {
         Group {
             if let result {
                 DraftSpinResultView(sport: sport, picks: picks, result: result, rewards: rewards,
+                                    isChallenge: isChallenge, isOfficialChallengeRun: isOfficialChallengeRun,
                                     onDone: { dismiss() })
             } else if showingSetup {
-                DraftSpinSetupView(sport: $sport, settings: $settings,
+                DraftSpinSetupView(sport: $sport, settings: $settings, isChallenge: $isChallenge,
                                    onStart: { Task { await startDraft() } },
                                    onClose: { dismiss() })
             } else if loading {
@@ -82,6 +95,12 @@ struct DraftSpinView: View {
     }
 
     private func startDraft() async {
+        // Defensive re-force: the setup screen's MODE toggle already snaps `sport` to
+        // `sportOfTheDay` the moment challenge mode is switched on, but this covers the debug
+        // -screenshotDraftSpin* flows, which skip the setup screen (and thus that toggle
+        // handler) entirely — see `load()`.
+        if isChallenge { sport = DraftSpinConstraint.sportOfTheDay(Date()) }
+        isOfficialChallengeRun = isChallenge && !challengeStore.hasCompletedChallenge(for: challengeDay)
         showingSetup = false
         loading = true
         slots = DraftSpinConstraint.lineupSlots(for: sport)
@@ -95,6 +114,7 @@ struct DraftSpinView: View {
             "one_team": String(settings.lockToOneTeam),
             "season_variations": String(settings.allowSeasonVariations),
             "sample_load_ms": String(sampleLoadMilliseconds),
+            "challenge": String(isChallenge),
         ])
         loading = false
         await spinNextRound()
@@ -103,12 +123,23 @@ struct DraftSpinView: View {
     private func spinNextRound() async {
         expandedPlayerID = nil
         rerollUsedThisRound = false
-        var rng = SystemRandomNumberGenerator()   // every spin is genuinely random
-        guard let (team, year) = DraftSpinConstraint.spinRound(
-            from: sample, sport: sport, openRoles: openSlots.map(\.role),
-            lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
-            excludeNames: excludedNames, using: &rng
-        ) else {
+        let spin: (team: String, year: Int)?
+        if isChallenge {
+            // Same seed for everyone on the same day — see `challengeRoundGenerator`'s doc
+            // comment for the (accepted) determinism caveat once picks diverge.
+            var rng = DraftSpinConstraint.challengeRoundGenerator(sport: sport, date: Date(), roundIndex: roundIndex)
+            spin = DraftSpinConstraint.spinRound(
+                from: sample, sport: sport, openRoles: openSlots.map(\.role),
+                lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
+                excludeNames: excludedNames, using: &rng)
+        } else {
+            var rng = SystemRandomNumberGenerator()   // every spin is genuinely random
+            spin = DraftSpinConstraint.spinRound(
+                from: sample, sport: sport, openRoles: openSlots.map(\.role),
+                lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
+                excludeNames: excludedNames, using: &rng)
+        }
+        guard let (team, year) = spin else {
             finish()
             return
         }
@@ -116,7 +147,9 @@ struct DraftSpinView: View {
     }
 
     private func reroll() async {
-        guard !rerollUsedThisRound else { return }
+        // No reroll in Today's Challenge: the whole point is every player facing the same
+        // spin, and a free reroll would let players fish for a better one it wouldn't share.
+        guard !rerollUsedThisRound, !isChallenge else { return }
         rerollUsedThisRound = true
         var rng = SystemRandomNumberGenerator()
         guard let (team, year) = DraftSpinConstraint.spinRound(
@@ -204,21 +237,28 @@ struct DraftSpinView: View {
                 Text("ROUND \(min(roundIndex + 1, slots.count)) OF \(slots.count)")
                     .font(.label12).foregroundStyle(Color.textMuted)
             }
-            Text("DRAFT & SPIN").font(.label12).foregroundStyle(Color.accentText)
+            Text(isChallenge ? "TODAY'S CHALLENGE" : "DRAFT & SPIN")
+                .font(.label12).foregroundStyle(Color.accentText)
             Text("Build your \(sport.displayName) squad").font(.title).foregroundStyle(Color.textPrimary)
             if let round = currentRound {
                 HStack(spacing: 10) {
                     chip(label: "TEAM", value: round.team.uppercased(), tint: .accentFill)
                     chip(label: "YEAR", value: String(round.year), tint: .successFill)
                     Spacer()
-                    Button {
-                        Task { await reroll() }
-                    } label: {
-                        Text("Reroll (\(rerollUsedThisRound ? 0 : 1))")
-                            .font(.custom(FontName.condBold, size: 13))
-                            .foregroundStyle(rerollUsedThisRound ? Color.textMuted : Color.accentText)
+                    if isChallenge {
+                        // No reroll here — see `reroll()`'s doc comment (a free reroll would
+                        // undercut "everyone sees the same spin").
+                        Text("SAME FOR EVERYONE").font(.label11).foregroundStyle(Color.textMuted)
+                    } else {
+                        Button {
+                            Task { await reroll() }
+                        } label: {
+                            Text("Reroll (\(rerollUsedThisRound ? 0 : 1))")
+                                .font(.custom(FontName.condBold, size: 13))
+                                .foregroundStyle(rerollUsedThisRound ? Color.textMuted : Color.accentText)
+                        }
+                        .disabled(rerollUsedThisRound)
                     }
-                    .disabled(rerollUsedThisRound)
                 }
                 if let expandedPlayerID, let player = round.roster.first(where: { $0.id == expandedPlayerID }) {
                     Text("PLACE \(player.name.uppercased()) IN A HIGHLIGHTED SLOT.")
@@ -434,9 +474,17 @@ struct DraftSpinView: View {
         case .madePlayoffs: performance = 0.6
         case .missedPlayoffs: performance = 0.3
         }
+        // Only the day's FIRST challenge completion becomes official; `recordIfFirst`'s own
+        // return value is authoritative (re-derived here rather than trusting the guess made
+        // when the run started, in case the day flips over a UTC midnight mid-session).
+        if isChallenge {
+            isOfficialChallengeRun = challengeStore.recordIfFirst(sport: sport, result: simulated, day: challengeDay)
+        }
         Task {
             // XP-only/unranked by design (see type doc comment) — `ranked: false` always, since
-            // the luck-dominant sim result must never move the competitive ladder.
+            // the luck-dominant sim result must never move the competitive ladder. This holds
+            // for every challenge replay too: a challenge run only ever gates the *separate*
+            // `DraftSpinChallengeStore` score, never the rating ladder.
             rewards = await container.complete(format: .draftSpin, sport: sport, performance: performance,
                                                perfect: simulated.outcome == .champion,
                                                puzzleID: dailyID, ranked: false)
