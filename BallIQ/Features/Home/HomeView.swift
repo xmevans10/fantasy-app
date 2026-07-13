@@ -24,6 +24,14 @@ struct HomeView: View {
     /// Sport whose rating the rank widget shows (selected filter, else NFL).
     private var rankSport: Sport { container.sportFilter.sport ?? .nfl }
 
+    /// nil when the puzzle hasn't loaded (or failed to) — kept distinct from `false` so a
+    /// load failure never gets counted as "completed" by `HomeDailyLoop`.
+    private var keep4CompletedToday: Bool? { keep4.map { container.hasCompletedToday(puzzleID: $0.id) } }
+    private var whoAmICompletedToday: Bool? { whoami.map { container.hasCompletedToday(puzzleID: $0.id) } }
+    private var bothDailiesComplete: Bool {
+        HomeDailyLoop.bothDailiesComplete(keep4Completed: keep4CompletedToday, whoAmICompleted: whoAmICompletedToday)
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -35,38 +43,54 @@ struct HomeView: View {
 
                     section("Today's daily games") {
                         VStack(spacing: 14) {
-                            if let puzzle = keep4 {
-                                DailyGameCard(formatName: "K4C4",
-                                              symbol: "rectangle.stack.fill",
-                                              sport: puzzle.sport,
-                                              title: puzzle.theme,
-                                              subtitle: "\(puzzle.players.count) \(puzzle.puzzleGrain().countNoun)",
-                                              scoring: puzzle.scoringKind(),
-                                              grain: puzzle.puzzleGrain(),
-                                              completed: container.hasCompletedToday(puzzleID: puzzle.id),
-                                              favoriteTeamMatch: container.favoriteTeams.team(for: puzzle.sport)
-                                                  .map(puzzle.features(teamAbbr:)) ?? false) {
-                                    // The daily card IS the puzzle — it opens directly
-                                    // (explicit feedback: no intermediate setup screen when
-                                    // the puzzle is already loaded and shown on the card).
-                                    // The formats grid below still routes through setup,
-                                    // where picking a sport is the point.
-                                    activePuzzle = puzzle
-                                }
-                                secondaryAction: { shareTarget = SharablePuzzle(keep4: puzzle) }
+                            if bothDailiesComplete {
+                                // Sells tomorrow instead of leaving the section reading as
+                                // "two finished cards and nothing else to do" — the arcade
+                                // formats are still fair game today even once the ranked
+                                // dailies are done.
+                                DailyLoopCountdownCard(streak: container.streak,
+                                                       arcadeFormats: GameFormat.arcade,
+                                                       launch: launch)
                             }
-                            if let puzzle = whoami {
-                                DailyGameCard(formatName: "Who am I?",
-                                              symbol: "questionmark.circle.fill",
-                                              sport: puzzle.sport,
-                                              title: "Guess today's mystery player",
-                                              subtitle: "\(puzzle.clues.count) clues",
-                                              completed: container.hasCompletedToday(puzzleID: puzzle.id),
-                                              typeColor: .voltFill, onTypeColor: .onVolt) {
-                                    activeWhoAmI = puzzle
+                            // Still visible (tapping either reopens today's result/recap, same
+                            // as before) but visually secondary once the countdown card above
+                            // is doing the selling — a dimmed "DONE" pair reads as evidence of
+                            // completion, not the next thing to do.
+                            VStack(spacing: 14) {
+                                if let puzzle = keep4 {
+                                    DailyGameCard(formatName: "K4C4",
+                                                  symbol: "rectangle.stack.fill",
+                                                  sport: puzzle.sport,
+                                                  title: puzzle.theme,
+                                                  subtitle: "\(puzzle.players.count) \(puzzle.puzzleGrain().countNoun)",
+                                                  scoring: puzzle.scoringKind(),
+                                                  grain: puzzle.puzzleGrain(),
+                                                  completed: container.hasCompletedToday(puzzleID: puzzle.id),
+                                                  favoriteTeamMatch: container.favoriteTeams.team(for: puzzle.sport)
+                                                      .map(puzzle.features(teamAbbr:)) ?? false) {
+                                        // The daily card IS the puzzle — it opens directly
+                                        // (explicit feedback: no intermediate setup screen when
+                                        // the puzzle is already loaded and shown on the card).
+                                        // The formats grid below still routes through setup,
+                                        // where picking a sport is the point.
+                                        activePuzzle = puzzle
+                                    }
+                                    secondaryAction: { shareTarget = SharablePuzzle(keep4: puzzle) }
                                 }
-                                secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }
+                                if let puzzle = whoami {
+                                    DailyGameCard(formatName: "Who am I?",
+                                                  symbol: "questionmark.circle.fill",
+                                                  sport: puzzle.sport,
+                                                  title: "Guess today's mystery player",
+                                                  subtitle: "\(puzzle.clues.count) clues",
+                                                  completed: container.hasCompletedToday(puzzleID: puzzle.id),
+                                                  typeColor: .voltFill, onTypeColor: .onVolt) {
+                                        activeWhoAmI = puzzle
+                                    }
+                                    secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }
+                                }
                             }
+                            .opacity(bothDailiesComplete ? 0.6 : 1)
                         }
                     }
                     .heroReveal(1)

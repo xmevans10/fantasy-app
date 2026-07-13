@@ -20,4 +20,9 @@ struct GameFormat: Identifiable {
         GameFormat(id: "grid", name: "The Grid", symbol: "square.grid.3x3.fill", isPro: true, isPlayable: true),
         GameFormat(id: "versus", name: "Versus", symbol: "person.2.fill", isPro: false, isPlayable: true, subtitle: "Head-to-head")
     ]
+
+    /// The "while you wait" arcade nudge on Home's post-completion state — Draft & Spin,
+    /// Over/Under, and The Grid are pure arcade (no daily obligation), unlike K4C4/Who Am I
+    /// (already played out for today) and Versus (a separate social loop, not filler).
+    static let arcade: [GameFormat] = all.filter { ["draft", "overunder", "grid"].contains($0.id) }
 }
