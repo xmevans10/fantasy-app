@@ -42,9 +42,12 @@ enum DebugLaunch {
     static var autoOpenGrid: Bool { has("-screenshotGrid") || has("-screenshotGridResult") }
     /// Auto-answers every cell with its first valid answer (simctl can't type into the guess field).
     static var autoSubmitGrid: Bool { has("-screenshotGridResult") }
-    /// Browse: auto-open the pre-play share sheet for the first archive puzzle.
+    /// Browse: auto-open the pre-play share sheet for the first archive puzzle. Consumed
+    /// inside BrowseView, so it only fires combined with the flag that gets there:
+    /// `-screenshotBrowse -screenshotShare`. Standalone it's a silent no-op (verified 2026-07-13).
     static var autoOpenShare: Bool { has("-screenshotShare") }
-    /// Keep4 game: auto-open the scoring-formula sheet (simctl can't tap the chip).
+    /// Keep4 game: auto-open the scoring-formula sheet (simctl can't tap the chip). Same
+    /// combination rule as `autoOpenShare`: needs `-screenshotGame -screenshotScoringInfo`.
     static var autoOpenScoringInfo: Bool { has("-screenshotScoringInfo") }
     /// Prefill the Browse search field (simctl can't type): `-searchQuery lamb`.
     static var searchQuery: String? {

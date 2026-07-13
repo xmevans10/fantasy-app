@@ -951,11 +951,13 @@ app claims to do and what actually works today:
   historical sweep across all leagues/seasons is still pending — a real, scoped, low-risk
   ingest job (see the provider's own module docstring for the exact plan), not a design
   question.
-- **Share sheet + Keep4 scoring-info popover — unverified 2026-07-12.** Both flows failed
-  to render during a full-app screenshot pass (`-screenshotShare`, `-screenshotScoringInfo`)
-  — most likely because both need to be launched in combination with a game-context flag
-  rather than standalone (untested), but confirm rather than assume; if either is a real
-  regression it belongs here, not in Tier 3.
+- **Share sheet + Keep4 scoring-info popover — ✅ verified working 2026-07-13, not a
+  regression.** Both flags are consumed inside their host view, so they're silent no-ops
+  standalone and must combine with the flag that navigates there: `-screenshotBrowse
+  -screenshotShare` and `-screenshotGame -screenshotScoringInfo`. Both render correctly
+  (screenshot-confirmed); combination rule now documented in `DebugLaunch.swift`. (The odd
+  "T"/0-seasons archive item seen during verification is simulator-local stale UserDefaults
+  — which survive `simctl uninstall` — not production data; both live tables checked clean.)
 - M19/M20 TestFlight QA of signed-in social flows (friends, FRIENDS leaderboard, onboarding
   claim) — needs two real signed-in accounts, not directly agent-executable, but an agent
   can prep a concrete test script/checklist so the human pass is fast.
