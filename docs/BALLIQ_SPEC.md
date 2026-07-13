@@ -1034,5 +1034,7 @@ expected retention/quality impact per unit of effort):
    season's top ~40; widening to ~100/season (cheap, cached) upgrades deep-roster
    Draft & Spin rounds from silhouette-heavy to mostly-real-photo.
 10. **M14 Spanish localization** — unblocks App Store featuring in LatAm; all-string work.
-11. **Content-drift guard** — M11's guard was left deliberately red on a real drift;
-    resolve the drift so the guard goes back to being a tripwire instead of noise.
+11. **Content-drift guard** — ✅ already resolved, confirmed 2026-07-13. An earlier
+    commit (`bc93f3e`, "Minigame fixes & polish...") already ran the bundle regen this
+    item asked for — `test_content_drift.py` passes against the current committed
+    `keep4_puzzles.json`, no action needed. Full `pytest tools/ingest/tests` still green.
