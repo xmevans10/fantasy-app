@@ -937,20 +937,27 @@ surface, not just the ones already flagged:
 **Tier 2 — Unbuilt features/functionality ("make it crisp").** Real gaps between what the
 app claims to do and what actually works today:
 - Backlog #1 (push notifications end-to-end — blocked only on APNs key material, a user
-  hand-off; everything up to that blocker is agent-buildable/verifiable now), #2
-  (post-completion daily loop), #4 (daily Draft & Spin challenge mode), #5 (arcade
-  leaderboards), #6 (Leagues season bootstrap).
+  hand-off; everything up to that blocker is agent-buildable/verifiable now), #5 (arcade
+  leaderboards — now the natural next item, since #4's challenge mode gives it a third
+  score source), #6 (Leagues season bootstrap). **#2 (post-completion daily loop) and #4
+  (daily Draft & Spin challenge) shipped 2026-07-13** — see their own entries below for
+  detail.
 - Backlog #7 (Phase F rating seasons) — **do not start from inference.** Confirmed
   2026-07-12: the entire written scope is three one-line mentions with no schema, no
   reset/decay decision, and no definition of "rewards" — genuinely underspecified, not
   merely under-detailed. Needs a scoping conversation (see the disambiguating questions
   logged 2026-07-12 in `prompts/HANDOFF-next-agent-2026-07-12c.md`) before any build.
-- **Soccer data breadth (new 2026-07-12, not yet a numbered backlog item)**:
-  `tools/ingest/providers/espn_soccer.py` covers ~38 countries' first divisions but has
-  only been backfilled for `usa.1`/2024 so far (validated, not run at scale). The full
-  historical sweep across all leagues/seasons is still pending — a real, scoped, low-risk
-  ingest job (see the provider's own module docstring for the exact plan), not a design
-  question.
+- **Soccer data breadth (new 2026-07-12, not yet a numbered backlog item)** — **in
+  progress 2026-07-13**: `tools/ingest/providers/espn_soccer.py` covers ~38 countries'
+  first divisions. A full local sequential sweep proved to be a genuine multi-day job
+  (~2 min/league-season × ~570 total), so it was migrated to
+  `.github/workflows/espn-soccer-backfill.yml` — a `workflow_dispatch` matrix, one leg
+  per league (`max-parallel: 6`, courtesy-capped against ESPN's keyless site API), each
+  writing its own CSV partition (`refresh(..., out_path=...)`); a merge job recombines
+  partitions (`merge_csvs`/`--merge-dir`), commits the refreshed CSV to `main`, and runs
+  `--upsert --catalog` to push into the live catalog — same additive/merge-duplicate
+  guarantee `ingest.yml` already uses. Dispatched 2026-07-13; check `gh run list
+  --workflow espn-soccer-backfill.yml` for status before assuming it's done.
 - **Share sheet + Keep4 scoring-info popover — ✅ verified working 2026-07-13, not a
   regression.** Both flags are consumed inside their host view, so they're silent no-ops
   standalone and must combine with the flag that navigates there: `-screenshotBrowse
@@ -986,19 +993,25 @@ expected retention/quality impact per unit of effort):
    cron); blocked only on real APNs key material (user hand-off, needs their Apple
    Developer account). Streak-save + "today's puzzle is live" pushes are the single
    biggest retention lever the app has already paid for but can't fire.
-2. **Post-completion daily loop** — after finishing both dailies, Home should sell
-   tomorrow (countdown to next daily, streak-at-stake framing) instead of showing two
-   completed cards; nudges arcade formats as the "while you wait" filler.
+2. **Post-completion daily loop** — ✅ shipped 2026-07-13. Once both dailies are done,
+   Home's daily section flips to a countdown-to-next-UTC-daily + streak-at-stake card
+   (`HomeDailyLoop`/`DailyLoopCountdownCard`) with a "while you wait" nudge toward the
+   arcade formats; the two completed cards stay tappable but dim to secondary. A failed
+   puzzle load is never mistaken for "completed."
 3. **Cold-launch speed: persist the arcade pools to disk** — the in-memory
    prefetch/caching added 2026-07-09 makes warm launches instant; a disk-backed cache
    (TTL ~1 day, like the pipeline's own .cache) would make the FIRST launch of a session
    instant too. Same shape for daily puzzles.
 
 *P1 — engagement depth:*
-4. **Daily Draft & Spin challenge** — spins are (correctly) fully random for free play,
-   but a parallel "Today's Challenge" mode that re-uses the retired date-seeded spin gives
-   every player the SAME rosters and makes scores comparable → shareable + leaderboard.
-   The seeding machinery still exists and is tested; this is a mode toggle, not a rebuild.
+4. **Daily Draft & Spin challenge** — ✅ shipped 2026-07-13. A MODE row (Free Play /
+   Today's Challenge) on setup; free play is untouched (same system RNG), challenge mode
+   forces `sportOfTheDay` and seeds every spin from `DraftSpinConstraint
+   .challengeRoundGenerator` (day + round index — the retired date-seeded design's seed
+   shape, reused only for this opt-in path) so every player gets the same round-by-round
+   rosters. No reroll in challenge mode. `DraftSpinChallengeStore` locks in only the
+   day's first completion as the official score; replays are XP-only. **Leaderboard
+   wiring is still #5, not yet built** — this item was scoring/comparability only.
 5. **Arcade leaderboards** — Over/Under high score and Grid score are local-only today;
    a `scores` table (same insert-only RLS shape as `events`) + a weekly board per sport
    turns both into competitive loops.
