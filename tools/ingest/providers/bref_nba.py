@@ -9,11 +9,12 @@ role players, and pre-ESPN-era stars) had no source. Only rows ≤ `MAX_YEAR` (2
 taken — 2002+ already comes from hoopR with better freshness and guaranteed headshots.
 
 Headshots: Wikipedia resolution (shared `providers/wikimedia.py`, basketball-context
-verified) for the **top slice** of each season by points — the rows that could actually
-crack a Keep4 theme pool or the bundled fallback, keeping the M16 guard honest. Deeper
-roster rows ship photo-less ("" headshot): they exist for Draft & Spin roster depth,
+verified) for the **top slice** of each season by points — widened to ~100/season
+(backlog #9) since resolution is cheap and cached (`providers/http.py`'s on-disk cache),
+covering deep-roster Draft & Spin rows that used to render silhouette-only. Rows past
+the slice still ship photo-less ("" headshot): they exist for Draft & Spin roster depth,
 render with the standard silhouette fallback in-app (same precedent as pre-CDN MLB
-players), and can't reach the bundle because theme pools sort by grade.
+players), and can't reach a Keep4/WhoAmI bundle because theme pools sort by grade.
 
 Same split as hoopr_nba: refresh (network) → committed `data/nba_bref_seasons.csv`;
 runtime `load_seasons()` is stdlib CSV. The dataset is frozen history — no cron needed.
@@ -41,9 +42,10 @@ _SOURCE_URL = "https://raw.githubusercontent.com/peasant98/TheNBACSV/master/nbaN
 MIN_YEAR = 1950
 MAX_YEAR = 2001          # 2002+ is hoopR's territory
 MIN_GAMES = 10           # a real season, not a 3-game cameo
-# Per-season count of top scorers who get a Wikipedia photo lookup — sized to cover
-# anything that could enter a graded theme pool/bundle.
-PHOTO_SLICE_PER_YEAR = 40
+# Per-season count of top scorers who get a Wikipedia photo lookup — widened from 40 to
+# 100 (backlog #9): resolution is cheap/cached, and 40 was leaving deep-roster Draft &
+# Spin rows silhouette-only even though a wider slice never reaches a graded theme pool.
+PHOTO_SLICE_PER_YEAR = 100
 
 CSV_FIELDS = ["name", "team_abbr", "season_year", "position",
               "games", "ppg", "rpg", "apg", "spg", "bpg", "fg_pct", "fg3_pct", "ts_pct",

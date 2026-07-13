@@ -59,3 +59,9 @@ def test_load_seasons_round_trips_committed_csv(tmp_path, monkeypatch):
 def test_load_seasons_empty_when_sweep_not_run(tmp_path, monkeypatch):
     monkeypatch.setattr(bref_nba, "CSV_PATH", tmp_path / "missing.csv")
     assert load_seasons() == []
+
+
+def test_photo_slice_widened_to_roughly_100_per_season():
+    # Backlog #9: 40/season left deep-roster Draft & Spin rows silhouette-only even
+    # though resolution is cheap/cached — locks the widened slice so it can't regress.
+    assert bref_nba.PHOTO_SLICE_PER_YEAR >= 100

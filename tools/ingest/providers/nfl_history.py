@@ -16,9 +16,10 @@ BAL-as-Colts …) pass through — they're real for their years and collide with
 (a (team, year) combo is the unit everywhere downstream). "2TM" (traded) → "".
 
 Headshots: Wikipedia top-slice resolution per season by fantasy points (shared
-`providers/wikimedia.py`, football-context verified) — same M16 posture as `bref_nba`:
-the theme-pool-eligible slice gets real photos, deeper roster rows ship with the
-standard silhouette fallback.
+`providers/wikimedia.py`, football-context verified) — same M16 posture as `bref_nba`,
+widened to ~100/season (backlog #9) since resolution is cheap and cached. The
+theme-pool-eligible slice plus deep-roster Draft & Spin rows now get real photos;
+whatever's left past the slice ships with the standard silhouette fallback.
 
 Run:  python -m tools.ingest.providers.nfl_history
 """
@@ -41,7 +42,10 @@ _SOURCE_URL = "https://raw.githubusercontent.com/fantasydatapros/data/master/yea
 
 MIN_YEAR = 1970
 MAX_YEAR = 1998          # 1999+ is nflverse's territory
-PHOTO_SLICE_PER_YEAR = 40
+# Per-season count of top fantasy scorers who get a Wikipedia photo lookup — widened
+# from 40 to 100 (backlog #9): resolution is cheap/cached, and 40 was leaving deep-roster
+# Draft & Spin rows silhouette-only even though a wider slice never reaches a bundle.
+PHOTO_SLICE_PER_YEAR = 100
 
 _POSITIONS = {"QB", "RB", "WR", "TE"}
 _ABBR_FIXES = {"GNB": "GB", "KAN": "KC", "NOR": "NO", "NWE": "NE",
