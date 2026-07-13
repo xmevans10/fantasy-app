@@ -87,7 +87,7 @@ _RATE_DELAY = 0.15
 MIN_APPEARANCES = 5   # a real squad season, not a cameo
 
 CSV_FIELDS = ["name", "team_abbr", "season_year", "position",
-              "appearances", "goals", "assists", "clean_sheets", "headshot"]
+              "appearances", "goals", "assists", "clean_sheets", "headshot", "league"]
 
 # ESPN league slug -> country/league label (for logging only). Every entry here was
 # live-verified 2026-07-12 to return real teams and, for a spot-checked sample across
@@ -154,17 +154,22 @@ def _resolve_positions(position_labels: dict[str, list[str]]) -> dict[str, str]:
 
 
 def _aggregate_rows(rows: Iterable[dict]) -> tuple[
-        dict[tuple[str, str, int], dict], dict[str, list[str]]]:
-    """Per-match, per-player box-score rows -> (name, team, season_end_year) season
-    totals, plus each player's position-label history (kept separate so position can be
-    resolved globally before the caller filters by `MIN_APPEARANCES`).
+        dict[tuple[str, str, int, str], dict], dict[str, list[str]]]:
+    """Per-match, per-player box-score rows -> (name, team, season_end_year, league)
+    season totals, plus each player's position-label history (kept separate so position
+    can be resolved globally before the caller filters by `MIN_APPEARANCES`).
+
+    The `league` slug is included in the key (not just carried as a value) so two
+    different leagues' rows for the same name/team/season never get summed into one
+    total — a same-name player on a same-named team in two different countries'
+    competitions should never merge.
 
     Expected row shape: {"player": str, "team": str, "season_end_year": int,
     "position": str, "appearances": float, "total_goals": float,
-    "goal_assists": float, "goals_conceded": float}. Matches the plain-dict shape this
-    module's own `_lineup_rows` builds from ESPN's JSON — kept dict-based (not a
-    DataFrame) so this stays unit-testable with hand-built fixtures, no pandas."""
-    totals: dict[tuple[str, str, int], dict] = collections.defaultdict(
+    "goal_assists": float, "goals_conceded": float, "league": str}. Matches the plain-dict
+    shape this module's own `_lineup_rows` builds from ESPN's JSON — kept dict-based (not
+    a DataFrame) so this stays unit-testable with hand-built fixtures, no pandas."""
+    totals: dict[tuple[str, str, int, str], dict] = collections.defaultdict(
         lambda: {"appearances": 0, "goals": 0, "assists": 0, "clean_sheets": 0})
     labels: dict[str, list[str]] = collections.defaultdict(list)
     for row in rows:
@@ -172,7 +177,7 @@ def _aggregate_rows(rows: Iterable[dict]) -> tuple[
         labels[name].append(row.get("position") or "")
         if (row.get("appearances") or 0) <= 0:
             continue
-        key = (name, row["team"], row["season_end_year"])
+        key = (name, row["team"], row["season_end_year"], row.get("league") or "")
         t = totals[key]
         t["appearances"] += 1
         t["goals"] += int(row.get("total_goals") or 0)
@@ -232,6 +237,7 @@ def _lineup_rows(league: str, event_id: str, season_end_year: int) -> list[dict]
                 "total_goals": stats.get("totalGoals"),
                 "goal_assists": stats.get("goalAssists"),
                 "goals_conceded": stats.get("goalsConceded"),
+                "league": league,
             })
     return rows
 
@@ -295,7 +301,7 @@ def refresh(leagues: list[str] | None = None,
     kept: list[dict] = []
     dropped_cameo = 0
     players_needing_headshot: set[str] = set()
-    for (name, team, season_end_year), stats in totals.items():
+    for (name, team, season_end_year, league), stats in totals.items():
         if stats["appearances"] < MIN_APPEARANCES:
             dropped_cameo += 1
             continue
@@ -305,6 +311,7 @@ def refresh(leagues: list[str] | None = None,
             "position": positions.get(name, "MF"),
             "appearances": stats["appearances"], "goals": stats["goals"],
             "assists": stats["assists"], "clean_sheets": stats["clean_sheets"],
+            "league": _LEAGUES.get(league, league),
         })
     print(f"[espn-soccer] {len(kept)} qualifying player-seasons "
           f"({dropped_cameo} dropped as cameos)")
@@ -378,6 +385,7 @@ def load_seasons() -> list[RawSeason]:
                 },
                 source="espn",
                 headshot=row["headshot"],
+                meta={"league": row["league"]} if row.get("league") else {},
             ))
     return out
 

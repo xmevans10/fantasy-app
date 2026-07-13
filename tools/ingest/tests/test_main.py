@@ -48,6 +48,18 @@ def test_catalog_carries_headshot_through():
     assert out[0]["headshot"] == "https://example.com/p.jpg"
 
 
+def test_catalog_carries_league_through_when_present_in_meta():
+    # Only espn_soccer.py populates meta["league"]; other providers never set it.
+    rows = [
+        _season("Prem Guy", sport="soccer", position="MF", meta={"league": "England"}),
+        _season("No League Guy", sport="soccer", position="MF"),
+    ]
+    out = catalog_rows(rows)
+    by_name = {r["name"]: r for r in out}
+    assert by_name["Prem Guy"]["league"] == "England"
+    assert by_name["No League Guy"]["league"] is None
+
+
 def test_merge_nfl_bio_backfills_missing_headshot_from_registry():
     # Reproduces the real-world gap: a legend's season row has no headshot_url (common for
     # older/retired seasons), but the all-time players.csv registry has one.

@@ -79,6 +79,20 @@ struct DraftSpinSetupView: View {
                 }
             }
 
+            // Today's Challenge forces the shared daily seed — a personal league filter
+            // would let players diverge from "everyone sees the same rosters," so this only
+            // shows in Free Play (challenge spins never read `settings.soccerLeague`).
+            if sport == .soccer && !isChallenge {
+                SetupOptionCard(
+                    title: "LEAGUE",
+                    caption: settings.soccerLeague == nil
+                        ? "Spins draw from any of the ~38 countries' top flights we track."
+                        : "Spins are restricted to \(settings.soccerLeague!) — if a round can't fill an open slot from just that league, it falls back to any league rather than getting stuck.")
+                {
+                    LeagueChipPicker(selected: $settings.soccerLeague)
+                }
+            }
+
             SetupOptionCard(
                 title: "TEAMS",
                 caption: settings.lockToOneTeam
@@ -101,5 +115,37 @@ struct DraftSpinSetupView: View {
                 { settings.allowSeasonVariations = $0 == 0 }
             }
         }
+    }
+}
+
+/// A wrapping chip row for a choice with more options than `SetupSegmentedControl` comfortably
+/// fits (LEAGUE: "ALL LEAGUES" + `DraftSpinConstraint.majorSoccerLeagues`, 11 total) — same
+/// capsule-chip visual language as the in-draft position tabs (`DraftSpinView.rosterList`).
+private struct LeagueChipPicker: View {
+    @Binding var selected: String?
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 2)
+
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 6) {
+            chip(label: "ALL LEAGUES", active: selected == nil) { selected = nil }
+            ForEach(DraftSpinConstraint.majorSoccerLeagues, id: \.self) { league in
+                chip(label: league.uppercased(), active: selected == league) { selected = league }
+            }
+        }
+    }
+
+    private func chip(label: String, active: Bool, onTap: @escaping () -> Void) -> some View {
+        Button(action: onTap) {
+            Text(label)
+                .font(.custom(active ? FontName.condBlack : FontName.condBold, size: 13))
+                .foregroundStyle(active ? Color.onAccent : Color.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(active ? Color.accentFill : Color.surfaceMuted)
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 }

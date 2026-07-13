@@ -18,11 +18,12 @@ struct DraftSpinResultView: View {
     private var heroFill: Color { result.outcome == .champion ? .voltFill : .accentFill }
     private var heroInk: Color { result.outcome == .champion ? .onVolt : .onAccent }
 
-    /// The single highest-power pick in the lineup — the "card of the round," highlighted
-    /// with the holographic foil treatment as the one orchestrated sparkle (matches the
-    /// Keep4 result screen's `topSeason` pattern).
+    /// The single highest real-fantasy-point pick in the lineup — the "card of the round,"
+    /// highlighted with the holographic foil treatment as the one orchestrated sparkle
+    /// (matches the Keep4 result screen's `topSeason` pattern). Same K4C4 fantasy basis as
+    /// the simulator itself, not the separate `power()` relevance signal.
     private var topPick: CatalogSeason? {
-        picks.max { DraftSpinSimulator.power($0, sport: sport) < DraftSpinSimulator.power($1, sport: sport) }
+        picks.max { DraftSpinSimulator.fantasyPoints($0) < DraftSpinSimulator.fantasyPoints($1) }
     }
 
     var body: some View {
@@ -125,9 +126,9 @@ struct DraftSpinResultView: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 1) {
-                    Text("\(Int((DraftSpinSimulator.power(player, sport: sport) * 100).rounded()))")
+                    Text("\(Int(DraftSpinSimulator.fantasyPoints(player).rounded()))")
                         .font(.custom(FontName.condBlack, size: 16)).foregroundStyle(Color.accentText)
-                    Text("POWER").font(.label11).foregroundStyle(Color.textMuted)
+                    Text("FPTS").font(.label11).foregroundStyle(Color.textMuted)
                 }
             }
             PositionStatGrid(sport: sport, position: player.position, stats: player.stats)

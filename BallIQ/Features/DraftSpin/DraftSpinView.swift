@@ -43,6 +43,10 @@ struct DraftSpinView: View {
 
     private var picks: [CatalogSeason] { slots.compactMap(\.pick) }
     private var openSlots: [DraftSpinLineupSlot] { slots.filter { $0.pick == nil } }
+    /// Real team codes / years from this sport's own broad sample — feeds the spin reel so it
+    /// only ever flashes options from the sport actually being played (see `SpinRevealView`).
+    private var sampleTeamAbbrs: [String] { sample.map { $0.teamAbbr.uppercased() } }
+    private var sampleYears: [String] { sample.map { String($0.seasonYear) } }
     /// Season variations OFF ("Prime only"): players already in the lineup can't reappear.
     private var excludedNames: Set<String> {
         settings.allowSeasonVariations ? [] : Set(picks.map(\.name))
@@ -63,6 +67,7 @@ struct DraftSpinView: View {
             } else if showingReveal, let round = currentRound {
                 SpinRevealView(team: round.team, year: String(round.year),
                                roundLabel: "Round \(min(roundIndex + 1, slots.count)) of \(slots.count)",
+                               realDecoyTeams: sampleTeamAbbrs, realDecoyYears: sampleYears,
                                rosterReady: $roundRosterReady) {
                     withAnimation(Motion.snap) { showingReveal = false }
                 }
@@ -137,7 +142,7 @@ struct DraftSpinView: View {
             spin = DraftSpinConstraint.spinRound(
                 from: sample, sport: sport, openRoles: openSlots.map(\.role),
                 lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
-                excludeNames: excludedNames, using: &rng)
+                excludeNames: excludedNames, league: settings.soccerLeague, using: &rng)
         }
         guard let (team, year) = spin else {
             finish()
@@ -155,7 +160,7 @@ struct DraftSpinView: View {
         guard let (team, year) = DraftSpinConstraint.spinRound(
             from: sample, sport: sport, openRoles: openSlots.map(\.role),
             lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
-            excludeNames: excludedNames, using: &rng
+            excludeNames: excludedNames, league: settings.soccerLeague, using: &rng
         ) else { return }
         await loadRoundRoster(team: team, year: year)
     }

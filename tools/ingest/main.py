@@ -352,6 +352,7 @@ def catalog_rows(seasons: list[RawSeason]) -> list[dict]:
             "career": s.career,
             "first_year": int(s.meta["first_year"]) if s.career else None,
             "last_year": int(s.meta["last_year"]) if s.career else None,
+            "league": s.meta.get("league") or None,
         }
     return list(by_id.values())
 

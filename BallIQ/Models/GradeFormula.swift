@@ -107,6 +107,11 @@ struct CatalogSeason: Identifiable, Codable, Equatable {
     var career: Bool? = nil
     var firstYear: Int? = nil
     var lastYear: Int? = nil
+    /// Human-readable league label for soccer rows only (e.g. "England", "USA (MLS)") —
+    /// mirrors `RawSeason.meta["league"]` from `espn_soccer.py`. nil for every other sport
+    /// and for soccer rows from providers that don't carry league data yet
+    /// (`transfermarkt_soccer.py`, `seed.py`).
+    var league: String? = nil
 
     var isCareer: Bool { career == true }
 
@@ -121,7 +126,7 @@ struct CatalogSeason: Identifiable, Codable, Equatable {
     // (e.g. "rushing_yards") must stay snake_case for GradeFormula, so we must not
     // use the shared `.convertFromSnakeCase` decoder here.
     enum CodingKeys: String, CodingKey {
-        case id, sport, name, position, stats, headshot, career
+        case id, sport, name, position, stats, headshot, career, league
         case teamAbbr = "team_abbr"
         case seasonYear = "season_year"
         case firstYear = "first_year"

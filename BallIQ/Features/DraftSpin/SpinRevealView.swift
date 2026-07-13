@@ -37,17 +37,31 @@ struct SpinRevealView: View {
     private let totalTicks = 16
     private let staggerTicks = 5
 
-    init(team: String, year: String, roundLabel: String = "", rosterReady: Binding<Bool> = .constant(true),
+    /// `realDecoyTeams`/`realDecoyYears`: actual in-sport values (drawn from the round's own
+    /// broad sample pool) so the reel flashes plausible NFL teams/years for an NFL spin, NBA
+    /// ones for an NBA spin, etc. — never another league's teams or an off-era year. Falls
+    /// back to a cosmetic letter scramble only when the real pool is too thin to feel like a
+    /// spin (e.g. a sport with barely any catalog coverage).
+    init(team: String, year: String, roundLabel: String = "", realDecoyTeams: [String] = [],
+         realDecoyYears: [String] = [], rosterReady: Binding<Bool> = .constant(true),
          onFinished: @escaping () -> Void) {
         self.team = team
         self.year = year
         self.roundLabel = roundLabel
         self._rosterReady = rosterReady
         self.onFinished = onFinished
-        self.decoyTeams = Self.decoys(for: team)
-        self.decoyYears = Self.decoys(for: year)
+        self.decoyTeams = Self.decoyPool(real: realDecoyTeams, answer: team)
+        self.decoyYears = Self.decoyPool(real: realDecoyYears, answer: year)
         _displayedTeam = State(initialValue: team)
         _displayedYear = State(initialValue: year)
+    }
+
+    /// Prefers real values, excluding the answer itself so the reel never "spoils" by
+    /// flashing the true team/year before it locks.
+    private static func decoyPool(real: [String], answer: String) -> [String] {
+        let distinct = Array(Set(real.filter { $0 != answer }))
+        guard distinct.count >= 3 else { return decoys(for: answer) }
+        return distinct
     }
 
     /// Cosmetic-only scramble of the real code's letters — always renders a legible,

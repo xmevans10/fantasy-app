@@ -145,6 +145,10 @@ alter table public.player_seasons add column if not exists headshot   text not n
 alter table public.player_seasons add column if not exists career     boolean not null default false;
 alter table public.player_seasons add column if not exists first_year int;
 alter table public.player_seasons add column if not exists last_year  int;
+-- Human-readable league/country label (e.g. 'England'), populated only for rows sourced
+-- from providers/espn_soccer.py's ~38-country sweep; null for every other source/sport.
+-- Powers Draft & Spin's "restrict spins to one league" setup filter.
+alter table public.player_seasons add column if not exists league     text;
 -- Draft & Spin lands on one real franchise season at a time. This keeps that narrow roster
 -- lookup indexed as the catalog grows, rather than scanning every player in a sport/year.
 create index if not exists player_seasons_roster_lookup_idx

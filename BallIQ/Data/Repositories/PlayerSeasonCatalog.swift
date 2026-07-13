@@ -169,7 +169,7 @@ final class PlayerSeasonCatalog {
         guard let client else { return nil }
         var items = [
             URLQueryItem(name: "select", value: "id,sport,name,team_abbr,season_year,position,stats,"
-                         + "headshot,career,first_year,last_year"),
+                         + "headshot,career,first_year,last_year,league"),
             // Stable order is required, not cosmetic: without it, *which* rows a capped response
             // contains isn't even guaranteed consistent across calls (verified in the Grid
             // pipeline bug) — a paginated fetch built on an unordered result could silently drop

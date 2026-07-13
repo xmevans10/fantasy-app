@@ -4,9 +4,11 @@ import XCTest
 final class DraftSpinTests: XCTestCase {
 
     private func season(_ id: String, position: String, stats: [String: Double],
-                       team: String = "SF", year: Int = 2020) -> CatalogSeason {
-        CatalogSeason(id: id, sport: .nfl, name: "Player \(id)", teamAbbr: team,
-                      seasonYear: year, position: position, stats: stats)
+                       team: String = "SF", year: Int = 2020, league: String? = nil) -> CatalogSeason {
+        var s = CatalogSeason(id: id, sport: .nfl, name: "Player \(id)", teamAbbr: team,
+                              seasonYear: year, position: position, stats: stats)
+        s.league = league
+        return s
     }
 
     private var nflPool: [CatalogSeason] {
@@ -161,6 +163,40 @@ final class DraftSpinTests: XCTestCase {
         var g = spinRNG("exclude-all")
         XCTAssertNil(DraftSpinConstraint.spinRound(from: pool, sport: .nfl, openRoles: ["QB"],
                                                    excludeNames: ["Player qb-sf20", "Player qb-dal"], using: &g))
+    }
+
+    // MARK: - spinRound league filter (soccer LEAGUE setup option)
+
+    private var twoLeaguePool: [CatalogSeason] {
+        [
+            season("gk-eng", position: "GK", stats: [:], team: "MCI", year: 2022, league: "England"),
+            season("gk-esp", position: "GK", stats: [:], team: "FCB", year: 2022, league: "Spain"),
+        ]
+    }
+
+    func testSpinRoundLeagueOnlySpinsThatLeague() {
+        for i in 0...5 {
+            var g = spinRNG("league-\(i)")
+            let spun = DraftSpinConstraint.spinRound(from: twoLeaguePool, sport: .soccer, openRoles: ["GK"],
+                                                     league: "England", using: &g)
+            XCTAssertEqual(spun?.team, "MCI", "stream \(i) escaped the league filter")
+        }
+    }
+
+    func testSpinRoundLeagueFallsBackWhenThatLeagueHasNoViableCombo() {
+        // Only Spain has a real candidate for this open role — the league filter must not
+        // dead-end the round, same never-a-dead-spin shape as `lockedTeam`.
+        let pool = [season("gk-esp", position: "GK", stats: [:], team: "FCB", year: 2022, league: "Spain")]
+        var g = spinRNG("league-fallback")
+        let spun = DraftSpinConstraint.spinRound(from: pool, sport: .soccer, openRoles: ["GK"],
+                                                 league: "England", using: &g)
+        XCTAssertEqual(spun?.team, "FCB")
+    }
+
+    func testSpinRoundNoLeagueFilterIgnoresLeagueField() {
+        var g = spinRNG("no-league-filter")
+        XCTAssertNotNil(DraftSpinConstraint.spinRound(from: twoLeaguePool, sport: .soccer,
+                                                       openRoles: ["GK"], using: &g))
     }
 
     // MARK: - Today's Challenge (backlog #4)
@@ -320,17 +356,37 @@ final class DraftSpinTests: XCTestCase {
     }
 
     func testWinProbabilityScalesAndClamps() {
-        XCTAssertEqual(DraftSpinSimulator.winProbability(power: DraftSpinSimulator.leagueBaselinePower),
-                       0.5, accuracy: 0.0001)
-        XCTAssertGreaterThan(DraftSpinSimulator.winProbability(power: 0.6),
-                             DraftSpinSimulator.winProbability(power: 0.4))
-        // The recalibrated feel ("too harsh" feedback): a decent real draft (~0.30 power)
-        // must sit ABOVE .500, not below it.
-        XCTAssertGreaterThan(DraftSpinSimulator.winProbability(power: 0.30), 0.5)
-        // Upper clamp binds within the real 0...1 power range; the lower one is a safety
-        // net (power can't go negative in practice).
-        XCTAssertEqual(DraftSpinSimulator.winProbability(power: 1.0), 0.92, accuracy: 0.0001)
-        XCTAssertEqual(DraftSpinSimulator.winProbability(power: -1.0), 0.15, accuracy: 0.0001)
+        for sport in Sport.allCases {
+            let a = DraftSpinSimulator.fantasyAnchors(for: sport)
+            // p50 (a normal, unremarkable lineup) is still a favorable coin flip — the
+            // "friendlier" recalibration ("still too harsh" feedback on the prior power-based
+            // formula): an average real draft should win more than it loses.
+            XCTAssertEqual(DraftSpinSimulator.winProbability(lineupTotal: a.p50, sport: sport),
+                           0.55, accuracy: 0.0001, "sport: \(sport.rawValue)")
+            // p90 (a well-drafted lineup) clearly contends; p99 (all-time-great) is a near-lock.
+            XCTAssertEqual(DraftSpinSimulator.winProbability(lineupTotal: a.p90, sport: sport),
+                           0.75, accuracy: 0.0001, "sport: \(sport.rawValue)")
+            XCTAssertEqual(DraftSpinSimulator.winProbability(lineupTotal: a.p99, sport: sport),
+                           0.93, accuracy: 0.0001, "sport: \(sport.rawValue)")
+            // Monotonic in lineup total, and never a guaranteed sweep or wipeout.
+            XCTAssertGreaterThan(DraftSpinSimulator.winProbability(lineupTotal: a.p99 * 2, sport: sport),
+                                 DraftSpinSimulator.winProbability(lineupTotal: 0, sport: sport),
+                                 "sport: \(sport.rawValue)")
+            XCTAssertEqual(DraftSpinSimulator.winProbability(lineupTotal: 0, sport: sport),
+                           0.30, accuracy: 0.0001, "sport: \(sport.rawValue)")
+            XCTAssertEqual(DraftSpinSimulator.winProbability(lineupTotal: a.p99 * 10, sport: sport),
+                           0.93, accuracy: 0.0001, "sport: \(sport.rawValue)")
+        }
+    }
+
+    /// The whole point of anchoring on real percentiles: a lineup drafted from real, average
+    /// seasons should score close to the p50 anchor, not near zero — the flaw that made the
+    /// old `power()`-based formula feel "too harsh" even after its first recalibration.
+    func testFantasyPointsUsesK4C4Formula() {
+        let qb = season("qb", position: "QB", stats: ["passing_yards": 4200, "passing_tds": 32, "interceptions": 10])
+        // nfl_fantasy: passing_yards*0.04 + passing_tds*4 + interceptions*-2
+        let expected: Double = 4200.0 * 0.04 + 32.0 * 4.0 - 10.0 * 2.0
+        XCTAssertEqual(DraftSpinSimulator.fantasyPoints(qb), expected, accuracy: 0.01)
     }
 
     func testWinsAndLossesAlwaysSumToSeasonLength() {
@@ -370,14 +426,15 @@ final class DraftSpinTests: XCTestCase {
 
     /// Locked-value regression: pins this exact lineup+seed sequence's output so a future
     /// refactor of the RNG/scoring math can't silently drift the result. (Values re-locked
-    /// 2026-07-09 when the audit replaced the coin-flip duel with `winProbability`.)
+    /// 2026-07-13 when the K4C4 fantasy-points recalibration replaced the `power`-based
+    /// `winProbability`.)
     func testLockedSimulationValueForFixedLineupAndSeed() {
         var g = seededRNG("draftspin-locked-nfl")
         let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .nfl, using: &g)
-        XCTAssertEqual(result.wins, 8)
-        XCTAssertEqual(result.losses, 9)
-        XCTAssertEqual(result.totalPoints, 533)
-        XCTAssertEqual(result.outcome, .missedPlayoffs)
+        XCTAssertEqual(result.wins, 9)
+        XCTAssertEqual(result.losses, 8)
+        XCTAssertEqual(result.totalPoints, 886)
+        XCTAssertEqual(result.outcome, .madePlayoffs)
     }
 
     func testEmptyLineupNeverCrashes() {
@@ -394,9 +451,9 @@ final class DraftSpinTests: XCTestCase {
     func testLockedSimulationValueForNonNFLSport() {
         var g = seededRNG("draftspin-locked-soccer")
         let result = DraftSpinSimulator.simulate(lineup: fixedLineup, sport: .soccer, using: &g)
-        XCTAssertEqual(result.wins, 21)
-        XCTAssertEqual(result.losses, 17)
-        XCTAssertEqual(result.totalPoints, 1120)
-        XCTAssertEqual(result.outcome, .madePlayoffs)
+        XCTAssertEqual(result.wins, 33)
+        XCTAssertEqual(result.losses, 5)
+        XCTAssertEqual(result.totalPoints, 849)
+        XCTAssertEqual(result.outcome, .champion)
     }
 }

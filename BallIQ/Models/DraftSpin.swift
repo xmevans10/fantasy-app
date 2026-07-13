@@ -49,6 +49,11 @@ struct DraftSpinSettings: Equatable {
     /// again in a later round as a different season of themselves; false ("Prime only") =
     /// each real player appears in your draft at most once.
     var allowSeasonVariations = true
+    /// Soccer only: restrict spins to one league (`DraftSpinConstraint.majorSoccerLeagues`
+    /// value, e.g. "England"). nil = any of the ~38 countries' top flights the catalog
+    /// carries — see that constant's doc comment for why the setup screen only offers a
+    /// curated subset rather than every ingested league.
+    var soccerLeague: String? = nil
 
     static let `default` = DraftSpinSettings()
 }
@@ -87,6 +92,19 @@ enum DraftSpinConstraint {
         }
     }
 
+    /// The soccer setup screen's LEAGUE picker offers this curated subset of the ~38
+    /// countries' top flights `espn_soccer.py` ingests, not all of them — real coverage
+    /// varies a lot by league (some only just started backfilling), and a picker listing
+    /// every country would mostly produce empty/thin drafts. These are the leagues expected
+    /// to have real, useful depth; `spinRound`'s own graceful fallback (below) still covers
+    /// the case where a chosen league is thinner than expected for a given round. Values
+    /// match `CatalogSeason.league` exactly (the human-readable label `espn_soccer.py`
+    /// writes, e.g. "USA (MLS)" — see that file's `_LEAGUES` dict).
+    static let majorSoccerLeagues = [
+        "England", "Spain", "Germany", "Italy", "France",
+        "USA (MLS)", "Netherlands", "Portugal", "Brazil", "Mexico",
+    ]
+
     /// Deterministic per day — every install spins the same sport on the same date. Uses
     /// `next()` directly with modulo rather than `randomElement(using:)`, which introduces a
     /// measurable bias toward `.soccer` with this generator (24% vs. 20% expected).
@@ -110,23 +128,33 @@ enum DraftSpinConstraint {
     /// leaves nothing viable the spin falls back to every team rather than dead-ending.
     /// `excludeNames` (season-variations OFF) treats already-drafted players as absent when
     /// judging a combo viable, so a spin can never land on a roster whose only placeable
-    /// candidates are players you already own.
+    /// candidates are players you already own. `league` (soccer LEAGUE setup option)
+    /// restricts the spin to `CatalogSeason.league == league`; same never-dead-end shape as
+    /// `lockedTeam` — a league with thin/not-yet-backfilled coverage for the currently open
+    /// roles falls back to the full pool rather than showing nothing.
     static func spinRound(from pool: [CatalogSeason], sport: Sport, openRoles: [String],
                         lockedTeam: String? = nil, usedLockedYears: Set<Int> = [],
-                        excludeNames: Set<String> = [],
+                        excludeNames: Set<String> = [], league: String? = nil,
                         using gen: inout some RandomNumberGenerator) -> (team: String, year: Int)? {
         let openFilters = (formations[sport] ?? []).filter { openRoles.contains($0.role) }.map(\.filter)
         guard !openFilters.isEmpty else { return nil }
 
-        var eligibleByCombo: [TeamYear: Bool] = [:]
-        for season in pool where !season.teamAbbr.isEmpty && !excludeNames.contains(season.name) {
-            let key = TeamYear(team: season.teamAbbr, year: season.seasonYear)
-            if eligibleByCombo[key] == true { continue }
-            eligibleByCombo[key] = openFilters.contains { $0.matches(season.position) }
+        func viableCombos(in seasons: [CatalogSeason]) -> [TeamYear] {
+            var eligibleByCombo: [TeamYear: Bool] = [:]
+            for season in seasons where !season.teamAbbr.isEmpty && !excludeNames.contains(season.name) {
+                let key = TeamYear(team: season.teamAbbr, year: season.seasonYear)
+                if eligibleByCombo[key] == true { continue }
+                eligibleByCombo[key] = openFilters.contains { $0.matches(season.position) }
+            }
+            return eligibleByCombo.compactMap { combo, isEligible in isEligible ? combo : nil }
         }
-        var viable: [TeamYear] = []
-        for (combo, isEligible) in eligibleByCombo where isEligible {
-            viable.append(combo)
+
+        var viable: [TeamYear]
+        if let league {
+            let narrowed = viableCombos(in: pool.filter { $0.league == league })
+            viable = narrowed.isEmpty ? viableCombos(in: pool) : narrowed
+        } else {
+            viable = viableCombos(in: pool)
         }
         if let lockedTeam {
             // Different year each round for the locked franchise; fall back to other teams
@@ -219,11 +247,18 @@ struct DraftSpinResult: Equatable {
 
 /// Pure season simulator, RNG-injected (system generator in gameplay — every run is a fresh
 /// season, matching the now-truly-random spins; seeded generator in tests). Still unranked/
-/// XP-only (a simulated season must never move the competitive ladder), but no longer
-/// pure-luck: the 2026-07-09 scoring audit found the original duel formula scaled the
-/// opponent's score by the player's own lineup power, so draft quality mathematically never
-/// affected the record — every lineup was a coin flip. Now lineup power sets the per-game
-/// win probability directly (see `winProbability`), so drafting well genuinely wins more.
+/// XP-only (a simulated season must never move the competitive ladder).
+///
+/// Scoring basis retired 2026-07-13: the original duel formula (through 2026-07-08) scaled the
+/// opponent's score by the player's own lineup power, so draft quality never affected the
+/// record; the 2026-07-09 fix moved to a `power`-based (0...1, `ScoringStat`-normalized) win
+/// probability, but live feedback afterward ("still too harsh") showed that abstraction wasn't
+/// legible — a fan can't tell what "0.3 power" means. This version scores lineups on the exact
+/// same currency a K4C4 grade uses: real fantasy points, via `ScoringRule`'s own presets
+/// (`fantasyPoints`). Win probability is anchored directly against real percentiles of that same
+/// stat pulled live from the catalog (`fantasyAnchors`) — "how good is my draft" now reads on a
+/// scale a fan already recognizes, and the calibration is provably centered on the real
+/// population instead of a hand-tuned baseline.
 enum DraftSpinSimulator {
     /// A sport's season length and the win counts that separate its three outcome tiers.
     /// Thresholds are matched by *tier probability* under a coin-flip (50/50) week, not by
@@ -248,35 +283,84 @@ enum DraftSpinSimulator {
         }
     }
 
-    /// The lineup power at which a season is a coin flip. Recalibrated 2026-07-09 after
-    /// live feedback ("i never make the playoffs lol") proved the first pass too harsh:
-    /// `power` normalizes each stat against `ScoringStat`'s near-record reference bounds,
-    /// so even a *good* best-available draft off real rosters averages only ≈0.30 (star
-    /// seasons land ≈0.5–0.65, and every lineup carries role players because real rosters
-    /// do). The original 0.40 baseline made a good draft a sub-.500 team by construction.
-    static let leagueBaselinePower = 0.25
+    /// Real fantasy-point percentiles (p50/p90/p99) for a FULL Draft & Spin lineup, summed
+    /// across every formation slot in `DraftSpinConstraint.formations` — pulled 2026-07-13 via
+    /// live SQL against the `player_seasons` catalog, one query per sport, using the exact same
+    /// `ScoringRule` fantasy-point formulas `fantasyPoints` calls per player below (a qualified-
+    /// season floor per sport — games/appearances/innings — mirrors the methodology behind the
+    /// NFL bounds in docs/scoring-and-grading.md). p50 = a normal, unremarkable lineup (half of
+    /// all real qualified seasons score below this); p90 = a well-drafted lineup; p99 = an
+    /// all-time-great, "undefeated-caliber" lineup — nothing in the catalog beats it except a
+    /// handful of freak outlier seasons. Re-run the same query shape if the catalog population
+    /// changes materially (new sport, big backfill).
+    struct FantasyAnchors { let p50: Double, p90: Double, p99: Double }
 
-    /// Per-game win chance from lineup power — linear around the baseline, clamped so no
-    /// season is ever a guaranteed sweep or wipeout (an all-star lineup can still miss, a
-    /// bad one can still shock): +0.1 lineup power ≈ +11 points of per-game win chance.
-    /// Target feel after the recalibration: a decent draft (power ≈0.30 → ~55%) makes the
-    /// playoffs more often than not, a strong one (≈0.45 → ~72%) contends for the title,
-    /// a bad one (≈0.20 → ~44%) still misses. Better drafts win visibly more; luck still
-    /// swings any single season.
-    static func winProbability(power: Double) -> Double {
-        min(max(0.5 + 1.1 * (power - leagueBaselinePower), 0.15), 0.92)
+    static func fantasyAnchors(for sport: Sport) -> FantasyAnchors {
+        switch sport {
+        case .nfl:      return FantasyAnchors(p50: 534,   p90: 1265,  p99: 1880)
+        case .nba:      return FantasyAnchors(p50: 6112,  p90: 13846, p99: 20192)
+        case .baseball: return FantasyAnchors(p50: 1973,  p90: 3005,  p99: 3942)
+        case .soccer:   return FantasyAnchors(p50: 368.5, p90: 677,   p99: 1024.25)
+        case .tennis:   return FantasyAnchors(p50: 34.5,  p90: 165,   p99: 532.5)
+        }
+    }
+
+    /// Which K4C4 fantasy-point preset (`ScoringRule.presets`) grades this player-season — the
+    /// same formula a Keep4/Cut4 puzzle grades it with (`docs/scoring-and-grading.md`). NFL uses
+    /// the unified any-position formula (passing+rushing+receiving all in one) since a lineup
+    /// mixes QB with skill positions; baseball and soccer split by role the same way the K4C4
+    /// themes do (hitter/pitcher, attacker/defender — `MF`/`FW` share the attacker formula,
+    /// `DF`/`GK` the defender one, matching `themes.py`'s `soccer-attackers`/`soccer-defenders`).
+    private static func fantasyPresetKey(_ season: CatalogSeason) -> String {
+        switch season.sport {
+        case .nfl: return "nfl_fantasy"
+        case .nba: return "nba_fantasy"
+        case .baseball: return season.position == "P" ? "baseball_pitcher_fantasy" : "baseball_hitter_fantasy"
+        case .soccer: return (season.position == "DF" || season.position == "GK")
+            ? "soccer_defender_fantasy" : "soccer_attacker_fantasy"
+        case .tennis: return "tennis_fantasy"
+        }
+    }
+
+    /// A player-season's real fantasy-point total, via the exact K4C4 formula for its sport/role.
+    static func fantasyPoints(_ season: CatalogSeason) -> Double {
+        ScoringRule.preset(fantasyPresetKey(season))?.grade(season) ?? 0
+    }
+
+    /// Per-game win chance from the lineup's total real fantasy points, piecewise-linear against
+    /// this sport's own p50/p90/p99 anchors (see `fantasyAnchors`): a merely-average lineup
+    /// (p50) still wins more than it loses, a well-drafted one (p90) clearly contends, and an
+    /// all-time-great one (p99+) is a near-lock — but never a guaranteed sweep or wipeout
+    /// (clamped 0.30...0.93).
+    static func winProbability(lineupTotal: Double, sport: Sport) -> Double {
+        let a = fantasyAnchors(for: sport)
+        if lineupTotal < a.p50 {
+            let t = min(max(lineupTotal / max(a.p50, 1), 0), 1)
+            return 0.30 + 0.25 * t
+        } else if lineupTotal < a.p90 {
+            let t = (lineupTotal - a.p50) / max(a.p90 - a.p50, 1)
+            return 0.55 + 0.20 * t
+        } else {
+            let t = min(max((lineupTotal - a.p90) / max(a.p99 - a.p90, 1), 0), 1)
+            return 0.75 + 0.18 * t
+        }
     }
 
     static func simulate(lineup: [CatalogSeason], sport: Sport,
                          using gen: inout some RandomNumberGenerator) -> DraftSpinResult {
         let shape = seasonShape(for: sport)
-        let basePower = lineup.isEmpty ? 0 : lineup.map { power($0, sport: sport) }.reduce(0, +) / Double(lineup.count)
-        let winChance = winProbability(power: basePower)
+        let lineupTotal = lineup.reduce(0.0) { $0 + fantasyPoints($1) }
+        let winChance = winProbability(lineupTotal: lineupTotal, sport: sport)
+        // `gameCount` already matches this sport's real season length, so this is literally
+        // "this roster's real season fantasy total, spread across a real season's games" — the
+        // simulated PTS total a player sees lands close to a number their own picks actually
+        // earned, not an abstract scaled score.
+        let perGame = lineupTotal / Double(shape.gameCount)
         var wins = 0
         var totalPoints = 0.0
         for _ in 0..<shape.gameCount {
             if Double.random(in: 0..<1, using: &gen) < winChance { wins += 1 }
-            totalPoints += basePower * 100 * Double.random(in: 0.7...1.3, using: &gen)
+            totalPoints += perGame * Double.random(in: 0.7...1.3, using: &gen)
         }
         let losses = shape.gameCount - wins
         let outcome: DraftSpinResult.Outcome = wins >= shape.championshipWins ? .champion

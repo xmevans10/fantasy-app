@@ -8,11 +8,11 @@ from tools.ingest.providers.espn_soccer import (
 
 
 def _row(player, team="Inter Miami CF", season=2024, position="Forward",
-         appearances=1, goals=0, assists=0, conceded=None):
+         appearances=1, goals=0, assists=0, conceded=None, league="usa.1"):
     return {"player": player, "team": team, "season_end_year": season,
             "position": position, "appearances": appearances,
             "total_goals": goals, "goal_assists": assists,
-            "goals_conceded": conceded}
+            "goals_conceded": conceded, "league": league}
 
 
 def test_bucket_position_maps_real_espn_labels_to_the_sport_convention():
@@ -60,7 +60,7 @@ def test_aggregate_rows_sums_appearances_goals_assists_across_matches():
         _row("messi", goals=0, assists=1),
     ]
     totals, labels = _aggregate_rows(rows)
-    key = ("messi", "Inter Miami CF", 2024)
+    key = ("messi", "Inter Miami CF", 2024, "usa.1")
     assert totals[key]["appearances"] == 3
     assert totals[key]["goals"] == 3
     assert totals[key]["assists"] == 2
@@ -74,7 +74,7 @@ def test_aggregate_rows_derives_clean_sheets_from_zero_goals_conceded():
         _row("keeper", position="Goalkeeper", conceded=0),
     ]
     totals, _ = _aggregate_rows(rows)
-    key = ("keeper", "Inter Miami CF", 2024)
+    key = ("keeper", "Inter Miami CF", 2024, "usa.1")
     assert totals[key]["appearances"] == 3
     assert totals[key]["clean_sheets"] == 2
 
@@ -86,7 +86,7 @@ def test_aggregate_rows_skips_zero_or_none_appearance_rows_but_keeps_position_la
         _row("benched", position="Forward", appearances=1, goals=1),
     ]
     totals, labels = _aggregate_rows(rows)
-    key = ("benched", "Inter Miami CF", 2024)
+    key = ("benched", "Inter Miami CF", 2024, "usa.1")
     assert totals[key]["appearances"] == 1
     assert totals[key]["goals"] == 1
     # All three matches' position labels are recorded, even the two skipped-for-totals ones.
@@ -101,9 +101,26 @@ def test_aggregate_rows_keys_by_name_team_and_season_separately():
     ]
     totals, _ = _aggregate_rows(rows)
     assert len(totals) == 3
-    assert totals[("mover", "Club A", 2023)]["appearances"] == 1
-    assert totals[("mover", "Club B", 2023)]["appearances"] == 1
-    assert totals[("mover", "Club B", 2024)]["appearances"] == 1
+    assert totals[("mover", "Club A", 2023, "usa.1")]["appearances"] == 1
+    assert totals[("mover", "Club B", 2023, "usa.1")]["appearances"] == 1
+    assert totals[("mover", "Club B", 2024, "usa.1")]["appearances"] == 1
+
+
+def test_aggregate_rows_does_not_merge_same_name_team_season_across_leagues():
+    # Same name, same team display string, same season — but two different countries'
+    # competitions (two matches each). Must stay as two distinct season totals, not one
+    # merged total — the reason the aggregation key was widened to include league.
+    rows = [
+        _row("santos", team="Sporting", season=2024, league="por.1", goals=2),
+        _row("santos", team="Sporting", season=2024, league="por.1", goals=1),
+        _row("santos", team="Sporting", season=2024, league="usa.1", goals=1),
+    ]
+    totals, _ = _aggregate_rows(rows)
+    assert len(totals) == 2
+    assert totals[("santos", "Sporting", 2024, "por.1")]["appearances"] == 2
+    assert totals[("santos", "Sporting", 2024, "por.1")]["goals"] == 3
+    assert totals[("santos", "Sporting", 2024, "usa.1")]["appearances"] == 1
+    assert totals[("santos", "Sporting", 2024, "usa.1")]["goals"] == 1
 
 
 def _write_csv(path, rows):
@@ -116,7 +133,8 @@ def _write_csv(path, rows):
 def _row_dict(name, season_year, team_abbr):
     return {"name": name, "team_abbr": team_abbr, "season_year": season_year,
             "position": "FW", "appearances": 20, "goals": 5, "assists": 3,
-            "clean_sheets": 0, "headshot": "https://example.com/x.jpg"}
+            "clean_sheets": 0, "headshot": "https://example.com/x.jpg",
+            "league": "England"}
 
 
 def test_merge_csvs_combines_and_sorts_per_league_partitions(tmp_path):

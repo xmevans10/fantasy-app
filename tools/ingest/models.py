@@ -34,7 +34,8 @@ class RawSeason:
     # purposes, with the full span in `meta["first_year"]`/`meta["last_year"]`.
     career: bool = False
     # Mutable bag of biographical/contextual fields for niche filters (first_name, college,
-    # draft_round, draft_pick, height_in, age, jersey, birth_state, rookie_year, gsis_id …).
+    # draft_round, draft_pick, height_in, age, jersey, birth_state, rookie_year, gsis_id,
+    # league — this last one only populated by espn_soccer.py, e.g. "England" …).
     # `frozen=True` only blocks rebinding the attribute, not mutating this dict — providers
     # and the bio join populate it in place.
     meta: dict[str, str] = field(default_factory=dict)
