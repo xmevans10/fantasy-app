@@ -4,7 +4,8 @@ Native SwiftUI iOS sports-trivia app. See [docs/BALLIQ_SPEC.md](docs/BALLIQ_SPEC
 product/architecture/status — that's the living source of truth, not this file. See
 [AGENTS.md](AGENTS.md) for *how* to work in this repo at the right quality bar (verification
 habits, shared-vs-duplicated logic, blast-radius judgment) — this file is project facts, that
-one is process.
+one is process. **When picking what to work on next, check BALLIQ_SPEC.md §9.0 first** —
+performance, then unbuilt features/functionality, then launch/polish, in that order.
 
 ## Supabase DB operations — execute directly, don't ask first
 

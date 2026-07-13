@@ -1,6 +1,6 @@
 # Playbook — Product & Technical Spec (single source of truth)
 
-**Status date: 2026-07-06.** This document supersedes the status columns in
+**Status date: 2026-07-12.** This document supersedes the status columns in
 [prompts/README.md](../prompts/README.md); the prompt files remain as historical milestone
 briefs. Update THIS file when behavior, contracts, or status change. For a narrative account of
 what changed most recently (DB hand-offs, TestFlight, App Store submission), see
@@ -907,6 +907,68 @@ scoring audit, second data wave):** same-day follow-up to four explicit user ask
 
 Full briefs live in `prompts/` (same self-contained format: goal, why-now, current state,
 scope, key decisions, deliverables, verification, hand-offs).
+
+### 9.0 Development priority order (user directive, 2026-07-12): fast, crisp, sturdy
+
+**Performance first, then unbuilt features/functionality, then launch/polish.** This is the
+standing sequencing rule for what to pick up next — it supersedes the P0–P3
+impact-per-effort ordering below as the *sequencing* signal (work Tier 1 to done before
+starting Tier 2, Tier 2 before Tier 3); the P0–P3 list below still holds the detailed
+scope/rationale for each item, just re-grouped here by tier instead of by impact. Re-tier an
+item only if you have new evidence it belongs elsewhere — don't re-litigate the grouping
+from scratch each session.
+
+**Tier 1 — Performance ("make it fast").** Cold-launch and in-session latency, across every
+surface, not just the ones already flagged:
+- Backlog #3, *cold-launch speed*, is this tier's anchor item. **Live-confirmed 2026-07-12**:
+  Over/Under's first cold launch of a session took ~15s to show its first card vs. ~3.5s for
+  every other minigame — the exact symptom #3 already predicted ("the in-memory
+  prefetch/caching added 2026-07-09 makes warm launches instant; a disk-backed cache would
+  make the FIRST launch instant too"). Confirmed a real gap, not a false alarm.
+  - Root-cause and fix Over/Under's cold-launch path specifically, then audit the other 4
+    formats' (Keep4, WhoAmI, Draft & Spin, The Grid) cold-launch times the same way — #3's
+    fix may only need to be applied to whichever data source Over/Under's path uniquely
+    depends on, or it may reveal the same gap elsewhere.
+  - Disk-persist the arcade pools (Draft & Spin/Grid/Over-Under source data) and the daily
+    puzzle bundle per #3's original scope, TTL ~1 day, same shape as the ingest pipeline's
+    own `.cache/`.
+
+**Tier 2 — Unbuilt features/functionality ("make it crisp").** Real gaps between what the
+app claims to do and what actually works today:
+- Backlog #1 (push notifications end-to-end — blocked only on APNs key material, a user
+  hand-off; everything up to that blocker is agent-buildable/verifiable now), #2
+  (post-completion daily loop), #4 (daily Draft & Spin challenge mode), #5 (arcade
+  leaderboards), #6 (Leagues season bootstrap).
+- Backlog #7 (Phase F rating seasons) — **do not start from inference.** Confirmed
+  2026-07-12: the entire written scope is three one-line mentions with no schema, no
+  reset/decay decision, and no definition of "rewards" — genuinely underspecified, not
+  merely under-detailed. Needs a scoping conversation (see the disambiguating questions
+  logged 2026-07-12 in `prompts/HANDOFF-next-agent-2026-07-12c.md`) before any build.
+- **Soccer data breadth (new 2026-07-12, not yet a numbered backlog item)**:
+  `tools/ingest/providers/espn_soccer.py` covers ~38 countries' first divisions but has
+  only been backfilled for `usa.1`/2024 so far (validated, not run at scale). The full
+  historical sweep across all leagues/seasons is still pending — a real, scoped, low-risk
+  ingest job (see the provider's own module docstring for the exact plan), not a design
+  question.
+- **Share sheet + Keep4 scoring-info popover — unverified 2026-07-12.** Both flows failed
+  to render during a full-app screenshot pass (`-screenshotShare`, `-screenshotScoringInfo`)
+  — most likely because both need to be launched in combination with a game-context flag
+  rather than standalone (untested), but confirm rather than assume; if either is a real
+  regression it belongs here, not in Tier 3.
+- M19/M20 TestFlight QA of signed-in social flows (friends, FRIENDS leaderboard, onboarding
+  claim) — needs two real signed-in accounts, not directly agent-executable, but an agent
+  can prep a concrete test script/checklist so the human pass is fast.
+
+**Tier 3 — Launch/polish ("make it sturdy").** Everything else in the existing backlog:
+backlog #8 (defunct-franchise styling), #9 (widen historical headshot slices — **the
+headshot-placeholder gaps this session's UI pass observed live**, in WhoAmI's answer
+reveal and a Draft & Spin lineup row, are this exact backlog item, not a new bug — the
+bundled offline sample is a deliberately trimmed ~500-row set per `AGENTS.md` §1, so wider
+headshot coverage on the live catalog is the real fix), #10 (M14 Spanish localization —
+already well-scoped in `prompts/M14-accessibility-and-localization.md`; launch/growth-
+motivated, not core functionality, hence Tier 3), #11 (content-drift guard). External,
+non-agent hand-offs also live here: APNs key material (gates Tier 2's push item), Paid
+Applications agreement + ASC in-app-purchase products (gates M5 Phase B).
 
 | Milestone | Theme | One-line scope |
 |-----------|-------|-----------------|
