@@ -1034,12 +1034,15 @@ expected retention/quality impact per unit of effort):
    pass: `bref_nba.py`'s own abbreviation rewrite (`SAS`→`SA`, `WAS`→`WSH`) was never
    mirrored in `TeamColors`, so every 1977–2001 Spurs season (356 rows) and 1998–2001
    Wizards season (63 rows) was silently rendering fallback colors — fixed.
-9. **Widen historical headshot slices** — ✅ code shipped 2026-07-13. The real cap was
-   `PHOTO_SLICE_PER_YEAR = 40` in both `bref_nba.py` and `nfl_history.py`; widened to
-   100. Live re-resolution sweep for both providers dispatched (~10–15 min estimated,
-   cache-backed); **catalog push (`--upsert --catalog`) still pending** as of this
-   note — confirm both CSVs regenerated and the upsert ran before treating deep-roster
-   Draft & Spin photo coverage as actually live.
+9. **Widen historical headshot slices** — ✅ code + regenerated CSVs shipped
+   2026-07-13. `PHOTO_SLICE_PER_YEAR` widened 40→100 in both `bref_nba.py` and
+   `nfl_history.py`; live re-resolution run and committed (NBA 662/1086 top-slice
+   matched, NFL 344/870 — purely additive, only the headshot column changed).
+   **`--upsert --catalog` deliberately NOT run yet** — that command runs the FULL
+   pipeline (every provider, including `espn_soccer.py`/`main.py`/`models.py`, which
+   had uncommitted concurrent edits in-flight as of this note); running it against a
+   mid-edit tree risked pushing inconsistent state live. Safe to run once that
+   concurrent work is committed — plain rerun, no code change needed.
 10. **M14 Spanish localization** — unblocks App Store featuring in LatAm; all-string work.
 11. **Content-drift guard** — ✅ already resolved, confirmed 2026-07-13. An earlier
     commit (`bc93f3e`, "Minigame fixes & polish...") already ran the bundle regen this
