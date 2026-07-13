@@ -27,6 +27,7 @@ from .providers import (
     bref_nba,
     espn_nba,
     espn_nba_pool,
+    espn_soccer,
     hoopr_nba,
     mlb_pool,
     mlb_stats,
@@ -246,6 +247,20 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
         by_id = {s.player_id: s for s in tm}
         by_id.update({s.player_id: s for s in soccer})
         print(f"[soccer] transfermarkt full-squad sweep: {len(tm)} rows")
+        soccer = list(by_id.values())
+    # Broadest-but-least-curated layer: ESPN's ~38-country sweep (committed CSV — see
+    # providers/espn_soccer.py). Same dedup discipline as the transfermarkt block above —
+    # existing seed/live/transfermarkt rows always win a collision, both by player_id and
+    # by (last name, season_year) name-variant — since this source has no per-player curation
+    # beyond a minimum-appearances cameo filter.
+    espn = espn_soccer.load_seasons()
+    if espn:
+        existing_last_names = {(s.name.split()[-1].lower(), s.season_year) for s in soccer}
+        espn = [s for s in espn
+                if (s.name.split()[-1].lower(), s.season_year) not in existing_last_names]
+        by_id = {s.player_id: s for s in espn}
+        by_id.update({s.player_id: s for s in soccer})
+        print(f"[soccer] espn full-squad sweep: {len(espn)} rows")
         soccer = list(by_id.values())
     # Tennis: ATP 1968–2018 (frozen snapshot) + ATP 2019–2025 (tennis_recent, fills the
     # gap the frozen snapshot left) + WTA 1968–2025 (tennis_wta, first women's-tour
