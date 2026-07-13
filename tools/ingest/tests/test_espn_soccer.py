@@ -1,8 +1,10 @@
 """ESPN full-squad soccer sweep tests — pure aggregation over the module's per-match
 box-score row shape (position bucketing/resolution + season totals with the
 goals-conceded-derived clean-sheet count), no network, no pandas, no mocking."""
+import csv
+
 from tools.ingest.providers.espn_soccer import (
-    _aggregate_rows, _bucket_position, _resolve_positions)
+    CSV_FIELDS, _aggregate_rows, _bucket_position, _resolve_positions, merge_csvs)
 
 
 def _row(player, team="Inter Miami CF", season=2024, position="Forward",
@@ -102,3 +104,44 @@ def test_aggregate_rows_keys_by_name_team_and_season_separately():
     assert totals[("mover", "Club A", 2023)]["appearances"] == 1
     assert totals[("mover", "Club B", 2023)]["appearances"] == 1
     assert totals[("mover", "Club B", 2024)]["appearances"] == 1
+
+
+def _write_csv(path, rows):
+    with path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+        w.writeheader()
+        w.writerows(rows)
+
+
+def _row_dict(name, season_year, team_abbr):
+    return {"name": name, "team_abbr": team_abbr, "season_year": season_year,
+            "position": "FW", "appearances": 20, "goals": 5, "assists": 3,
+            "clean_sheets": 0, "headshot": "https://example.com/x.jpg"}
+
+
+def test_merge_csvs_combines_and_sorts_per_league_partitions(tmp_path):
+    eng = tmp_path / "eng.1.csv"
+    bra = tmp_path / "bra.1.csv"
+    _write_csv(eng, [_row_dict("Zed Player", 2023, "ARS")])
+    _write_csv(bra, [_row_dict("Amir Player", 2023, "FLA")])
+
+    out = tmp_path / "merged.csv"
+    merge_csvs([eng, bra], out)
+
+    with out.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    assert [r["name"] for r in rows] == ["Amir Player", "Zed Player"]
+
+
+def test_merge_csvs_sorts_by_name_then_season_then_team(tmp_path):
+    a = tmp_path / "a.csv"
+    b = tmp_path / "b.csv"
+    _write_csv(a, [_row_dict("Same Name", 2024, "ZZZ")])
+    _write_csv(b, [_row_dict("Same Name", 2023, "AAA")])
+
+    out = tmp_path / "merged.csv"
+    merge_csvs([a, b], out)
+
+    with out.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    assert [r["season_year"] for r in rows] == ["2023", "2024"]

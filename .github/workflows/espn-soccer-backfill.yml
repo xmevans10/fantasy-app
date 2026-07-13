@@ -1,0 +1,104 @@
+name: espn-soccer-backfill
+
+# One-time (re-runnable) historical backfill for tools/ingest/providers/espn_soccer.py —
+# not on a schedule like ingest.yml. A full sequential local run is a multi-day job (~38
+# leagues, each up to ~28 seasons of match-by-match discovery); this splits it into one
+# matrix leg per league so every leg finishes well inside a single job's 6h cap, then
+# merges the per-league partitions into the one committed CSV and pushes real rows into
+# the live catalog the same way ingest.yml's `ingest` job does.
+on:
+  workflow_dispatch:
+    inputs:
+      leagues:
+        description: "Space-separated ESPN league slugs to backfill (default: all ~38)"
+        required: false
+        default: ""
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt
+      - run: python -m pytest tools/ingest/tests -q
+
+  backfill:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      # Capped, not "all 38 at once" — ESPN's site API is keyless/unofficial (same
+      # courtesy-pause rationale as the module's own _RATE_DELAY); hitting it from a
+      # smaller number of concurrent datacenter IPs is a better-behaved citizen than
+      # maximum parallelism, at the cost of a few extra batches.
+      max-parallel: 6
+      fail-fast: false
+      matrix:
+        league: [arg.1, aus.1, aut.1, bel.1, bol.1, bra.1, chi.1, chn.1, col.1, den.1,
+                 ecu.1, eng.1, esp.1, fra.1, ger.1, gre.1, ind.1, irl.1, isr.1, ita.1,
+                 jpn.1, ksa.1, mex.1, ned.1, nor.1, par.1, per.1, por.1, rou.1, rsa.1,
+                 rus.1, sco.1, sui.1, swe.1, tur.1, uru.1, usa.1, ven.1]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt
+      # Per-league cache key: concurrent legs never share (and thus never race on) a
+      # cache entry, unlike ingest.yml's single shared key.
+      - uses: actions/cache@v4
+        with:
+          path: tools/ingest/.cache
+          key: espn-soccer-cache-${{ matrix.league }}-${{ github.run_id }}
+          restore-keys: |
+            espn-soccer-cache-${{ matrix.league }}-
+      - name: Sweep this league
+        if: ${{ github.event.inputs.leagues == '' || contains(github.event.inputs.leagues, matrix.league) }}
+        run: |
+          python -m tools.ingest.providers.espn_soccer \
+            --leagues ${{ matrix.league }} \
+            --out "espn-out/${{ matrix.league }}.csv"
+      - uses: actions/upload-artifact@v4
+        if: ${{ github.event.inputs.leagues == '' || contains(github.event.inputs.leagues, matrix.league) }}
+        with:
+          name: espn-soccer-${{ matrix.league }}
+          path: espn-out/${{ matrix.league }}.csv
+          if-no-files-found: ignore
+
+  merge-and-upsert:
+    needs: backfill
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: espn-soccer-*
+          path: espn-out
+          merge-multiple: true
+      - name: Merge per-league partitions into the committed CSV
+        run: |
+          python -m tools.ingest.providers.espn_soccer \
+            --merge-dir espn-out \
+            --out tools/ingest/data/soccer_espn_seasons.csv
+      - name: Commit the refreshed CSV
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tools/ingest/data/soccer_espn_seasons.csv
+          git diff --cached --quiet || git commit -m "espn-soccer: full historical backfill (automated)"
+          git push
+      # Additive/merge-duplicate upsert into the live catalog — same on_conflict=id,
+      # resolution=merge-duplicates guarantee CLAUDE.md already blesses as safe to just run.
+      - name: Push into the live catalog
+        run: python -m tools.ingest.main --upsert --catalog

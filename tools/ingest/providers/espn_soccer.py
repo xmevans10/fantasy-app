@@ -237,11 +237,15 @@ def _lineup_rows(league: str, event_id: str, season_end_year: int) -> list[dict]
 
 
 def refresh(leagues: list[str] | None = None,
-            season_from: int | None = None, season_to: int | None = None) -> None:
-    """Discover + aggregate every (league, season) in range, resolve headshots, append
-    to the committed CSV. Safe to re-run/resume: each network call is cached on disk
-    keyed by (league, day/event), so a re-run after a partial/interrupted sweep only
-    fetches what it doesn't already have."""
+            season_from: int | None = None, season_to: int | None = None,
+            out_path: Path | None = None) -> None:
+    """Discover + aggregate every (league, season) in range, resolve headshots, write
+    to `out_path` (default: the committed CSV). Safe to re-run/resume: each network call
+    is cached on disk keyed by (league, day/event), so a re-run after a partial/
+    interrupted sweep only fetches what it doesn't already have. `out_path` exists so a
+    CI matrix job (one leg per league — see `.github/workflows/espn-soccer-backfill.yml`)
+    can write its own partition instead of every parallel leg colliding on one file;
+    `merge_csvs` below recombines those partitions into the single committed CSV."""
     leagues = leagues or list(_LEAGUES)
     season_to = season_to or dt.date.today().year + (1 if dt.date.today().month >= 7 else 0)
 
@@ -318,13 +322,34 @@ def refresh(leagues: list[str] | None = None,
             final.append(row)
     final.sort(key=lambda r: (r["name"], r["season_year"], r["team_abbr"]))
 
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with CSV_PATH.open("w", encoding="utf-8", newline="") as f:
+    dest = out_path or CSV_PATH
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with dest.open("w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
         w.writeheader()
         w.writerows(final)
     print(f"[espn-soccer] wrote {len(final)} player-seasons (M16 photo gate: "
-          f"{len(kept) - len(final)} dropped, no confident photo) → {CSV_PATH}")
+          f"{len(kept) - len(final)} dropped, no confident photo) → {dest}")
+
+
+def merge_csvs(inputs: list[Path], out_path: Path) -> None:
+    """Recombines the per-league CSV partitions a CI matrix job's legs each wrote (via
+    `refresh(..., out_path=...)`) into the one committed CSV — the counterpart to that
+    partitioning. Every input already has this module's own headshot/cameo gates applied
+    (each leg ran a real `refresh()`), so this is a plain concatenate + re-sort, no
+    re-filtering."""
+    rows: list[dict] = []
+    for path in inputs:
+        with path.open(encoding="utf-8") as f:
+            rows.extend(csv.DictReader(f))
+    rows.sort(key=lambda r: (r["name"], int(r["season_year"]), r["team_abbr"]))
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+        w.writeheader()
+        w.writerows(rows)
+    print(f"[espn-soccer] merged {len(inputs)} league partitions, {len(rows)} rows → {out_path}")
 
 
 # ---------------------------------------------------------------------------
@@ -367,8 +392,19 @@ def main() -> int:
                     help="earliest season END year (default: each league's empirical floor)")
     ap.add_argument("--to", dest="season_to", type=int, default=None,
                     help="latest season END year (default: current)")
+    ap.add_argument("--out", type=Path, default=None,
+                    help="write to this CSV instead of the committed data file "
+                         "(a CI matrix leg's own partition — see merge-dir below)")
+    ap.add_argument("--merge-dir", type=Path, default=None,
+                    help="skip the live sweep; merge every *.csv in this directory "
+                         "(matrix legs' --out partitions) into --out (or the committed "
+                         "CSV if --out is omitted)")
     args = ap.parse_args()
-    refresh(leagues=args.leagues, season_from=args.season_from, season_to=args.season_to)
+    if args.merge_dir:
+        merge_csvs(sorted(args.merge_dir.glob("*.csv")), args.out or CSV_PATH)
+        return 0
+    refresh(leagues=args.leagues, season_from=args.season_from, season_to=args.season_to,
+            out_path=args.out)
     return 0
 
 
