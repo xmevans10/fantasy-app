@@ -4,7 +4,7 @@ import SwiftUI
 /// headshots) as the franchise signal — no licensed assets, instant recognizability, and it
 /// fits the "Prime Time" broadcast look. Keyed by (sport, abbreviation) because several
 /// abbreviations collide across leagues (CHI, DAL, MIN, PHI, WAS …).
-struct TeamPalette: Equatable {
+struct TeamPalette: Equatable, Hashable {
     let primary: Color
     let secondary: Color
     let onPrimary: Color      // legible text/icon on `primary`
@@ -51,10 +51,48 @@ enum TeamColors {
         case .nfl:
             aliases = ["LA": "LAR", "STL": "LAR", "OAK": "LV", "LVR": "LV", "SD": "LAC", "SDG": "LAC",
                        "WSH": "WAS", "JAC": "JAX", "ARZ": "ARI", "GNB": "GB", "KAN": "KC", "NWE": "NE",
-                       "NOR": "NO", "SFO": "SF", "TAM": "TB", "CLV": "CLE", "BLT": "BAL", "HST": "HOU"]
+                       "NOR": "NO", "SFO": "SF", "TAM": "TB", "CLV": "CLE", "BLT": "BAL", "HST": "HOU",
+                       // `nfl_history.py`'s 1970–1998 sweep (backlog #8): same franchise, pre-move/
+                       // pre-rename code. "BOS" is the Patriots' one 1970 season as the Boston
+                       // Patriots (renamed New England the next year); "PHO" is the Cardinals'
+                       // Phoenix-era name (1988–93) before the 1994 Arizona rebrand; "RAI"/"RAM"
+                       // are the Raiders'/Rams' pre-Vegas/pre-second-LA-move codes.
+                       "BOS": "NE", "PHO": "ARI", "RAI": "LV", "RAM": "LAR"]
         case .nba:
             aliases = ["NO": "NOP", "NOH": "NOP", "NJN": "BKN", "NYN": "BKN", "PHO": "PHX", "SAN": "SAS",
-                       "GS": "GSW", "NY": "NYK", "UTAH": "UTA", "CHO": "CHA", "SEA": "OKC"]
+                       "GS": "GSW", "NY": "NYK", "UTAH": "UTA", "CHO": "CHA", "SEA": "OKC",
+                       // `bref_nba.py`'s own `_ABBR_FIXES` rewrites the raw dataset's "SAS"/"WAS"
+                       // codes to "SA"/"WSH" (matching *its* source's spelling) — but those rewritten
+                       // codes were never added here, so every 1977–2001 Spurs season (and the
+                       // 1998–2001 post-Bullets-rename Wizards seasons) silently fell back until now.
+                       "SA": "SAS", "WSH": "WAS",
+                       // Franchise-continuity codes from the 1950–2001 bref sweep (backlog #8):
+                       // each of these is the *same* team as the current-day key, just under an
+                       // older city/era abbreviation. Chicago Packers → Zephyrs → (2nd) Baltimore
+                       // Bullets → Capital Bullets → Washington Bullets is one unbroken lineage
+                       // that renamed to the Wizards in 1997.
+                       "CHP": "WAS", "CHZ": "WAS", "BAL": "WAS", "CAP": "WAS", "WSB": "WAS",
+                       // Rochester Royals → Cincinnati Royals → Kansas City-Omaha Kings → Kansas
+                       // City Kings → Sacramento Kings.
+                       "ROC": "SAC", "CIN": "SAC", "KCO": "SAC", "KCK": "SAC",
+                       // Tri-Cities Blackhawks → Milwaukee Hawks → St. Louis Hawks → Atlanta Hawks.
+                       "TRI": "ATL", "MLH": "ATL", "STL": "ATL",
+                       // Philadelphia Warriors → San Francisco Warriors → Golden State Warriors.
+                       "PHW": "GSW", "SFW": "GSW",
+                       // Buffalo Braves → San Diego Clippers → LA Clippers.
+                       "BUF": "LAC", "SDC": "LAC",
+                       "FTW": "DET",   // Fort Wayne Pistons → Detroit Pistons (1957 move).
+                       "MNL": "LAL",   // Minneapolis Lakers → LA Lakers (1960 move).
+                       "SYR": "PHI",   // Syracuse Nationals → Philadelphia 76ers (1963 move).
+                       "SDR": "HOU",   // San Diego Rockets → Houston Rockets (1971 move).
+                       "NOJ": "UTA",   // New Orleans Jazz → Utah Jazz (1979 move).
+                       "VAN": "MEM",   // Vancouver Grizzlies → Memphis Grizzlies (2001 move).
+                       // Original Charlotte Hornets (1988–2002, moved to New Orleans and became
+                       // the Pelicans) — the NBA's 2014 name/history ruling reassigned the
+                       // "Hornets" identity to Charlotte's own franchise, which is exactly what
+                       // `CHA`'s palette already uses (real Hornets teal/purple), so this is a
+                       // color match, not just a legal one.
+                       "CHH": "CHA"]
         case .baseball, .soccer, .tennis:
             aliases = [:]   // no historical-franchise collisions to normalize yet
         }
@@ -98,6 +136,28 @@ enum TeamColors {
         "ORL": (0x0077C0, 0xC4CED4), "PHI": (0x006BB6, 0xED174C), "PHX": (0x1D1160, 0xE56020),
         "POR": (0xE03A3E, 0x000000), "SAC": (0x5A2D81, 0x63727A), "SAS": (0xC4CED4, 0x000000),
         "TOR": (0xCE1141, 0x000000), "UTA": (0x002B5C, 0x00471B), "WAS": (0x002B5C, 0xE31837),
+
+        // Genuinely-defunct 1949–52 franchises with no current-day successor to alias to
+        // (backlog #8) — real colors sourced from each team's Wikipedia infobox, not a
+        // guess. Where the infobox only documents a two-color (team-color + white) scheme,
+        // white is swapped for a warm ivory instead: unlike soccer's TOT, these are cards
+        // whose *only* other color is a dark/saturated primary, so a literal white secondary
+        // would read as "no second color" rather than a real block-color pairing.
+        "AND": (0xFA002C, 0x001689),   // Anderson Packers (Indiana) — red/navy home-away kits.
+        "BLB": (0xCD1937, 0x193781),   // Baltimore Bullets (1944–54; distinct franchise from
+                                        // the later Bullets/Wizards lineage aliased to "WAS").
+        "CHS": (0xE03A3E, 0x003DA6),   // Chicago Stags — red/blue.
+        "DNN": (0x00008B, 0xD8D3C5),   // Denver Nuggets (1948–50 AAU/NBL/NBA) — no relation
+                                        // to the 1976+ ABA-merger Denver Nuggets ("DEN").
+        "INO": (0x0D2240, 0xFF0000),   // Indianapolis Olympians — navy/red.
+        "SHE": (0xC41E3A, 0xE6D9D0),   // Sheboygan Red Skins — red/ivory.
+        "STB": (0xD3232A, 0xD8D3C5),   // St. Louis Bombers — red/ivory.
+        "WAT": (0xFFC72C, 0x000000),   // Waterloo Hawks — gold/black; unrelated to the
+                                        // Tri-Cities/Milwaukee/St.Louis/Atlanta Hawks lineage
+                                        // despite the shared nickname (folded 1951).
+        "WSC": (0x008348, 0xD8D3C5),   // Washington Capitols (Red Auerbach's first team,
+                                        // 1946–51) — green/ivory; unrelated to the Bullets/
+                                        // Wizards franchise despite the shared city.
     ]
 
     /// All 30 MLB clubs — matches `providers/mlb_stats.py`'s `TEAM_ABBR` id table exactly.
