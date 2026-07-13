@@ -71,13 +71,55 @@ final class PlayerSeasonCatalog {
         if let task = draftSpinSampleTasks[sport] { return await task.value }
         let task = Task<[CatalogSeason], Never> { [weak self] in
             guard let self else { return [] }
-            return await self.search(CatalogQuery(sport: sport), limit: 2_000)
+            return await self.loadDraftSpinSample(for: sport)
         }
         draftSpinSampleTasks[sport] = task
         let seasons = await task.value
         draftSpinSampleTasks[sport] = nil
         draftSpinSamples[sport] = seasons
         return seasons
+    }
+
+    /// The ~1MB, 2-request fetch that drives the ~15s Over/Under & Draft & Spin cold-launch
+    /// latency (BALLIQ_SPEC §9 backlog #3) — a disk cache sits between the in-memory sample
+    /// and the network so only the FIRST app session of the day pays for it. A network
+    /// failure still prefers a stale disk copy over the ~500-row bundle: real (if dated)
+    /// data beats a trimmed sample.
+    private static let diskCacheTTL: TimeInterval = 24 * 60 * 60
+    private static func diskCacheKey(for sport: Sport) -> String { "arcade-pool-\(sport.rawValue)" }
+
+    private func loadDraftSpinSample(for sport: Sport) async -> [CatalogSeason] {
+        let key = Self.diskCacheKey(for: sport)
+        if let entry = await DiskCache.read([CatalogSeason].self, key: key),
+           Date().timeIntervalSince(entry.writtenAt) < Self.diskCacheTTL {
+            #if DEBUG
+            print("[catalog] \(Date()) arcade sample \(sport.rawValue): disk hit (fresh)")
+            #endif
+            return entry.value
+        }
+        let q = CatalogQuery(sport: sport)
+        if let remote = await fetchRemote(q, limit: 2_000, overfetchForRanking: false) {
+            #if DEBUG
+            print("[catalog] \(Date()) arcade sample \(sport.rawValue): network fetch (\(remote.count) rows)")
+            #endif
+            let ordered = Self.ordered(remote)
+            await DiskCache.write(ordered, key: key)
+            return ordered
+        }
+        if let stale = await DiskCache.read([CatalogSeason].self, key: key) {
+            #if DEBUG
+            print("[catalog] \(Date()) arcade sample \(sport.rawValue): disk hit (stale, network failed)")
+            #endif
+            return stale.value
+        }
+        #if DEBUG
+        print("[catalog] \(Date()) arcade sample \(sport.rawValue): bundled fallback")
+        #endif
+        return Self.ordered(filterBundled(q))
+    }
+
+    private static func ordered(_ seasons: [CatalogSeason]) -> [CatalogSeason] {
+        Array(seasons.sorted { ($0.seasonYear, $0.name) > ($1.seasonYear, $1.name) }.prefix(2_000))
     }
 
     /// Safe to call when a setup screen first appears or its sport changes. In-flight requests

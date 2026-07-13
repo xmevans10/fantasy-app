@@ -1,6 +1,6 @@
 import Foundation
 
-private struct PuzzleContentRow<Content: Decodable>: Decodable {
+private struct PuzzleContentRow<Content: Codable>: Codable {
     let content: Content
     let activeDate: String?
 
@@ -71,7 +71,21 @@ final class RemotePuzzleRepository: PuzzleRepository {
         return rows[PuzzleStore.dailyIndex(count: rows.count, date: date)].content
     }
 
-    private func fetch<T: Decodable>(format: String, filter: SportFilter, as type: T.Type) async -> [PuzzleContentRow<T>]? {
+    /// Same shape as `PlayerSeasonCatalog`'s arcade-pool disk cache: a fresh copy skips the
+    /// network on every cold launch after the first. Freshness is "written today" rather than
+    /// a flat TTL — a new UTC day's daily puzzle row (`active_date`) only exists once the
+    /// ingest pipeline mints it, so a launch on a new day MUST refetch or `pick()` above would
+    /// never see today's row at all.
+    private func fetch<T: Codable>(format: String, filter: SportFilter, as type: T.Type) async -> [PuzzleContentRow<T>]? {
+        let key = "puzzles-\(format)-\(filter.rawValue)"
+        let today = PuzzleStore.todayUTCString()
+        if let entry = await DiskCache.read([PuzzleContentRow<T>].self, key: key),
+           PuzzleStore.todayUTCString(entry.writtenAt) == today {
+            #if DEBUG
+            print("[puzzles] \(Date()) \(key): disk hit (today)")
+            #endif
+            return entry.value
+        }
         var query = [URLQueryItem(name: "select", value: "content,active_date"),
                      URLQueryItem(name: "format", value: "eq.\(format)"),
                      // Stable order is essential: the modulo fallback indexes into this pool by
@@ -81,6 +95,22 @@ final class RemotePuzzleRepository: PuzzleRepository {
         if let sport = filter.sport {
             query.append(URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)"))
         }
-        return try? await client.select("puzzles", query: query, decoder: contentDecoder)
+        if let remote: [PuzzleContentRow<T>] = try? await client.select("puzzles", query: query, decoder: contentDecoder),
+           !remote.isEmpty {
+            #if DEBUG
+            print("[puzzles] \(Date()) \(key): network fetch (\(remote.count) rows)")
+            #endif
+            await DiskCache.write(remote, key: key)
+            return remote
+        }
+        // Network failed (or the table was briefly empty) — a stale cached pool is still real
+        // data, unlike the bundled fallback callers reach for when `fetch` returns nil.
+        if let stale = await DiskCache.read([PuzzleContentRow<T>].self, key: key) {
+            #if DEBUG
+            print("[puzzles] \(Date()) \(key): disk hit (stale, network failed)")
+            #endif
+            return stale.value
+        }
+        return nil
     }
 }

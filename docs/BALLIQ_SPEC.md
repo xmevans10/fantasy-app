@@ -920,18 +920,19 @@ from scratch each session.
 
 **Tier 1 — Performance ("make it fast").** Cold-launch and in-session latency, across every
 surface, not just the ones already flagged:
-- Backlog #3, *cold-launch speed*, is this tier's anchor item. **Live-confirmed 2026-07-12**:
-  Over/Under's first cold launch of a session took ~15s to show its first card vs. ~3.5s for
-  every other minigame — the exact symptom #3 already predicted ("the in-memory
-  prefetch/caching added 2026-07-09 makes warm launches instant; a disk-backed cache would
-  make the FIRST launch instant too"). Confirmed a real gap, not a false alarm.
-  - Root-cause and fix Over/Under's cold-launch path specifically, then audit the other 4
-    formats' (Keep4, WhoAmI, Draft & Spin, The Grid) cold-launch times the same way — #3's
-    fix may only need to be applied to whichever data source Over/Under's path uniquely
-    depends on, or it may reveal the same gap elsewhere.
-  - Disk-persist the arcade pools (Draft & Spin/Grid/Over-Under source data) and the daily
-    puzzle bundle per #3's original scope, TTL ~1 day, same shape as the ingest pipeline's
-    own `.cache/`.
+- Backlog #3, *cold-launch speed* — **✅ shipped 2026-07-13.** Root cause: Over/Under's (and
+  Draft & Spin's) first card blocked on the sport-wide 2,000-row arcade sample — two *serial*
+  1,000-row PostgREST pages, ~1.1 MB measured — cached in memory only, so every new app
+  session repaid it (~15s on a phone radio). Fix: `DiskCache` (BallIQ/Data/DiskCache.swift)
+  under `PlayerSeasonCatalog.draftSpinSample` (24h TTL) and `RemotePuzzleRepository.fetch`
+  (fresh = written same UTC day, so a new day's `active_date` row is always refetched);
+  layered memory → fresh disk → network (write-through) → stale disk on network failure →
+  bundled fallback (never persisted, so an offline first launch can't poison the cache).
+  Measured on-simulator 2026-07-13 (fresh install vs process-kill relaunch, timestamped
+  debug logs): Over/Under 7.3s first-ever → **1.6s per-session (`disk hit (fresh)`)**;
+  Keep4/WhoAmI/Grid ~1.8s → ~1.5s with `[puzzles] disk hit (today)`. All 5 formats audited;
+  only the two arcade-sample consumers had the big gap. 248 Swift tests incl. 6 new
+  `DiskCacheTests` (network-skip proven by request counting, not return values).
 
 **Tier 2 — Unbuilt features/functionality ("make it crisp").** Real gaps between what the
 app claims to do and what actually works today:
