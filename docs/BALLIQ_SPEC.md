@@ -939,9 +939,9 @@ app claims to do and what actually works today:
 - Backlog #1 (push notifications end-to-end — blocked only on APNs key material, a user
   hand-off; everything up to that blocker is agent-buildable/verifiable now), #5 (arcade
   leaderboards — now the natural next item, since #4's challenge mode gives it a third
-  score source), #6 (Leagues season bootstrap). **#2 (post-completion daily loop) and #4
-  (daily Draft & Spin challenge) shipped 2026-07-13** — see their own entries below for
-  detail.
+  score source). **#2 (post-completion daily loop) and #4 (daily Draft & Spin challenge)
+  shipped 2026-07-13; #6 (Leagues season bootstrap) confirmed already resolved live** —
+  see their own entries below for detail.
 - Backlog #7 (Phase F rating seasons) — **do not start from inference.** Confirmed
   2026-07-12: the entire written scope is three one-line mentions with no schema, no
   reset/decay decision, and no definition of "rewards" — genuinely underspecified, not
@@ -1015,8 +1015,11 @@ expected retention/quality impact per unit of effort):
 5. **Arcade leaderboards** — Over/Under high score and Grid score are local-only today;
    a `scores` table (same insert-only RLS shape as `events`) + a weekly board per sport
    turns both into competitive loops.
-6. **Leagues season bootstrap** — the known open item from the 07-05 handoff: the first
-   real cohort season needs seeding so the tab shows a live race, not an empty state.
+6. **Leagues season bootstrap** — ✅ resolved on its own, confirmed live 2026-07-13. The
+   07-05 handoff worried a manual trigger would be needed; instead `weekly-cohort-rollover`
+   fired naturally on its Monday 05:00 UTC schedule with no intervention: season 1 ran
+   2026-07-06→07-13 (closed), season 2 is active now (07-13→07-20) with a real cohort and
+   members. Leagues has never actually shown an empty state in production.
 
 *P2 — monetization (finish M5):*
 7. **Phase F rating seasons** (8-week cycles, placement, end-of-season rewards) — the
