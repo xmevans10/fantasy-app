@@ -1026,13 +1026,20 @@ expected retention/quality impact per unit of effort):
    remaining M5 build; the paywall/entitlement rails it sells through are done.
 
 *P3 — quality/polish:*
-8. **Historical-era presentation** — the 1950–2001 NBA / 1970–1998 NFL catalogs (added
-   2026-07-09) surface defunct franchises (SYR, MNL, RAI, WSB …) that `TeamColors` doesn't
-   know → default styling. A small defunct-franchise palette + logo pass would make
-   old-team rosters feel as premium as current ones.
-9. **Widen historical headshot slices** — the new sweeps resolve Wikipedia photos for each
-   season's top ~40; widening to ~100/season (cheap, cached) upgrades deep-roster
-   Draft & Spin rounds from silhouette-heavy to mostly-real-photo.
+8. **Historical-era presentation** — ✅ shipped 2026-07-13. Real colors for every
+   abbreviation the 1950–2001 NBA / 1970–1998 NFL catalogs can emit: 4 NFL +
+   20 NBA franchise-continuity aliases to their current team (SYR→PHI, MNL→LAL,
+   RAI→LV, WSB→WAS, etc.), 9 genuinely-defunct-with-no-successor teams got real
+   Wikipedia-sourced colors. Also caught two real pre-existing bugs found in the same
+   pass: `bref_nba.py`'s own abbreviation rewrite (`SAS`→`SA`, `WAS`→`WSH`) was never
+   mirrored in `TeamColors`, so every 1977–2001 Spurs season (356 rows) and 1998–2001
+   Wizards season (63 rows) was silently rendering fallback colors — fixed.
+9. **Widen historical headshot slices** — ✅ code shipped 2026-07-13. The real cap was
+   `PHOTO_SLICE_PER_YEAR = 40` in both `bref_nba.py` and `nfl_history.py`; widened to
+   100. Live re-resolution sweep for both providers dispatched (~10–15 min estimated,
+   cache-backed); **catalog push (`--upsert --catalog`) still pending** as of this
+   note — confirm both CSVs regenerated and the upsert ran before treating deep-roster
+   Draft & Spin photo coverage as actually live.
 10. **M14 Spanish localization** — unblocks App Store featuring in LatAm; all-string work.
 11. **Content-drift guard** — ✅ already resolved, confirmed 2026-07-13. An earlier
     commit (`bc93f3e`, "Minigame fixes & polish...") already ran the bundle regen this
