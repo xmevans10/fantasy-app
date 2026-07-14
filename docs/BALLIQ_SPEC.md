@@ -966,20 +966,36 @@ surface, not just the ones already flagged:
   Keep4/WhoAmI/Grid ~1.8s → ~1.5s with `[puzzles] disk hit (today)`. All 5 formats audited;
   only the two arcade-sample consumers had the big gap. 248 Swift tests incl. 6 new
   `DiskCacheTests` (network-skip proven by request counting, not return values).
+  **Re-verified 2026-07-14** (final-sprint Tier 1 gate): both suites green on the
+  consolidated tree and a fresh simulator launch showed all three cache consumers
+  serving from disk within the same second (`disk hit (today)` ×2, `disk hit (fresh)`).
 
 **Tier 2 — Unbuilt features/functionality ("make it crisp").** Real gaps between what the
 app claims to do and what actually works today:
-- Backlog #1 (push notifications end-to-end — blocked only on APNs key material, a user
-  hand-off; everything up to that blocker is agent-buildable/verifiable now), #5 (arcade
-  leaderboards — now the natural next item, since #4's challenge mode gives it a third
-  score source). **#2 (post-completion daily loop) and #4 (daily Draft & Spin challenge)
-  shipped 2026-07-13; #6 (Leagues season bootstrap) confirmed already resolved live** —
-  see their own entries below for detail.
-- Backlog #7 (Phase F rating seasons) — **do not start from inference.** Confirmed
-  2026-07-12: the entire written scope is three one-line mentions with no schema, no
-  reset/decay decision, and no definition of "rewards" — genuinely underspecified, not
-  merely under-detailed. Needs a scoping conversation (see the disambiguating questions
-  logged 2026-07-12 in `prompts/HANDOFF-next-agent-2026-07-12c.md`) before any build.
+- Backlog #1 (push notifications) — **agent-verifiable half CONFIRMED working 2026-07-14**:
+  all 5 edge functions deployed/ACTIVE, all 4 cron jobs firing on schedule with 200s
+  across 24h of logs (streak-risk hourly, versus-timeout q15min, season-end 3×/day,
+  weekly rollover Mon 05:00), chain runs end-to-end in `[apns:stub]` log-only mode.
+  Remaining is ALL user-side, one portal visit: (a) an APNs auth key — note the ASC API
+  key in `tools/release/private_keys/` is a different key type and can NOT sign APNs
+  JWTs; three `AuthKey_*.p8` files exist on disk (`6H8Y89UWX3` in ~/Downloads,
+  `BCRQ7T7V6H`/`929CXQZ9B6` in ~/Documents/floppyduck — APNs keys are TEAM-wide, so any
+  of these works IF the portal's Keys page shows it APNs-enabled on team 8K5ZVPCQ42);
+  (b) enable Push Notifications capability on the `com.balliqfantasy.app` App ID (then an
+  agent adds the missing `aps-environment` entitlement — deliberately not added before
+  the capability exists, it would break archive signing); (c) set
+  `APNS_KEY_ID`/`APNS_TEAM_ID`/`APNS_PRIVATE_KEY`/`APNS_BUNDLE_ID` as edge-function
+  secrets — the local `supabase` CLI is logged into the WRONG account (re-confirmed
+  2026-07-14), so either `supabase login` first or paste them in the dashboard
+  (Edge Functions → Secrets). #5 (arcade leaderboards) **✅ shipped 2026-07-14** — see
+  its entry below. **#2 (post-completion daily loop) and #4 (daily Draft & Spin
+  challenge) shipped 2026-07-13; #6 (Leagues season bootstrap) confirmed already
+  resolved live** — see their own entries below for detail.
+- Backlog #7 (Phase F rating seasons) — **explicitly DEFERRED by the user 2026-07-14**
+  ("defer", in response to the scoping ask). Still do not start from inference: the
+  written scope remains three one-line mentions with no schema, no reset/decay decision,
+  and no definition of "rewards". When the user re-opens it, run the scoping conversation
+  first (questions logged 2026-07-12 in `prompts/HANDOFF-next-agent-2026-07-12c.md`).
 - **Soccer data breadth (new 2026-07-12)** — ✅ shipped 2026-07-13. Migrated the
   genuinely multi-day local sequential sweep (~2 min/league-season × ~570 total) to
   `.github/workflows/espn-soccer-backfill.yml`, a `workflow_dispatch` matrix (one leg
@@ -1005,10 +1021,22 @@ app claims to do and what actually works today:
   "T"/0-seasons archive item seen during verification is simulator-local stale UserDefaults
   — which survive `simctl uninstall` — not production data; both live tables checked clean.)
 - M19/M20 TestFlight QA of signed-in social flows (friends, FRIENDS leaderboard, onboarding
-  claim) — needs two real signed-in accounts, not directly agent-executable, but an agent
-  can prep a concrete test script/checklist so the human pass is fast.
+  claim) — needs two real signed-in accounts, not directly agent-executable. **Checklist
+  prepped 2026-07-14: `prompts/QA-testflight-social-flows.md`** (~25 min two-account pass,
+  every step pass/fail observable, includes the Daily Draft/arcade board signed-in halves
+  and the known-blocked items that must not be counted as failures).
 
-**Tier 3 — Launch/polish ("make it sturdy").** Everything else in the existing backlog:
+**Tier 3 — Launch/polish ("make it sturdy").** Everything else in the existing backlog,
+plus a standing user directive added 2026-07-14: **team logos + colors wherever a team
+appears, always via the shared systems (`TeamColors` etc.), never hardcoded per-view** —
+audit/fix pass ✅ shipped same day: Grid board + recap team-abbr cells now render team
+colors via a new shared `TeamAbbrChip` (DesignSystem/PlayerMediaBadges.swift), Draft &
+Spin's in-draft TEAM chip tints from the landed team, Profile's favorite-team pill
+carries the selected team's palette (298 tests green, Grid chips screenshot-verified;
+`TeamLogoBadge`/ESPN-CDN logo system already existed — no gap). Deliberately skipped as
+product-taste calls: recoloring SpinRevealView's volt "LOCKED IN" motif, share-card
+lineup accent stripes, WhoAmI reveal (no structured teamAbbr in its content model).
+Backlog items:
 backlog #8 (defunct-franchise styling), #9 (widen historical headshot slices — **the
 headshot-placeholder gaps this session's UI pass observed live**, in WhoAmI's answer
 reveal and a Draft & Spin lineup row, are this exact backlog item, not a new bug — the
@@ -1091,11 +1119,20 @@ expected retention/quality impact per unit of effort):
    2026-07-13. `PHOTO_SLICE_PER_YEAR` widened 40→100 in both `bref_nba.py` and
    `nfl_history.py`; live re-resolution run and committed (NBA 662/1086 top-slice
    matched, NFL 344/870 — purely additive, only the headshot column changed).
-   **`--upsert --catalog` deliberately NOT run yet** — that command runs the FULL
-   pipeline (every provider, including `espn_soccer.py`/`main.py`/`models.py`, which
-   had uncommitted concurrent edits in-flight as of this note); running it against a
-   mid-edit tree risked pushing inconsistent state live. Safe to run once that
-   concurrent work is committed — plain rerun, no code change needed.
+   **`--upsert --catalog` run + verified live 2026-07-14** — done, but it took three
+   attempts and surfaced two real pipeline bugs, both fixed: (1) `fetch_existing_catalog_ids`
+   paged by Range/offset, which the doubled (~460k-row) table pushed past the server's
+   statement timeout (57014), silently killing the first run mid-pipeline (the `| tail`
+   pipe also masked the real exit code — don't pipe long pipeline runs) — replaced with
+   keyset pagination (`order=id` + `id=gt.<last>`, regression-tested in `test_upsert.py`);
+   (2) no composite index supported that query shape, so even keyset pages timed out —
+   `player_seasons_sport_id_idx (sport, id)` added live + in schema.sql. The earlier runs'
+   "~61k new rows" was a phantom of the same truncation bug: with correct paging the steady
+   state is 194,679 closed rows all already stored + 37,430 always-resend (careers + 2026)
+   = exactly the live 232,109. Historical headshots confirmed live (NBA 1950–2001:
+   6,156/13,489 rows with headshots ≥ the CSVs' 6,084; NFL 1970–1998: 3,051 ≥ 2,788).
+   Also done 2026-07-14 with user approval: the 231,685 stale bare-format duplicate rows
+   deleted (table now exactly 232,109, 0 old-format) + `vacuum (analyze)` run.
 10. **M14 Spanish localization** — unblocks App Store featuring in LatAm; all-string work.
 11. **Content-drift guard** — ✅ already resolved, confirmed 2026-07-13. An earlier
     commit (`bc93f3e`, "Minigame fixes & polish...") already ran the bundle regen this
