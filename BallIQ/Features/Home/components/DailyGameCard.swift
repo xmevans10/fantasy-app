@@ -102,9 +102,15 @@ struct DailyGameCard: View {
                     }
                     Spacer(minLength: 8)
                     if completed {
-                        Label("DONE", systemImage: "checkmark.circle.fill")
-                            .font(.label12)
-                            .foregroundStyle(Color.successText)
+                        // A filled "seal" — reads as finished at a glance, not a faint label.
+                        // The whole card also gets a done treatment below (tinted body, muted
+                        // header, check overlay) so completion is obvious even in a scanned list.
+                        Label("DONE", systemImage: "checkmark.seal.fill")
+                            .font(.heading)
+                            .foregroundStyle(Color.onSuccess)
+                            .padding(.horizontal, 16).padding(.vertical, 9)
+                            .background(Color.successFill)
+                            .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                     } else {
                         Text("PLAY")
                             .font(.heading)
@@ -116,17 +122,39 @@ struct DailyGameCard: View {
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity)
-                .background(bodyFill)
+                // Completed cards get a soft success wash instead of the plain body fill, so a
+                // done puzzle is distinguishable from an unplayed one at a scan, not only by the
+                // corner control.
+                .background(completed ? Color.successBg : bodyFill)
                 .accessibilityElement(children: .combine)
             }
             .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+            // Mute a completed card's sport color so the vivid header reads as "still to play"
+            // and the desaturated one as "done" — the strongest at-a-glance signal in a list.
+            .saturation(completed ? 0.55 : 1)
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
-                    .strokeBorder(Color.borderInk, lineWidth: 2)
+                    .strokeBorder(completed ? Color.successFill : Color.borderInk,
+                                  lineWidth: completed ? 2.5 : 2)
             )
+            .overlay(alignment: .topTrailing) {
+                // A small checkmark seal notched into the top-right corner — the universal
+                // "checked off" affordance the request asked for, on top of the color changes.
+                if completed {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(Color.successFill)
+                        .background(Circle().fill(Color.surface).padding(2))
+                        .offset(x: 7, y: -7)
+                        .accessibilityHidden(true)
+                }
+            }
+            // Slightly de-emphasized overall — done, but still tappable to review/replay.
+            .opacity(completed ? 0.92 : 1)
             .shadow(color: Color.black.opacity(0.14), radius: 0, x: 0, y: 4)
         }
         .buttonStyle(PrimePressStyle())
+        .accessibilityLabel(completed ? "\(formatName), \(title). Completed." : "\(formatName), \(title)")
     }
 
     /// One header-band badge (type / scoring / grain) — same capsule for all three instead

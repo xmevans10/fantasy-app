@@ -178,7 +178,7 @@ struct CommunityView: View {
                 description: item.description,
                 scoring: isKeep4 ? item.scoringKind : nil,
                 grain: isKeep4 ? item.grainKind : nil,
-                completed: false,
+                completed: container.hasCompletedToday(puzzleID: item.id),
                 typeColor: isKeep4 ? .accentFill : .voltFill, onTypeColor: isKeep4 ? .onAccent : .onVolt,
                 bodyFill: .warningBg
             ) { Task { await open(item) } }

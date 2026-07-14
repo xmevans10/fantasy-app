@@ -124,7 +124,7 @@ struct BrowseView: View {
         DailyGameCard(formatName: "K4C4", symbol: "rectangle.stack.fill", sport: p.sport,
                       title: title, subtitle: "\(p.players.count) \(p.puzzleGrain().countNoun) · archive",
                       scoring: p.scoringKind(), grain: p.puzzleGrain(),
-                      completed: false,
+                      completed: container.hasCompletedToday(puzzleID: p.id),
                       favoriteTeamMatch: container.favoriteTeams.team(for: p.sport).map(p.features(teamAbbr:)) ?? false) {
             activeKeep4 = p
         }
@@ -135,7 +135,7 @@ struct BrowseView: View {
     private func card(whoAmI p: WhoAmIPuzzle, number: Int) -> some View {
         DailyGameCard(formatName: "Who am I?", symbol: "questionmark.circle.fill", sport: p.sport,
                       title: "Mystery player #\(number)", subtitle: "\(p.clues.count) clues · archive",
-                      completed: false, typeColor: .voltFill, onTypeColor: .onVolt) {
+                      completed: container.hasCompletedToday(puzzleID: p.id), typeColor: .voltFill, onTypeColor: .onVolt) {
             activeWhoAmI = p
         }
         secondaryAction: { shareTarget = SharablePuzzle(whoAmI: p) }
