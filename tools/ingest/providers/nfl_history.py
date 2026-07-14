@@ -13,7 +13,7 @@ Stat keys mirror `nfl_nflverse.fetch_year` exactly (same grade formulas downstre
 as 0. Team abbrs: PFR's 3-letter spellings are folded to the codes the catalog already
 uses where it's the same franchise+city (GNB→GB …); era-specific codes (RAI, RAM,
 BAL-as-Colts …) pass through — they're real for their years and collide with nothing
-(a (team, year) combo is the unit everywhere downstream). "2TM" (traded) → "".
+(a (team, year) combo is the unit everywhere downstream). "2TM"/"3TM"/"4TM" (traded) → "".
 
 Headshots: Wikipedia top-slice resolution per season by fantasy points (shared
 `providers/wikimedia.py`, football-context verified) — same M16 posture as `bref_nba`,
@@ -49,7 +49,7 @@ PHOTO_SLICE_PER_YEAR = 100
 
 _POSITIONS = {"QB", "RB", "WR", "TE"}
 _ABBR_FIXES = {"GNB": "GB", "KAN": "KC", "NOR": "NO", "NWE": "NE",
-               "SDG": "SD", "SFO": "SF", "TAM": "TB", "2TM": ""}
+               "SDG": "SD", "SFO": "SF", "TAM": "TB", "2TM": "", "3TM": "", "4TM": ""}
 
 CSV_FIELDS = ["name", "team_abbr", "season_year", "position", "games",
               "passing_yards", "passing_tds", "interceptions", "attempts", "completions",

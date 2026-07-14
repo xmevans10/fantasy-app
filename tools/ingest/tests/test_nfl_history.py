@@ -32,12 +32,18 @@ def test_filters_non_offense_and_fixes_pfr_abbrs():
         "5.0,2.0,3900.0,33.0,520.0,150.0,2.0,30.0,0.0,0.0,310.0",
         "2,Traded Back,2TM,RB,26.0,15.0,8.0,0,0,0,0.0,200.0,800.0,20.0,150.0,7.5,3.0,1.0,"
         "0.0,0.0,0.0,800.0,6.0,200.0,150.0,1.0,180.0",
+        "3,Multi Traded,3TM,WR,27.0,16.0,10.0,0,0,0,0.0,10.0,50.0,5.0,60.0,12.0,2.0,0.0,"
+        "0.0,0.0,0.0,50.0,1.0,10.0,60.0,1.0,25.0",
+        "4,Four Teams,4TM,RB,25.0,14.0,7.0,0,0,0,0.0,30.0,120.0,10.0,80.0,8.0,1.0,0.0,"
+        "0.0,0.0,0.0,120.0,2.0,30.0,80.0,1.0,30.0",
     ])
     rows = parse_year(1996, text)
-    assert [r["position"] for r in rows] == ["QB", "RB"]     # kicker dropped
+    assert [r["position"] for r in rows] == ["QB", "RB", "WR", "RB"]     # kicker dropped
     assert rows[0]["team_abbr"] == "GB"                       # GNB → catalog GB
     assert rows[0]["completion_pct"] == round(100 * 300 / 520, 1)
     assert rows[1]["team_abbr"] == ""                         # 2TM → teamless
+    assert rows[2]["team_abbr"] == ""                         # 3TM → teamless
+    assert rows[3]["team_abbr"] == ""                         # 4TM → teamless
 
 
 def test_load_seasons_round_trips_committed_csv(tmp_path, monkeypatch):

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-13T02:02:15+00:00",
+  "generated_at": "2026-07-13T23:41:17+00:00",
   "totals": {
     "themes": 44,
     "themes_below_pool_floor": 0,
@@ -284,8 +284,8 @@
       "title": "Elite power-hitting seasons",
       "sport": "baseball",
       "grain": "season",
-      "eligible_seasons": 60409,
-      "excluded_by_min_stats": 38883,
+      "eligible_seasons": 60411,
+      "excluded_by_min_stats": 38876,
       "excluded_by_filters": 0,
       "pool_size": 24,
       "pool_cap": 24,
@@ -299,8 +299,8 @@
       "title": "Ace pitching seasons",
       "sport": "baseball",
       "grain": "season",
-      "eligible_seasons": 31243,
-      "excluded_by_min_stats": 14944,
+      "eligible_seasons": 31245,
+      "excluded_by_min_stats": 14941,
       "excluded_by_filters": 0,
       "pool_size": 24,
       "pool_cap": 24,
@@ -420,7 +420,7 @@
       "sport": "baseball",
       "grain": "career",
       "eligible_seasons": 3202,
-      "excluded_by_min_stats": 1676,
+      "excluded_by_min_stats": 1675,
       "excluded_by_filters": 0,
       "pool_size": 24,
       "pool_cap": 24,
@@ -674,13 +674,13 @@
     {
       "sport": "baseball",
       "position": "H",
-      "season_rows": 60409,
+      "season_rows": 60411,
       "draft_slot_viable": true
     },
     {
       "sport": "baseball",
       "position": "P",
-      "season_rows": 31243,
+      "season_rows": 31245,
       "draft_slot_viable": true
     },
     {
