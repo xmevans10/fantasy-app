@@ -199,12 +199,12 @@ final class DraftSpinTests: XCTestCase {
                                                        openRoles: ["GK"], using: &g))
     }
 
-    // MARK: - Today's Challenge (backlog #4)
+    // MARK: - Daily Draft (backlog #4)
 
-    func testChallengeRoundGeneratorIsDeterministicForSameDayAndRoundIndex() {
+    func testDailyDraftRoundGeneratorIsDeterministicForSameDayAndRoundIndex() {
         let date = ISO8601DateFormatter().date(from: "2026-07-12T00:00:00Z")!
-        var g1 = DraftSpinConstraint.challengeRoundGenerator(sport: .nfl, date: date, roundIndex: 0)
-        var g2 = DraftSpinConstraint.challengeRoundGenerator(sport: .nfl, date: date, roundIndex: 0)
+        var g1 = DraftSpinConstraint.dailyDraftRoundGenerator(sport: .nfl, date: date, roundIndex: 0)
+        var g2 = DraftSpinConstraint.dailyDraftRoundGenerator(sport: .nfl, date: date, roundIndex: 0)
         let a = DraftSpinConstraint.spinRound(from: richNFLRoster, sport: .nfl,
                                               openRoles: ["QB", "RB", "WR", "TE", "FLEX", "FLEX"], using: &g1)
         let b = DraftSpinConstraint.spinRound(from: richNFLRoster, sport: .nfl,
@@ -214,28 +214,28 @@ final class DraftSpinTests: XCTestCase {
         XCTAssertEqual(a?.year, b?.year)
     }
 
-    func testChallengeRoundGeneratorVariesAcrossRoundIndicesOrDays() {
+    func testDailyDraftRoundGeneratorVariesAcrossRoundIndicesOrDays() {
         let date = ISO8601DateFormatter().date(from: "2026-07-12T00:00:00Z")!
         let otherDate = ISO8601DateFormatter().date(from: "2026-07-13T00:00:00Z")!
-        var sameDayRound0 = DraftSpinConstraint.challengeRoundGenerator(sport: .nfl, date: date, roundIndex: 0)
-        var sameDayRound1 = DraftSpinConstraint.challengeRoundGenerator(sport: .nfl, date: date, roundIndex: 1)
-        var differentDayRound0 = DraftSpinConstraint.challengeRoundGenerator(sport: .nfl, date: otherDate, roundIndex: 0)
+        var sameDayRound0 = DraftSpinConstraint.dailyDraftRoundGenerator(sport: .nfl, date: date, roundIndex: 0)
+        var sameDayRound1 = DraftSpinConstraint.dailyDraftRoundGenerator(sport: .nfl, date: date, roundIndex: 1)
+        var differentDayRound0 = DraftSpinConstraint.dailyDraftRoundGenerator(sport: .nfl, date: otherDate, roundIndex: 0)
         // The raw generator streams themselves must differ — that's what actually guarantees
         // varying results downstream, independent of any particular pool's viable-combo set.
         XCTAssertNotEqual(sameDayRound0.next(), sameDayRound1.next())
         XCTAssertNotEqual(sameDayRound0.next(), differentDayRound0.next())
     }
 
-    /// The retired design's own caveat (now inherited by challenge mode): once two "players"
+    /// The retired design's own caveat (now inherited by Daily Draft): once two "players"
     /// have drafted different players into the same open role, `excludeNames` reshapes the
     /// viable pool, so the same day+round seed can legitimately diverge. This is expected, not
     /// a bug — pinned here so a future change can't silently "fix" it into unconditional
     /// determinism (which `spinRound`'s exclusion behavior makes impossible to guarantee).
     /// The specific combo excluded here (SF/2020) is structurally guaranteed to never be the
     /// excluded call's answer, independent of the shared seed's exact draw.
-    func testChallengeRoundGeneratorDivergesOnceExcludedNamesDiffer() {
+    func testDailyDraftRoundGeneratorDivergesOnceExcludedNamesDiffer() {
         let date = ISO8601DateFormatter().date(from: "2026-07-12T00:00:00Z")!
-        var gen = DraftSpinConstraint.challengeRoundGenerator(sport: .nfl, date: date, roundIndex: 1)
+        var gen = DraftSpinConstraint.dailyDraftRoundGenerator(sport: .nfl, date: date, roundIndex: 1)
         let withExclusion = DraftSpinConstraint.spinRound(from: twoTeamPool, sport: .nfl, openRoles: ["QB"],
                                                           excludeNames: ["Player qb-sf20"], using: &gen)
         XCTAssertNotNil(withExclusion)

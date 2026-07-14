@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var container: RepositoryContainer
+    @Environment(\.scenePhase) private var scenePhase
 
     // Deep-link / share-link play (balliq://play/<id>). Requires the URL scheme to be
     // registered in Info.plist; the in-app feed works regardless.
@@ -29,6 +30,9 @@ struct ContentView: View {
             VersusView()
                 .tabItem { Label("Versus", systemImage: "bolt.fill") }
                 .tag(2)
+                // Explicit stopgap while APNs pushes for versus_challenge are stubbed — badge
+                // absent when signed out or zero (`openVersusChallenges` resets to 0 in both cases).
+                .badge(container.isSignedIn ? container.openVersusChallenges : 0)
 
             CommunityView()
                 .tabItem { Label("Community", systemImage: "square.stack.3d.up.fill") }
@@ -41,6 +45,10 @@ struct ContentView: View {
                 .tag(4)
         }
         .onOpenURL { url in Task { await handle(url) } }
+        .onChange(of: scenePhase) { _, phase in
+            // Foreground refresh — the only "push" the Versus badge gets until APNs ships.
+            if phase == .active { Task { await container.refreshVersusBadge() } }
+        }
         .onAppear {
             if let url = DebugLaunch.openURL { Task { await handle(url) } }
             if DebugLaunch.autoOpenCreateKeep4 { debugCreate = true }

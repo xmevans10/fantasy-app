@@ -8,6 +8,7 @@ struct VersusView: View {
     @State private var results: [VersusChallengeRow] = []
     @State private var loaded = false
     @State private var showChallengeSheet = false
+    @State private var showVersusInfo = false
     @State private var playChallenge: VersusChallengeRow?
     @State private var playPuzzle: Keep4Puzzle?
 
@@ -29,6 +30,12 @@ struct VersusView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { Wordmark() }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showVersusInfo = true } label: {
+                        Image(systemName: "info.circle")
+                    }
+                    .accessibilityLabel("How Versus works")
+                }
                 if auth.isSignedIn {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button { showChallengeSheet = true } label: {
@@ -40,9 +47,15 @@ struct VersusView: View {
             }
         }
         .task { await load() }
+        .onAppear {
+            if DebugLaunch.autoOpenVersusInfo || HowItWorksSheet.shouldAutoPresent(feature: "versus") {
+                showVersusInfo = true
+            }
+        }
         .sheet(isPresented: $showChallengeSheet) {
             ChallengeSheet { await load() }
         }
+        .sheet(isPresented: $showVersusInfo) { versusInfoSheet }
         .fullScreenCover(item: $playPuzzle) { puzzle in
             Keep4GameView(puzzle: puzzle, ranked: false, versusChallengeID: playChallenge?.challenge.id)
                 .environmentObject(container)
@@ -52,14 +65,44 @@ struct VersusView: View {
     private var signInPrompt: some View {
         EmptyStateView(symbol: "bolt.fill",
                        title: "Versus",
-                       message: "Sign in to challenge friends to a head-to-head on today's puzzle.")
+                       message: "Sign in to duel anyone 1v1 on today's puzzle — best score wins the day, and wins stack into a best-of-7 series.")
     }
 
     private var emptyState: some View {
         EmptyStateView(symbol: "bolt.fill",
                        title: "No challenges yet",
-                       message: "Challenge a friend by username.",
+                       message: "Challenge anyone by username. You both play the same daily puzzle — higher score wins the day, and wins stack into a best-of-7 series. Play within 24 hours or forfeit.",
                        actionTitle: "New challenge") { showChallengeSheet = true }
+    }
+
+    /// Copy derives from the spec's competitive glossary; mechanics mirror
+    /// `resolve_versus_challenge` in supabase/schema.sql (ties → challenger, forfeit on
+    /// expiry, series completes after 7 duels).
+    private var versusInfoSheet: some View {
+        HowItWorksSheet(
+            title: "Versus Duels",
+            intro: "A 1v1 duel: you and your opponent independently play the same daily puzzle, and the scores settle it.",
+            symbol: "bolt.fill",
+            tint: Color.accentText,
+            tintBackground: Color.accentBg,
+            rules: [
+                .init(symbol: "person.2.fill",
+                      title: "Same puzzle, both of you",
+                      detail: "Challenge anyone by username. You each play the same daily Keep4 puzzle for the chosen sport — the higher score wins the day."),
+                .init(symbol: "crown.fill",
+                      title: "Ties go to the challenger",
+                      detail: "Dead-even scores count as a win for whoever sent the challenge — an edge for making the first move."),
+                .init(symbol: "trophy.fill",
+                      title: "Best-of-7 series",
+                      detail: "Every duel against the same player in the same sport stacks into a running series — most wins after 7 takes it."),
+            ],
+            callout: .init(symbol: "clock.fill",
+                           label: "24 hours to play",
+                           text: "Each duel expires a day after it's sent. Don't play in time and you forfeit the win to your opponent.",
+                           tint: Color.warningText,
+                           background: Color.warningBg),
+            footnote: "Versus games never affect your rating — they're XP and bragging rights only.",
+            startExpanded: DebugLaunch.autoOpenVersusInfo)
     }
 
     private var list: some View {
@@ -97,7 +140,12 @@ struct VersusView: View {
                 } label: {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(row.opponentUsername ?? "Player").font(.bodyStrong).foregroundStyle(Color.textPrimary)
-                        Text(statusLine(c, me: me)).font(.label11).foregroundStyle(Color.textMuted)
+                        Text(Self.statusLine(c, me: me)).font(.label11).foregroundStyle(Color.textMuted)
+                        if let series = row.series, let line = Self.seriesLine(series, me: me) {
+                            Text(line)
+                                .font(.custom(FontName.condBold, size: 12))
+                                .foregroundStyle(seriesColor(series, me: me))
+                        }
                     }
                 }
                 .buttonStyle(.plain)
@@ -129,12 +177,54 @@ struct VersusView: View {
         }
     }
 
-    private func statusLine(_ c: VersusChallenge, me: String) -> String {
-        if c.status == "completed" || c.status == "forfeited" {
-            guard let mine = c.myScore(me: me), let theirs = c.theirScore(me: me) else { return "Forfeited" }
-            return "You \(Int(mine * 100)) – \(Int(theirs * 100)) them"
+    // MARK: - Status copy (pure, unit-tested in VersusStatusLineTests)
+
+    /// One line saying where this duel stands. Forfeits are explicit about *who* didn't
+    /// play: per `resolve_versus_challenge`, a single no-show resolves to `completed` with
+    /// only one score recorded, while `forfeited` is reserved for the double no-show.
+    static func statusLine(_ c: VersusChallenge, me: String, now: Date = Date()) -> String {
+        let mine = c.myScore(me: me)
+        let theirs = c.theirScore(me: me)
+        switch c.status {
+        case "forfeited":
+            return "Expired — neither of you played"
+        case "completed":
+            if let mine, let theirs {
+                return "You \(Int(mine * 100)) – \(Int(theirs * 100)) them"
+            }
+            return mine != nil
+                ? "They didn't play in time — win by forfeit"
+                : "Time ran out before you played — forfeit loss"
+        default:
+            let base = c.hasPlayed(me: me) ? "Waiting for them to play" : "Play today's puzzle"
+            return "\(base) · \(timeLeftText(until: c.expiresAt, now: now))"
         }
-        return c.hasPlayed(me: me) ? "Waiting for them to play" : "Play today's puzzle"
+    }
+
+    /// "14h left" / "45m left" / "Expiring…" (past-due but the 15-minute forfeit cron
+    /// hasn't swept it yet).
+    static func timeLeftText(until expiry: Date, now: Date = Date()) -> String {
+        let seconds = Int(expiry.timeIntervalSince(now))
+        guard seconds > 0 else { return "Expiring…" }
+        let hours = seconds / 3_600
+        return hours >= 1 ? "\(hours)h left" : "\(max(1, seconds / 60))m left"
+    }
+
+    /// The running best-of-7 score, or the settled outcome once the series completes.
+    /// Nil when the series has no decided duels yet — "Series 0–0" is noise on a first duel.
+    static func seriesLine(_ series: VersusSeries, me: String) -> String? {
+        let mine = series.myWins(me: me)
+        let theirs = series.theirWins(me: me)
+        if series.status == "completed" {
+            return mine > theirs ? "Series won \(mine)–\(theirs)" : "Series lost \(mine)–\(theirs)"
+        }
+        guard mine + theirs > 0 else { return nil }
+        return "Series \(mine)–\(theirs) · best of 7"
+    }
+
+    private func seriesColor(_ series: VersusSeries, me: String) -> Color {
+        guard series.status == "completed" else { return Color.accentText }
+        return series.myWins(me: me) > series.theirWins(me: me) ? Color.successText : Color.dangerText
     }
 
     private func play(_ row: VersusChallengeRow) async {

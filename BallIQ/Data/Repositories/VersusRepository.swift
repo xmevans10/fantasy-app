@@ -32,12 +32,33 @@ final class VersusRepository {
         return challenges.map { VersusChallengeRow(challenge: $0, opponentUsername: nameByID[$0.opponentID(me: me)] ?? nil) }
     }
 
+    /// Attaches each row's `versus_series` (win counts, completion status) via one batched
+    /// `in.(…)` query on the distinct series ids — mirrors the `profiles` join above and
+    /// `CohortRepository.standings`'s member/profile join. A series id absent from the result
+    /// (RLS gap, or already-vanished row) just leaves that row's `series` nil.
+    private func withSeries(_ rows: [VersusChallengeRow]) async -> [VersusChallengeRow] {
+        guard !rows.isEmpty else { return [] }
+        let ids = Set(rows.map { $0.challenge.seriesId }).map(String.init).joined(separator: ",")
+        let series: [VersusSeries] = (try? await client.select("versus_series", query: [
+            URLQueryItem(name: "select", value: "id,user_a,user_b,sport,wins_a,wins_b,status"),
+            URLQueryItem(name: "id", value: "in.(\(ids))"),
+        ])) ?? []
+        let seriesByID = Dictionary(uniqueKeysWithValues: series.map { ($0.id, $0) })
+        return rows.map { row in
+            var row = row
+            row.series = seriesByID[row.challenge.seriesId]
+            return row
+        }
+    }
+
     func pendingAndActive(userID: String) async -> [VersusChallengeRow] {
-        await withOpponentNames(await myChallenges(userID: userID, statuses: ["pending", "active"]), me: userID)
+        let rows = await withOpponentNames(await myChallenges(userID: userID, statuses: ["pending", "active"]), me: userID)
+        return await withSeries(rows)
     }
 
     func recentResults(userID: String) async -> [VersusChallengeRow] {
-        await withOpponentNames(await myChallenges(userID: userID, statuses: ["completed", "forfeited"]), me: userID)
+        let rows = await withOpponentNames(await myChallenges(userID: userID, statuses: ["completed", "forfeited"]), me: userID)
+        return await withSeries(rows)
     }
 
     /// Resolves a username to a user id via the (now world-readable) `profiles` table.

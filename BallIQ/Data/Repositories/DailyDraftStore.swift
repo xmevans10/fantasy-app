@@ -1,21 +1,21 @@
 import Foundation
 
-/// UserDefaults-backed persistence for Today's Challenge mode's daily score — local-only
+/// UserDefaults-backed persistence for Daily Draft mode's daily score — local-only
 /// (arcade session state, not synced), mirroring `LocalOverUnderStore`'s shape. Only the
-/// FIRST challenge completion of a UTC day becomes "official" (what a future leaderboard,
+/// FIRST Daily Draft completion of a UTC day becomes "official" (what a future leaderboard,
 /// backlog #5, will eventually read); a replay that same day still earns XP via the normal
 /// `RepositoryContainer.complete` call (Draft & Spin is always `ranked: false` regardless of
 /// mode), but must never clobber the locked-in score with a luckier rerun.
-final class DraftSpinChallengeStore {
+final class DailyDraftStore {
     private let defaults: UserDefaults
     private enum Key {
-        static func result(_ day: String) -> String { "draftSpinChallengeResult_\(day)" }
+        static func result(_ day: String) -> String { "dailyDraftResult_\(day)" }
     }
 
     init(defaults: UserDefaults = .standard) { self.defaults = defaults }
 
-    /// A day's locked-in challenge outcome — enough to render the result screen's "today's
-    /// challenge" framing and (eventually, backlog #5) a leaderboard row.
+    /// A day's locked-in Daily Draft outcome — enough to render the result screen's "today's
+    /// Daily Draft" framing and (eventually, backlog #5) a leaderboard row.
     struct StoredResult: Codable, Equatable {
         let sport: String
         let wins: Int
@@ -29,7 +29,7 @@ final class DraftSpinChallengeStore {
         return try? JSONDecoder().decode(StoredResult.self, from: data)
     }
 
-    func hasCompletedChallenge(for day: String) -> Bool { officialResult(for: day) != nil }
+    func hasCompletedDailyDraft(for day: String) -> Bool { officialResult(for: day) != nil }
 
     /// Records `result` as `day`'s official score iff none exists yet. Returns whether this
     /// call became the official score — `false` means a replay arrived after the day's score

@@ -6,44 +6,65 @@ import SwiftUI
 /// appears for NFL and is locked to "Offense only": the catalog carries no defensive
 /// players, and a control advertising data we don't have would be a lie.
 ///
-/// Backlog #4: a MODE row (Free Play / Today's Challenge) sits above the rest. `GameSetupScreen`
+/// Backlog #4: a MODE row (Free Play / Daily Draft) sits above the rest. `GameSetupScreen`
 /// always renders its own SPORT grid regardless of mode, so "sport forced, not pickable" in
-/// challenge mode is enforced via `lockableSport`'s no-op setter rather than by hiding that
+/// Daily Draft mode is enforced via `lockableSport`'s no-op setter rather than by hiding that
 /// grid — `GameSetupScreen` is a shared scaffold this view doesn't own.
 struct DraftSpinSetupView: View {
     @Binding var sport: Sport
     @Binding var settings: DraftSpinSettings
-    @Binding var isChallenge: Bool
+    @Binding var isDailyDraft: Bool
     let onStart: () -> Void
     let onClose: () -> Void
 
-    /// Passed to `GameSetupScreen` instead of `$sport` directly: in challenge mode its getter
+    @State private var showingHowItWorks = false
+
+    /// The competition name for the chosen league value (falls back to the raw value if it's
+    /// somehow not in the curated list) — used in the caption so it reads "restricted to
+    /// Premier League", not the underlying "England" country tag.
+    private var selectedLeagueName: String {
+        guard let value = settings.soccerLeague else { return "" }
+        return DraftSpinConstraint.majorSoccerLeagues.first { $0.value == value }?.name ?? value
+    }
+
+    /// Passed to `GameSetupScreen` instead of `$sport` directly: in Daily Draft mode its getter
     /// still reflects the live `sport` value (kept in sync with `sportOfTheDay` by the MODE
     /// row's own toggle below) but the setter swallows any tap on a different sport, so the
     /// picker renders normally yet can't actually change the forced sport.
     private var lockableSport: Binding<Sport> {
-        Binding(get: { sport }, set: { newValue in if !isChallenge { sport = newValue } })
+        Binding(get: { sport }, set: { newValue in if !isDailyDraft { sport = newValue } })
     }
 
     var body: some View {
         GameSetupScreen(formatName: "Draft & Spin",
                         title: "Set your draft rules",
-                        startLabel: isChallenge ? "Start today's challenge" : "Spin to draft",
+                        startLabel: isDailyDraft ? "Start the Daily Draft" : "Spin to draft",
                         sport: lockableSport,
                         onStart: onStart,
                         onClose: onClose)
         {
             SetupOptionCard(
                 title: "MODE",
-                caption: isChallenge
-                    ? "Same \(sport.displayName) rosters as every other player today. One scored run per day — replays after that only earn XP."
+                caption: isDailyDraft
+                    ? "Same \(sport.displayName) spins as every other player today. One official run per day — replays after that only earn XP."
                     : "Fully random spins, any sport, anytime — practice or grind XP.")
             {
-                SetupSegmentedControl(options: ["FREE PLAY", "TODAY'S CHALLENGE"],
-                                      selectedIndex: isChallenge ? 1 : 0)
+                SetupSegmentedControl(options: ["FREE PLAY", "DAILY DRAFT"],
+                                      selectedIndex: isDailyDraft ? 1 : 0)
                 { index in
-                    isChallenge = index == 1
-                    if isChallenge { sport = DraftSpinConstraint.sportOfTheDay(Date()) }
+                    isDailyDraft = index == 1
+                    if isDailyDraft { sport = DraftSpinConstraint.sportOfTheDay(Date()) }
+                }
+                if isDailyDraft {
+                    Button {
+                        Haptics.tap()
+                        showingHowItWorks = true
+                    } label: {
+                        Label("How it works", systemImage: "info.circle")
+                            .font(.label12)
+                            .foregroundStyle(Color.accentText)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
 
@@ -79,15 +100,15 @@ struct DraftSpinSetupView: View {
                 }
             }
 
-            // Today's Challenge forces the shared daily seed — a personal league filter
-            // would let players diverge from "everyone sees the same rosters," so this only
-            // shows in Free Play (challenge spins never read `settings.soccerLeague`).
-            if sport == .soccer && !isChallenge {
+            // Daily Draft forces the shared daily seed — a personal league filter would let
+            // players diverge from "everyone sees the same rosters," so this only shows in
+            // Free Play (Daily Draft spins never read `settings.soccerLeague`).
+            if sport == .soccer && !isDailyDraft {
                 SetupOptionCard(
                     title: "LEAGUE",
                     caption: settings.soccerLeague == nil
                         ? "Spins draw from any of the ~38 countries' top flights we track."
-                        : "Spins are restricted to \(settings.soccerLeague!) — if a round can't fill an open slot from just that league, it falls back to any league rather than getting stuck.")
+                        : "Spins are restricted to \(selectedLeagueName) — if a round can't fill an open slot from just that league, it falls back to any league rather than getting stuck.")
                 {
                     LeagueChipPicker(selected: $settings.soccerLeague)
                 }
@@ -115,6 +136,29 @@ struct DraftSpinSetupView: View {
                 { settings.allowSeasonVariations = $0 == 0 }
             }
         }
+        .onAppear {
+            // `-screenshotDraftSpinSetup -screenshotDailyDraftInfo`: simctl can't tap the info
+            // button, so force the sheet open, already expanded for full capture.
+            if DebugLaunch.autoOpenDailyDraftInfo { showingHowItWorks = true }
+        }
+        .sheet(isPresented: $showingHowItWorks) {
+            HowItWorksSheet(
+                title: "Daily Draft",
+                intro: "Draft & Spin's daily competitive mode — one sport, one shot, everyone drafting from the same spins.",
+                symbol: "dice.fill",
+                tint: .accentText,
+                tintBackground: .accentBg,
+                rules: [
+                    HowItWorksSheet.Rule(symbol: "calendar", title: "One sport a day",
+                                         detail: "Daily Draft always plays today's featured sport — no picking your own."),
+                    HowItWorksSheet.Rule(symbol: "person.3.fill", title: "Same spins, no rerolls",
+                                         detail: "Every player gets the identical round-by-round spins today, and the reroll option is off."),
+                    HowItWorksSheet.Rule(symbol: "checkmark.seal.fill", title: "First run is official",
+                                         detail: "Your first completed run of the day is your official score. Replays after that only earn XP."),
+                ],
+                footnote: "Everyone's spins start identical; your draft picks steer which rosters you see next.",
+                startExpanded: DebugLaunch.autoOpenDailyDraftInfo)
+        }
     }
 }
 
@@ -129,8 +173,12 @@ private struct LeagueChipPicker: View {
     var body: some View {
         LazyVGrid(columns: columns, spacing: 6) {
             chip(label: "ALL LEAGUES", active: selected == nil) { selected = nil }
+            // Chip shows the competition name; the filter still matches on `league.value`
+            // (the country label the catalog is tagged by) — see `SoccerLeague`'s doc comment.
             ForEach(DraftSpinConstraint.majorSoccerLeagues, id: \.self) { league in
-                chip(label: league.uppercased(), active: selected == league) { selected = league }
+                chip(label: league.name.uppercased(), active: selected == league.value) {
+                    selected = league.value
+                }
             }
         }
     }

@@ -5,15 +5,16 @@ struct DraftSpinResultView: View {
     let picks: [CatalogSeason]
     let result: DraftSpinResult
     var rewards: RepositoryContainer.SessionRewards? = nil
-    /// Backlog #4: Today's Challenge framing. `isOfficialChallengeRun` is only meaningful
-    /// when `isChallenge` is true — false means an earlier run today already locked in the
+    /// Backlog #4: Daily Draft framing. `isOfficialDailyDraftRun` is only meaningful
+    /// when `isDailyDraft` is true — false means an earlier run today already locked in the
     /// day's score, so this run is a replay (still XP via `rewards`, just not the scored one).
-    var isChallenge: Bool = false
-    var isOfficialChallengeRun: Bool = true
+    var isDailyDraft: Bool = false
+    var isOfficialDailyDraftRun: Bool = true
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
     @State private var confetti = 0
+    @State private var showLeaderboard = false
 
     private var heroFill: Color { result.outcome == .champion ? .voltFill : .accentFill }
     private var heroInk: Color { result.outcome == .champion ? .onVolt : .onAccent }
@@ -32,8 +33,8 @@ struct DraftSpinResultView: View {
                 VStack(spacing: 18) {
                     // Shift every stagger index by one slot when the banner is present so the
                     // reveal cadence still counts up cleanly instead of doubling up on 0.
-                    let offset = isChallenge ? 1 : 0
-                    if isChallenge { challengeBanner.heroReveal(0) }
+                    let offset = isDailyDraft ? 1 : 0
+                    if isDailyDraft { dailyDraftBanner.heroReveal(0) }
                     scoreHeader.heroReveal(offset)
                     if let top = topPick { topSeasonCard(top).heroReveal(offset + 1) }
                     if let rewards { RewardsRow(rewards: rewards).heroReveal(offset + 2) }
@@ -49,24 +50,44 @@ struct DraftSpinResultView: View {
         .onAppear { if result.outcome == .champion { confetti += 1 } }
     }
 
-    /// Sets the shared-rosters context up front — the whole reason a challenge score is
-    /// comparable is that every player drafted off the identical spins, so say so plainly
+    /// Sets the shared-spins context up front — the whole reason a Daily Draft score is
+    /// comparable is that every player started from the identical spins, so say so plainly
     /// before the score itself lands.
-    private var challengeBanner: some View {
+    private var dailyDraftBanner: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text("TODAY'S CHALLENGE").font(.label11).foregroundStyle(Color.onVolt.opacity(0.85))
+                Text("DAILY DRAFT").font(.label11).foregroundStyle(Color.onVolt.opacity(0.85))
                 Spacer()
                 Text(sport.displayName.uppercased()).font(.label11).foregroundStyle(Color.onVolt.opacity(0.85))
             }
-            Text(isOfficialChallengeRun
-                 ? "Everyone gets these same rosters today — this run is your scored one."
-                 : "Practice replay — your official score today was already locked in.")
+            Text(isOfficialDailyDraftRun
+                 ? "Everyone starts from today's same spins — this run is your official score."
+                 : "Practice replay — today's official score was already locked in.")
                 .font(.body14).foregroundStyle(Color.onVolt)
+            // The payoff for the shared spins: the board is worth showing after a replay too —
+            // the day's *official* run is what's ranked there, not this one.
+            Button {
+                showLeaderboard = true
+                Haptics.tap()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "list.number").font(.system(size: 12, weight: .bold))
+                    Text("SEE TODAY'S BOARD").font(.custom(FontName.condBlack, size: 13))
+                }
+                .foregroundStyle(Color.onVolt)
+                .padding(.horizontal, 12).padding(.vertical, 7)
+                .overlay(Capsule().strokeBorder(Color.onVolt.opacity(0.6), lineWidth: 1.5))
+            }
+            .buttonStyle(PrimePressStyle())
+            .padding(.top, 4)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .blockCard(fill: .voltFill)
+        .sheet(isPresented: $showLeaderboard) {
+            DailyDraftLeaderboardView(day: OverUnderRoundGenerator.dayString(Date()), sport: sport)
+                .environmentObject(container)
+        }
     }
 
     private var scoreHeader: some View {
@@ -140,7 +161,7 @@ struct DraftSpinResultView: View {
         // A replay's card is still shareable, but it must not be captioned as the day's
         // scored result if it isn't one.
         let card = DraftSpinShareCardView(sport: sport, picks: picks, result: result,
-                                          isChallenge: isChallenge && isOfficialChallengeRun)
+                                          isDailyDraft: isDailyDraft && isOfficialDailyDraftRun)
         return ShareLink(item: card.rendered(), preview: SharePreview("My Draft & Spin season", image: card.rendered())) {
             Label("SHARE RESULT", systemImage: "square.and.arrow.up").ctaLabel()
         }
@@ -170,7 +191,7 @@ struct DraftSpinShareCardView: View {
     let sport: Sport
     let picks: [CatalogSeason]
     let result: DraftSpinResult
-    var isChallenge: Bool = false
+    var isDailyDraft: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -178,14 +199,14 @@ struct DraftSpinShareCardView: View {
                 HStack {
                     Wordmark(size: 20)
                     Spacer()
-                    Text(isChallenge ? "TODAY'S CHALLENGE" : "DRAFT & SPIN")
+                    Text(isDailyDraft ? "DAILY DRAFT" : "DRAFT & SPIN")
                         .font(.custom(FontName.condBlack, size: 14)).foregroundStyle(Color.onAccent.opacity(0.85))
                 }
                 Text(result.outcome.title(for: sport)).font(.custom(FontName.condBlack, size: 26)).foregroundStyle(Color.onAccent)
                 Text("\(result.wins)-\(result.losses) · \(result.totalPoints) PTS")
                     .font(.custom(FontName.condBold, size: 15)).foregroundStyle(Color.onAccent.opacity(0.85))
-                if isChallenge {
-                    Text("Same rosters as everyone, \(sport.displayName) · today")
+                if isDailyDraft {
+                    Text("Today's Daily Draft · \(sport.displayName)")
                         .font(.custom(FontName.condBold, size: 12)).foregroundStyle(Color.onAccent.opacity(0.7))
                 }
             }

@@ -13,6 +13,9 @@ final class RepositoryContainer: ObservableObject {
     let community: CommunityPuzzleRepository?
     let cohorts: CohortRepository?
     let versus: VersusRepository?
+    let dailyDraftBoard: DailyDraftLeaderboardRepository?
+    /// Weekly arcade boards for Over/Under + Grid (backlog #5). Nil when local-only.
+    let arcadeBoard: ArcadeLeaderboardRepository?
     /// Friends graph + public profiles (M19). Nil when local-only — social is server-only.
     let social: SocialRepository?
     /// Era-adjustment baselines for composable scoring (bundled; empty until the pipeline ships them).
@@ -44,6 +47,11 @@ final class RepositoryContainer: ObservableObject {
     /// Incoming pending friend-request count (M19) — badge fuel for Profile/Friends entry
     /// points; refreshed on sign-in sync and after any friends mutation via `refreshFriendBadge()`.
     @Published private(set) var pendingFriendRequests = 0
+    /// Open Versus challenges I haven't played yet — the tab badge, and the explicit stopgap
+    /// while APNs pushes for `versus_challenge` are stubbed. Refreshed on sign-in sync, on
+    /// foreground (`ContentView`'s scenePhase watcher), and after any Versus mutation below —
+    /// no polling timer, just reuse of the existing pending/active fetch.
+    @Published private(set) var openVersusChallenges = 0
     /// What the current user can access (Pro/packs) — the union of the on-device StoreKit read
     /// (`store.entitlements`, instant but only ever reflects what's local) and the server's
     /// verified `entitlements` table (`serverEntitlements`, synced on sign-in — the belt to the
@@ -64,6 +72,8 @@ final class RepositoryContainer: ObservableObject {
         self.community = client.map { CommunityPuzzleRepository(client: $0) }
         self.cohorts = client.map { CohortRepository(client: $0) }
         self.versus = client.map { VersusRepository(client: $0) }
+        self.dailyDraftBoard = client.map { DailyDraftLeaderboardRepository(client: $0) }
+        self.arcadeBoard = client.map { ArcadeLeaderboardRepository(client: $0) }
         self.social = client.map { SocialRepository(client: $0) }
         self.analytics = client.map { AnalyticsClient(client: $0) }
         let raw = UserDefaults.standard.string(forKey: "sportFilter") ?? SportFilter.all.rawValue
@@ -109,13 +119,39 @@ final class RepositoryContainer: ObservableObject {
         favoriteTeams = await loadFavoriteTeams()
         identity = await loadIdentity()
         await refreshFriendBadge()
+        await refreshVersusBadge()
+        await resubmitTodaysDailyDraftIfNeeded()
         serverEntitlements = await mirror.pullEntitlements()
         recomputeEntitlements()
     }
 
+    /// Fire-and-forget push of a Daily Draft official score to `daily_draft_scores`.
+    /// Server-side first-write-wins mirrors `DailyDraftStore.recordIfFirst`, so calling this
+    /// again with the same day (a retry, or a resubmit on sign-in) is always safe.
+    func submitDailyDraftScore(day: String, stored: DailyDraftStore.StoredResult) async {
+        guard let dailyDraftBoard, auth.userID != nil else { return }
+        await dailyDraftBoard.submit(day: day, stored: stored)
+    }
+
+    /// Fire-and-forget post of a finished arcade run to this week's board. Signed-out runs
+    /// simply don't post — the caller still records the local high score either way, and the
+    /// board ranks each user's weekly best server-side, so reposts are harmless.
+    func submitArcadeScore(game: ArcadeLeaderboardRepository.Game, sport: Sport, score: Int) async {
+        guard let arcadeBoard, let uid = auth.userID else { return }
+        await arcadeBoard.submit(userID: uid, game: game, sport: sport, score: score)
+    }
+
+    /// Offline/late-sign-in recovery: if today has a locally locked-in official run, push it.
+    /// A run that already reached the server is a no-op server-side.
+    private func resubmitTodaysDailyDraftIfNeeded() async {
+        let day = OverUnderRoundGenerator.dayString(Date())
+        guard let stored = DailyDraftStore().officialResult(for: day) else { return }
+        await submitDailyDraftScore(day: day, stored: stored)
+    }
+
     func handleSignedOut() {
         sync = nil; isAdmin = false; favoriteTeams = .empty
-        identity = .empty; pendingFriendRequests = 0
+        identity = .empty; pendingFriendRequests = 0; openVersusChallenges = 0
         serverEntitlements = .free
         recomputeEntitlements()
     }
@@ -274,12 +310,24 @@ final class RepositoryContainer: ObservableObject {
         guard let puzzle = await puzzles.keep4Puzzle(for: filter, date: Date()) else {
             throw VersusError.opponentNotFound
         }
-        return try await versus.createChallenge(opponentID: opponentID, sport: sport, puzzleID: puzzle.id)
+        let challengeID = try await versus.createChallenge(opponentID: opponentID, sport: sport, puzzleID: puzzle.id)
+        await refreshVersusBadge()   // the new challenge is itself unplayed by me
+        return challengeID
     }
 
     /// Records the caller's score on a Versus challenge (called from `Keep4GameView.finish()`).
     func submitVersusResult(challengeID: Int, performance: Double) async {
         await versus?.submitResult(challengeID: challengeID, score: performance)
+        await refreshVersusBadge()
+    }
+
+    /// Recounts open (pending/active) challenges I haven't played yet. Call after sign-in sync,
+    /// on foreground, and after any Versus mutation so the tab badge stays honest without a
+    /// realtime channel (mirrors `refreshFriendBadge()`).
+    func refreshVersusBadge() async {
+        guard let versus, let uid = auth.userID else { openVersusChallenges = 0; return }
+        let rows = await versus.pendingAndActive(userID: uid)
+        openVersusChallenges = VersusChallengeRow.unplayedCount(rows, me: uid)
     }
 
     // MARK: - Push (device token + per-category settings)

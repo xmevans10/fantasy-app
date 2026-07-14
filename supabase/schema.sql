@@ -131,7 +131,14 @@ create trigger on_auth_user_created
 -- Searchable real-stat catalog for Keep4 creation. Populated by tools/ingest
 -- (`--catalog`); `stats` is the raw numeric stat dict (same keys grade.py reads).
 create table if not exists public.player_seasons (
-  id          text primary key,            -- e.g. 'derrick-henry-2020'
+  id          text primary key,            -- e.g. 'nfl-derrick-henry-2020' — sport-prefixed
+                                            -- since 2026-07-14 (see RawSeason.player_id):
+                                            -- the bare 'name-year' form let two different real
+                                            -- players sharing a name silently overwrite each
+                                            -- other on upsert whenever their sports' seasons
+                                            -- overlapped in year (confirmed: NFL RB Chris
+                                            -- Johnson's 2009 season was clobbered by MLB's
+                                            -- Chris Johnson under the old scheme).
   sport       text not null,               -- 'nfl' | 'nba'
   name        text not null,
   team_abbr   text not null,
@@ -153,6 +160,12 @@ alter table public.player_seasons add column if not exists league     text;
 -- lookup indexed as the catalog grows, rather than scanning every player in a sport/year.
 create index if not exists player_seasons_roster_lookup_idx
   on public.player_seasons (sport, career, team_abbr, season_year);
+-- The ingest pipeline's existing-id fetch pages by (sport = X, id > last, order by id,
+-- limit N) — see tools/ingest/upsert.py fetch_existing_catalog_ids. Without this the plan
+-- heap-filters the pk index or seq-scans + sorts the whole table, which began exceeding
+-- the statement timeout (57014) once the table doubled past ~460k rows (2026-07-14).
+create index if not exists player_seasons_sport_id_idx
+  on public.player_seasons (sport, id);
 
 -- User-authored puzzles, kept separate from `puzzles` so the daily rotation stays
 -- clean. `content` is the same camelCase Keep4Puzzle/WhoAmIPuzzle JSON the app decodes.
@@ -646,6 +659,141 @@ begin
     returning id into ch_id;
   return ch_id;
 end;
+$$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Daily Draft (Draft & Spin's daily seeded mode) — one official score per user per UTC day
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Server-side first-write-wins mirrors the client's DailyDraftStore.recordIfFirst — a replay
+-- (even a better one) can never overwrite the locked-in official run.
+create table if not exists public.daily_draft_scores (
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  day          date not null,
+  sport        text not null,
+  wins         int  not null check (wins >= 0),
+  losses       int  not null check (losses >= 0),
+  total_points int  not null,
+  outcome      text not null,
+  created_at   timestamptz not null default now(),
+  primary key (user_id, day)
+);
+create index if not exists daily_draft_scores_day_idx
+  on public.daily_draft_scores (day, wins desc, total_points desc);
+
+alter table public.daily_draft_scores enable row level security;
+
+drop policy if exists "daily_draft_scores readable" on public.daily_draft_scores;
+-- The daily leaderboard is public content (pseudonymous, like cohort standings); ranked
+-- output should come from the daily_draft_leaderboard RPC, but plain reads are harmless.
+create policy "daily_draft_scores readable" on public.daily_draft_scores
+  for select using (true);
+-- Writes only via submit_daily_draft_score (SECURITY DEFINER) — no insert/update policy.
+
+-- Records the caller's official Daily Draft score for `p_day` iff none exists yet.
+-- Returns whether this call became the official score (false = already locked in).
+-- No future days; past days are allowed so an offline run can retry on a later launch.
+create or replace function public.submit_daily_draft_score(
+  p_day date, p_sport text, p_wins int, p_losses int, p_total_points int, p_outcome text)
+returns boolean language plpgsql security definer as $$
+declare
+  inserted boolean;
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  if p_day > (now() at time zone 'utc')::date then raise exception 'future day'; end if;
+  insert into public.daily_draft_scores (user_id, day, sport, wins, losses, total_points, outcome)
+    values (auth.uid(), p_day, p_sport, p_wins, p_losses, p_total_points, p_outcome)
+    on conflict (user_id, day) do nothing
+    returning true into inserted;
+  return coalesce(inserted, false);
+end;
+$$;
+
+-- Top-50 rows for a day plus the caller's own row (rank included) even when outside the top 50.
+create or replace function public.daily_draft_leaderboard(p_day date)
+returns table (
+  rank bigint, user_id uuid, username text, avatar text, sport text,
+  wins int, losses int, total_points int, outcome text, is_me boolean
+) language sql security definer stable as $$
+  with ranked as (
+    select s.*,
+           row_number() over (order by s.wins desc, s.total_points desc, s.created_at asc) as rnk
+    from public.daily_draft_scores s
+    where s.day = p_day
+  )
+  select r.rnk, r.user_id, p.username, p.avatar, r.sport,
+         r.wins, r.losses, r.total_points, r.outcome,
+         coalesce(r.user_id = auth.uid(), false)
+  from ranked r
+  left join public.profiles p on p.id = r.user_id
+  where r.rnk <= 50 or r.user_id = auth.uid()
+  order by r.rnk;
+$$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Arcade leaderboards (backlog #5) — weekly boards per sport for Over/Under + Grid
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- One row per finished run (like `events`, insert-only); the board ranks each user's
+-- best score of the UTC week. week_start is server-authoritative: the column default
+-- computes it and the insert policy rejects any other value, so a client can't post
+-- into a past or future week.
+create table if not exists public.arcade_scores (
+  id         bigint generated always as identity primary key,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  game       text not null check (game in ('over_under', 'grid')),
+  sport      text not null,
+  score      int  not null check (score >= 0),
+  week_start date not null default (date_trunc('week', now() at time zone 'utc'))::date,
+  created_at timestamptz not null default now()
+);
+create index if not exists arcade_scores_board_idx
+  on public.arcade_scores (game, sport, week_start, score desc);
+
+alter table public.arcade_scores enable row level security;
+
+drop policy if exists "arcade_scores readable" on public.arcade_scores;
+-- Public pseudonymous content, same stance as daily_draft_scores: ranked output should
+-- come from the arcade_leaderboard RPC, but plain reads are harmless.
+create policy "arcade_scores readable" on public.arcade_scores
+  for select using (true);
+
+drop policy if exists "arcade_scores insert own" on public.arcade_scores;
+create policy "arcade_scores insert own" on public.arcade_scores
+  for insert with check (
+    auth.uid() = user_id
+    and week_start = (date_trunc('week', now() at time zone 'utc'))::date
+  );
+-- No update/delete policies: rows are immutable once posted.
+
+-- Top-50 weekly board for one game+sport, plus the caller's own row (true rank included)
+-- even when outside the top 50 — mirrors daily_draft_leaderboard. p_week null = current
+-- UTC week. Best score per user; ties broken by who reached that score first.
+create or replace function public.arcade_leaderboard(
+  p_game text, p_sport text, p_week date default null)
+returns table (
+  rank bigint, user_id uuid, username text, avatar text,
+  best_score int, is_me boolean
+) language sql security definer stable as $$
+  with wk as (
+    select coalesce(p_week, (date_trunc('week', now() at time zone 'utc'))::date) as w
+  ),
+  best as (
+    select distinct on (s.user_id) s.user_id, s.score as best_score, s.created_at
+    from public.arcade_scores s, wk
+    where s.game = p_game and s.sport = p_sport and s.week_start = wk.w
+    order by s.user_id, s.score desc, s.created_at asc
+  ),
+  ranked as (
+    select b.*, row_number() over (order by b.best_score desc, b.created_at asc) as rnk
+    from best b
+  )
+  select r.rnk, r.user_id, p.username, p.avatar, r.best_score,
+         coalesce(r.user_id = auth.uid(), false)
+  from ranked r
+  left join public.profiles p on p.id = r.user_id
+  where r.rnk <= 50 or r.user_id = auth.uid()
+  order by r.rnk;
 $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────

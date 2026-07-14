@@ -17,6 +17,7 @@ struct FriendsView: View {
     /// Which friend's challenge menu most recently fired, for the transient "sent" line —
     /// keyed by userID since multiple friend rows share this screen.
     @State private var challengeSentFor: String?
+    @State private var challengeFailedFor: String?
 
     var body: some View {
         NavigationStack {
@@ -195,6 +196,8 @@ struct FriendsView: View {
                         Text(row.username ?? "Player").font(.bodyStrong).foregroundStyle(Color.textPrimary)
                         if challengeSentFor == row.userID {
                             Text("Challenge sent").font(.label11).foregroundStyle(Color.successText)
+                        } else if challengeFailedFor == row.userID {
+                            Text("Couldn't send — try again").font(.label11).foregroundStyle(Color.dangerText)
                         }
                     }
                 }
@@ -231,10 +234,14 @@ struct FriendsView: View {
         do {
             _ = try await container.createVersusChallenge(username: username, sport: sport)
             challengeSentFor = row.userID
+            challengeFailedFor = nil
             Haptics.success()
         } catch {
-            // Silent — VersusView/ChallengeSheet is the primary flow for surfacing challenge
-            // errors; this menu is a shortcut and a failure here just means "try Versus tab".
+            // Inline failure state mirrors the "Challenge sent" success treatment — the old
+            // silent catch left the tap looking like it worked when it hadn't.
+            challengeFailedFor = row.userID
+            if challengeSentFor == row.userID { challengeSentFor = nil }
+            Haptics.reject()
         }
     }
 

@@ -9,7 +9,9 @@ struct GridResultView: View {
     var rewards: RepositoryContainer.SessionRewards? = nil
     let onDone: () -> Void
 
+    @EnvironmentObject private var container: RepositoryContainer
     @State private var confetti = 0
+    @State private var showLeaderboard = false
 
     private var isPerfect: Bool { correctCount == 9 }
 
@@ -18,8 +20,9 @@ struct GridResultView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     scoreHeader.heroReveal(0)
-                    if let rewards { RewardsRow(rewards: rewards).heroReveal(1) }
-                    if let puzzle { boardRecap(puzzle).heroReveal(2) }
+                    leaderboardEntry.heroReveal(1)
+                    if let rewards { RewardsRow(rewards: rewards).heroReveal(2) }
+                    if let puzzle { boardRecap(puzzle).heroReveal(3) }
                 }
                 .padding(16)
             }
@@ -28,6 +31,30 @@ struct GridResultView: View {
         .background(Color.appBackground)
         .celebrate(on: $confetti, intensity: isPerfect ? 90 : 40)
         .onAppear { if isPerfect { confetti += 1 } }
+        .sheet(isPresented: $showLeaderboard) {
+            ArcadeLeaderboardView(game: .grid, sport: sport)
+                .environmentObject(container)
+        }
+    }
+
+    /// This week's board for Grid — always offered (even on an unranked replay), since a
+    /// prior run today may already be the one ranked on it (mirrors the Daily Draft banner's
+    /// "SEE TODAY'S BOARD" entry off `DraftSpinResultView`).
+    private var leaderboardEntry: some View {
+        Button {
+            showLeaderboard = true
+            Haptics.tap()
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "list.number").font(.system(size: 12, weight: .bold))
+                Text("LEADERBOARD").font(.custom(FontName.condBlack, size: 13))
+            }
+            .foregroundStyle(Color.accentText)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .overlay(Capsule().strokeBorder(Color.accentText.opacity(0.6), lineWidth: 1.5))
+        }
+        .buttonStyle(PrimePressStyle())
     }
 
     private var scoreHeader: some View {

@@ -11,12 +11,41 @@ struct DailyLoopCountdownCard: View {
     /// decides counts as "arcade filler" — see `GameFormat.arcade`.
     let arcadeFormats: [GameFormat]
     let launch: (GameFormat) -> Void
+    /// Opens Draft & Spin straight into Daily Draft mode — the one "while you wait" option
+    /// that's itself a shared daily, so it gets its own billing above the free-play arcade row.
+    var launchDailyDraft: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             countdownBlock
+            if launchDailyDraft != nil { dailyDraftRow }
             arcadeNudge
         }
+    }
+
+    private var dailyDraftRow: some View {
+        Button {
+            launchDailyDraft?()
+            Haptics.tap()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "dice.fill")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(Color.accentText)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Daily Draft").font(.title).foregroundStyle(Color.textPrimary)
+                    Text("TODAY'S SHARED SPINS · ONE OFFICIAL RUN")
+                        .font(.label11).foregroundStyle(Color.textMuted)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .cardSurface()
+        }
+        .buttonStyle(PrimePressStyle())
     }
 
     private var countdownBlock: some View {

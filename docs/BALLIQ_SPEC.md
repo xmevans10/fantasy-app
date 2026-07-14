@@ -1055,9 +1055,19 @@ expected retention/quality impact per unit of effort):
    store), fire-and-forget submit at finish + resubmit-on-sign-in for offline runs,
    board sheet off the result banner (`DailyDraftLeaderboardView`), and a Home entry
    via the daily-loop card's dedicated Daily Draft row.
-5. **Arcade leaderboards** — Daily Draft's board shipped 2026-07-13 (see #4). Over/Under
-   high score and Grid score are still local-only; a `scores` table (same insert-only
-   RLS shape as `events`) + a weekly board per sport turns both into competitive loops.
+5. **Arcade leaderboards** — ✅ shipped 2026-07-14 (Daily Draft's board shipped 07-13, see
+   #4). `arcade_scores` (insert-only RLS like `events`, one row per finished run; the
+   insert policy pins `week_start` to the current UTC week server-side so past/future
+   weeks can't be posted into) + `arcade_leaderboard(p_game, p_sport, p_week)` RPC (top-50
+   weekly best-per-user + caller's own ranked row, mirroring `daily_draft_leaderboard`).
+   App side: `ArcadeLeaderboardRepository` + shared `ArcadeLeaderboardView`
+   (Features/Arcade/) + `RepositoryContainer.submitArcadeScore` (fire-and-forget, silent
+   no-op signed-out — no retry queue on purpose: a lost run is low-stakes, the next good
+   run this week reposts). Over/Under posts EVERY finished run (each run is fresh); Grid
+   posts only the day's ranked run (unranked replays of the same daily puzzle must not
+   farm the board). Board sheet off both result views. Verified 2026-07-14: build + 298
+   tests green, both result surfaces screenshot-confirmed, and a live insert→RPC→delete
+   round trip returned rank 1 with the correct UTC week bucket.
 6. **Leagues season bootstrap** — ✅ resolved on its own, confirmed live 2026-07-13. The
    07-05 handoff worried a manual trigger would be needed; instead `weekly-cohort-rollover`
    fired naturally on its Monday 05:00 UTC schedule with no intervention: season 1 ran

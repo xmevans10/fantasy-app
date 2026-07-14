@@ -49,6 +49,22 @@ enum DebugLaunch {
     /// Keep4 game: auto-open the scoring-formula sheet (simctl can't tap the chip). Same
     /// combination rule as `autoOpenShare`: needs `-screenshotGame -screenshotScoringInfo`.
     static var autoOpenScoringInfo: Bool { has("-screenshotScoringInfo") }
+    /// Auto-present the "How it works" explainer sheets (simctl can't tap the info button).
+    /// Combination flags like `autoOpenScoringInfo`: `-screenshotLeagues -screenshotLeaguesInfo`,
+    /// `-screenshotVersus -screenshotVersusInfo`, `-screenshotDraftSpinSetup -screenshotDailyDraftInfo`.
+    static var autoOpenLeaguesInfo: Bool { has("-screenshotLeaguesInfo") }
+    static var autoOpenVersusInfo: Bool { has("-screenshotVersusInfo") }
+    static var autoOpenDailyDraftInfo: Bool { has("-screenshotDailyDraftInfo") }
+    /// Force the Leagues promotion/relegation recap banner for capture (real state needs a
+    /// prior rollover): `-forcePriorZone promoted` or `-forcePriorZone relegated`.
+    static var forcePriorZone: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-forcePriorZone"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+    /// Force the Leagues "your league starts Monday" empty-state countdown even when the
+    /// account has a membership: `-forceLeagueCountdown`.
+    static var forceLeagueCountdown: Bool { has("-forceLeagueCountdown") }
     /// Prefill the Browse search field (simctl can't type): `-searchQuery lamb`.
     static var searchQuery: String? {
         let args = ProcessInfo.processInfo.arguments
@@ -105,6 +121,11 @@ enum DebugLaunch {
     static let autoSubmitGrid = false
     static let autoOpenShare = false
     static let autoOpenScoringInfo = false
+    static let autoOpenLeaguesInfo = false
+    static let autoOpenVersusInfo = false
+    static let autoOpenDailyDraftInfo = false
+    static let forcePriorZone: String? = nil
+    static let forceLeagueCountdown = false
     static let searchQuery: String? = nil
     static let browseSport: String? = nil
     static let createTemplateKey: String? = nil

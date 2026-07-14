@@ -229,6 +229,9 @@ struct GridGameView: View {
         Task {
             rewards = await container.complete(format: .grid, sport: sport, performance: performance,
                                                perfect: solved.count == 9, puzzleID: dailyID, ranked: ranked)
+            // Grid's puzzle is daily — only the first (ranked) run of the day posts to the
+            // weekly board, or an unranked replay could farm it by re-solving the same puzzle.
+            if ranked { await container.submitArcadeScore(game: .grid, sport: sport, score: score) }
             withAnimation(Motion.snap) { result = (score, solved.count) }
         }
     }

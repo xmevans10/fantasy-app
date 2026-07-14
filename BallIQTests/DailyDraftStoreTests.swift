@@ -1,22 +1,22 @@
 import XCTest
 @testable import BallIQ
 
-/// The day's official Draft & Spin challenge score must be locked in by the FIRST completion
-/// and never overwritten by a later replay, even a luckier one — see `DraftSpinChallengeStore`.
-final class DraftSpinChallengeStoreTests: XCTestCase {
+/// The day's official Daily Draft score must be locked in by the FIRST completion
+/// and never overwritten by a later replay, even a luckier one — see `DailyDraftStore`.
+final class DailyDraftStoreTests: XCTestCase {
 
     private var defaults: UserDefaults!
-    private var store: DraftSpinChallengeStore!
+    private var store: DailyDraftStore!
 
     override func setUp() {
         super.setUp()
-        defaults = UserDefaults(suiteName: "DraftSpinChallengeStoreTests")
-        defaults.removePersistentDomain(forName: "DraftSpinChallengeStoreTests")
-        store = DraftSpinChallengeStore(defaults: defaults)
+        defaults = UserDefaults(suiteName: "DailyDraftStoreTests")
+        defaults.removePersistentDomain(forName: "DailyDraftStoreTests")
+        store = DailyDraftStore(defaults: defaults)
     }
 
     override func tearDown() {
-        defaults.removePersistentDomain(forName: "DraftSpinChallengeStoreTests")
+        defaults.removePersistentDomain(forName: "DailyDraftStoreTests")
         super.tearDown()
     }
 
@@ -26,14 +26,14 @@ final class DraftSpinChallengeStoreTests: XCTestCase {
 
     func testNoOfficialResultBeforeAnyCompletion() {
         XCTAssertNil(store.officialResult(for: "2026-07-12"))
-        XCTAssertFalse(store.hasCompletedChallenge(for: "2026-07-12"))
+        XCTAssertFalse(store.hasCompletedDailyDraft(for: "2026-07-12"))
     }
 
     func testFirstCompletionBecomesOfficial() {
         let recorded = store.recordIfFirst(sport: .nfl, result: result(points: 500), day: "2026-07-12")
         XCTAssertTrue(recorded)
         XCTAssertEqual(store.officialResult(for: "2026-07-12")?.totalPoints, 500)
-        XCTAssertTrue(store.hasCompletedChallenge(for: "2026-07-12"))
+        XCTAssertTrue(store.hasCompletedDailyDraft(for: "2026-07-12"))
     }
 
     func testReplayNeverOverwritesTheOfficialScore() {

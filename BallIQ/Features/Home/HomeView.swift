@@ -13,6 +13,7 @@ struct HomeView: View {
     @State private var showPaywall = false
     @State private var showOverUnder = false
     @State private var showDraftSpin = false
+    @State private var showDailyDraft = false
     @State private var showGrid = false
     @State private var showKeep4Launch = false
     @State private var showWhoAmILaunch = false
@@ -50,7 +51,8 @@ struct HomeView: View {
                                 // dailies are done.
                                 DailyLoopCountdownCard(streak: container.streak,
                                                        arcadeFormats: GameFormat.arcade,
-                                                       launch: launch)
+                                                       launch: launch,
+                                                       launchDailyDraft: { showDailyDraft = true })
                             }
                             // Still visible (tapping either reopens today's result/recap, same
                             // as before) but visually secondary once the countdown card above
@@ -134,6 +136,9 @@ struct HomeView: View {
             }
             .fullScreenCover(isPresented: $showDraftSpin) {
                 DraftSpinView().environmentObject(container)
+            }
+            .fullScreenCover(isPresented: $showDailyDraft) {
+                DraftSpinView(startInDailyDraft: true).environmentObject(container)
             }
             .fullScreenCover(isPresented: $showGrid) {
                 GridGameView().environmentObject(container)

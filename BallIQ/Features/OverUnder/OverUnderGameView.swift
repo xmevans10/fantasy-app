@@ -291,6 +291,9 @@ struct OverUnderGameView: View {
                                                puzzleID: dailyID, ranked: ranked)
             withAnimation(Motion.snap) { showResult = true }
         }
+        // Every finished run posts (not just local highs) — the weekly board ranks each
+        // user's best server-side, so a lower run this week is a harmless no-op there.
+        Task { await container.submitArcadeScore(game: .overUnder, sport: sport, score: score) }
     }
 
     /// `-screenshotOverUnderResult`: simctl can't play through a real session, so force an

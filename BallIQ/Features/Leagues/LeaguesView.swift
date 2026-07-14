@@ -5,8 +5,13 @@ struct LeaguesView: View {
     @EnvironmentObject private var auth: AuthService
 
     @State private var season: Season?
+    @State private var membership: CohortMembership?
     @State private var standings: [CohortStandingRow] = []
     @State private var loaded = false
+    @State private var showLeaguesInfo = false
+    /// Whether the promotion/relegation recap banner has been dismissed for the *current*
+    /// season — reloaded from `UserDefaults` once `membership` resolves in `load()`.
+    @State private var recapDismissed = false
 
     // MARK: - FRIENDS scope (M20)
 
@@ -45,15 +50,60 @@ struct LeaguesView: View {
             .background(Color.appBackground)
             .navigationTitle("Leagues")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarLeading) { Wordmark() } }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) { Wordmark() }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showLeaguesInfo = true } label: {
+                        Image(systemName: "info.circle")
+                    }
+                    .accessibilityLabel("How leagues work")
+                }
+            }
         }
         .task { await load() }
+        .onAppear {
+            if DebugLaunch.autoOpenLeaguesInfo || HowItWorksSheet.shouldAutoPresent(feature: "leagues") {
+                showLeaguesInfo = true
+            }
+        }
+        .sheet(isPresented: $showLeaguesInfo) { leaguesInfoSheet }
     }
 
     private var signInPrompt: some View {
         EmptyStateView(symbol: "trophy.fill",
                        title: "Leagues",
-                       message: "Sign in to join a weekly league — climb the standings to promote.")
+                       message: "Sign in to get placed in a weekly league — every game you play earns XP toward the standings.")
+    }
+
+    /// Copy derives from the spec's competitive glossary; the cutoff numbers come from
+    /// `LeagueRules` against the loaded cohort (falling back to a full 30) so the sheet
+    /// can never promise a headcount the standings bars don't show.
+    private var leaguesInfoSheet: some View {
+        let n = standings.isEmpty ? 30 : standings.count
+        return HowItWorksSheet(
+            title: "Weekly Leagues",
+            intro: "A weekly XP race against players at your level. No joining, no invites — placement is automatic.",
+            symbol: "trophy.fill",
+            tint: Color.accentText,
+            tintBackground: Color.accentBg,
+            rules: [
+                .init(symbol: "calendar",
+                      title: "Placed every Monday",
+                      detail: "Each Monday, every rated player is grouped into a fresh league of up to 30 by rating."),
+                .init(symbol: "bolt.fill",
+                      title: "Every game counts",
+                      detail: "Every game you finish this week earns League XP — any format, ranked or not."),
+                .init(symbol: "arrow.up.arrow.down",
+                      title: LeagueRules.summaryLine(memberCount: n),
+                      detail: "When the week ends, the top of the table is promoted to a tougher league and the bottom is relegated to an easier one."),
+            ],
+            callout: .init(symbol: "paintbrush.fill",
+                           label: "The colored bars",
+                           text: "Green rows are currently in the promotion zone, red rows in the relegation zone. Nothing is locked until the week's timer hits zero.",
+                           tint: Color.successText,
+                           background: Color.successBg),
+            footnote: "Leagues never affect your rating — that only moves on ranked daily games.",
+            startExpanded: DebugLaunch.autoOpenLeaguesInfo)
     }
 
     /// Two-way scope switcher, reusing `SetupSegmentedControl` (Home's per-game setup
@@ -72,23 +122,62 @@ struct LeaguesView: View {
     private var leagueContent: some View {
         if !loaded {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if standings.isEmpty {
+        } else if standings.isEmpty || DebugLaunch.forceLeagueCountdown {
             noLeagueYet
         } else {
             standingsList
         }
     }
 
+    /// Honest unplaced state: placement only ever happens at the Monday rollover, so this
+    /// counts down to it instead of implying that mid-week play gets you in (it doesn't —
+    /// `bump_weekly_xp` is a no-op without a membership).
     private var noLeagueYet: some View {
-        EmptyStateView(symbol: "hourglass",
-                       title: "Your league forms soon",
-                       message: "Leagues are assigned at the start of each week. Play a few ranked puzzles and check back.")
+        VStack(spacing: 14) {
+            Image(systemName: "hourglass")
+                .font(.system(size: 34, weight: .bold))
+                .foregroundStyle(Color.accentText)
+                .frame(width: 84, height: 84)
+                .background(Color.accentBg)
+                .clipShape(Circle())
+            Text("YOUR LEAGUE STARTS MONDAY")
+                .font(.title)
+                .foregroundStyle(Color.textPrimary)
+                .multilineTextAlignment(.center)
+            TimelineView(.periodic(from: .now, by: 60)) { context in
+                let next = LeagueRules.nextRollover(after: context.date)
+                VStack(spacing: 4) {
+                    Text(countdownText(from: context.date, to: next))
+                        .font(.hero(30))
+                        .foregroundStyle(Color.accentText)
+                    Text(next.formatted(date: .abbreviated, time: .shortened))
+                        .font(.label11)
+                        .foregroundStyle(Color.textMuted)
+                }
+            }
+            Text("You'll be placed with up to 29 players — every game you finish earns League XP.")
+                .font(.body14)
+                .foregroundStyle(Color.textMuted)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func countdownText(from now: Date, to target: Date) -> String {
+        let seconds = max(0, Int(target.timeIntervalSince(now)))
+        let days = seconds / 86_400
+        let hours = (seconds % 86_400) / 3_600
+        let minutes = (seconds % 3_600) / 60
+        return days > 0 ? "\(days)d \(hours)h" : hours > 0 ? "\(hours)h \(minutes)m" : "\(minutes)m"
     }
 
     private var standingsList: some View {
         ScrollView {
             VStack(spacing: 18) {
+                recapBanner
                 if let season { countdownCard(season).heroReveal(0) }
+                zoneLegend
                 VStack(spacing: 10) {
                     ForEach(standings) { row in standingRow(row) }
                 }
@@ -102,15 +191,81 @@ struct LeaguesView: View {
         let days = max(0, Calendar.current.dateComponents([.day], from: Date(), to: season.endsAt).day ?? 0)
         return HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text("SEASON ENDS").font(.label11).foregroundStyle(Color.onAccent.opacity(0.75))
+                Text("WEEK ENDS").font(.label11).foregroundStyle(Color.onAccent.opacity(0.75))
                 Text(days == 0 ? "Today" : "\(days) day\(days == 1 ? "" : "s")")
                     .font(.heading).foregroundStyle(Color.onAccent)
+                Text(LeagueRules.summaryLine(memberCount: standings.count))
+                    .font(.label11).foregroundStyle(Color.onAccent.opacity(0.75))
             }
             Spacer()
             Image(systemName: "calendar").font(.system(size: 22)).foregroundStyle(Color.onAccent)
         }
         .padding(16)
         .blockCard(fill: .accentFill)
+    }
+
+    /// Legend for the zone-colored rank bars — numbers come from the loaded cohort's actual
+    /// cutoffs (`LeagueRules`), so a 9-player league honestly reads "TOP 4", never a
+    /// hardcoded 5.
+    private var zoneLegend: some View {
+        HStack(spacing: 14) {
+            legendItem(color: Color.successText,
+                       text: LeagueRules.promoteLine(memberCount: standings.count))
+            legendItem(color: Color.dangerText,
+                       text: LeagueRules.relegateLine(memberCount: standings.count))
+            Spacer()
+        }
+    }
+
+    private func legendItem(color: Color, text: String) -> some View {
+        HStack(spacing: 5) {
+            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 8, height: 8)
+            Text(text.uppercased()).font(.label11).foregroundStyle(Color.textMuted)
+        }
+    }
+
+    // MARK: - Promotion/relegation recap (prior_zone)
+
+    /// "You were promoted/relegated last week" — `prior_zone` is written by the rollover for
+    /// exactly this banner. Shows once per season (dismissal keyed by season id) and only for
+    /// actual movement; the held middle stays quiet.
+    @ViewBuilder
+    private var recapBanner: some View {
+        let zone = DebugLaunch.forcePriorZone ?? membership?.priorZone
+        if !recapDismissed, let zone, zone == "promoted" || zone == "relegated" {
+            let promoted = zone == "promoted"
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: promoted ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(promoted ? Color.successText : Color.dangerText)
+                Text(promoted
+                     ? "You were promoted last week — welcome to a tougher league."
+                     : "You were relegated last week — win this one and bounce right back.")
+                    .font(.body14)
+                    .foregroundStyle(Color.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 4)
+                Button {
+                    recapDismissed = true
+                    UserDefaults.standard.set(true, forKey: recapDismissKey)
+                    Haptics.tap()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Color.textMuted)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Dismiss")
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(promoted ? Color.successBg : Color.dangerBg)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+        }
+    }
+
+    private var recapDismissKey: String {
+        "leagueRecapDismissed_season_\(membership?.seasonId ?? 0)"
     }
 
     @ViewBuilder
@@ -323,6 +478,9 @@ struct LeaguesView: View {
             async let standingsFetch = cohorts.standings(cohortID: membership.cohortId, meUserID: userID)
             season = await seasonFetch
             standings = await standingsFetch
+            self.membership = membership
+            recapDismissed = UserDefaults.standard.bool(
+                forKey: "leagueRecapDismissed_season_\(membership.seasonId)")
         }
         friendProfiles = await friendsFetch
     }

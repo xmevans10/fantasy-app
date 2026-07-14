@@ -95,7 +95,7 @@ struct OnboardingView: View {
                     featureRow("chart.bar.fill", fill: .voltFill, on: .onVolt,
                                "Real seasons", "Rank real careers by the stats, not vibes")
                     featureRow("trophy.fill", fill: .warningFill, on: .onWarning,
-                               "Compete", "Leagues, streaks, and 1v1 challenges")
+                               "Compete", "Weekly leagues, streaks, and 1v1 Versus duels")
                 }
                 .padding(.horizontal, 16).padding(.vertical, 14)
                 .frame(maxWidth: .infinity, alignment: .leading)

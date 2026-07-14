@@ -36,11 +36,25 @@ struct VersusChallenge: Decodable, Identifiable, Equatable {
     func won(me: String) -> Bool? { winnerId == nil ? nil : winnerId == me }
 }
 
-/// A `versus_challenge` plus the opponent's display name, ready for the Versus tab list.
+/// A `versus_challenge` plus the opponent's display name and its parent series, ready for the
+/// Versus tab list. `series` is nil when the batch series fetch didn't return a match (RLS gap,
+/// or the row was fetched before the series existed) — callers must not force-unwrap it.
 struct VersusChallengeRow: Identifiable, Equatable {
     let challenge: VersusChallenge
     let opponentUsername: String?
+    var series: VersusSeries? = nil
     var id: Int { challenge.id }
+
+    /// Open (pending/active) challenges where I haven't played yet — fuel for the Versus tab
+    /// badge (§ M20, the stopgap while APNs pushes for `versus_challenge` are stubbed). The
+    /// status check is redundant against `pendingAndActive`'s server-side filter but keeps this
+    /// safe to call directly against an unfiltered/mixed list (as the unit tests do).
+    static func unplayedCount(_ rows: [VersusChallengeRow], me: String) -> Int {
+        rows.filter { row in
+            (row.challenge.status == "pending" || row.challenge.status == "active")
+                && !row.challenge.hasPlayed(me: me)
+        }.count
+    }
 }
 
 struct VersusSeries: Decodable, Equatable {

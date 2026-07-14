@@ -92,17 +92,34 @@ enum DraftSpinConstraint {
         }
     }
 
-    /// The soccer setup screen's LEAGUE picker offers this curated subset of the ~38
-    /// countries' top flights `espn_soccer.py` ingests, not all of them — real coverage
-    /// varies a lot by league (some only just started backfilling), and a picker listing
-    /// every country would mostly produce empty/thin drafts. These are the leagues expected
-    /// to have real, useful depth; `spinRound`'s own graceful fallback (below) still covers
-    /// the case where a chosen league is thinner than expected for a given round. Values
-    /// match `CatalogSeason.league` exactly (the human-readable label `espn_soccer.py`
-    /// writes, e.g. "USA (MLS)" — see that file's `_LEAGUES` dict).
+    /// One selectable league on the Draft & Spin setup screen: `value` is matched exactly
+    /// against `CatalogSeason.league` (the country label `espn_soccer.py` writes — see its
+    /// `_LEAGUES` dict), and `name` is the competition shown on the chip.
+    ///
+    /// The two are kept separate deliberately: the stored data is tagged by COUNTRY (top
+    /// flight of ESPN's `.1` slug), so filtering on the country value stays correct even if a
+    /// country's rows ever turn out to include something other than its single top division —
+    /// whereas a hardcoded "Premier League" *label* would silently misdescribe such rows. So we
+    /// show the competition name the player expects, but never filter on it.
+    struct SoccerLeague: Equatable, Hashable { let value: String, name: String }
+
+    /// The setup screen's LEAGUE picker offers this curated subset of the ~38 countries' top
+    /// flights `espn_soccer.py` ingests, not all of them — real coverage varies a lot by league
+    /// (some only just started backfilling), and a picker listing every country would mostly
+    /// produce empty/thin drafts. These are the leagues expected to have real, useful depth;
+    /// `spinRound`'s own graceful fallback (below) still covers the case where a chosen league is
+    /// thinner than expected for a given round.
     static let majorSoccerLeagues = [
-        "England", "Spain", "Germany", "Italy", "France",
-        "USA (MLS)", "Netherlands", "Portugal", "Brazil", "Mexico",
+        SoccerLeague(value: "England",     name: "Premier League"),
+        SoccerLeague(value: "Spain",       name: "La Liga"),
+        SoccerLeague(value: "Germany",     name: "Bundesliga"),
+        SoccerLeague(value: "Italy",       name: "Serie A"),
+        SoccerLeague(value: "France",      name: "Ligue 1"),
+        SoccerLeague(value: "USA (MLS)",   name: "MLS"),
+        SoccerLeague(value: "Netherlands", name: "Eredivisie"),
+        SoccerLeague(value: "Portugal",    name: "Primeira Liga"),
+        SoccerLeague(value: "Brazil",      name: "Brasileirão"),
+        SoccerLeague(value: "Mexico",      name: "Liga MX"),
     ]
 
     /// Deterministic per day — every install spins the same sport on the same date. Uses
@@ -179,22 +196,22 @@ enum DraftSpinConstraint {
         return (chosen.team, chosen.year)
     }
 
-    /// Today's Challenge mode (backlog #4): every player who opens the challenge on the same
-    /// UTC day must see the identical round-1 (team, year) spin, so scores are comparable —
-    /// seeded by day + round index only, no reroll dimension (challenge mode has no reroll,
-    /// see `DraftSpinView`). This resurrects the *seed shape* of the original date-seeded
-    /// design (retired 2026-07-09 for free play — see git history on this file, commit
-    /// a3916fc — free play is truly random by explicit product decision and stays that way;
-    /// only this new challenge path is seeded again). **Determinism caveat, inherited from
-    /// that same retired design:** `spinRound`'s `excludeNames`/`lockedTeam`/`usedLockedYears`
-    /// arguments still shape the viable-combo pool, so once two players' prior picks diverge
-    /// (different players drafted into the same open role), a later round's spin can diverge
-    /// too even off the same seed. Same seed guarantees the same spin *given the same prior
-    /// picks* — not an unconditional guarantee across every possible play history.
-    static func challengeRoundGenerator(sport: Sport, date: Date, roundIndex: Int) -> SeededGenerator {
+    /// Daily Draft mode (backlog #4): every player who opens Daily Draft on the same UTC day
+    /// must see the identical round-1 (team, year) spin, so scores are comparable — seeded by
+    /// day + round index only, no reroll dimension (Daily Draft has no reroll, see
+    /// `DraftSpinView`). This resurrects the *seed shape* of the original date-seeded design
+    /// (retired 2026-07-09 for free play — see git history on this file, commit a3916fc — free
+    /// play is truly random by explicit product decision and stays that way; only this daily
+    /// path is seeded again). **Determinism caveat, inherited from that same retired design:**
+    /// `spinRound`'s `excludeNames`/`lockedTeam`/`usedLockedYears` arguments still shape the
+    /// viable-combo pool, so once two players' prior picks diverge (different players drafted
+    /// into the same open role), a later round's spin can diverge too even off the same seed.
+    /// Same seed guarantees the same spin *given the same prior picks* — not an unconditional
+    /// guarantee across every possible play history.
+    static func dailyDraftRoundGenerator(sport: Sport, date: Date, roundIndex: Int) -> SeededGenerator {
         let day = OverUnderRoundGenerator.dayString(date)
         return SeededGenerator(seed: SeededGenerator.stableHash(
-            "draftspin-challenge-\(sport.rawValue)-\(day)-\(roundIndex)"))
+            "draftspin-dailydraft-\(sport.rawValue)-\(day)-\(roundIndex)"))
     }
 
     /// Which of `openSlots` a real `position` can be assigned to.

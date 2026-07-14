@@ -13,15 +13,17 @@ struct OverUnderResultView: View {
     @EnvironmentObject private var container: RepositoryContainer
     @State private var confetti = 0
     @State private var showPaywall = false
+    @State private var showLeaderboard = false
 
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 18) {
                     scoreHeader.heroReveal(0)
-                    if let rewards { RewardsRow(rewards: rewards).heroReveal(1) }
+                    leaderboardEntry.heroReveal(1)
+                    if let rewards { RewardsRow(rewards: rewards).heroReveal(2) }
                     if !container.entitlements.hasUnlimitedOverUnderLives {
-                        livesUpsell.heroReveal(2)
+                        livesUpsell.heroReveal(3)
                     }
                 }
                 .padding(16)
@@ -37,6 +39,32 @@ struct OverUnderResultView: View {
         .sheet(isPresented: $showPaywall) {
             PaywallView().environmentObject(container)
         }
+        .sheet(isPresented: $showLeaderboard) {
+            ArcadeLeaderboardView(game: .overUnder, sport: sport)
+                .environmentObject(container)
+        }
+    }
+
+    private var leaderboardEntry: some View {
+        Button {
+            showLeaderboard = true
+            Haptics.tap()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "list.number")
+                    .font(.system(size: 20, weight: .bold)).foregroundStyle(Color.accentText)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Leaderboard").font(.title).foregroundStyle(Color.textPrimary)
+                    Text("THIS WEEK'S TOP OVER/UNDER RUNS").font(.label11).foregroundStyle(Color.textMuted)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .cardSurface()
+        }
+        .buttonStyle(PrimePressStyle())
     }
 
     private var scoreHeader: some View {

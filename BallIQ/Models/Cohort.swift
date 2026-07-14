@@ -43,6 +43,59 @@ private struct CohortMemberRow: Decodable {
 /// bottom 5 relegate). Computed client-side from rank, same cutoffs as the rollover Edge Function.
 enum CohortZone { case promote, relegate, hold }
 
+/// Pure zone/cutoff/schedule math for Leagues, pulled out of `CohortRepository` so the
+/// standings computation, the zone legend, and the How-it-works sheet all read from one
+/// place — a cohort of 9 quoting "Top 5" in the legend but "Top 4" in the sheet would be a
+/// visible contradiction, not just duplicated logic.
+enum LeagueRules {
+    static let maxPerZone = 5
+
+    /// `min(5, n/2)` on both ends — identical math to the `weekly-cohort-rollover` Edge
+    /// Function, so a half-empty cohort never promotes/relegates more than half its field.
+    static func cutoffs(memberCount: Int) -> (promote: Int, relegate: Int) {
+        let cutoff = min(maxPerZone, max(0, memberCount) / 2)
+        return (cutoff, cutoff)
+    }
+
+    /// Zone for a 0-based standings rank (0 = first place), given the cohort's total size.
+    static func zone(rankIndex: Int, memberCount: Int) -> CohortZone {
+        let (promote, relegate) = cutoffs(memberCount: memberCount)
+        if rankIndex < promote { return .promote }
+        if rankIndex >= memberCount - relegate { return .relegate }
+        return .hold
+    }
+
+    /// "Top 5 move up" — honest for small cohorts (n=9 reads "Top 4"), so the legend never
+    /// promises a headcount the standings bars don't actually show.
+    static func promoteLine(memberCount: Int) -> String {
+        "Top \(cutoffs(memberCount: memberCount).promote) move up"
+    }
+
+    static func relegateLine(memberCount: Int) -> String {
+        "Bottom \(cutoffs(memberCount: memberCount).relegate) move down"
+    }
+
+    /// The legend row and the countdown card's sub-line share this exact phrasing so the two
+    /// can't drift into slightly different claims about the same cohort.
+    static func summaryLine(memberCount: Int) -> String {
+        "\(promoteLine(memberCount: memberCount)) · \(relegateLine(memberCount: memberCount))"
+    }
+
+    /// Next Monday 05:00 UTC strictly after `date` — mirrors the `0 5 * * 1` cron schedule
+    /// driving `weekly-cohort-rollover` (see `supabase/migrations/0001_schedule_edge_functions.sql`),
+    /// so the "league starts Monday" countdown can never promise a time the server doesn't
+    /// actually roll over at.
+    static func nextRollover(after date: Date) -> Date {
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC")!
+        let weekday = utc.component(.weekday, from: date) // 1 = Sunday, 2 = Monday, ...
+        let daysUntilMonday = (2 - weekday + 7) % 7
+        let startOfCandidateDay = utc.date(byAdding: .day, value: daysUntilMonday, to: utc.startOfDay(for: date))!
+        let candidate = utc.date(byAdding: .hour, value: 5, to: startOfCandidateDay)!
+        return candidate > date ? candidate : utc.date(byAdding: .day, value: 7, to: candidate)!
+    }
+}
+
 /// A standings row ready to display: cohort member + their public profile fields.
 struct CohortStandingRow: Identifiable, Equatable {
     let userId: String
@@ -105,12 +158,8 @@ final class CohortRepository {
         let profileByID = Dictionary(uniqueKeysWithValues: profiles.map { ($0.id, $0) })
 
         let n = members.count
-        let promoteCutoff = min(5, n / 2)
-        let relegateCutoff = min(5, n / 2)
-
         return members.enumerated().map { index, member in
-            let zone: CohortZone = index < promoteCutoff ? .promote
-                : index >= n - relegateCutoff ? .relegate : .hold
+            let zone = LeagueRules.zone(rankIndex: index, memberCount: n)
             let profile = profileByID[member.userId]
             return CohortStandingRow(userId: member.userId, username: profile?.username,
                                      avatar: profile?.avatar, weeklyXp: member.weeklyXp,
