@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-13T23:41:17+00:00",
+  "generated_at": "2026-07-14T01:00:19+00:00",
   "totals": {
     "themes": 44,
     "themes_below_pool_floor": 0,
@@ -314,8 +314,8 @@
       "title": "Elite goal-scoring seasons",
       "sport": "soccer",
       "grain": "season",
-      "eligible_seasons": 43608,
-      "excluded_by_min_stats": 12940,
+      "eligible_seasons": 46546,
+      "excluded_by_min_stats": 13910,
       "excluded_by_filters": 0,
       "pool_size": 24,
       "pool_cap": 24,
@@ -329,8 +329,8 @@
       "title": "Clean-sheet defender & keeper seasons",
       "sport": "soccer",
       "grain": "season",
-      "eligible_seasons": 29460,
-      "excluded_by_min_stats": 9174,
+      "eligible_seasons": 31778,
+      "excluded_by_min_stats": 9971,
       "excluded_by_filters": 0,
       "pool_size": 24,
       "pool_cap": 24,
@@ -710,25 +710,25 @@
     {
       "sport": "soccer",
       "position": "DF",
-      "season_rows": 24621,
+      "season_rows": 26464,
       "draft_slot_viable": true
     },
     {
       "sport": "soccer",
       "position": "FW",
-      "season_rows": 21359,
+      "season_rows": 22289,
       "draft_slot_viable": true
     },
     {
       "sport": "soccer",
       "position": "GK",
-      "season_rows": 4839,
+      "season_rows": 5314,
       "draft_slot_viable": true
     },
     {
       "sport": "soccer",
       "position": "MF",
-      "season_rows": 22249,
+      "season_rows": 24257,
       "draft_slot_viable": true
     }
   ]
