@@ -32,6 +32,39 @@ Home, not a tab.
 tiers (Bronze→…), XP/levels (`LevelCurve`), day streak. Community/archive/versus play is
 unranked (XP only).
 
+**Competitive glossary (source of truth for all UI copy on these surfaces — established
+2026-07-13; "challenge" belongs exclusively to Versus):**
+- **Leagues** — your weekly XP race. Every Monday 05:00 UTC the rollover places every
+  rated player into a league (cohort) of up to 30. Every game finished that week — any
+  format, ranked or not — earns League XP (`bump_weekly_xp`). Week ends: top `min(5, n/2)`
+  move up, bottom `min(5, n/2)` move down, rest hold. No create/join/invite — placement is
+  automatic; mid-week play does NOT place you (the RPC is a no-op without membership).
+- **Versus (Challenges)** — a 1v1 duel. Challenge any player by username; both
+  independently play the *same* daily Keep4 puzzle (pinned `puzzle_id`); higher score wins
+  the day, ties go to the challenger. 24h to play or forfeit. Wins accumulate into a
+  best-of-7 `versus_series` per (pair, sport).
+- **Daily Draft** — Draft & Spin's daily competitive mode (renamed from "Today's
+  Challenge" 2026-07-13). One sport per day, everyone gets the same starting spins, no
+  rerolls; first completed run of the UTC day is the official score (local
+  `DailyDraftStore` + server `daily_draft_scores`, both first-write-wins), replays are
+  XP-only. Honest caveat: spins start identical, but pick divergence steers later rosters.
+
+**Competitive education layer (shipped 2026-07-13):** each surface explains itself via a
+shared `HowItWorksSheet` (`DesignSystem/HowItWorksSheet.swift`, generalized from
+`ScoringDetailSheet`'s visual grammar) — `info.circle` on Leagues/Versus (auto-presents
+once per feature via `shouldAutoPresent`), a "How it works" link on Daily Draft setup.
+Zone math/legend/copy share one source (`LeagueRules` in `Cohort.swift` — cutoffs,
+zone-per-rank, legend strings, `nextRollover`), so a 9-player cohort honestly reads
+"Top 4". Coherence fixes landed with it: Versus rows show the live best-of-7 series
+(batched `versus_series` fetch), forfeit lines say who didn't play + open rows show
+hours-left, the Versus tab badges unplayed incoming challenges (foreground-refresh
+stopgap until APNs), Friends-tab challenge failures surface inline, the Leagues recap
+banner finally uses `prior_zone`, and the unplaced empty state counts down to the real
+Monday 05:00 UTC rollover instead of claiming mid-week play gets you in. Screenshot
+flags: `-screenshotLeaguesInfo`/`-screenshotVersusInfo`/`-screenshotDailyDraftInfo`
+(combine with their tab flags), `-forcePriorZone promoted|relegated`,
+`-forceLeagueCountdown`.
+
 **Product feedback themes (distilled 2026-07-09 from the user's corrections across the
 M5/M18 sessions — treat as standing direction, apply proactively to new work):**
 1. **Best-surface parity.** K4C4's card is the quality bar ("our best feature"); every
@@ -947,17 +980,23 @@ app claims to do and what actually works today:
   reset/decay decision, and no definition of "rewards" — genuinely underspecified, not
   merely under-detailed. Needs a scoping conversation (see the disambiguating questions
   logged 2026-07-12 in `prompts/HANDOFF-next-agent-2026-07-12c.md`) before any build.
-- **Soccer data breadth (new 2026-07-12, not yet a numbered backlog item)** — **in
-  progress 2026-07-13**: `tools/ingest/providers/espn_soccer.py` covers ~38 countries'
-  first divisions. A full local sequential sweep proved to be a genuine multi-day job
-  (~2 min/league-season × ~570 total), so it was migrated to
-  `.github/workflows/espn-soccer-backfill.yml` — a `workflow_dispatch` matrix, one leg
-  per league (`max-parallel: 6`, courtesy-capped against ESPN's keyless site API), each
-  writing its own CSV partition (`refresh(..., out_path=...)`); a merge job recombines
-  partitions (`merge_csvs`/`--merge-dir`), commits the refreshed CSV to `main`, and runs
-  `--upsert --catalog` to push into the live catalog — same additive/merge-duplicate
-  guarantee `ingest.yml` already uses. Dispatched 2026-07-13; check `gh run list
-  --workflow espn-soccer-backfill.yml` for status before assuming it's done.
+- **Soccer data breadth (new 2026-07-12)** — ✅ shipped 2026-07-13. Migrated the
+  genuinely multi-day local sequential sweep (~2 min/league-season × ~570 total) to
+  `.github/workflows/espn-soccer-backfill.yml`, a `workflow_dispatch` matrix (one leg
+  per league, `max-parallel: 6`). All 38 legs succeeded; the workflow's own
+  `merge-and-upsert` job lost a `git push` race against concurrent commits during this
+  session (its computed merge was correct — 7,156 rows — but the ephemeral runner's
+  commit was never persisted), so the 38 already-computed artifacts were downloaded and
+  the identical merge completed locally instead. One real gap caught in verification:
+  the CI-computed partitions predated a `league` metadata column added mid-run by
+  concurrent work, so the first live push had it empty for all new rows — backfilled
+  from each artifact's own filename (no new network calls) and re-pushed through the
+  full pipeline's real dedup path (not a raw `load_seasons()` push, which would have
+  bypassed the merge's existing collision-exclusion against seed/transfermarkt soccer
+  data). Confirmed live via direct SQL: real `league` values (e.g. "Brazil") on real
+  rows. `tools/ingest/providers/espn_soccer.py` now also carries an `--out`/
+  `--merge-dir` split (`merge_csvs`) purpose-built for this CI-matrix shape, reusable
+  for any future multi-day provider backfill.
 - **Share sheet + Keep4 scoring-info popover — ✅ verified working 2026-07-13, not a
   regression.** Both flags are consumed inside their host view, so they're silent no-ops
   standalone and must combine with the flag that navigates there: `-screenshotBrowse
@@ -1004,17 +1043,21 @@ expected retention/quality impact per unit of effort):
    instant too. Same shape for daily puzzles.
 
 *P1 — engagement depth:*
-4. **Daily Draft & Spin challenge** — ✅ shipped 2026-07-13. A MODE row (Free Play /
-   Today's Challenge) on setup; free play is untouched (same system RNG), challenge mode
-   forces `sportOfTheDay` and seeds every spin from `DraftSpinConstraint
-   .challengeRoundGenerator` (day + round index — the retired date-seeded design's seed
-   shape, reused only for this opt-in path) so every player gets the same round-by-round
-   rosters. No reroll in challenge mode. `DraftSpinChallengeStore` locks in only the
-   day's first completion as the official score; replays are XP-only. **Leaderboard
-   wiring is still #5, not yet built** — this item was scoring/comparability only.
-5. **Arcade leaderboards** — Over/Under high score and Grid score are local-only today;
-   a `scores` table (same insert-only RLS shape as `events`) + a weekly board per sport
-   turns both into competitive loops.
+4. **Daily Draft** (né "Daily Draft & Spin challenge") — ✅ shipped 2026-07-13, renamed
+   same day per the competitive glossary ("challenge" belongs to Versus). A MODE row
+   (Free Play / Daily Draft) on setup; free play is untouched (same system RNG), Daily
+   Draft forces `sportOfTheDay` and seeds every spin from `DraftSpinConstraint
+   .dailyDraftRoundGenerator` (day + round index) so every player gets the same
+   round-by-round spins. No reroll. `DailyDraftStore` locks in only the day's first
+   completion as the official score; replays are XP-only. **Leaderboard shipped too**
+   (same day): `daily_draft_scores` + `submit_daily_draft_score` /
+   `daily_draft_leaderboard` RPCs (first-write-wins server-side, mirroring the local
+   store), fire-and-forget submit at finish + resubmit-on-sign-in for offline runs,
+   board sheet off the result banner (`DailyDraftLeaderboardView`), and a Home entry
+   via the daily-loop card's dedicated Daily Draft row.
+5. **Arcade leaderboards** — Daily Draft's board shipped 2026-07-13 (see #4). Over/Under
+   high score and Grid score are still local-only; a `scores` table (same insert-only
+   RLS shape as `events`) + a weekly board per sport turns both into competitive loops.
 6. **Leagues season bootstrap** — ✅ resolved on its own, confirmed live 2026-07-13. The
    07-05 handoff worried a manual trigger would be needed; instead `weekly-cohort-rollover`
    fired naturally on its Monday 05:00 UTC schedule with no intervention: season 1 ran
