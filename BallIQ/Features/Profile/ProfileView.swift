@@ -190,6 +190,9 @@ struct ProfileView: View {
 
     private func favoriteTeamRow(_ sport: Sport) -> some View {
         let selected = container.favoriteTeams.team(for: sport)
+        // A picked team should read as that team, not a generic muted pill — same identity
+        // signal every player card already carries via `TeamColors`.
+        let team = selected.map { TeamColors.palette(sport: sport, abbr: $0) }
         return HStack(spacing: 12) {
             Image(systemName: sport.symbol).font(.system(size: 14)).foregroundStyle(sport.cardFill)
             Text(sport.displayName).font(.body14).foregroundStyle(Color.textPrimary)
@@ -208,11 +211,12 @@ struct ProfileView: View {
                         .frame(width: 18, height: 18)
                     }
                     Text(selected ?? "Pick a team").font(.label12)
-                        .foregroundStyle(selected == nil ? Color.textMuted : Color.textPrimary)
-                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10)).foregroundStyle(Color.textMuted)
+                        .foregroundStyle(team?.onPrimary ?? Color.textMuted)
+                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10))
+                        .foregroundStyle(team != nil ? team!.onPrimary.opacity(0.7) : Color.textMuted)
                 }
                 .padding(.horizontal, 10).padding(.vertical, 6)
-                .background(Color.surfaceMuted)
+                .background(team?.primary ?? Color.surfaceMuted)
                 .clipShape(Capsule())
             }
         }

@@ -123,7 +123,7 @@ struct GridGameView: View {
                         labelCell("\(puzzle.colDecades[col - 1])s")
                     }
                 } else if col == 0 {
-                    labelCell(puzzle.rowTeams[row - 1].uppercased())
+                    TeamAbbrChip(sport: puzzle.sport, abbr: puzzle.rowTeams[row - 1])
                 } else {
                     answerCell(puzzle, row: row - 1, col: col - 1)
                 }

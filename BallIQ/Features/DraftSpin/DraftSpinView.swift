@@ -253,7 +253,10 @@ struct DraftSpinView: View {
             Text("Build your \(sport.displayName) squad").font(.title).foregroundStyle(Color.textPrimary)
             if let round = currentRound {
                 HStack(spacing: 10) {
-                    chip(label: "TEAM", value: round.team.uppercased(), tint: .accentFill)
+                    // Team's own color instead of a generic accent — the same identity signal
+                    // every player-card header band already carries via `TeamColors`.
+                    chip(label: "TEAM", value: round.team.uppercased(),
+                         tint: TeamColors.palette(sport: sport, abbr: round.team).primary)
                     chip(label: "YEAR", value: String(round.year), tint: .successFill)
                     Spacer()
                     if isDailyDraft {

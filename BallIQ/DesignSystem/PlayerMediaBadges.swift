@@ -76,3 +76,27 @@ struct TeamLogoBadge: View {
             .accessibilityHidden(true)   // decorative — team/country is already read as text
     }
 }
+
+/// A team abbreviation rendered as its own real color chip — Grid's board/recap row headers
+/// ("CLE", "SEA") used to render these as plain ink-on-neutral text, the one team-identity
+/// surface in the app that skipped `TeamColors` entirely. One shared shape instead of a
+/// per-view copy (AGENTS.md §4), since Grid needs the identical chip at two sizes (the live
+/// board and the post-game recap).
+struct TeamAbbrChip: View {
+    let sport: Sport
+    let abbr: String
+    var fontSize: CGFloat = 14
+    var minHeight: CGFloat = 44
+
+    private var team: TeamPalette { TeamColors.palette(sport: sport, abbr: abbr) }
+
+    var body: some View {
+        Text(abbr.uppercased())
+            .font(.custom(FontName.condBlack, size: fontSize))
+            .foregroundStyle(team.onPrimary)
+            .lineLimit(1).minimumScaleFactor(0.6)
+            .frame(maxWidth: .infinity, minHeight: minHeight)
+            .background(team.primary)
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+    }
+}
