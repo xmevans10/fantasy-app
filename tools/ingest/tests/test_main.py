@@ -60,6 +60,27 @@ def test_catalog_carries_league_through_when_present_in_meta():
     assert by_name["No League Guy"]["league"] is None
 
 
+def test_catalog_does_not_collide_same_name_across_sports():
+    # Regression for the live bug (found 2026-07-14): NFL RB Chris Johnson's real 2009
+    # season (2,006 rushing yards) was silently overwritten in Supabase by MLB Chris
+    # Johnson's 2009 Astros season — both hashed to the bare id "chris-johnson-2009"
+    # before `RawSeason.player_id` was sport-prefixed. Same name, same year, different
+    # sport must now produce two distinct catalog rows, not one clobbering the other.
+    rows = [
+        _season("Chris Johnson", sport="nfl", position="RB",
+                stats={"rushing_yards": 2006.0}),
+        _season("Chris Johnson", sport="baseball", position="H",
+                stats={"hits": 180.0}),
+    ]
+    out = catalog_rows(rows)
+    assert len(out) == 2
+    ids = {r["id"] for r in out}
+    assert ids == {"nfl-chris-johnson-2015", "baseball-chris-johnson-2015"}
+    by_sport = {r["sport"]: r for r in out}
+    assert by_sport["nfl"]["stats"]["rushing_yards"] == 2006.0
+    assert by_sport["baseball"]["stats"]["hits"] == 180.0
+
+
 def test_merge_nfl_bio_backfills_missing_headshot_from_registry():
     # Reproduces the real-world gap: a legend's season row has no headshot_url (common for
     # older/retired seasons), but the all-time players.csv registry has one.

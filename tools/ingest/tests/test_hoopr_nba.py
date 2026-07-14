@@ -76,7 +76,7 @@ def test_load_seasons_round_trips_committed_csv(tmp_path, monkeypatch):
     seasons = load_seasons()
     assert len(seasons) == 1
     s = seasons[0]
-    assert s.player_id == "lebron-james-2019"
+    assert s.player_id == "nba-lebron-james-2019"
     assert s.sport == "nba" and s.source == "hoopr"
     assert s.team_abbr == "LAL" and s.position == "F"
     assert s.stats["ppg"] == 27.4 and s.stats["games"] == 55.0

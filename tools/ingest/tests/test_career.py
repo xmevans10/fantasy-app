@@ -119,5 +119,5 @@ def test_career_player_id_is_stable_and_distinct_from_season_ids():
     seasons = [_pitcher(2020, 100.0, 2.70, 1.10, bb=30, er=30),
                _pitcher(2021, 200.0, 2.25, 1.00, bb=50, er=50)]
     row = build_career_rows(seasons)[0]
-    assert row.player_id == "test-pitcher-career"
+    assert row.player_id == "baseball-test-pitcher-career"
     assert row.player_id not in {s.player_id for s in seasons}

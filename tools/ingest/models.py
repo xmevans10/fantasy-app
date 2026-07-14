@@ -42,12 +42,22 @@ class RawSeason:
 
     @property
     def player_id(self) -> str:
-        """Stable id for this entity inside a puzzle, e.g. 'derrick-henry-2020' (season),
-        'derrick-henry-2020-wk12' (single game), or 'derrick-henry-career' (career aggregate)
-        so none of the three grains ever collide."""
+        """Stable id for this entity inside a puzzle, e.g. 'nfl-derrick-henry-2020' (season),
+        'nfl-derrick-henry-2020-wk12' (single game), or 'nfl-derrick-henry-career' (career
+        aggregate) so none of the three grains ever collide.
+
+        Sport-prefixed (as of 2026-07-14) — this is `player_seasons.id`, the table's primary
+        key / upsert conflict target, and it was NOT sport-scoped before this: two different
+        real players sharing a name (e.g. NFL RB Chris Johnson and MLB 3B Chris Johnson, both
+        active 2009-2016) collided on the bare `slug(name)-year` id for every overlapping year,
+        and the later-ingested sport silently overwrote the earlier one on every upsert. Confirmed
+        live: NFL Chris Johnson's actual 2009 season (2,006 rushing yards) was missing from the
+        catalog, clobbered by MLB Chris Johnson's 2009 Astros season under the same id. A full
+        re-ingest across every sport is required after this change to recover any seasons a past
+        collision silently dropped — a bare format-string fix here only stops *future* collisions."""
         if self.career:
-            return f"{slug(self.name)}-career"
-        base = f"{slug(self.name)}-{self.season_year}"
+            return f"{self.sport}-{slug(self.name)}-career"
+        base = f"{self.sport}-{slug(self.name)}-{self.season_year}"
         return f"{base}-wk{self.week:02d}" if self.week is not None else base
 
 

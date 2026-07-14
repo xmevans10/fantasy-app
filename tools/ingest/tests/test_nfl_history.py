@@ -59,7 +59,7 @@ def test_load_seasons_round_trips_committed_csv(tmp_path, monkeypatch):
     seasons = load_seasons()
     assert len(seasons) == 1
     s = seasons[0]
-    assert s.player_id == "walter-payton-1977"
+    assert s.player_id == "nfl-walter-payton-1977"
     assert s.sport == "nfl" and s.source == "pfr" and s.position == "RB"
     assert s.stats["rushing_yards"] == 1852.0
     assert "fantasy_points" not in s.stats     # dataset convenience column, not a stat

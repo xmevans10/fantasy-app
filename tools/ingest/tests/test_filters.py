@@ -64,6 +64,6 @@ def test_missing_field_does_not_match_value_ops():
 def test_game_grain_player_id_is_distinct_from_season():
     season = _season(season_year=2007)
     game = _season(season_year=2007, week=12, opponent="DEN")
-    assert season.player_id == "ted-ginn-2007"
-    assert game.player_id == "ted-ginn-2007-wk12"
+    assert season.player_id == "nfl-ted-ginn-2007"
+    assert game.player_id == "nfl-ted-ginn-2007-wk12"
     assert season.player_id != game.player_id

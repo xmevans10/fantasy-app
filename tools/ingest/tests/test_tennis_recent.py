@@ -22,7 +22,7 @@ def test_load_seasons_round_trips_committed_csv(tmp_path, monkeypatch):
     seasons = load_seasons()
     assert len(seasons) == 1
     s = seasons[0]
-    assert s.player_id == "jannik-sinner-2024"
+    assert s.player_id == "tennis-jannik-sinner-2024"
     assert s.sport == "tennis" and s.position == "Player"
     assert s.team_abbr == "ITA"                       # country stands in for team
     assert s.stats == {"matches_won": 73.0, "matches_lost": 6.0, "titles": 8.0, "grand_slams": 2.0}

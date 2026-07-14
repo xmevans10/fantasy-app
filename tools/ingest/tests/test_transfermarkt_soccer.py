@@ -98,7 +98,7 @@ def test_load_seasons_round_trips_committed_csv(tmp_path, monkeypatch):
     seasons = load_seasons()
     assert len(seasons) == 1
     s = seasons[0]
-    assert s.player_id == "alisson-2019"
+    assert s.player_id == "soccer-alisson-2019"
     assert s.sport == "soccer" and s.position == "GK" and s.team_abbr == "LIV"
     assert s.stats == {"appearances": 38.0, "goals": 0.0, "assists": 0.0,
                        "clean_sheets": 21.0}

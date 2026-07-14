@@ -50,7 +50,7 @@ def test_load_seasons_round_trips_committed_csv(tmp_path, monkeypatch):
     seasons = load_seasons()
     assert len(seasons) == 1
     s = seasons[0]
-    assert s.player_id == "wilt-chamberlain-1962"
+    assert s.player_id == "nba-wilt-chamberlain-1962"
     assert s.sport == "nba" and s.source == "bref" and s.position == "C"
     assert s.stats["ppg"] == 50.4
     assert s.headshot.endswith("wilt.jpg")
