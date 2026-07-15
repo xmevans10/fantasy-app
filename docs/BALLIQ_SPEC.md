@@ -1133,7 +1133,17 @@ expected retention/quality impact per unit of effort):
    6,156/13,489 rows with headshots ≥ the CSVs' 6,084; NFL 1970–1998: 3,051 ≥ 2,788).
    Also done 2026-07-14 with user approval: the 231,685 stale bare-format duplicate rows
    deleted (table now exactly 232,109, 0 old-format) + `vacuum (analyze)` run.
-10. **M14 Spanish localization** — unblocks App Store featuring in LatAm; all-string work.
+10. **M14 Spanish localization** — ✅ shipped 2026-07-14. `BallIQ/Localizable.xcstrings`
+    (Xcode 15+ String Catalog), 418/435 UI-chrome strings translated (neutral
+    Latin-American Spanish, arcade-casual register); the 17 without an `es` value are
+    deliberate `shouldTranslate: false` entries — format brand names (DRAFT & SPIN, THE
+    GRID, Who am I?, Versus, PRO) that stay identical across locales, plus a couple of
+    stylistic label fragments. Player names/team abbrs/league names/pipeline stat labels
+    stay English (data, not chrome) per the M14 brief. `LocalizationTests` proves the
+    catalog compiles into the bundle and actually resolves (not just that the file
+    exists). 301 Swift tests green; `-AppleLanguages (es)` screenshot-verified on Home
+    and Keep4 — full natural-Spanish coverage on both. Native-speaker review of the
+    machine-translated strings remains a user hand-off before wide release.
 11. **Content-drift guard** — ✅ already resolved, confirmed 2026-07-13. An earlier
     commit (`bc93f3e`, "Minigame fixes & polish...") already ran the bundle regen this
     item asked for — `test_content_drift.py` passes against the current committed
