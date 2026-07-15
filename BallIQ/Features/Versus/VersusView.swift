@@ -119,7 +119,7 @@ struct VersusView: View {
         }
     }
 
-    private func section(_ title: String, rows: [VersusChallengeRow]) -> some View {
+    private func section(_ title: LocalizedStringKey, rows: [VersusChallengeRow]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title).font(.label12).foregroundStyle(Color.textMuted)
             ForEach(rows) { row in challengeRow(row) }
@@ -187,16 +187,17 @@ struct VersusView: View {
         let theirs = c.theirScore(me: me)
         switch c.status {
         case "forfeited":
-            return "Expired — neither of you played"
+            return String(localized: "Expired — neither of you played")
         case "completed":
             if let mine, let theirs {
-                return "You \(Int(mine * 100)) – \(Int(theirs * 100)) them"
+                return String(localized: "You \(Int(mine * 100)) – \(Int(theirs * 100)) them")
             }
             return mine != nil
-                ? "They didn't play in time — win by forfeit"
-                : "Time ran out before you played — forfeit loss"
+                ? String(localized: "They didn't play in time — win by forfeit")
+                : String(localized: "Time ran out before you played — forfeit loss")
         default:
-            let base = c.hasPlayed(me: me) ? "Waiting for them to play" : "Play today's puzzle"
+            let base = c.hasPlayed(me: me) ? String(localized: "Waiting for them to play")
+                                            : String(localized: "Play today's puzzle")
             return "\(base) · \(timeLeftText(until: c.expiresAt, now: now))"
         }
     }
@@ -205,9 +206,9 @@ struct VersusView: View {
     /// hasn't swept it yet).
     static func timeLeftText(until expiry: Date, now: Date = Date()) -> String {
         let seconds = Int(expiry.timeIntervalSince(now))
-        guard seconds > 0 else { return "Expiring…" }
+        guard seconds > 0 else { return String(localized: "Expiring…") }
         let hours = seconds / 3_600
-        return hours >= 1 ? "\(hours)h left" : "\(max(1, seconds / 60))m left"
+        return hours >= 1 ? String(localized: "\(hours)h left") : String(localized: "\(max(1, seconds / 60))m left")
     }
 
     /// The running best-of-7 score, or the settled outcome once the series completes.
@@ -345,11 +346,11 @@ private struct ChallengeSheet: View {
             await onSent()
             dismiss()
         } catch VersusError.opponentNotFound {
-            errorMessage = "Couldn't find that username."
+            errorMessage = String(localized: "Couldn't find that username.")
         } catch VersusError.cannotChallengeSelf {
-            errorMessage = "You can't challenge yourself."
+            errorMessage = String(localized: "You can't challenge yourself.")
         } catch {
-            errorMessage = "Something went wrong. Try again."
+            errorMessage = String(localized: "Something went wrong. Try again.")
         }
         sending = false
     }

@@ -72,7 +72,7 @@ struct DraftSpinView: View {
                 loadingScreen
             } else if showingReveal, let round = currentRound {
                 SpinRevealView(team: round.team, year: String(round.year),
-                               roundLabel: "Round \(min(roundIndex + 1, slots.count)) of \(slots.count)",
+                               roundLabel: String(localized: "Round \(min(roundIndex + 1, slots.count)) of \(slots.count)"),
                                realDecoyTeams: sampleTeamAbbrs, realDecoyYears: sampleYears,
                                rosterReady: $roundRosterReady) {
                     withAnimation(Motion.snap) { showingReveal = false }
@@ -255,9 +255,9 @@ struct DraftSpinView: View {
                 HStack(spacing: 10) {
                     // Team's own color instead of a generic accent — the same identity signal
                     // every player-card header band already carries via `TeamColors`.
-                    chip(label: "TEAM", value: round.team.uppercased(),
+                    chip(label: String(localized: "TEAM"), value: round.team.uppercased(),
                          tint: TeamColors.palette(sport: sport, abbr: round.team).primary)
-                    chip(label: "YEAR", value: String(round.year), tint: .successFill)
+                    chip(label: String(localized: "YEAR"), value: String(round.year), tint: .successFill)
                     Spacer()
                     if isDailyDraft {
                         // No reroll here — see `reroll()`'s doc comment (a free reroll would

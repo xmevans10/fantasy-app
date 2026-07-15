@@ -203,12 +203,12 @@ struct ScoringDetailSheet: View {
         switch kind {
         case .ppr:
             switch puzzle.sport {
-            case .nfl:    return "Real PPR fantasy points"
-            case .tennis: return "Season résumé points"
-            default:      return "Real fantasy points"
+            case .nfl:    return String(localized: "Real PPR fantasy points")
+            case .tennis: return String(localized: "Season résumé points")
+            default:      return String(localized: "Real fantasy points")
             }
-        case .era:   return "Era-adjusted fantasy points"
-        case .vibes: return "Author's call"
+        case .era:   return String(localized: "Era-adjusted fantasy points")
+        case .vibes: return String(localized: "Author's call")
         }
     }
 
@@ -216,13 +216,15 @@ struct ScoringDetailSheet: View {
         switch kind {
         case .ppr:
             return puzzle.sport == .tennis
-                ? "Every card is scored from its real season results using the table below. The four highest totals are the correct Keeps."
-                : "Every card is worth the fantasy points its real stat line produced. Add up the table below — the four highest totals are the correct Keeps."
+                ? String(localized: "Every card is scored from its real season results using the table below. The four highest totals are the correct Keeps.")
+                : String(localized: "Every card is worth the fantasy points its real stat line produced. Add up the table below — the four highest totals are the correct Keeps.")
         case .era:
-            return "Every card starts from its real fantasy points, then gets adjusted for its era — so a monster season from a low-scoring year isn't buried by modern stat inflation."
+            return String(localized: "Every card starts from its real fantasy points, then gets adjusted for its era — so a monster season from a low-scoring year isn't buried by modern stat inflation.")
         case .vibes:
-            let whose = author.map { "@\($0)" } ?? "The author"
-            return "\(whose) put these eight in order by feel — no formula, no stat math. The numbers on the cards are evidence, not the answer key."
+            // "@handle put these..." vs "The author put these..." — the substituted actor
+            // is itself localized so `%@ put these...` isn't stuck mid-sentence in English.
+            let whose = author.map { "@\($0)" } ?? String(localized: "The author")
+            return String(localized: "\(whose) put these eight in order by feel — no formula, no stat math. The numbers on the cards are evidence, not the answer key.")
         }
     }
 
@@ -320,10 +322,10 @@ struct ScoringDetailSheet: View {
     private var footnoteText: String {
         var lines = [provenance(for: breakdown.sections.first?.scaleKey ?? "")]
         if kind == .era {
-            lines.append("The era index is BallIQ's own, built from league-wide averages by position and year.")
+            lines.append(String(localized: "The era index is BallIQ's own, built from league-wide averages by position and year."))
         }
         if !breakdown.exact, isCommunity, puzzle.sport == .nfl {
-            lines.append("This community puzzle predates formula tagging — its author may have picked the Half-PPR or Standard variant instead.")
+            lines.append(String(localized: "This community puzzle predates formula tagging — its author may have picked the Half-PPR or Standard variant instead."))
         }
         return lines.joined(separator: " ")
     }
@@ -331,21 +333,21 @@ struct ScoringDetailSheet: View {
     private func provenance(for scale: String) -> String {
         switch scale {
         case "nfl_fantasy", "nfl_skill_ppr", "nfl_qb_fantasy":
-            return "This is the industry-standard full-PPR formula — the same default scoring used on ESPN, Yahoo, and Sleeper."
+            return String(localized: "This is the industry-standard full-PPR formula — the same default scoring used on ESPN, Yahoo, and Sleeper.")
         case "nfl_fantasy_half":
-            return "Half-PPR: the industry-standard formula with receptions at half a point."
+            return String(localized: "Half-PPR: the industry-standard formula with receptions at half a point.")
         case "nfl_fantasy_standard":
-            return "Standard (non-PPR) scoring — receptions themselves score nothing."
+            return String(localized: "Standard (non-PPR) scoring — receptions themselves score nothing.")
         case "nba_fantasy":
-            return "DraftKings-style per-stat rates, lightly simplified and applied to full-season totals."
+            return String(localized: "DraftKings-style per-stat rates, lightly simplified and applied to full-season totals.")
         case "baseball_hitter_fantasy", "baseball_pitcher_fantasy":
-            return "Classic points-league baseball scoring convention."
+            return String(localized: "Classic points-league baseball scoring convention.")
         case "soccer_attacker_fantasy", "soccer_defender_fantasy":
-            return "Inspired by Fantasy Premier League scoring, simplified to one shared rate per role."
+            return String(localized: "Inspired by Fantasy Premier League scoring, simplified to one shared rate per role.")
         case "tennis_fantasy":
-            return "BallIQ's own formula — there's no standard fantasy game for tennis, so seasons are scored as résumés: wins carry the total, Slams tower over everything."
+            return String(localized: "BallIQ's own formula — there's no standard fantasy game for tennis, so seasons are scored as résumés: wins carry the total, Slams tower over everything.")
         default:
-            return "BallIQ's own scoring formula."
+            return String(localized: "BallIQ's own scoring formula.")
         }
     }
 }

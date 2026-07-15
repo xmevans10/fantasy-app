@@ -83,8 +83,8 @@ struct HomeView: View {
                                     DailyGameCard(formatName: "Who am I?",
                                                   symbol: "questionmark.circle.fill",
                                                   sport: puzzle.sport,
-                                                  title: "Guess today's mystery player",
-                                                  subtitle: "\(puzzle.clues.count) clues",
+                                                  title: String(localized: "Guess today's mystery player"),
+                                                  subtitle: String(localized: "\(puzzle.clues.count) clues"),
                                                   completed: container.hasCompletedToday(puzzleID: puzzle.id),
                                                   typeColor: .voltFill, onTypeColor: .onVolt) {
                                         activeWhoAmI = puzzle
@@ -240,7 +240,9 @@ struct HomeView: View {
     }
 
     @ViewBuilder
-    private func section<Content: View>(_ title: String,
+    // LocalizedStringKey so the three literal section titles extract into
+    // Localizable.xcstrings — same pattern as EmptyStateView/GameSetupScreen.
+    private func section<Content: View>(_ title: LocalizedStringKey,
                                         @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)

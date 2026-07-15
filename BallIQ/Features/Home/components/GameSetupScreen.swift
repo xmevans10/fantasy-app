@@ -8,9 +8,14 @@ import SwiftUI
 struct GameSetupScreen<Options: View>: View {
     @EnvironmentObject private var container: RepositoryContainer
 
+    // `formatName` stays `String` — every call site is either a branded format name (kept
+    // English, see Localizable.xcstrings) or `GameFormat`/local enum `.displayName`, a
+    // runtime property access that can't literal-convert to LocalizedStringKey anyway.
+    // `title`/`startLabel` are always call-site literals across all 4 setup screens, so
+    // LocalizedStringKey lets them extract without touching those call sites.
     let formatName: String            // e.g. "DRAFT & SPIN"
-    let title: String                 // e.g. "Set your draft"
-    let startLabel: String            // e.g. "SPIN TO DRAFT"
+    let title: LocalizedStringKey     // e.g. "Set your draft"
+    let startLabel: LocalizedStringKey // e.g. "SPIN TO DRAFT"
     @Binding var sport: Sport
     let onStart: () -> Void
     let onClose: () -> Void
@@ -60,7 +65,8 @@ struct GameSetupScreen<Options: View>: View {
                 container.sportFilter = filter
                 onStart()
             } label: {
-                Text(startLabel.uppercased())
+                Text(startLabel)
+                    .textCase(.uppercase)
                     .font(.custom(FontName.condBlack, size: 18))
                     .foregroundStyle(Color.onAccent)
                     .frame(maxWidth: .infinity)
@@ -127,8 +133,10 @@ struct GameSetupScreen<Options: View>: View {
 /// One titled option block on a setup screen — shared by every format so option rows
 /// render identically everywhere.
 struct SetupOptionCard<Control: View>: View {
-    let title: String
-    let caption: String?
+    // LocalizedStringKey — every call site (this file's SPORT card, DraftSpinSetupView's 6)
+    // passes a literal or a literal ternary/interpolation, so this extracts for free.
+    let title: LocalizedStringKey
+    let caption: LocalizedStringKey?
     @ViewBuilder var control: () -> Control
 
     var body: some View {
@@ -150,7 +158,10 @@ struct SetupOptionCard<Control: View>: View {
 /// setup screen show an honest disabled option (e.g. NFL "Both sides" with no defensive
 /// data) without hiding that the reference feature exists.
 struct SetupSegmentedControl: View {
-    let options: [String]
+    // LocalizedStringKey so the 4 call sites' literal option arrays extract into
+    // Localizable.xcstrings without themselves changing — see EmptyStateView for the
+    // same pattern.
+    let options: [LocalizedStringKey]
     let selectedIndex: Int
     var enabled: [Bool]? = nil
     let onSelect: (Int) -> Void

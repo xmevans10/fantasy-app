@@ -32,12 +32,12 @@ struct CreateView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             NavigationLink { CreateKeep4View().environmentObject(container) } label: {
-                choice(title: "K4C4", blurb: "Pick 8 real seasons; the top 4 by the stats are the answer.",
+                choice(title: "K4C4", blurb: String(localized: "Pick 8 real seasons; the top 4 by the stats are the answer."),
                        symbol: "rectangle.stack.fill", accent: .accentFill, on: .onAccent)
             }
             .buttonStyle(PrimePressStyle())
             NavigationLink { CreateWhoAmIView().environmentObject(container) } label: {
-                choice(title: "Who Am I?", blurb: "Write six clues that lead to a mystery player.",
+                choice(title: "Who Am I?", blurb: String(localized: "Write six clues that lead to a mystery player."),
                        symbol: "person.fill.questionmark", accent: .voltFill, on: .onVolt)
             }
             .buttonStyle(PrimePressStyle())

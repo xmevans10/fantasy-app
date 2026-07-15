@@ -115,9 +115,13 @@ struct PrimeDropdown<Value: Hashable>: View {
 /// optional CTA. Centers itself in whatever container it's given.
 struct EmptyStateView: View {
     let symbol: String
-    let title: String
-    let message: String
-    var actionTitle: String? = nil
+    // LocalizedStringKey (not String) so every call site's literal/ternary/interpolated
+    // title-message-actionTitle extracts into Localizable.xcstrings automatically — the
+    // 19 call sites across the app all pass compile-time literals, so this costs them
+    // nothing, but it's why we can't accept an arbitrary already-computed String here.
+    let title: LocalizedStringKey
+    let message: LocalizedStringKey
+    var actionTitle: LocalizedStringKey? = nil
     var action: (() -> Void)? = nil
 
     var body: some View {
@@ -128,7 +132,8 @@ struct EmptyStateView: View {
                 .frame(width: 84, height: 84)
                 .background(Color.accentBg)
                 .clipShape(Circle())
-            Text(title.uppercased())
+            Text(title)
+                .textCase(.uppercase)
                 .font(.title)
                 .foregroundStyle(Color.textPrimary)
                 .multilineTextAlignment(.center)
@@ -139,7 +144,8 @@ struct EmptyStateView: View {
                 .padding(.horizontal, 40)
             if let actionTitle, let action {
                 Button(action: action) {
-                    Text(actionTitle.uppercased())
+                    Text(actionTitle)
+                        .textCase(.uppercase)
                         .font(.heading)
                         .foregroundStyle(Color.onAccent)
                         .padding(.horizontal, 26).padding(.vertical, 11)

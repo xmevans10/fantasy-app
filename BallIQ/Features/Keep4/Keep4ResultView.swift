@@ -60,9 +60,9 @@ struct Keep4ResultView: View {
     /// Grain-aware header: a career puzzle's best card is a career, not a season.
     private var topCardTitle: String {
         switch puzzle.puzzleGrain() {
-        case .season:     return "TOP SEASON"
-        case .singleGame: return "TOP GAME"
-        case .career:     return "TOP CAREER"
+        case .season:     return String(localized: "TOP SEASON")
+        case .singleGame: return String(localized: "TOP GAME")
+        case .career:     return String(localized: "TOP CAREER")
         }
     }
 
@@ -89,8 +89,8 @@ struct Keep4ResultView: View {
                 .foregroundStyle(Color.textPrimary)
 
             HStack(alignment: .top, spacing: 10) {
-                pileColumn(title: "KEEPS", players: correctKeeps, fill: .successFill, on: .onSuccess)
-                pileColumn(title: "CUTS", players: correctCuts, fill: .dangerFill, on: .onDanger)
+                pileColumn(title: String(localized: "KEEPS"), players: correctKeeps, fill: .successFill, on: .onSuccess)
+                pileColumn(title: String(localized: "CUTS"), players: correctCuts, fill: .dangerFill, on: .onDanger)
             }
         }
     }

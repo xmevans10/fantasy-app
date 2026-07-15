@@ -198,7 +198,7 @@ struct PublicProfileView: View {
             challengeSent = sport
             Haptics.success()
         } catch {
-            errorMessage = "Couldn't send the challenge. Try again."
+            errorMessage = String(localized: "Couldn't send the challenge. Try again.")
         }
         working = false
     }

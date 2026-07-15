@@ -26,12 +26,12 @@ enum ClueKind: String, Codable {
     /// Sentence-case label (CDS).
     var label: String {
         switch self {
-        case .era: return "Era"
-        case .position: return "Position"
-        case .teams: return "Teams"
-        case .statLine: return "Stat line"
-        case .fact: return "Known for"
-        case .jersey: return "Jersey"
+        case .era: return String(localized: "Era")
+        case .position: return String(localized: "Position")
+        case .teams: return String(localized: "Teams")
+        case .statLine: return String(localized: "Stat line")
+        case .fact: return String(localized: "Known for")
+        case .jersey: return String(localized: "Jersey")
         }
     }
 }

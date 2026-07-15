@@ -32,7 +32,8 @@ struct FormatGridItem: View {
                     .font(.custom(FontName.condBold, size: 16))
                     .foregroundStyle(Color.textPrimary)
                     .multilineTextAlignment(.leading)
-                Text((format.subtitle ?? (format.isPlayable ? "Daily" : (format.isPro ? "Pro only" : "Soon"))).uppercased())
+                Text(format.subtitle ?? (format.isPlayable ? "Daily" : (format.isPro ? "Pro only" : "Soon")))
+                    .textCase(.uppercase)
                     .font(.label11)
                     .foregroundStyle(format.isPlayable ? Color.accentText : Color.textMuted)
             }

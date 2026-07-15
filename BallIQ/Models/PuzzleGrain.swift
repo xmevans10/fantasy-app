@@ -24,27 +24,27 @@ enum PuzzleGrain: String, Codable {
     /// Short ALL-CAPS badge text for puzzle cards.
     var badgeLabel: String {
         switch self {
-        case .season:     return "SEASON"
-        case .singleGame: return "SINGLE GAME"
-        case .career:     return "CAREER"
+        case .season:     return String(localized: "SEASON")
+        case .singleGame: return String(localized: "SINGLE GAME")
+        case .career:     return String(localized: "CAREER")
         }
     }
 
     /// Plural noun for "N ___" card-count subtitles (e.g. "8 seasons" / "8 games" / "8 careers").
     var countNoun: String {
         switch self {
-        case .season:     return "seasons"
-        case .singleGame: return "games"
-        case .career:     return "careers"
+        case .season:     return String(localized: "seasons")
+        case .singleGame: return String(localized: "games")
+        case .career:     return String(localized: "careers")
         }
     }
 
     /// 1-line explainer shown above the first card in the play flow.
     var explainer: String {
         switch self {
-        case .season:     return "Ranked by real single-season stats"
-        case .singleGame: return "Ranked by one single-game performance, not a full season"
-        case .career:     return "Ranked by real career totals across every season"
+        case .season:     return String(localized: "Ranked by real single-season stats")
+        case .singleGame: return String(localized: "Ranked by one single-game performance, not a full season")
+        case .career:     return String(localized: "Ranked by real career totals across every season")
         }
     }
 

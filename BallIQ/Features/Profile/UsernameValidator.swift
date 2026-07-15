@@ -12,10 +12,10 @@ enum UsernameValidationError: Error, Equatable {
     /// Inline hint shown under the TextField.
     var message: String {
         switch self {
-        case .tooShort: return "At least 3 characters."
-        case .tooLong: return "20 characters or fewer."
-        case .invalidCharacters: return "Letters, numbers, and underscores only."
-        case .mustStartWithLetter: return "Must start with a letter."
+        case .tooShort: return String(localized: "At least 3 characters.")
+        case .tooLong: return String(localized: "20 characters or fewer.")
+        case .invalidCharacters: return String(localized: "Letters, numbers, and underscores only.")
+        case .mustStartWithLetter: return String(localized: "Must start with a letter.")
         }
     }
 }

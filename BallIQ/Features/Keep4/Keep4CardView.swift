@@ -163,8 +163,8 @@ struct Keep4CardView: View {
 
     private var segmentedControl: some View {
         HStack(spacing: 0) {
-            segment(title: "Cut", pile: .cut, gradient: Self.cutGradient)
-            segment(title: "Keep", pile: .keep, gradient: Self.keepGradient)
+            segment(title: String(localized: "Cut"), pile: .cut, gradient: Self.cutGradient)
+            segment(title: String(localized: "Keep"), pile: .keep, gradient: Self.keepGradient)
         }
         .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(Color.borderInk, lineWidth: 2))
@@ -190,7 +190,9 @@ struct Keep4CardView: View {
         .buttonStyle(.plain)
         .disabled(disabled)
         .accessibilityLabel("\(title) \(player.name)")
-        .accessibilityHint(disabled ? "\(pile == .keep ? "Keep" : "Cut") pile is full" : "")
+        .accessibilityHint(disabled
+                           ? "\(pile == .keep ? String(localized: "Keep") : String(localized: "Cut")) pile is full"
+                           : "")
     }
 
     private var dragGesture: some Gesture {

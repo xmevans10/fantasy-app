@@ -137,9 +137,9 @@ struct IdentityEditorSheet: View {
             Haptics.success()
             dismiss()
         } catch SupabaseError.http(status: 409, body: _) {
-            errorMessage = "That username is taken."
+            errorMessage = String(localized: "That username is taken.")
         } catch {
-            errorMessage = "Couldn't save. Try again."
+            errorMessage = String(localized: "Couldn't save. Try again.")
         }
         saving = false
     }

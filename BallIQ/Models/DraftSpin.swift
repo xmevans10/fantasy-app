@@ -236,21 +236,21 @@ struct DraftSpinResult: Equatable {
             switch sport {
             case .nfl, .nba, .baseball:
                 switch self {
-                case .champion: return "CHAMPION"
-                case .madePlayoffs: return "MADE THE PLAYOFFS"
-                case .missedPlayoffs: return "MISSED THE PLAYOFFS"
+                case .champion: return String(localized: "CHAMPION")
+                case .madePlayoffs: return String(localized: "MADE THE PLAYOFFS")
+                case .missedPlayoffs: return String(localized: "MISSED THE PLAYOFFS")
                 }
             case .soccer:
                 switch self {
-                case .champion: return "WON THE LEAGUE"
-                case .madePlayoffs: return "TOP FOUR"
-                case .missedPlayoffs: return "MID-TABLE"
+                case .champion: return String(localized: "WON THE LEAGUE")
+                case .madePlayoffs: return String(localized: "TOP FOUR")
+                case .missedPlayoffs: return String(localized: "MID-TABLE")
                 }
             case .tennis:
                 switch self {
-                case .champion: return "YEAR-END No. 1"
-                case .madePlayoffs: return "TOP 10 SEASON"
-                case .missedPlayoffs: return "TOUR GRIND"
+                case .champion: return String(localized: "YEAR-END No. 1")
+                case .madePlayoffs: return String(localized: "TOP 10 SEASON")
+                case .missedPlayoffs: return String(localized: "TOUR GRIND")
                 }
             }
         }

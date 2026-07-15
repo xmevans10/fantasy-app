@@ -1,0 +1,4244 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+      "shouldTranslate" : false
+    },
+    "…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "…"
+          }
+        }
+      }
+    },
+    "@%@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "@%@"
+          }
+        }
+      }
+    },
+    "%@ · '%@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · '%@"
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@"
+          }
+        }
+      }
+    },
+    "%@ · %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %lld"
+          }
+        }
+      }
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ %lld/%lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %lld/%lld"
+          }
+        }
+      }
+    },
+    "%@ legends" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "leyendas de %@"
+          }
+        }
+      }
+    },
+    "%@ PILE FULL — REMAINING ARE %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PILA DE %@ LLENA — EL RESTO VA A %@"
+          }
+        }
+      }
+    },
+    "%@ pile is full" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La pila de %@ está llena"
+          }
+        }
+      }
+    },
+    "%@ put these eight in order by feel — no formula, no stat math. The numbers on the cards are evidence, not the answer key." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ puso estos ocho en orden según su instinto — sin fórmula, sin cálculo de estadísticas. Los números en las cartas son evidencia, no la respuesta correcta."
+          }
+        }
+      }
+    },
+    "%@ RATING" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PUNTAJE DE %@"
+          }
+        }
+      }
+    },
+    "%@, %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, %@"
+          }
+        }
+      }
+    },
+    "%@, %@. Completed." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, %@. Completado."
+          }
+        }
+      }
+    },
+    "%@%lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@%lld"
+          }
+        }
+      }
+    },
+    "%lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        }
+      }
+    },
+    "%lld clues" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pistas"
+          }
+        }
+      }
+    },
+    "%lld day streak" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Racha de %lld días"
+          }
+        }
+      }
+    },
+    "%lld day%@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld día%@"
+          }
+        }
+      }
+    },
+    "%lld OF %lld CORRECT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld DE %lld ACIERTOS"
+          }
+        }
+      }
+    },
+    "%lld of %lld lives" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld de %lld vidas"
+          }
+        }
+      }
+    },
+    "%lld OF 9 CORRECT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld DE 9 ACIERTOS"
+          }
+        }
+      }
+    },
+    "%lld OF 9 GUESSED" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld DE 9 ADIVINADOS"
+          }
+        }
+      }
+    },
+    "%lld PTS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld PTS"
+          }
+        }
+      }
+    },
+    "%lld PTS TO NEXT TIER" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld PTS PARA EL SIGUIENTE NIVEL"
+          }
+        }
+      }
+    },
+    "%lld RIGHT · %lld WRONG" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld BIEN · %lld MAL"
+          }
+        }
+      }
+    },
+    "%lld to %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld para %@"
+          }
+        }
+      }
+    },
+    "%lld wrong · −%lld pts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mal · −%lld pts"
+          }
+        }
+      }
+    },
+    "%lld XP" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld XP"
+          }
+        }
+      }
+    },
+    "%lld-%lld · %lld PTS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld-%lld · %lld PTS"
+          }
+        }
+      }
+    },
+    "%lld-%lld record" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "récord %lld-%lld"
+          }
+        }
+      }
+    },
+    "%lld-%lld RECORD" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RÉCORD %lld-%lld"
+          }
+        }
+      }
+    },
+    "%lld. %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld. %@"
+          }
+        }
+      }
+    },
+    "%lld/%lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld/%lld"
+          }
+        }
+      }
+    },
+    "%lldh left" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldh restantes"
+          }
+        }
+      }
+    },
+    "%lldm left" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm restantes"
+          }
+        }
+      }
+    },
+    "1 day streak" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Racha de 1 día"
+          }
+        }
+      }
+    },
+    "3–20 characters: letters, numbers, underscore. Must start with a letter." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3–20 caracteres: letras, números y guion bajo. Debe empezar con una letra."
+          }
+        }
+      }
+    },
+    "20 characters or fewer." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "20 caracteres o menos."
+          }
+        }
+      }
+    },
+    "A brief note about this puzzle" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una breve nota sobre este acertijo"
+          }
+        }
+      }
+    },
+    "A fresh Keep4 and Who Am I? every day" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un Keep4 y un Who Am I? nuevos cada día"
+          }
+        }
+      }
+    },
+    "A player you drafted can show up again in a later round as a different season of themselves." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un jugador que ya draftaste puede volver a aparecer en una ronda posterior como una temporada diferente de sí mismo."
+          }
+        }
+      }
+    },
+    "ACCEPT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ACEPTAR"
+          }
+        }
+      }
+    },
+    "ACCOUNT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CUENTA"
+          }
+        }
+      }
+    },
+    "Add %lld more to publish." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrega %lld más para publicar."
+          }
+        }
+      }
+    },
+    "Add %lld more, then drag them into your order." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrega %lld más y luego ordénalos arrastrando."
+          }
+        }
+      }
+    },
+    "ADD FRIEND" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AGREGAR AMIGO"
+          }
+        }
+      }
+    },
+    "Add friends by username from your Profile to see how you stack up." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrega amigos por nombre de usuario desde tu perfil para ver cómo te comparas."
+          }
+        }
+      }
+    },
+    "Add friends by username to compare profiles and start Versus battles." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrega amigos por nombre de usuario para comparar perfiles y empezar duelos de Versus."
+          }
+        }
+      }
+    },
+    "All" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos"
+          }
+        }
+      }
+    },
+    "All 5 sports on the daily filter" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los 5 deportes en el filtro diario"
+          }
+        }
+      }
+    },
+    "All decades" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas las décadas"
+          }
+        }
+      }
+    },
+    "ALL LEAGUES" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TODAS LAS LIGAS"
+          }
+        }
+      }
+    },
+    "ALL TEAMS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TODOS LOS EQUIPOS"
+          }
+        }
+      }
+    },
+    "Arcade" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arcade"
+          }
+        }
+      }
+    },
+    "At least 3 characters." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al menos 3 caracteres."
+          }
+        }
+      }
+    },
+    "Author's call" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decisión del autor"
+          }
+        }
+      }
+    },
+    "AVATAR" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AVATAR"
+          }
+        }
+      }
+    },
+    "BallIQ's own formula — there's no standard fantasy game for tennis, so seasons are scored as résumés: wins carry the total, Slams tower over everything." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fórmula propia de BallIQ — no existe un juego de fantasy estándar para tenis, así que las temporadas se puntúan como resúmenes: las victorias suman el total, y los Grand Slams superan todo lo demás."
+          }
+        }
+      }
+    },
+    "BallIQ's own scoring formula." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fórmula de puntuación propia de BallIQ."
+          }
+        }
+      }
+    },
+    "Be the first — tap ＋ to cook one up." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sé el primero — toca ＋ para crear uno."
+          }
+        }
+      }
+    },
+    "BEST IN %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MEJOR EN %@"
+          }
+        }
+      }
+    },
+    "BEST: %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MEJOR: %lld"
+          }
+        }
+      }
+    },
+    "BETTER LUCK TOMORROW" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MÁS SUERTE MAÑANA"
+          }
+        }
+      }
+    },
+    "Blind sort — swipe right to Keep, left to Cut. Decisions are final." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orden a ciegas — desliza a la derecha para Mantener, a la izquierda para Cortar. Las decisiones son definitivas."
+          }
+        }
+      }
+    },
+    "book" : {
+      "shouldTranslate" : false
+    },
+    "Browse" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explorar"
+          }
+        }
+      }
+    },
+    "Browse all puzzles" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explorar todos los acertijos"
+          }
+        }
+      }
+    },
+    "Build your %@ squad" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arma tu equipo de %@"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar"
+          }
+        }
+      }
+    },
+    "CARD %lld OF %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CARTA %lld DE %lld"
+          }
+        }
+      }
+    },
+    "Cards will show %@'s exact stat columns, scored like the daily puzzle. Search below is scoped to %@ only." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las cartas mostrarán las columnas de estadísticas exactas de %@, puntuadas como el acertijo diario. La búsqueda de abajo se limita solo a %@."
+          }
+        }
+      }
+    },
+    "CAREER" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CARRERA"
+          }
+        }
+      }
+    },
+    "careers" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "carreras"
+          }
+        }
+      }
+    },
+    "Challenge anyone by username. You both play the same daily puzzle — higher score wins the day, and wins stack into a best-of-7 series. Play within 24 hours or forfeit." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desafía a cualquiera por nombre de usuario. Ambos juegan el mismo acertijo diario — el puntaje más alto gana el día, y las victorias se acumulan en una serie al mejor de 7. Juega dentro de 24 horas o pierdes por default."
+          }
+        }
+      }
+    },
+    "Challenge sent" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desafío enviado"
+          }
+        }
+      }
+    },
+    "Challenge sent — today's %@ puzzle." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desafío enviado — el acertijo de %@ de hoy."
+          }
+        }
+      }
+    },
+    "CHAMPION" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CAMPEÓN"
+          }
+        }
+      }
+    },
+    "Check back tomorrow for a new Grid." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve mañana para una nueva Grilla."
+          }
+        }
+      }
+    },
+    "Check your connection and try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisa tu conexión e intenta de nuevo."
+          }
+        }
+      }
+    },
+    "CHOOSE A HIGHLIGHTED LINEUP SLOT BELOW" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ELIGE UN LUGAR DESTACADO DE LA ALINEACIÓN ABAJO"
+          }
+        }
+      }
+    },
+    "CLAIM YOUR USERNAME" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RECLAMA TU NOMBRE DE USUARIO"
+          }
+        }
+      }
+    },
+    "Classic points-league baseball scoring convention." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Convención clásica de puntuación de béisbol por puntos."
+          }
+        }
+      }
+    },
+    "Clear search" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar búsqueda"
+          }
+        }
+      }
+    },
+    "Close" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar"
+          }
+        }
+      }
+    },
+    "Clue %lld of %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pista %lld de %lld"
+          }
+        }
+      }
+    },
+    "CLUES" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PISTAS"
+          }
+        }
+      }
+    },
+    "Combo" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Combo"
+          }
+        }
+      }
+    },
+    "Community" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comunidad"
+          }
+        }
+      }
+    },
+    "Community puzzles are tied to your account so others know who made them." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los acertijos de la comunidad están vinculados a tu cuenta para que otros sepan quién los creó."
+          }
+        }
+      }
+    },
+    "Compete" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compite"
+          }
+        }
+      }
+    },
+    "Continue as guest" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar como invitado"
+          }
+        }
+      }
+    },
+    "Continue with Google" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar con Google"
+          }
+        }
+      }
+    },
+    "CORRECT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CORRECTO"
+          }
+        }
+      }
+    },
+    "Costs %lld points" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuesta %lld puntos"
+          }
+        }
+      }
+    },
+    "Couldn't complete sign-in. Try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo completar el inicio de sesión. Intenta de nuevo."
+          }
+        }
+      }
+    },
+    "Couldn't find that username." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró ese nombre de usuario."
+          }
+        }
+      }
+    },
+    "Couldn't load community" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo cargar la comunidad"
+          }
+        }
+      }
+    },
+    "Couldn't load player seasons for %@ right now." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron cargar las temporadas de jugadores de %@ en este momento."
+          }
+        }
+      }
+    },
+    "Couldn't load reports" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron cargar los reportes"
+          }
+        }
+      }
+    },
+    "Couldn't publish" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo publicar"
+          }
+        }
+      }
+    },
+    "Couldn't refresh — tap to retry" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo actualizar — toca para reintentar"
+          }
+        }
+      }
+    },
+    "Couldn't save. Try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo guardar. Intenta de nuevo."
+          }
+        }
+      }
+    },
+    "Couldn't send — try again" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo enviar — intenta de nuevo"
+          }
+        }
+      }
+    },
+    "Couldn't send the challenge. Try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo enviar el desafío. Intenta de nuevo."
+          }
+        }
+      }
+    },
+    "Create" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crear"
+          }
+        }
+      }
+    },
+    "Create puzzle" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crear acertijo"
+          }
+        }
+      }
+    },
+    "CURRENT STREAK" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RACHA ACTUAL"
+          }
+        }
+      }
+    },
+    "Cut" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cortar"
+          }
+        }
+      }
+    },
+    "CUT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CORTAR"
+          }
+        }
+      }
+    },
+    "CUTS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CORTES"
+          }
+        }
+      }
+    },
+    "Daily" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diario"
+          }
+        }
+      }
+    },
+    "Daily Draft" : {
+      "shouldTranslate" : false
+    },
+    "DAILY DRAFT" : {
+      "shouldTranslate" : false
+    },
+    "Daily puzzles" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acertijos diarios"
+          }
+        }
+      }
+    },
+    "Daily puzzles will fill this archive." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los acertijos diarios llenarán este archivo."
+          }
+        }
+      }
+    },
+    "Date" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fecha"
+          }
+        }
+      }
+    },
+    "DECLINE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RECHAZAR"
+          }
+        }
+      }
+    },
+    "Defensive player data isn't in the catalog yet — offense it is." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los datos de jugadores defensivos todavía no están en el catálogo — así que toca ofensiva."
+          }
+        }
+      }
+    },
+    "Deletion can't be undone — restoring or leaving it hidden are reversible." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La eliminación no se puede deshacer — restaurar u ocultar sí son reversibles."
+          }
+        }
+      }
+    },
+    "Dismiss" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descartar"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo"
+          }
+        }
+      }
+    },
+    "DONE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LISTO"
+          }
+        }
+      }
+    },
+    "DRAFT & SPIN" : {
+      "shouldTranslate" : false
+    },
+    "DraftKings-style per-stat rates, lightly simplified and applied to full-season totals." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarifas por estadística estilo DraftKings, ligeramente simplificadas y aplicadas a los totales de la temporada completa."
+          }
+        }
+      }
+    },
+    "Drag into the order you'd keep them — top 4 are KEEP, bottom 4 are CUT." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrástralos al orden en que los mantendrías — los 4 de arriba son MANTENER, los 4 de abajo son CORTAR."
+          }
+        }
+      }
+    },
+    "e.g. One-hit wonders: 2010s WRs" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "p. ej. Estrellas de un año: WRs de los 2010"
+          }
+        }
+      }
+    },
+    "Each real player appears in your draft at most once." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada jugador real aparece en tu draft como máximo una vez."
+          }
+        }
+      }
+    },
+    "ENABLE PUSH NOTIFICATIONS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ACTIVAR NOTIFICACIONES PUSH"
+          }
+        }
+      }
+    },
+    "Era" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Era"
+          }
+        }
+      }
+    },
+    "Era-adjust scoring" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puntuación ajustada por era"
+          }
+        }
+      }
+    },
+    "Era-adjusted fantasy points" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puntos de fantasy ajustados por era"
+          }
+        }
+      }
+    },
+    "Every card is scored from its real season results using the table below. The four highest totals are the correct Keeps." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada carta se puntúa según los resultados reales de su temporada usando la tabla de abajo. Los cuatro totales más altos son los Keeps correctos."
+          }
+        }
+      }
+    },
+    "Every card is worth the fantasy points its real stat line produced. Add up the table below — the four highest totals are the correct Keeps." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada carta vale los puntos de fantasy que produjo su línea de estadísticas real. Suma la tabla de abajo — los cuatro totales más altos son los Keeps correctos."
+          }
+        }
+      }
+    },
+    "Every card starts from its real fantasy points, then gets adjusted for its era — so a monster season from a low-scoring year isn't buried by modern stat inflation." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada carta parte de sus puntos de fantasy reales, y luego se ajusta según su era — así una temporada monstruosa de un año de bajo puntaje no queda enterrada por la inflación estadística moderna."
+          }
+        }
+      }
+    },
+    "Every round spins any team and year." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada ronda gira cualquier equipo y año."
+          }
+        }
+      }
+    },
+    "Every spin lands on a real team-season roster. Draft the best player for each open spot." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada giro cae en un roster real de un equipo y una temporada. Draftea al mejor jugador para cada lugar libre."
+          }
+        }
+      }
+    },
+    "Everyone starts from today's same spins — this run is your official score." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos parten de los mismos giros de hoy — esta partida es tu puntaje oficial."
+          }
+        }
+      }
+    },
+    "Expired — neither of you played" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expiró — ninguno de los dos jugó"
+          }
+        }
+      }
+    },
+    "Expiring…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por expirar…"
+          }
+        }
+      }
+    },
+    "FAVORITE TEAMS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EQUIPOS FAVORITOS"
+          }
+        }
+      }
+    },
+    "FINAL" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FINAL"
+          }
+        }
+      }
+    },
+    "Finding real %@ rosters…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando rosters reales de %@…"
+          }
+        }
+      }
+    },
+    "FIRST-CLUE GENIUS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GENIO DE LA PRIMERA PISTA"
+          }
+        }
+      }
+    },
+    "Five sports: NFL, NBA, MLB, soccer, and tennis" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cinco deportes: NFL, NBA, MLB, Soccer y Tennis"
+          }
+        }
+      }
+    },
+    "FPTS" : {
+      "shouldTranslate" : false
+    },
+    "FREE PLAY" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JUEGO LIBRE"
+          }
+        }
+      }
+    },
+    "Friends" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amigos"
+          }
+        }
+      }
+    },
+    "FRIENDS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AMIGOS"
+          }
+        }
+      }
+    },
+    "From %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desde %lld"
+          }
+        }
+      }
+    },
+    "Full archive — replay every past daily" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo completo — rejuega todos los diarios pasados"
+          }
+        }
+      }
+    },
+    "Fully random spins, any sport, anytime — practice or grind XP." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giros totalmente aleatorios, cualquier deporte, cuando quieras — practica o suma XP."
+          }
+        }
+      }
+    },
+    "Game formats" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatos de juego"
+          }
+        }
+      }
+    },
+    "games" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "partidos"
+          }
+        }
+      }
+    },
+    "Give up" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendirse"
+          }
+        }
+      }
+    },
+    "GRID COMPLETE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GRILLA COMPLETA"
+          }
+        }
+      }
+    },
+    "Guess" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adivinar"
+          }
+        }
+      }
+    },
+    "GUESS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ADIVINAR"
+          }
+        }
+      }
+    },
+    "Guess today's mystery player" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adivina al jugador misterioso de hoy"
+          }
+        }
+      }
+    },
+    "Half-PPR: the industry-standard formula with receptions at half a point." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Half-PPR: la fórmula estándar de la industria con las recepciones valiendo medio punto."
+          }
+        }
+      }
+    },
+    "Hard" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Difícil"
+          }
+        }
+      }
+    },
+    "Hard mode — stats hidden" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo difícil — estadísticas ocultas"
+          }
+        }
+      }
+    },
+    "Hard mode on every Keep4/Cut4" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo difícil en cada Keep4/Cut4"
+          }
+        }
+      }
+    },
+    "Head-to-head" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cara a cara"
+          }
+        }
+      }
+    },
+    "Home" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio"
+          }
+        }
+      }
+    },
+    "How it works" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cómo funciona"
+          }
+        }
+      }
+    },
+    "How it's scored" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cómo se puntúa"
+          }
+        }
+      }
+    },
+    "How leagues work" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cómo funcionan las ligas"
+          }
+        }
+      }
+    },
+    "How Versus works" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cómo funciona Versus"
+          }
+        }
+      }
+    },
+    "IMMACULATE GRID" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GRILLA INMACULADA"
+          }
+        }
+      }
+    },
+    "Inaccurate or broken puzzle" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acertijo inexacto o dañado"
+          }
+        }
+      }
+    },
+    "Inspired by Fantasy Premier League scoring, simplified to one shared rate per role." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspirado en la puntuación de Fantasy Premier League, simplificada a una tarifa compartida por rol."
+          }
+        }
+      }
+    },
+    "IT'S A HIT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡ES UN ÉXITO!"
+          }
+        }
+      }
+    },
+    "Jersey" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camiseta"
+          }
+        }
+      }
+    },
+    "K4C4" : {
+      "shouldTranslate" : false
+    },
+    "Keep" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener"
+          }
+        }
+      }
+    },
+    "KEEP" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MANTENER"
+          }
+        }
+      }
+    },
+    "KEEPS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MANTENIDOS"
+          }
+        }
+      }
+    },
+    "Known for" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conocido por"
+          }
+        }
+      }
+    },
+    "Leaderboard" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabla de posiciones"
+          }
+        }
+      }
+    },
+    "LEADERBOARD" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TABLA DE POSICIONES"
+          }
+        }
+      }
+    },
+    "LEAGUE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LIGA"
+          }
+        }
+      }
+    },
+    "Leagues" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ligas"
+          }
+        }
+      }
+    },
+    "Letters, numbers, and underscores only." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo letras, números y guiones bajos."
+          }
+        }
+      }
+    },
+    "Loading plans…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando planes…"
+          }
+        }
+      }
+    },
+    "LOCKED IN" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CONFIRMADO"
+          }
+        }
+      }
+    },
+    "LOSS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DERROTA"
+          }
+        }
+      }
+    },
+    "MADE THE PLAYOFFS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CLASIFICÓ A PLAYOFFS"
+          }
+        }
+      }
+    },
+    "Max tier" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nivel máximo"
+          }
+        }
+      }
+    },
+    "MID-TABLE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MITAD DE TABLA"
+          }
+        }
+      }
+    },
+    "MISSED THE PLAYOFFS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NO CLASIFICÓ A PLAYOFFS"
+          }
+        }
+      }
+    },
+    "MODE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MODO"
+          }
+        }
+      }
+    },
+    "Moderation" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moderación"
+          }
+        }
+      }
+    },
+    "More options" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más opciones"
+          }
+        }
+      }
+    },
+    "Multiplies each season's points by its era's league volume — a 2002 stat line can outrank a bigger modern one." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multiplica los puntos de cada temporada por el volumen de la liga en su era — una línea de estadísticas de 2002 puede superar a una moderna más grande."
+          }
+        }
+      }
+    },
+    "Must start with a letter." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debe empezar con una letra."
+          }
+        }
+      }
+    },
+    "My BallIQ profile" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi perfil de BallIQ"
+          }
+        }
+      }
+    },
+    "My Draft & Spin season" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi temporada de Draft & Spin"
+          }
+        }
+      }
+    },
+    "My Playbook result" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi resultado de Playbook"
+          }
+        }
+      }
+    },
+    "MY PROFILE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MI PERFIL"
+          }
+        }
+      }
+    },
+    "Name that player" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombra a ese jugador"
+          }
+        }
+      }
+    },
+    "Name the player" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombra al jugador"
+          }
+        }
+      }
+    },
+    "Never wait for lives" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nunca esperes por vidas"
+          }
+        }
+      }
+    },
+    "New challenge" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo desafío"
+          }
+        }
+      }
+    },
+    "New Challenge" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo desafío"
+          }
+        }
+      }
+    },
+    "NEW HIGH SCORE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NUEVO PUNTAJE MÁXIMO"
+          }
+        }
+      }
+    },
+    "New K4C4" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo K4C4"
+          }
+        }
+      }
+    },
+    "New Who Am I?" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo Who Am I?"
+          }
+        }
+      }
+    },
+    "Next clue · −%lld pts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próxima pista · −%lld pts"
+          }
+        }
+      }
+    },
+    "NEXT DAILY AT MIDNIGHT UTC" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PRÓXIMO DIARIO A MEDIANOCHE UTC"
+          }
+        }
+      }
+    },
+    "No %@ %@ puzzle is live today — try another sport." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ningún acertijo de %@ %@ activo hoy — prueba con otro deporte."
+          }
+        }
+      }
+    },
+    "No challenges yet" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía no hay desafíos"
+          }
+        }
+      }
+    },
+    "No community puzzles yet" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía no hay acertijos de la comunidad"
+          }
+        }
+      }
+    },
+    "No data" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin datos"
+          }
+        }
+      }
+    },
+    "No formula" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin fórmula"
+          }
+        }
+      }
+    },
+    "No friends yet" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía no tienes amigos"
+          }
+        }
+      }
+    },
+    "No Grid today" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoy no hay Grilla"
+          }
+        }
+      }
+    },
+    "No open slot fits this position." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún lugar libre encaja con esta posición."
+          }
+        }
+      }
+    },
+    "No players match." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún jugador coincide."
+          }
+        }
+      }
+    },
+    "No players match. Loosen the filters above." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún jugador coincide. Relaja los filtros de arriba."
+          }
+        }
+      }
+    },
+    "No puzzle today" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay acertijo hoy"
+          }
+        }
+      }
+    },
+    "No puzzles match" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún acertijo coincide"
+          }
+        }
+      }
+    },
+    "No reported puzzles to review." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay acertijos reportados para revisar."
+          }
+        }
+      }
+    },
+    "No scores yet" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía no hay puntajes"
+          }
+        }
+      }
+    },
+    "Nobody's official run is in yet — yours can be the one to beat." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía nadie tiene una partida oficial — la tuya puede ser la que hay que superar."
+          }
+        }
+      }
+    },
+    "Nobody's posted a run this week — yours can set the bar." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nadie ha publicado una partida esta semana — la tuya puede marcar el estándar."
+          }
+        }
+      }
+    },
+    "None" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguno"
+          }
+        }
+      }
+    },
+    "Normal" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        }
+      }
+    },
+    "Nothing here yet" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía no hay nada aquí"
+          }
+        }
+      }
+    },
+    "NOTIFICATIONS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NOTIFICACIONES"
+          }
+        }
+      }
+    },
+    "OFFENSE ONLY" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SOLO OFENSIVA"
+          }
+        }
+      }
+    },
+    "Offensive" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ofensivo"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "ON" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ACTIVADO"
+          }
+        }
+      }
+    },
+    "ONE TEAM" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UN EQUIPO"
+          }
+        }
+      }
+    },
+    "OPEN" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ABIERTOS"
+          }
+        }
+      }
+    },
+    "Open the grid" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir la grilla"
+          }
+        }
+      }
+    },
+    "OPENING THE VAULT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ABRIENDO LA BÓVEDA"
+          }
+        }
+      }
+    },
+    "Opponent's username" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de usuario del oponente"
+          }
+        }
+      }
+    },
+    "Other" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otro"
+          }
+        }
+      }
+    },
+    "OUT OF GUESSES" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SIN INTENTOS"
+          }
+        }
+      }
+    },
+    "OUT OF LIVES" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SIN VIDAS"
+          }
+        }
+      }
+    },
+    "Over" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más"
+          }
+        }
+      }
+    },
+    "OVER / UNDER" : {
+      "shouldTranslate" : false
+    },
+    "OVER OR UNDER?" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿MÁS O MENOS?"
+          }
+        }
+      }
+    },
+    "PENDING" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PENDIENTE"
+          }
+        }
+      }
+    },
+    "PERFECT SORT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ORDEN PERFECTO"
+          }
+        }
+      }
+    },
+    "Pick 8 real seasons; the top 4 by the stats are the answer." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige 8 temporadas reales; las 4 mejores según las estadísticas son la respuesta."
+          }
+        }
+      }
+    },
+    "Pick your sport" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige tu deporte"
+          }
+        }
+      }
+    },
+    "PLACE %@ IN A HIGHLIGHTED SLOT." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COLOCA A %@ EN UN LUGAR DESTACADO."
+          }
+        }
+      }
+    },
+    "PLACE PLAYER" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COLOCAR JUGADOR"
+          }
+        }
+      }
+    },
+    "Plans unavailable right now." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los planes no están disponibles por ahora."
+          }
+        }
+      }
+    },
+    "play" : {
+      "shouldTranslate" : false
+    },
+    "PLAY" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JUGAR"
+          }
+        }
+      }
+    },
+    "Play a ranked %@ puzzle to start your rating history." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Juega un acertijo clasificado de %@ para comenzar tu historial de puntaje."
+          }
+        }
+      }
+    },
+    "PLAY AT PLAYBOOK" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JUEGA EN PLAYBOOK"
+          }
+        }
+      }
+    },
+    "Play today's puzzle" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Juega el acertijo de hoy"
+          }
+        }
+      }
+    },
+    "PLAYBOOK PRO" : {
+      "shouldTranslate" : false
+    },
+    "Player name" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre del jugador"
+          }
+        }
+      }
+    },
+    "Player not found" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jugador no encontrado"
+          }
+        }
+      }
+    },
+    "Position" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posición"
+          }
+        }
+      }
+    },
+    "Practice replay — today's official score was already locked in." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repetición de práctica — tu puntaje oficial de hoy ya quedó registrado."
+          }
+        }
+      }
+    },
+    "PRIME ONLY" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SOLO PRIME"
+          }
+        }
+      }
+    },
+    "Pro" : {
+      "shouldTranslate" : false
+    },
+    "PRO" : {
+      "shouldTranslate" : false
+    },
+    "PRO GETS UNLIMITED OVER/UNDER" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PRO TE DA OVER/UNDER ILIMITADO"
+          }
+        }
+      }
+    },
+    "Pro only" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo Pro"
+          }
+        }
+      }
+    },
+    "Profile" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perfil"
+          }
+        }
+      }
+    },
+    "PROVE YOU KNOW BALL." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DEMUESTRA QUE SABES DE DEPORTES."
+          }
+        }
+      }
+    },
+    "Publish" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publicar"
+          }
+        }
+      }
+    },
+    "Published!" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Publicado!"
+          }
+        }
+      }
+    },
+    "Purchase failed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La compra falló"
+          }
+        }
+      }
+    },
+    "Puzzle options" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opciones del acertijo"
+          }
+        }
+      }
+    },
+    "Queue is clear" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay nada pendiente"
+          }
+        }
+      }
+    },
+    "Rank real careers by the stats, not vibes" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clasifica carreras reales por las estadísticas, no por sensaciones"
+          }
+        }
+      }
+    },
+    "Ranked by one single-game performance, not a full season" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clasificado por una sola actuación de un partido, no una temporada completa"
+          }
+        }
+      }
+    },
+    "Ranked by real career totals across every season" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clasificado por los totales de carrera reales de todas las temporadas"
+          }
+        }
+      }
+    },
+    "Ranked by real single-season stats" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clasificado por estadísticas reales de una sola temporada"
+          }
+        }
+      }
+    },
+    "Rating" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puntaje"
+          }
+        }
+      }
+    },
+    "RATING" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PUNTAJE"
+          }
+        }
+      }
+    },
+    "RATING HISTORY & TRENDS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HISTORIAL Y TENDENCIAS DE PUNTAJE"
+          }
+        }
+      }
+    },
+    "RATINGS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PUNTAJES"
+          }
+        }
+      }
+    },
+    "Real fantasy points" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puntos reales de fantasy"
+          }
+        }
+      }
+    },
+    "Real PPR fantasy points" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puntos reales de fantasy PPR"
+          }
+        }
+      }
+    },
+    "Real seasons" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporadas reales"
+          }
+        }
+      }
+    },
+    "Remove" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar"
+          }
+        }
+      }
+    },
+    "Remove friend" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar amigo"
+          }
+        }
+      }
+    },
+    "Remove this puzzle permanently?" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar este acertijo de forma permanente?"
+          }
+        }
+      }
+    },
+    "REPLAY THE FULL ARCHIVE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "REJUEGA TODO EL ARCHIVO"
+          }
+        }
+      }
+    },
+    "Report puzzle" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reportar acertijo"
+          }
+        }
+      }
+    },
+    "Report sent" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reporte enviado"
+          }
+        }
+      }
+    },
+    "Report this puzzle" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reportar este acertijo"
+          }
+        }
+      }
+    },
+    "Report this puzzle?" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Reportar este acertijo?"
+          }
+        }
+      }
+    },
+    "REPORTED COMMUNITY PUZZLES" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ACERTIJOS DE LA COMUNIDAD REPORTADOS"
+          }
+        }
+      }
+    },
+    "REQUESTS & CHALLENGES" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SOLICITUDES Y DESAFÍOS"
+          }
+        }
+      }
+    },
+    "Reroll (%lld)" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-tirar (%lld)"
+          }
+        }
+      }
+    },
+    "RESTORE PURCHASES" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RESTAURAR COMPRAS"
+          }
+        }
+      }
+    },
+    "RESULTS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RESULTADOS"
+          }
+        }
+      }
+    },
+    "Retry" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentar"
+          }
+        }
+      }
+    },
+    "Reveal next clue" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revelar la próxima pista"
+          }
+        }
+      }
+    },
+    "ROSTER" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROSTER"
+          }
+        }
+      }
+    },
+    "Round %lld of %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ronda %lld de %lld"
+          }
+        }
+      }
+    },
+    "ROUND %lld OF %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RONDA %lld DE %lld"
+          }
+        }
+      }
+    },
+    "Round 1 spins a franchise, then every round spins a different year of that same team." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ronda 1 gira una franquicia, y luego cada ronda gira un año distinto de ese mismo equipo."
+          }
+        }
+      }
+    },
+    "Same %@ spins as every other player today. One official run per day — replays after that only earn XP." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los mismos giros de %@ que todos los demás jugadores hoy. Una partida oficial por día — las repeticiones después de esa solo suman XP."
+          }
+        }
+      }
+    },
+    "SAVE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GUARDAR"
+          }
+        }
+      }
+    },
+    "Score" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puntaje"
+          }
+        }
+      }
+    },
+    "SCOUTING THE ROSTER…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EXPLORANDO EL ROSTER…"
+          }
+        }
+      }
+    },
+    "Search" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar"
+          }
+        }
+      }
+    },
+    "SEASON" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TEMPORADA"
+          }
+        }
+      }
+    },
+    "Season résumé points" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puntos de resumen de temporada"
+          }
+        }
+      }
+    },
+    "SEASON VARIATIONS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VARIACIONES DE TEMPORADA"
+          }
+        }
+      }
+    },
+    "seasons" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "temporadas"
+          }
+        }
+      }
+    },
+    "SEE TODAY'S BOARD" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VER EL TABLERO DE HOY"
+          }
+        }
+      }
+    },
+    "Send" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar"
+          }
+        }
+      }
+    },
+    "SEND CHALLENGE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ENVIAR DESAFÍO"
+          }
+        }
+      }
+    },
+    "SENDING…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ENVIANDO…"
+          }
+        }
+      }
+    },
+    "Set your draft rules" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configura las reglas de tu draft"
+          }
+        }
+      }
+    },
+    "SHARE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMPARTIR"
+          }
+        }
+      }
+    },
+    "SHARE MY CARD" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMPARTIR MI CARTA"
+          }
+        }
+      }
+    },
+    "Share puzzle" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir acertijo"
+          }
+        }
+      }
+    },
+    "SHARE PUZZLE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMPARTIR ACERTIJO"
+          }
+        }
+      }
+    },
+    "SHARE RESULT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMPARTIR RESULTADO"
+          }
+        }
+      }
+    },
+    "Share this link so anyone can play your puzzle." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparte este enlace para que cualquiera juegue tu acertijo."
+          }
+        }
+      }
+    },
+    "Shows the exact scoring formula" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra la fórmula de puntuación exacta"
+          }
+        }
+      }
+    },
+    "Sign in to add friends by username and start Versus battles." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión para agregar amigos por nombre de usuario y comenzar duelos de Versus."
+          }
+        }
+      }
+    },
+    "Sign in to create" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión para crear"
+          }
+        }
+      }
+    },
+    "Sign in to duel anyone 1v1 on today's puzzle — best score wins the day, and wins stack into a best-of-7 series." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión para desafiar a cualquiera 1v1 en el acertijo de hoy — el mejor puntaje gana el día, y las victorias se acumulan en una serie al mejor de 7."
+          }
+        }
+      }
+    },
+    "Sign in to get placed in a weekly league — every game you play earns XP toward the standings." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión para que te ubiquen en una liga semanal — cada partida que juegues gana XP para la tabla de posiciones."
+          }
+        }
+      }
+    },
+    "Sign in to put your official run on today's board." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión para poner tu partida oficial en el tablero de hoy."
+          }
+        }
+      }
+    },
+    "Sign in to put your runs on this week's board." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión para poner tus partidas en el tablero de esta semana."
+          }
+        }
+      }
+    },
+    "Sign in to save your progress and climb the leaderboards." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión para guardar tu progreso y subir en las tablas de posiciones."
+          }
+        }
+      }
+    },
+    "SIGN OUT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CERRAR SESIÓN"
+          }
+        }
+      }
+    },
+    "Sign-in didn't return an identity token. Try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El inicio de sesión no devolvió un token de identidad. Intenta de nuevo."
+          }
+        }
+      }
+    },
+    "Signed in — progress syncs across devices" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesión iniciada — el progreso se sincroniza entre dispositivos"
+          }
+        }
+      }
+    },
+    "SINGLE GAME" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UN SOLO PARTIDO"
+          }
+        }
+      }
+    },
+    "SOLVED" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RESUELTO"
+          }
+        }
+      }
+    },
+    "SOLVED ON CLUE %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RESUELTO EN LA PISTA %lld"
+          }
+        }
+      }
+    },
+    "Something went wrong. Please try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algo salió mal. Intenta de nuevo, por favor."
+          }
+        }
+      }
+    },
+    "Something went wrong. Try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algo salió mal. Intenta de nuevo."
+          }
+        }
+      }
+    },
+    "Soon" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pronto"
+          }
+        }
+      }
+    },
+    "Spam" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spam"
+          }
+        }
+      }
+    },
+    "Spin to draft" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Girar para draftear"
+          }
+        }
+      }
+    },
+    "SPINNING…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GIRANDO…"
+          }
+        }
+      }
+    },
+    "Spins are restricted to %@ — if a round can't fill an open slot from just that league, it falls back to any league rather than getting stuck." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los giros se limitan a %@ — si una ronda no puede llenar un lugar libre solo con esa liga, recurre a cualquier liga en vez de quedarse trabada."
+          }
+        }
+      }
+    },
+    "Spins draw from any of the ~38 countries' top flights we track." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los giros se sortean entre las máximas divisiones de los ~38 países que seguimos."
+          }
+        }
+      }
+    },
+    "SPORT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DEPORTE"
+          }
+        }
+      }
+    },
+    "Standard (non-PPR) scoring — receptions themselves score nothing." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puntuación estándar (sin PPR) — las recepciones en sí no valen puntos."
+          }
+        }
+      }
+    },
+    "Start the Daily Draft" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comenzar el Daily Draft"
+          }
+        }
+      }
+    },
+    "Start the streak" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comienza la racha"
+          }
+        }
+      }
+    },
+    "Stat line" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Línea de estadísticas"
+          }
+        }
+      }
+    },
+    "Stats" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estadísticas"
+          }
+        }
+      }
+    },
+    "Streak" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Racha"
+          }
+        }
+      }
+    },
+    "Submits the name you entered" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envía el nombre que ingresaste"
+          }
+        }
+      }
+    },
+    "Swipe right for Over, left for Under — or tap below." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desliza a la derecha para Más, a la izquierda para Menos — o toca abajo."
+          }
+        }
+      }
+    },
+    "Tap a cell and name a player who fits both the team and the era. One guess per cell." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca una celda y nombra a un jugador que encaje con el equipo y la era. Un intento por celda."
+          }
+        }
+      }
+    },
+    "TAP A PLAYER FOR THEIR FULL STAT LINE." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TOCA A UN JUGADOR PARA VER SUS ESTADÍSTICAS COMPLETAS."
+          }
+        }
+      }
+    },
+    "TEAM" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EQUIPO"
+          }
+        }
+      }
+    },
+    "Teams" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Equipos"
+          }
+        }
+      }
+    },
+    "TEAMS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EQUIPOS"
+          }
+        }
+      }
+    },
+    "Tell us more" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuéntanos más"
+          }
+        }
+      }
+    },
+    "Templates copy a daily theme's scoring and card layout; you pick the 8 seasons." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las plantillas copian la puntuación y el diseño de carta de un tema diario; tú eliges las 8 temporadas."
+          }
+        }
+      }
+    },
+    "Thanks — we'll take a look." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gracias — le echaremos un vistazo."
+          }
+        }
+      }
+    },
+    "That username is taken." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ese nombre de usuario ya está en uso."
+          }
+        }
+      }
+    },
+    "THE ANSWER" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LA RESPUESTA"
+          }
+        }
+      }
+    },
+    "THE ANSWER WAS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LA RESPUESTA ERA"
+          }
+        }
+      }
+    },
+    "The author" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El autor"
+          }
+        }
+      }
+    },
+    "THE BOARD" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EL TABLERO"
+          }
+        }
+      }
+    },
+    "The era index is BallIQ's own, built from league-wide averages by position and year." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El índice de era es propio de BallIQ, construido a partir de promedios de toda la liga por posición y año."
+          }
+        }
+      }
+    },
+    "THE GRID" : {
+      "shouldTranslate" : false
+    },
+    "The Grid — Pro-only format" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Grid — formato exclusivo Pro"
+          }
+        }
+      }
+    },
+    "The point total is multiplied by an era index: the position's all-time average total divided by the average from that season's year. Scarce eras multiply up, inflated eras trim down — and everyone from the same position and year gets the same multiplier, so it never reorders peers." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El total de puntos se multiplica por un índice de era: el promedio histórico de la posición dividido por el promedio del año de esa temporada. Las eras escasas multiplican hacia arriba, las eras infladas recortan hacia abajo — y todos los de la misma posición y año reciben el mismo multiplicador, así que nunca reordena a los pares."
+          }
+        }
+      }
+    },
+    "Then: the era index" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luego: el índice de era"
+          }
+        }
+      }
+    },
+    "They didn't play in time — win by forfeit" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No jugaron a tiempo — victoria por default"
+          }
+        }
+      }
+    },
+    "This community puzzle predates formula tagging — its author may have picked the Half-PPR or Standard variant instead." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este acertijo de la comunidad es anterior al etiquetado de fórmulas — es posible que su autor haya elegido la variante Half-PPR o Standard."
+          }
+        }
+      }
+    },
+    "This is the industry-standard full-PPR formula — the same default scoring used on ESPN, Yahoo, and Sleeper." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta es la fórmula estándar de la industria de PPR completo — la misma puntuación predeterminada que usan ESPN, Yahoo y Sleeper."
+          }
+        }
+      }
+    },
+    "This profile isn't available." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este perfil no está disponible."
+          }
+        }
+      }
+    },
+    "THIS WEEK'S BOARD" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EL TABLERO DE ESTA SEMANA"
+          }
+        }
+      }
+    },
+    "THIS WEEK'S TOP OVER/UNDER RUNS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LAS MEJORES RACHAS DE OVER/UNDER DE ESTA SEMANA"
+          }
+        }
+      }
+    },
+    "Time ran out before you played — forfeit loss" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se acabó el tiempo antes de que jugaras — derrota por default"
+          }
+        }
+      }
+    },
+    "To %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A %lld"
+          }
+        }
+      }
+    },
+    "Today" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoy"
+          }
+        }
+      }
+    },
+    "TODAY'S BOARD" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EL TABLERO DE HOY"
+          }
+        }
+      }
+    },
+    "Today's Daily Draft · %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El Daily Draft de hoy · %@"
+          }
+        }
+      }
+    },
+    "Today's daily games" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los juegos diarios de hoy"
+          }
+        }
+      }
+    },
+    "TODAY'S SHARED SPINS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LOS GIROS COMPARTIDOS DE HOY"
+          }
+        }
+      }
+    },
+    "TODAY'S SHARED SPINS · ONE OFFICIAL RUN" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LOS GIROS COMPARTIDOS DE HOY · UNA PARTIDA OFICIAL"
+          }
+        }
+      }
+    },
+    "TOP 10 SEASON" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TEMPORADA TOP 10"
+          }
+        }
+      }
+    },
+    "TOP CAREER" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MEJOR CARRERA"
+          }
+        }
+      }
+    },
+    "TOP FOUR" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TOP CUATRO"
+          }
+        }
+      }
+    },
+    "TOP GAME" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MEJOR PARTIDO"
+          }
+        }
+      }
+    },
+    "TOP SEASON" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MEJOR TEMPORADA"
+          }
+        }
+      }
+    },
+    "TOUR GRIND" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GRIND DEL TOUR"
+          }
+        }
+      }
+    },
+    "Try a different search or decade." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba con otra búsqueda o década."
+          }
+        }
+      }
+    },
+    "Try a different search." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba con otra búsqueda."
+          }
+        }
+      }
+    },
+    "Under" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menos"
+          }
+        }
+      }
+    },
+    "Unlimited lives" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vidas ilimitadas"
+          }
+        }
+      }
+    },
+    "Unlimited Over/Under lives" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vidas ilimitadas en Over/Under"
+          }
+        }
+      }
+    },
+    "Unlock every format, every sport, every day." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desbloquea cada formato, cada deporte, todos los días."
+          }
+        }
+      }
+    },
+    "UNLOCKS VERSUS CHALLENGES & FRIENDS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DESBLOQUEA DESAFÍOS DE VERSUS Y AMIGOS"
+          }
+        }
+      }
+    },
+    "Username" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de usuario"
+          }
+        }
+      }
+    },
+    "USERNAME" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NOMBRE DE USUARIO"
+          }
+        }
+      }
+    },
+    "Versus" : {
+      "shouldTranslate" : false
+    },
+    "Vibes puzzles are pure opinion: great seasons, big names, personal bias — whatever moved the author. Your job is to read their mind, not the math, so no point table exists to study." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los acertijos Vibes son pura opinión: grandes temporadas, nombres importantes, sesgo personal — lo que sea que haya movido al autor. Tu trabajo es leer su mente, no la matemática, así que no existe una tabla de puntos para estudiar."
+          }
+        }
+      }
+    },
+    "WAITING" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ESPERANDO"
+          }
+        }
+      }
+    },
+    "Waiting for them to play" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando a que jueguen"
+          }
+        }
+      }
+    },
+    "WEEK ENDS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LA SEMANA TERMINA"
+          }
+        }
+      }
+    },
+    "Weekly leagues, streaks, and 1v1 Versus duels" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ligas semanales, rachas y duelos 1v1 de Versus"
+          }
+        }
+      }
+    },
+    "What do you want to build?" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Qué quieres crear?"
+          }
+        }
+      }
+    },
+    "What's wrong with this puzzle?" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Qué tiene de malo este acertijo?"
+          }
+        }
+      }
+    },
+    "While you wait" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mientras esperas"
+          }
+        }
+      }
+    },
+    "Who am I?" : {
+      "shouldTranslate" : false
+    },
+    "WHO AM I?" : {
+      "shouldTranslate" : false
+    },
+    "WIN" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VICTORIA"
+          }
+        }
+      }
+    },
+    "WON THE LEAGUE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GANÓ LA LIGA"
+          }
+        }
+      }
+    },
+    "Worth %lld pts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vale %lld pts"
+          }
+        }
+      }
+    },
+    "Write six clues that lead to a mystery player." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribe seis pistas que lleven a un jugador misterioso."
+          }
+        }
+      }
+    },
+    "XP" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "XP"
+          }
+        }
+      }
+    },
+    "YEAR" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AÑO"
+          }
+        }
+      }
+    },
+    "YEAR-END No. 1" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "N.º 1 DEL AÑO"
+          }
+        }
+      }
+    },
+    "You %lld – %lld them" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tú %lld – %lld ellos"
+          }
+        }
+      }
+    },
+    "You can't challenge yourself." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No puedes desafiarte a ti mismo."
+          }
+        }
+      }
+    },
+    "You cut" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cortaste"
+          }
+        }
+      }
+    },
+    "You kept" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantuviste"
+          }
+        }
+      }
+    },
+    "You were promoted last week — welcome to a tougher league." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subiste de categoría la semana pasada — bienvenido a una liga más difícil."
+          }
+        }
+      }
+    },
+    "You were relegated last week — win this one and bounce right back." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bajaste de categoría la semana pasada — gana esta y vuelve de inmediato."
+          }
+        }
+      }
+    },
+    "You'll be placed with up to 29 players — every game you finish earns League XP." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serás ubicado con hasta 29 jugadores más — cada partida que termines gana XP de Liga."
+          }
+        }
+      }
+    },
+    "Your Identity" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu identidad"
+          }
+        }
+      }
+    },
+    "YOUR LEAGUE STARTS MONDAY" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TU LIGA EMPIEZA EL LUNES"
+          }
+        }
+      }
+    },
+    "YOUR LINEUP" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TU ALINEACIÓN"
+          }
+        }
+      }
+    },
+    "Your rank" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu posición"
+          }
+        }
+      }
+    },
+    "YOUR SQUAD" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TU EQUIPO"
+          }
+        }
+      }
+    },
+    "YOUR TEAM" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TU EQUIPO"
+          }
+        }
+      }
+    },
+    "yourname" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tunombre"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

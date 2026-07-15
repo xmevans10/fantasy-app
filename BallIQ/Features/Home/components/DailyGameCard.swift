@@ -71,7 +71,7 @@ struct DailyGameCard: View {
                                 badge(symbol: grain.symbol, text: grain.badgeLabel)
                             }
                             if favoriteTeamMatch {
-                                badge(symbol: "star.fill", text: "YOUR TEAM")
+                                badge(symbol: "star.fill", text: String(localized: "YOUR TEAM"))
                             }
                         }
                     }

@@ -101,13 +101,13 @@ struct RewardsRow: View {
         let change = rewards.ratingChange
         let up = change.delta >= 0
         return HStack(spacing: 16) {
-            metric(label: "Rating", value: "\(change.new)",
+            metric(label: String(localized: "Rating"), value: "\(change.new)",
                    accent: "\(up ? "+" : "")\(change.delta)",
                    accentColor: up ? .successText : .dangerText)
             Divider().frame(height: 32)
-            metric(label: "XP", value: "+\(rewards.xpEarned)", accent: nil, accentColor: .textMuted)
+            metric(label: String(localized: "XP"), value: "+\(rewards.xpEarned)", accent: nil, accentColor: .textMuted)
             Divider().frame(height: 32)
-            metric(label: "Streak", value: "\(rewards.newStreak)", accent: nil, accentColor: .textMuted)
+            metric(label: String(localized: "Streak"), value: "\(rewards.newStreak)", accent: nil, accentColor: .textMuted)
         }
         .frame(maxWidth: .infinity)
         .padding(16)

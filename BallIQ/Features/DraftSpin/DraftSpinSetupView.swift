@@ -172,7 +172,7 @@ private struct LeagueChipPicker: View {
 
     var body: some View {
         LazyVGrid(columns: columns, spacing: 6) {
-            chip(label: "ALL LEAGUES", active: selected == nil) { selected = nil }
+            chip(label: String(localized: "ALL LEAGUES"), active: selected == nil) { selected = nil }
             // Chip shows the competition name; the filter still matches on `league.value`
             // (the country label the catalog is tagged by) — see `SoccerLeague`'s doc comment.
             ForEach(DraftSpinConstraint.majorSoccerLeagues, id: \.self) { league in

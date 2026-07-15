@@ -91,8 +91,8 @@ struct SpinRevealView: View {
             Spacer(minLength: 12)
 
             VStack(spacing: 16) {
-                reel(label: "TEAM", value: displayedTeam, locked: teamLocked)
-                reel(label: "YEAR", value: displayedYear, locked: yearLocked)
+                reel(label: String(localized: "TEAM"), value: displayedTeam, locked: teamLocked)
+                reel(label: String(localized: "YEAR"), value: displayedYear, locked: yearLocked)
             }
             .padding(.horizontal, 24)
 

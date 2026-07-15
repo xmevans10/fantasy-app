@@ -46,7 +46,7 @@ enum Keep4Mode: String, CaseIterable {
     case normal
     case hard
 
-    var title: String { self == .normal ? "Normal" : "Hard" }
+    var title: String { self == .normal ? String(localized: "Normal") : String(localized: "Hard") }
     var formatKind: GameFormatKind { self == .normal ? .keep4Normal : .keep4Hard }
 }
 

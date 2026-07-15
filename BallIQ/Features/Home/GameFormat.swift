@@ -10,7 +10,9 @@ struct GameFormat: Identifiable {
     let isPlayable: Bool
     /// Grid card subtitle. Defaults to "Daily"/"Pro only"/"Soon" by playability if unset —
     /// only needed when a playable format isn't a daily puzzle (e.g. Versus).
-    var subtitle: String? = nil
+    /// `LocalizedStringKey` (not `String`) so both this and the fallback default in
+    /// `FormatGridItem` extract into Localizable.xcstrings.
+    var subtitle: LocalizedStringKey? = nil
 
     static let all: [GameFormat] = [
         GameFormat(id: "keep4", name: "K4C4", symbol: "rectangle.stack.fill", isPro: false, isPlayable: true),

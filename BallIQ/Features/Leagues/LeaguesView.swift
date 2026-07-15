@@ -20,7 +20,7 @@ struct LeaguesView: View {
     /// accepted friend, keyed by whichever sport's rating the chip row currently selects.
     private enum LeagueScope: Int, CaseIterable {
         case league, friends
-        var title: String { self == .league ? "LEAGUE" : "FRIENDS" }
+        var title: LocalizedStringKey { self == .league ? "LEAGUE" : "FRIENDS" }
     }
 
     @State private var scope: LeagueScope = .league

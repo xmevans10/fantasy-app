@@ -118,9 +118,9 @@ struct OverUnderGameView: View {
                 livesRow
             }
             HStack(spacing: 10) {
-                statChip(label: "Score", value: "\(score)")
+                statChip(label: String(localized: "Score"), value: "\(score)")
                 if combo > 0 {
-                    statChip(label: "Combo", value: "×\(String(format: "%.1f", OverUnderScoring.comboMultiplier(consecutiveCorrect: combo)))",
+                    statChip(label: String(localized: "Combo"), value: "×\(String(format: "%.1f", OverUnderScoring.comboMultiplier(consecutiveCorrect: combo)))",
                             fill: .voltFill, on: .onVolt)
                 }
             }
@@ -212,8 +212,8 @@ struct OverUnderGameView: View {
 
     private var overUnderControl: some View {
         HStack(spacing: 0) {
-            segment(title: "Under", guessOver: false, gradient: Self.underGradient)
-            segment(title: "Over", guessOver: true, gradient: Self.overGradient)
+            segment(title: String(localized: "Under"), guessOver: false, gradient: Self.underGradient)
+            segment(title: String(localized: "Over"), guessOver: true, gradient: Self.overGradient)
         }
         .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(Color.borderInk, lineWidth: 2))

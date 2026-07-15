@@ -185,8 +185,8 @@ struct Keep4GameView: View {
             }
 
             HStack(spacing: 10) {
-                tally(label: "Keep", count: keepCount, color: .successText)
-                tally(label: "Cut", count: cutCount, color: .dangerText)
+                tally(label: String(localized: "Keep"), count: keepCount, color: .successText)
+                tally(label: String(localized: "Cut"), count: cutCount, color: .dangerText)
             }
 
             if placement.isEmpty {
@@ -207,8 +207,8 @@ struct Keep4GameView: View {
     private var footer: some View {
         VStack(spacing: 8) {
             if let forced = forcedDisabledPile {
-                let full = forced == .keep ? "KEEP" : "CUT"
-                let rest = forced == .keep ? "CUTS" : "KEEPS"
+                let full = forced == .keep ? String(localized: "KEEP") : String(localized: "CUT")
+                let rest = forced == .keep ? String(localized: "CUTS") : String(localized: "KEEPS")
                 Label("\(full) PILE FULL — REMAINING ARE \(rest)", systemImage: "lock.fill")
                     .font(.label12)
                     .foregroundStyle(forced == .keep ? Color.dangerText : Color.successText)

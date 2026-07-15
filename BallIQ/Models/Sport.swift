@@ -190,7 +190,7 @@ enum SportFilter: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .all: return "All"
+        case .all: return String(localized: "All")
         case .nfl: return "NFL"
         case .nba: return "NBA"
         case .baseball: return "MLB"

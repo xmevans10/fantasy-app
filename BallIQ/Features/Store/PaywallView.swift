@@ -78,7 +78,7 @@ struct PaywallView: View {
         .cardSurface()
     }
 
-    private func benefitRow(symbol: String, text: String) -> some View {
+    private func benefitRow(symbol: String, text: LocalizedStringKey) -> some View {
         HStack(spacing: 10) {
             Image(systemName: symbol)
                 .font(.system(size: 16, weight: .bold))
@@ -137,7 +137,7 @@ struct PaywallView: View {
         do {
             _ = try await container.purchase(product)
         } catch {
-            errorMessage = "Something went wrong. Please try again."
+            errorMessage = String(localized: "Something went wrong. Please try again.")
         }
     }
 }

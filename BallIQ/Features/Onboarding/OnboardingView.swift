@@ -121,7 +121,7 @@ struct OnboardingView: View {
     }
 
     private func featureRow(_ symbol: String, fill: Color, on: Color,
-                            _ title: String, _ subtitle: String) -> some View {
+                            _ title: LocalizedStringKey, _ subtitle: LocalizedStringKey) -> some View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
                 .font(.system(size: 15, weight: .black))
@@ -136,7 +136,7 @@ struct OnboardingView: View {
                 )
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 0) {
-                Text(title.uppercased()).font(.heading).foregroundStyle(Color.textPrimary)
+                Text(title).textCase(.uppercase).font(.heading).foregroundStyle(Color.textPrimary)
                 Text(subtitle).font(.label12).foregroundStyle(Color.textMuted)
             }
             Spacer(minLength: 0)
@@ -168,7 +168,7 @@ struct OnboardingView: View {
             container.track(.signInCompleted, ["provider": "google", "surface": "onboarding"])
             finishOrClaimUsername()
         } catch {
-            self.error = "Couldn't complete sign-in. Try again."
+            self.error = String(localized: "Couldn't complete sign-in. Try again.")
         }
     }
 
@@ -179,7 +179,7 @@ struct OnboardingView: View {
                   let tokenData = cred.identityToken,
                   let token = String(data: tokenData, encoding: .utf8),
                   let raw = currentNonce else {
-                error = "Sign-in didn't return an identity token. Try again."
+                error = String(localized: "Sign-in didn't return an identity token. Try again.")
                 return
             }
             Task {
@@ -189,7 +189,7 @@ struct OnboardingView: View {
                     container.track(.signInCompleted, ["provider": "apple", "surface": "onboarding"])
                     finishOrClaimUsername()
                 } catch {
-                    self.error = "Couldn't complete sign-in. Try again."
+                    self.error = String(localized: "Couldn't complete sign-in. Try again.")
                 }
             }
         case .failure:
