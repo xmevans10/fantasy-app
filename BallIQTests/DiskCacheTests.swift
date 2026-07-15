@@ -16,7 +16,22 @@ final class DiskCacheTests: XCTestCase {
         return SupabaseClient(config: config, session: URLSession(configuration: cfg))
     }
 
+    override func setUp() {
+        super.setUp()
+        // Redirect every DiskCache read/write into a per-run temp directory — these tests
+        // use production cache keys, and without this they'd plant fixtures in the host
+        // app's real caches directory (which the next real launch would then serve).
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DiskCacheTests-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        DiskCache.directoryOverride = dir
+    }
+
     override func tearDown() {
+        if let dir = DiskCache.directoryOverride {
+            try? FileManager.default.removeItem(at: dir)
+        }
+        DiskCache.directoryOverride = nil
         MockURLProtocol.handler = nil
         super.tearDown()
     }

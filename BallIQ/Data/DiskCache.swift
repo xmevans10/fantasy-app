@@ -33,11 +33,17 @@ enum DiskCache {
         }.value
     }
 
+    /// Test hook: hosted unit tests run inside the real BallIQ.app process, so without a
+    /// redirect any test that writes a production key ("puzzles-keep4-all", "arcade-pool-*")
+    /// plants its fixture in the app's REAL cache and the next launch on that simulator
+    /// serves fixture data (an empty theme-"T" puzzle on Home, found 2026-07-14).
+    nonisolated(unsafe) static var directoryOverride: URL?
+
     /// Caches directory can be purged by the OS at any time — every caller here already
     /// treats a miss as "go fetch", so losing the file is a latency regression, never a
     /// correctness bug.
     private static func cacheURL(for key: String) -> URL? {
-        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
+        (directoryOverride ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first)?
             .appendingPathComponent("\(key).json")
     }
 
