@@ -1,11 +1,12 @@
 // Shared push-payload builder + sender. The payload builders are pure (unit-testable from
-// Deno's test runner). JWT signing + delivery below is real (Web Crypto, no external library);
-// the remaining hand-off is only the actual secret material.
+// Deno's test runner). JWT signing + delivery below is real (Web Crypto, no external library).
 //
-// Hand-off (cannot be done by the agent): generate an APNs auth key (.p8) in the Apple
-// Developer portal, enable the "Push Notifications" capability on the App ID, and set
-// APNS_KEY_ID / APNS_TEAM_ID / APNS_PRIVATE_KEY / APNS_BUNDLE_ID as Edge Function secrets
-// (`supabase secrets set ...`). Until then this function logs instead of sending.
+// Credentials: env vars APNS_KEY_ID / APNS_TEAM_ID / APNS_PRIVATE_KEY / APNS_BUNDLE_ID win
+// when set (real Edge Function secrets); otherwise they're fetched once per isolate from
+// Supabase Vault via the service-role-only `get_apns_config()` RPC (see the
+// `apns_vault_config` migration, 2026-07-15 — Vault is where the live key F92WNG523G
+// actually is, since no management token exists to set env secrets from the agent side).
+// Only if BOTH sources come up empty does this fall back to `[apns:stub]` logging.
 
 export type NotificationCategory =
   | "streak_at_risk"
@@ -127,6 +128,55 @@ export async function signApnsJwt(
 // Module-level cache: APNs auth tokens are valid up to 1h; re-signing per-push is wasteful,
 // especially inside a cron batch that pushes to many device tokens at once. Re-minted 10 minutes
 // before the real 1h expiry to leave margin for in-flight requests.
+interface ApnsConfig {
+  keyId?: string;
+  teamId?: string;
+  privateKey?: string;
+  bundleId?: string;
+}
+
+let cachedConfig: ApnsConfig | null = null;
+
+/** Env secrets win; otherwise fetch once per isolate from Vault via `get_apns_config()`. */
+async function loadApnsConfig(doFetch: typeof fetch): Promise<ApnsConfig> {
+  const fromEnv: ApnsConfig = {
+    keyId: Deno.env.get("APNS_KEY_ID"),
+    teamId: Deno.env.get("APNS_TEAM_ID"),
+    privateKey: Deno.env.get("APNS_PRIVATE_KEY"),
+    bundleId: Deno.env.get("APNS_BUNDLE_ID"),
+  };
+  if (fromEnv.keyId && fromEnv.teamId && fromEnv.privateKey && fromEnv.bundleId) return fromEnv;
+  if (cachedConfig) return cachedConfig;
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceKey) return fromEnv;
+
+  try {
+    const res = await doFetch(`${supabaseUrl}/rest/v1/rpc/get_apns_config`, {
+      method: "POST",
+      headers: {
+        apikey: serviceKey,
+        authorization: `Bearer ${serviceKey}`,
+        "content-type": "application/json",
+      },
+      body: "{}",
+    });
+    if (!res.ok) throw new Error(`get_apns_config ${res.status}`);
+    const vault = (await res.json()) as Record<string, string> | null;
+    cachedConfig = {
+      keyId: vault?.APNS_KEY_ID,
+      teamId: vault?.APNS_TEAM_ID,
+      privateKey: vault?.APNS_PRIVATE_KEY,
+      bundleId: vault?.APNS_BUNDLE_ID,
+    };
+    return cachedConfig;
+  } catch (e) {
+    console.error("[apns] vault config fetch failed:", e);
+    return fromEnv;
+  }
+}
+
 let cachedToken: { token: string; mintedAt: number } | null = null;
 const TOKEN_TTL_MS = 50 * 60 * 1000;
 
@@ -154,10 +204,7 @@ export async function sendApnsPush(
   const doFetch = deps.fetch ?? fetch;
   const now = deps.now ?? Date.now;
 
-  const keyId = Deno.env.get("APNS_KEY_ID");
-  const teamId = Deno.env.get("APNS_TEAM_ID");
-  const privateKey = Deno.env.get("APNS_PRIVATE_KEY");
-  const bundleId = Deno.env.get("APNS_BUNDLE_ID");
+  const { keyId, teamId, privateKey, bundleId } = await loadApnsConfig(doFetch);
 
   if (!keyId || !teamId || !privateKey || !bundleId) {
     console.log(`[apns:stub] would send to ${deviceToken}:`, JSON.stringify(payload));

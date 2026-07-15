@@ -990,3 +990,28 @@ drop trigger if exists friends_notify_request on public.friends;
 create trigger friends_notify_request
   after insert on public.friends
   for each row execute function public.notify_friend_request_webhook();
+
+-- ============================================================
+-- APNs credentials via Vault (2026-07-15, applied live as migration `apns_vault_config`)
+-- ============================================================
+-- The real APNs auth key (F92WNG523G) lives in Supabase Vault, written 2026-07-15, because
+-- no management token exists in the agent environment to set true Edge Function secrets.
+-- Edge functions read it through this service-role-only RPC (see _shared/apns.ts: env vars
+-- win when present; Vault is the fallback). A temporary `vault_set_secret` writer was used
+-- once and dropped in migration `drop_vault_setter`.
+-- Vault rows (names only; values encrypted): APNS_KEY_ID, APNS_TEAM_ID, APNS_PRIVATE_KEY,
+-- APNS_BUNDLE_ID.
+
+create or replace function public.get_apns_config()
+returns jsonb
+language sql
+security definer
+set search_path = ''
+as $$
+  select jsonb_object_agg(name, decrypted_secret)
+  from vault.decrypted_secrets
+  where name in ('APNS_KEY_ID', 'APNS_TEAM_ID', 'APNS_PRIVATE_KEY', 'APNS_BUNDLE_ID');
+$$;
+
+revoke all on function public.get_apns_config() from public, anon, authenticated;
+grant execute on function public.get_apns_config() to service_role;
