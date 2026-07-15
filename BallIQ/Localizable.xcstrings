@@ -144,6 +144,19 @@
         }
       }
     },
+    "ERA-ADJUSTED" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AJUSTADO POR ERA"
+          }
+        }
+      }
+    },
+    "FANTASY" : {
+      "shouldTranslate" : false
+    },
     "%@%lld" : {
       "localizations" : {
         "es" : {
@@ -2541,6 +2554,16 @@
         }
       }
     },
+    "POINTS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PUNTOS"
+          }
+        }
+      }
+    },
     "Position" : {
       "localizations" : {
         "es" : {
@@ -2550,6 +2573,9 @@
           }
         }
       }
+    },
+    "PPR" : {
+      "shouldTranslate" : false
     },
     "Practice replay — today's official score was already locked in." : {
       "localizations" : {
@@ -2677,6 +2703,16 @@
         }
       }
     },
+    "Ranked by era-adjusted fantasy points — scarcer eras count for more" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clasificado por puntos de fantasy ajustados por era — las eras más escasas cuentan más"
+          }
+        }
+      }
+    },
     "Ranked by one single-game performance, not a full season" : {
       "localizations" : {
         "es" : {
@@ -2693,6 +2729,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clasificado por los totales de carrera reales de todas las temporadas"
+          }
+        }
+      }
+    },
+    "Ranked by real fantasy points" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clasificado por puntos de fantasy reales"
+          }
+        }
+      }
+    },
+    "Ranked by real PPR fantasy points" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clasificado por puntos reales de fantasy PPR"
+          }
+        }
+      }
+    },
+    "Ranked by real season résumés — wins, titles, Slams" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clasificado por resúmenes reales de temporada — victorias, títulos, Grand Slams"
           }
         }
       }
@@ -3942,6 +4008,29 @@
     },
     "Versus" : {
       "shouldTranslate" : false
+    },
+    "VIBES" : {
+      "shouldTranslate" : false
+    },
+    "Vibes — @%@'s gut call on what makes a great season, no formula" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vibes — la intuición de @%@ sobre lo que hace grande una temporada, sin fórmula"
+          }
+        }
+      }
+    },
+    "Vibes — the author's gut call on what makes a great season, no formula" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vibes — la intuición del autor sobre lo que hace grande una temporada, sin fórmula"
+          }
+        }
+      }
     },
     "Vibes puzzles are pure opinion: great seasons, big names, personal bias — whatever moved the author. Your job is to read their mind, not the math, so no point table exists to study." : {
       "localizations" : {

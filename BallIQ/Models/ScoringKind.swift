@@ -47,12 +47,12 @@ enum ScoringKind: String, Codable {
         switch self {
         case .ppr:
             switch sport {
-            case .nfl:    return "PPR"
-            case .tennis: return "POINTS"
-            default:      return "FANTASY"
+            case .nfl:    return "PPR"                          // brand acronym, every locale
+            case .tennis: return String(localized: "POINTS")
+            default:      return "FANTASY"                      // "fantasy" is the loanword in es too
             }
-        case .era:    return "ERA-ADJUSTED"
-        case .vibes:  return "VIBES"
+        case .era:    return String(localized: "ERA-ADJUSTED")
+        case .vibes:  return "VIBES"                            // product word, kept like "Vibes" copy
         }
     }
 
@@ -65,15 +65,19 @@ enum ScoringKind: String, Codable {
         switch self {
         case .ppr:
             switch sport {
-            case .nfl:    return "Ranked by real PPR fantasy points"
-            case .tennis: return "Ranked by real season résumés — wins, titles, Slams"
-            default:      return "Ranked by real fantasy points"
+            case .nfl:    return String(localized: "Ranked by real PPR fantasy points")
+            case .tennis: return String(localized: "Ranked by real season résumés — wins, titles, Slams")
+            default:      return String(localized: "Ranked by real fantasy points")
             }
         case .era:
-            return "Ranked by era-adjusted fantasy points — scarcer eras count for more"
+            return String(localized: "Ranked by era-adjusted fantasy points — scarcer eras count for more")
         case .vibes:
-            let whose = author.map { "@\($0)'s" } ?? "the author's"
-            return "Vibes — \(whose) gut call on what makes a great season, no formula"
+            // Two whole-sentence keys (not a composed "whose" fragment) so the possessive
+            // can be rebuilt per-language instead of gluing English grammar into Spanish.
+            if let author {
+                return String(localized: "Vibes — @\(author)'s gut call on what makes a great season, no formula")
+            }
+            return String(localized: "Vibes — the author's gut call on what makes a great season, no formula")
         }
     }
 
