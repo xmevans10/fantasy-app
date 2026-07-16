@@ -3,6 +3,10 @@ import SwiftUI
 struct VersusView: View {
     @EnvironmentObject private var container: RepositoryContainer
     @EnvironmentObject private var auth: AuthService
+    /// Root tab selection — the signed-out empty state's "Sign in" CTA jumps to the
+    /// Profile tab (4), where the actual sign-in buttons live. Defaults to a dead
+    /// binding so previews/older call sites don't have to care.
+    var selectedTab: Binding<Int> = .constant(0)
 
     @State private var open: [VersusChallengeRow] = []
     @State private var results: [VersusChallengeRow] = []
@@ -65,7 +69,8 @@ struct VersusView: View {
     private var signInPrompt: some View {
         EmptyStateView(symbol: "bolt.fill",
                        title: "Versus",
-                       message: "Sign in to duel anyone 1v1 on today's puzzle — best score wins the day, and wins stack into a best-of-7 series.")
+                       message: "Sign in to duel anyone 1v1 on today's puzzle — best score wins the day, and wins stack into a best-of-7 series.",
+                       actionTitle: "Sign in") { selectedTab.wrappedValue = 4 }
     }
 
     private var emptyState: some View {

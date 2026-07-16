@@ -3,6 +3,10 @@ import SwiftUI
 struct LeaguesView: View {
     @EnvironmentObject private var container: RepositoryContainer
     @EnvironmentObject private var auth: AuthService
+    /// Root tab selection — the signed-out empty state's "Sign in" CTA jumps to the
+    /// Profile tab (4), where the actual sign-in buttons live. Defaults to a dead
+    /// binding so previews/older call sites don't have to care.
+    var selectedTab: Binding<Int> = .constant(0)
 
     @State private var season: Season?
     @State private var membership: CohortMembership?
@@ -72,7 +76,8 @@ struct LeaguesView: View {
     private var signInPrompt: some View {
         EmptyStateView(symbol: "trophy.fill",
                        title: "Leagues",
-                       message: "Sign in to get placed in a weekly league — every game you play earns XP toward the standings.")
+                       message: "Sign in to get placed in a weekly league — every game you play earns XP toward the standings.",
+                       actionTitle: "Sign in") { selectedTab.wrappedValue = 4 }
     }
 
     /// Copy derives from the spec's competitive glossary; the cutoff numbers come from

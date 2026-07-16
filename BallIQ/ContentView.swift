@@ -23,11 +23,11 @@ struct ContentView: View {
                 .tabItem { Label("Home", systemImage: "house.fill") }
                 .tag(0)
 
-            LeaguesView()
+            LeaguesView(selectedTab: $selectedTab)
                 .tabItem { Label("Leagues", systemImage: "trophy.fill") }
                 .tag(1)
 
-            VersusView()
+            VersusView(selectedTab: $selectedTab)
                 .tabItem { Label("Versus", systemImage: "bolt.fill") }
                 .tag(2)
                 // Explicit stopgap while APNs pushes for versus_challenge are stubbed — badge

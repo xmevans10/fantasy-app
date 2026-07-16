@@ -268,13 +268,10 @@ struct ProfileView: View {
 
     private var heroCard: some View {
         VStack(spacing: 6) {
+            avatarBadge
             if auth.isSignedIn, let username = container.identity.username {
                 identityLine(username: username)
-                    .padding(.bottom, 4)
             }
-            Image(systemName: tier.symbol)
-                .font(.system(size: 40, weight: .black))
-                .foregroundStyle(tier.color)
             Text(tier.name.uppercased())
                 .font(.heading).foregroundStyle(Color.onAccent.opacity(0.85))
             CountUpText(value: rating, font: .hero(64), color: .onAccent)
@@ -286,15 +283,50 @@ struct ProfileView: View {
         .blockCard(fill: .accentFill)
     }
 
-    /// Avatar + `@username` + pencil edit, shown atop the hero once identity is claimed.
-    private func identityLine(username: String) -> some View {
+    /// The hero's face: the player's chosen emoji avatar in a big tier-ringed circle
+    /// (replacing the old flat gray `tier.symbol`, which read as a stale placeholder icon).
+    /// Signed-in players get a pencil badge + tap-to-edit (the avatar picker lived buried
+    /// inside the identity editor — this makes it discoverable); guests keep the tier
+    /// shield, since there's no profile row to hang an avatar on before sign-in.
+    private var avatarBadge: some View {
         let avatar = container.identity.avatar?.isEmpty == false ? container.identity.avatar! : "🏟️"
-        return HStack(spacing: 8) {
-            Text(avatar)
-                .font(.system(size: 22))
-                .frame(width: 36, height: 36)
+        return Button {
+            if auth.isSignedIn { showIdentityEditor = true }
+        } label: {
+            ZStack(alignment: .bottomTrailing) {
+                Group {
+                    if auth.isSignedIn {
+                        Text(avatar).font(.system(size: 44))
+                    } else {
+                        Image(systemName: tier.symbol)
+                            .font(.system(size: 36, weight: .black))
+                            .foregroundStyle(tier.color)
+                    }
+                }
+                .frame(width: 84, height: 84)
                 .background(Color.onAccent.opacity(0.14))
                 .clipShape(Circle())
+                .overlay(Circle().strokeBorder(tier.color, lineWidth: 3.5))
+                if auth.isSignedIn {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.textPrimary)
+                        .padding(6)
+                        .background(Color.surface)
+                        .clipShape(Circle())
+                        .overlay(Circle().strokeBorder(Color.borderInk, lineWidth: 1.5))
+                        .offset(x: 3, y: 3)
+                }
+            }
+        }
+        .buttonStyle(PrimePressStyle())
+        .disabled(!auth.isSignedIn)
+        .accessibilityLabel(auth.isSignedIn ? "Edit avatar and username" : "\(tier.name) tier")
+    }
+
+    /// `@username` + pencil edit under the avatar, once identity is claimed.
+    private func identityLine(username: String) -> some View {
+        HStack(spacing: 8) {
             Text("@\(username)")
                 .font(.custom(FontName.condBlack, size: 16))
                 .foregroundStyle(Color.onAccent)

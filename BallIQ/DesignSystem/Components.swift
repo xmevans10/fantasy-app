@@ -79,8 +79,14 @@ struct PrimeDropdown<Value: Hashable>: View {
     /// Whether `selection` counts as "no filter applied" — controls the quiet vs
     /// accent-tinted trigger style. Defaults to comparing against `options.first`.
     var isDefault: ((Value) -> Bool)? = nil
+    /// Chip text while no filter is applied. A row of dropdowns all reading "ALL" /
+    /// "ALL D…" says nothing about what each one filters — the idle chip should name its
+    /// DIMENSION ("SPORT", "DECADE"), and only a real selection shows the value. nil keeps
+    /// the old behavior (always show the selected option's title).
+    var unsetLabel: String? = nil
 
     private var active: Bool { !(isDefault?(selection) ?? (selection == options.first)) }
+    private var chipText: String { active ? title(selection) : (unsetLabel ?? title(selection)) }
 
     var body: some View {
         Menu {
@@ -98,7 +104,7 @@ struct PrimeDropdown<Value: Hashable>: View {
             }
         } label: {
             HStack(spacing: 4) {
-                Text(title(selection).uppercased())
+                Text(chipText.uppercased())
                     .font(.custom(active ? FontName.condBlack : FontName.condBold, size: 14))
                     .lineLimit(1)
                 Image(systemName: "chevron.down").font(.system(size: 10, weight: .bold))
