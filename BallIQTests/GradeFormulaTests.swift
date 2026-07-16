@@ -135,4 +135,21 @@ final class GradeFormulaTests: XCTestCase {
         XCTAssertTrue(game.isGame)
         XCTAssertEqual(game.subtitle, "vs BOS · Apr 8 · 2022")
     }
+
+    /// Traded seasons are ingested with a deliberately blank team ("TOT"/"2TM" →
+    /// "", see bref_nba.py/nfl_history.py) — their subtitles must drop the team
+    /// segment entirely, not render a dangling " · 2021".
+    func testTeamlessSubtitlesOmitTheSeparator() {
+        let season = CatalogSeason(id: "aaron-gordon-2021", sport: .nba, name: "Aaron Gordon",
+                                   teamAbbr: "", seasonYear: 2021, position: "F", stats: [:])
+        XCTAssertEqual(season.subtitle, "2021")
+        let career = CatalogSeason(id: "x-career", sport: .nba, name: "X",
+                                   teamAbbr: "", seasonYear: 2023, position: "G", stats: [:],
+                                   career: true, firstYear: 2016, lastYear: 2023)
+        XCTAssertEqual(career.subtitle, "2016-2023")
+        let card = PlayerSeason(id: "aaron-gordon-2021", name: "Aaron Gordon", teamAbbr: "",
+                                seasonYear: 2021, stats: [], grade: 1)
+        XCTAssertEqual(card.subtitle, "2021")
+        XCTAssertEqual(CardLabel.dotJoined("AARON GORDON", ""), "AARON GORDON")
+    }
 }

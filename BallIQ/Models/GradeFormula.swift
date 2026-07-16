@@ -131,9 +131,10 @@ struct CatalogSeason: Identifiable, Codable, Equatable {
             return "vs \(opponent) · Wk \(week) · \(seasonYear)"
         }
         if let firstYear, let lastYear {
-            return lastYear != firstYear ? "\(teamAbbr) · \(firstYear)-\(lastYear)" : "\(teamAbbr) · \(firstYear)"
+            let span = lastYear != firstYear ? "\(firstYear)-\(lastYear)" : "\(firstYear)"
+            return CardLabel.dotJoined(teamAbbr, span)
         }
-        return "\(teamAbbr) · \(seasonYear)"
+        return CardLabel.dotJoined(teamAbbr, "\(seasonYear)")
     }
 
     // Explicit keys so this decodes with a PLAIN JSONDecoder — `stats` dict keys

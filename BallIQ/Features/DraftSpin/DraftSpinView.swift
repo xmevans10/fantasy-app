@@ -405,7 +405,7 @@ struct DraftSpinView: View {
                     PlayerHeadshotBadge(headshot: player.headshot, tint: team.primary, size: 40)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(player.name).font(.custom(FontName.condBlack, size: 16)).foregroundStyle(Color.textPrimary)
-                        Text("\(player.teamAbbr.uppercased()) · \(String(player.seasonYear))")
+                        Text(CardLabel.dotJoined(player.teamAbbr.uppercased(), String(player.seasonYear)))
                             .font(.label11).foregroundStyle(Color.textMuted)
                     }
                     Spacer()

@@ -1,5 +1,15 @@
 import Foundation
 
+/// Shared " · "-separated card-label formatter. Traded seasons are ingested with a
+/// deliberately blank `team_abbr` ("TOT"/"2TM" — see bref_nba.py/nfl_history.py), so any
+/// label that interpolates the team directly renders a dangling " · 2021"; every subtitle/
+/// chip that mixes a team segment with other segments joins through here instead.
+enum CardLabel {
+    static func dotJoined(_ segments: String...) -> String {
+        segments.filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+}
+
 /// A single player-season "card" in a Keep4/Cut4 puzzle.
 struct PlayerSeason: Identifiable, Codable, Equatable {
     let id: String
@@ -40,9 +50,10 @@ struct PlayerSeason: Identifiable, Codable, Equatable {
             return "vs \(opponent) · Wk \(week) · \(seasonYear)"
         }
         if let firstYear, let lastYear {
-            return lastYear != firstYear ? "\(teamAbbr) · \(firstYear)-\(lastYear)" : "\(teamAbbr) · \(firstYear)"
+            let span = lastYear != firstYear ? "\(firstYear)-\(lastYear)" : "\(firstYear)"
+            return CardLabel.dotJoined(teamAbbr, span)
         }
-        return "\(teamAbbr) · \(seasonYear)"
+        return CardLabel.dotJoined(teamAbbr, "\(seasonYear)")
     }
 
     /// The revealed grade, shown at the formula's full 1-decimal precision with grouping

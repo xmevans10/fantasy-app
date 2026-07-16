@@ -142,7 +142,7 @@ struct DraftSpinResultView: View {
                 PlayerHeadshotBadge(headshot: player.headshot, tint: team.primary, size: 32)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(player.name).font(.custom(FontName.condBold, size: 14)).foregroundStyle(Color.textPrimary)
-                    Text("\(player.teamAbbr.uppercased()) · \(String(player.seasonYear))")
+                    Text(CardLabel.dotJoined(player.teamAbbr.uppercased(), String(player.seasonYear)))
                         .font(.label11).foregroundStyle(Color.textMuted)
                 }
                 Spacer()
@@ -216,7 +216,7 @@ struct DraftSpinShareCardView: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(picks) { player in
-                    Text("\(player.name.uppercased()) · \(player.teamAbbr.uppercased())")
+                    Text(CardLabel.dotJoined(player.name.uppercased(), player.teamAbbr.uppercased()))
                         .font(.custom(FontName.condBold, size: 13))
                         .foregroundStyle(Color.textPrimary)
                 }

@@ -127,7 +127,8 @@ struct Keep4ResultView: View {
                     .font(.custom(FontName.condBold, size: 13))
                     .foregroundStyle(Color.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.7)
-                Text("\(player.teamAbbr.uppercased()) · '\(String(format: "%02d", player.seasonYear % 100))")
+                Text(CardLabel.dotJoined(player.teamAbbr.uppercased(),
+                                         "'\(String(format: "%02d", player.seasonYear % 100))"))
                     .font(.label11)
                     .foregroundStyle(Color.textMuted)
             }

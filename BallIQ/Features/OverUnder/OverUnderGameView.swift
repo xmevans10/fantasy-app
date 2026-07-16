@@ -166,7 +166,8 @@ struct OverUnderGameView: View {
                         .font(.custom(FontName.condBlack, size: 21))
                         .foregroundStyle(team.onPrimary)
                         .lineLimit(1).minimumScaleFactor(0.6)
-                    Text("\(round.player.teamAbbr.uppercased()) · \(String(round.player.seasonYear))")
+                    Text(CardLabel.dotJoined(round.player.teamAbbr.uppercased(),
+                                             String(round.player.seasonYear)))
                         .font(.custom(FontName.condBold, size: 12))
                         .foregroundStyle(team.onPrimary.opacity(0.72))
                 }
