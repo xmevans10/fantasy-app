@@ -36,9 +36,19 @@ metadata via its REST API — lives in gitignored `tools/release/`:
 - For anything else in App Store Connect (TestFlight groups, beta review, app metadata,
   screenshots, pricing) there's no MCP connector — call the REST API directly
   (`api.appstoreconnect.apple.com`) with an ES256 JWT signed from the `.p8` key
-  (`kid`=`ASC_KEY_ID`, `iss`=`ASC_ISSUER_ID`, `aud`=`appstoreconnect-v1`). No reusable script
-  is checked in (it was all done ad hoc in `/tmp` scratch scripts); rebuild the JWT-signing
-  helper rather than hunting for one.
+  (`kid`=`ASC_KEY_ID`, `iss`=`ASC_ISSUER_ID`, `aud`=`appstoreconnect-v1`). A reusable helper
+  now lives at gitignored `tools/release/asc.py` (added 2026-07-16, run from the repo root):
+  `python3 tools/release/asc.py GET|POST|PATCH|DELETE <path> ['<json-body>']` — stdlib-only,
+  signs the JWT via `openssl` (DER→raw conversion included). Apple's API occasionally drops
+  a connection (`RemoteDisconnected`); just retry once.
+- **1.1 release flow, proven end-to-end 2026-07-16** (v1.0 went READY_FOR_SALE ~2026-07-16;
+  1.1 = build 9 submitted same day): bump `CURRENT_PROJECT_VERSION` in the pbxproj → archive/
+  export-upload per above → `POST /v1/appStoreVersions` (versionString, app rel) →
+  `PATCH .../appStoreVersionLocalizations/<id>` `whatsNew` → poll `GET /v1/builds?filter[app]=
+  …&filter[version]=N` for `processingState: VALID` (~15 min) → `PATCH /v1/appStoreVersions/
+  <id>/relationships/build` → `POST /v1/reviewSubmissions` + `POST /v1/reviewSubmissionItems`
+  → `PATCH /v1/reviewSubmissions/<id>` `{"submitted": true}`. Export compliance never blocks:
+  `ITSAppUsesNonExemptEncryption=false` is baked into Info.plist.
 - App identity: app record id `6785275045` (bundle `com.balliqfantasy.app`, ASC name
   "BallIQ - Fantasy", on-device `CFBundleDisplayName` "Playbook" — the mismatch is intentional/
   pre-existing, not a bug to fix).
