@@ -6,7 +6,12 @@ struct WhoAmIResultView: View {
     var rewards: RepositoryContainer.SessionRewards? = nil
     let onDone: () -> Void
 
+    @EnvironmentObject private var container: RepositoryContainer
     @State private var confetti = 0
+    /// Resolved from the live catalog at reveal time (WhoAmI content has no photo URL) —
+    /// see `WhoAmIAnswerPhoto` for the conservative matching rules. Stays nil (silhouette)
+    /// when no confident match exists.
+    @State private var answerHeadshot: String?
 
     private var heroFill: Color { result.solved ? (result.cluesUsed == 1 ? .voltFill : .accentFill) : .surface1 }
     private var heroInk: Color { result.solved ? (result.cluesUsed == 1 ? .onVolt : .onAccent) : .textPrimary }
@@ -26,6 +31,11 @@ struct WhoAmIResultView: View {
         .background(Color.appBackground)
         .celebrate(on: $confetti, intensity: result.cluesUsed == 1 ? 90 : 50)
         .onAppear { if result.solved { confetti += 1 } }
+        .task {
+            let rows = await container.catalog.search(
+                CatalogQuery(sport: puzzle.sport, name: puzzle.answer.canonical), limit: 30)
+            answerHeadshot = WhoAmIAnswerPhoto.headshot(from: rows, for: puzzle)
+        }
     }
 
     private var scoreHeader: some View {
@@ -46,13 +56,14 @@ struct WhoAmIResultView: View {
         .blockCard(fill: heroFill)
     }
 
-    /// Header-band + headshot-badge shape (silhouette placeholder — WhoAmI's content has no
-    /// photo URL) so the reveal reads as the same "player card" language every other
-    /// minigame's result screen already uses, instead of plain stacked text.
+    /// Header-band + headshot-badge shape so the reveal reads as the same "player card"
+    /// language every other minigame's result screen already uses. The photo is resolved
+    /// live from the catalog (`answerHeadshot`); the badge's own silhouette fallback covers
+    /// the no-confident-match case.
     private var answerCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
-                PlayerHeadshotBadge(headshot: nil, tint: Color.onAccent, size: 44)
+                PlayerHeadshotBadge(headshot: answerHeadshot, tint: Color.onAccent, size: 44)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("THE ANSWER WAS")
                         .font(.label11)

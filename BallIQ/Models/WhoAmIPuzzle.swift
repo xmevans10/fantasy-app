@@ -36,6 +36,43 @@ enum ClueKind: String, Codable {
     }
 }
 
+/// Resolves the answer's headshot from catalog rows at reveal time — WhoAmI content itself
+/// carries no photo URL (its content model predates M16 headshots), but the answer player
+/// almost always has `player_seasons` rows. Deliberately conservative: exact normalized-name
+/// equality only (never `AnswerMatcher`'s last-name/typo forgiveness — that leniency is for
+/// grading a human's guess, not for picking whose face to show), and when the era clue's
+/// span is parseable, only rows overlapping it count — so same-name players in one sport
+/// (e.g. Jaren Jackson Sr./Jr., both in the NBA catalog) can never swap faces.
+enum WhoAmIAnswerPhoto {
+    /// "Played from 1992 to 2011" / "Played in 1998" → 1992...2011 / 1998...1998. The era
+    /// clue is pipeline-generated content with a fixed shape (assemble.py `build_whoami_row`)
+    /// and is never localized; nil when absent or if the shape ever changes.
+    static func eraSpan(of puzzle: WhoAmIPuzzle) -> ClosedRange<Int>? {
+        guard let text = puzzle.clues.first(where: { $0.kind == .era })?.text else { return nil }
+        let years = text.split(whereSeparator: { !$0.isNumber })
+            .compactMap { $0.count == 4 ? Int($0) : nil }
+        guard let first = years.first, let last = years.last, first <= last else { return nil }
+        return first...last
+    }
+
+    static func headshot(from rows: [CatalogSeason], for puzzle: WhoAmIPuzzle) -> String? {
+        let accepted = Set(([puzzle.answer.canonical] + puzzle.answer.aliases)
+            .map(AnswerMatcher.normalize))
+        let span = eraSpan(of: puzzle)
+        return rows
+            .filter { row in
+                guard let headshot = row.headshot, !headshot.isEmpty,
+                      accepted.contains(AnswerMatcher.normalize(row.name)) else { return false }
+                guard let span else { return true }
+                let lo = row.firstYear ?? row.seasonYear
+                let hi = Swift.max(lo, row.lastYear ?? row.seasonYear)
+                return (lo...hi).overlaps(span)
+            }
+            .max { $0.seasonYear < $1.seasonYear }?   // latest row → most recent photo
+            .headshot
+    }
+}
+
 /// Pure scoring for Who Am I? — earlier solve = more points; wrong guesses cost points.
 enum WhoAmIScoring {
     static let perClue = [1000, 800, 600, 400, 200, 100]
