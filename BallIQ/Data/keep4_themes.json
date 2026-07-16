@@ -79,6 +79,11 @@
         "stat": "receiving_yards",
         "label": "Rec Yds",
         "fmt": "comma_int"
+      },
+      {
+        "stat": "receiving_tds",
+        "label": "Rec TD",
+        "fmt": "int"
       }
     ],
     "poolCap": 24,
@@ -785,6 +790,11 @@
         "stat": "receiving_yards",
         "label": "Rec Yds",
         "fmt": "comma_int"
+      },
+      {
+        "stat": "receiving_tds",
+        "label": "Rec TD",
+        "fmt": "int"
       }
     ],
     "poolCap": 24,

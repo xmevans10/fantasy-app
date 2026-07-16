@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-15T15:19:19+00:00",
+  "generated_at": "2026-07-16T16:53:49+00:00",
   "totals": {
     "themes": 50,
     "themes_below_pool_floor": 0,
@@ -345,7 +345,7 @@
       "sport": "baseball",
       "grain": "season",
       "eligible_seasons": 60411,
-      "excluded_by_min_stats": 38876,
+      "excluded_by_min_stats": 38872,
       "excluded_by_filters": 0,
       "pool_size": 24,
       "pool_cap": 24,
@@ -360,7 +360,7 @@
       "sport": "baseball",
       "grain": "season",
       "eligible_seasons": 31245,
-      "excluded_by_min_stats": 14941,
+      "excluded_by_min_stats": 14939,
       "excluded_by_filters": 0,
       "pool_size": 24,
       "pool_cap": 24,

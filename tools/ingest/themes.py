@@ -224,6 +224,7 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("ypc", "Yds/Carry", "dec1"),
             StatColumn("receptions", "Rec", "int"),
             StatColumn("receiving_yards", "Rec Yds", "comma_int"),
+            StatColumn("receiving_tds", "Rec TD", "int"),
         ],
     ),
     Theme(
@@ -487,6 +488,7 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("rushing_tds", "Rush TD", "int"),
             StatColumn("ypc", "Yds/Carry", "dec1"),
             StatColumn("receiving_yards", "Rec Yds", "comma_int"),
+            StatColumn("receiving_tds", "Rec TD", "int"),
         ],
     ),
     Theme(
