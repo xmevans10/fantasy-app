@@ -425,7 +425,7 @@ struct ProfileView: View {
                     }
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "globe").font(.system(size: 15, weight: .bold))
+                        GoogleGMark(size: 17)
                         Text("Continue with Google").font(.bodyStrong)
                     }
                     .foregroundStyle(Color.textPrimary)

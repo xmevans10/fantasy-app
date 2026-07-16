@@ -149,7 +149,7 @@ struct OnboardingView: View {
             Task { await signInWithGoogle() }
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: "globe").font(.system(size: 16, weight: .bold))
+                GoogleGMark(size: 18)
                 Text("Continue with Google").font(.bodyStrong)
             }
             .foregroundStyle(Color.textPrimary)
