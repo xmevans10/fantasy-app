@@ -936,6 +936,37 @@ scoring audit, second data wave):** same-day follow-up to four explicit user ask
   provider: burst-calling their REST API with no delay gets 429-throttled within ~20
   requests — `_WIKI_DELAY` (0.35s, cache-miss only) keeps the sweep legal.
 
+**Shipped 2026-07-16 (post-backlog opportunity audit — flag-driven play-through of all 5
+formats + every tab, cross-checked against live SQL):**
+- **Draft & Spin instant-empty-result bug (real, production-reachable):** on a day whose
+  sport-of-the-day is Pro-locked (3 of 5 days for free users), a guest with the "All" filter
+  seeded the draft with the locked sport; `GameSetupScreen.correctLockedDefault`'s async
+  snap-back to NFL landed mid-`startDraft`, splitting the draft across two sports (soccer
+  slots vs NFL spin filters) so round 1 dead-ended into "MISSED THE PLAYOFFS · 0" with an
+  empty YOUR LINEUP. Fixed three ways: entitlement-aware sport seeding in `load()`, Daily
+  Draft forces the true `sportOfTheDay` at load (its setup screen previously displayed the
+  wrong sport until Start), and the setup screen's sport binding is gated on `showingSetup`
+  so no late write can mutate a running draft. **Open product call:** free users now hit the
+  paywall starting Daily Draft on locked-sport days — coherent, but whether Daily Draft
+  should instead bypass the sport gate (like the daily Keep4/WhoAmI, which are playable
+  regardless of sport) is a user decision.
+- **WhoAmI answer reveal shows the real player's photo** — resolved live from the catalog at
+  reveal time via `WhoAmIAnswerPhoto` (exact normalized-name equality only, era-clue span
+  disambiguation so e.g. Jaren Jackson Sr./Jr. can never swap faces, latest row's photo
+  wins; silhouette kept when no confident match). The §9 Tier-3 note that the WhoAmI reveal
+  placeholder was purely backlog #9's slice-width problem is now stale: the reveal reads
+  photos the catalog already has.
+- **Team-less (traded "TOT"/"2TM") season cards** no longer render a dangling " · 2021" —
+  shared `CardLabel.dotJoined` replaces six drifting inline interpolations (285 NFL + 1,687
+  NBA live rows are team-less by ingest design and reach Over/Under's arcade pool today).
+- **Draft & Spin rosters drop position-less rows** (espn_nba stores "" when ESPN carries no
+  position — all 11 live Eddy Curry seasons); such rows can never fill a slot and only
+  rendered as an unplaceable row under a blank position tab.
+- **Arcade leaderboard entry unified** — Grid's result screen had drifted to a bare capsule
+  pill with no explainer while Over/Under had the full card row; one shared
+  `ArcadeLeaderboardEntryRow` now serves both (es-localized caption included).
+- 319 Swift / 217 Python tests green; every fix screenshot-verified on the affected state.
+
 ## 9. Roadmap — remaining milestones + product backlog (PM audit 2026-07-09)
 
 Full briefs live in `prompts/` (same self-contained format: goal, why-now, current state,
