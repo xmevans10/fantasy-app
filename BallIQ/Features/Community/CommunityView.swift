@@ -43,7 +43,7 @@ struct CommunityView: View {
             .navigationTitle("Community")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { Wordmark(size: 22) }
+                Wordmark.toolbarItem(size: 22)
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showCreate = true } label: { Image(systemName: "plus.circle.fill") }
                         .accessibilityLabel("Create puzzle")

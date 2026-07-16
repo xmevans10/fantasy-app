@@ -177,4 +177,18 @@ struct Wordmark: View {
         }
         .textCase(.lowercase)
     }
+
+    /// `.topBarLeading` toolbar placement for the wordmark. iOS 26's Liquid Glass toolbar
+    /// auto-encloses `.topBarLeading` content in a fixed-size pill background sized for a
+    /// single icon, which clips this two-word text lockup into an illegible circle —
+    /// `sharedBackgroundVisibility(.hidden)` opts the item out of that background.
+    @ToolbarContentBuilder
+    static func toolbarItem(size: CGFloat = 26) -> some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            ToolbarItem(placement: .topBarLeading) { Wordmark(size: size).fixedSize() }
+                .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .topBarLeading) { Wordmark(size: size) }
+        }
+    }
 }

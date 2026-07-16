@@ -34,7 +34,7 @@ struct FriendsView: View {
             .background(Color.appBackground)
             .navigationTitle("Friends")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarLeading) { Wordmark() } }
+            .toolbar { Wordmark.toolbarItem() }
         }
         .task { await load() }
     }

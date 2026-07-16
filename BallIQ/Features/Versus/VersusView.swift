@@ -33,7 +33,7 @@ struct VersusView: View {
             .navigationTitle("Versus")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { Wordmark() }
+                Wordmark.toolbarItem()
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showVersusInfo = true } label: {
                         Image(systemName: "info.circle")

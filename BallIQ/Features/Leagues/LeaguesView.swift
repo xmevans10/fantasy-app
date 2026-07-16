@@ -55,7 +55,7 @@ struct LeaguesView: View {
             .navigationTitle("Leagues")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { Wordmark() }
+                Wordmark.toolbarItem()
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showLeaguesInfo = true } label: {
                         Image(systemName: "info.circle")

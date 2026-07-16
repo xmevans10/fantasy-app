@@ -45,7 +45,8 @@ struct ProfileView: View {
             }
             .background(Color.appBackground)
             .navigationTitle("")
-            .toolbar { ToolbarItem(placement: .topBarLeading) { Wordmark() } }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { Wordmark.toolbarItem() }
             .navigationDestination(isPresented: $showStats) {
                 StatsView().environmentObject(container)
             }
@@ -324,22 +325,12 @@ struct ProfileView: View {
         .accessibilityLabel(auth.isSignedIn ? "Edit avatar and username" : "\(tier.name) tier")
     }
 
-    /// `@username` + pencil edit under the avatar, once identity is claimed.
+    /// `@username` under the avatar, once identity is claimed. Edit entry point is the
+    /// avatar badge's pencil above — a second pencil here read as a duplicate affordance.
     private func identityLine(username: String) -> some View {
-        HStack(spacing: 8) {
-            Text("@\(username)")
-                .font(.custom(FontName.condBlack, size: 16))
-                .foregroundStyle(Color.onAccent)
-            Button { showIdentityEditor = true } label: {
-                Image(systemName: "pencil")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(Color.onAccent.opacity(0.85))
-                    .padding(6)
-                    .background(Color.onAccent.opacity(0.14))
-                    .clipShape(Circle())
-            }
-            .buttonStyle(PrimePressStyle())
-        }
+        Text("@\(username)")
+            .font(.custom(FontName.condBlack, size: 16))
+            .foregroundStyle(Color.onAccent)
     }
 
     private var statRow: some View {
