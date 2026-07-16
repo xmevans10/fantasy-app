@@ -322,8 +322,7 @@ private struct ChallengeSheet: View {
                             Haptics.tap()
                         } label: {
                             HStack(spacing: 6) {
-                                Text(friend.avatar?.isEmpty == false ? friend.avatar! : "🏟️")
-                                    .font(.system(size: 14))
+                                AvatarView(avatar: friend.avatar, size: 14)
                                 Text(name).font(.label12)
                             }
                             .foregroundStyle(Color.textPrimary)

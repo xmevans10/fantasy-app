@@ -430,6 +430,20 @@ final class RepositoryContainer: ObservableObject {
         identity = ProfileIdentity(username: username, avatar: avatar)
     }
 
+    /// Uploads a JPEG profile photo to the `avatars` bucket at `{uid}/avatar.jpg` (upsert, so
+    /// re-uploads overwrite in place) and returns its public URL. `IdentityEditorSheet` treats
+    /// the return value exactly like a preset emoji — just another string for `saveIdentity`'s
+    /// `avatar` param — and every render site (`AvatarView`) tells the two apart by URL prefix.
+    /// A cache-busting query param is appended so `AsyncImage` doesn't keep serving the old
+    /// photo bytes from the same overwritten path.
+    func uploadAvatarPhoto(_ data: Data) async throws -> String {
+        guard let client, let uid = auth.userID else { throw SupabaseError.notConfigured }
+        let path = "\(uid)/avatar.jpg"
+        try await client.uploadObject(bucket: "avatars", path: path, data: data, contentType: "image/jpeg")
+        let bust = Int(Date().timeIntervalSince1970)
+        return "\(client.publicObjectURL(bucket: "avatars", path: path).absoluteString)?t=\(bust)"
+    }
+
     /// Recounts incoming pending friend requests (cheap: one filtered select). Call after
     /// any friends mutation so badges stay honest without a realtime channel.
     func refreshFriendBadge() async {

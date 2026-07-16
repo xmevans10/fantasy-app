@@ -163,6 +163,29 @@ final class SupabaseClient {
         return try await perform(restRequest(table: "rpc/\(function)", method: "POST", body: body))
     }
 
+    // MARK: - Storage
+
+    /// Uploads raw bytes to `{bucket}/{path}` (Storage's object API, not PostgREST — no SDK,
+    /// same hand-rolled pattern as the REST helpers above). `upsert: true` overwrites an
+    /// existing object at that path instead of 409-ing, which is what a re-uploaded avatar wants.
+    @discardableResult
+    func uploadObject(bucket: String, path: String, data: Data,
+                      contentType: String, upsert: Bool = true) async throws -> Data {
+        var req = URLRequest(url: config.url.appendingPathComponent("storage/v1/object/\(bucket)/\(path)"))
+        req.httpMethod = "POST"
+        applyHeaders(&req)
+        req.httpBody = data
+        req.setValue(contentType, forHTTPHeaderField: "Content-Type")
+        if upsert { req.setValue("true", forHTTPHeaderField: "x-upsert") }
+        return try await perform(req)
+    }
+
+    /// Public URL for an object in a public bucket — valid without a signed-URL round trip
+    /// since `avatars` is created with `public = true`.
+    func publicObjectURL(bucket: String, path: String) -> URL {
+        config.url.appendingPathComponent("storage/v1/object/public/\(bucket)/\(path)")
+    }
+
     func decode<T: Decodable>(_ data: Data) throws -> T {
         do { return try JSONDecoder.supabase.decode(T.self, from: data) }
         catch { throw SupabaseError.decoding(String(describing: error)) }

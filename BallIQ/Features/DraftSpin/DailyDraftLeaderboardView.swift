@@ -75,13 +75,7 @@ struct DailyDraftLeaderboardView: View {
                 .font(.hero(18))
                 .foregroundStyle(row.rank <= 3 ? Color.accentText : Color.textMuted)
                 .frame(width: 28, alignment: .leading)
-            if let avatar = row.avatar, !avatar.isEmpty {
-                Text(avatar).font(.system(size: 22)).frame(width: 28, height: 28)
-            } else {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(Color.textMuted)
-            }
+            AvatarView(avatar: row.avatar, size: 28, emojiFallback: nil)
             VStack(alignment: .leading, spacing: 1) {
                 Text(row.displayName)
                     .font(row.isMe ? .bodyStrong : .body14)

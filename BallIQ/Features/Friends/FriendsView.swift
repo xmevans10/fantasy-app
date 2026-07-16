@@ -277,16 +277,7 @@ struct FriendsView: View {
     // MARK: - Shared
 
     private func avatar(_ row: FriendRow) -> some View {
-        Group {
-            if let avatar = row.avatar, !avatar.isEmpty {
-                Text(avatar).font(.system(size: 22))
-            } else {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.system(size: 22))
-                    .foregroundStyle(Color.textMuted)
-            }
-        }
-        .frame(width: 36, height: 36)
+        AvatarView(avatar: row.avatar, size: 36, emojiFallback: nil)
     }
 
     // MARK: - Data

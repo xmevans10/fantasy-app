@@ -295,13 +295,7 @@ struct LeaguesView: View {
                 .font(.hero(18))
                 .foregroundStyle(zoneColor(row.zone))
                 .frame(width: 28, alignment: .leading)
-            if let avatar = row.avatar, !avatar.isEmpty {
-                Text(avatar).font(.system(size: 22)).frame(width: 28, height: 28)
-            } else {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(Color.textMuted)
-            }
+            AvatarView(avatar: row.avatar, size: 28, emojiFallback: nil)
             Text(row.displayName)
                 .font(row.isMe ? .bodyStrong : .body14)
                 .foregroundStyle(Color.textPrimary)
@@ -410,13 +404,7 @@ struct LeaguesView: View {
                 .font(.hero(18))
                 .foregroundStyle(Color.textMuted)
                 .frame(width: 28, alignment: .leading)
-            if let avatar = row.avatar, !avatar.isEmpty {
-                Text(avatar).font(.system(size: 22)).frame(width: 28, height: 28)
-            } else {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(Color.textMuted)
-            }
+            AvatarView(avatar: row.avatar, size: 28, emojiFallback: nil)
             Text(row.username ?? "Player")
                 .font(row.isMe ? .bodyStrong : .body14)
                 .foregroundStyle(Color.textPrimary)

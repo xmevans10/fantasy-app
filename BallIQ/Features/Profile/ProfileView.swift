@@ -290,23 +290,23 @@ struct ProfileView: View {
     /// inside the identity editor — this makes it discoverable); guests keep the tier
     /// shield, since there's no profile row to hang an avatar on before sign-in.
     private var avatarBadge: some View {
-        let avatar = container.identity.avatar?.isEmpty == false ? container.identity.avatar! : "🏟️"
-        return Button {
+        Button {
             if auth.isSignedIn { showIdentityEditor = true }
         } label: {
             ZStack(alignment: .bottomTrailing) {
                 Group {
                     if auth.isSignedIn {
-                        Text(avatar).font(.system(size: 44))
+                        AvatarView(avatar: container.identity.avatar, size: 84,
+                                  background: Color.onAccent.opacity(0.14))
                     } else {
                         Image(systemName: tier.symbol)
                             .font(.system(size: 36, weight: .black))
                             .foregroundStyle(tier.color)
+                            .frame(width: 84, height: 84)
+                            .background(Color.onAccent.opacity(0.14))
+                            .clipShape(Circle())
                     }
                 }
-                .frame(width: 84, height: 84)
-                .background(Color.onAccent.opacity(0.14))
-                .clipShape(Circle())
                 .overlay(Circle().strokeBorder(tier.color, lineWidth: 3.5))
                 if auth.isSignedIn {
                     Image(systemName: "pencil")

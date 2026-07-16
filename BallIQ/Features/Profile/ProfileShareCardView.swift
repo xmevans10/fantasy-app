@@ -22,11 +22,7 @@ struct ProfileShareCardView: View {
                     Text("MY PROFILE").font(.custom(FontName.condBlack, size: 14)).foregroundStyle(Color.onAccent.opacity(0.85))
                 }
                 HStack(spacing: 10) {
-                    Text(avatar)
-                        .font(.system(size: 34))
-                        .frame(width: 52, height: 52)
-                        .background(Color.onAccent.opacity(0.14))
-                        .clipShape(Circle())
+                    AvatarView(avatar: avatar, size: 52, background: Color.onAccent.opacity(0.14))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("@\(username)").font(.custom(FontName.condBlack, size: 22)).foregroundStyle(Color.onAccent)
                         Text("\(tier.name.uppercased()) · \(sport.displayName.uppercased())")

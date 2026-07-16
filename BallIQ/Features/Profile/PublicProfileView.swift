@@ -65,11 +65,7 @@ struct PublicProfileView: View {
         let rating = profile.rating(for: profile.bestSport)
         let tier = Tier.forRating(rating)
         return VStack(spacing: 8) {
-            Text(profile.avatar?.isEmpty == false ? profile.avatar! : "🏟️")
-                .font(.system(size: 52))
-                .frame(width: 84, height: 84)
-                .background(Color.onAccent.opacity(0.14))
-                .clipShape(Circle())
+            AvatarView(avatar: profile.avatar, size: 84, background: Color.onAccent.opacity(0.14))
             Text(profile.username ?? "Player")
                 .font(.custom(FontName.condBlack, size: 24))
                 .foregroundStyle(Color.onAccent)

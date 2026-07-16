@@ -1020,3 +1020,36 @@ $$;
 
 revoke all on function public.get_apns_config() from public, anon, authenticated;
 grant execute on function public.get_apns_config() to service_role;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Storage: profile photo uploads (M20)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Public-read, owner-write bucket for uploaded profile photos (path: {uid}/avatar.jpg).
+-- Public read so avatars render for friends/community without a signed URL round-trip;
+-- write/update/delete restricted to the owning user via the {uid}/ path prefix, mirroring
+-- the "own profile" RLS pattern on public.profiles.
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists "avatar public read" on storage.objects;
+drop policy if exists "avatar owner insert" on storage.objects;
+drop policy if exists "avatar owner update" on storage.objects;
+drop policy if exists "avatar owner delete" on storage.objects;
+
+create policy "avatar public read" on storage.objects
+  for select using (bucket_id = 'avatars');
+
+create policy "avatar owner insert" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "avatar owner update" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text)
+  with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "avatar owner delete" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);

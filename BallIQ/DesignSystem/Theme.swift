@@ -192,3 +192,49 @@ struct Wordmark: View {
         }
     }
 }
+
+// MARK: - AvatarView
+/// Renders `ProfileIdentity.avatar`/`PublicProfile.avatar` etc: either a preset emoji or an
+/// uploaded photo URL (`RepositoryContainer.uploadAvatarPhoto` always returns an `http` URL;
+/// no preset emoji ever does, so the prefix check is unambiguous). One shared view so the
+/// ~9 avatar call sites across the app don't each hand-roll the emoji-vs-photo branch.
+struct AvatarView: View {
+    let avatar: String?
+    var size: CGFloat = 44
+    /// Shown when `avatar` is nil/empty. `nil` here means "use the SF Symbol person icon"
+    /// instead (the leaderboard-row convention); most other call sites want a themed emoji.
+    var emojiFallback: String? = "🏟️"
+    var background: Color = .clear
+
+    var body: some View {
+        Group {
+            if let avatar, avatar.hasPrefix("http"), let url = URL(string: avatar) {
+                AsyncImage(url: url) { phase in
+                    if case .success(let image) = phase {
+                        image.resizable().scaledToFill()
+                    } else {
+                        fallback
+                    }
+                }
+            } else if let avatar, !avatar.isEmpty {
+                Text(avatar).font(.system(size: size * 0.6))
+            } else {
+                fallback
+            }
+        }
+        .frame(width: size, height: size)
+        .background(background)
+        .clipShape(Circle())
+    }
+
+    @ViewBuilder
+    private var fallback: some View {
+        if let emojiFallback {
+            Text(emojiFallback).font(.system(size: size * 0.6))
+        } else {
+            Image(systemName: "person.crop.circle.fill")
+                .font(.system(size: size))
+                .foregroundStyle(Color.textMuted)
+        }
+    }
+}

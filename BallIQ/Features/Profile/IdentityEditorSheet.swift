@@ -1,4 +1,6 @@
 import SwiftUI
+import PhotosUI
+import UIKit
 
 /// Username + avatar editor — the one place `profiles.username`/`profiles.avatar` get
 /// written from. Opened both from the "claim your username" CTA (first-run) and from the
@@ -11,6 +13,9 @@ struct IdentityEditorSheet: View {
     @State private var selectedAvatar: String
     @State private var saving = false
     @State private var errorMessage: String?
+    @State private var photoPickerItem: PhotosPickerItem?
+    @State private var uploadingPhoto = false
+    @State private var photoUploadError: String?
 
     /// Sports-flavored preset set — single-select, stored as the raw emoji string.
     static let presetAvatars = [
@@ -57,7 +62,7 @@ struct IdentityEditorSheet: View {
                 usernameInput = existing
             }
             if let existingAvatar = container.identity.avatar,
-               IdentityEditorSheet.presetAvatars.contains(existingAvatar) {
+               IdentityEditorSheet.presetAvatars.contains(existingAvatar) || existingAvatar.hasPrefix("http") {
                 selectedAvatar = existingAvatar
             }
         }
@@ -89,6 +94,7 @@ struct IdentityEditorSheet: View {
     private var avatarGrid: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("AVATAR").font(.label12).foregroundStyle(Color.textMuted)
+            photoPickerRow
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 6), spacing: 10) {
                 ForEach(IdentityEditorSheet.presetAvatars, id: \.self) { emoji in
                     let selected = emoji == selectedAvatar
@@ -113,6 +119,65 @@ struct IdentityEditorSheet: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .cardSurface()
+    }
+
+    /// A photo upload alongside the emoji grid, not a replacement — `selectedAvatar` holds
+    /// whichever one the user picked last, since `saveIdentity`'s `avatar` param treats both
+    /// as an opaque string. Selecting an emoji below overwrites a photo selection and vice versa.
+    private var photoPickerRow: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            PhotosPicker(selection: $photoPickerItem, matching: .images) {
+                HStack(spacing: 10) {
+                    if uploadingPhoto {
+                        ProgressView().frame(width: 44, height: 44)
+                    } else if selectedAvatar.hasPrefix("http") {
+                        AvatarView(avatar: selectedAvatar, size: 44)
+                    } else {
+                        Image(systemName: "photo.badge.plus")
+                            .font(.system(size: 18))
+                            .foregroundStyle(Color.textPrimary)
+                            .frame(width: 44, height: 44)
+                            .background(Color.surfaceMuted)
+                            .clipShape(Circle())
+                    }
+                    Text(selectedAvatar.hasPrefix("http") ? "Photo selected — tap to change" : "Or choose a photo")
+                        .font(.label12)
+                        .foregroundStyle(Color.textPrimary)
+                    Spacer()
+                }
+                .padding(10)
+                .background(selectedAvatar.hasPrefix("http") ? Color.accentBg : Color.surfaceMuted)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+            }
+            .buttonStyle(PrimePressStyle())
+            .disabled(uploadingPhoto)
+            if let photoUploadError {
+                Text(photoUploadError).font(.label11).foregroundStyle(Color.dangerText)
+            }
+        }
+        .onChange(of: photoPickerItem) { _, newItem in
+            Task { await handlePhotoPick(newItem) }
+        }
+    }
+
+    private func handlePhotoPick(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+        photoUploadError = nil
+        uploadingPhoto = true
+        defer { uploadingPhoto = false }
+        do {
+            guard let data = try await item.loadTransferable(type: Data.self),
+                  let uiImage = UIImage(data: data),
+                  let jpeg = uiImage.resizedForAvatar().jpegData(compressionQuality: 0.85) else {
+                photoUploadError = String(localized: "Couldn't read that photo.")
+                return
+            }
+            let url = try await container.uploadAvatarPhoto(jpeg)
+            selectedAvatar = url
+            Haptics.tap()
+        } catch {
+            photoUploadError = String(localized: "Upload failed. Try again.")
+        }
     }
 
     private var saveButton: some View {
@@ -147,4 +212,16 @@ struct IdentityEditorSheet: View {
 
 private extension Result {
     var isFailure: Bool { if case .failure = self { return true }; return false }
+}
+
+private extension UIImage {
+    /// Downscales to at most 512pt on the longest side before upload — avatars render at
+    /// ≤84pt in the app, so this keeps uploads small without visible quality loss.
+    func resizedForAvatar(maxDimension: CGFloat = 512) -> UIImage {
+        let scale = min(1, maxDimension / max(size.width, size.height))
+        guard scale < 1 else { return self }
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { _ in draw(in: CGRect(origin: .zero, size: newSize)) }
+    }
 }
