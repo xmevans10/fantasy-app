@@ -211,8 +211,13 @@ struct DraftSpinView: View {
 
         let fetched = await container.catalog.draftSpinRoster(sport: sport, team: team, year: year)
         // Excluded names (season variations OFF) are dropped from display too — `spinRound`
-        // already guaranteed at least one placeable candidate survives this filter.
-        let roster = fetched.filter { $0.teamAbbr == team && !excludedNames.contains($0.name) }
+        // already guaranteed at least one placeable candidate survives this filter. Rows with
+        // no position at all (espn_nba's `_norm_position` stores "" when ESPN doesn't carry
+        // one, e.g. Eddy Curry's whole career) can never be placed in any slot, so they'd
+        // only render an unplaceable row under a blank position tab — drop them here too.
+        let roster = fetched.filter {
+            $0.teamAbbr == team && !$0.position.isEmpty && !excludedNames.contains($0.name)
+        }
         currentRound = DraftSpinRound(team: team, year: year, roster: roster)
         roundRosterReady = true
         if DebugLaunch.autoSubmitDraftSpin { autoPickForScreenshot(roster) }
