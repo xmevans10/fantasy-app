@@ -58,6 +58,17 @@ struct DraftSpinView: View {
         settings.allowSeasonVariations ? [] : Set(picks.map(\.name))
     }
 
+    /// The sport binding the setup screen edits, gated on the setup screen actually showing.
+    /// `GameSetupScreen.correctLockedDefault` writes through this binding from an `onChange`,
+    /// which can deliver on the render pass AFTER an auto-start has already torn the setup
+    /// screen down — that late write used to mutate `sport` mid-`startDraft`, splitting the
+    /// draft across two sports (one sport's lineup slots filtered by the other's formation),
+    /// so the first spin dead-ended into an instant empty-lineup result. Once the draft
+    /// starts, its sport is final.
+    private var setupSport: Binding<Sport> {
+        Binding(get: { sport }, set: { newValue in if showingSetup { sport = newValue } })
+    }
+
     var body: some View {
         Group {
             if let result {
@@ -65,7 +76,7 @@ struct DraftSpinView: View {
                                     isDailyDraft: isDailyDraft, isOfficialDailyDraftRun: isOfficialDailyDraftRun,
                                     onDone: { dismiss() })
             } else if showingSetup {
-                DraftSpinSetupView(sport: $sport, settings: $settings, isDailyDraft: $isDailyDraft,
+                DraftSpinSetupView(sport: setupSport, settings: $settings, isDailyDraft: $isDailyDraft,
                                    onStart: { Task { await startDraft() } },
                                    onClose: { dismiss() })
             } else if loading {
@@ -93,9 +104,25 @@ struct DraftSpinView: View {
     private func load() async {
         // Default the picker: debug override, else the last sport played anywhere in the
         // app, else this format's daily rotation. The setup screen owns the final choice.
-        sport = DebugLaunch.draftSpinSport
-            ?? container.sportFilter.sport
-            ?? DraftSpinConstraint.sportOfTheDay(Date())
+        if isDailyDraft {
+            // Opened straight into Daily Draft (Home's daily-loop row): show the real forced
+            // sport, mirroring the MODE toggle's own forcing — the setup caption and squad
+            // grid read `sport`, and `startDraft`'s re-force must not be the first place the
+            // true sport appears.
+            sport = DraftSpinConstraint.sportOfTheDay(Date())
+        } else if let debugSport = DebugLaunch.draftSpinSport {
+            sport = debugSport
+        } else {
+            let seeded = container.sportFilter.sport ?? DraftSpinConstraint.sportOfTheDay(Date())
+            // Never seed a Pro-locked sport (a lapsed last-played sport, or a locked
+            // sport-of-the-day): the setup screen's `correctLockedDefault` corrects it
+            // asynchronously via the binding, and the auto-start screenshot path begins the
+            // draft before that write lands — splitting the draft across two sports (one
+            // sport's slots against another's sample), which dead-ends the first spin into
+            // an instant empty-lineup result.
+            sport = container.entitlements.canSelect(SportFilter(rawValue: seeded.rawValue) ?? .all)
+                ? seeded : .nfl
+        }
         loading = false
         if showingSetup { container.catalog.prefetchDraftSpinSample(for: sport) }
         // Screenshot flows target the board/result, not the setup screen — skip straight in
