@@ -28,6 +28,11 @@ class RawSeason:
     # Single-game grain (None/"" = season aggregate). A row with `week` set is one game.
     week: int | None = None
     opponent: str = ""       # opponent team abbr for game-grain rows, e.g. "DEN"
+    # Pre-formatted display date for non-NFL game-grain rows (e.g. "Apr 8") — NFL's card
+    # context reads as "vs OPP · Wk W", which doesn't make sense for MLB/NBA where the
+    # game isn't identified by a week number; those providers set this instead so
+    # PlayerSeason.swift's subtitle can read "vs OPP · Apr 8 · 2022". "" = use `week`.
+    game_date: str = ""
     # Career-grain aggregate (see career.py) — one row per (sport, position, player) summing
     # every real season the pipeline pulled. Mutually exclusive with `week` (a career row is
     # never a single game); `season_year` holds the player's LAST season for sort/recency

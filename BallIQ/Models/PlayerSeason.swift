@@ -17,6 +17,10 @@ struct PlayerSeason: Identifiable, Codable, Equatable {
     /// `_player_content`. Additive + optional so season-only content decodes unchanged.
     var week: Int? = nil
     var opponent: String? = nil
+    /// Pre-formatted display date (e.g. "Apr 8") for non-NFL single-game rows, where a
+    /// "Wk W" label doesn't make sense — see assemble.py's `_player_content`. nil for NFL
+    /// game rows (they use `week`) and season/career cards.
+    var gameDate: String? = nil
     /// Career grain (nil for season/single-game cards). Both set together — see
     /// assemble.py `_player_content`; `seasonYear` holds the player's LAST season for
     /// this row, `firstYear`/`lastYear` give the full span for display.
@@ -29,6 +33,9 @@ struct PlayerSeason: Identifiable, Codable, Equatable {
     }
 
     var subtitle: String {
+        if let gameDate, let opponent {
+            return "vs \(opponent) · \(gameDate) · \(seasonYear)"
+        }
         if let week, let opponent {
             return "vs \(opponent) · Wk \(week) · \(seasonYear)"
         }

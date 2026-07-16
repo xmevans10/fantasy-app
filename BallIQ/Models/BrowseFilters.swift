@@ -13,7 +13,26 @@ enum DecadeFilter: String, CaseIterable, Identifiable {
     case twentyTwenties = "2020s"
 
     var id: String { rawValue }
-    var title: String { self == .all ? "All decades" : rawValue }
+    var title: String { self == .all ? String(localized: "All decades") : rawValue }
+}
+
+/// Puzzle-depth facet for the Browse archive — wraps `PuzzleGrain` with an `.all` case so it
+/// slots into the same `PrimeDropdown` shape as `DecadeFilter` and `SportFilter`.
+enum GrainFilter: String, CaseIterable, Identifiable {
+    case all
+    case season
+    case singleGame = "game"
+    case career
+
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .all:        return String(localized: "All depths")
+        case .season:     return PuzzleGrain.season.badgeLabel.capitalized
+        case .singleGame: return PuzzleGrain.singleGame.badgeLabel.capitalized
+        case .career:     return PuzzleGrain.career.badgeLabel.capitalized
+        }
+    }
 }
 
 enum BrowseFilters {
@@ -30,5 +49,9 @@ enum BrowseFilters {
 
     static func matchesDecade(_ puzzle: Keep4Puzzle, filter: DecadeFilter) -> Bool {
         filter == .all || decade(of: puzzle) == filter
+    }
+
+    static func matchesGrain(_ puzzle: Keep4Puzzle, filter: GrainFilter) -> Bool {
+        filter == .all || puzzle.puzzleGrain().rawValue == filter.rawValue
     }
 }

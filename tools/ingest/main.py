@@ -29,8 +29,10 @@ from .providers import (
     espn_nba_pool,
     espn_soccer,
     hoopr_nba,
+    hoopr_nba_games,
     mlb_pool,
     mlb_stats,
+    mlb_stats_games,
     nba_balldontlie,
     nfl_history,
     nfl_nflverse,
@@ -143,6 +145,8 @@ def derive_nba_totals(seasons: list[RawSeason]) -> None:
     for s in seasons:
         if s.sport != "nba":
             continue
+        if s.week is not None:   # single-game rows already carry real per-game totals,
+            continue             # not per-game averages — deriving would zero them out
         games = s.stats.get("games", 0.0)
         for pg, total in per_game_to_total.items():
             s.stats[total] = float(round(s.stats.get(pg, 0.0) * games))
@@ -210,6 +214,15 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
         nba = list(by_id.values())
     print(f"[nba] {len(nba)} player-seasons")
 
+    # Single-game grain (M-single-game): committed hoopR box-score sweep (see
+    # hoopr_nba_games's module docstring — pre-filtered to notable games only, unlike the
+    # season sweep above). Game rows carry distinct `-wk`-suffixed player_ids, so a plain
+    # append is safe (no dedup needed, unlike the season unions above).
+    nba_games = hoopr_nba_games.load_seasons()
+    if nba_games:
+        print(f"[nba] hoopR single-game sweep: {len(nba_games)} player-games")
+        nba += nba_games
+
     # MLB Stats API (keyless, verified live) is primary; the committed leader-swept pool
     # (`mlb_player_ids.json`, refreshed occasionally via providers.mlb_pool) broadens it
     # from the ~2 dozen marquee ids to hundreds of real stars. Union guarantees the
@@ -222,6 +235,18 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
         print("[baseball] MLB Stats API empty — using curated real-stat seed (data/baseball_seed.csv)")
         baseball = seed.load_baseball()
     print(f"[baseball] {len(baseball)} player-seasons")
+
+    # Single-game grain (M-single-game): `stats=gameLog` needs one API call PER PLAYER
+    # PER SEASON YEAR (no `yearByYear` equivalent), so this is bounded to the curated
+    # marquee list rather than the full discovered pool — see mlb_stats_games's
+    # module docstring. Reuses the same bounded `game_years` window NFL's single-game
+    # pull uses.
+    if game_years:
+        print(f"[baseball] fetching single games for {len(MLB_LIVE_TARGETS)} marquee players "
+              f"{game_years[0]}–{game_years[-1]} …")
+        baseball_games = mlb_stats_games.fetch_by_ids(MLB_LIVE_TARGETS, game_years)
+        print(f"[baseball] {len(baseball_games)} player-games")
+        baseball += baseball_games
 
     # Soccer: API-Football's leaderboard sweep (providers/api_football.py, refreshed
     # occasionally via that module's own budget-limited __main__, same split as the
@@ -338,13 +363,12 @@ def assign_active_dates(rows: list[PuzzleRow], backfill_days: int) -> None:
 def catalog_rows(seasons: list[RawSeason]) -> list[dict]:
     """Deduped player-season rows for the `player_seasons` creation catalog (snake_case).
 
-    Excludes single-game rows (`week` set) — the Create flow's on-device grading isn't
-    built for single games (an explicit non-goal). Career rows (M17) ARE included: the
-    4 career themes are creatable, and search needs a real career pool to draw from."""
+    Single-game rows (`week` set) ARE included (as of the single-game-creation change) —
+    a puzzle is a puzzle regardless of grain, and search needs a real single-game pool to
+    draw from just like it needs a career pool. Career rows (M17) are included too: all
+    three grains are creatable, and search needs a real pool of each to draw from."""
     by_id: dict[str, dict] = {}
     for s in seasons:
-        if s.week is not None:
-            continue
         by_id[s.player_id] = {
             "id": s.player_id, "sport": s.sport, "name": s.name,
             "team_abbr": s.team_abbr, "season_year": s.season_year,
@@ -353,6 +377,9 @@ def catalog_rows(seasons: list[RawSeason]) -> list[dict]:
             "first_year": int(s.meta["first_year"]) if s.career else None,
             "last_year": int(s.meta["last_year"]) if s.career else None,
             "league": s.meta.get("league") or None,
+            "week": s.week,
+            "opponent": s.opponent or None,
+            "game_date": s.game_date or None,
         }
     return list(by_id.values())
 
@@ -366,12 +393,17 @@ def filter_new_catalog_rows(rows: list[dict]) -> list[dict]:
     every time its player has a new season, and the current in-progress season's stats
     change week to week — both must always be resent. A season is "closed" once
     `season_year` is strictly before the current year (this year's season may still be
-    live when the pipeline runs)."""
+    live when the pipeline runs). A single-game row (`week` set) is always "closed" the
+    moment it exists — a final box score never changes after the fact, unlike a season's
+    running total — so it's skip-eligible regardless of `season_year`, even for a game
+    played during the current in-progress season."""
     from .upsert import fetch_existing_catalog_ids
 
     current_year = dt.date.today().year
-    always_send = [r for r in rows if r["career"] or r["season_year"] >= current_year]
-    closed = [r for r in rows if not r["career"] and r["season_year"] < current_year]
+    always_send = [r for r in rows
+                   if r["career"] or (r["week"] is None and r["season_year"] >= current_year)]
+    closed = [r for r in rows
+              if not r["career"] and (r["week"] is not None or r["season_year"] < current_year)]
 
     by_sport: dict[str, list[dict]] = {}
     for r in closed:
@@ -392,17 +424,18 @@ def write_catalog_fallback(seasons: list[RawSeason], per_theme: int = 200) -> No
     the top `per_theme` graded seasons of each theme (union), in the camelCase-keyed shape
     the Swift `CatalogSeason` decodes (team_abbr/season_year stay snake_case).
 
-    Season-grain only, by design (M17 decision): career creation is live-catalog-only —
-    the offline/no-network create experience already accepts a smaller pool, and career
-    rows are a nice-to-have there, not a requirement. Loop below explicitly skips any
-    non-season theme (including the 4 career ones) when building the trim set."""
+    Season AND single-game grain, by design: both are creatable in the app, so both need a
+    real offline pool. Career creation stays live-catalog-only (M17 decision) — the
+    offline/no-network create experience already accepts a smaller pool, and career rows
+    are a nice-to-have there, not a requirement. Loop below explicitly skips career themes
+    when building the trim set."""
     keep_ids: set[str] = set()
     for theme in KEEP4_THEMES:
-        if theme.grain != "season":   # catalog_rows() only has season rows; skip the pool too
+        if theme.grain == "career":   # career creation is live-catalog-only, see docstring
             continue
         pool = [s for s in seasons
                 if s.sport == theme.sport and s.position in theme.positions
-                and s.week is None and not s.career
+                and (s.week is not None) == (theme.grain == "game") and not s.career
                 and not any(s.stats.get(k, 0.0) < v for k, v in theme.min_stats.items())]
         pool.sort(key=lambda s: grade(s.stats, theme.scale), reverse=True)
         keep_ids.update(s.player_id for s in pool[:per_theme])

@@ -5,8 +5,8 @@ import SwiftUI
 /// before they sort: one season, one single game, or an entire career.
 ///
 /// Baked into the puzzle at assembly time (`assemble.py`'s `"grain": theme.grain`) or at
-/// community publish (always `.season` today — the Create flow only offers season-grain
-/// themes; single-game and career pools aren't wired into player search yet).
+/// community publish (`CreateKeep4View`'s `query.grain` — any of the three, a creator picks
+/// which pool to search via the discovery grain toggle).
 enum PuzzleGrain: String, Codable {
     case season
     case singleGame = "game"

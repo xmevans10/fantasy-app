@@ -6,12 +6,12 @@ import XCTest
 /// decluttering Browse's filter row — see BrowseView's dropdown-row redesign.)
 final class BrowseFiltersTests: XCTestCase {
 
-    private func puzzle(theme: String, sport: Sport, years: [Int]) -> Keep4Puzzle {
+    private func puzzle(theme: String, sport: Sport, years: [Int], grain: String? = nil) -> Keep4Puzzle {
         let players = years.enumerated().map { i, y in
             PlayerSeason(id: "p\(i)", name: "P\(i)", teamAbbr: "AAA", seasonYear: y,
                         stats: [], grade: 0)
         }
-        return Keep4Puzzle(id: "t", theme: theme, sport: sport, players: players)
+        return Keep4Puzzle(id: "t", theme: theme, sport: sport, players: players, grain: grain)
     }
 
     func testDecadeBucketsByMedianYear() {
@@ -28,6 +28,28 @@ final class BrowseFiltersTests: XCTestCase {
         let p = puzzle(theme: "x", sport: .nfl, years: Array(repeating: 2015, count: 8))
         XCTAssertTrue(BrowseFilters.matchesDecade(p, filter: .twentyTens))
         XCTAssertFalse(BrowseFilters.matchesDecade(p, filter: .twentyTwenties))
+    }
+
+    func testGrainFilterAllMatchesEverything() {
+        let p = puzzle(theme: "x", sport: .nfl, years: Array(repeating: 2015, count: 8), grain: "game")
+        XCTAssertTrue(BrowseFilters.matchesGrain(p, filter: .all))
+    }
+
+    func testGrainFilterOnlyMatchesItsOwnGrain() {
+        let seasonPuzzle = puzzle(theme: "x", sport: .nfl, years: Array(repeating: 2015, count: 8), grain: "season")
+        let gamePuzzle = puzzle(theme: "y", sport: .nfl, years: Array(repeating: 2015, count: 8), grain: "game")
+        XCTAssertTrue(BrowseFilters.matchesGrain(seasonPuzzle, filter: .season))
+        XCTAssertFalse(BrowseFilters.matchesGrain(seasonPuzzle, filter: .singleGame))
+        XCTAssertTrue(BrowseFilters.matchesGrain(gamePuzzle, filter: .singleGame))
+        XCTAssertFalse(BrowseFilters.matchesGrain(gamePuzzle, filter: .season))
+    }
+
+    func testGrainFilterDefaultsUnbakedPuzzleToSeason() {
+        // No baked `grain` and a theme title that doesn't match any bundled theme — falls
+        // back to `.season` per `puzzleGrain(themes:)`, same as a legacy/community row.
+        let p = puzzle(theme: "not-a-real-theme", sport: .nfl, years: Array(repeating: 2015, count: 8))
+        XCTAssertTrue(BrowseFilters.matchesGrain(p, filter: .season))
+        XCTAssertFalse(BrowseFilters.matchesGrain(p, filter: .career))
     }
 
 }

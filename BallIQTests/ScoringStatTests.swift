@@ -110,4 +110,44 @@ final class ScoringStatTests: XCTestCase {
         let cols = ScoringStat.displayColumns(sport: .nfl, position: "QB", preferredKeys: nflFantasyTerms)
         XCTAssertEqual(cols.map(\.key), ["passing_yards", "passing_tds", "interceptions"])
     }
+
+    // MARK: - Single-game grain (single-game puzzle creation)
+
+    /// The exact bug this whole grain param exists to prevent: an NBA single-game row
+    /// carries raw totals (`points`/`rebounds`/...), not the season's per-game rates
+    /// (`ppg`/`rpg`/...). Defaulting to the season template would read absent keys and
+    /// silently render every stat as zero.
+    func testNBASingleGameUsesRawTotalsNotPerGameRates() {
+        let cols = ScoringStat.displayColumns(sport: .nba, position: "G", grain: .singleGame)
+        XCTAssertEqual(cols.map(\.key), ["points", "assists", "rebounds"])
+        for col in cols {
+            XCTAssertFalse(col.key.hasSuffix("pg"), "single-game NBA card should never show a per-game rate")
+        }
+    }
+
+    func testNBASeasonGrainStillUsesGenericFallbackUnaffected() {
+        // Explicit .season (the default) must be untouched by the new game-grain override —
+        // NBA still has no season template, same as before this change.
+        let center = ScoringStat.displayColumns(sport: .nba, position: "C", grain: .season)
+        let guard_ = ScoringStat.displayColumns(sport: .nba, position: "G", grain: .season)
+        XCTAssertEqual(center.map(\.key), guard_.map(\.key))
+    }
+
+    /// Baseball's season template shows the rate stats `avg`/`era` — neither is emitted for
+    /// a single game (see `mlb_stats_games.py`) — so the game-grain override swaps them for
+    /// counting stats the game rows do carry.
+    func testBaseballSingleGameSwapsRateStatsForCountingStats() {
+        let hitter = ScoringStat.displayColumns(sport: .baseball, position: "H", grain: .singleGame)
+        XCTAssertEqual(hitter.map(\.key), ["home_runs", "rbi", "hits"])
+        let pitcher = ScoringStat.displayColumns(sport: .baseball, position: "P", grain: .singleGame)
+        XCTAssertEqual(pitcher.map(\.key), ["strike_outs", "earned_runs", "innings_pitched"])
+    }
+
+    /// NFL has no game-grain override — a game row's `rushing_yards` etc. are the exact
+    /// same field names as a season row's, so the season template already works unchanged.
+    func testNFLSingleGameFallsBackToSameSeasonTemplate() {
+        let seasonCols = ScoringStat.displayColumns(sport: .nfl, position: "RB", grain: .season)
+        let gameCols = ScoringStat.displayColumns(sport: .nfl, position: "RB", grain: .singleGame)
+        XCTAssertEqual(seasonCols.map(\.key), gameCols.map(\.key))
+    }
 }

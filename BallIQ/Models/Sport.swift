@@ -165,6 +165,31 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         ],
     ]
 
+    /// Single-game overrides for `positionStatTemplates`, used only when a free-form
+    /// creation pool is scoped to single-game rows (`CatalogQuery.grain == .singleGame`).
+    /// NFL/soccer game rows carry the exact same stat keys as their season rows (a game's
+    /// `rushing_yards` and a season's `rushing_yards` are the same field name, just a
+    /// smaller number) so they need no override and fall through to the season template
+    /// above. NBA and baseball differ: NBA game rows carry raw single-game totals
+    /// (`points`/`rebounds`/`assists`/`blocks`) where season rows carry per-game rate
+    /// stats (`ppg`/`rpg`/...) — showing "PPG" on a single-game card would read `stats["ppg"]`
+    /// (absent on a game row) and silently render "0.0". Baseball game rows lack the
+    /// season-only *rate* stats `avg`/`era` (not meaningful/emitted for one game — see
+    /// `mlb_stats_games.py`), so those two keys are swapped for raw counting stats the
+    /// game rows do carry. NBA has no entry in `positionStatTemplates` at all (its stats
+    /// apply broadly regardless of position), so this is NBA's only template, season or game.
+    static let positionStatTemplatesGame: [Sport: [String: [String]]] = [
+        .nba: [
+            "G": ["points", "assists", "rebounds"],
+            "F": ["points", "rebounds", "assists"],
+            "C": ["points", "rebounds", "blocks"],
+        ],
+        .baseball: [
+            "H": ["home_runs", "rbi", "hits"],
+            "P": ["strike_outs", "earned_runs", "innings_pitched"],
+        ],
+    ]
+
     /// Slice a stat-keyed sequence (theme columns, `ScoringStat`s, …) down to `position`'s
     /// families for this sport. Returns `columns` unchanged if the sport/position has no
     /// family entry, or if slicing would leave fewer than `minimum` — a too-aggressive slice

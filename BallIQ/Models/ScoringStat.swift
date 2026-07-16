@@ -65,6 +65,14 @@ extension ScoringStat {
             ScoringStat(key: "bpg",    label: "BPG", sport: .nba, lo: 0.3,   hi: 3.7,   higherWins: true, fmt: .dec1),
             ScoringStat(key: "ts_pct", label: "TS%", sport: .nba, lo: 0.480, hi: 0.670, higherWins: true, fmt: .pct),
             ScoringStat(key: "fg_pct", label: "FG%", sport: .nba, lo: 0.420, hi: 0.620, higherWins: true, fmt: .pct),
+            // Single-game raw totals (as opposed to the per-game rates above) — only
+            // meaningful on `CatalogSeason.isGame` rows, see `Sport.positionStatTemplatesGame`.
+            ScoringStat(key: "points",             label: "PTS", sport: .nba, lo: 10, hi: 60, higherWins: true, fmt: .int),
+            ScoringStat(key: "rebounds",           label: "REB", sport: .nba, lo: 3,  hi: 25, higherWins: true, fmt: .int),
+            ScoringStat(key: "assists",            label: "AST", sport: .nba, lo: 1,  hi: 20, higherWins: true, fmt: .int),
+            ScoringStat(key: "steals",             label: "STL", sport: .nba, lo: 0,  hi: 8,  higherWins: true, fmt: .int),
+            ScoringStat(key: "blocks",             label: "BLK", sport: .nba, lo: 0,  hi: 8,  higherWins: true, fmt: .int),
+            ScoringStat(key: "field_goals_made",   label: "FGM", sport: .nba, lo: 2,  hi: 25, higherWins: true, fmt: .int),
         ],
         .baseball: [
             ScoringStat(key: "hits",           label: "Hits",     sport: .baseball, lo: 80,    hi: 200,   higherWins: true,  fmt: .int),
@@ -120,7 +128,8 @@ extension ScoringStat {
     /// `Sport.positionStatTemplates` (this position's own obvious stat sheet) whenever one
     /// exists, keeping only the ones the active rule actually scores.
     static func displayColumns(sport: Sport, position: String?,
-                              preferredKeys: [String] = []) -> [ScoringStat] {
+                              preferredKeys: [String] = [],
+                              grain: PuzzleGrain = .season) -> [ScoringStat] {
         let all = catalog(for: sport)
         let byKey = Dictionary(uniqueKeysWithValues: all.map { ($0.key, $0) })
         // minimum: 0 — trust the position filter even if it empties the preferred set out
@@ -130,7 +139,7 @@ extension ScoringStat {
             preferredKeys.compactMap { byKey[$0] },
             position: position, minimum: 0, statKey: \.key)
 
-        let templated = template(sport: sport, position: position)
+        let templated = template(sport: sport, position: position, grain: grain)
         if !templated.isEmpty {
             guard !preferred.isEmpty else { return templated }
             let scoredKeys = Set(preferred.map(\.key))
@@ -153,10 +162,21 @@ extension ScoringStat {
         return Array((relevant + padding).prefix(3))
     }
 
-    /// `position`'s explicit default stat sheet (`Sport.positionStatTemplates`), resolved to
-    /// full `ScoringStat`s in template order — empty if the sport/position has no template.
-    static func template(sport: Sport, position: String?) -> [ScoringStat] {
-        guard let position, let keys = Sport.positionStatTemplates[sport]?[position] else { return [] }
+    /// `position`'s explicit default stat sheet, resolved to full `ScoringStat`s in template
+    /// order — empty if the sport/position has no template. `grain == .singleGame` prefers
+    /// `Sport.positionStatTemplatesGame`'s override (NBA/baseball, whose game-row stat keys
+    /// differ from their season ones) and falls back to the season template `positionStatTemplates`
+    /// when no override exists (NFL/soccer, whose game rows reuse the season key names).
+    static func template(sport: Sport, position: String?, grain: PuzzleGrain = .season) -> [ScoringStat] {
+        guard let position else { return [] }
+        let keys: [String]
+        if grain == .singleGame, let gameKeys = Sport.positionStatTemplatesGame[sport]?[position] {
+            keys = gameKeys
+        } else if let seasonKeys = Sport.positionStatTemplates[sport]?[position] {
+            keys = seasonKeys
+        } else {
+            return []
+        }
         let byKey = Dictionary(uniqueKeysWithValues: catalog(for: sport).map { ($0.key, $0) })
         return keys.compactMap { byKey[$0] }
     }

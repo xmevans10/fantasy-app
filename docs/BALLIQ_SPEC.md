@@ -368,7 +368,7 @@ One template definition, consumed by both sides:
 | M11 production hardening | ✅ shipped; edge functions now actually deployed + cron-scheduled (2026-07-05, see §2) |
 | M12 trust & safety | ✅ shipped; `is_admin`/review RLS applied live (2026-07-05) |
 | M13 discovery & growth | ✅ shipped; `weekly_play_counts` RPC applied live (2026-07-05) |
-| M14 accessibility & localization | 🟧 VoiceOver shipped; **Spanish localization untouched** |
+| M14 accessibility & localization | ✅ shipped 2026-07-14/15 — VoiceOver + Dynamic Type, plus Spanish (`Localizable.xcstrings`, 429/435 translated; native-speaker review of the machine translation still a hand-off) |
 | M15 analytics & content health | ✅ shipped; `events` table + RLS applied live (2026-07-05) |
 | M16 headshot coverage | ✅ shipped (all 5 sports, 100% coverage) |
 | M17 puzzle grain + community career creation | ✅ shipped, including the live catalog migration/backfill |
@@ -1025,6 +1025,38 @@ app claims to do and what actually works today:
   prepped 2026-07-14: `prompts/QA-testflight-social-flows.md`** (~25 min two-account pass,
   every step pass/fail observable, includes the Daily Draft/arcade board signed-in halves
   and the known-blocked items that must not be counted as failures).
+- **Single-game content breadth + single-game/cross-sport creation (new 2026-07-15) —
+  ✅ shipped**, per user directive "a puzzle is a puzzle... users should have full author
+  powers based on our features." Single-game (`grain="game"`) content went from 3 NFL-only
+  themes to 9 across NFL/MLB/NBA: two new NFL themes (TE explosion, QB rushing) reusing the
+  existing nflverse weekly pull; a new MLB single-game provider
+  (`providers/mlb_stats_games.py`, MLB Stats API `stats=gameLog`, bounded to the curated
+  marquee player list — one call per player per season, so the full ~7,800-player pool
+  isn't viable) with 2 themes; a new NBA single-game provider
+  (`providers/hoopr_nba_games.py`, hoopR's `player_box` parquet, pre-filtered to "notable"
+  games only so the committed sweep stays ~3MB instead of ~33MB) with 2 themes. A `gameDate`
+  field (Python → JSON → Swift) now carries a pretty date label ("Apr 8") for non-NFL game
+  cards, since NFL's "Wk W" label doesn't make sense for MLB/NBA. Browse gained a
+  season/single-game/career depth filter (`GrainFilter`, mirrors the existing decade filter).
+  Separately, single-game rows now reach the live `player_seasons` creation catalog too
+  (previously excluded — "on-device grading isn't built for single games" — that's now
+  false): 3 new nullable columns (`week`/`opponent`/`game_date`) on `player_seasons`,
+  `catalog_rows()` stops filtering them out, `CatalogQuery.grain` replaces the old
+  season/career-only boolean with a 3-way facet, `Keep4Theme.isCreatable` now accepts all
+  three grains, and a new grain toggle in `CreateKeep4View`'s discovery section lets a
+  creator scope search to season/game/career. Cross-sport puzzles were **already possible**
+  before this change (Create's "Any sport" discovery filter + "Vibes" no-formula drag-rank
+  scoring — confirmed via code read, not something built this session) — combined with the
+  single-game catalog fix, a user can now build e.g. "greatest single games ever" mixing an
+  NFL game, an NBA game, and an MLB game in one Vibes-scored puzzle. 217 Python + 312 Swift
+  tests green; live-verified via screenshot (template-driven single-game NBA creation
+  showing real "vs OKC · Nov 29" cards, correctly graded) and direct SQL (73,951 NFL +
+  26,791 NBA + 18,792 baseball single-game rows live in `player_seasons`). One asymmetry to
+  know about: NFL/MLB single-game content refreshes automatically via the existing daily
+  cron (`.github/workflows/ingest.yml`) since both providers fetch live; NBA's committed
+  `data/nba_hoopr_games.csv` sweep is a manual/occasional refresh (same established pattern
+  as `hoopr_nba.py`'s season sweep) — the cron won't pick up new NBA games until someone
+  reruns `python -m tools.ingest.providers.hoopr_nba_games`.
 
 **Tier 3 — Launch/polish ("make it sturdy").** Everything else in the existing backlog,
 plus a standing user directive added 2026-07-14: **team logos + colors wherever a team

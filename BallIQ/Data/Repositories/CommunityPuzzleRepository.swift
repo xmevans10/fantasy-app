@@ -15,8 +15,9 @@ struct CommunitySummary: Identifiable, Decodable, Equatable {
     /// whoami and for legacy rows published before the field existed.
     let scoring: String?
     /// Baked grain (`content.grain`: "season" | "game" | "career"), keep4 only — nil for
-    /// whoami and for legacy rows published before the field existed (all pre-M17 community
-    /// puzzles are season-grain regardless, since that's the only grain Create has ever offered).
+    /// whoami and for legacy rows published before the field existed (every pre-single-game-
+    /// creation community puzzle is season-grain regardless, since that was the only grain
+    /// Create offered until then).
     let grain: String?
     /// Only selected by the moderation review queue ("public" | "unlisted" | "hidden");
     /// nil in the regular feed, which doesn't fetch it.

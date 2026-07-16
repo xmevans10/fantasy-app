@@ -437,6 +437,40 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("ts_pct", "TS%", "pct1"),
         ],
     ),
+    # ── NBA single-game (grain="game" — one row per player's one box score, via
+    # providers/hoopr_nba_games.py). ─────────────────────────────────────────────
+    Theme(
+        key="nba-game-scoring-outburst",
+        title="Historic single-game scoring outbursts",
+        sport="nba",
+        scale="nba_fantasy_game",
+        positions=frozenset({"G", "F", "C"}),
+        min_stats={"points": 40},
+        grain="game",
+        columns=[
+            StatColumn("points", "PTS", "int"),
+            StatColumn("field_goals_made", "FGM", "int"),
+            StatColumn("rebounds", "REB", "int"),
+            StatColumn("assists", "AST", "int"),
+        ],
+    ),
+    Theme(
+        key="nba-game-triple-double",
+        title="Single-game triple-double explosions",
+        sport="nba",
+        scale="nba_fantasy_game",
+        positions=frozenset({"G", "F", "C"}),
+        min_stats={"points": 10},
+        filters=(Filter(field="rebounds", op="gte", value=10),
+                 Filter(field="assists", op="gte", value=10)),
+        grain="game",
+        columns=[
+            StatColumn("points", "PTS", "int"),
+            StatColumn("rebounds", "REB", "int"),
+            StatColumn("assists", "AST", "int"),
+            StatColumn("steals", "STL", "int"),
+        ],
+    ),
     # ── NFL single-game (grain="game" — one row per player's one game, via
     # providers/nfl_nflverse_games.py). The "biggest single game" angle the season
     # themes above can never express. ────────────────────────────────────────────
@@ -485,6 +519,36 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("rushing_yards", "Rush Yds", "comma_int"),
         ],
     ),
+    Theme(
+        key="nfl-game-te-explosion",
+        title="Big-play tight end games",
+        sport="nfl",
+        scale="nfl_skill_ppr_game",
+        positions=frozenset({"TE"}),
+        min_stats={"receiving_yards": 90},
+        grain="game",
+        columns=[
+            StatColumn("receiving_yards", "Rec Yds", "comma_int"),
+            StatColumn("receptions", "Rec", "int"),
+            StatColumn("receiving_tds", "Rec TD", "int"),
+            StatColumn("ypr", "Yds/Rec", "dec1"),
+        ],
+    ),
+    Theme(
+        key="nfl-game-qb-rushing",
+        title="Dual-threat QB rushing games",
+        sport="nfl",
+        scale="nfl_qb_fantasy_game",
+        positions=frozenset({"QB"}),
+        min_stats={"rushing_yards": 70},
+        grain="game",
+        columns=[
+            StatColumn("rushing_yards", "Rush Yds", "comma_int"),
+            StatColumn("rushing_tds", "Rush TD", "int"),
+            StatColumn("passing_yards", "Pass Yds", "comma_int"),
+            StatColumn("passing_tds", "Pass TD", "int"),
+        ],
+    ),
     # ── Baseball (live MLB Stats API, seed fallback) ─────────────────────
     Theme(
         key="baseball-power-hitters",
@@ -514,6 +578,39 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("era", "ERA", "dec2"),
             StatColumn("whip", "WHIP", "dec2"),
             StatColumn("innings_pitched", "IP", "dec1"),
+        ],
+    ),
+    # ── Baseball single-game (grain="game" — one row per player's one game, via
+    # providers/mlb_stats_games.py's `stats=gameLog` pull). ───────────────────────
+    Theme(
+        key="baseball-game-power-outburst",
+        title="Multi-homer games",
+        sport="baseball",
+        scale="baseball_hitter_fantasy_game",
+        positions=frozenset({"H"}),
+        min_stats={"home_runs": 2},
+        grain="game",
+        columns=[
+            StatColumn("home_runs", "HR", "int"),
+            StatColumn("rbi", "RBI", "int"),
+            StatColumn("hits", "Hits", "int"),
+            StatColumn("runs", "R", "int"),
+        ],
+    ),
+    Theme(
+        key="baseball-game-ace-start",
+        title="Dominant single-game pitching starts",
+        sport="baseball",
+        scale="baseball_pitcher_fantasy_game",
+        positions=frozenset({"P"}),
+        min_stats={"strike_outs": 8},
+        filters=(Filter(field="earned_runs", op="lte", value=1),),
+        grain="game",
+        columns=[
+            StatColumn("strike_outs", "K", "int"),
+            StatColumn("earned_runs", "ER", "int"),
+            StatColumn("innings_pitched", "IP", "dec1"),
+            StatColumn("wins", "W", "int"),
         ],
     ),
     # ── Soccer (seed-only for now — no live club-stats source verified working;

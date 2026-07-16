@@ -112,10 +112,24 @@ struct CatalogSeason: Identifiable, Codable, Equatable {
     /// and for soccer rows from providers that don't carry league data yet
     /// (`transfermarkt_soccer.py`, `seed.py`).
     var league: String? = nil
+    /// Single-game grain, mirrors `RawSeason.week`/`.opponent`/`.game_date` — nil/nil/nil
+    /// for a season or career row. `gameDate` is nil for NFL game rows (they use `week`
+    /// for the "Wk W" label instead); non-nil for MLB/NBA game rows. All three optional so
+    /// existing season/career catalog rows (no such keys at all) still decode.
+    var week: Int? = nil
+    var opponent: String? = nil
+    var gameDate: String? = nil
 
     var isCareer: Bool { career == true }
+    var isGame: Bool { week != nil }
 
     var subtitle: String {
+        if let gameDate, let opponent {
+            return "vs \(opponent) · \(gameDate) · \(seasonYear)"
+        }
+        if let week, let opponent {
+            return "vs \(opponent) · Wk \(week) · \(seasonYear)"
+        }
         if let firstYear, let lastYear {
             return lastYear != firstYear ? "\(teamAbbr) · \(firstYear)-\(lastYear)" : "\(teamAbbr) · \(firstYear)"
         }
@@ -126,11 +140,12 @@ struct CatalogSeason: Identifiable, Codable, Equatable {
     // (e.g. "rushing_yards") must stay snake_case for GradeFormula, so we must not
     // use the shared `.convertFromSnakeCase` decoder here.
     enum CodingKeys: String, CodingKey {
-        case id, sport, name, position, stats, headshot, career, league
+        case id, sport, name, position, stats, headshot, career, league, week, opponent
         case teamAbbr = "team_abbr"
         case seasonYear = "season_year"
         case firstYear = "first_year"
         case lastYear = "last_year"
+        case gameDate = "game_date"
     }
 }
 

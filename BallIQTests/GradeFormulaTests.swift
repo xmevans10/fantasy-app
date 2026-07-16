@@ -117,11 +117,22 @@ final class GradeFormulaTests: XCTestCase {
         XCTAssertEqual(career.subtitle, "TEN · 2016-2023")
     }
 
-    /// M17: `CatalogQuery.career` defaults to season-only — the same scope every query
-    /// had before career rows existed in the catalog — so free-form/season-template
-    /// search never regresses to seeing career aggregates mixed in.
+    /// M17: `CatalogQuery.grain` defaults to season-only — the same scope every query
+    /// had before career (and later single-game) rows existed in the catalog — so
+    /// free-form/season-template search never regresses to seeing another grain mixed in.
     func testCatalogQueryDefaultsToSeasonOnly() {
-        XCTAssertFalse(CatalogQuery().career)
-        XCTAssertFalse(CatalogQuery(sport: .nfl).career)
+        XCTAssertEqual(CatalogQuery().grain, .season)
+        XCTAssertEqual(CatalogQuery(sport: .nfl).grain, .season)
+    }
+
+    /// A single-game catalog row's subtitle reads "vs OPP · date · year" — matching
+    /// PlayerSeason.subtitle's own single-game format (MLB/NBA, which use `gameDate`
+    /// rather than NFL's `week`-based "Wk W" label).
+    func testCatalogSeasonGameSubtitleReadsOpponentAndDate() {
+        let game = CatalogSeason(id: "aaron-judge-2022-wk12", sport: .baseball, name: "Aaron Judge",
+                                 teamAbbr: "NYY", seasonYear: 2022, position: "H", stats: [:],
+                                 week: 12, opponent: "BOS", gameDate: "Apr 8")
+        XCTAssertTrue(game.isGame)
+        XCTAssertEqual(game.subtitle, "vs BOS · Apr 8 · 2022")
     }
 }

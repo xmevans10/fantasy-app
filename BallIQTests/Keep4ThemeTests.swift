@@ -9,7 +9,7 @@ final class Keep4ThemeTests: XCTestCase {
     private let themes = Keep4Theme.loadBundled()
 
     func testBundleDecodesAllThemes() {
-        XCTAssertEqual(themes.count, 28, "bundled keep4_themes.json out of sync with themes.py")
+        XCTAssertEqual(themes.count, 34, "bundled keep4_themes.json out of sync with themes.py")
         XCTAssertEqual(Set(themes.map(\.key)).count, themes.count, "duplicate theme keys")
     }
 
@@ -38,18 +38,16 @@ final class Keep4ThemeTests: XCTestCase {
         XCTAssertEqual(t.columns.map(\.fmt), ["comma_int", "int", "int", "dec1", "int"])
     }
 
-    /// Every creatable (season- or career-grain, M17) theme must resolve to an app
-    /// ScoringRule preset, so a template grades identically to the pipeline; game-grain
-    /// themes are excluded from creation (single-game search isn't wired into Create).
-    func testSeasonAndCareerThemesResolveToPresets() {
-        for t in themes where t.grain == "season" || t.grain == "career" {
+    /// Every theme (any of the three grains — season/career/single-game are all
+    /// creatable) must resolve to an app ScoringRule preset, so a template grades
+    /// identically to the pipeline.
+    func testAllGrainsResolveToPresetsAndAreCreatable() {
+        for t in themes {
             XCTAssertNotNil(t.scoringRule, "\(t.key): scale \(t.scale) has no app preset")
             XCTAssertTrue(t.isCreatable, "\(t.key) should be creatable")
         }
-        for t in themes where t.grain == "game" {
-            XCTAssertFalse(t.isCreatable, "\(t.key): game grain must not surface in creation")
-        }
         XCTAssertTrue(themes.contains { $0.grain == "career" }, "no career themes in bundle to assert against")
+        XCTAssertTrue(themes.contains { $0.grain == "game" }, "no single-game themes in bundle to assert against")
     }
 
     /// Formatting parity with themes.py `_fmt_value` (locked values).

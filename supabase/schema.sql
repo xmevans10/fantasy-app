@@ -156,6 +156,11 @@ alter table public.player_seasons add column if not exists last_year  int;
 -- from providers/espn_soccer.py's ~38-country sweep; null for every other source/sport.
 -- Powers Draft & Spin's "restrict spins to one league" setup filter.
 alter table public.player_seasons add column if not exists league     text;
+-- Single-game grain (single-game puzzle creation): a row with `week` set is one player's
+-- one game, mirroring RawSeason.week/opponent/game_date. Null for every season/career row.
+alter table public.player_seasons add column if not exists week       integer;
+alter table public.player_seasons add column if not exists opponent   text;
+alter table public.player_seasons add column if not exists game_date  text;
 -- Draft & Spin lands on one real franchise season at a time. This keeps that narrow roster
 -- lookup indexed as the catalog grows, rather than scanning every player in a sport/year.
 create index if not exists player_seasons_roster_lookup_idx

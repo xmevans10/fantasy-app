@@ -35,10 +35,9 @@ struct Keep4Theme: Codable, Equatable, Identifiable {
     /// The scoring rule this theme grades with — identical math to the pipeline's grade.py.
     var scoringRule: ScoringRule? { ScoringRule.preset(scale) }
 
-    /// Themes the creation flow can offer: season or career grain (the catalog has no
-    /// single-game rows — on-device grading isn't built for those) with a scale the app
-    /// mirrors.
-    var isCreatable: Bool { (grain == "season" || grain == "career") && scoringRule != nil }
+    /// Themes the creation flow can offer: any of the three grains (season, career, or
+    /// single-game — a puzzle is a puzzle regardless of grain) with a scale the app mirrors.
+    var isCreatable: Bool { PuzzleGrain(rawValue: grain) != nil && scoringRule != nil }
 
     // MARK: - Card building (mirrors themes.py format_columns / _fmt_value exactly)
 

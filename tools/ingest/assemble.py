@@ -45,6 +45,8 @@ def _player_content(theme: Theme, season: RawSeason, value: float) -> dict:
     if season.week is not None:        # game-grain card context (Swift renders "vs OPP · Wk W")
         content["week"] = season.week
         content["opponent"] = season.opponent
+        if season.game_date:           # non-NFL game grain (Swift renders "vs OPP · Apr 8")
+            content["gameDate"] = season.game_date
     if season.career:                  # career-grain card context (Swift renders "CAREER · 1996-2016")
         content["firstYear"] = int(season.meta.get("first_year", season.season_year))
         content["lastYear"] = int(season.meta.get("last_year", season.season_year))

@@ -20,7 +20,8 @@ struct CreateKeep4View: View {
     /// stat columns come from the theme — exactly what the daily pipeline bakes — instead
     /// of being derived from the scoring preset. Cleared by any manual scoring change.
     @State private var activeTheme: Keep4Theme?
-    /// Season-grain themes with an app-mirrored scale, from the bundled keep4_themes.json.
+    /// Creatable themes (any grain — season, career, or single-game) with an app-mirrored
+    /// scale, from the bundled keep4_themes.json.
     private let themes: [Keep4Theme] = Keep4Theme.bundled.filter(\.isCreatable)
     /// The 8 picks. Order is meaningless for the three fantasy-points choices (the preview
     /// sorts by grade) but IS the ranking itself for Vibes — drag to reorder there.
@@ -140,23 +141,24 @@ struct CreateKeep4View: View {
     }
 
     /// Adopt a theme template: same scale, sport, and discovery positions as the pipeline.
-    /// A career-grain theme also scopes search to career-only rows (never mixing career
-    /// aggregates with season rows in one pool).
+    /// The theme's own grain also scopes search to that grain only (never mixing season,
+    /// career, and single-game rows in one pool).
     private func apply(_ theme: Keep4Theme) {
         guard theme.scoringRule != nil else { return }
         activeTheme = theme
         scoringSport = theme.sport
         scoringChoice = .ppr
         eraAdjusted = theme.eraAdjusted
-        query = CatalogQuery(sport: theme.sport, positions: theme.positions, career: theme.grain == "career")
+        query = CatalogQuery(sport: theme.sport, positions: theme.positions,
+                             grain: PuzzleGrain(rawValue: theme.grain) ?? .season)
         Haptics.tap()
     }
 
-    /// Leave any active theme template and drop its career-only search scope — free-form
-    /// creation never offers career rows (no per-position career scale without a template).
+    /// Leave any active theme template and drop its grain-only search scope — free-form
+    /// creation defaults back to season (the original, most-populated pool).
     private func clearTemplate() {
         activeTheme = nil
-        query.career = false
+        query.grain = .season
     }
 
     // MARK: - Scoring (the answer axis)
@@ -309,12 +311,34 @@ struct CreateKeep4View: View {
     private var discoverySection: some View {
         sectionCard("Find players", systemImage: "magnifyingglass") {
             VStack(alignment: .leading, spacing: 12) {
+                grainToggle
                 anySportToggle
                 positionChips
                 eraRow
                 facetField("Team", text: teamBinding, placeholder: "e.g. KC")
                 PrimeSearchField(placeholder: "Search a player", text: $query.name)
                 if searching { ProgressView() }
+            }
+        }
+    }
+
+    /// Which grain to search — locked to one at a time (never mixed within a single pool,
+    /// same discipline `apply(theme:)` already applies for a template). Switching away from
+    /// a template's grain implicitly leaves the template, same as any other manual facet
+    /// change would once a rule stops matching — but grain changes never clear the template
+    /// mid-search here since the chips already reflect `query.grain`, kept in sync by
+    /// `apply`/`clearTemplate`.
+    private var grainToggle: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach([PuzzleGrain.season, .singleGame, .career], id: \.self) { g in
+                    PrimeChip(label: g.badgeLabel, active: query.grain == g) {
+                        guard query.grain != g else { return }
+                        query.grain = g
+                        if activeTheme != nil, activeTheme?.grain != g.rawValue { activeTheme = nil }
+                        Haptics.tap()
+                    }
+                }
             }
         }
     }
@@ -493,9 +517,12 @@ struct CreateKeep4View: View {
     /// Default card stat lines for Vibes (no scoring terms to derive from — a few
     /// informative headline stats for the sport, sliced to the season's own position via
     /// `ScoringStat.displayColumns` so a free-form pool mixing positions — e.g. a QB
-    /// alongside WRs — never bakes a stat family the QB's card doesn't record.
+    /// alongside WRs — never bakes a stat family the QB's card doesn't record. `grain`
+    /// matters here too: a single-game NBA/baseball row's stat keys differ from its
+    /// season counterpart (see `Sport.positionStatTemplatesGame`), so the wrong grain
+    /// would silently read absent keys and render every stat as zero.
     private func defaultStatLines(_ s: CatalogSeason) -> [PlayerSeason.StatLine] {
-        ScoringStat.displayColumns(sport: s.sport, position: s.position).map { stat in
+        ScoringStat.displayColumns(sport: s.sport, position: s.position, grain: query.grain).map { stat in
             let value = s.stats[stat.key] ?? 0
             return .init(label: stat.label, value: stat.format(value))
         }
@@ -505,7 +532,9 @@ struct CreateKeep4View: View {
     /// never shown to players) so `Keep4Puzzle.correctKeepIDs`' top-4/bottom-4 math works
     /// unchanged. Otherwise the grade is the rule's real fantasy total. Display columns come
     /// from the active theme template when one is set, otherwise the rule's own terms (or, for
-    /// Vibes, a few generic headline stats). Sport = modal sport of picks.
+    /// Vibes, a few generic headline stats). Sport = modal sport of picks. `week`/`opponent`/
+    /// `gameDate` carry through so a single-game puzzle's cards show "vs OPP · date" instead
+    /// of a bare season year, same as the daily pipeline's own single-game cards.
     private func cards() -> [PlayerSeason] {
         if isVibes {
             let n = selected.count
@@ -513,6 +542,7 @@ struct CreateKeep4View: View {
                 PlayerSeason(id: s.id, name: s.name, teamAbbr: s.teamAbbr,
                             seasonYear: s.seasonYear, stats: defaultStatLines(s),
                             grade: Double(n - i), headshot: s.headshot,
+                            week: s.week, opponent: s.opponent, gameDate: s.gameDate,
                             firstYear: s.firstYear, lastYear: s.lastYear)
             }
         }
@@ -527,7 +557,8 @@ struct CreateKeep4View: View {
                 // skill-position rule would otherwise show its (all-zero) receiving terms.
                 let preferredKeys = (r?.terms ?? []).map(\.stat)
                 lines = ScoringStat.displayColumns(sport: s.sport, position: s.position,
-                                                   preferredKeys: preferredKeys).map { stat in
+                                                   preferredKeys: preferredKeys,
+                                                   grain: query.grain).map { stat in
                     let value = s.stats[stat.key] ?? 0
                     return .init(label: stat.label, value: stat.format(value))
                 }
@@ -536,6 +567,7 @@ struct CreateKeep4View: View {
                                 seasonYear: s.seasonYear, stats: lines,
                                 grade: r?.grade(s, baselines: container.baselines) ?? 0,
                                 headshot: s.headshot,
+                                week: s.week, opponent: s.opponent, gameDate: s.gameDate,
                                 firstYear: s.firstYear, lastYear: s.lastYear)
         }
     }
@@ -553,11 +585,12 @@ struct CreateKeep4View: View {
         let id = container.newCommunityID()
         let trimmedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
         let scoring: ScoringKind = isVibes ? .vibes : (rule.map(ScoringKind.init(rule:)) ?? .ppr)
-        // Bakes the active template's grain (season/career, M17); "season" when no
-        // template is active (free-form creation only ever offers season rows to pick).
+        // Bakes the discovery grain actually searched (season/career/single-game) — not
+        // just the active template's, so free-form creation (no template) still tags the
+        // puzzle correctly instead of hardcoding "season" regardless of what was picked.
         let puzzle = Keep4Puzzle(id: id, theme: title, sport: sport, players: cards(),
                                  description: trimmedDescription.isEmpty ? nil : trimmedDescription,
-                                 scoring: scoring, grain: activeTheme?.grain ?? "season",
+                                 scoring: scoring, grain: query.grain.rawValue,
                                  scale: rule == nil ? nil : scaleKey)
         do {
             _ = try await container.publish(id: id, sport: sport, format: "keep4",

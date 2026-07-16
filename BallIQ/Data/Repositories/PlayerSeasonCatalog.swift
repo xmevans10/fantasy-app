@@ -16,10 +16,11 @@ struct CatalogQuery: Equatable {
     /// only to discard them on-device.
     var exactTeam: String?
     var name: String = ""
-    /// true → only career-aggregate rows; false (default) → only season rows. Always
-    /// applied (never "any") so a season template's pool never accidentally mixes in a
-    /// career aggregate's wildly different stat magnitudes, and vice versa (M17).
-    var career: Bool = false
+    /// Which of the three grains to search — season (default), career-aggregate, or
+    /// single-game. Always applied (never "any") so one template's pool never accidentally
+    /// mixes in another grain's wildly different stat magnitudes (M17, extended to game
+    /// grain for single-game creation).
+    var grain: PuzzleGrain = .season
 
     static let empty = CatalogQuery()
 }
@@ -169,14 +170,22 @@ final class PlayerSeasonCatalog {
         guard let client else { return nil }
         var items = [
             URLQueryItem(name: "select", value: "id,sport,name,team_abbr,season_year,position,stats,"
-                         + "headshot,career,first_year,last_year,league"),
+                         + "headshot,career,first_year,last_year,league,week,opponent,game_date"),
             // Stable order is required, not cosmetic: without it, *which* rows a capped response
             // contains isn't even guaranteed consistent across calls (verified in the Grid
             // pipeline bug) — a paginated fetch built on an unordered result could silently drop
             // or duplicate rows between pages.
             URLQueryItem(name: "order", value: "id"),
-            URLQueryItem(name: "career", value: "eq.\(q.career)"),
+            URLQueryItem(name: "career", value: "eq.\(q.grain == .career)"),
         ]
+        // Season vs single-game are both career=false — distinguish by whether `week` is
+        // set. Career rows never have `week` set either way, so this filter is skipped for
+        // them (the `career=eq.true` predicate above already scopes the pool correctly).
+        switch q.grain {
+        case .season:     items.append(URLQueryItem(name: "week", value: "is.null"))
+        case .singleGame: items.append(URLQueryItem(name: "week", value: "not.is.null"))
+        case .career:     break
+        }
         if let sport = q.sport {
             items.append(URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)"))
         }
@@ -227,7 +236,8 @@ final class PlayerSeasonCatalog {
                 && (q.exactTeam == nil || q.exactTeam!.isEmpty || s.teamAbbr == q.exactTeam!)
                 && (q.exactTeam != nil || team == nil || team!.isEmpty || s.teamAbbr.lowercased().contains(team!))
                 && (name.isEmpty || s.name.lowercased().contains(name))
-                && s.isCareer == q.career
+                && s.isCareer == (q.grain == .career)
+                && (q.grain == .career || s.isGame == (q.grain == .singleGame))
         }
     }
 

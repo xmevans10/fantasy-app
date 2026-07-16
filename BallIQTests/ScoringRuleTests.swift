@@ -266,4 +266,36 @@ final class ScoringRuleTests: XCTestCase {
         let sloppy = rule.grade(stats: ["interceptions": 20], sport: .nfl, position: "QB", seasonYear: 2020, baselines: baselines)
         XCTAssertGreaterThan(clean, sloppy, "fewer interceptions should score higher")
     }
+
+    // MARK: - Single-game `_game`-suffixed presets (single-game puzzle creation)
+
+    /// grade.py aliases `_FANTASY["x_game"] = _FANTASY["x"]` for single-game grain (same
+    /// PPR math, just a smaller magnitude) — `ScoringRule.preset` mirrors that by stripping
+    /// the suffix rather than declaring 6 duplicate dictionary entries.
+    func testGameSuffixedPresetsResolveToSameRuleAsSeasonBase() {
+        let gameSuffixed = ["nfl_fantasy_game", "nfl_skill_ppr_game", "nfl_qb_fantasy_game",
+                            "nba_fantasy_game", "baseball_hitter_fantasy_game",
+                            "baseball_pitcher_fantasy_game"]
+        for key in gameSuffixed {
+            let base = String(key.dropLast(5))
+            let gameRule = try! XCTUnwrap(ScoringRule.preset(key), "\(key) should resolve")
+            let baseRule = try! XCTUnwrap(ScoringRule.preset(base), "\(base) should resolve")
+            XCTAssertEqual(gameRule.terms.map(\.stat), baseRule.terms.map(\.stat), key)
+            XCTAssertEqual(gameRule.terms.map(\.weight), baseRule.terms.map(\.weight), key)
+        }
+    }
+
+    func testUnknownGameSuffixedKeyStillReturnsNil() {
+        XCTAssertNil(ScoringRule.preset("not_a_real_scale_game"))
+        XCTAssertNil(ScoringRule.preset("not_a_real_scale"))
+    }
+
+    /// A single-game NBA box score's real fantasy total, using the aliased preset —
+    /// matches grade.py's `nba_fantasy_game` byte-for-byte (same coefficients as `nba_fantasy`).
+    func testNBAGamePresetGradesOneBoxScore() {
+        let judge: [String: Double] = ["points": 45, "rebounds": 8, "assists": 6, "steals": 2, "blocks": 1]
+        let g = ScoringRule.preset("nba_fantasy_game")!.grade(stats: judge, sport: .nba, position: "G", seasonYear: 2019)
+        // 45*1.0 + 8*1.2 + 6*1.5 + 2*3.0 + 1*3.0 = 45 + 9.6 + 9 + 6 + 3 = 72.6
+        XCTAssertEqual(g, 72.6, accuracy: 0.001)
+    }
 }

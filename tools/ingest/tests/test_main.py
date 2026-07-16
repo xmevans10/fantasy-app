@@ -1,9 +1,8 @@
-"""Tests for main.py's catalog assembly. Game-grain rows never reach the catalog
-(on-device grading isn't built for single games — an explicit non-goal). Career-grain
-rows DO reach it as of M17 (community career-puzzle creation)."""
+"""Tests for main.py's catalog assembly. Season, career, AND single-game rows all reach
+the catalog — every grain is creatable in the app."""
 from unittest.mock import patch
 
-from tools.ingest.main import catalog_rows, merge_nfl_bio
+from tools.ingest.main import catalog_rows, filter_new_catalog_rows, merge_nfl_bio
 from tools.ingest.models import RawSeason
 
 
@@ -14,14 +13,22 @@ def _season(name, **kw):
     return RawSeason(**base)
 
 
-def test_catalog_excludes_game_grain_rows():
+def test_catalog_includes_game_grain_rows():
+    # Single-game rows reach the catalog too (as of the single-game-creation change) —
+    # a puzzle is a puzzle regardless of grain, so search needs a real single-game pool.
     rows = [
         _season("Season Guy"),
-        _season("Game Guy", week=12, opponent="DEN"),
+        _season("Game Guy", week=12, opponent="DEN", game_date="Nov 24"),
     ]
     out = catalog_rows(rows)
-    names = {r["name"] for r in out}
-    assert names == {"Season Guy"}
+    by_name = {r["name"]: r for r in out}
+    assert set(by_name) == {"Season Guy", "Game Guy"}
+    assert by_name["Season Guy"]["week"] is None
+    assert by_name["Season Guy"]["opponent"] is None
+    assert by_name["Season Guy"]["game_date"] is None
+    assert by_name["Game Guy"]["week"] == 12
+    assert by_name["Game Guy"]["opponent"] == "DEN"
+    assert by_name["Game Guy"]["game_date"] == "Nov 24"
 
 
 def test_catalog_includes_career_grain_rows():
@@ -103,3 +110,23 @@ def test_merge_nfl_bio_does_not_override_an_existing_headshot():
     }):
         merge_nfl_bio([current])
     assert current.headshot == "https://cdn.example/current.png"
+
+
+def test_filter_new_catalog_rows_treats_game_rows_as_always_skippable():
+    # A single-game row from THIS year's in-progress season must still be treated as
+    # "closed" (skip-eligible once stored) — unlike a season aggregate for the current
+    # year, a final box score never changes after the fact.
+    import datetime as dt
+
+    current_year = dt.date.today().year
+    rows = catalog_rows([
+        _season("Current Season Guy", season_year=current_year, sport="nfl"),
+        _season("Current Game Guy", season_year=current_year, sport="nfl", week=3, opponent="KC"),
+    ])
+    with patch("tools.ingest.upsert.fetch_existing_catalog_ids",
+               return_value={f"nfl-current-game-guy-{current_year}-wk03"}):
+        out = filter_new_catalog_rows(rows)
+    names = {r["name"] for r in out}
+    # The season row is always resent (current year, still growing); the game row was
+    # already stored, so it's skipped even though it shares the same in-progress year.
+    assert names == {"Current Season Guy"}

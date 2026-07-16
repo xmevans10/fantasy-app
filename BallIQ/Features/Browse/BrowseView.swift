@@ -9,6 +9,7 @@ struct BrowseView: View {
     @State private var format: BrowseFormat = .keep4
     @State private var sportFilter: SportFilter = .all
     @State private var decadeFilter: DecadeFilter = .all
+    @State private var grainFilter: GrainFilter = .all
     @State private var searchText = ""
     @State private var searchExpanded = false
     @State private var keep4: [Keep4Puzzle] = []
@@ -52,21 +53,32 @@ struct BrowseView: View {
     // MARK: - Controls
 
     /// One collapsed control row instead of a stack of always-expanded chip rows: Format/
-    /// Sport/Decade are `PrimeDropdown`s (native `Menu`), search collapses to an icon until
-    /// tapped. Search only applies to K4C4 — Who Am I? archive cards are deliberately
-    /// anonymous ("Mystery player #n"); searching would leak answers — so it and Decade
-    /// (a K4C4-only facet, see `BrowseFilters`) drop out of the row for that tab.
+    /// Sport/Decade/Depth are `PrimeDropdown`s (native `Menu`), search collapses to an icon
+    /// until tapped. Search only applies to K4C4 — Who Am I? archive cards are deliberately
+    /// anonymous ("Mystery player #n"); searching would leak answers — so it and Decade/Depth
+    /// (K4C4-only facets, see `BrowseFilters`) drop out of the row for that tab.
     private var controls: some View {
         HStack(spacing: 8) {
             if searchExpanded {
                 PrimeExpandingSearch(placeholder: "Search themes or players",
                                     text: $searchText, isExpanded: $searchExpanded)
             } else {
-                PrimeDropdown(options: BrowseFormat.allCases, selection: $format,
-                             title: \.title, isDefault: { _ in false })
-                PrimeDropdown(options: SportFilter.allCases, selection: $sportFilter, title: \.title)
-                if format == .keep4 {
-                    PrimeDropdown(options: DecadeFilter.allCases, selection: $decadeFilter, title: \.title)
+                // Chips scroll rather than compress: four dropdowns + search can't share
+                // one screen width without truncating into meaningless "SPO…"/"DEC…" —
+                // the whole point of the dimension labels is that they stay readable.
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        PrimeDropdown(options: BrowseFormat.allCases, selection: $format,
+                                     title: \.title, isDefault: { _ in false })
+                        PrimeDropdown(options: SportFilter.allCases, selection: $sportFilter, title: \.title,
+                                      unsetLabel: String(localized: "Sport"))
+                        if format == .keep4 {
+                            PrimeDropdown(options: DecadeFilter.allCases, selection: $decadeFilter, title: \.title,
+                                          unsetLabel: String(localized: "Decade"))
+                            PrimeDropdown(options: GrainFilter.allCases, selection: $grainFilter, title: \.title,
+                                          unsetLabel: String(localized: "Depth"))
+                        }
+                    }
                 }
                 Spacer(minLength: 0)
                 if format == .keep4 {
@@ -104,6 +116,7 @@ struct BrowseView: View {
     private var filteredKeep4: [Keep4Puzzle] {
         keep4.filter {
             BrowseFilters.matchesDecade($0, filter: decadeFilter) &&
+                BrowseFilters.matchesGrain($0, filter: grainFilter) &&
                 PuzzleSearch.matches(query: searchText, keep4: $0)
         }
     }
@@ -142,11 +155,12 @@ struct BrowseView: View {
     }
 
     private var emptyState: some View {
-        let filtersActive = format == .keep4 && (decadeFilter != .all || !searchText.isEmpty)
+        let filtersActive = format == .keep4 &&
+            (decadeFilter != .all || grainFilter != .all || !searchText.isEmpty)
         return EmptyStateView(symbol: filtersActive ? "line.3.horizontal.decrease.circle" : "tray.full",
                               title: filtersActive ? "No puzzles match" : "Nothing here yet",
                               message: filtersActive
-                                  ? "Try a different search or decade."
+                                  ? "Try a different search, decade, or depth."
                                   : "Daily puzzles will fill this archive.")
     }
 

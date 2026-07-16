@@ -240,7 +240,15 @@ extension ScoringRule {
                                      ("grand_slams", 30.0), ("matches_lost", -0.5)),
     ]
 
-    static func preset(_ key: String) -> ScoringRule? { presets[key] }
+    /// Single-game grain reuses the season coefficients under their own `_game`-suffixed
+    /// keys (mirrors grade.py's `_FANTASY["x_game"] = _FANTASY["x"]` aliasing, grade.py:173-178)
+    /// — a game total just lands at a smaller magnitude than a season total, same math
+    /// either way, so no separate preset needs to be declared for each one.
+    static func preset(_ key: String) -> ScoringRule? {
+        if let rule = presets[key] { return rule }
+        if key.hasSuffix("_game") { return presets[String(key.dropLast(5))] }
+        return nil
+    }
 
     /// Toggle every term of this rule between fixed and era-adjusted normalization,
     /// preserving the fixed bounds as the era fallback. Points terms are absolute fantasy

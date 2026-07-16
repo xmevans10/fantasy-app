@@ -175,6 +175,9 @@ _FANTASY: dict[str, list[tuple[str, float]]] = {
 _FANTASY["nfl_fantasy_game"] = _FANTASY["nfl_fantasy"]
 _FANTASY["nfl_skill_ppr_game"] = _FANTASY["nfl_skill_ppr"]
 _FANTASY["nfl_qb_fantasy_game"] = _FANTASY["nfl_qb_fantasy"]
+_FANTASY["nba_fantasy_game"] = _FANTASY["nba_fantasy"]
+_FANTASY["baseball_hitter_fantasy_game"] = _FANTASY["baseball_hitter_fantasy"]
+_FANTASY["baseball_pitcher_fantasy_game"] = _FANTASY["baseball_pitcher_fantasy"]
 
 
 def _component(value: float, lo: float, hi: float, invert: bool) -> float:

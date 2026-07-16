@@ -5,7 +5,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "antonio-brown-2015",
+        "id": "nfl-antonio-brown-2015",
         "name": "Antonio Brown",
         "teamAbbr": "PIT",
         "seasonYear": 2015,
@@ -35,7 +35,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ecxsx9t7bfg42bgfwj3v"
       },
       {
-        "id": "ceedee-lamb-2023",
+        "id": "nfl-ceedee-lamb-2023",
         "name": "CeeDee Lamb",
         "teamAbbr": "DAL",
         "seasonYear": 2023,
@@ -65,7 +65,7 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/tfuj9njqdw2dovkwhryc"
       },
       {
-        "id": "cooper-kupp-2021",
+        "id": "nfl-cooper-kupp-2021",
         "name": "Cooper Kupp",
         "teamAbbr": "LA",
         "seasonYear": 2021,
@@ -95,7 +95,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bkahtsjkvnom1sbnb6xm"
       },
       {
-        "id": "ja-marr-chase-2024",
+        "id": "nfl-ja-marr-chase-2024",
         "name": "Ja'Marr Chase",
         "teamAbbr": "CIN",
         "seasonYear": 2024,
@@ -125,7 +125,7 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/qkcb3qt2fhasfgtfuprd"
       },
       {
-        "id": "jerry-rice-1995",
+        "id": "nfl-jerry-rice-1995",
         "name": "Jerry Rice",
         "teamAbbr": "SF",
         "seasonYear": 1995,
@@ -155,7 +155,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg/330px-Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg"
       },
       {
-        "id": "marvin-harrison-2002",
+        "id": "nfl-marvin-harrison-2002",
         "name": "Marvin Harrison",
         "teamAbbr": "IND",
         "seasonYear": 2002,
@@ -185,7 +185,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fni7z2tqhhaq5kbe5a0s"
       },
       {
-        "id": "randy-moss-2007",
+        "id": "nfl-randy-moss-2007",
         "name": "Randy Moss",
         "teamAbbr": "NE",
         "seasonYear": 2007,
@@ -215,7 +215,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/udotyrimbuirasxxkd8p"
       },
       {
-        "id": "tyreek-hill-2023",
+        "id": "nfl-tyreek-hill-2023",
         "name": "Tyreek Hill",
         "teamAbbr": "MIA",
         "seasonYear": 2023,
@@ -254,7 +254,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "chris-johnson-2009",
+        "id": "nfl-chris-johnson-2009",
         "name": "Chris Johnson",
         "teamAbbr": "TEN",
         "seasonYear": 2009,
@@ -284,7 +284,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryf9nc84eovvdbf0cz79"
       },
       {
-        "id": "christian-mccaffrey-2019",
+        "id": "nfl-christian-mccaffrey-2019",
         "name": "Christian McCaffrey",
         "teamAbbr": "CAR",
         "seasonYear": 2019,
@@ -314,7 +314,7 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/umiv5sn2xxrjdjwjtkqm"
       },
       {
-        "id": "david-johnson-2016",
+        "id": "nfl-david-johnson-2016",
         "name": "David Johnson",
         "teamAbbr": "ARI",
         "seasonYear": 2016,
@@ -344,7 +344,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/y7dtsyyjnoafefkbylbb"
       },
       {
-        "id": "emmitt-smith-1995",
+        "id": "nfl-emmitt-smith-1995",
         "name": "Emmitt Smith",
         "teamAbbr": "DAL",
         "seasonYear": 1995,
@@ -374,7 +374,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg/330px-Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg"
       },
       {
-        "id": "ladainian-tomlinson-2006",
+        "id": "nfl-ladainian-tomlinson-2006",
         "name": "LaDainian Tomlinson",
         "teamAbbr": "LAC",
         "seasonYear": 2006,
@@ -404,7 +404,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
       },
       {
-        "id": "marshall-faulk-2000",
+        "id": "nfl-marshall-faulk-2000",
         "name": "Marshall Faulk",
         "teamAbbr": "LA",
         "seasonYear": 2000,
@@ -434,7 +434,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
       },
       {
-        "id": "priest-holmes-2003",
+        "id": "nfl-priest-holmes-2003",
         "name": "Priest Holmes",
         "teamAbbr": "KC",
         "seasonYear": 2003,
@@ -464,7 +464,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
       },
       {
-        "id": "steven-jackson-2006",
+        "id": "nfl-steven-jackson-2006",
         "name": "Steven Jackson",
         "teamAbbr": "LA",
         "seasonYear": 2006,
@@ -503,7 +503,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "aaron-rodgers-2011",
+        "id": "nfl-aaron-rodgers-2011",
         "name": "Aaron Rodgers",
         "teamAbbr": "GB",
         "seasonYear": 2011,
@@ -533,7 +533,7 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/jdcb4nomlc4rd6k5l6to"
       },
       {
-        "id": "cam-newton-2015",
+        "id": "nfl-cam-newton-2015",
         "name": "Cam Newton",
         "teamAbbr": "CAR",
         "seasonYear": 2015,
@@ -563,7 +563,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zwmgw2gmnn2kch4nquft"
       },
       {
-        "id": "drew-brees-2011",
+        "id": "nfl-drew-brees-2011",
         "name": "Drew Brees",
         "teamAbbr": "NO",
         "seasonYear": 2011,
@@ -593,7 +593,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i20xlpzdmn7xubotijjd"
       },
       {
-        "id": "josh-allen-2021",
+        "id": "nfl-josh-allen-2021",
         "name": "Josh Allen",
         "teamAbbr": "BUF",
         "seasonYear": 2021,
@@ -623,7 +623,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ghmmndgjefpxziks7ntf"
       },
       {
-        "id": "lamar-jackson-2024",
+        "id": "nfl-lamar-jackson-2024",
         "name": "Lamar Jackson",
         "teamAbbr": "BAL",
         "seasonYear": 2024,
@@ -653,7 +653,7 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p"
       },
       {
-        "id": "patrick-mahomes-2018",
+        "id": "nfl-patrick-mahomes-2018",
         "name": "Patrick Mahomes",
         "teamAbbr": "KC",
         "seasonYear": 2018,
@@ -683,7 +683,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/oagzjdsdoezmp6frggrn"
       },
       {
-        "id": "peyton-manning-2013",
+        "id": "nfl-peyton-manning-2013",
         "name": "Peyton Manning",
         "teamAbbr": "DEN",
         "seasonYear": 2013,
@@ -713,7 +713,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xpcd6auodk3w0vda6jal"
       },
       {
-        "id": "tom-brady-2007",
+        "id": "nfl-tom-brady-2007",
         "name": "Tom Brady",
         "teamAbbr": "NE",
         "seasonYear": 2007,
@@ -752,7 +752,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "cam-newton-2015",
+        "id": "nfl-cam-newton-2015",
         "name": "Cam Newton",
         "teamAbbr": "CAR",
         "seasonYear": 2015,
@@ -782,7 +782,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zwmgw2gmnn2kch4nquft"
       },
       {
-        "id": "daunte-culpepper-2004",
+        "id": "nfl-daunte-culpepper-2004",
         "name": "Daunte Culpepper",
         "teamAbbr": "MIN",
         "seasonYear": 2004,
@@ -812,7 +812,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vmvl5xojgtwm6jadhy7l"
       },
       {
-        "id": "deshaun-watson-2020",
+        "id": "nfl-deshaun-watson-2020",
         "name": "Deshaun Watson",
         "teamAbbr": "HOU",
         "seasonYear": 2020,
@@ -842,7 +842,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/otfs2docj6eahaebo5xn"
       },
       {
-        "id": "jalen-hurts-2022",
+        "id": "nfl-jalen-hurts-2022",
         "name": "Jalen Hurts",
         "teamAbbr": "PHI",
         "seasonYear": 2022,
@@ -872,7 +872,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/aityegmlyh53aifbssbp"
       },
       {
-        "id": "josh-allen-2021",
+        "id": "nfl-josh-allen-2021",
         "name": "Josh Allen",
         "teamAbbr": "BUF",
         "seasonYear": 2021,
@@ -902,7 +902,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ghmmndgjefpxziks7ntf"
       },
       {
-        "id": "kyler-murray-2020",
+        "id": "nfl-kyler-murray-2020",
         "name": "Kyler Murray",
         "teamAbbr": "ARI",
         "seasonYear": 2020,
@@ -932,7 +932,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ad68dbv2eqakttaqwppv"
       },
       {
-        "id": "lamar-jackson-2024",
+        "id": "nfl-lamar-jackson-2024",
         "name": "Lamar Jackson",
         "teamAbbr": "BAL",
         "seasonYear": 2024,
@@ -962,7 +962,7 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p"
       },
       {
-        "id": "steve-young-1998",
+        "id": "nfl-steve-young-1998",
         "name": "Steve Young",
         "teamAbbr": "SF",
         "seasonYear": 1998,
@@ -1001,7 +1001,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "arian-foster-2010",
+        "id": "nfl-arian-foster-2010",
         "name": "Arian Foster",
         "teamAbbr": "HOU",
         "seasonYear": 2010,
@@ -1031,7 +1031,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/b7zvp5go7e86i7wd1qyh"
       },
       {
-        "id": "christian-mccaffrey-2019",
+        "id": "nfl-christian-mccaffrey-2019",
         "name": "Christian McCaffrey",
         "teamAbbr": "CAR",
         "seasonYear": 2019,
@@ -1061,7 +1061,7 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/umiv5sn2xxrjdjwjtkqm"
       },
       {
-        "id": "david-johnson-2016",
+        "id": "nfl-david-johnson-2016",
         "name": "David Johnson",
         "teamAbbr": "ARI",
         "seasonYear": 2016,
@@ -1091,7 +1091,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/y7dtsyyjnoafefkbylbb"
       },
       {
-        "id": "edgerrin-james-2000",
+        "id": "nfl-edgerrin-james-2000",
         "name": "Edgerrin James",
         "teamAbbr": "IND",
         "seasonYear": 2000,
@@ -1121,7 +1121,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g7i6v01dasbvebawxwdm"
       },
       {
-        "id": "ladainian-tomlinson-2006",
+        "id": "nfl-ladainian-tomlinson-2006",
         "name": "LaDainian Tomlinson",
         "teamAbbr": "LAC",
         "seasonYear": 2006,
@@ -1151,7 +1151,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
       },
       {
-        "id": "marshall-faulk-2000",
+        "id": "nfl-marshall-faulk-2000",
         "name": "Marshall Faulk",
         "teamAbbr": "LA",
         "seasonYear": 2000,
@@ -1181,7 +1181,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
       },
       {
-        "id": "priest-holmes-2003",
+        "id": "nfl-priest-holmes-2003",
         "name": "Priest Holmes",
         "teamAbbr": "KC",
         "seasonYear": 2003,
@@ -1211,7 +1211,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
       },
       {
-        "id": "steven-jackson-2006",
+        "id": "nfl-steven-jackson-2006",
         "name": "Steven Jackson",
         "teamAbbr": "LA",
         "seasonYear": 2006,
@@ -1250,7 +1250,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "calvin-johnson-2011",
+        "id": "nfl-calvin-johnson-2011",
         "name": "Calvin Johnson",
         "teamAbbr": "DET",
         "seasonYear": 2011,
@@ -1280,7 +1280,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/z6dxib9sientn4m9cljh"
       },
       {
-        "id": "deebo-samuel-2021",
+        "id": "nfl-deebo-samuel-2021",
         "name": "Deebo Samuel",
         "teamAbbr": "SF",
         "seasonYear": 2021,
@@ -1310,7 +1310,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ciwaktyqewczcquks4wy"
       },
       {
-        "id": "demaryius-thomas-2013",
+        "id": "nfl-demaryius-thomas-2013",
         "name": "Demaryius Thomas",
         "teamAbbr": "DEN",
         "seasonYear": 2013,
@@ -1340,7 +1340,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/p1yjsqtqimjd6iazu3h9"
       },
       {
-        "id": "jerry-rice-1986",
+        "id": "nfl-jerry-rice-1986",
         "name": "Jerry Rice",
         "teamAbbr": "SF",
         "seasonYear": 1986,
@@ -1370,7 +1370,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg/330px-Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg"
       },
       {
-        "id": "jordy-nelson-2014",
+        "id": "nfl-jordy-nelson-2014",
         "name": "Jordy Nelson",
         "teamAbbr": "GB",
         "seasonYear": 2014,
@@ -1400,7 +1400,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bde2n4ozsakatgs4yyp2"
       },
       {
-        "id": "josh-gordon-2013",
+        "id": "nfl-josh-gordon-2013",
         "name": "Josh Gordon",
         "teamAbbr": "CLE",
         "seasonYear": 2013,
@@ -1430,7 +1430,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wwqz2ujrj7wp86tyaxof"
       },
       {
-        "id": "rod-smith-2000",
+        "id": "nfl-rod-smith-2000",
         "name": "Rod Smith",
         "teamAbbr": "DEN",
         "seasonYear": 2000,
@@ -1460,7 +1460,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/yc387fqxeouidqr4yyvn"
       },
       {
-        "id": "tyreek-hill-2018",
+        "id": "nfl-tyreek-hill-2018",
         "name": "Tyreek Hill",
         "teamAbbr": "KC",
         "seasonYear": 2018,
@@ -1499,7 +1499,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "christian-mccaffrey-2019",
+        "id": "nfl-christian-mccaffrey-2019",
         "name": "Christian McCaffrey",
         "teamAbbr": "CAR",
         "seasonYear": 2019,
@@ -1529,7 +1529,7 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/umiv5sn2xxrjdjwjtkqm"
       },
       {
-        "id": "cooper-kupp-2021",
+        "id": "nfl-cooper-kupp-2021",
         "name": "Cooper Kupp",
         "teamAbbr": "LA",
         "seasonYear": 2021,
@@ -1551,7 +1551,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bkahtsjkvnom1sbnb6xm"
       },
       {
-        "id": "emmitt-smith-1995",
+        "id": "nfl-emmitt-smith-1995",
         "name": "Emmitt Smith",
         "teamAbbr": "DAL",
         "seasonYear": 1995,
@@ -1581,7 +1581,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg/330px-Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg"
       },
       {
-        "id": "ladainian-tomlinson-2006",
+        "id": "nfl-ladainian-tomlinson-2006",
         "name": "LaDainian Tomlinson",
         "teamAbbr": "LAC",
         "seasonYear": 2006,
@@ -1611,7 +1611,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
       },
       {
-        "id": "lamar-jackson-2024",
+        "id": "nfl-lamar-jackson-2024",
         "name": "Lamar Jackson",
         "teamAbbr": "BAL",
         "seasonYear": 2024,
@@ -1637,7 +1637,7 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p"
       },
       {
-        "id": "marshall-faulk-2000",
+        "id": "nfl-marshall-faulk-2000",
         "name": "Marshall Faulk",
         "teamAbbr": "LA",
         "seasonYear": 2000,
@@ -1667,7 +1667,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
       },
       {
-        "id": "peyton-manning-2013",
+        "id": "nfl-peyton-manning-2013",
         "name": "Peyton Manning",
         "teamAbbr": "DEN",
         "seasonYear": 2013,
@@ -1693,7 +1693,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xpcd6auodk3w0vda6jal"
       },
       {
-        "id": "priest-holmes-2003",
+        "id": "nfl-priest-holmes-2003",
         "name": "Priest Holmes",
         "teamAbbr": "KC",
         "seasonYear": 2003,
@@ -1732,7 +1732,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "chuck-foreman-1975",
+        "id": "nfl-chuck-foreman-1975",
         "name": "Chuck Foreman",
         "teamAbbr": "MIN",
         "seasonYear": 1975,
@@ -1762,7 +1762,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/6/6c/Chuck_Foreman%2C_1972.png"
       },
       {
-        "id": "dan-marino-1986",
+        "id": "nfl-dan-marino-1986",
         "name": "Dan Marino",
         "teamAbbr": "MIA",
         "seasonYear": 1986,
@@ -1788,7 +1788,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Danmarino.jpg/330px-Danmarino.jpg"
       },
       {
-        "id": "emmitt-smith-1995",
+        "id": "nfl-emmitt-smith-1995",
         "name": "Emmitt Smith",
         "teamAbbr": "DAL",
         "seasonYear": 1995,
@@ -1818,7 +1818,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg/330px-Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg"
       },
       {
-        "id": "eric-dickerson-1983",
+        "id": "nfl-eric-dickerson-1983",
         "name": "Eric Dickerson",
         "teamAbbr": "RAM",
         "seasonYear": 1983,
@@ -1848,7 +1848,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Eric_Dickerson.jpg/330px-Eric_Dickerson.jpg"
       },
       {
-        "id": "marshall-faulk-1998",
+        "id": "nfl-marshall-faulk-1998",
         "name": "Marshall Faulk",
         "teamAbbr": "IND",
         "seasonYear": 1998,
@@ -1878,7 +1878,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Marshall_Faulk_by_Gage_Skidmore.jpg/330px-Marshall_Faulk_by_Gage_Skidmore.jpg"
       },
       {
-        "id": "o-j-simpson-1975",
+        "id": "nfl-o-j-simpson-1975",
         "name": "O.J. Simpson",
         "teamAbbr": "BUF",
         "seasonYear": 1975,
@@ -1908,7 +1908,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/O.J._Simpson_1990_%C2%B7_DN-ST-91-03444_crop.JPEG/330px-O.J._Simpson_1990_%C2%B7_DN-ST-91-03444_crop.JPEG"
       },
       {
-        "id": "terrell-davis-1998",
+        "id": "nfl-terrell-davis-1998",
         "name": "Terrell Davis",
         "teamAbbr": "DEN",
         "seasonYear": 1998,
@@ -1938,7 +1938,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Terrell_Davis_1-31-05_050131-N-8102J-020.jpg/330px-Terrell_Davis_1-31-05_050131-N-8102J-020.jpg"
       },
       {
-        "id": "walter-payton-1977",
+        "id": "nfl-walter-payton-1977",
         "name": "Walter Payton",
         "teamAbbr": "CHI",
         "seasonYear": 1977,
@@ -1977,7 +1977,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "darren-waller-2020",
+        "id": "nfl-darren-waller-2020",
         "name": "Darren Waller",
         "teamAbbr": "LV",
         "seasonYear": 2020,
@@ -2007,7 +2007,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/qqzht46a66zbi9xyylf4"
       },
       {
-        "id": "jimmy-graham-2013",
+        "id": "nfl-jimmy-graham-2013",
         "name": "Jimmy Graham",
         "teamAbbr": "NO",
         "seasonYear": 2013,
@@ -2037,7 +2037,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/h7xs06oj6g03mippwtse"
       },
       {
-        "id": "kellen-winslow-1980",
+        "id": "nfl-kellen-winslow-1980",
         "name": "Kellen Winslow",
         "teamAbbr": "SD",
         "seasonYear": 1980,
@@ -2067,7 +2067,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/4/47/Kellen_Winslow_Sr_cropped.jpg"
       },
       {
-        "id": "mark-andrews-2021",
+        "id": "nfl-mark-andrews-2021",
         "name": "Mark Andrews",
         "teamAbbr": "BAL",
         "seasonYear": 2021,
@@ -2097,7 +2097,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/cv7h66mkpoalli9wfdqp"
       },
       {
-        "id": "rob-gronkowski-2011",
+        "id": "nfl-rob-gronkowski-2011",
         "name": "Rob Gronkowski",
         "teamAbbr": "NE",
         "seasonYear": 2011,
@@ -2127,7 +2127,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/svpo7chliiymc0r7hegp"
       },
       {
-        "id": "todd-christensen-1983",
+        "id": "nfl-todd-christensen-1983",
         "name": "Todd Christensen",
         "teamAbbr": "RAI",
         "seasonYear": 1983,
@@ -2157,7 +2157,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/en/a/ac/Todd_Christensen.jpg"
       },
       {
-        "id": "travis-kelce-2022",
+        "id": "nfl-travis-kelce-2022",
         "name": "Travis Kelce",
         "teamAbbr": "KC",
         "seasonYear": 2022,
@@ -2187,7 +2187,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryzr3vbragwe50vtj9af"
       },
       {
-        "id": "zach-ertz-2018",
+        "id": "nfl-zach-ertz-2018",
         "name": "Zach Ertz",
         "teamAbbr": "PHI",
         "seasonYear": 2018,
@@ -2226,7 +2226,7 @@
     "sport": "nba",
     "players": [
       {
-        "id": "bob-mcadoo-1975",
+        "id": "nba-bob-mcadoo-1975",
         "name": "Bob McAdoo",
         "teamAbbr": "BUF",
         "seasonYear": 1975,
@@ -2256,7 +2256,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
       },
       {
-        "id": "david-robinson-1994",
+        "id": "nba-david-robinson-1994",
         "name": "David Robinson",
         "teamAbbr": "SA",
         "seasonYear": 1994,
@@ -2286,7 +2286,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
       },
       {
-        "id": "hakeem-olajuwon-1993",
+        "id": "nba-hakeem-olajuwon-1993",
         "name": "Hakeem Olajuwon",
         "teamAbbr": "HOU",
         "seasonYear": 1993,
@@ -2316,7 +2316,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
       },
       {
-        "id": "james-harden-2017",
+        "id": "nba-james-harden-2017",
         "name": "James Harden",
         "teamAbbr": "HOU",
         "seasonYear": 2017,
@@ -2346,7 +2346,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png"
       },
       {
-        "id": "kareem-abdul-jabbar-1976",
+        "id": "nba-kareem-abdul-jabbar-1976",
         "name": "Kareem Abdul-Jabbar",
         "teamAbbr": "LAL",
         "seasonYear": 1976,
@@ -2376,7 +2376,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
       },
       {
-        "id": "michael-jordan-1988",
+        "id": "nba-michael-jordan-1988",
         "name": "Michael Jordan",
         "teamAbbr": "CHI",
         "seasonYear": 1988,
@@ -2406,7 +2406,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png"
       },
       {
-        "id": "russell-westbrook-2017",
+        "id": "nba-russell-westbrook-2017",
         "name": "Russell Westbrook",
         "teamAbbr": "OKC",
         "seasonYear": 2017,
@@ -2436,7 +2436,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png"
       },
       {
-        "id": "wilt-chamberlain-1962",
+        "id": "nba-wilt-chamberlain-1962",
         "name": "Wilt Chamberlain",
         "teamAbbr": "PHW",
         "seasonYear": 1962,
@@ -2475,7 +2475,7 @@
     "sport": "nba",
     "players": [
       {
-        "id": "bob-mcadoo-1975",
+        "id": "nba-bob-mcadoo-1975",
         "name": "Bob McAdoo",
         "teamAbbr": "BUF",
         "seasonYear": 1975,
@@ -2505,7 +2505,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
       },
       {
-        "id": "david-robinson-1994",
+        "id": "nba-david-robinson-1994",
         "name": "David Robinson",
         "teamAbbr": "SA",
         "seasonYear": 1994,
@@ -2535,7 +2535,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
       },
       {
-        "id": "hakeem-olajuwon-1990",
+        "id": "nba-hakeem-olajuwon-1990",
         "name": "Hakeem Olajuwon",
         "teamAbbr": "HOU",
         "seasonYear": 1990,
@@ -2565,7 +2565,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
       },
       {
-        "id": "kareem-abdul-jabbar-1976",
+        "id": "nba-kareem-abdul-jabbar-1976",
         "name": "Kareem Abdul-Jabbar",
         "teamAbbr": "LAL",
         "seasonYear": 1976,
@@ -2595,7 +2595,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
       },
       {
-        "id": "kevin-garnett-2004",
+        "id": "nba-kevin-garnett-2004",
         "name": "Kevin Garnett",
         "teamAbbr": "MIN",
         "seasonYear": 2004,
@@ -2625,7 +2625,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png"
       },
       {
-        "id": "patrick-ewing-1990",
+        "id": "nba-patrick-ewing-1990",
         "name": "Patrick Ewing",
         "teamAbbr": "NY",
         "seasonYear": 1990,
@@ -2655,7 +2655,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Patrick_Ewing_2021_%28cropped%29.jpg/330px-Patrick_Ewing_2021_%28cropped%29.jpg"
       },
       {
-        "id": "shaquille-o-neal-2000",
+        "id": "nba-shaquille-o-neal-2000",
         "name": "Shaquille O'Neal",
         "teamAbbr": "LAL",
         "seasonYear": 2000,
@@ -2685,7 +2685,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
       },
       {
-        "id": "wilt-chamberlain-1962",
+        "id": "nba-wilt-chamberlain-1962",
         "name": "Wilt Chamberlain",
         "teamAbbr": "PHW",
         "seasonYear": 1962,
@@ -2724,7 +2724,7 @@
     "sport": "nba",
     "players": [
       {
-        "id": "dwyane-wade-2009",
+        "id": "nba-dwyane-wade-2009",
         "name": "Dwyane Wade",
         "teamAbbr": "MIA",
         "seasonYear": 2009,
@@ -2754,7 +2754,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1987.png"
       },
       {
-        "id": "james-harden-2017",
+        "id": "nba-james-harden-2017",
         "name": "James Harden",
         "teamAbbr": "HOU",
         "seasonYear": 2017,
@@ -2784,7 +2784,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png"
       },
       {
-        "id": "lebron-james-2018",
+        "id": "nba-lebron-james-2018",
         "name": "LeBron James",
         "teamAbbr": "CLE",
         "seasonYear": 2018,
@@ -2814,7 +2814,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1966.png"
       },
       {
-        "id": "michael-jordan-1989",
+        "id": "nba-michael-jordan-1989",
         "name": "Michael Jordan",
         "teamAbbr": "CHI",
         "seasonYear": 1989,
@@ -2844,7 +2844,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png"
       },
       {
-        "id": "nikola-jokic-2024",
+        "id": "nba-nikola-jokic-2024",
         "name": "Nikola Jokic",
         "teamAbbr": "DEN",
         "seasonYear": 2024,
@@ -2874,7 +2874,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png"
       },
       {
-        "id": "oscar-robertson-1962",
+        "id": "nba-oscar-robertson-1962",
         "name": "Oscar Robertson",
         "teamAbbr": "CIN",
         "seasonYear": 1962,
@@ -2904,7 +2904,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Oscar_Robertson_2024.jpg/330px-Oscar_Robertson_2024.jpg"
       },
       {
-        "id": "russell-westbrook-2017",
+        "id": "nba-russell-westbrook-2017",
         "name": "Russell Westbrook",
         "teamAbbr": "OKC",
         "seasonYear": 2017,
@@ -2934,7 +2934,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png"
       },
       {
-        "id": "wilt-chamberlain-1968",
+        "id": "nba-wilt-chamberlain-1968",
         "name": "Wilt Chamberlain",
         "teamAbbr": "PHI",
         "seasonYear": 1968,
@@ -2973,7 +2973,7 @@
     "sport": "nba",
     "players": [
       {
-        "id": "bob-mcadoo-1975",
+        "id": "nba-bob-mcadoo-1975",
         "name": "Bob McAdoo",
         "teamAbbr": "BUF",
         "seasonYear": 1975,
@@ -3003,7 +3003,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
       },
       {
-        "id": "david-robinson-1994",
+        "id": "nba-david-robinson-1994",
         "name": "David Robinson",
         "teamAbbr": "SA",
         "seasonYear": 1994,
@@ -3033,7 +3033,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
       },
       {
-        "id": "elvin-hayes-1974",
+        "id": "nba-elvin-hayes-1974",
         "name": "Elvin Hayes",
         "teamAbbr": "CAP",
         "seasonYear": 1974,
@@ -3063,7 +3063,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Elvin_Hayes_1975.jpeg/330px-Elvin_Hayes_1975.jpeg"
       },
       {
-        "id": "hakeem-olajuwon-1990",
+        "id": "nba-hakeem-olajuwon-1990",
         "name": "Hakeem Olajuwon",
         "teamAbbr": "HOU",
         "seasonYear": 1990,
@@ -3093,7 +3093,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
       },
       {
-        "id": "kareem-abdul-jabbar-1976",
+        "id": "nba-kareem-abdul-jabbar-1976",
         "name": "Kareem Abdul-Jabbar",
         "teamAbbr": "LAL",
         "seasonYear": 1976,
@@ -3123,7 +3123,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
       },
       {
-        "id": "kevin-garnett-2004",
+        "id": "nba-kevin-garnett-2004",
         "name": "Kevin Garnett",
         "teamAbbr": "MIN",
         "seasonYear": 2004,
@@ -3153,7 +3153,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png"
       },
       {
-        "id": "patrick-ewing-1990",
+        "id": "nba-patrick-ewing-1990",
         "name": "Patrick Ewing",
         "teamAbbr": "NY",
         "seasonYear": 1990,
@@ -3183,7 +3183,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Patrick_Ewing_2021_%28cropped%29.jpg/330px-Patrick_Ewing_2021_%28cropped%29.jpg"
       },
       {
-        "id": "shaquille-o-neal-2000",
+        "id": "nba-shaquille-o-neal-2000",
         "name": "Shaquille O'Neal",
         "teamAbbr": "LAL",
         "seasonYear": 2000,
@@ -3222,7 +3222,7 @@
     "sport": "nba",
     "players": [
       {
-        "id": "chris-paul-2009",
+        "id": "nba-chris-paul-2009",
         "name": "Chris Paul",
         "teamAbbr": "NO",
         "seasonYear": 2009,
@@ -3252,7 +3252,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/2779.png"
       },
       {
-        "id": "clyde-drexler-1989",
+        "id": "nba-clyde-drexler-1989",
         "name": "Clyde Drexler",
         "teamAbbr": "POR",
         "seasonYear": 1989,
@@ -3282,7 +3282,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Clyde_Drexler_01.jpg/330px-Clyde_Drexler_01.jpg"
       },
       {
-        "id": "dwyane-wade-2009",
+        "id": "nba-dwyane-wade-2009",
         "name": "Dwyane Wade",
         "teamAbbr": "MIA",
         "seasonYear": 2009,
@@ -3312,7 +3312,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1987.png"
       },
       {
-        "id": "isiah-thomas-1985",
+        "id": "nba-isiah-thomas-1985",
         "name": "Isiah Thomas",
         "teamAbbr": "DET",
         "seasonYear": 1985,
@@ -3342,7 +3342,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Isiah_Thomas_2007_%28cropped%29.jpg/330px-Isiah_Thomas_2007_%28cropped%29.jpg"
       },
       {
-        "id": "james-harden-2019",
+        "id": "nba-james-harden-2019",
         "name": "James Harden",
         "teamAbbr": "HOU",
         "seasonYear": 2019,
@@ -3372,7 +3372,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png"
       },
       {
-        "id": "magic-johnson-1989",
+        "id": "nba-magic-johnson-1989",
         "name": "Magic Johnson",
         "teamAbbr": "LAL",
         "seasonYear": 1989,
@@ -3402,7 +3402,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg/330px-Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg"
       },
       {
-        "id": "michael-jordan-1988",
+        "id": "nba-michael-jordan-1988",
         "name": "Michael Jordan",
         "teamAbbr": "CHI",
         "seasonYear": 1988,
@@ -3432,7 +3432,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png"
       },
       {
-        "id": "russell-westbrook-2018",
+        "id": "nba-russell-westbrook-2018",
         "name": "Russell Westbrook",
         "teamAbbr": "OKC",
         "seasonYear": 2018,
@@ -3471,7 +3471,7 @@
     "sport": "nba",
     "players": [
       {
-        "id": "bob-mcadoo-1975",
+        "id": "nba-bob-mcadoo-1975",
         "name": "Bob McAdoo",
         "teamAbbr": "BUF",
         "seasonYear": 1975,
@@ -3501,7 +3501,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
       },
       {
-        "id": "david-robinson-1994",
+        "id": "nba-david-robinson-1994",
         "name": "David Robinson",
         "teamAbbr": "SA",
         "seasonYear": 1994,
@@ -3531,7 +3531,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
       },
       {
-        "id": "hakeem-olajuwon-1990",
+        "id": "nba-hakeem-olajuwon-1990",
         "name": "Hakeem Olajuwon",
         "teamAbbr": "HOU",
         "seasonYear": 1990,
@@ -3561,7 +3561,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
       },
       {
-        "id": "kareem-abdul-jabbar-1976",
+        "id": "nba-kareem-abdul-jabbar-1976",
         "name": "Kareem Abdul-Jabbar",
         "teamAbbr": "LAL",
         "seasonYear": 1976,
@@ -3591,7 +3591,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
       },
       {
-        "id": "kevin-garnett-2004",
+        "id": "nba-kevin-garnett-2004",
         "name": "Kevin Garnett",
         "teamAbbr": "MIN",
         "seasonYear": 2004,
@@ -3621,7 +3621,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png"
       },
       {
-        "id": "patrick-ewing-1990",
+        "id": "nba-patrick-ewing-1990",
         "name": "Patrick Ewing",
         "teamAbbr": "NY",
         "seasonYear": 1990,
@@ -3651,7 +3651,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Patrick_Ewing_2021_%28cropped%29.jpg/330px-Patrick_Ewing_2021_%28cropped%29.jpg"
       },
       {
-        "id": "shaquille-o-neal-2000",
+        "id": "nba-shaquille-o-neal-2000",
         "name": "Shaquille O'Neal",
         "teamAbbr": "LAL",
         "seasonYear": 2000,
@@ -3681,7 +3681,7 @@
         "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
       },
       {
-        "id": "wilt-chamberlain-1962",
+        "id": "nba-wilt-chamberlain-1962",
         "name": "Wilt Chamberlain",
         "teamAbbr": "PHW",
         "seasonYear": 1962,
@@ -3715,12 +3715,494 @@
     "scale": "nba_fantasy"
   },
   {
+    "id": "nba-game-scoring-outburst-00",
+    "theme": "Historic single-game scoring outbursts",
+    "sport": "nba",
+    "players": [
+      {
+        "id": "nba-anthony-davis-2017-wk01",
+        "name": "Anthony Davis",
+        "teamAbbr": "NO",
+        "seasonYear": 2017,
+        "grade": 102.5,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "50"
+          },
+          {
+            "label": "FGM",
+            "value": "17"
+          },
+          {
+            "label": "REB",
+            "value": "15"
+          },
+          {
+            "label": "AST",
+            "value": "5"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/6583.png",
+        "week": 1,
+        "opponent": "DEN",
+        "gameDate": "Oct 26"
+      },
+      {
+        "id": "nba-bam-adebayo-2026-wk16",
+        "name": "Bam Adebayo",
+        "teamAbbr": "MIA",
+        "seasonYear": 2026,
+        "grade": 110.3,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "83"
+          },
+          {
+            "label": "FGM",
+            "value": "20"
+          },
+          {
+            "label": "REB",
+            "value": "9"
+          },
+          {
+            "label": "AST",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4066261.png",
+        "week": 16,
+        "opponent": "WSH",
+        "gameDate": "Mar 10"
+      },
+      {
+        "id": "nba-demarcus-cousins-2018-wk32",
+        "name": "DeMarcus Cousins",
+        "teamAbbr": "NO",
+        "seasonYear": 2018,
+        "grade": 101.6,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "44"
+          },
+          {
+            "label": "FGM",
+            "value": "13"
+          },
+          {
+            "label": "REB",
+            "value": "23"
+          },
+          {
+            "label": "AST",
+            "value": "10"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4258.png",
+        "week": 32,
+        "opponent": "CHI",
+        "gameDate": "Jan 22"
+      },
+      {
+        "id": "nba-giannis-antetokounmpo-2025-wk08",
+        "name": "Giannis Antetokounmpo",
+        "teamAbbr": "MIL",
+        "seasonYear": 2025,
+        "grade": 101.3,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "59"
+          },
+          {
+            "label": "FGM",
+            "value": "21"
+          },
+          {
+            "label": "REB",
+            "value": "14"
+          },
+          {
+            "label": "AST",
+            "value": "7"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3032977.png",
+        "week": 8,
+        "opponent": "DET",
+        "gameDate": "Nov 13"
+      },
+      {
+        "id": "nba-james-harden-2018-wk34",
+        "name": "James Harden",
+        "teamAbbr": "HOU",
+        "seasonYear": 2018,
+        "grade": 103.5,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "60"
+          },
+          {
+            "label": "FGM",
+            "value": "19"
+          },
+          {
+            "label": "REB",
+            "value": "10"
+          },
+          {
+            "label": "AST",
+            "value": "11"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png",
+        "week": 34,
+        "opponent": "ORL",
+        "gameDate": "Jan 30"
+      },
+      {
+        "id": "nba-joel-embiid-2023-wk09",
+        "name": "Joel Embiid",
+        "teamAbbr": "PHI",
+        "seasonYear": 2023,
+        "grade": 108.2,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "59"
+          },
+          {
+            "label": "FGM",
+            "value": "19"
+          },
+          {
+            "label": "REB",
+            "value": "11"
+          },
+          {
+            "label": "AST",
+            "value": "8"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3059318.png",
+        "week": 9,
+        "opponent": "UTAH",
+        "gameDate": "Nov 13"
+      },
+      {
+        "id": "nba-luka-doncic-2023-wk27",
+        "name": "Luka Doncic",
+        "teamAbbr": "DAL",
+        "seasonYear": 2023,
+        "grade": 109.2,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "60"
+          },
+          {
+            "label": "FGM",
+            "value": "21"
+          },
+          {
+            "label": "REB",
+            "value": "21"
+          },
+          {
+            "label": "AST",
+            "value": "10"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3945274.png",
+        "week": 27,
+        "opponent": "NY",
+        "gameDate": "Dec 27"
+      },
+      {
+        "id": "nba-nikola-jokic-2026-wk28",
+        "name": "Nikola Jokic",
+        "teamAbbr": "DEN",
+        "seasonYear": 2026,
+        "grade": 103.7,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "56"
+          },
+          {
+            "label": "FGM",
+            "value": "15"
+          },
+          {
+            "label": "REB",
+            "value": "16"
+          },
+          {
+            "label": "AST",
+            "value": "15"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png",
+        "week": 28,
+        "opponent": "MIN",
+        "gameDate": "Dec 25"
+      }
+    ],
+    "grain": "game",
+    "scale": "nba_fantasy_game"
+  },
+  {
+    "id": "nba-game-triple-double-00",
+    "theme": "Single-game triple-double explosions",
+    "sport": "nba",
+    "players": [
+      {
+        "id": "nba-bradley-beal-2019-wk23",
+        "name": "Bradley Beal",
+        "teamAbbr": "WSH",
+        "seasonYear": 2019,
+        "grade": 92.5,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "43"
+          },
+          {
+            "label": "REB",
+            "value": "10"
+          },
+          {
+            "label": "AST",
+            "value": "15"
+          },
+          {
+            "label": "STL",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/6580.png",
+        "week": 23,
+        "opponent": "TOR",
+        "gameDate": "Jan 13"
+      },
+      {
+        "id": "nba-cade-cunningham-2026-wk08",
+        "name": "Cade Cunningham",
+        "teamAbbr": "DET",
+        "seasonYear": 2026,
+        "grade": 97.9,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "46"
+          },
+          {
+            "label": "REB",
+            "value": "12"
+          },
+          {
+            "label": "AST",
+            "value": "11"
+          },
+          {
+            "label": "STL",
+            "value": "5"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4432166.png",
+        "week": 8,
+        "opponent": "WSH",
+        "gameDate": "Nov 10"
+      },
+      {
+        "id": "nba-demarcus-cousins-2018-wk32",
+        "name": "DeMarcus Cousins",
+        "teamAbbr": "NO",
+        "seasonYear": 2018,
+        "grade": 101.6,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "44"
+          },
+          {
+            "label": "REB",
+            "value": "23"
+          },
+          {
+            "label": "AST",
+            "value": "10"
+          },
+          {
+            "label": "STL",
+            "value": "4"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4258.png",
+        "week": 32,
+        "opponent": "CHI",
+        "gameDate": "Jan 22"
+      },
+      {
+        "id": "nba-jalen-johnson-2026-wk02",
+        "name": "Jalen Johnson",
+        "teamAbbr": "ATL",
+        "seasonYear": 2026,
+        "grade": 94.6,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "31"
+          },
+          {
+            "label": "REB",
+            "value": "18"
+          },
+          {
+            "label": "AST",
+            "value": "14"
+          },
+          {
+            "label": "STL",
+            "value": "7"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4701230.png",
+        "week": 2,
+        "opponent": "UTAH",
+        "gameDate": "Nov 13"
+      },
+      {
+        "id": "nba-james-harden-2018-wk34",
+        "name": "James Harden",
+        "teamAbbr": "HOU",
+        "seasonYear": 2018,
+        "grade": 103.5,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "60"
+          },
+          {
+            "label": "REB",
+            "value": "10"
+          },
+          {
+            "label": "AST",
+            "value": "11"
+          },
+          {
+            "label": "STL",
+            "value": "4"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png",
+        "week": 34,
+        "opponent": "ORL",
+        "gameDate": "Jan 30"
+      },
+      {
+        "id": "nba-luka-doncic-2023-wk27",
+        "name": "Luka Doncic",
+        "teamAbbr": "DAL",
+        "seasonYear": 2023,
+        "grade": 109.2,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "60"
+          },
+          {
+            "label": "REB",
+            "value": "21"
+          },
+          {
+            "label": "AST",
+            "value": "10"
+          },
+          {
+            "label": "STL",
+            "value": "2"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3945274.png",
+        "week": 27,
+        "opponent": "NY",
+        "gameDate": "Dec 27"
+      },
+      {
+        "id": "nba-nikola-jokic-2026-wk28",
+        "name": "Nikola Jokic",
+        "teamAbbr": "DEN",
+        "seasonYear": 2026,
+        "grade": 103.7,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "56"
+          },
+          {
+            "label": "REB",
+            "value": "16"
+          },
+          {
+            "label": "AST",
+            "value": "15"
+          },
+          {
+            "label": "STL",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png",
+        "week": 28,
+        "opponent": "MIN",
+        "gameDate": "Dec 25"
+      },
+      {
+        "id": "nba-russell-westbrook-2017-wk67",
+        "name": "Russell Westbrook",
+        "teamAbbr": "OKC",
+        "seasonYear": 2017,
+        "grade": 98.1,
+        "stats": [
+          {
+            "label": "PTS",
+            "value": "57"
+          },
+          {
+            "label": "REB",
+            "value": "13"
+          },
+          {
+            "label": "AST",
+            "value": "11"
+          },
+          {
+            "label": "STL",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png",
+        "week": 67,
+        "opponent": "ORL",
+        "gameDate": "Mar 29"
+      }
+    ],
+    "grain": "game",
+    "scale": "nba_fantasy_game"
+  },
+  {
     "id": "nfl-game-rb-explosion-00",
     "theme": "Explosive single-game RB performances",
     "sport": "nfl",
     "players": [
       {
-        "id": "alvin-kamara-2020-wk16",
+        "id": "nfl-alvin-kamara-2020-wk16",
         "name": "Alvin Kamara",
         "teamAbbr": "NO",
         "seasonYear": 2020,
@@ -3748,7 +4230,7 @@
         "opponent": "MIN"
       },
       {
-        "id": "dalvin-cook-2020-wk08",
+        "id": "nfl-dalvin-cook-2020-wk08",
         "name": "Dalvin Cook",
         "teamAbbr": "MIN",
         "seasonYear": 2020,
@@ -3776,7 +4258,7 @@
         "opponent": "GB"
       },
       {
-        "id": "devon-achane-2023-wk03",
+        "id": "nfl-devon-achane-2023-wk03",
         "name": "Devon Achane",
         "teamAbbr": "MIA",
         "seasonYear": 2023,
@@ -3804,7 +4286,7 @@
         "opponent": "DEN"
       },
       {
-        "id": "doug-martin-2012-wk09",
+        "id": "nfl-doug-martin-2012-wk09",
         "name": "Doug Martin",
         "teamAbbr": "TB",
         "seasonYear": 2012,
@@ -3832,7 +4314,7 @@
         "opponent": "LV"
       },
       {
-        "id": "joe-mixon-2022-wk09",
+        "id": "nfl-joe-mixon-2022-wk09",
         "name": "Joe Mixon",
         "teamAbbr": "CIN",
         "seasonYear": 2022,
@@ -3860,7 +4342,7 @@
         "opponent": "CAR"
       },
       {
-        "id": "jonathan-taylor-2021-wk11",
+        "id": "nfl-jonathan-taylor-2021-wk11",
         "name": "Jonathan Taylor",
         "teamAbbr": "IND",
         "seasonYear": 2021,
@@ -3888,7 +4370,7 @@
         "opponent": "BUF"
       },
       {
-        "id": "josh-jacobs-2022-wk12",
+        "id": "nfl-josh-jacobs-2022-wk12",
         "name": "Josh Jacobs",
         "teamAbbr": "LV",
         "seasonYear": 2022,
@@ -3916,7 +4398,7 @@
         "opponent": "SEA"
       },
       {
-        "id": "le-veon-bell-2016-wk14",
+        "id": "nfl-le-veon-bell-2016-wk14",
         "name": "Le'Veon Bell",
         "teamAbbr": "PIT",
         "seasonYear": 2016,
@@ -3953,7 +4435,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "amari-cooper-2018-wk14",
+        "id": "nfl-amari-cooper-2018-wk14",
         "name": "Amari Cooper",
         "teamAbbr": "DAL",
         "seasonYear": 2018,
@@ -3981,7 +4463,7 @@
         "opponent": "PHI"
       },
       {
-        "id": "andre-johnson-2013-wk09",
+        "id": "nfl-andre-johnson-2013-wk09",
         "name": "Andre Johnson",
         "teamAbbr": "HOU",
         "seasonYear": 2013,
@@ -4009,7 +4491,7 @@
         "opponent": "IND"
       },
       {
-        "id": "calvin-johnson-2013-wk08",
+        "id": "nfl-calvin-johnson-2013-wk08",
         "name": "Calvin Johnson",
         "teamAbbr": "DET",
         "seasonYear": 2013,
@@ -4037,7 +4519,7 @@
         "opponent": "DAL"
       },
       {
-        "id": "ja-marr-chase-2021-wk17",
+        "id": "nfl-ja-marr-chase-2021-wk17",
         "name": "Ja'Marr Chase",
         "teamAbbr": "CIN",
         "seasonYear": 2021,
@@ -4065,7 +4547,7 @@
         "opponent": "KC"
       },
       {
-        "id": "julio-jones-2017-wk12",
+        "id": "nfl-julio-jones-2017-wk12",
         "name": "Julio Jones",
         "teamAbbr": "ATL",
         "seasonYear": 2017,
@@ -4093,7 +4575,7 @@
         "opponent": "TB"
       },
       {
-        "id": "tyler-lockett-2020-wk07",
+        "id": "nfl-tyler-lockett-2020-wk07",
         "name": "Tyler Lockett",
         "teamAbbr": "SEA",
         "seasonYear": 2020,
@@ -4121,7 +4603,7 @@
         "opponent": "ARI"
       },
       {
-        "id": "tyreek-hill-2020-wk12",
+        "id": "nfl-tyreek-hill-2020-wk12",
         "name": "Tyreek Hill",
         "teamAbbr": "KC",
         "seasonYear": 2020,
@@ -4149,7 +4631,7 @@
         "opponent": "TB"
       },
       {
-        "id": "wes-welker-2011-wk03",
+        "id": "nfl-wes-welker-2011-wk03",
         "name": "Wes Welker",
         "teamAbbr": "NE",
         "seasonYear": 2011,
@@ -4186,7 +4668,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "aaron-rodgers-2011-wk04",
+        "id": "nfl-aaron-rodgers-2011-wk04",
         "name": "Aaron Rodgers",
         "teamAbbr": "GB",
         "seasonYear": 2011,
@@ -4214,7 +4696,7 @@
         "opponent": "DEN"
       },
       {
-        "id": "ben-roethlisberger-2014-wk08",
+        "id": "nfl-ben-roethlisberger-2014-wk08",
         "name": "Ben Roethlisberger",
         "teamAbbr": "PIT",
         "seasonYear": 2014,
@@ -4242,7 +4724,7 @@
         "opponent": "IND"
       },
       {
-        "id": "cam-newton-2015-wk15",
+        "id": "nfl-cam-newton-2015-wk15",
         "name": "Cam Newton",
         "teamAbbr": "CAR",
         "seasonYear": 2015,
@@ -4270,7 +4752,7 @@
         "opponent": "NYG"
       },
       {
-        "id": "drew-brees-2015-wk08",
+        "id": "nfl-drew-brees-2015-wk08",
         "name": "Drew Brees",
         "teamAbbr": "NO",
         "seasonYear": 2015,
@@ -4298,7 +4780,7 @@
         "opponent": "NYG"
       },
       {
-        "id": "josh-allen-2024-wk14",
+        "id": "nfl-josh-allen-2024-wk14",
         "name": "Josh Allen",
         "teamAbbr": "BUF",
         "seasonYear": 2024,
@@ -4326,7 +4808,7 @@
         "opponent": "LA"
       },
       {
-        "id": "mitchell-trubisky-2018-wk04",
+        "id": "nfl-mitchell-trubisky-2018-wk04",
         "name": "Mitchell Trubisky",
         "teamAbbr": "CHI",
         "seasonYear": 2018,
@@ -4354,7 +4836,7 @@
         "opponent": "TB"
       },
       {
-        "id": "nick-foles-2013-wk09",
+        "id": "nfl-nick-foles-2013-wk09",
         "name": "Nick Foles",
         "teamAbbr": "PHI",
         "seasonYear": 2013,
@@ -4382,7 +4864,7 @@
         "opponent": "LV"
       },
       {
-        "id": "peyton-manning-2013-wk01",
+        "id": "nfl-peyton-manning-2013-wk01",
         "name": "Peyton Manning",
         "teamAbbr": "DEN",
         "seasonYear": 2013,
@@ -4414,42 +4896,478 @@
     "scale": "nfl_qb_fantasy_game"
   },
   {
+    "id": "nfl-game-te-explosion-00",
+    "theme": "Big-play tight end games",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "nfl-darren-waller-2020-wk13",
+        "name": "Darren Waller",
+        "teamAbbr": "LV",
+        "seasonYear": 2020,
+        "grade": 45.0,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "200"
+          },
+          {
+            "label": "Rec",
+            "value": "13"
+          },
+          {
+            "label": "Rec TD",
+            "value": "2"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "15.4"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/qqzht46a66zbi9xyylf4",
+        "week": 13,
+        "opponent": "NYJ"
+      },
+      {
+        "id": "nfl-evan-engram-2022-wk14",
+        "name": "Evan Engram",
+        "teamAbbr": "JAX",
+        "seasonYear": 2022,
+        "grade": 39.2,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "162"
+          },
+          {
+            "label": "Rec",
+            "value": "11"
+          },
+          {
+            "label": "Rec TD",
+            "value": "2"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "14.7"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/sea0atk2feif4n75dvq8",
+        "week": 14,
+        "opponent": "TEN"
+      },
+      {
+        "id": "nfl-george-kittle-2020-wk04",
+        "name": "George Kittle",
+        "teamAbbr": "SF",
+        "seasonYear": 2020,
+        "grade": 40.1,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "183"
+          },
+          {
+            "label": "Rec",
+            "value": "15"
+          },
+          {
+            "label": "Rec TD",
+            "value": "1"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "12.2"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/ivkrikewqqdllzvano8h",
+        "week": 4,
+        "opponent": "PHI"
+      },
+      {
+        "id": "nfl-rob-gronkowski-2014-wk08",
+        "name": "Rob Gronkowski",
+        "teamAbbr": "NE",
+        "seasonYear": 2014,
+        "grade": 41.9,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "149"
+          },
+          {
+            "label": "Rec",
+            "value": "9"
+          },
+          {
+            "label": "Rec TD",
+            "value": "3"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "16.6"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/svpo7chliiymc0r7hegp",
+        "week": 8,
+        "opponent": "CHI"
+      },
+      {
+        "id": "nfl-tony-gonzalez-2013-wk04",
+        "name": "Tony Gonzalez",
+        "teamAbbr": "ATL",
+        "seasonYear": 2013,
+        "grade": 38.9,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "149"
+          },
+          {
+            "label": "Rec",
+            "value": "12"
+          },
+          {
+            "label": "Rec TD",
+            "value": "2"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "12.4"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/enbspvy0ahsyznomitre",
+        "week": 4,
+        "opponent": "NE"
+      },
+      {
+        "id": "nfl-travis-kelce-2021-wk15",
+        "name": "Travis Kelce",
+        "teamAbbr": "KC",
+        "seasonYear": 2021,
+        "grade": 41.1,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "191"
+          },
+          {
+            "label": "Rec",
+            "value": "10"
+          },
+          {
+            "label": "Rec TD",
+            "value": "2"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "19.1"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/ilk4qbxxs6mt3v9zfvtg",
+        "week": 15,
+        "opponent": "LAC"
+      },
+      {
+        "id": "nfl-vernon-davis-2013-wk06",
+        "name": "Vernon Davis",
+        "teamAbbr": "SF",
+        "seasonYear": 2013,
+        "grade": 38.0,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "180"
+          },
+          {
+            "label": "Rec",
+            "value": "8"
+          },
+          {
+            "label": "Rec TD",
+            "value": "2"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "22.5"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/so5ywayfeeu4zeijln5m",
+        "week": 6,
+        "opponent": "ARI"
+      },
+      {
+        "id": "nfl-zach-ertz-2018-wk10",
+        "name": "Zach Ertz",
+        "teamAbbr": "PHI",
+        "seasonYear": 2018,
+        "grade": 40.5,
+        "stats": [
+          {
+            "label": "Rec Yds",
+            "value": "145"
+          },
+          {
+            "label": "Rec",
+            "value": "14"
+          },
+          {
+            "label": "Rec TD",
+            "value": "2"
+          },
+          {
+            "label": "Yds/Rec",
+            "value": "10.4"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/xktmmeumuoglbuam75iz",
+        "week": 10,
+        "opponent": "DAL"
+      }
+    ],
+    "grain": "game",
+    "scale": "nfl_skill_ppr_game"
+  },
+  {
+    "id": "nfl-game-qb-rushing-00",
+    "theme": "Dual-threat QB rushing games",
+    "sport": "nfl",
+    "players": [
+      {
+        "id": "nfl-alex-smith-2017-wk13",
+        "name": "Alex Smith",
+        "teamAbbr": "KC",
+        "seasonYear": 2017,
+        "grade": 37.6,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "70"
+          },
+          {
+            "label": "Rush TD",
+            "value": "0"
+          },
+          {
+            "label": "Pass Yds",
+            "value": "366"
+          },
+          {
+            "label": "Pass TD",
+            "value": "4"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dpa5d1a8jj6jdymocjkx",
+        "week": 13,
+        "opponent": "NYJ"
+      },
+      {
+        "id": "nfl-cam-newton-2015-wk15",
+        "name": "Cam Newton",
+        "teamAbbr": "CAR",
+        "seasonYear": 2015,
+        "grade": 43.6,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "100"
+          },
+          {
+            "label": "Rush TD",
+            "value": "0"
+          },
+          {
+            "label": "Pass Yds",
+            "value": "340"
+          },
+          {
+            "label": "Pass TD",
+            "value": "5"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zwmgw2gmnn2kch4nquft",
+        "week": 15,
+        "opponent": "NYG"
+      },
+      {
+        "id": "nfl-josh-allen-2024-wk14",
+        "name": "Josh Allen",
+        "teamAbbr": "BUF",
+        "seasonYear": 2024,
+        "grade": 51.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "82"
+          },
+          {
+            "label": "Rush TD",
+            "value": "3"
+          },
+          {
+            "label": "Pass Yds",
+            "value": "342"
+          },
+          {
+            "label": "Pass TD",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/lq4ezafbszwwt2qsvhqv",
+        "week": 14,
+        "opponent": "LA"
+      },
+      {
+        "id": "nfl-justin-fields-2022-wk09",
+        "name": "Justin Fields",
+        "teamAbbr": "CHI",
+        "seasonYear": 2022,
+        "grade": 40.7,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "178"
+          },
+          {
+            "label": "Rush TD",
+            "value": "1"
+          },
+          {
+            "label": "Pass Yds",
+            "value": "123"
+          },
+          {
+            "label": "Pass TD",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/vqcvybvs1vlqhkjvujbg",
+        "week": 9,
+        "opponent": "MIA"
+      },
+      {
+        "id": "nfl-kyler-murray-2020-wk09",
+        "name": "Kyler Murray",
+        "teamAbbr": "ARI",
+        "seasonYear": 2020,
+        "grade": 39.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "106"
+          },
+          {
+            "label": "Rush TD",
+            "value": "1"
+          },
+          {
+            "label": "Pass Yds",
+            "value": "283"
+          },
+          {
+            "label": "Pass TD",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/lsladvvsaptc29bbcah2",
+        "week": 9,
+        "opponent": "MIA"
+      },
+      {
+        "id": "nfl-lamar-jackson-2022-wk02",
+        "name": "Lamar Jackson",
+        "teamAbbr": "BAL",
+        "seasonYear": 2022,
+        "grade": 42.6,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "119"
+          },
+          {
+            "label": "Rush TD",
+            "value": "1"
+          },
+          {
+            "label": "Pass Yds",
+            "value": "318"
+          },
+          {
+            "label": "Pass TD",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p",
+        "week": 2,
+        "opponent": "MIA"
+      },
+      {
+        "id": "nfl-marcus-mariota-2015-wk13",
+        "name": "Marcus Mariota",
+        "teamAbbr": "TEN",
+        "seasonYear": 2015,
+        "grade": 37.9,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "112"
+          },
+          {
+            "label": "Rush TD",
+            "value": "1"
+          },
+          {
+            "label": "Pass Yds",
+            "value": "268"
+          },
+          {
+            "label": "Pass TD",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/b9ribxqudeehvmjlw0va",
+        "week": 13,
+        "opponent": "JAX"
+      },
+      {
+        "id": "nfl-russell-wilson-2012-wk15",
+        "name": "Russell Wilson",
+        "teamAbbr": "SEA",
+        "seasonYear": 2012,
+        "grade": 39.4,
+        "stats": [
+          {
+            "label": "Rush Yds",
+            "value": "92"
+          },
+          {
+            "label": "Rush TD",
+            "value": "3"
+          },
+          {
+            "label": "Pass Yds",
+            "value": "205"
+          },
+          {
+            "label": "Pass TD",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/u36rhg0md8ey3b4khbre",
+        "week": 15,
+        "opponent": "BUF"
+      }
+    ],
+    "grain": "game",
+    "scale": "nfl_qb_fantasy_game"
+  },
+  {
     "id": "baseball-power-hitters-00",
     "theme": "Elite power-hitting seasons",
     "sport": "baseball",
     "players": [
       {
-        "id": "babe-ruth-1921",
-        "name": "Babe Ruth",
-        "teamAbbr": "NYY",
-        "seasonYear": 1921,
-        "grade": 984.0,
-        "stats": [
-          {
-            "label": "HR",
-            "value": "59"
-          },
-          {
-            "label": "RBI",
-            "value": "171"
-          },
-          {
-            "label": "AVG",
-            "value": "0.378"
-          },
-          {
-            "label": "OPS",
-            "value": "1.358"
-          },
-          {
-            "label": "R",
-            "value": "177"
-          }
-        ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121578/headshot/67/current"
-      },
-      {
-        "id": "barry-bonds-2001",
+        "id": "baseball-barry-bonds-2001",
         "name": "Barry Bonds",
         "teamAbbr": "SF",
         "seasonYear": 2001,
@@ -4479,7 +5397,37 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/111188/headshot/67/current"
       },
       {
-        "id": "hack-wilson-1930",
+        "id": "baseball-billy-hamilton-1894",
+        "name": "Billy Hamilton",
+        "teamAbbr": "PHI",
+        "seasonYear": 1894,
+        "grade": 888.0,
+        "stats": [
+          {
+            "label": "HR",
+            "value": "4"
+          },
+          {
+            "label": "RBI",
+            "value": "87"
+          },
+          {
+            "label": "AVG",
+            "value": "0.404"
+          },
+          {
+            "label": "OPS",
+            "value": "1.051"
+          },
+          {
+            "label": "R",
+            "value": "192"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/115386/headshot/67/current"
+      },
+      {
+        "id": "baseball-hack-wilson-1930",
         "name": "Hack Wilson",
         "teamAbbr": "CHC",
         "seasonYear": 1930,
@@ -4509,7 +5457,7 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/124412/headshot/67/current"
       },
       {
-        "id": "jimmie-foxx-1932",
+        "id": "baseball-jimmie-foxx-1932",
         "name": "Jimmie Foxx",
         "teamAbbr": "ATH",
         "seasonYear": 1932,
@@ -4539,7 +5487,7 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/114367/headshot/67/current"
       },
       {
-        "id": "lou-gehrig-1931",
+        "id": "baseball-lou-gehrig-1931",
         "name": "Lou Gehrig",
         "teamAbbr": "NYY",
         "seasonYear": 1931,
@@ -4569,7 +5517,7 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/114680/headshot/67/current"
       },
       {
-        "id": "ronald-acuna-jr-2023",
+        "id": "baseball-ronald-acuna-jr-2023",
         "name": "Ronald Acuña Jr.",
         "teamAbbr": "ATL",
         "seasonYear": 2023,
@@ -4599,7 +5547,7 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/660670/headshot/67/current"
       },
       {
-        "id": "shohei-ohtani-2024",
+        "id": "baseball-shohei-ohtani-2024",
         "name": "Shohei Ohtani",
         "teamAbbr": "LAD",
         "seasonYear": 2024,
@@ -4629,7 +5577,7 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/660271/headshot/67/current"
       },
       {
-        "id": "ty-cobb-1911",
+        "id": "baseball-ty-cobb-1911",
         "name": "Ty Cobb",
         "teamAbbr": "DET",
         "seasonYear": 1911,
@@ -4668,67 +5616,67 @@
     "sport": "baseball",
     "players": [
       {
-        "id": "bob-feller-1946",
-        "name": "Bob Feller",
-        "teamAbbr": "CLE",
-        "seasonYear": 1946,
-        "grade": 706.8,
+        "id": "baseball-charlie-buffinton-1884",
+        "name": "Charlie Buffinton",
+        "teamAbbr": "ATL",
+        "seasonYear": 1884,
+        "grade": 1066.0,
         "stats": [
           {
             "label": "K",
-            "value": "348"
+            "value": "417"
           },
           {
             "label": "W",
-            "value": "26"
+            "value": "48"
           },
           {
             "label": "ERA",
-            "value": "2.18"
+            "value": "2.15"
           },
           {
             "label": "WHIP",
-            "value": "1.16"
+            "value": "0.99"
           },
           {
             "label": "IP",
-            "value": "371.3"
+            "value": "587.0"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/114055/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/111672/headshot/67/current"
       },
       {
-        "id": "christy-mathewson-1908",
-        "name": "Christy Mathewson",
-        "teamAbbr": "SF",
-        "seasonYear": 1908,
-        "grade": 781.7,
+        "id": "baseball-ed-morris-1886",
+        "name": "Ed Morris",
+        "teamAbbr": "PIT",
+        "seasonYear": 1886,
+        "grade": 882.3,
         "stats": [
           {
             "label": "K",
-            "value": "259"
+            "value": "326"
           },
           {
             "label": "W",
-            "value": "37"
+            "value": "41"
           },
           {
             "label": "ERA",
-            "value": "1.43"
+            "value": "2.45"
           },
           {
             "label": "WHIP",
-            "value": "0.84"
+            "value": "1.03"
           },
           {
             "label": "IP",
-            "value": "390.7"
+            "value": "555.3"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/118422/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/119397/headshot/67/current"
       },
       {
-        "id": "ed-walsh-1908",
+        "id": "baseball-ed-walsh-1908",
         "name": "Ed Walsh",
         "teamAbbr": "CWS",
         "seasonYear": 1908,
@@ -4758,53 +5706,83 @@
         "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/123878/headshot/67/current"
       },
       {
-        "id": "grover-alexander-1915",
-        "name": "Grover Alexander",
-        "teamAbbr": "PHI",
-        "seasonYear": 1915,
-        "grade": 707.3,
+        "id": "baseball-jim-whitney-1883",
+        "name": "Jim Whitney",
+        "teamAbbr": "ATL",
+        "seasonYear": 1883,
+        "grade": 910.5,
         "stats": [
           {
             "label": "K",
-            "value": "241"
+            "value": "345"
           },
           {
             "label": "W",
-            "value": "31"
+            "value": "37"
           },
           {
             "label": "ERA",
-            "value": "1.22"
+            "value": "2.24"
           },
           {
             "label": "WHIP",
-            "value": "0.84"
+            "value": "1.03"
           },
           {
             "label": "IP",
-            "value": "376.3"
+            "value": "514.0"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/110127/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/124221/headshot/67/current"
       },
       {
-        "id": "jack-chesbro-1904",
-        "name": "Jack Chesbro",
-        "teamAbbr": "NYY",
-        "seasonYear": 1904,
-        "grade": 762.7,
+        "id": "baseball-john-clarkson-1885",
+        "name": "John Clarkson",
+        "teamAbbr": "CHC",
+        "seasonYear": 1885,
+        "grade": 1019.5,
         "stats": [
           {
             "label": "K",
-            "value": "239"
+            "value": "308"
           },
           {
             "label": "W",
-            "value": "41"
+            "value": "53"
           },
           {
             "label": "ERA",
-            "value": "1.82"
+            "value": "1.85"
+          },
+          {
+            "label": "WHIP",
+            "value": "0.95"
+          },
+          {
+            "label": "IP",
+            "value": "623.0"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112369/headshot/67/current"
+      },
+      {
+        "id": "baseball-larry-corcoran-1880",
+        "name": "Larry Corcoran",
+        "teamAbbr": "CHC",
+        "seasonYear": 1880,
+        "grade": 865.8,
+        "stats": [
+          {
+            "label": "K",
+            "value": "268"
+          },
+          {
+            "label": "W",
+            "value": "43"
+          },
+          {
+            "label": "ERA",
+            "value": "1.95"
           },
           {
             "label": "WHIP",
@@ -4812,104 +5790,556 @@
           },
           {
             "label": "IP",
-            "value": "454.7"
+            "value": "536.3"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112233/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112675/headshot/67/current"
       },
       {
-        "id": "rube-waddell-1904",
-        "name": "Rube Waddell",
-        "teamAbbr": "ATH",
-        "seasonYear": 1904,
-        "grade": 742.5,
+        "id": "baseball-mickey-welch-1884",
+        "name": "Mickey Welch",
+        "teamAbbr": "SF",
+        "seasonYear": 1884,
+        "grade": 869.3,
         "stats": [
           {
             "label": "K",
-            "value": "349"
+            "value": "345"
           },
           {
             "label": "W",
-            "value": "25"
+            "value": "39"
           },
           {
             "label": "ERA",
-            "value": "1.62"
+            "value": "2.50"
           },
           {
             "label": "WHIP",
-            "value": "1.04"
+            "value": "1.21"
           },
           {
             "label": "IP",
-            "value": "383.0"
+            "value": "557.3"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/123767/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/124062/headshot/67/current"
       },
       {
-        "id": "sandy-koufax-1965",
-        "name": "Sandy Koufax",
-        "teamAbbr": "LAD",
-        "seasonYear": 1965,
-        "grade": 748.2,
+        "id": "baseball-tim-keefe-1886",
+        "name": "Tim Keefe",
+        "teamAbbr": "SF",
+        "seasonYear": 1886,
+        "grade": 839.0,
         "stats": [
           {
             "label": "K",
-            "value": "382"
+            "value": "297"
           },
           {
             "label": "W",
-            "value": "26"
+            "value": "42"
           },
           {
             "label": "ERA",
-            "value": "2.04"
+            "value": "2.56"
           },
           {
             "label": "WHIP",
-            "value": "0.86"
+            "value": "1.09"
           },
           {
             "label": "IP",
-            "value": "335.7"
+            "value": "535.0"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/117277/headshot/67/current"
-      },
-      {
-        "id": "walter-johnson-1912",
-        "name": "Walter Johnson",
-        "teamAbbr": "MIN",
-        "seasonYear": 1912,
-        "grade": 754.0,
-        "stats": [
-          {
-            "label": "K",
-            "value": "303"
-          },
-          {
-            "label": "W",
-            "value": "33"
-          },
-          {
-            "label": "ERA",
-            "value": "1.39"
-          },
-          {
-            "label": "WHIP",
-            "value": "0.91"
-          },
-          {
-            "label": "IP",
-            "value": "369.0"
-          }
-        ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/116635/headshot/67/current"
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/116888/headshot/67/current"
       }
     ],
     "grain": "season",
     "scale": "baseball_pitcher_fantasy"
+  },
+  {
+    "id": "baseball-game-power-outburst-00",
+    "theme": "Multi-homer games",
+    "sport": "baseball",
+    "players": [
+      {
+        "id": "baseball-aaron-judge-2025-wk02",
+        "name": "Aaron Judge",
+        "teamAbbr": "NYY",
+        "seasonYear": 2025,
+        "grade": 26.0,
+        "stats": [
+          {
+            "label": "HR",
+            "value": "3"
+          },
+          {
+            "label": "RBI",
+            "value": "8"
+          },
+          {
+            "label": "Hits",
+            "value": "4"
+          },
+          {
+            "label": "R",
+            "value": "4"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/592450/headshot/67/current",
+        "week": 2,
+        "opponent": "MIL",
+        "gameDate": "Mar 29"
+      },
+      {
+        "id": "baseball-bobby-witt-jr-2023-wk51",
+        "name": "Bobby Witt Jr.",
+        "teamAbbr": "KC",
+        "seasonYear": 2023,
+        "grade": 21.0,
+        "stats": [
+          {
+            "label": "HR",
+            "value": "2"
+          },
+          {
+            "label": "RBI",
+            "value": "5"
+          },
+          {
+            "label": "Hits",
+            "value": "4"
+          },
+          {
+            "label": "R",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/677951/headshot/67/current",
+        "week": 51,
+        "opponent": "WSH",
+        "gameDate": "May 26"
+      },
+      {
+        "id": "baseball-jose-ramirez-2017-wk11",
+        "name": "José Ramírez",
+        "teamAbbr": "CLE",
+        "seasonYear": 2017,
+        "grade": 20.0,
+        "stats": [
+          {
+            "label": "HR",
+            "value": "2"
+          },
+          {
+            "label": "RBI",
+            "value": "6"
+          },
+          {
+            "label": "Hits",
+            "value": "4"
+          },
+          {
+            "label": "R",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/608070/headshot/67/current",
+        "week": 11,
+        "opponent": "DET",
+        "gameDate": "Apr 15"
+      },
+      {
+        "id": "baseball-juan-soto-2024-wk117",
+        "name": "Juan Soto",
+        "teamAbbr": "NYY",
+        "seasonYear": 2024,
+        "grade": 20.0,
+        "stats": [
+          {
+            "label": "HR",
+            "value": "3"
+          },
+          {
+            "label": "RBI",
+            "value": "4"
+          },
+          {
+            "label": "Hits",
+            "value": "3"
+          },
+          {
+            "label": "R",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/665742/headshot/67/current",
+        "week": 117,
+        "opponent": "CWS",
+        "gameDate": "Aug 13"
+      },
+      {
+        "id": "baseball-matt-olson-2023-wk81",
+        "name": "Matt Olson",
+        "teamAbbr": "ATL",
+        "seasonYear": 2023,
+        "grade": 21.0,
+        "stats": [
+          {
+            "label": "HR",
+            "value": "2"
+          },
+          {
+            "label": "RBI",
+            "value": "5"
+          },
+          {
+            "label": "Hits",
+            "value": "4"
+          },
+          {
+            "label": "R",
+            "value": "4"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/621566/headshot/67/current",
+        "week": 81,
+        "opponent": "MIA",
+        "gameDate": "Jun 30"
+      },
+      {
+        "id": "baseball-mookie-betts-2016-wk113",
+        "name": "Mookie Betts",
+        "teamAbbr": "BOS",
+        "seasonYear": 2016,
+        "grade": 25.0,
+        "stats": [
+          {
+            "label": "HR",
+            "value": "3"
+          },
+          {
+            "label": "RBI",
+            "value": "8"
+          },
+          {
+            "label": "Hits",
+            "value": "4"
+          },
+          {
+            "label": "R",
+            "value": "4"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/605141/headshot/67/current",
+        "week": 113,
+        "opponent": "AZ",
+        "gameDate": "Aug 14"
+      },
+      {
+        "id": "baseball-shohei-ohtani-2024-wk150",
+        "name": "Shohei Ohtani",
+        "teamAbbr": "LAD",
+        "seasonYear": 2024,
+        "grade": 35.0,
+        "stats": [
+          {
+            "label": "HR",
+            "value": "3"
+          },
+          {
+            "label": "RBI",
+            "value": "10"
+          },
+          {
+            "label": "Hits",
+            "value": "6"
+          },
+          {
+            "label": "R",
+            "value": "4"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/660271/headshot/67/current",
+        "week": 150,
+        "opponent": "MIA",
+        "gameDate": "Sep 19"
+      },
+      {
+        "id": "baseball-yordan-alvarez-2019-wk45",
+        "name": "Yordan Alvarez",
+        "teamAbbr": "HOU",
+        "seasonYear": 2019,
+        "grade": 24.0,
+        "stats": [
+          {
+            "label": "HR",
+            "value": "3"
+          },
+          {
+            "label": "RBI",
+            "value": "7"
+          },
+          {
+            "label": "Hits",
+            "value": "3"
+          },
+          {
+            "label": "R",
+            "value": "4"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/670541/headshot/67/current",
+        "week": 45,
+        "opponent": "BAL",
+        "gameDate": "Aug 10"
+      }
+    ],
+    "grain": "game",
+    "scale": "baseball_hitter_fantasy_game"
+  },
+  {
+    "id": "baseball-game-ace-start-00",
+    "theme": "Dominant single-game pitching starts",
+    "sport": "baseball",
+    "players": [
+      {
+        "id": "baseball-clayton-kershaw-2014-wk10",
+        "name": "Clayton Kershaw",
+        "teamAbbr": "LAD",
+        "seasonYear": 2014,
+        "grade": 29.0,
+        "stats": [
+          {
+            "label": "K",
+            "value": "15"
+          },
+          {
+            "label": "ER",
+            "value": "0"
+          },
+          {
+            "label": "IP",
+            "value": "9.0"
+          },
+          {
+            "label": "W",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/477132/headshot/67/current",
+        "week": 10,
+        "opponent": "COL",
+        "gameDate": "Jun 18"
+      },
+      {
+        "id": "baseball-corbin-burnes-2021-wk20",
+        "name": "Corbin Burnes",
+        "teamAbbr": "MIL",
+        "seasonYear": 2021,
+        "grade": 28.0,
+        "stats": [
+          {
+            "label": "K",
+            "value": "15"
+          },
+          {
+            "label": "ER",
+            "value": "0"
+          },
+          {
+            "label": "IP",
+            "value": "8.0"
+          },
+          {
+            "label": "W",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/669203/headshot/67/current",
+        "week": 20,
+        "opponent": "CHC",
+        "gameDate": "Aug 11"
+      },
+      {
+        "id": "baseball-gerrit-cole-2018-wk07",
+        "name": "Gerrit Cole",
+        "teamAbbr": "HOU",
+        "seasonYear": 2018,
+        "grade": 29.5,
+        "stats": [
+          {
+            "label": "K",
+            "value": "16"
+          },
+          {
+            "label": "ER",
+            "value": "0"
+          },
+          {
+            "label": "IP",
+            "value": "9.0"
+          },
+          {
+            "label": "W",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/543037/headshot/67/current",
+        "week": 7,
+        "opponent": "AZ",
+        "gameDate": "May 4"
+      },
+      {
+        "id": "baseball-jacob-degrom-2021-wk04",
+        "name": "Jacob deGrom",
+        "teamAbbr": "NYM",
+        "seasonYear": 2021,
+        "grade": 29.0,
+        "stats": [
+          {
+            "label": "K",
+            "value": "15"
+          },
+          {
+            "label": "ER",
+            "value": "0"
+          },
+          {
+            "label": "IP",
+            "value": "9.0"
+          },
+          {
+            "label": "W",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/594798/headshot/67/current",
+        "week": 4,
+        "opponent": "WSH",
+        "gameDate": "Apr 23"
+      },
+      {
+        "id": "baseball-justin-verlander-2019-wk29",
+        "name": "Justin Verlander",
+        "teamAbbr": "HOU",
+        "seasonYear": 2019,
+        "grade": 27.5,
+        "stats": [
+          {
+            "label": "K",
+            "value": "14"
+          },
+          {
+            "label": "ER",
+            "value": "0"
+          },
+          {
+            "label": "IP",
+            "value": "9.0"
+          },
+          {
+            "label": "W",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/434378/headshot/67/current",
+        "week": 29,
+        "opponent": "TOR",
+        "gameDate": "Sep 1"
+      },
+      {
+        "id": "baseball-sandy-alcantara-2022-wk10",
+        "name": "Sandy Alcantara",
+        "teamAbbr": "MIA",
+        "seasonYear": 2022,
+        "grade": 26.0,
+        "stats": [
+          {
+            "label": "K",
+            "value": "14"
+          },
+          {
+            "label": "ER",
+            "value": "1"
+          },
+          {
+            "label": "IP",
+            "value": "8.0"
+          },
+          {
+            "label": "W",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/645261/headshot/67/current",
+        "week": 10,
+        "opponent": "ATL",
+        "gameDate": "May 28"
+      },
+      {
+        "id": "baseball-shohei-ohtani-2022-wk12",
+        "name": "Shohei Ohtani",
+        "teamAbbr": "LAA",
+        "seasonYear": 2022,
+        "grade": 25.5,
+        "stats": [
+          {
+            "label": "K",
+            "value": "13"
+          },
+          {
+            "label": "ER",
+            "value": "0"
+          },
+          {
+            "label": "IP",
+            "value": "8.0"
+          },
+          {
+            "label": "W",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/660271/headshot/67/current",
+        "week": 12,
+        "opponent": "KC",
+        "gameDate": "Jun 22"
+      },
+      {
+        "id": "baseball-spencer-strider-2022-wk28",
+        "name": "Spencer Strider",
+        "teamAbbr": "ATL",
+        "seasonYear": 2022,
+        "grade": 29.0,
+        "stats": [
+          {
+            "label": "K",
+            "value": "16"
+          },
+          {
+            "label": "ER",
+            "value": "0"
+          },
+          {
+            "label": "IP",
+            "value": "8.0"
+          },
+          {
+            "label": "W",
+            "value": "1"
+          }
+        ],
+        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/675911/headshot/67/current",
+        "week": 28,
+        "opponent": "COL",
+        "gameDate": "Sep 1"
+      }
+    ],
+    "grain": "game",
+    "scale": "baseball_pitcher_fantasy_game"
   },
   {
     "id": "soccer-attackers-00",
@@ -4917,7 +6347,7 @@
     "sport": "soccer",
     "players": [
       {
-        "id": "ciro-immobile-2020",
+        "id": "soccer-ciro-immobile-2020",
         "name": "Ciro Immobile",
         "teamAbbr": "LAZ",
         "seasonYear": 2020,
@@ -4939,7 +6369,7 @@
         "headshot": "https://img.a.transfermarkt.technology/portrait/header/105521-1770718860.jpg?lm=1"
       },
       {
-        "id": "cristiano-ronaldo-2015",
+        "id": "soccer-cristiano-ronaldo-2015",
         "name": "Cristiano Ronaldo",
         "teamAbbr": "RMA",
         "seasonYear": 2015,
@@ -4961,7 +6391,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Cristiano_Ronaldo_2275_%28cropped%29.jpg/330px-Cristiano_Ronaldo_2275_%28cropped%29.jpg"
       },
       {
-        "id": "lionel-messi-2012",
+        "id": "soccer-lionel-messi-2012",
         "name": "Lionel Messi",
         "teamAbbr": "FCB",
         "seasonYear": 2012,
@@ -4983,7 +6413,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-055.jpg/330px-Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-055.jpg"
       },
       {
-        "id": "luis-suarez-2016",
+        "id": "soccer-luis-suarez-2016",
         "name": "Luis Suárez",
         "teamAbbr": "FCB",
         "seasonYear": 2016,
@@ -5005,7 +6435,7 @@
         "headshot": "https://img.a.transfermarkt.technology/portrait/header/44352-1771695059.jpg?lm=1"
       },
       {
-        "id": "robert-lewandowski-2021",
+        "id": "soccer-robert-lewandowski-2021",
         "name": "Robert Lewandowski",
         "teamAbbr": "BAY",
         "seasonYear": 2021,
@@ -5027,7 +6457,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg/330px-2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg"
       },
       {
-        "id": "viktor-einar-gyokeres-2024",
+        "id": "soccer-viktor-einar-gyokeres-2024",
         "name": "Viktor Einar Gyökeres",
         "teamAbbr": "SC",
         "seasonYear": 2024,
@@ -5049,7 +6479,7 @@
         "headshot": "https://media.api-sports.io/football/players/18979.png"
       },
       {
-        "id": "viktor-gyokeres-2025",
+        "id": "soccer-viktor-gyokeres-2025",
         "name": "Viktor Gyökeres",
         "teamAbbr": "SPO",
         "seasonYear": 2025,
@@ -5071,7 +6501,7 @@
         "headshot": "https://img.a.transfermarkt.technology/portrait/header/325443-1737581896.jpg?lm=1"
       },
       {
-        "id": "zlatan-ibrahimovic-2016",
+        "id": "soccer-zlatan-ibrahimovic-2016",
         "name": "Zlatan Ibrahimović",
         "teamAbbr": "PSG",
         "seasonYear": 2016,
@@ -5102,7 +6532,7 @@
     "sport": "soccer",
     "players": [
       {
-        "id": "alejandro-grimaldo-2024",
+        "id": "soccer-alejandro-grimaldo-2024",
         "name": "Alejandro Grimaldo",
         "teamAbbr": "LEV",
         "seasonYear": 2024,
@@ -5128,15 +6558,15 @@
         "headshot": "https://img.a.transfermarkt.technology/portrait/header/193082-1689710805.jpg?lm=1"
       },
       {
-        "id": "alessandro-florenzi-2014",
-        "name": "Alessandro Florenzi",
-        "teamAbbr": "ROM",
-        "seasonYear": 2014,
-        "grade": 159.5,
+        "id": "soccer-edgar-castillo-2009",
+        "name": "Edgar Castillo",
+        "teamAbbr": "SAN",
+        "seasonYear": 2009,
+        "grade": 179.5,
         "stats": [
           {
             "label": "Clean Sheets",
-            "value": "21"
+            "value": "35"
           },
           {
             "label": "Apps",
@@ -5144,43 +6574,17 @@
           },
           {
             "label": "Goals",
-            "value": "6"
+            "value": "2"
           },
           {
             "label": "Assists",
-            "value": "7"
+            "value": "3"
           }
         ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/130365-1663574873.jpg?lm=1"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Edgar_Castillo.jpg/330px-Edgar_Castillo.jpg"
       },
       {
-        "id": "alex-telles-2020",
-        "name": "Alex Telles",
-        "teamAbbr": "POR",
-        "seasonYear": 2020,
-        "grade": 173.5,
-        "stats": [
-          {
-            "label": "Clean Sheets",
-            "value": "17"
-          },
-          {
-            "label": "Apps",
-            "value": "31"
-          },
-          {
-            "label": "Goals",
-            "value": "11"
-          },
-          {
-            "label": "Assists",
-            "value": "8"
-          }
-        ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/255755-1659559306.jpg?lm=1"
-      },
-      {
-        "id": "federico-dimarco-2026",
+        "id": "soccer-federico-dimarco-2026",
         "name": "Federico Dimarco",
         "teamAbbr": "INT",
         "seasonYear": 2026,
@@ -5206,7 +6610,59 @@
         "headshot": "https://img.a.transfermarkt.technology/portrait/header/198116-1725531769.jpg?lm=1"
       },
       {
-        "id": "james-tavernier-2024",
+        "id": "soccer-graham-zusi-2012",
+        "name": "Graham Zusi",
+        "teamAbbr": "KCI",
+        "seasonYear": 2012,
+        "grade": 201.0,
+        "stats": [
+          {
+            "label": "Clean Sheets",
+            "value": "36"
+          },
+          {
+            "label": "Apps",
+            "value": "36"
+          },
+          {
+            "label": "Goals",
+            "value": "5"
+          },
+          {
+            "label": "Assists",
+            "value": "3"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Graham_Zusi_2022.png"
+      },
+      {
+        "id": "soccer-israel-jimenez-2012",
+        "name": "Israel Jiménez",
+        "teamAbbr": "TUA",
+        "seasonYear": 2012,
+        "grade": 201.0,
+        "stats": [
+          {
+            "label": "Clean Sheets",
+            "value": "42"
+          },
+          {
+            "label": "Apps",
+            "value": "42"
+          },
+          {
+            "label": "Goals",
+            "value": "2"
+          },
+          {
+            "label": "Assists",
+            "value": "0"
+          }
+        ],
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Israel_Jimenez.jpg/330px-Israel_Jimenez.jpg"
+      },
+      {
+        "id": "soccer-james-tavernier-2024",
         "name": "James Tavernier",
         "teamAbbr": "RAN",
         "seasonYear": 2024,
@@ -5232,33 +6688,7 @@
         "headshot": "https://img.a.transfermarkt.technology/portrait/header/62094-1663162918.jpg?lm=1"
       },
       {
-        "id": "jonathan-schmid-2013",
-        "name": "Jonathan Schmid",
-        "teamAbbr": "FRE",
-        "seasonYear": 2013,
-        "grade": 152.5,
-        "stats": [
-          {
-            "label": "Clean Sheets",
-            "value": "13"
-          },
-          {
-            "label": "Apps",
-            "value": "33"
-          },
-          {
-            "label": "Goals",
-            "value": "11"
-          },
-          {
-            "label": "Assists",
-            "value": "6"
-          }
-        ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/70285-1658412605.jpg?lm=1"
-      },
-      {
-        "id": "marcos-llorente-2021",
+        "id": "soccer-marcos-llorente-2021",
         "name": "Marcos Llorente",
         "teamAbbr": "ATM",
         "seasonYear": 2021,
@@ -5284,15 +6714,15 @@
         "headshot": "https://img.a.transfermarkt.technology/portrait/header/282411-1773182531.jpg?lm=1"
       },
       {
-        "id": "sergio-ramos-2020",
-        "name": "Sergio Ramos",
-        "teamAbbr": "RMA",
-        "seasonYear": 2020,
-        "grade": 154.5,
+        "id": "soccer-matt-besler-2012",
+        "name": "Matt Besler",
+        "teamAbbr": "KCI",
+        "seasonYear": 2012,
+        "grade": 178.5,
         "stats": [
           {
             "label": "Clean Sheets",
-            "value": "17"
+            "value": "35"
           },
           {
             "label": "Apps",
@@ -5300,14 +6730,14 @@
           },
           {
             "label": "Goals",
-            "value": "11"
+            "value": "2"
           },
           {
             "label": "Assists",
-            "value": "1"
+            "value": "3"
           }
         ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/25557-1694502812.jpg?lm=1"
+        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Matt_Besler_%28cropped%29.jpg/330px-Matt_Besler_%28cropped%29.jpg"
       }
     ],
     "grain": "season",
@@ -5319,7 +6749,7 @@
     "sport": "tennis",
     "players": [
       {
-        "id": "billie-jean-king-1971",
+        "id": "tennis-billie-jean-king-1971",
         "name": "Billie Jean King",
         "teamAbbr": "USA",
         "seasonYear": 1971,
@@ -5345,7 +6775,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Billie_Jean_King_at_the_2026_Sundance_Film_Festival_02_%28crop_2%29.jpg/330px-Billie_Jean_King_at_the_2026_Sundance_Film_Festival_02_%28crop_2%29.jpg"
       },
       {
-        "id": "chris-evert-1975",
+        "id": "tennis-chris-evert-1975",
         "name": "Chris Evert",
         "teamAbbr": "USA",
         "seasonYear": 1975,
@@ -5371,7 +6801,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Chris_Evert.jpg/330px-Chris_Evert.jpg"
       },
       {
-        "id": "guillermo-vilas-1977",
+        "id": "tennis-guillermo-vilas-1977",
         "name": "Guillermo Vilas",
         "teamAbbr": "ARG",
         "seasonYear": 1977,
@@ -5397,7 +6827,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Vilas-1975.jpg/330px-Vilas-1975.jpg"
       },
       {
-        "id": "jimmy-connors-1974",
+        "id": "tennis-jimmy-connors-1974",
         "name": "Jimmy Connors",
         "teamAbbr": "USA",
         "seasonYear": 1974,
@@ -5423,7 +6853,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Jimmy_Conners_1994.jpg/330px-Jimmy_Conners_1994.jpg"
       },
       {
-        "id": "margaret-court-1970",
+        "id": "tennis-margaret-court-1970",
         "name": "Margaret Court",
         "teamAbbr": "AUS",
         "seasonYear": 1970,
@@ -5449,7 +6879,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Margaret_Court.png/330px-Margaret_Court.png"
       },
       {
-        "id": "martina-navratilova-1983",
+        "id": "tennis-martina-navratilova-1983",
         "name": "Martina Navratilova",
         "teamAbbr": "USA",
         "seasonYear": 1983,
@@ -5475,7 +6905,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Martina_Navratilova_Eastbourne_2011.jpg/330px-Martina_Navratilova_Eastbourne_2011.jpg"
       },
       {
-        "id": "roger-federer-2006",
+        "id": "tennis-roger-federer-2006",
         "name": "Roger Federer",
         "teamAbbr": "SUI",
         "seasonYear": 2006,
@@ -5501,7 +6931,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/330px-Roger_Federer_2015_%28cropped%29.jpg"
       },
       {
-        "id": "steffi-graf-1989",
+        "id": "tennis-steffi-graf-1989",
         "name": "Steffi Graf",
         "teamAbbr": "GER",
         "seasonYear": 1989,
@@ -5536,7 +6966,7 @@
     "sport": "tennis",
     "players": [
       {
-        "id": "chris-evert-1975",
+        "id": "tennis-chris-evert-1975",
         "name": "Chris Evert",
         "teamAbbr": "USA",
         "seasonYear": 1975,
@@ -5562,7 +6992,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Chris_Evert.jpg/330px-Chris_Evert.jpg"
       },
       {
-        "id": "guillermo-vilas-1977",
+        "id": "tennis-guillermo-vilas-1977",
         "name": "Guillermo Vilas",
         "teamAbbr": "ARG",
         "seasonYear": 1977,
@@ -5588,7 +7018,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Vilas-1975.jpg/330px-Vilas-1975.jpg"
       },
       {
-        "id": "jimmy-connors-1974",
+        "id": "tennis-jimmy-connors-1974",
         "name": "Jimmy Connors",
         "teamAbbr": "USA",
         "seasonYear": 1974,
@@ -5614,7 +7044,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Jimmy_Conners_1994.jpg/330px-Jimmy_Conners_1994.jpg"
       },
       {
-        "id": "margaret-court-1970",
+        "id": "tennis-margaret-court-1970",
         "name": "Margaret Court",
         "teamAbbr": "AUS",
         "seasonYear": 1970,
@@ -5640,7 +7070,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Margaret_Court.png/330px-Margaret_Court.png"
       },
       {
-        "id": "martina-hingis-1997",
+        "id": "tennis-martina-hingis-1997",
         "name": "Martina Hingis",
         "teamAbbr": "SUI",
         "seasonYear": 1997,
@@ -5666,7 +7096,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Hingis_RG16_%2810%29_%2827331857371%29.jpg/330px-Hingis_RG16_%2810%29_%2827331857371%29.jpg"
       },
       {
-        "id": "martina-navratilova-1983",
+        "id": "tennis-martina-navratilova-1983",
         "name": "Martina Navratilova",
         "teamAbbr": "USA",
         "seasonYear": 1983,
@@ -5692,7 +7122,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Martina_Navratilova_Eastbourne_2011.jpg/330px-Martina_Navratilova_Eastbourne_2011.jpg"
       },
       {
-        "id": "roger-federer-2006",
+        "id": "tennis-roger-federer-2006",
         "name": "Roger Federer",
         "teamAbbr": "SUI",
         "seasonYear": 2006,
@@ -5718,7 +7148,7 @@
         "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/330px-Roger_Federer_2015_%28cropped%29.jpg"
       },
       {
-        "id": "steffi-graf-1989",
+        "id": "tennis-steffi-graf-1989",
         "name": "Steffi Graf",
         "teamAbbr": "GER",
         "seasonYear": 1989,
@@ -5753,7 +7183,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "aaron-rodgers-career",
+        "id": "nfl-aaron-rodgers-career",
         "name": "Aaron Rodgers",
         "teamAbbr": "NYJ",
         "seasonYear": 2024,
@@ -5781,7 +7211,7 @@
         "lastYear": 2024
       },
       {
-        "id": "ben-roethlisberger-career",
+        "id": "nfl-ben-roethlisberger-career",
         "name": "Ben Roethlisberger",
         "teamAbbr": "PIT",
         "seasonYear": 2021,
@@ -5809,7 +7239,7 @@
         "lastYear": 2021
       },
       {
-        "id": "brett-favre-career",
+        "id": "nfl-brett-favre-career",
         "name": "Brett Favre",
         "teamAbbr": "MIN",
         "seasonYear": 2010,
@@ -5837,7 +7267,7 @@
         "lastYear": 2010
       },
       {
-        "id": "drew-brees-career",
+        "id": "nfl-drew-brees-career",
         "name": "Drew Brees",
         "teamAbbr": "NO",
         "seasonYear": 2020,
@@ -5865,7 +7295,7 @@
         "lastYear": 2020
       },
       {
-        "id": "jerry-rice-career",
+        "id": "nfl-jerry-rice-career",
         "name": "Jerry Rice",
         "teamAbbr": "SEA",
         "seasonYear": 2004,
@@ -5889,7 +7319,7 @@
         "lastYear": 2004
       },
       {
-        "id": "larry-fitzgerald-career",
+        "id": "nfl-larry-fitzgerald-career",
         "name": "Larry Fitzgerald",
         "teamAbbr": "ARI",
         "seasonYear": 2020,
@@ -5913,7 +7343,7 @@
         "lastYear": 2020
       },
       {
-        "id": "peyton-manning-career",
+        "id": "nfl-peyton-manning-career",
         "name": "Peyton Manning",
         "teamAbbr": "DEN",
         "seasonYear": 2015,
@@ -5941,7 +7371,7 @@
         "lastYear": 2015
       },
       {
-        "id": "tom-brady-career",
+        "id": "nfl-tom-brady-career",
         "name": "Tom Brady",
         "teamAbbr": "TB",
         "seasonYear": 2022,
@@ -5978,7 +7408,7 @@
     "sport": "nba",
     "players": [
       {
-        "id": "hakeem-olajuwon-career",
+        "id": "nba-hakeem-olajuwon-career",
         "name": "Hakeem Olajuwon",
         "teamAbbr": "TOR",
         "seasonYear": 2002,
@@ -6010,7 +7440,7 @@
         "lastYear": 2002
       },
       {
-        "id": "kareem-abdul-jabbar-career",
+        "id": "nba-kareem-abdul-jabbar-career",
         "name": "Kareem Abdul-Jabbar",
         "teamAbbr": "LAL",
         "seasonYear": 1989,
@@ -6042,7 +7472,7 @@
         "lastYear": 1989
       },
       {
-        "id": "karl-malone-career",
+        "id": "nba-karl-malone-career",
         "name": "Karl Malone",
         "teamAbbr": "LAL",
         "seasonYear": 2004,
@@ -6074,7 +7504,7 @@
         "lastYear": 2004
       },
       {
-        "id": "kevin-garnett-career",
+        "id": "nba-kevin-garnett-career",
         "name": "Kevin Garnett",
         "teamAbbr": "MIN",
         "seasonYear": 2016,
@@ -6106,7 +7536,7 @@
         "lastYear": 2016
       },
       {
-        "id": "lebron-james-career",
+        "id": "nba-lebron-james-career",
         "name": "LeBron James",
         "teamAbbr": "LAL",
         "seasonYear": 2026,
@@ -6138,7 +7568,7 @@
         "lastYear": 2026
       },
       {
-        "id": "russell-westbrook-career",
+        "id": "nba-russell-westbrook-career",
         "name": "Russell Westbrook",
         "teamAbbr": "SAC",
         "seasonYear": 2026,
@@ -6170,7 +7600,7 @@
         "lastYear": 2026
       },
       {
-        "id": "tim-duncan-career",
+        "id": "nba-tim-duncan-career",
         "name": "Tim Duncan",
         "teamAbbr": "SA",
         "seasonYear": 2016,
@@ -6202,7 +7632,7 @@
         "lastYear": 2016
       },
       {
-        "id": "wilt-chamberlain-career",
+        "id": "nba-wilt-chamberlain-career",
         "name": "Wilt Chamberlain",
         "teamAbbr": "LAL",
         "seasonYear": 1973,
@@ -6243,7 +7673,7 @@
     "sport": "baseball",
     "players": [
       {
-        "id": "albert-pujols-career",
+        "id": "baseball-albert-pujols-career",
         "name": "Albert Pujols",
         "teamAbbr": "STL",
         "seasonYear": 2022,
@@ -6275,7 +7705,7 @@
         "lastYear": 2022
       },
       {
-        "id": "babe-ruth-career",
+        "id": "baseball-babe-ruth-career",
         "name": "Babe Ruth",
         "teamAbbr": "ATL",
         "seasonYear": 1935,
@@ -6307,7 +7737,7 @@
         "lastYear": 1935
       },
       {
-        "id": "barry-bonds-career",
+        "id": "baseball-barry-bonds-career",
         "name": "Barry Bonds",
         "teamAbbr": "SF",
         "seasonYear": 2007,
@@ -6339,7 +7769,7 @@
         "lastYear": 2007
       },
       {
-        "id": "frank-thomas-career",
+        "id": "baseball-frank-thomas-career",
         "name": "Frank Thomas",
         "teamAbbr": "ATH",
         "seasonYear": 2008,
@@ -6371,7 +7801,7 @@
         "lastYear": 2008
       },
       {
-        "id": "hank-aaron-career",
+        "id": "baseball-hank-aaron-career",
         "name": "Hank Aaron",
         "teamAbbr": "MIL",
         "seasonYear": 1976,
@@ -6403,7 +7833,7 @@
         "lastYear": 1976
       },
       {
-        "id": "rickey-henderson-career",
+        "id": "baseball-rickey-henderson-career",
         "name": "Rickey Henderson",
         "teamAbbr": "LAD",
         "seasonYear": 2003,
@@ -6435,7 +7865,7 @@
         "lastYear": 2003
       },
       {
-        "id": "ty-cobb-career",
+        "id": "baseball-ty-cobb-career",
         "name": "Ty Cobb",
         "teamAbbr": "ATH",
         "seasonYear": 1928,
@@ -6467,7 +7897,7 @@
         "lastYear": 1928
       },
       {
-        "id": "willie-mays-career",
+        "id": "baseball-willie-mays-career",
         "name": "Willie Mays",
         "teamAbbr": "NYM",
         "seasonYear": 1973,
@@ -6508,7 +7938,7 @@
     "sport": "baseball",
     "players": [
       {
-        "id": "don-sutton-career",
+        "id": "baseball-don-sutton-career",
         "name": "Don Sutton",
         "teamAbbr": "LAD",
         "seasonYear": 1988,
@@ -6540,7 +7970,7 @@
         "lastYear": 1988
       },
       {
-        "id": "gaylord-perry-career",
+        "id": "baseball-gaylord-perry-career",
         "name": "Gaylord Perry",
         "teamAbbr": "KC",
         "seasonYear": 1983,
@@ -6572,7 +8002,7 @@
         "lastYear": 1983
       },
       {
-        "id": "greg-maddux-career",
+        "id": "baseball-greg-maddux-career",
         "name": "Greg Maddux",
         "teamAbbr": "LAD",
         "seasonYear": 2008,
@@ -6604,7 +8034,7 @@
         "lastYear": 2008
       },
       {
-        "id": "nolan-ryan-jr-career",
+        "id": "baseball-nolan-ryan-jr-career",
         "name": "Nolan Ryan Jr.",
         "teamAbbr": "TEX",
         "seasonYear": 1993,
@@ -6636,7 +8066,7 @@
         "lastYear": 1993
       },
       {
-        "id": "randy-johnson-career",
+        "id": "baseball-randy-johnson-career",
         "name": "Randy Johnson",
         "teamAbbr": "SF",
         "seasonYear": 2009,
@@ -6668,7 +8098,7 @@
         "lastYear": 2009
       },
       {
-        "id": "roger-clemens-career",
+        "id": "baseball-roger-clemens-career",
         "name": "Roger Clemens",
         "teamAbbr": "NYY",
         "seasonYear": 2007,
@@ -6700,7 +8130,7 @@
         "lastYear": 2007
       },
       {
-        "id": "steve-carlton-career",
+        "id": "baseball-steve-carlton-career",
         "name": "Steve Carlton",
         "teamAbbr": "MIN",
         "seasonYear": 1988,
@@ -6732,7 +8162,7 @@
         "lastYear": 1988
       },
       {
-        "id": "walter-johnson-career",
+        "id": "baseball-walter-johnson-career",
         "name": "Walter Johnson",
         "teamAbbr": "MIN",
         "seasonYear": 1927,
@@ -6773,7 +8203,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "brett-favre-2009",
+        "id": "nfl-brett-favre-2009",
         "name": "Brett Favre",
         "teamAbbr": "MIN",
         "seasonYear": 2009,
@@ -6803,7 +8233,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/m3sggjgdqlp4jqpxktvr"
       },
       {
-        "id": "chris-chandler-2001",
+        "id": "nfl-chris-chandler-2001",
         "name": "Chris Chandler",
         "teamAbbr": "ATL",
         "seasonYear": 2001,
@@ -6833,7 +8263,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/yrkv7xnpwcfljbhpgz6w"
       },
       {
-        "id": "doug-flutie-2001",
+        "id": "nfl-doug-flutie-2001",
         "name": "Doug Flutie",
         "teamAbbr": "LAC",
         "seasonYear": 2001,
@@ -6863,7 +8293,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/unmsud4qh5emea93d31q"
       },
       {
-        "id": "jeff-garcia-2008",
+        "id": "nfl-jeff-garcia-2008",
         "name": "Jeff Garcia",
         "teamAbbr": "TB",
         "seasonYear": 2008,
@@ -6893,7 +8323,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bysr1fkpqdhljtvlkcrm"
       },
       {
-        "id": "kerry-collins-2008",
+        "id": "nfl-kerry-collins-2008",
         "name": "Kerry Collins",
         "teamAbbr": "TEN",
         "seasonYear": 2008,
@@ -6923,7 +8353,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jse9o88qf7weuicc1wwz"
       },
       {
-        "id": "kurt-warner-2008",
+        "id": "nfl-kurt-warner-2008",
         "name": "Kurt Warner",
         "teamAbbr": "ARI",
         "seasonYear": 2008,
@@ -6953,7 +8383,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xlgzhoozvi1agd8hn4kk"
       },
       {
-        "id": "rich-gannon-2002",
+        "id": "nfl-rich-gannon-2002",
         "name": "Rich Gannon",
         "teamAbbr": "LV",
         "seasonYear": 2002,
@@ -6983,7 +8413,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wy2haknzelfdpaxh0pig"
       },
       {
-        "id": "vinny-testaverde-2000",
+        "id": "nfl-vinny-testaverde-2000",
         "name": "Vinny Testaverde",
         "teamAbbr": "NYJ",
         "seasonYear": 2000,
@@ -7022,7 +8452,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "aaron-brooks-2002",
+        "id": "nfl-aaron-brooks-2002",
         "name": "Aaron Brooks",
         "teamAbbr": "NO",
         "seasonYear": 2002,
@@ -7052,7 +8482,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/hmlvskmkxcrzwzxker5b"
       },
       {
-        "id": "brett-favre-2009",
+        "id": "nfl-brett-favre-2009",
         "name": "Brett Favre",
         "teamAbbr": "MIN",
         "seasonYear": 2009,
@@ -7082,7 +8512,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/m3sggjgdqlp4jqpxktvr"
       },
       {
-        "id": "david-garrard-2009",
+        "id": "nfl-david-garrard-2009",
         "name": "David Garrard",
         "teamAbbr": "JAX",
         "seasonYear": 2009,
@@ -7112,7 +8542,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ogcdepv291fwwguy3zho"
       },
       {
-        "id": "drew-brees-2009",
+        "id": "nfl-drew-brees-2009",
         "name": "Drew Brees",
         "teamAbbr": "NO",
         "seasonYear": 2009,
@@ -7142,7 +8572,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i20xlpzdmn7xubotijjd"
       },
       {
-        "id": "jake-plummer-2004",
+        "id": "nfl-jake-plummer-2004",
         "name": "Jake Plummer",
         "teamAbbr": "DEN",
         "seasonYear": 2004,
@@ -7172,7 +8602,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iurwxdpuwvijm50vhwt9"
       },
       {
-        "id": "kordell-stewart-2001",
+        "id": "nfl-kordell-stewart-2001",
         "name": "Kordell Stewart",
         "teamAbbr": "PIT",
         "seasonYear": 2001,
@@ -7202,7 +8632,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wyel70n1iopggkgtup2x"
       },
       {
-        "id": "matt-schaub-2009",
+        "id": "nfl-matt-schaub-2009",
         "name": "Matt Schaub",
         "teamAbbr": "HOU",
         "seasonYear": 2009,
@@ -7232,7 +8662,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mj2kh2nddxnw04ludcx0"
       },
       {
-        "id": "rich-gannon-2002",
+        "id": "nfl-rich-gannon-2002",
         "name": "Rich Gannon",
         "teamAbbr": "LV",
         "seasonYear": 2002,
@@ -7271,7 +8701,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "derek-anderson-2007",
+        "id": "nfl-derek-anderson-2007",
         "name": "Derek Anderson",
         "teamAbbr": "CLE",
         "seasonYear": 2007,
@@ -7301,7 +8731,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/w191gsxivnqgdwgydka6"
       },
       {
-        "id": "elvis-grbac-2000",
+        "id": "nfl-elvis-grbac-2000",
         "name": "Elvis Grbac",
         "teamAbbr": "KC",
         "seasonYear": 2000,
@@ -7331,7 +8761,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/s4ry52iclpzzgg1aave6"
       },
       {
-        "id": "marc-bulger-2006",
+        "id": "nfl-marc-bulger-2006",
         "name": "Marc Bulger",
         "teamAbbr": "LA",
         "seasonYear": 2006,
@@ -7361,7 +8791,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vww6hwhkqzevfn6nsnhw"
       },
       {
-        "id": "mark-brunell-2000",
+        "id": "nfl-mark-brunell-2000",
         "name": "Mark Brunell",
         "teamAbbr": "JAX",
         "seasonYear": 2000,
@@ -7391,7 +8821,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/p91vbvdb7ik4fcjuo7ym"
       },
       {
-        "id": "matt-cassel-2008",
+        "id": "nfl-matt-cassel-2008",
         "name": "Matt Cassel",
         "teamAbbr": "NE",
         "seasonYear": 2008,
@@ -7421,7 +8851,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/n1ucqggyu5hlsqzuv5gj"
       },
       {
-        "id": "matt-hasselbeck-2007",
+        "id": "nfl-matt-hasselbeck-2007",
         "name": "Matt Hasselbeck",
         "teamAbbr": "SEA",
         "seasonYear": 2007,
@@ -7451,7 +8881,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/t1nf9avoy2kauqwrvzza"
       },
       {
-        "id": "tom-brady-2007",
+        "id": "nfl-tom-brady-2007",
         "name": "Tom Brady",
         "teamAbbr": "NE",
         "seasonYear": 2007,
@@ -7481,7 +8911,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q7dpdlxyu5rs05rgh1le"
       },
       {
-        "id": "trent-green-2004",
+        "id": "nfl-trent-green-2004",
         "name": "Trent Green",
         "teamAbbr": "KC",
         "seasonYear": 2004,
@@ -7520,7 +8950,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "aaron-rodgers-2009",
+        "id": "nfl-aaron-rodgers-2009",
         "name": "Aaron Rodgers",
         "teamAbbr": "GB",
         "seasonYear": 2009,
@@ -7550,7 +8980,7 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/jdcb4nomlc4rd6k5l6to"
       },
       {
-        "id": "ben-roethlisberger-2009",
+        "id": "nfl-ben-roethlisberger-2009",
         "name": "Ben Roethlisberger",
         "teamAbbr": "PIT",
         "seasonYear": 2009,
@@ -7580,7 +9010,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vziogpnyp9d0xtpiuqhr"
       },
       {
-        "id": "daunte-culpepper-2004",
+        "id": "nfl-daunte-culpepper-2004",
         "name": "Daunte Culpepper",
         "teamAbbr": "MIN",
         "seasonYear": 2004,
@@ -7610,7 +9040,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vmvl5xojgtwm6jadhy7l"
       },
       {
-        "id": "donovan-mcnabb-2004",
+        "id": "nfl-donovan-mcnabb-2004",
         "name": "Donovan McNabb",
         "teamAbbr": "PHI",
         "seasonYear": 2004,
@@ -7640,7 +9070,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wd6jjtwdweq7v3ya2pet"
       },
       {
-        "id": "jay-cutler-2008",
+        "id": "nfl-jay-cutler-2008",
         "name": "Jay Cutler",
         "teamAbbr": "DEN",
         "seasonYear": 2008,
@@ -7670,7 +9100,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ks6n7gvw4vccihlse6bn"
       },
       {
-        "id": "mike-vick-2002",
+        "id": "nfl-mike-vick-2002",
         "name": "Mike Vick",
         "teamAbbr": "ATL",
         "seasonYear": 2002,
@@ -7700,7 +9130,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/hrg4riwhpjbijfovsjrk"
       },
       {
-        "id": "peyton-manning-2004",
+        "id": "nfl-peyton-manning-2004",
         "name": "Peyton Manning",
         "teamAbbr": "IND",
         "seasonYear": 2004,
@@ -7730,7 +9160,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xpcd6auodk3w0vda6jal"
       },
       {
-        "id": "philip-rivers-2008",
+        "id": "nfl-philip-rivers-2008",
         "name": "Philip Rivers",
         "teamAbbr": "LAC",
         "seasonYear": 2008,
@@ -7769,7 +9199,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "byron-leftwich-2004",
+        "id": "nfl-byron-leftwich-2004",
         "name": "Byron Leftwich",
         "teamAbbr": "JAX",
         "seasonYear": 2004,
@@ -7799,7 +9229,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zmv2cxypb5s0nhtpq3nq"
       },
       {
-        "id": "cam-newton-2015",
+        "id": "nfl-cam-newton-2015",
         "name": "Cam Newton",
         "teamAbbr": "CAR",
         "seasonYear": 2015,
@@ -7829,7 +9259,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zwmgw2gmnn2kch4nquft"
       },
       {
-        "id": "daunte-culpepper-2004",
+        "id": "nfl-daunte-culpepper-2004",
         "name": "Daunte Culpepper",
         "teamAbbr": "MIN",
         "seasonYear": 2004,
@@ -7859,7 +9289,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vmvl5xojgtwm6jadhy7l"
       },
       {
-        "id": "jamarcus-russell-2008",
+        "id": "nfl-jamarcus-russell-2008",
         "name": "JaMarcus Russell",
         "teamAbbr": "LV",
         "seasonYear": 2008,
@@ -7889,7 +9319,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/j9utxwp9846osapesksk"
       },
       {
-        "id": "joe-flacco-2014",
+        "id": "nfl-joe-flacco-2014",
         "name": "Joe Flacco",
         "teamAbbr": "BAL",
         "seasonYear": 2014,
@@ -7919,7 +9349,7 @@
         "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/dwsbpmlhoqud0puidizt"
       },
       {
-        "id": "kerry-collins-2000",
+        "id": "nfl-kerry-collins-2000",
         "name": "Kerry Collins",
         "teamAbbr": "NYG",
         "seasonYear": 2000,
@@ -7949,7 +9379,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jse9o88qf7weuicc1wwz"
       },
       {
-        "id": "matt-schaub-2009",
+        "id": "nfl-matt-schaub-2009",
         "name": "Matt Schaub",
         "teamAbbr": "HOU",
         "seasonYear": 2009,
@@ -7979,7 +9409,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mj2kh2nddxnw04ludcx0"
       },
       {
-        "id": "trent-dilfer-2005",
+        "id": "nfl-trent-dilfer-2005",
         "name": "Trent Dilfer",
         "teamAbbr": "CLE",
         "seasonYear": 2005,
@@ -8018,7 +9448,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "andre-ellington-2014",
+        "id": "nfl-andre-ellington-2014",
         "name": "Andre Ellington",
         "teamAbbr": "ARI",
         "seasonYear": 2014,
@@ -8048,7 +9478,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/seb6k3tjdcgi8tqmzt2z"
       },
       {
-        "id": "c-j-spiller-2012",
+        "id": "nfl-c-j-spiller-2012",
         "name": "C.J. Spiller",
         "teamAbbr": "BUF",
         "seasonYear": 2012,
@@ -8078,7 +9508,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jqbnrdpq9c2nbchzntxt"
       },
       {
-        "id": "darren-sproles-2011",
+        "id": "nfl-darren-sproles-2011",
         "name": "Darren Sproles",
         "teamAbbr": "NO",
         "seasonYear": 2011,
@@ -8108,7 +9538,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/gvj5ng27blmwuz170aeo"
       },
       {
-        "id": "dion-lewis-2017",
+        "id": "nfl-dion-lewis-2017",
         "name": "Dion Lewis",
         "teamAbbr": "NE",
         "seasonYear": 2017,
@@ -8138,7 +9568,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/erzmtaaz3eimbg998hyq"
       },
       {
-        "id": "jamaal-charles-2013",
+        "id": "nfl-jamaal-charles-2013",
         "name": "Jamaal Charles",
         "teamAbbr": "KC",
         "seasonYear": 2013,
@@ -8168,7 +9598,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mdrlzgankwwjldxllgcx"
       },
       {
-        "id": "justin-forsett-2014",
+        "id": "nfl-justin-forsett-2014",
         "name": "Justin Forsett",
         "teamAbbr": "BAL",
         "seasonYear": 2014,
@@ -8198,7 +9628,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/o86dvbcs8dcubcpj6fnu"
       },
       {
-        "id": "matt-breida-2018",
+        "id": "nfl-matt-breida-2018",
         "name": "Matt Breida",
         "teamAbbr": "SF",
         "seasonYear": 2018,
@@ -8228,7 +9658,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/rc4m1xw0xmtsrxswd0bg"
       },
       {
-        "id": "phillip-lindsay-2018",
+        "id": "nfl-phillip-lindsay-2018",
         "name": "Phillip Lindsay",
         "teamAbbr": "DEN",
         "seasonYear": 2018,
@@ -8267,7 +9697,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "ahmad-bradshaw-2010",
+        "id": "nfl-ahmad-bradshaw-2010",
         "name": "Ahmad Bradshaw",
         "teamAbbr": "NYG",
         "seasonYear": 2010,
@@ -8297,7 +9727,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vlgcz2so2urjgowxz3tz"
       },
       {
-        "id": "chester-taylor-2006",
+        "id": "nfl-chester-taylor-2006",
         "name": "Chester Taylor",
         "teamAbbr": "MIN",
         "seasonYear": 2006,
@@ -8327,7 +9757,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ay2c42ghmrgmxqcdsmdi"
       },
       {
-        "id": "chris-carson-2019",
+        "id": "nfl-chris-carson-2019",
         "name": "Chris Carson",
         "teamAbbr": "SEA",
         "seasonYear": 2019,
@@ -8357,7 +9787,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zxjqunrgf4j8p2eg4xyl"
       },
       {
-        "id": "derrick-ward-2008",
+        "id": "nfl-derrick-ward-2008",
         "name": "Derrick Ward",
         "teamAbbr": "NYG",
         "seasonYear": 2008,
@@ -8387,7 +9817,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/alp1lllkthvns8nnaul0"
       },
       {
-        "id": "isiah-pacheco-2023",
+        "id": "nfl-isiah-pacheco-2023",
         "name": "Isiah Pacheco",
         "teamAbbr": "KC",
         "seasonYear": 2023,
@@ -8417,7 +9847,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/rzr8nxjunjeiv8bjir59"
       },
       {
-        "id": "jamal-anderson-2000",
+        "id": "nfl-jamal-anderson-2000",
         "name": "Jamal Anderson",
         "teamAbbr": "ATL",
         "seasonYear": 2000,
@@ -8447,7 +9877,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/faws2enuknhawnowkns0"
       },
       {
-        "id": "justin-forsett-2014",
+        "id": "nfl-justin-forsett-2014",
         "name": "Justin Forsett",
         "teamAbbr": "BAL",
         "seasonYear": 2014,
@@ -8477,7 +9907,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/o86dvbcs8dcubcpj6fnu"
       },
       {
-        "id": "peyton-hillis-2010",
+        "id": "nfl-peyton-hillis-2010",
         "name": "Peyton Hillis",
         "teamAbbr": "CLE",
         "seasonYear": 2010,
@@ -8516,7 +9946,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "brian-westbrook-2007",
+        "id": "nfl-brian-westbrook-2007",
         "name": "Brian Westbrook",
         "teamAbbr": "PHI",
         "seasonYear": 2007,
@@ -8546,7 +9976,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xerjzdet52uvvhqovape"
       },
       {
-        "id": "charlie-garner-2002",
+        "id": "nfl-charlie-garner-2002",
         "name": "Charlie Garner",
         "teamAbbr": "LV",
         "seasonYear": 2002,
@@ -8576,7 +10006,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i6vgoizxzlnf1ecxnzbq"
       },
       {
-        "id": "ladainian-tomlinson-2006",
+        "id": "nfl-ladainian-tomlinson-2006",
         "name": "LaDainian Tomlinson",
         "teamAbbr": "LAC",
         "seasonYear": 2006,
@@ -8606,7 +10036,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
       },
       {
-        "id": "larry-johnson-2006",
+        "id": "nfl-larry-johnson-2006",
         "name": "Larry Johnson",
         "teamAbbr": "KC",
         "seasonYear": 2006,
@@ -8636,7 +10066,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mzwxygpnqm65aj1w1qyr"
       },
       {
-        "id": "marshall-faulk-2000",
+        "id": "nfl-marshall-faulk-2000",
         "name": "Marshall Faulk",
         "teamAbbr": "LA",
         "seasonYear": 2000,
@@ -8666,7 +10096,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
       },
       {
-        "id": "priest-holmes-2003",
+        "id": "nfl-priest-holmes-2003",
         "name": "Priest Holmes",
         "teamAbbr": "KC",
         "seasonYear": 2003,
@@ -8696,7 +10126,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
       },
       {
-        "id": "shaun-alexander-2005",
+        "id": "nfl-shaun-alexander-2005",
         "name": "Shaun Alexander",
         "teamAbbr": "SEA",
         "seasonYear": 2005,
@@ -8726,7 +10156,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q6aogsngaiaq2yr1sgyv"
       },
       {
-        "id": "tiki-barber-2005",
+        "id": "nfl-tiki-barber-2005",
         "name": "Tiki Barber",
         "teamAbbr": "NYG",
         "seasonYear": 2005,
@@ -8765,7 +10195,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "adrian-peterson-2007",
+        "id": "nfl-adrian-peterson-2007",
         "name": "Adrian Peterson",
         "teamAbbr": "MIN",
         "seasonYear": 2007,
@@ -8795,7 +10225,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ug2ua3skqc9f6vkbowxc"
       },
       {
-        "id": "chris-johnson-2008",
+        "id": "nfl-chris-johnson-2008",
         "name": "Chris Johnson",
         "teamAbbr": "TEN",
         "seasonYear": 2008,
@@ -8825,7 +10255,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryf9nc84eovvdbf0cz79"
       },
       {
-        "id": "clinton-portis-2002",
+        "id": "nfl-clinton-portis-2002",
         "name": "Clinton Portis",
         "teamAbbr": "DEN",
         "seasonYear": 2002,
@@ -8855,7 +10285,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/nuj4tdazwyxp6cfhac7h"
       },
       {
-        "id": "ladainian-tomlinson-2001",
+        "id": "nfl-ladainian-tomlinson-2001",
         "name": "LaDainian Tomlinson",
         "teamAbbr": "LAC",
         "seasonYear": 2001,
@@ -8885,7 +10315,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
       },
       {
-        "id": "matt-forte-2008",
+        "id": "nfl-matt-forte-2008",
         "name": "Matt Forte",
         "teamAbbr": "CHI",
         "seasonYear": 2008,
@@ -8915,7 +10345,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/olqssssjykcx7tx7xsy3"
       },
       {
-        "id": "maurice-jones-drew-2006",
+        "id": "nfl-maurice-jones-drew-2006",
         "name": "Maurice Jones-Drew",
         "teamAbbr": "JAX",
         "seasonYear": 2006,
@@ -8945,7 +10375,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/imza3kc0cmkjaym7sjsn"
       },
       {
-        "id": "mike-anderson-2000",
+        "id": "nfl-mike-anderson-2000",
         "name": "Mike Anderson",
         "teamAbbr": "DEN",
         "seasonYear": 2000,
@@ -8975,7 +10405,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/u233mhiu14upds1god2j"
       },
       {
-        "id": "steve-slaton-2008",
+        "id": "nfl-steve-slaton-2008",
         "name": "Steve Slaton",
         "teamAbbr": "HOU",
         "seasonYear": 2008,
@@ -9014,7 +10444,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "brian-westbrook-2007",
+        "id": "nfl-brian-westbrook-2007",
         "name": "Brian Westbrook",
         "teamAbbr": "PHI",
         "seasonYear": 2007,
@@ -9044,7 +10474,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xerjzdet52uvvhqovape"
       },
       {
-        "id": "charlie-garner-2002",
+        "id": "nfl-charlie-garner-2002",
         "name": "Charlie Garner",
         "teamAbbr": "LV",
         "seasonYear": 2002,
@@ -9074,7 +10504,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i6vgoizxzlnf1ecxnzbq"
       },
       {
-        "id": "chris-johnson-2009",
+        "id": "nfl-chris-johnson-2009",
         "name": "Chris Johnson",
         "teamAbbr": "TEN",
         "seasonYear": 2009,
@@ -9104,7 +10534,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryf9nc84eovvdbf0cz79"
       },
       {
-        "id": "ladainian-tomlinson-2006",
+        "id": "nfl-ladainian-tomlinson-2006",
         "name": "LaDainian Tomlinson",
         "teamAbbr": "LAC",
         "seasonYear": 2006,
@@ -9134,7 +10564,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
       },
       {
-        "id": "marshall-faulk-2000",
+        "id": "nfl-marshall-faulk-2000",
         "name": "Marshall Faulk",
         "teamAbbr": "LA",
         "seasonYear": 2000,
@@ -9164,7 +10594,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
       },
       {
-        "id": "priest-holmes-2003",
+        "id": "nfl-priest-holmes-2003",
         "name": "Priest Holmes",
         "teamAbbr": "KC",
         "seasonYear": 2003,
@@ -9194,7 +10624,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
       },
       {
-        "id": "shaun-alexander-2005",
+        "id": "nfl-shaun-alexander-2005",
         "name": "Shaun Alexander",
         "teamAbbr": "SEA",
         "seasonYear": 2005,
@@ -9224,7 +10654,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q6aogsngaiaq2yr1sgyv"
       },
       {
-        "id": "tiki-barber-2005",
+        "id": "nfl-tiki-barber-2005",
         "name": "Tiki Barber",
         "teamAbbr": "NYG",
         "seasonYear": 2005,
@@ -9263,7 +10693,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "andre-johnson-2008",
+        "id": "nfl-andre-johnson-2008",
         "name": "Andre Johnson",
         "teamAbbr": "HOU",
         "seasonYear": 2008,
@@ -9293,7 +10723,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iavrftkbpw4bekzl7zfv"
       },
       {
-        "id": "braylon-edwards-2007",
+        "id": "nfl-braylon-edwards-2007",
         "name": "Braylon Edwards",
         "teamAbbr": "CLE",
         "seasonYear": 2007,
@@ -9323,7 +10753,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryuel7mxiqtyhyqn4lyn"
       },
       {
-        "id": "calvin-johnson-2008",
+        "id": "nfl-calvin-johnson-2008",
         "name": "Calvin Johnson",
         "teamAbbr": "DET",
         "seasonYear": 2008,
@@ -9353,7 +10783,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/z6dxib9sientn4m9cljh"
       },
       {
-        "id": "cris-carter-2000",
+        "id": "nfl-cris-carter-2000",
         "name": "Cris Carter",
         "teamAbbr": "MIN",
         "seasonYear": 2000,
@@ -9383,7 +10813,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/tb52fk83tmdpmbzwliuk"
       },
       {
-        "id": "david-boston-2001",
+        "id": "nfl-david-boston-2001",
         "name": "David Boston",
         "teamAbbr": "ARI",
         "seasonYear": 2001,
@@ -9413,7 +10843,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/efvdgyy0lnmdok7k2us0"
       },
       {
-        "id": "joey-galloway-2005",
+        "id": "nfl-joey-galloway-2005",
         "name": "Joey Galloway",
         "teamAbbr": "TB",
         "seasonYear": 2005,
@@ -9443,7 +10873,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pfioccpzeifhnunjtdy2"
       },
       {
-        "id": "larry-fitzgerald-2008",
+        "id": "nfl-larry-fitzgerald-2008",
         "name": "Larry Fitzgerald",
         "teamAbbr": "ARI",
         "seasonYear": 2008,
@@ -9473,7 +10903,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ycgjjaad5un42gy4pnga"
       },
       {
-        "id": "torry-holt-2003",
+        "id": "nfl-torry-holt-2003",
         "name": "Torry Holt",
         "teamAbbr": "LA",
         "seasonYear": 2003,
@@ -9512,7 +10942,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "chad-lewis-2000",
+        "id": "nfl-chad-lewis-2000",
         "name": "Chad Lewis",
         "teamAbbr": "PHI",
         "seasonYear": 2000,
@@ -9542,7 +10972,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ypchowfddyjthk70ldcx"
       },
       {
-        "id": "greg-olsen-2009",
+        "id": "nfl-greg-olsen-2009",
         "name": "Greg Olsen",
         "teamAbbr": "CHI",
         "seasonYear": 2009,
@@ -9572,7 +11002,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jevf1bubmrv2vvmiwq3r"
       },
       {
-        "id": "heath-miller-2009",
+        "id": "nfl-heath-miller-2009",
         "name": "Heath Miller",
         "teamAbbr": "PIT",
         "seasonYear": 2009,
@@ -9602,7 +11032,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iqw8fry4hgfvegs9nfuf"
       },
       {
-        "id": "jason-witten-2007",
+        "id": "nfl-jason-witten-2007",
         "name": "Jason Witten",
         "teamAbbr": "DAL",
         "seasonYear": 2007,
@@ -9632,7 +11062,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/r7uafhtwuexuaty0nhsc"
       },
       {
-        "id": "jeremy-shockey-2005",
+        "id": "nfl-jeremy-shockey-2005",
         "name": "Jeremy Shockey",
         "teamAbbr": "NYG",
         "seasonYear": 2005,
@@ -9662,7 +11092,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/oe4d8uw9nbhjtivrsmgu"
       },
       {
-        "id": "kyle-brady-2000",
+        "id": "nfl-kyle-brady-2000",
         "name": "Kyle Brady",
         "teamAbbr": "JAX",
         "seasonYear": 2000,
@@ -9692,7 +11122,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/cbfkt8kpdkyq9yikpooi"
       },
       {
-        "id": "todd-heap-2005",
+        "id": "nfl-todd-heap-2005",
         "name": "Todd Heap",
         "teamAbbr": "BAL",
         "seasonYear": 2005,
@@ -9722,7 +11152,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lfwhp1fevjrx1puoon94"
       },
       {
-        "id": "tony-gonzalez-2004",
+        "id": "nfl-tony-gonzalez-2004",
         "name": "Tony Gonzalez",
         "teamAbbr": "KC",
         "seasonYear": 2004,
@@ -9761,7 +11191,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "antonio-gates-2014",
+        "id": "nfl-antonio-gates-2014",
         "name": "Antonio Gates",
         "teamAbbr": "LAC",
         "seasonYear": 2014,
@@ -9791,7 +11221,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/kndulvysinvn4tpvt0bc"
       },
       {
-        "id": "cameron-brate-2016",
+        "id": "nfl-cameron-brate-2016",
         "name": "Cameron Brate",
         "teamAbbr": "TB",
         "seasonYear": 2016,
@@ -9821,7 +11251,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jhioqec65qy4z7s6w9a6"
       },
       {
-        "id": "jack-doyle-2017",
+        "id": "nfl-jack-doyle-2017",
         "name": "Jack Doyle",
         "teamAbbr": "IND",
         "seasonYear": 2017,
@@ -9851,7 +11281,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/h6abyvmg2g93llboizi6"
       },
       {
-        "id": "jake-ballard-2011",
+        "id": "nfl-jake-ballard-2011",
         "name": "Jake Ballard",
         "teamAbbr": "NYG",
         "seasonYear": 2011,
@@ -9881,7 +11311,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pqwrskwkqbzzkf33gxvr"
       },
       {
-        "id": "larry-donnell-2014",
+        "id": "nfl-larry-donnell-2014",
         "name": "Larry Donnell",
         "teamAbbr": "NYG",
         "seasonYear": 2014,
@@ -9911,7 +11341,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/beuv1dnhzlntfnnvh2zv"
       },
       {
-        "id": "timothy-wright-2013",
+        "id": "nfl-timothy-wright-2013",
         "name": "Timothy Wright",
         "teamAbbr": "TB",
         "seasonYear": 2013,
@@ -9941,7 +11371,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wydzzhwo9is11uqaeffj"
       },
       {
-        "id": "trey-burton-2018",
+        "id": "nfl-trey-burton-2018",
         "name": "Trey Burton",
         "teamAbbr": "CHI",
         "seasonYear": 2018,
@@ -9971,7 +11401,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vt2ce0szit4ozyh5s5iw"
       },
       {
-        "id": "will-tye-2015",
+        "id": "nfl-will-tye-2015",
         "name": "Will Tye",
         "teamAbbr": "NYG",
         "seasonYear": 2015,
@@ -10010,7 +11440,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "antonio-gates-2014",
+        "id": "nfl-antonio-gates-2014",
         "name": "Antonio Gates",
         "teamAbbr": "LAC",
         "seasonYear": 2014,
@@ -10040,7 +11470,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/kndulvysinvn4tpvt0bc"
       },
       {
-        "id": "benjamin-watson-2015",
+        "id": "nfl-benjamin-watson-2015",
         "name": "Benjamin Watson",
         "teamAbbr": "NO",
         "seasonYear": 2015,
@@ -10070,7 +11500,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dorymozpdnrllkqlfzpu"
       },
       {
-        "id": "delanie-walker-2017",
+        "id": "nfl-delanie-walker-2017",
         "name": "Delanie Walker",
         "teamAbbr": "TEN",
         "seasonYear": 2017,
@@ -10100,7 +11530,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/diknegkpqy0qnri7877z"
       },
       {
-        "id": "greg-olsen-2019",
+        "id": "nfl-greg-olsen-2019",
         "name": "Greg Olsen",
         "teamAbbr": "CAR",
         "seasonYear": 2019,
@@ -10130,7 +11560,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jevf1bubmrv2vvmiwq3r"
       },
       {
-        "id": "heath-miller-2015",
+        "id": "nfl-heath-miller-2015",
         "name": "Heath Miller",
         "teamAbbr": "PIT",
         "seasonYear": 2015,
@@ -10160,7 +11590,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iqw8fry4hgfvegs9nfuf"
       },
       {
-        "id": "jason-witten-2015",
+        "id": "nfl-jason-witten-2015",
         "name": "Jason Witten",
         "teamAbbr": "DAL",
         "seasonYear": 2015,
@@ -10190,7 +11620,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/r7uafhtwuexuaty0nhsc"
       },
       {
-        "id": "tony-gonzalez-2012",
+        "id": "nfl-tony-gonzalez-2012",
         "name": "Tony Gonzalez",
         "teamAbbr": "ATL",
         "seasonYear": 2012,
@@ -10220,7 +11650,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/enbspvy0ahsyznomitre"
       },
       {
-        "id": "vernon-davis-2017",
+        "id": "nfl-vernon-davis-2017",
         "name": "Vernon Davis",
         "teamAbbr": "WAS",
         "seasonYear": 2017,
@@ -10259,7 +11689,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "chris-cooley-2005",
+        "id": "nfl-chris-cooley-2005",
         "name": "Chris Cooley",
         "teamAbbr": "WAS",
         "seasonYear": 2005,
@@ -10289,7 +11719,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fvuuyskqr5koylr0ebcc"
       },
       {
-        "id": "greg-olsen-2008",
+        "id": "nfl-greg-olsen-2008",
         "name": "Greg Olsen",
         "teamAbbr": "CHI",
         "seasonYear": 2008,
@@ -10319,7 +11749,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jevf1bubmrv2vvmiwq3r"
       },
       {
-        "id": "jason-witten-2004",
+        "id": "nfl-jason-witten-2004",
         "name": "Jason Witten",
         "teamAbbr": "DAL",
         "seasonYear": 2004,
@@ -10349,7 +11779,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/r7uafhtwuexuaty0nhsc"
       },
       {
-        "id": "jeremy-shockey-2002",
+        "id": "nfl-jeremy-shockey-2002",
         "name": "Jeremy Shockey",
         "teamAbbr": "NYG",
         "seasonYear": 2002,
@@ -10379,7 +11809,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/oe4d8uw9nbhjtivrsmgu"
       },
       {
-        "id": "jermichael-finley-2009",
+        "id": "nfl-jermichael-finley-2009",
         "name": "Jermichael Finley",
         "teamAbbr": "GB",
         "seasonYear": 2009,
@@ -10409,7 +11839,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/s1hfogrew6ypcgdklquv"
       },
       {
-        "id": "kellen-winslow-2006",
+        "id": "nfl-kellen-winslow-2006",
         "name": "Kellen Winslow",
         "teamAbbr": "CLE",
         "seasonYear": 2006,
@@ -10439,7 +11869,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pw3hoatll5kkuc9v2gva"
       },
       {
-        "id": "todd-heap-2002",
+        "id": "nfl-todd-heap-2002",
         "name": "Todd Heap",
         "teamAbbr": "BAL",
         "seasonYear": 2002,
@@ -10469,7 +11899,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lfwhp1fevjrx1puoon94"
       },
       {
-        "id": "zach-miller-2008",
+        "id": "nfl-zach-miller-2008",
         "name": "Zach Miller",
         "teamAbbr": "LV",
         "seasonYear": 2008,
@@ -10508,7 +11938,7 @@
     "sport": "nfl",
     "players": [
       {
-        "id": "cris-carter-2001",
+        "id": "nfl-cris-carter-2001",
         "name": "Cris Carter",
         "teamAbbr": "MIN",
         "seasonYear": 2001,
@@ -10538,7 +11968,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/tb52fk83tmdpmbzwliuk"
       },
       {
-        "id": "isaac-bruce-2008",
+        "id": "nfl-isaac-bruce-2008",
         "name": "Isaac Bruce",
         "teamAbbr": "SF",
         "seasonYear": 2008,
@@ -10568,7 +11998,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/txgl2lvmyu3m28cltnib"
       },
       {
-        "id": "jerry-rice-2002",
+        "id": "nfl-jerry-rice-2002",
         "name": "Jerry Rice",
         "teamAbbr": "LV",
         "seasonYear": 2002,
@@ -10598,7 +12028,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g1vjcnbryx3nmg0ppsnl"
       },
       {
-        "id": "jimmy-smith-2005",
+        "id": "nfl-jimmy-smith-2005",
         "name": "Jimmy Smith",
         "teamAbbr": "JAX",
         "seasonYear": 2005,
@@ -10628,7 +12058,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zgvlthadzlf0q6thnktj"
       },
       {
-        "id": "joey-galloway-2007",
+        "id": "nfl-joey-galloway-2007",
         "name": "Joey Galloway",
         "teamAbbr": "TB",
         "seasonYear": 2007,
@@ -10658,7 +12088,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pfioccpzeifhnunjtdy2"
       },
       {
-        "id": "marvin-harrison-2008",
+        "id": "nfl-marvin-harrison-2008",
         "name": "Marvin Harrison",
         "teamAbbr": "IND",
         "seasonYear": 2008,
@@ -10688,7 +12118,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fni7z2tqhhaq5kbe5a0s"
       },
       {
-        "id": "terrell-owens-2009",
+        "id": "nfl-terrell-owens-2009",
         "name": "Terrell Owens",
         "teamAbbr": "BUF",
         "seasonYear": 2009,
@@ -10718,7 +12148,7 @@
         "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/c41avnwoegxy9nnwmgbo"
       },
       {
-        "id": "tim-brown-2002",
+        "id": "nfl-tim-brown-2002",
         "name": "Tim Brown",
         "teamAbbr": "LV",
         "seasonYear": 2002,

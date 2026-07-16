@@ -677,6 +677,84 @@
     "eraAdjusted": false
   },
   {
+    "key": "nba-game-scoring-outburst",
+    "title": "Historic single-game scoring outbursts",
+    "sport": "nba",
+    "scale": "nba_fantasy_game",
+    "positions": [
+      "C",
+      "F",
+      "G"
+    ],
+    "minStats": {
+      "points": 40
+    },
+    "columns": [
+      {
+        "stat": "points",
+        "label": "PTS",
+        "fmt": "int"
+      },
+      {
+        "stat": "field_goals_made",
+        "label": "FGM",
+        "fmt": "int"
+      },
+      {
+        "stat": "rebounds",
+        "label": "REB",
+        "fmt": "int"
+      },
+      {
+        "stat": "assists",
+        "label": "AST",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "game",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nba-game-triple-double",
+    "title": "Single-game triple-double explosions",
+    "sport": "nba",
+    "scale": "nba_fantasy_game",
+    "positions": [
+      "C",
+      "F",
+      "G"
+    ],
+    "minStats": {
+      "points": 10
+    },
+    "columns": [
+      {
+        "stat": "points",
+        "label": "PTS",
+        "fmt": "int"
+      },
+      {
+        "stat": "rebounds",
+        "label": "REB",
+        "fmt": "int"
+      },
+      {
+        "stat": "assists",
+        "label": "AST",
+        "fmt": "int"
+      },
+      {
+        "stat": "steals",
+        "label": "STL",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "game",
+    "eraAdjusted": false
+  },
+  {
     "key": "nfl-game-rb-explosion",
     "title": "Explosive single-game RB performances",
     "sport": "nfl",
@@ -788,6 +866,80 @@
     "eraAdjusted": false
   },
   {
+    "key": "nfl-game-te-explosion",
+    "title": "Big-play tight end games",
+    "sport": "nfl",
+    "scale": "nfl_skill_ppr_game",
+    "positions": [
+      "TE"
+    ],
+    "minStats": {
+      "receiving_yards": 90
+    },
+    "columns": [
+      {
+        "stat": "receiving_yards",
+        "label": "Rec Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "receptions",
+        "label": "Rec",
+        "fmt": "int"
+      },
+      {
+        "stat": "receiving_tds",
+        "label": "Rec TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "ypr",
+        "label": "Yds/Rec",
+        "fmt": "dec1"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "game",
+    "eraAdjusted": false
+  },
+  {
+    "key": "nfl-game-qb-rushing",
+    "title": "Dual-threat QB rushing games",
+    "sport": "nfl",
+    "scale": "nfl_qb_fantasy_game",
+    "positions": [
+      "QB"
+    ],
+    "minStats": {
+      "rushing_yards": 70
+    },
+    "columns": [
+      {
+        "stat": "rushing_yards",
+        "label": "Rush Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "rushing_tds",
+        "label": "Rush TD",
+        "fmt": "int"
+      },
+      {
+        "stat": "passing_yards",
+        "label": "Pass Yds",
+        "fmt": "comma_int"
+      },
+      {
+        "stat": "passing_tds",
+        "label": "Pass TD",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "game",
+    "eraAdjusted": false
+  },
+  {
     "key": "baseball-power-hitters",
     "title": "Elite power-hitting seasons",
     "sport": "baseball",
@@ -869,6 +1021,80 @@
     ],
     "poolCap": 24,
     "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "baseball-game-power-outburst",
+    "title": "Multi-homer games",
+    "sport": "baseball",
+    "scale": "baseball_hitter_fantasy_game",
+    "positions": [
+      "H"
+    ],
+    "minStats": {
+      "home_runs": 2
+    },
+    "columns": [
+      {
+        "stat": "home_runs",
+        "label": "HR",
+        "fmt": "int"
+      },
+      {
+        "stat": "rbi",
+        "label": "RBI",
+        "fmt": "int"
+      },
+      {
+        "stat": "hits",
+        "label": "Hits",
+        "fmt": "int"
+      },
+      {
+        "stat": "runs",
+        "label": "R",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "game",
+    "eraAdjusted": false
+  },
+  {
+    "key": "baseball-game-ace-start",
+    "title": "Dominant single-game pitching starts",
+    "sport": "baseball",
+    "scale": "baseball_pitcher_fantasy_game",
+    "positions": [
+      "P"
+    ],
+    "minStats": {
+      "strike_outs": 8
+    },
+    "columns": [
+      {
+        "stat": "strike_outs",
+        "label": "K",
+        "fmt": "int"
+      },
+      {
+        "stat": "earned_runs",
+        "label": "ER",
+        "fmt": "int"
+      },
+      {
+        "stat": "innings_pitched",
+        "label": "IP",
+        "fmt": "dec1"
+      },
+      {
+        "stat": "wins",
+        "label": "W",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "game",
     "eraAdjusted": false
   },
   {
