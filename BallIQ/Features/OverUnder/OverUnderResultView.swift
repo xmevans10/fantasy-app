@@ -46,25 +46,9 @@ struct OverUnderResultView: View {
     }
 
     private var leaderboardEntry: some View {
-        Button {
+        ArcadeLeaderboardEntryRow(caption: "THIS WEEK'S TOP OVER/UNDER RUNS") {
             showLeaderboard = true
-            Haptics.tap()
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: "list.number")
-                    .font(.system(size: 20, weight: .bold)).foregroundStyle(Color.accentText)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Leaderboard").font(.title).foregroundStyle(Color.textPrimary)
-                    Text("THIS WEEK'S TOP OVER/UNDER RUNS").font(.label11).foregroundStyle(Color.textMuted)
-                }
-                Spacer()
-                Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity)
-            .cardSurface()
         }
-        .buttonStyle(PrimePressStyle())
     }
 
     private var scoreHeader: some View {

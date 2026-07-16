@@ -96,3 +96,37 @@ struct ArcadeLeaderboardView: View {
         rows = await board.leaderboard(game: game, sport: sport)
     }
 }
+
+/// The result-screen entry point to this board — one shared row so Over/Under and Grid (and
+/// any future arcade format) present the identical affordance. Before this existed, each
+/// result screen hand-rolled its own button and they'd already drifted: Over/Under had this
+/// full card row, Grid a bare capsule pill with no explainer (AGENTS.md §4).
+struct ArcadeLeaderboardEntryRow: View {
+    /// One line under the title saying which runs the board ranks, e.g.
+    /// "THIS WEEK'S TOP OVER/UNDER RUNS".
+    let caption: LocalizedStringKey
+    let action: () -> Void
+
+    var body: some View {
+        Button {
+            Haptics.tap()
+            action()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "list.number")
+                    .font(.system(size: 20, weight: .bold)).foregroundStyle(Color.accentText)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Leaderboard").font(.title).foregroundStyle(Color.textPrimary)
+                    Text(caption).font(.label11).foregroundStyle(Color.textMuted)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .cardSurface()
+        }
+        .buttonStyle(PrimePressStyle())
+    }
+}

@@ -41,20 +41,9 @@ struct GridResultView: View {
     /// prior run today may already be the one ranked on it (mirrors the Daily Draft banner's
     /// "SEE TODAY'S BOARD" entry off `DraftSpinResultView`).
     private var leaderboardEntry: some View {
-        Button {
+        ArcadeLeaderboardEntryRow(caption: "THIS WEEK'S TOP GRID RUNS") {
             showLeaderboard = true
-            Haptics.tap()
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "list.number").font(.system(size: 12, weight: .bold))
-                Text("LEADERBOARD").font(.custom(FontName.condBlack, size: 13))
-            }
-            .foregroundStyle(Color.accentText)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .overlay(Capsule().strokeBorder(Color.accentText.opacity(0.6), lineWidth: 1.5))
         }
-        .buttonStyle(PrimePressStyle())
     }
 
     private var scoreHeader: some View {
