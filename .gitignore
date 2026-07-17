@@ -24,6 +24,10 @@ __pycache__/
 # Release pipeline — App Store Connect API key + credentials
 tools/release/.env
 tools/release/private_keys/
+tools/release/asc.py
+
+# Google OAuth client config (Sign in with Google setup artifact) — never commit
+client_*.apps.googleusercontent.com.plist
 
 # Claude Code local settings
 .claude/settings.local.json
