@@ -977,6 +977,30 @@ formats + every tab, cross-checked against live SQL):**
   `ArcadeLeaderboardEntryRow` now serves both (es-localized caption included).
 - 319 Swift / 217 Python tests green; every fix screenshot-verified on the affected state.
 
+**Shipped 2026-07-17 (1.2 push-chain hardening, first session after the push gates cleared):**
+- **notify-streak-risk timezone bug (production, hits every US user):** the "already played
+  today" suppression compared the app's *local* `last_played_day` (written as a local-time
+  "yyyy-MM-dd" — ProgressRepository.swift) against the **UTC** day. At 8pm US-Eastern the UTC
+  calendar has already rolled to tomorrow, so the check never matched and any US-timezone user
+  with a streak would get the streak-risk nag *every night even after playing*. Confirmed live:
+  the 2026-07-17 00:00:04 UTC cron run (8:00pm ET) pushed to the registered device although
+  that day's puzzles were done — a wrong push, but it also proved the full production chain
+  (pg_cron → edge function → Vault APNs config → real APNs → device), i.e. 1.2's exit
+  criterion's mechanics. Fix: per-device local day/hour math extracted to
+  `_shared/localtime.ts` (5 locked Deno tests incl. the exact 8pm-ET regression case) and a
+  `[streak-risk] checked=N sent=N` summary log so future runs are verifiable from logs alone.
+  **Deploy is pending** — the session's MCP `deploy_edge_function` call was permission-blocked
+  and the local supabase CLI is logged into the wrong account (known since 2026-06-29), so the
+  fixed function is committed but production still runs the buggy version until a deploy is
+  approved. Deno tests: `deno test --allow-env supabase/functions/_shared/`.
+- **es catalog backfill:** 9 strings had shipped without Spanish (7 from the avatar-upload
+  feature, "All depths"/"Try a different search, decade, or depth." from Browse) — all
+  translated; 0 untranslated strings remain outside deliberate `shouldTranslate: false`
+  brand terms (Daily Draft, PRO, K4C4, …).
+- `.gitignore` now actually covers `tools/release/asc.py` (the docs already *described* it as
+  gitignored, but it wasn't) and `client_*.apps.googleusercontent.com.plist`.
+- 319 Swift / 217 Python / 23 Deno tests green.
+
 ## 9. Roadmap — remaining milestones + product backlog (PM audit 2026-07-09)
 
 Full briefs live in `prompts/` (same self-contained format: goal, why-now, current state,
@@ -1259,6 +1283,11 @@ pipeline is one command sequence now — see the `testflight-release` skill).
   — 1.2 is the right forcing function since pushes make the social flows fully testable.
 - [user] Native-speaker pass over the Spanish catalog (418 machine-translated strings).
 - Exit: a streak-risk push lands on a real device from the production cron chain.
+  **Status 2026-07-17:** the 00:00:04 UTC cron run (8:00pm ET 07-16) sent a real push to the
+  registered device — awaiting the user's confirmation it displayed. Caveat: that send was
+  itself a manifestation of the local-vs-UTC-day suppression bug fixed the same session (see
+  §8's 2026-07-17 entry); the fixed function still needs its deploy approved, after which the
+  *correct* behavior is: push only on an evening the user hasn't played by 8pm local.
 
 **1.3 — "Open the register": monetization switched on (M5 Phase B completion).**
 Every rail exists (StoreKit 2 store, gating, paywall, server-validated entitlements,
