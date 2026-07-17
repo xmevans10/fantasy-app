@@ -481,7 +481,14 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
                      sport=r["sport"], position=r["position"], stats=r.get("stats") or {})
             for r in raw
         ]
-        puzzle = grid.generate_grid(seasons, sport=sport, date=today)
+        # NFL cells accept the FULL roster (every position, Immaculate-Grid-style), not just
+        # the graded offensive pool — validity only; stars/viability stay graded-pool-driven.
+        extra_members = None
+        if sport == "nfl":
+            from .providers import nfl_rosters
+            extra_members = nfl_rosters.fetch_years(list(range(nfl_rosters.MIN_YEAR, _CURRENT_YEAR + 1)))
+            print(f"[grid] nfl: {len(extra_members)} roster memberships widen the answer pools")
+        puzzle = grid.generate_grid(seasons, sport=sport, date=today, extra_members=extra_members)
         if puzzle is None:
             print(f"[grid] {sport}: no viable grid from {len(seasons)} seasons — skipped")
             continue

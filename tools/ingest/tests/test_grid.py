@@ -149,3 +149,48 @@ def test_to_content_shape_is_camel_case_and_matches_puzzle():
 def test_puzzle_id_is_stable_and_namespaced_by_sport_and_date():
     assert grid.puzzle_id("nfl", "2026-07-08") == "grid-nfl-2026-07-08"
     assert grid.puzzle_id("nba", "2026-07-08") != grid.puzzle_id("nfl", "2026-07-08")
+
+
+# MARK: roster extras (nfl_rosters -> extra_members) — validity widens, stars/viability don't
+
+from tools.ingest.providers.nfl_rosters import RosterMember
+
+
+def test_extra_members_widen_cell_validity():
+    puzzle = grid.generate_grid(_rich_pool(), sport="nfl", date="2026-07-08",
+                                extra_members=[RosterMember("Roster Guy", team, decade + 1)
+                                               for team in ["SF", "GB", "DAL"]
+                                               for decade in [1990, 2000, 2010]])
+    assert puzzle is not None
+    for cell in puzzle.cells:
+        assert "Roster Guy" in {a.name for a in cell.valid_answers}
+
+
+def test_extra_members_do_not_change_rarity_stars():
+    base = grid.generate_grid(_rich_pool(), sport="nfl", date="2026-07-08")
+    extras = [RosterMember(f"Extra{i}", team, decade)
+              for i in range(40)
+              for team in ["SF", "GB", "DAL"]
+              for decade in [1990, 2000, 2010]]
+    widened = grid.generate_grid(_rich_pool(), sport="nfl", date="2026-07-08",
+                                 extra_members=extras)
+    assert base is not None and widened is not None
+    assert [c.rarity_stars for c in base.cells] == [c.rarity_stars for c in widened.cells]
+
+
+def test_extra_members_never_create_viability():
+    # A pool missing one decade entirely can't be rescued by roster-only members there.
+    seasons = [_season(f"P{i}", "SF", 1990 + i) for i in range(4)]
+    extras = [RosterMember(f"R{i}", "SF", 2000 + i) for i in range(4)]
+    assert grid.generate_grid(seasons, sport="nfl", date="2026-07-08",
+                              max_attempts=50, extra_members=extras) is None
+
+
+def test_extra_member_duplicating_a_graded_player_is_not_double_counted():
+    extras = [RosterMember("SF1990Player0", "SF", 1993)]
+    puzzle = grid.generate_grid(_rich_pool(), sport="nfl", date="2026-07-08",
+                                extra_members=extras)
+    assert puzzle is not None
+    for cell in puzzle.cells:
+        names = [a.name for a in cell.valid_answers]
+        assert len(names) == len(set(names))

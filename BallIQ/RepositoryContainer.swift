@@ -141,6 +141,46 @@ final class RepositoryContainer: ObservableObject {
         await arcadeBoard.submit(userID: uid, game: game, sport: sport, score: score)
     }
 
+    /// One Grid attempt for the crowd-rarity log (`grid_guesses`).
+    struct GridGuessLog: Encodable {
+        let puzzleDay: String
+        let sport: String
+        let cellIndex: Int
+        let guessName: String
+        let correct: Bool
+        let userId: String
+    }
+
+    /// One row of `grid_guess_stats`: how many players picked `guessName` for `cellIndex`,
+    /// out of `cellTotal` correct picks in that cell.
+    struct GridCellPickStats: Decodable {
+        let cellIndex: Int
+        let guessName: String
+        let picks: Int
+        let cellTotal: Int
+    }
+
+    /// Fire-and-forget crowd-rarity log of a finished Grid run's attempts. Signed-out /
+    /// local-only sessions skip silently — the stats are a community aggregate, not progress.
+    func logGridGuesses(day: String, sport: Sport, attempts: [(cell: Int, name: String, correct: Bool)]) async {
+        guard let client, let uid = auth.userID, !attempts.isEmpty else { return }
+        let rows = attempts.map {
+            GridGuessLog(puzzleDay: day, sport: sport.rawValue, cellIndex: $0.cell,
+                         guessName: $0.name, correct: $0.correct, userId: uid)
+        }
+        try? await client.insert("grid_guesses", values: rows)
+    }
+
+    /// Per-cell pick distribution for one day's Grid ("X% picked this"). Empty when
+    /// local-only, offline, or nobody has played yet.
+    func gridGuessStats(day: String, sport: Sport) async -> [GridCellPickStats] {
+        guard let client else { return [] }
+        struct Args: Encodable { let pSport: String, pDay: String }
+        guard let data = try? await client.rpc("grid_guess_stats", args: Args(pSport: sport.rawValue, pDay: day)),
+              let rows = try? JSONDecoder.supabase.decode([GridCellPickStats].self, from: data) else { return [] }
+        return rows
+    }
+
     /// Offline/late-sign-in recovery: if today has a locally locked-in official run, push it.
     /// A run that already reached the server is a no-op server-side.
     private func resubmitTodaysDailyDraftIfNeeded() async {

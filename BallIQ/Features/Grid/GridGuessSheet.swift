@@ -9,19 +9,27 @@ struct GridGuessSheet: View {
     let prompt: String
     /// Sport-wide distinct player names (may be empty → the field still works as free text).
     let names: [String]
+    /// Display names already used in other cells — the Immaculate Grid rule: one player per
+    /// grid. Filtered out of suggestions, and a typed duplicate is blocked with inline
+    /// feedback rather than burning the cell's one attempt. Duplicate detection uses the same
+    /// typo-tolerant `AnswerMatcher` the grader uses, so "Tom Bradyy" can't sneak a reuse past
+    /// an exact-string check.
+    let usedNames: [String]
     let onGuess: (String) -> Void
     let onCancel: () -> Void
 
-    init(prompt: String, names: [String], initialText: String = "",
+    init(prompt: String, names: [String], usedNames: [String] = [], initialText: String = "",
          onGuess: @escaping (String) -> Void, onCancel: @escaping () -> Void) {
         self.prompt = prompt
         self.names = names
+        self.usedNames = usedNames
         self.onGuess = onGuess
         self.onCancel = onCancel
         _text = State(initialValue: initialText)   // seed only used by the render-gallery test
     }
 
     @State private var text: String
+    @State private var duplicateBlocked = false
     /// The index normalized once on appear (diacritic/case-folded), so each keystroke filters
     /// cheaply instead of re-normalizing thousands of names (soccer alone has ~21k).
     @State private var normalizedNames: [(display: String, norm: String)] = []
@@ -29,8 +37,16 @@ struct GridGuessSheet: View {
 
     static let maxSuggestions = 8
 
+    private var usedNormalized: Set<String> { Set(usedNames.map(AnswerMatcher.normalize)) }
+
     private var suggestions: [String] {
         Self.rank(query: text, normalized: normalizedNames, limit: Self.maxSuggestions)
+            .filter { !usedNormalized.contains(AnswerMatcher.normalize($0)) }
+    }
+
+    /// True when `guess` would re-answer with a player already placed in another cell.
+    static func isDuplicate(_ guess: String, usedNames: [String]) -> Bool {
+        usedNames.contains { AnswerMatcher.matches(guess, answer: .init(canonical: $0, aliases: [])) }
     }
 
     /// Prefix hits ranked above interior hits, each alphabetical within its group (the index
@@ -86,6 +102,13 @@ struct GridGuessSheet: View {
                 .background(Color.surfaceMuted)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                 .padding(.horizontal, 16)
+                .onChange(of: text) { duplicateBlocked = false }
+
+                if duplicateBlocked {
+                    Label("Already used in another cell — one player per grid.", systemImage: "exclamationmark.triangle.fill")
+                        .font(.label12).foregroundStyle(Color.dangerText)
+                        .padding(.horizontal, 16).padding(.top, 10)
+                }
 
                 suggestionList
 
@@ -144,6 +167,10 @@ struct GridGuessSheet: View {
 
     private func submitTyped() {
         guard !trimmed.isEmpty else { return }
+        guard !Self.isDuplicate(trimmed, usedNames: usedNames) else {
+            duplicateBlocked = true
+            return
+        }
         onGuess(trimmed)
     }
 }

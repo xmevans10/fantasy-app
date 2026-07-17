@@ -46,3 +46,8 @@ jobs:
           restore-keys: |
             ingest-cache-
       - run: python -m tools.ingest.main --backfill 30 --upsert --catalog
+      # Mint today's Grid puzzles (sports without a viable board skip themselves). NFL answer
+      # pools are widened to full rosters (nfl_rosters.py); previously grids were only minted
+      # by hand, so the daily active_date row often didn't exist and clients fell back to the
+      # modulo pick over stale rows.
+      - run: python -m tools.ingest.main --grid nfl nba soccer tennis --upsert

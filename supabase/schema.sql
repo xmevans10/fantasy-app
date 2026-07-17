@@ -1059,6 +1059,45 @@ $$;
 revoke all on function public.grid_player_names(text) from public;
 grant execute on function public.grid_player_names(text) to anon, authenticated, service_role;
 
+-- Crowd-sourced Grid rarity (2026-07-17, applied live as migration `grid_guesses_crowd_rarity`).
+-- Every submitted Grid guess is logged; grid_guess_stats aggregates correct picks per cell to
+-- power "X% picked this" on the result screen. Display-only — star scoring untouched.
+create table if not exists public.grid_guesses (
+  id bigint generated always as identity primary key,
+  puzzle_day text not null,
+  sport text not null,
+  cell_index int not null check (cell_index between 0 and 8),
+  guess_name text not null,
+  correct boolean not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists grid_guesses_cell_idx
+  on public.grid_guesses (sport, puzzle_day, cell_index);
+
+alter table public.grid_guesses enable row level security;
+
+create policy grid_guesses_insert_own on public.grid_guesses
+  for insert to authenticated with check (user_id = (select auth.uid()));
+
+create or replace function public.grid_guess_stats(p_sport text, p_day text)
+returns table(cell_index int, guess_name text, picks bigint, cell_total bigint)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select g.cell_index, g.guess_name, count(*) as picks,
+         sum(count(*)) over (partition by g.cell_index) as cell_total
+  from public.grid_guesses g
+  where g.sport = p_sport and g.puzzle_day = p_day and g.correct
+  group by g.cell_index, g.guess_name;
+$$;
+
+revoke all on function public.grid_guess_stats(text, text) from public;
+grant execute on function public.grid_guess_stats(text, text) to anon, authenticated, service_role;
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Storage: profile photo uploads (M20)
 -- ─────────────────────────────────────────────────────────────────────────────

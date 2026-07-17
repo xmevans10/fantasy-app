@@ -13,6 +13,8 @@ struct GridGameView: View {
     /// Index (row*3+col) -> the matched valid-answer name, once correctly guessed.
     @State private var solved: [Int: String] = [:]
     @State private var wrong: Set<Int> = []
+    /// What was actually typed on each miss — kept only for the crowd-rarity log.
+    @State private var wrongNames: [Int: String] = [:]
     @State private var activeCell: Int?
     /// Sport-wide player names powering the guess autocomplete (empty offline → free text).
     @State private var nameIndex: [String] = []
@@ -55,6 +57,7 @@ struct GridGameView: View {
                 GridGuessSheet(
                     prompt: cellPrompt(puzzle, index: activeCell),
                     names: nameIndex,
+                    usedNames: Array(solved.values),
                     onGuess: { submitGuess($0) },
                     onCancel: { self.activeCell = nil }
                 )
@@ -215,6 +218,7 @@ struct GridGameView: View {
             Haptics.success()
         } else {
             wrong.insert(index)
+            wrongNames[index] = guess
             Haptics.reject()
         }
 
@@ -227,14 +231,20 @@ struct GridGameView: View {
         }
         let score = solved.count * 100 + totalStars * 20
         let performance = Double(solved.count) / 9.0
-        let dailyID = "grid-\(sport.rawValue)-\(OverUnderRoundGenerator.dayString(Date()))"
+        let day = OverUnderRoundGenerator.dayString(Date())
+        let dailyID = "grid-\(sport.rawValue)-\(day)"
         let ranked = !container.hasCompletedToday(puzzleID: dailyID)
+        let attempts = solved.map { (cell: $0.key, name: $0.value, correct: true) }
+            + wrongNames.map { (cell: $0.key, name: $0.value, correct: false) }
         Task {
             rewards = await container.complete(format: .grid, sport: sport, performance: performance,
                                                perfect: solved.count == 9, puzzleID: dailyID, ranked: ranked)
             // Grid's puzzle is daily — only the first (ranked) run of the day posts to the
             // weekly board, or an unranked replay could farm it by re-solving the same puzzle.
             if ranked { await container.submitArcadeScore(game: .grid, sport: sport, score: score) }
+            // Crowd-rarity log feeds "X% picked this" — ranked runs only, so replays can't
+            // pad an answer's numbers by re-solving the same board.
+            if ranked { await container.logGridGuesses(day: day, sport: sport, attempts: attempts) }
             withAnimation(Motion.snap) { result = (score, solved.count) }
         }
     }

@@ -57,7 +57,8 @@ def _rarity_stars(count: int) -> int:
     return 1
 
 
-def _build_cell(pool: list[RawSeason], team: str, decade: int) -> GridCell | None:
+def _build_cell(pool: list[RawSeason], team: str, decade: int,
+                extra_members: list | None = None) -> GridCell | None:
     matches = [s for s in pool if s.team_abbr == team and _decade(s.season_year) == decade]
     # One answer per distinct player (their most recent qualifying season, for display).
     by_name: dict[str, RawSeason] = {}
@@ -67,19 +68,43 @@ def _build_cell(pool: list[RawSeason], team: str, decade: int) -> GridCell | Non
             by_name[s.name] = s
     if not by_name:
         return None
-    answers = tuple(
+    # Rarity stars come from the GRADED pool only — that's the stable "how many notable
+    # answers exist" signal the star economy was tuned on. Roster extras (below) widen
+    # *validity* without inflating every cell to 1-star.
+    stars = _rarity_stars(len(by_name))
+    graded = [
         GridAnswer(player_id=slug(s.name), name=s.name, team_abbr=s.team_abbr, season_year=s.season_year)
-        for s in sorted(by_name.values(), key=lambda s: s.name)
-    )
-    return GridCell(valid_answers=answers, rarity_stars=_rarity_stars(len(answers)))
+        for s in by_name.values()
+    ]
+    # Full-roster members (nfl_rosters.py) matching this cell, minus players the graded pool
+    # already covers. Validity-only: they never affect stars, and never create viability —
+    # a cell with zero graded answers stays None (team/decade combos are drawn from the
+    # graded pool anyway, and stars would be undefined).
+    extra_by_name: dict[str, object] = {}
+    for m in (extra_members or []):
+        if m.team_abbr != team or _decade(m.season_year) != decade or m.name in by_name:
+            continue
+        existing = extra_by_name.get(m.name)
+        if existing is None or m.season_year > existing.season_year:
+            extra_by_name[m.name] = m
+    extras = [
+        GridAnswer(player_id=slug(m.name), name=m.name, team_abbr=m.team_abbr, season_year=m.season_year)
+        for m in extra_by_name.values()
+    ]
+    answers = tuple(sorted(graded + extras, key=lambda a: a.name))
+    return GridCell(valid_answers=answers, rarity_stars=stars)
 
 
 def generate_grid(seasons: list[RawSeason], sport: str, date: str,
-                  max_attempts: int = 200) -> GridPuzzle | None:
+                  max_attempts: int = 200, extra_members: list | None = None) -> GridPuzzle | None:
     """Deterministic per (sport, date). Tries successive seeded team/decade combos (drawn from
     what's actually present in `seasons`) until every one of the 9 cells has >=1 valid answer,
     or gives up after `max_attempts` (returns None -- caller skips today's Grid rather than
-    shipping a broken puzzle, same posture as daily_puzzle.py's viability gate)."""
+    shipping a broken puzzle, same posture as daily_puzzle.py's viability gate).
+
+    `extra_members` (e.g. nfl_rosters.RosterMember) widen each cell's VALID answers to full
+    rosters -- Immaculate-Grid-style "anyone who was on the team counts" -- without touching
+    team/decade selection, viability, or rarity stars (all still graded-pool-driven)."""
     pool = [s for s in seasons if s.sport == sport and not s.career]
     # A blank team_abbr is missing/unresolved data, not a real team -- never a valid row label.
     teams = sorted({s.team_abbr for s in pool if s.team_abbr})
@@ -94,7 +119,7 @@ def generate_grid(seasons: list[RawSeason], sport: str, date: str,
         cells: list[GridCell] = []
         viable = True
         for team, decade in itertools.product(row_teams, col_decades):
-            cell = _build_cell(pool, team, decade)
+            cell = _build_cell(pool, team, decade, extra_members=extra_members)
             if cell is None:
                 viable = False
                 break

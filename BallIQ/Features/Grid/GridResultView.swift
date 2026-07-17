@@ -12,8 +12,21 @@ struct GridResultView: View {
     @EnvironmentObject private var container: RepositoryContainer
     @State private var confetti = 0
     @State private var showLeaderboard = false
+    /// cell index → (name → pct of that cell's correct picks). Empty until the crowd stats
+    /// land (or forever, offline) — the recap simply shows no % line then.
+    @State private var pickPct: [Int: [String: Int]] = [:]
 
     private var isPerfect: Bool { correctCount == 9 }
+
+    /// The Immaculate-Grid-style emoji recap: 🟩 solved / ⬛ missed, row-major 3×3. Pure so
+    /// the exact share text is locked by tests.
+    static func shareText(sport: Sport, score: Int, solved: [Int: String], date: Date = Date()) -> String {
+        let rows = (0..<3).map { row in
+            (0..<3).map { col in solved[row * 3 + col] != nil ? "🟩" : "⬛" }.joined()
+        }.joined(separator: "\n")
+        let day = OverUnderRoundGenerator.dayString(date)
+        return "Playbook Grid — \(sport.displayName) \(day)\n\(rows)\nScore \(score)"
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -31,6 +44,15 @@ struct GridResultView: View {
         .background(Color.appBackground)
         .celebrate(on: $confetti, intensity: isPerfect ? 90 : 40)
         .onAppear { if isPerfect { confetti += 1 } }
+        .task {
+            let day = OverUnderRoundGenerator.dayString(Date())
+            let stats = await container.gridGuessStats(day: day, sport: sport)
+            var pct: [Int: [String: Int]] = [:]
+            for row in stats where row.cellTotal > 0 {
+                pct[row.cellIndex, default: [:]][row.guessName] = Int((Double(row.picks) / Double(row.cellTotal) * 100).rounded())
+            }
+            pickPct = pct
+        }
         .sheet(isPresented: $showLeaderboard) {
             ArcadeLeaderboardView(game: .grid, sport: sport)
                 .environmentObject(container)
@@ -107,6 +129,9 @@ struct GridResultView: View {
             if let name = solved[index] {
                 Image(systemName: "checkmark.circle.fill").font(.system(size: 12)).foregroundStyle(Color.successText)
                 Text(name).font(.label11).foregroundStyle(Color.textPrimary).lineLimit(2).minimumScaleFactor(0.6)
+                if let pct = pickPct[index]?[name] {
+                    Text("\(pct)% picked").font(.label11).foregroundStyle(Color.textMuted)
+                }
             } else {
                 Image(systemName: "xmark.circle.fill").font(.system(size: 12)).foregroundStyle(Color.dangerText)
             }
@@ -121,11 +146,19 @@ struct GridResultView: View {
     private var doneBar: some View {
         VStack(spacing: 0) {
             Rectangle().fill(Color.hairline).frame(height: Hairline.width)
-            Button(action: onDone) {
-                Text("DONE").font(.heading).foregroundStyle(Color.accentText)
-                    .frame(maxWidth: .infinity).padding(.vertical, 15)
+            HStack(spacing: 12) {
+                ShareLink(item: Self.shareText(sport: sport, score: score, solved: solved)) {
+                    Label("SHARE", systemImage: "square.and.arrow.up")
+                        .font(.heading).foregroundStyle(Color.accentText)
+                        .frame(maxWidth: .infinity).padding(.vertical, 15)
+                }
+                .buttonStyle(.plain)
+                Button(action: onDone) {
+                    Text("DONE").font(.heading).foregroundStyle(Color.accentText)
+                        .frame(maxWidth: .infinity).padding(.vertical, 15)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .padding(16)
             .background(Color.surface)
         }

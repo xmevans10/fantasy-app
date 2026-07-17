@@ -1420,25 +1420,28 @@ team, team × award/stat, etc.); a typeahead dropdown of qualified players; a **
 player across the grid; an emoji share-grid. What makes it feel deep is (a) it accepts *anyone
 who ever appeared* for the team, and (b) the rarity meta-game rewarding deep cuts.
 
-Where BallIQ's Grid stands against that, most-impactful first:
-- ~~**Guess typeahead**~~ — **shipped 2026-07-17** (`GridGuessSheet` + `grid_player_names`
-  RPC). This was the biggest felt gap and the direct fix for the "I typed Sam Darnold and it
-  did nothing" frustration (autocorrect + no name affordance).
-- **Roster completeness is the #1 remaining depth gap.** A cell's valid answers are only
-  players with a *qualifying season stat row* in `player_seasons` — for NFL that's
-  QB/RB/WR/TE/FB only (see `nfl_nflverse.fetch_year`'s position filter), so DBs, linemen,
-  kickers, and cup-of-coffee players are unanswerable even when correct. Immaculate Grid takes
-  any appearance. Closing this needs a fuller roster source (nflverse rosters/`players.csv`
-  join, not just the offensive stat leaders) feeding grid answer-sets. Biggest lever, biggest
-  data lift.
-- **Data freshness.** Catalog tops out at 2024 because nflverse's 2025 season aggregate 404s
-  as of 2026-07-17; the pipeline's `range(1999, current+1)` auto-ingests it once published, but
-  until then any 2025-only tenure (Darnold→SEA) is legitimately unanswerable. Worth a cron/
-  reminder to re-run ingest when 2025 lands.
-- **Crowd-sourced rarity.** Today rarity is offline stars from answer-count at generation time
-  (`grid.py:_rarity_stars`). Real parity = "% of players who picked this," which needs logging
-  every submitted guess per cell and surfacing the distribution — a server-side aggregate + a
-  new `grid_guesses` table. Rewarding-obscurity is the meta-game that gives IG its legs.
-- **No-reuse rule + emoji share-grid** — smaller: track picked player-ids across the 9 cells and
-  reject a repeat; render the 3×3 result as a shareable emoji/text grid (the app already has a
-  share-card system to hang it on).
+Where BallIQ's Grid stands against that — **all five gaps closed 2026-07-17** except the
+upstream-blocked freshness item:
+- ~~**Guess typeahead**~~ — **shipped** (`GridGuessSheet` + `grid_player_names` RPC). The
+  biggest felt gap and the direct fix for the "I typed Sam Darnold and it did nothing"
+  frustration (autocorrect + no name affordance).
+- ~~**Roster completeness**~~ — **shipped**: `tools/ingest/providers/nfl_rosters.py` pulls
+  nflverse `roster_{year}.csv` (1999+, every position, ~69k memberships) and `grid.py` merges
+  them into cell `validAnswers` as `extra_members` — validity only. Stars stay derived from
+  the graded pool (the economy they were tuned on), viability still requires ≥1 graded answer,
+  and nothing touches `player_seasons` (zero blast radius on Keep4/Draft & Spin/WhoAmI).
+  Verified live: today's NFL grid cells went from stat-leaders-only to 149–425 valid answers
+  each. Locked by 4 new tests in `test_grid.py`.
+- ~~**Crowd-sourced rarity**~~ — **shipped**: `grid_guesses` table (insert-own RLS; ranked
+  runs only, so replays can't pad numbers) + `grid_guess_stats` security-definer aggregate;
+  the result recap shows "X% picked this" under each solved name. Display-only — star scoring
+  untouched per §4's invariants.
+- ~~**No-reuse rule + emoji share-grid**~~ — **shipped**: one player per grid, enforced in the
+  guess sheet with the grader's own typo-tolerant matcher (blocks with inline feedback rather
+  than burning the cell's single attempt; used names also drop out of the typeahead), and an
+  Immaculate-style 🟩/⬛ ShareLink on the result (`GridResultView.shareText`, test-locked).
+- **Data freshness (open, upstream-blocked).** Catalog tops out at 2024 because nflverse's
+  2025 season aggregate 404s as of 2026-07-17; `range(1999, current+1)` auto-ingests it once
+  published. Meanwhile the daily ingest cron now also mints the day's grids
+  (`--grid nfl nba soccer tennis` added to `ingest.yml` — previously grids were only ever
+  minted by hand, so the daily `active_date` row usually didn't exist).
