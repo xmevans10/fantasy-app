@@ -1341,24 +1341,45 @@ pipeline is one command sequence now — see the `testflight-release` skill).
   errors in the function log.
 
 **1.3 — "Open the register": monetization switched on (M5 Phase B completion).**
-Every rail exists (StoreKit 2 store, gating, paywall, server-validated entitlements,
-deployed-but-inert `app-store-notifications` function). Nothing here is code-first; it's
-ASC-first.
-- [user] ~~Sign the Paid Applications agreement; create the four products~~ — **done,
-  verified 2026-07-16**: all four exist in ASC (`Pro Monthly`/`Pro Yearly` in subscription
-  group "Pro" id 22239725, both packs as IAPs 6791226005/6791225648) with product IDs
-  exactly matching `StoreProduct`'s rawValues. All are `MISSING_METADATA` — still needed:
-  **[user] price points** (a real product decision), then [agent] localized display
-  copy + review screenshots + attach to a review submission.
-- [agent] Set `APPLE_ROOT_CA_PEM` as an edge secret, point the production App Store Server
-  Notifications URL at the function, sandbox-verify a purchase → webhook → `entitlements`
-  row → client union end-to-end, and build the "companion client-transaction verify" belt
-  (the documented fast-follow from Phase B's scope note) if the sandbox pass shows the race
-  window matters.
-- [agent] Paywall/pricing polish once real localized prices render (screenshot pass per
-  AGENTS §5 — longest price strings, es locale).
+Every rail exists (StoreKit 2 store, gating, paywall, server-validated entitlements). As of
+2026-07-17 the user chose to ship 1.2 + 1.3 as **one build** — build 10 (version string still
+`1.1`, since 1.1 never went live) supersedes the in-review build 9, carrying the 1.2 push
+polish + this monetization work. Nearly everything here is now done; the residue is one
+ASC-UI click + one ASC-UI URL field.
+- [user] ~~Sign the Paid Applications agreement; create the four products~~ / ~~price points~~
+  / ~~localized copy + review screenshots~~ — **all done, verified 2026-07-17**: the four
+  products (`Pro Monthly` $4.99 / `Pro Yearly` $34.99 in subscription group "Pro" id
+  22239725; `Draft & Spin Pack` $1.99 / `The Grid Pack` $2.99 as IAPs 6791226005/6791225648)
+  are all **READY_TO_SUBMIT** — priced across 175 territories, en-US + es-MX display copy,
+  and a rendered paywall review screenshot on each (produced by `PaywallGalleryTests` via
+  `SKTestSession`; the packs got a bottom-scrolled capture after the paywall learned to sell
+  them — see below).
+- ~~[agent] Un-stub `app-store-notifications`~~ — **done, live (deployed v2, 2026-07-17)**: the
+  Apple Root CA - G3 PEM is in Supabase Vault (secret `APPLE_ROOT_CA_PEM`), read at runtime via
+  the new service-role `get_app_store_config()` RPC (mirrors `get_apns_config()`/apns.ts, since
+  no management token exists here to set true edge secrets; `_shared/app_store_config.ts`).
+  Verified: a syntactically valid but untrusted JWS now returns 400 "verification failed" (chain
+  check runs) instead of 500 "not configured".
+- ~~[agent] Paywall sells the packs~~ — **done**: `PaywallView` now renders the two
+  non-consumable packs below the subscriptions ("Just want one format? Unlock it forever."),
+  hidden for Pro and for already-owned packs. Without this the pack IAPs had no purchase
+  surface, so Apple couldn't have located them for review.
+- **[user] Two remaining ASC-UI-only steps** (neither is exposed by the ASC REST API):
+  (1) **Submit the products.** Review submission `55fbb8f8-4715-48f2-916f-fe7a458e3ede`
+  (READY_FOR_REVIEW) already holds app version 1.1 / build 10. Because all four are the
+  *first* product of their type, Apple requires them attached to a version submission via the
+  UI (Monetization → each product → **Add for Review** → select version 1.1; add the "Pro"
+  subscription group too) → **Submit for Review**. The API's `reviewSubmissionItems` accepts
+  only app-version items, and standalone `inAppPurchaseSubmissions` rejects a first
+  non-consumable (`FIRST_NON_CONSUMABLE_MUST_BE_SUBMITTED_ON_VERSION`).
+  (2) **Set the production App Store Server Notifications V2 URL** to the
+  `app-store-notifications` function (App Information → App Store Server Notifications). The
+  ASC API has no endpoint for this field (confirmed 404).
+- [agent, fast-follow] Sandbox-verify purchase → webhook → `entitlements` row → client union
+  once (2) is set and a sandbox purchase is made on a real device; build the "companion
+  client-transaction verify" belt if the race window matters.
 - Exit: a sandbox Pro purchase unlocks hard mode/archive/sports on a second signed-in
-  device via the server path alone (StoreKit store wiped).
+  device via the server path alone (StoreKit store wiped) — gated on the two [user] steps.
 
 **1.4 — "Seasons": M5 Phase F rating seasons — the deferred competitive spine.**
 Explicitly deferred by the user 2026-07-14; do not start from inference.
