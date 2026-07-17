@@ -1000,6 +1000,17 @@ formats + every tab, cross-checked against live SQL):**
 - `.gitignore` now actually covers `tools/release/asc.py` (the docs already *described* it as
   gitignored, but it wasn't) and `client_*.apps.googleusercontent.com.plist`.
 - 319 Swift / 217 Python / 23 Deno tests green.
+- **Ranked play made legible on Home (user feedback 2026-07-17: "ranked puzzles are not
+  intuitively placed"):** the true ranked map was two daily cards with no ranked marker,
+  Over/Under labeled "Arcade" despite its first daily run being ranked, Grid's ranked-ness
+  invisible, and "Your rank" at the very bottom of the page. Now: RANKED chip on the daily
+  K4C4/WhoAmI cards (`DailyGameCard.ranked`, default-off so community/archive cards stay
+  unmarked), the formats grid's playable-daily fallback subtitle reads "Daily · Ranked"
+  (covers K4C4/WhoAmI/Grid), Over/Under drops its dishonest explicit "Arcade" subtitle to
+  take the same fallback, and the "Your rank" section moved directly beneath the daily
+  cards that feed it. Draft & Spin (never ranked) keeps "Arcade"; Versus keeps
+  "Head-to-head". Screenshot-verified en; es strings added ("CLASIFICADO",
+  "Diario · Clasificado").
 
 ## 9. Roadmap — remaining milestones + product backlog (PM audit 2026-07-09)
 

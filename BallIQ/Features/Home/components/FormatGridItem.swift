@@ -32,7 +32,10 @@ struct FormatGridItem: View {
                     .font(.custom(FontName.condBold, size: 16))
                     .foregroundStyle(Color.textPrimary)
                     .multilineTextAlignment(.leading)
-                Text(format.subtitle ?? (format.isPlayable ? "Daily" : (format.isPro ? "Pro only" : "Soon")))
+                // "Daily · Ranked" (not just "Daily"): every subtitle-less playable format —
+                // K4C4, Who Am I?, The Grid — moves competitive rating on its first daily
+                // run, and that used to be invisible here (user feedback 2026-07-17).
+                Text(format.subtitle ?? (format.isPlayable ? "Daily · Ranked" : (format.isPro ? "Pro only" : "Soon")))
                     .textCase(.uppercase)
                     .font(.label11)
                     .foregroundStyle(format.isPlayable ? Color.accentText : Color.textMuted)

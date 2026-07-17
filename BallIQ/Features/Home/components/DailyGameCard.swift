@@ -25,6 +25,9 @@ struct DailyGameCard: View {
     var onTypeColor: Color = .onAccent
     /// Card body fill — community cards pass a warm tint to read "hand-made" vs the daily white.
     var bodyFill: Color = .surface1
+    /// True when this session moves the player's competitive rating (the daily K4C4/WhoAmI
+    /// cards). Off by default so community/archive cards — XP-only by design — stay unmarked.
+    var ranked: Bool = false
     let action: () -> Void
     /// Optional secondary action — an explicit overflow icon in the header band, distinct from
     /// the card's primary tap-to-play. nil (default) hides it; only Community cards pass one
@@ -64,6 +67,9 @@ struct DailyGameCard: View {
                             // Puzzle-TYPE signifier — its own solid-color chip since the header
                             // band itself is now colored by sport, not type.
                             badge(symbol: symbol, text: formatName.uppercased(), fill: typeColor, foreground: onTypeColor)
+                            if ranked {
+                                badge(symbol: "chart.line.uptrend.xyaxis", text: String(localized: "RANKED"))
+                            }
                             if let scoring {
                                 badge(symbol: scoring.symbol, text: scoring.badgeLabel(for: sport))
                             }

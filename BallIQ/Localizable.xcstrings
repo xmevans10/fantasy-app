@@ -1176,6 +1176,16 @@
         }
       }
     },
+    "Daily · Ranked" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diario · Clasificado"
+          }
+        }
+      }
+    },
     "Date" : {
       "localizations" : {
         "es" : {
@@ -2793,6 +2803,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clasifica carreras reales por las estadísticas, no por sensaciones"
+          }
+        }
+      }
+    },
+    "RANKED" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CLASIFICADO"
           }
         }
       }

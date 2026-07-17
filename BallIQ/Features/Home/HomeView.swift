@@ -69,7 +69,8 @@ struct HomeView: View {
                                                   grain: puzzle.puzzleGrain(),
                                                   completed: container.hasCompletedToday(puzzleID: puzzle.id),
                                                   favoriteTeamMatch: container.favoriteTeams.team(for: puzzle.sport)
-                                                      .map(puzzle.features(teamAbbr:)) ?? false) {
+                                                      .map(puzzle.features(teamAbbr:)) ?? false,
+                                                  ranked: true) {
                                         // The daily card IS the puzzle — it opens directly
                                         // (explicit feedback: no intermediate setup screen when
                                         // the puzzle is already loaded and shown on the card).
@@ -86,7 +87,8 @@ struct HomeView: View {
                                                   title: String(localized: "Guess today's mystery player"),
                                                   subtitle: String(localized: "\(puzzle.clues.count) clues"),
                                                   completed: container.hasCompletedToday(puzzleID: puzzle.id),
-                                                  typeColor: .voltFill, onTypeColor: .onVolt) {
+                                                  typeColor: .voltFill, onTypeColor: .onVolt,
+                                                  ranked: true) {
                                         activeWhoAmI = puzzle
                                     }
                                     secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }
@@ -97,12 +99,20 @@ struct HomeView: View {
                     }
                     .heroReveal(1)
 
+                    // Directly beneath the daily cards that feed it — the rank used to sit at
+                    // the very bottom of the page, disconnected from the ranked games above
+                    // (user feedback 2026-07-17: "ranked puzzles are not intuitively placed").
+                    section("Your rank") {
+                        RankWidget(sport: rankSport, rating: container.rating(for: rankSport))
+                    }
+                    .heroReveal(2)
+
                     Button {
                         if container.entitlements.canAccessArchive { showBrowse = true }
                         else { showPaywall = true }
                     } label: { browseRow }
                         .buttonStyle(PrimePressStyle())
-                        .heroReveal(2)
+                        .heroReveal(3)
 
                     section("Game formats") {
                         LazyVGrid(columns: gridColumns, spacing: 12) {
@@ -110,11 +120,6 @@ struct HomeView: View {
                                 FormatGridItem(format: format) { launch(format) }
                             }
                         }
-                    }
-                    .heroReveal(3)
-
-                    section("Your rank") {
-                        RankWidget(sport: rankSport, rating: container.rating(for: rankSport))
                     }
                     .heroReveal(4)
                 }

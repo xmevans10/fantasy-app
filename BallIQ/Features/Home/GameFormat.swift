@@ -18,7 +18,10 @@ struct GameFormat: Identifiable {
         GameFormat(id: "keep4", name: "K4C4", symbol: "rectangle.stack.fill", isPro: false, isPlayable: true),
         GameFormat(id: "whoami", name: "Who am I?", symbol: "questionmark.circle.fill", isPro: false, isPlayable: true),
         GameFormat(id: "draft", name: "Draft & Spin", symbol: "dice.fill", isPro: false, isPlayable: true, subtitle: "Arcade"),
-        GameFormat(id: "overunder", name: "Over / Under", symbol: "arrow.up.arrow.down", isPro: false, isPlayable: true, subtitle: "Arcade"),
+        // No explicit subtitle: Over/Under's first run each UTC day is ranked (see
+        // OverUnderGameView's `ranked` flag), so it takes the "Daily · Ranked" fallback —
+        // the old "Arcade" label hid that it moves rating (user feedback 2026-07-17).
+        GameFormat(id: "overunder", name: "Over / Under", symbol: "arrow.up.arrow.down", isPro: false, isPlayable: true),
         GameFormat(id: "grid", name: "The Grid", symbol: "square.grid.3x3.fill", isPro: true, isPlayable: true),
         GameFormat(id: "versus", name: "Versus", symbol: "person.2.fill", isPro: false, isPlayable: true, subtitle: "Head-to-head")
     ]
