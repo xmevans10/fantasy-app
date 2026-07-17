@@ -3,10 +3,25 @@ import SwiftUI
 /// Archive of every daily puzzle (not just today's). Playing from here is **unranked**
 /// (XP only) — replaying past dailies shouldn't move the competitive rating. Mirrors the
 /// Community browse layout; reads the full pool via `PuzzleRepository.all*`.
+///
+/// With `pinnedFormat` set this doubles as a per-format **hub** (opened from Home's format
+/// tiles, 2026-07-17 IA fix): today's *ranked* daily leads, the archive follows, and the
+/// format dropdown disappears. The tiles used to dead-end into today's daily only while
+/// the whole replayable library hid behind the quiet Browse row — the hub makes a format
+/// tile mean "play this format", not "play today's one puzzle". Archive plays stay
+/// Pro-gated at the row tap (free users can see the shelf; playing it sells Pro).
 struct BrowseView: View {
     @EnvironmentObject private var container: RepositoryContainer
 
-    @State private var format: BrowseFormat = .keep4
+    /// When set, this screen is that format's hub: no format dropdown, daily-first layout.
+    let pinnedFormat: BrowseFormat?
+
+    init(pinnedFormat: BrowseFormat? = nil) {
+        self.pinnedFormat = pinnedFormat
+        _format = State(initialValue: pinnedFormat ?? .keep4)
+    }
+
+    @State private var format: BrowseFormat
     @State private var sportFilter: SportFilter = .all
     @State private var decadeFilter: DecadeFilter = .all
     @State private var grainFilter: GrainFilter = .all
@@ -14,11 +29,16 @@ struct BrowseView: View {
     @State private var searchExpanded = false
     @State private var keep4: [Keep4Puzzle] = []
     @State private var whoami: [WhoAmIPuzzle] = []
+    @State private var dailyKeep4: Keep4Puzzle?
+    @State private var dailyWhoAmI: WhoAmIPuzzle?
     @State private var loading = false
 
     @State private var activeKeep4: Keep4Puzzle?
     @State private var activeWhoAmI: WhoAmIPuzzle?
+    @State private var activeDailyKeep4: Keep4Puzzle?
+    @State private var activeDailyWhoAmI: WhoAmIPuzzle?
     @State private var shareTarget: SharablePuzzle?
+    @State private var showPaywall = false
 
     enum BrowseFormat: String, CaseIterable {
         case keep4, whoami
@@ -32,7 +52,7 @@ struct BrowseView: View {
             content
         }
         .background(Color.appBackground)
-        .navigationTitle("Browse")
+        .navigationTitle(pinnedFormat?.title ?? "Browse")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: refreshKey) { await load() }
         .fullScreenCover(item: $activeKeep4) { p in
@@ -41,9 +61,20 @@ struct BrowseView: View {
         .fullScreenCover(item: $activeWhoAmI) { p in
             WhoAmIGameView(puzzle: p, ranked: false).environmentObject(container)
         }
+        // Today's daily from the hub is the real ranked run — same semantics as Home's
+        // daily cards, distinct from the unranked archive covers above.
+        .fullScreenCover(item: $activeDailyKeep4) { p in
+            Keep4GameView(puzzle: p).environmentObject(container)
+        }
+        .fullScreenCover(item: $activeDailyWhoAmI) { p in
+            WhoAmIGameView(puzzle: p).environmentObject(container)
+        }
         .sheet(item: $shareTarget) { target in
             PuzzleShareSheet(puzzle: target, surface: "puzzle_browse")
                 .environmentObject(container)
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView().environmentObject(container)
         }
     }
 
@@ -68,8 +99,10 @@ struct BrowseView: View {
                 // the whole point of the dimension labels is that they stay readable.
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        PrimeDropdown(options: BrowseFormat.allCases, selection: $format,
-                                     title: \.title, isDefault: { _ in false })
+                        if pinnedFormat == nil {
+                            PrimeDropdown(options: BrowseFormat.allCases, selection: $format,
+                                         title: \.title, isDefault: { _ in false })
+                        }
                         PrimeDropdown(options: SportFilter.allCases, selection: $sportFilter, title: \.title,
                                       unsetLabel: String(localized: "Sport"))
                         if format == .keep4 {
@@ -93,14 +126,20 @@ struct BrowseView: View {
     // MARK: - Content
 
     @ViewBuilder private var content: some View {
-        if loading && currentEmpty {
+        if loading && currentEmpty && dailyPuzzleMissing {
             Spacer(); ProgressView().tint(.accentFill); Spacer()
-        } else if currentEmpty {
-            emptyState
         } else {
             ScrollView {
-                LazyVStack(spacing: 12) {
-                    if format == .keep4 {
+                LazyVStack(alignment: .leading, spacing: 12) {
+                    if pinnedFormat != nil {
+                        LowerThirdHeader(title: "Today's daily")
+                        dailySection
+                        LowerThirdHeader(title: "Archive")
+                            .padding(.top, 10)
+                    }
+                    if currentEmpty {
+                        emptyState.frame(maxWidth: .infinity)
+                    } else if format == .keep4 {
                         ForEach(numberedKeep4, id: \.puzzle.id) { card(keep4: $0.puzzle, title: $0.title) }
                     } else {
                         ForEach(Array(whoami.enumerated()), id: \.element.id) { i, p in
@@ -110,6 +149,37 @@ struct BrowseView: View {
                 }
                 .padding(16)
             }
+        }
+    }
+
+    private var dailyPuzzleMissing: Bool {
+        pinnedFormat == nil || (format == .keep4 ? dailyKeep4 == nil : dailyWhoAmI == nil)
+    }
+
+    /// Today's ranked daily for the chosen sport — the same card Home shows, so the hub
+    /// reads as "the daily, then everything else this format has".
+    @ViewBuilder private var dailySection: some View {
+        if format == .keep4, let p = dailyKeep4 {
+            DailyGameCard(formatName: "K4C4", symbol: "rectangle.stack.fill", sport: p.sport,
+                          title: p.theme, subtitle: "\(p.players.count) \(p.puzzleGrain().countNoun)",
+                          scoring: p.scoringKind(), grain: p.puzzleGrain(),
+                          completed: container.hasCompletedToday(puzzleID: p.id),
+                          favoriteTeamMatch: container.favoriteTeams.team(for: p.sport)
+                              .map(p.features(teamAbbr:)) ?? false,
+                          ranked: true) {
+                activeDailyKeep4 = p
+            }
+            secondaryAction: { shareTarget = SharablePuzzle(keep4: p) }
+        } else if format == .whoami, let p = dailyWhoAmI {
+            DailyGameCard(formatName: "Who am I?", symbol: "questionmark.circle.fill", sport: p.sport,
+                          title: String(localized: "Guess today's mystery player"),
+                          subtitle: String(localized: "\(p.clues.count) clues"),
+                          completed: container.hasCompletedToday(puzzleID: p.id),
+                          typeColor: .voltFill, onTypeColor: .onVolt,
+                          ranked: true) {
+                activeDailyWhoAmI = p
+            }
+            secondaryAction: { shareTarget = SharablePuzzle(whoAmI: p) }
         }
     }
 
@@ -133,13 +203,19 @@ struct BrowseView: View {
         }
     }
 
+    /// Archive plays are the Pro pillar — from the hub, free users see the shelf but the
+    /// row tap paywalls (the Home Browse row gates at entry, so Pro users never hit this).
+    private func playArchive(_ open: () -> Void) {
+        if container.entitlements.canAccessArchive { open() } else { showPaywall = true }
+    }
+
     private func card(keep4 p: Keep4Puzzle, title: String) -> some View {
         DailyGameCard(formatName: "K4C4", symbol: "rectangle.stack.fill", sport: p.sport,
                       title: title, subtitle: "\(p.players.count) \(p.puzzleGrain().countNoun) · archive",
                       scoring: p.scoringKind(), grain: p.puzzleGrain(),
                       completed: container.hasCompletedToday(puzzleID: p.id),
                       favoriteTeamMatch: container.favoriteTeams.team(for: p.sport).map(p.features(teamAbbr:)) ?? false) {
-            activeKeep4 = p
+            playArchive { activeKeep4 = p }
         }
         secondaryAction: { shareTarget = SharablePuzzle(keep4: p) }
     }
@@ -149,7 +225,7 @@ struct BrowseView: View {
         DailyGameCard(formatName: "Who am I?", symbol: "questionmark.circle.fill", sport: p.sport,
                       title: "Mystery player #\(number)", subtitle: "\(p.clues.count) clues · archive",
                       completed: container.hasCompletedToday(puzzleID: p.id), typeColor: .voltFill, onTypeColor: .onVolt) {
-            activeWhoAmI = p
+            playArchive { activeWhoAmI = p }
         }
         secondaryAction: { shareTarget = SharablePuzzle(whoAmI: p) }
     }
@@ -173,6 +249,13 @@ struct BrowseView: View {
             keep4 = await container.puzzles.allKeep4(for: sportFilter)
         } else {
             whoami = await container.puzzles.allWhoAmI(for: sportFilter)
+        }
+        if pinnedFormat != nil {
+            if format == .keep4 {
+                dailyKeep4 = await container.puzzles.keep4Puzzle(for: sportFilter, date: Date())
+            } else {
+                dailyWhoAmI = await container.puzzles.whoAmIPuzzle(for: sportFilter, date: Date())
+            }
         }
         if let query = DebugLaunch.searchQuery { searchText = query }
         if let sport = DebugLaunch.browseSport, let filter = SportFilter(rawValue: sport) {

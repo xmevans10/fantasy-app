@@ -1021,6 +1021,19 @@ formats + every tab, cross-checked against live SQL):**
   numeral, with the Balatro foil reserved for Legend only (full-card foil swallowed the
   tier color — screenshot-caught); (3) Home's shared `section()` header is a broadcast
   lower-third — condensed caps on an accent `DiagonalBlock` chip with the ink ledge.
+- **Format hubs (user IA feedback 2026-07-17: "which do I click if I want to play a
+  game?"):** the K4C4/Who Am I? tiles used to funnel through a sport picker into *today's
+  daily only* while the whole replayable library hid behind the quiet Browse row — the
+  flashiest tiles were the shallowest tap on the page. Now each tile opens its **format
+  hub**: `BrowseView` gained a `pinnedFormat` mode (format dropdown hidden, nav title =
+  format) that leads with today's *ranked* daily card and follows with the format's full
+  archive; archive plays stay unranked and Pro-gate **at the row tap** (free users see the
+  shelf, the tap opens the paywall — verified live: guest tap → Playbook Pro sheet with
+  "Full archive" on it). Tile subtitles now say "Daily + archive". The old
+  `DailyGameLaunchView` (sport-picker → daily dead-end) is deleted; the lower-third header
+  is extracted to a shared `LowerThirdHeader` (DesignSystem/Components.swift) used by both
+  Home and the hubs. Driven end-to-end in-sim: Home → K4C4 tile → hub → daily + archive +
+  paywall.
 
 ## 9. Roadmap — remaining milestones + product backlog (PM audit 2026-07-09)
 

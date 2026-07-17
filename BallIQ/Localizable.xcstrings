@@ -575,6 +575,16 @@
         }
       }
     },
+    "Archive" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo"
+          }
+        }
+      }
+    },
     "At least 3 characters." : {
       "localizations" : {
         "es" : {
@@ -1146,6 +1156,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diario"
+          }
+        }
+      }
+    },
+    "Daily + archive" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diario + archivo"
           }
         }
       }
@@ -3956,6 +3976,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "EL TABLERO DE HOY"
+          }
+        }
+      }
+    },
+    "Today's daily" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El diario de hoy"
           }
         }
       }

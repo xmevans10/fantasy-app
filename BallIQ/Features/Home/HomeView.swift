@@ -15,8 +15,11 @@ struct HomeView: View {
     @State private var showDraftSpin = false
     @State private var showDailyDraft = false
     @State private var showGrid = false
-    @State private var showKeep4Launch = false
-    @State private var showWhoAmILaunch = false
+    /// The K4C4/Who Am I? tiles open their format hub (daily + archive in one place,
+    /// 2026-07-17 IA fix) — not just today's daily, which made the flashiest tiles the
+    /// shallowest tap on the page.
+    @State private var showKeep4Hub = false
+    @State private var showWhoAmIHub = false
     @State private var shareTarget: SharablePuzzle?
 
     private let gridColumns = [GridItem(.flexible(), spacing: 12),
@@ -148,11 +151,11 @@ struct HomeView: View {
             .fullScreenCover(isPresented: $showGrid) {
                 GridGameView().environmentObject(container)
             }
-            .fullScreenCover(isPresented: $showKeep4Launch) {
-                DailyGameLaunchView(format: .keep4).environmentObject(container)
+            .navigationDestination(isPresented: $showKeep4Hub) {
+                BrowseView(pinnedFormat: .keep4).environmentObject(container)
             }
-            .fullScreenCover(isPresented: $showWhoAmILaunch) {
-                DailyGameLaunchView(format: .whoAmI).environmentObject(container)
+            .navigationDestination(isPresented: $showWhoAmIHub) {
+                BrowseView(pinnedFormat: .whoami).environmentObject(container)
             }
             .sheet(item: $shareTarget) { target in
                 PuzzleShareSheet(puzzle: target, surface: "puzzle_home")
@@ -207,8 +210,8 @@ struct HomeView: View {
 
     private func launch(_ format: GameFormat) {
         switch format.id {
-        case "keep4": showKeep4Launch = true
-        case "whoami": showWhoAmILaunch = true
+        case "keep4": showKeep4Hub = true
+        case "whoami": showWhoAmIHub = true
         case "versus": selectedTab = 2
         case "overunder": showOverUnder = true
         case "draft": showDraftSpin = true
@@ -253,20 +256,8 @@ struct HomeView: View {
                                         @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             // Broadcast lower-third chip instead of bare ink text (2026-07-17 "too much
-            // white" pass): accent block with the sticker ledge and a diagonal cut on the
-            // bottom edge — one shared change that recolors every Home section header.
-            Text(title)
-                .font(.heading)
-                .textCase(.uppercase)
-                .foregroundStyle(Color.onAccent)
-                .padding(.horizontal, 12)
-                .padding(.top, 5).padding(.bottom, 9)
-                .background(
-                    ZStack {
-                        DiagonalBlock(cut: 8).fill(Color.borderInk).offset(x: 3, y: 3)
-                        DiagonalBlock(cut: 8).fill(Color.accentFill)
-                    }
-                )
+            // white" pass) — shared with the format hubs via `LowerThirdHeader`.
+            LowerThirdHeader(title: title)
             content()
         }
     }

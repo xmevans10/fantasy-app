@@ -3,6 +3,28 @@ import SwiftUI
 // Shared "Prime Time" controls — one segmented control, one empty state, one CTA treatment,
 // one press feedback. Screens compose these instead of hand-rolling per-screen variants.
 
+/// Broadcast lower-third section header — condensed white caps on an accent block with a
+/// diagonal-cut bottom edge and the sticker ink ledge. Home's section headers and the
+/// format-hub sections share this one chip instead of drifting copies.
+struct LowerThirdHeader: View {
+    let title: LocalizedStringKey
+
+    var body: some View {
+        Text(title)
+            .font(.heading)
+            .textCase(.uppercase)
+            .foregroundStyle(Color.onAccent)
+            .padding(.horizontal, 12)
+            .padding(.top, 5).padding(.bottom, 9)
+            .background(
+                ZStack {
+                    DiagonalBlock(cut: 8).fill(Color.borderInk).offset(x: 3, y: 3)
+                    DiagonalBlock(cut: 8).fill(Color.accentFill)
+                }
+            )
+    }
+}
+
 /// Broadcast segmented control — surfaceMuted track, accentFill active segment, condensed caps.
 /// Replaces stock `.pickerStyle(.segmented)` so every screen shares the same switch.
 struct PrimeSegmentedControl<Value: Hashable>: View {

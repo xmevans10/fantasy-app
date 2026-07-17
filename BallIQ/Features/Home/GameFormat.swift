@@ -20,10 +20,12 @@ struct GameFormat: Identifiable {
     var onTint: Color = .onAccent
 
     static let all: [GameFormat] = [
+        // "Daily + archive": these two tiles open the format hub (BrowseView pinned),
+        // not just today's puzzle — the subtitle should promise what the tap delivers.
         GameFormat(id: "keep4", name: "K4C4", symbol: "rectangle.stack.fill", isPro: false, isPlayable: true,
-                   tint: .accentFill, onTint: .onAccent),
+                   subtitle: "Daily + archive", tint: .accentFill, onTint: .onAccent),
         GameFormat(id: "whoami", name: "Who am I?", symbol: "questionmark.circle.fill", isPro: false, isPlayable: true,
-                   tint: .voltFill, onTint: .onVolt),
+                   subtitle: "Daily + archive", tint: .voltFill, onTint: .onVolt),
         GameFormat(id: "draft", name: "Draft & Spin", symbol: "dice.fill", isPro: false, isPlayable: true, subtitle: "Arcade",
                    tint: .warningFill, onTint: .onWarning),
         // No explicit subtitle: Over/Under's first run each UTC day is ranked (see
