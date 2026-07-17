@@ -4,8 +4,10 @@ Native SwiftUI iOS sports-trivia app. See [docs/BALLIQ_SPEC.md](docs/BALLIQ_SPEC
 product/architecture/status — that's the living source of truth, not this file. See
 [AGENTS.md](AGENTS.md) for *how* to work in this repo at the right quality bar (verification
 habits, shared-vs-duplicated logic, blast-radius judgment) — this file is project facts, that
-one is process. **When picking what to work on next, check BALLIQ_SPEC.md §9.0 first** —
-performance, then unbuilt features/functionality, then launch/polish, in that order.
+one is process. **When picking what to work on next, check BALLIQ_SPEC.md §9.1's version
+roadmap first** (1.2 push → 1.3 monetization → 1.4 rating seasons → 1.5 content depth;
+§9.0's tier rule still governs anything outside that roadmap). The app is LIVE on the App
+Store as of 2026-07-16 (v1.0 approved; v1.1 in review) — treat `main` as production.
 
 ## Supabase DB operations — execute directly, don't ask first
 

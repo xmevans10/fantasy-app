@@ -354,7 +354,7 @@ One template definition, consumed by both sides:
   `ImageRenderer` inside a hosted XCTest instead — see `ScoringGalleryTests`.
 - Era analysis (findings in §4): `python3 -m tools.ingest.era_analysis`.
 
-## 8. Milestone status (2026-07-05)
+## 8. Milestone status (updated 2026-07-16)
 
 | Milestone | Status |
 |-----------|--------|
@@ -375,15 +375,25 @@ One template definition, consumed by both sides:
 | M19 social layer (friends graph + public profiles) | ✅ shipped 2026-07-12; server side live-verified 16/16 (RLS negatives included); signed-in UI pass still needs two TestFlight accounts |
 | M20 social follow-through | ✅ shipped 2026-07-12 — FRIENDS leaderboard scope on Leagues (`friend_profiles` RPC), onboarding username claim, friend-request push (deployed + chain verified), pg_net DB triggers for both notify webhooks |
 
-**Release status (new as of 2026-07-05):** a TestFlight build is live for external testers
-(join link in [prompts/HANDOFF-next-agent-2026-07-05.md](../prompts/HANDOFF-next-agent-2026-07-05.md)),
-and the app has been submitted for full App Store review. See that handoff and `CLAUDE.md`'s
-"App Store Connect / TestFlight" section for the release pipeline mechanics — don't rebuild the
-manual-signing workaround from scratch, it's already documented.
+**Release status (updated 2026-07-16):** **the app is LIVE on the App Store.** v1.0's
+2026-07-05 review submission was approved (`READY_FOR_SALE`, confirmed via the ASC API
+2026-07-16 — ASC name "Playbook: Sports Trivia", app record `6785275045`). **v1.1 (build 9,
+cut from `main` @ `bbe5910`) was submitted for review 2026-07-16 20:15 UTC** and is
+`WAITING_FOR_REVIEW`, release type `AFTER_APPROVAL` (goes live automatically on approval).
+1.1 carries everything shipped since v1.0's late-June cut: Over/Under, Draft & Spin, The
+Grid, Daily Draft + all weekly arcade leaderboards, the daily loop, friends/public profiles/
+FRIENDS league scope, profile photo upload, team colors/historical franchises, single-game
+grain content + creation, the big catalog expansion, Spanish, cold-launch disk cache, and
+the 2026-07-16 audit fixes. TestFlight external-tester build link:
+[prompts/HANDOFF-next-agent-2026-07-05.md](../prompts/HANDOFF-next-agent-2026-07-05.md).
+Pipeline mechanics live in the `testflight-release` skill (now including the proven
+end-to-end 1.1 submission flow and the persistent `tools/release/asc.py` REST helper).
 
 **Open items / hand-offs**
-1. **M5 monetization (Pro/StoreKit)** is the only fully-unstarted milestone. **M14** Spanish
-   localization is the other real gap. Both are pure app-code, independently scoped — see §9.
+1. ~~M5 monetization fully unstarted / M14 Spanish~~ — stale: M5 Phases A–E and M14 Spanish
+   both shipped (see the table above). What remains of M5 is (a) the **user-side ASC setup**
+   (Paid Applications agreement + creating the IAP products — hand-off 7 below) and (b) the
+   **deferred Phase F rating seasons** (user scoping conversation first; see §9).
 2. ~~**Per-format daily completion bug**~~ — fixed (shipped in the 2026-07-04 commit): the two
    Home cards now check `hasCompletedToday(_ card:)` backed by a per-day
    `completedCardsToday: Set<DailyCard>`; `hasPlayedToday` remains "played anything" and
@@ -982,6 +992,11 @@ scope/rationale for each item, just re-grouped here by tier instead of by impact
 item only if you have new evidence it belongs elsewhere — don't re-litigate the grouping
 from scratch each session.
 
+> **Status 2026-07-16: all three tiers are exhausted** — every agent-buildable item below is
+> shipped; the residue is user-gated. Sequencing now lives in **§9.1's version roadmap**
+> (1.2 push → 1.3 monetization → 1.4 rating seasons → 1.5 content depth); the tier lists
+> below remain as the scope/rationale record for each item.
+
 **Tier 1 — Performance ("make it fast").** Cold-launch and in-session latency, across every
 surface, not just the ones already flagged:
 - Backlog #3, *cold-launch speed* — **✅ shipped 2026-07-13.** Root cause: Over/Under's (and
@@ -1100,11 +1115,10 @@ carries the selected team's palette (298 tests green, Grid chips screenshot-veri
 product-taste calls: recoloring SpinRevealView's volt "LOCKED IN" motif, share-card
 lineup accent stripes, WhoAmI reveal (no structured teamAbbr in its content model).
 Backlog items:
-backlog #8 (defunct-franchise styling), #9 (widen historical headshot slices — **the
-headshot-placeholder gaps this session's UI pass observed live**, in WhoAmI's answer
-reveal and a Draft & Spin lineup row, are this exact backlog item, not a new bug — the
-bundled offline sample is a deliberately trimmed ~500-row set per `AGENTS.md` §1, so wider
-headshot coverage on the live catalog is the real fix), #10 (M14 Spanish localization —
+backlog #8 (defunct-franchise styling), #9 (widen historical headshot slices — note
+2026-07-16: the WhoAmI answer-reveal half of the old "headshot placeholder" observation is
+no longer this item; the reveal now resolves real photos from the catalog via
+`WhoAmIAnswerPhoto`. What remains of #9 is pure catalog coverage width), #10 (M14 Spanish localization —
 already well-scoped in `prompts/M14-accessibility-and-localization.md`; launch/growth-
 motivated, not core functionality, hence Tier 3), #11 (content-drift guard). External,
 non-agent hand-offs also live here: APNs key material (gates Tier 2's push item), Paid
@@ -1211,3 +1225,83 @@ expected retention/quality impact per unit of effort):
     commit (`bc93f3e`, "Minigame fixes & polish...") already ran the bundle regen this
     item asked for — `test_content_drift.py` passes against the current committed
     `keep4_puzzles.json`, no action needed. Full `pytest tools/ingest/tests` still green.
+
+### 9.1 Version roadmap (planned 2026-07-16, immediately after the 1.1 submission)
+
+The tiered backlog above is exhausted (§9.0): everything agent-buildable is shipped, and
+what's left is gated on user actions or user decisions. This roadmap re-cuts that residue —
+plus the 2026-07-16 audit's open product calls — into shippable App Store versions, in
+order. Convention: **[user]** = needs the user's account/portal/decision before an agent
+can act; **[agent]** = buildable unattended once its [user] gates (if any) clear. Each
+version ships only when both test suites are green and its own exit criterion is met.
+
+**1.1.1 — reserved patch slot.** Only if 1.1's review rejects or a live regression surfaces
+post-approval. No planned content; cut from `main` with the fix, same-day submission (the
+pipeline is one command sequence now — see the `testflight-release` skill).
+
+**1.2 — "It remembers you": push notifications + the retention loop's last mile.**
+The single biggest already-paid-for lever (§9 P0 #1): all 5 edge functions and 4 cron jobs
+are deployed and verified in `[apns:stub]` mode; only real key material is missing.
+- [user] Generate/confirm an APNs auth key on team `8K5ZVPCQ42` (three `AuthKey_*.p8`
+  candidates already on disk — see the Tier 2 push entry above), enable the Push
+  Notifications capability on `com.balliqfantasy.app`, and paste the four `APNS_*` secrets
+  into Edge Functions → Secrets (or `supabase login` first — the local CLI is on the wrong
+  account).
+- [agent] Add the `aps-environment` entitlement (deliberately not added before the
+  capability exists — it would break archive signing), flip `apns.ts` out of stub mode,
+  E2E-verify device-token registration → streak-risk push on a real device/TestFlight, and
+  wire the notification-settings screen to reality.
+- [user→agent] Resolve the two audit product calls: (a) should Daily Draft bypass the Pro
+  sport gate on locked-sport days (like the daily Keep4/WhoAmI do) or keep paywalling at
+  Start (current, safe default)? (b) onboarding copy still says "A fresh Keep4 and Who Am
+  I? every day" — refresh to cover the four daily surfaces, or keep the two-daily framing?
+- [user] Two-account TestFlight QA pass (`prompts/QA-testflight-social-flows.md`, ~25 min)
+  — 1.2 is the right forcing function since pushes make the social flows fully testable.
+- [user] Native-speaker pass over the Spanish catalog (418 machine-translated strings).
+- Exit: a streak-risk push lands on a real device from the production cron chain.
+
+**1.3 — "Open the register": monetization switched on (M5 Phase B completion).**
+Every rail exists (StoreKit 2 store, gating, paywall, server-validated entitlements,
+deployed-but-inert `app-store-notifications` function). Nothing here is code-first; it's
+ASC-first.
+- [user] Sign the Paid Applications agreement (ASC → Business); create the four products
+  (`pro.monthly`, `pro.yearly`, `pack.draftspin`, `pack.grid`) with real prices.
+- [agent] Set `APPLE_ROOT_CA_PEM` as an edge secret, point the production App Store Server
+  Notifications URL at the function, sandbox-verify a purchase → webhook → `entitlements`
+  row → client union end-to-end, and build the "companion client-transaction verify" belt
+  (the documented fast-follow from Phase B's scope note) if the sandbox pass shows the race
+  window matters.
+- [agent] Paywall/pricing polish once real localized prices render (screenshot pass per
+  AGENTS §5 — longest price strings, es locale).
+- Exit: a sandbox Pro purchase unlocks hard mode/archive/sports on a second signed-in
+  device via the server path alone (StoreKit store wiped).
+
+**1.4 — "Seasons": M5 Phase F rating seasons — the deferred competitive spine.**
+Explicitly deferred by the user 2026-07-14; do not start from inference.
+- [user] The scoping conversation first — the open questions are already logged in
+  `prompts/HANDOFF-next-agent-2026-07-12c.md` (cycle length/reset semantics, placement,
+  what "rewards" concretely are, how seasons interact with the weekly leagues and the
+  Pro entitlement it's meant to sell).
+- [agent] Then: schema + RPCs following the `seasons`/`cohorts` and arcade-leaderboard
+  precedents, season UI on Leagues/Profile, locked-value tests for placement/decay math.
+- Exit: a full simulated 8-week cycle (clock-injected, unit-tested) plus a live season row
+  visible in the app.
+
+**1.5 — "Deep bench": content depth where the catalog is thinnest.**
+All [agent], no gates — the release valve between user-gated versions; pull items forward
+whenever a gate above stalls.
+- Tennis daily/archive depth: the live archive holds exactly 2 tennis Keep4 themes today
+  (audit observation) against 9,615 catalog rows — add themed slices (Grand-Slam eras,
+  country cohorts) via the established themes.py pattern.
+- Soccer league-cohort themes off the now-38-league catalog; more single-game themes for
+  NBA/MLB now that the grain ships (the NBA hoopR games sweep needs its documented manual
+  re-run to stay fresh).
+- WhoAmI pool expansion (the curated entry list is the bottleneck for variety) + backlog
+  #8 defunct-franchise styling, the last unshipped Tier-3 crumb.
+- Exit: no sport's archive has fewer than ~6 themes; WhoAmI pool ≥ 2× current.
+
+**Candidate pool (unscheduled — needs user appetite before any lands in a version):**
+Home-screen widget (streak + daily countdown — pairs naturally with 1.2's pushes), App
+Store product-page refresh (1.1's screenshots predate arcade formats/leaderboards),
+Game Center achievements mirroring the XP system, iPad layout pass. None are commitments;
+each is a conversation first.
