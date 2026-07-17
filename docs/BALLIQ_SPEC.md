@@ -1011,6 +1011,16 @@ formats + every tab, cross-checked against live SQL):**
   cards that feed it. Draft & Spin (never ranked) keeps "Arcade"; Versus keeps
   "Head-to-head". Screenshot-verified en; es strings added ("CLASIFICADO",
   "Diario · Clasificado").
+- **"Too much white" Home de-blanding (user feedback 2026-07-17), three changes reusing
+  existing Prime Time primitives, all screenshot-verified light + dark:** (1) the six
+  GAME FORMATS tiles are now arcade cartridges — each format wears its own `blockCard`
+  color (`GameFormat.tint`/`onTint`: K4C4 accent blue, WhoAmI volt, Draft & Spin warning
+  orange, Over/Under danger red, Grid pro purple, Versus ink) with sticker outline + ledge
+  shadow; (2) `RankWidget` is a broadcast hero — tier-colored `blockCard` fill (new
+  `Tier.onColor` for legible ink per metal), `SpeedLines` atmosphere, Anton `hero(44)`
+  numeral, with the Balatro foil reserved for Legend only (full-card foil swallowed the
+  tier color — screenshot-caught); (3) Home's shared `section()` header is a broadcast
+  lower-third — condensed caps on an accent `DiagonalBlock` chip with the ink ledge.
 
 ## 9. Roadmap — remaining milestones + product backlog (PM audit 2026-07-09)
 

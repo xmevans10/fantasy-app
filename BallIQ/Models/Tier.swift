@@ -36,6 +36,15 @@ enum Tier: String, CaseIterable {
         }
     }
 
+    /// Legible ink on this tier's `color` fill. Static (not the dynamic `.ink`) because the
+    /// tier fills themselves don't change between light and dark mode.
+    var onColor: Color {
+        switch self {
+        case .bronze, .legend: return .white
+        default:               return Color(hex: 0x15120B)
+        }
+    }
+
     static func forRating(_ rating: Int) -> Tier {
         allCases.first { $0.range.contains(rating) } ?? .bronze
     }

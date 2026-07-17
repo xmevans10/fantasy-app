@@ -252,10 +252,21 @@ struct HomeView: View {
     private func section<Content: View>(_ title: LocalizedStringKey,
                                         @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
+            // Broadcast lower-third chip instead of bare ink text (2026-07-17 "too much
+            // white" pass): accent block with the sticker ledge and a diagonal cut on the
+            // bottom edge — one shared change that recolors every Home section header.
             Text(title)
                 .font(.heading)
                 .textCase(.uppercase)
-                .foregroundStyle(Color.textPrimary)
+                .foregroundStyle(Color.onAccent)
+                .padding(.horizontal, 12)
+                .padding(.top, 5).padding(.bottom, 9)
+                .background(
+                    ZStack {
+                        DiagonalBlock(cut: 8).fill(Color.borderInk).offset(x: 3, y: 3)
+                        DiagonalBlock(cut: 8).fill(Color.accentFill)
+                    }
+                )
             content()
         }
     }

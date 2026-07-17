@@ -23,26 +23,26 @@ struct RankWidget: View {
             HStack(alignment: .center, spacing: 14) {
                 Image(systemName: tier.symbol)
                     .font(.system(size: 34, weight: .black))
-                    .foregroundStyle(tier.color)
+                    .foregroundStyle(tier.onColor)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(tier.name.uppercased())
                         .font(.title)
-                        .foregroundStyle(Color.textPrimary)
+                        .foregroundStyle(tier.onColor)
                     Text("\(sport.displayName.uppercased()) RATING")
                         .font(.label11)
-                        .foregroundStyle(Color.textMuted)
+                        .foregroundStyle(tier.onColor.opacity(0.75))
                 }
                 Spacer()
                 Text("\(rating)")
-                    .font(.hero(40))
-                    .foregroundStyle(tier.color)
+                    .font(.hero(44))
+                    .foregroundStyle(tier.onColor)
             }
 
             VStack(alignment: .leading, spacing: 6) {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color.surfaceMuted)
-                        Capsule().fill(tier.color)
+                        Capsule().fill(tier.onColor.opacity(0.25))
+                        Capsule().fill(tier.onColor)
                             .frame(width: max(8, geo.size.width * progress))
                     }
                 }
@@ -50,11 +50,21 @@ struct RankWidget: View {
                 if let pts = pointsToNext {
                     Text("\(pts) PTS TO NEXT TIER")
                         .font(.label11)
-                        .foregroundStyle(Color.textMuted)
+                        .foregroundStyle(tier.onColor.opacity(0.75))
                 }
             }
         }
         .padding(18)
-        .cardSurface()
+        // Broadcast hero, not a settings row (2026-07-17 "too much white" pass): the whole
+        // block wears the tier's metal with speed lines behind the numerals. The Balatro
+        // foil shimmer is reserved for Legend — over the lower tiers' fills it swallowed
+        // the tier color entirely (screenshot-caught), and foil is meant for the one rare
+        // card anyway. The `.hero(44)` numeral is Anton — the scoreboard face.
+        .background(
+            SpeedLines(color: tier.onColor, opacity: 0.08)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+        )
+        .blockCard(fill: tier.color)
+        .foil(active: tier == .legend, cornerRadius: Radius.card)
     }
 }
