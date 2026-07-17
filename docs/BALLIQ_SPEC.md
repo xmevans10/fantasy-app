@@ -1034,6 +1034,11 @@ formats + every tab, cross-checked against live SQL):**
   is extracted to a shared `LowerThirdHeader` (DesignSystem/Components.swift) used by both
   Home and the hubs. Driven end-to-end in-sim: Home → K4C4 tile → hub → daily + archive +
   paywall.
+- **Gold polychrome banners (user call, 2026-07-17):** `LowerThirdHeader` switched from
+  accent blue to a new `goldFill`/`onGold` token pair (same hue as the Gold rating tier)
+  with the Balatro foil shimmer applied — `Foil` generalized from rounded-rect-only to any
+  clip shape (`foil(active:in:)`) so the sheen respects the banner's `DiagonalBlock` cut.
+  Screenshot-verified light + dark.
 
 ## 9. Roadmap — remaining milestones + product backlog (PM audit 2026-07-09)
 

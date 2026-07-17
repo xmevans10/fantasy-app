@@ -48,6 +48,11 @@ extension Color {
     static let accentBg     = dynamic(light: Color(hex: 0xE3E9FF), dark: Color(hex: 0x16224F))
     static let accentBorder = dynamic(light: Color(hex: 0x1E50FF), dark: Color(hex: 0x7C9CFF))
 
+    // MARK: gold — trophy metal (lower-third banners; same hue as the Gold rating tier).
+    // Static in both modes, so its on-color is static ink too.
+    static let goldFill = Color(hex: 0xE0A92E)
+    static let onGold   = Color(hex: 0x15120B)
+
     // MARK: volt — sharp accent (lime). Highlights, streaks, emphasis.
     static let voltFill = Color(hex: 0xC2F03A)
     static let onVolt    = Color(hex: 0x15120B)

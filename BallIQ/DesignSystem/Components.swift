@@ -13,15 +13,18 @@ struct LowerThirdHeader: View {
         Text(title)
             .font(.heading)
             .textCase(.uppercase)
-            .foregroundStyle(Color.onAccent)
+            .foregroundStyle(Color.onGold)
             .padding(.horizontal, 12)
             .padding(.top, 5).padding(.bottom, 9)
             .background(
                 ZStack {
                     DiagonalBlock(cut: 8).fill(Color.borderInk).offset(x: 3, y: 3)
-                    DiagonalBlock(cut: 8).fill(Color.accentFill)
+                    DiagonalBlock(cut: 8).fill(Color.goldFill)
                 }
             )
+            // Gold + polychrome shimmer (user call, 2026-07-17) — the foil sheen is clipped
+            // to the same diagonal shape so it never spills past the banner's cut corner.
+            .foil(active: true, in: DiagonalBlock(cut: 8))
     }
 }
 

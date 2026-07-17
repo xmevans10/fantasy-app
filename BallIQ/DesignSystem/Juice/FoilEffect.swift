@@ -38,7 +38,9 @@ final class FoilMotion: ObservableObject {
 /// Gated on Reduce Motion (renders the card untouched, never starts the motion manager).
 struct Foil: ViewModifier {
     var active: Bool
-    var cornerRadius: CGFloat
+    /// The sheen is clipped to this shape — a rounded rect for cards, `DiagonalBlock` for
+    /// the lower-third banners. Any shape works; it just needs to match the view's own clip.
+    var shape: AnyShape
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var motion = FoilMotion.shared
@@ -65,7 +67,7 @@ struct Foil: ViewModifier {
         let tilt = Angle(radians: motion.roll * 1.2 + motion.pitch * 0.6)
         let center = UnitPoint(x: 0.5 + CGFloat(sin(motion.roll)) * 0.35,
                                y: 0.5 + CGFloat(sin(motion.pitch)) * 0.35)
-        return RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        return shape
             .fill(AngularGradient(gradient: Self.rainbow, center: center, angle: drift + tilt))
             .blendMode(.overlay)
             .opacity(0.5)
@@ -80,6 +82,12 @@ extension View {
     /// Apply a holographic "foil" shimmer (see `Foil`). `cornerRadius` should match the card's
     /// own clip so the sheen stays within its rounded bounds.
     func foil(active: Bool, cornerRadius: CGFloat = 14) -> some View {
-        modifier(Foil(active: active, cornerRadius: cornerRadius))
+        modifier(Foil(active: active,
+                      shape: AnyShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))))
+    }
+
+    /// Foil clipped to an arbitrary shape (e.g. the lower-third banners' `DiagonalBlock`).
+    func foil(active: Bool, in shape: some Shape) -> some View {
+        modifier(Foil(active: active, shape: AnyShape(shape)))
     }
 }
