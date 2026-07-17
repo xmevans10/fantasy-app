@@ -5,12 +5,16 @@
 // and can't be trusted alone (a jailbroken/modified client could fake it) — this table, written
 // only by this service-role function, is what `RemoteSync` actually trusts across devices.
 //
-// Hand-off (cannot be done by the agent): set the production notifications URL to this
-// function's URL in App Store Connect (App Information → App Store Server Notifications), and
-// set `APPLE_ROOT_CA_PEM` (Apple's Root CA — G3) as an Edge Function secret. Until both exist,
-// no real traffic reaches this function — it's fully covered by
-// `_shared/app_store_notifications.test.ts`'s self-generated fixture chain in the meantime.
+// Remaining hand-off (cannot be done by the agent): set the production App Store Server
+// Notifications URL to this function's URL in App Store Connect (App Information → App Store
+// Server Notifications). The trust anchor (`APPLE_ROOT_CA_PEM`, Apple's Root CA — G3) is now
+// resolved at runtime: the env secret wins if present, else it's fetched once per isolate from
+// Supabase Vault via `get_app_store_config()` (2026-07-17 — same fallback the APNs key uses,
+// because no management token exists here to set true Edge Function secrets). The whole
+// verify/persist path is covered by `_shared/app_store_notifications.test.ts`'s self-generated
+// fixture chain.
 import { serviceClient } from "../_shared/supabase.ts";
+import { loadAppleRootPem } from "../_shared/app_store_config.ts";
 import {
   AppleNotificationPayload,
   AppleSignedPayloadError,
@@ -20,9 +24,9 @@ import {
 } from "../_shared/app_store_notifications.ts";
 
 Deno.serve(async (req) => {
-  const rootPem = Deno.env.get("APPLE_ROOT_CA_PEM");
+  const rootPem = await loadAppleRootPem(fetch);
   if (!rootPem) {
-    console.error("APPLE_ROOT_CA_PEM not set — cannot verify any notification yet");
+    console.error("APPLE_ROOT_CA_PEM unavailable (env + Vault both empty) — cannot verify");
     return new Response(JSON.stringify({ error: "not configured" }), { status: 500 });
   }
 

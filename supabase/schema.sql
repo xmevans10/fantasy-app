@@ -1021,6 +1021,25 @@ $$;
 revoke all on function public.get_apns_config() from public, anon, authenticated;
 grant execute on function public.get_apns_config() to service_role;
 
+-- App Store Server Notifications trust anchor via Vault (2026-07-17, applied live as migration
+-- `app_store_notifications_root_ca_vault`). The public Apple Root CA - G3 PEM is stored in
+-- Vault as `APPLE_ROOT_CA_PEM`; the `app-store-notifications` edge function reads it through
+-- this service-role-only RPC when the env secret is absent (see _shared/app_store_config.ts).
+-- Same rationale as get_apns_config: no management token here to set true Edge Function secrets.
+create or replace function public.get_app_store_config()
+returns jsonb
+language sql
+security definer
+set search_path = ''
+as $$
+  select jsonb_object_agg(name, decrypted_secret)
+  from vault.decrypted_secrets
+  where name in ('APPLE_ROOT_CA_PEM');
+$$;
+
+revoke all on function public.get_app_store_config() from public, anon, authenticated;
+grant execute on function public.get_app_store_config() to service_role;
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Storage: profile photo uploads (M20)
 -- ─────────────────────────────────────────────────────────────────────────────
