@@ -1300,11 +1300,17 @@ pipeline is one command sequence now — see the `testflight-release` skill).
   — 1.2 is the right forcing function since pushes make the social flows fully testable.
 - [user] Native-speaker pass over the Spanish catalog (418 machine-translated strings).
 - Exit: a streak-risk push lands on a real device from the production cron chain.
-  **Status 2026-07-17:** the 00:00:04 UTC cron run (8:00pm ET 07-16) sent a real push to the
-  registered device — awaiting the user's confirmation it displayed. Caveat: that send was
-  itself a manifestation of the local-vs-UTC-day suppression bug fixed the same session (see
-  §8's 2026-07-17 entry); the fixed function still needs its deploy approved, after which the
-  *correct* behavior is: push only on an evening the user hasn't played by 8pm local.
+  **Status 2026-07-17:** the 00:00:04 UTC cron run (8:00pm ET 07-16) attempted a real send
+  (200, no server-side errors) but nothing displayed — root cause confirmed with the user:
+  the registered token came from an **Xcode dev-signed install**, i.e. a *sandbox* APNs
+  token, and key F92WNG523G is production-scoped, so Apple silently rejects with
+  BadDeviceToken. Not a code bug. **Remedy:** [user] install build 9 from TestFlight on the
+  phone and open the app once (re-registers a production token); the first evening the
+  dailies aren't done by 8pm local, the fixed hourly cron (deployed v3, 2026-07-17, with
+  the local-day suppression fix + a `[streak-risk] checked/sent` log line) delivers the
+  exit-criterion push. The old token stays in `device_tokens` until the 410-prune
+  fast-follow lands (documented in `_shared/apns.ts`) — harmless, each send to it just
+  errors in the function log.
 
 **1.3 — "Open the register": monetization switched on (M5 Phase B completion).**
 Every rail exists (StoreKit 2 store, gating, paywall, server-validated entitlements,
