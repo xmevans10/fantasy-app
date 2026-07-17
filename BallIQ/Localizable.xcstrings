@@ -423,16 +423,6 @@
         }
       }
     },
-    "A fresh Keep4 and Who Am I? every day" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Un Keep4 y un Who Am I? nuevos cada día"
-          }
-        }
-      }
-    },
     "A player you drafted can show up again in a later round as a different season of themselves." : {
       "localizations" : {
         "es" : {
@@ -1507,6 +1497,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cinco deportes: NFL, NBA, MLB, Soccer y Tennis"
+          }
+        }
+      }
+    },
+    "Four fresh challenges every day — Keep4, Who Am I?, The Grid, and Daily Draft" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuatro retos nuevos cada día: Keep4, Who Am I?, The Grid y Daily Draft"
           }
         }
       }

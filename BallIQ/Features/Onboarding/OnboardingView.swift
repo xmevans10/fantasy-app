@@ -28,6 +28,12 @@ struct OnboardingView: View {
                     .font(.display1)
                     .foregroundStyle(Color.textPrimary)
                     .multilineTextAlignment(.center)
+                    // The es tagline is ~40% longer than the en one and was ellipsizing.
+                    // This screen is a fixed (non-scrolling) VStack, so wrapping to a second
+                    // line pushes the guest button off the bottom — scale the headline down
+                    // instead, keeping every locale to one line of the same layout height.
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.55)
             }
             .heroReveal(0)
 
@@ -91,7 +97,7 @@ struct OnboardingView: View {
             if !compact {
                 VStack(alignment: .leading, spacing: 16) {
                     featureRow("bolt.fill", fill: .accentFill, on: .onAccent,
-                               "Daily puzzles", "A fresh Keep4 and Who Am I? every day")
+                               "Daily puzzles", "Four fresh challenges every day — Keep4, Who Am I?, The Grid, and Daily Draft")
                     featureRow("chart.bar.fill", fill: .voltFill, on: .onVolt,
                                "Real seasons", "Rank real careers by the stats, not vibes")
                     featureRow("trophy.fill", fill: .warningFill, on: .onWarning,
@@ -138,6 +144,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text(title).textCase(.uppercase).font(.heading).foregroundStyle(Color.textPrimary)
                 Text(subtitle).font(.label12).foregroundStyle(Color.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
         }
