@@ -1410,3 +1410,35 @@ Home-screen widget (streak + daily countdown — pairs naturally with 1.2's push
 Store product-page refresh (1.1's screenshots predate arcade formats/leaderboards),
 Game Center achievements mirroring the XP system, iPad layout pass. None are commitments;
 each is a conversation first.
+
+### 9.2 The Grid — Immaculate-Grid-parity roadmap (user directive 2026-07-17: "give it a lot of love")
+
+Benchmark: Immaculate Grid (immaculategrid.com — MLB.com/sports-reference across MLB/NBA/NFL/
+NHL/soccer). Nine guesses, one per cell, each cell = the intersection of two rubrics (team ×
+team, team × award/stat, etc.); a typeahead dropdown of qualified players; a **rarity score**
+(crowd-sourced: the % of all players who gave that answer, lower = more obscure); no reusing a
+player across the grid; an emoji share-grid. What makes it feel deep is (a) it accepts *anyone
+who ever appeared* for the team, and (b) the rarity meta-game rewarding deep cuts.
+
+Where BallIQ's Grid stands against that, most-impactful first:
+- ~~**Guess typeahead**~~ — **shipped 2026-07-17** (`GridGuessSheet` + `grid_player_names`
+  RPC). This was the biggest felt gap and the direct fix for the "I typed Sam Darnold and it
+  did nothing" frustration (autocorrect + no name affordance).
+- **Roster completeness is the #1 remaining depth gap.** A cell's valid answers are only
+  players with a *qualifying season stat row* in `player_seasons` — for NFL that's
+  QB/RB/WR/TE/FB only (see `nfl_nflverse.fetch_year`'s position filter), so DBs, linemen,
+  kickers, and cup-of-coffee players are unanswerable even when correct. Immaculate Grid takes
+  any appearance. Closing this needs a fuller roster source (nflverse rosters/`players.csv`
+  join, not just the offensive stat leaders) feeding grid answer-sets. Biggest lever, biggest
+  data lift.
+- **Data freshness.** Catalog tops out at 2024 because nflverse's 2025 season aggregate 404s
+  as of 2026-07-17; the pipeline's `range(1999, current+1)` auto-ingests it once published, but
+  until then any 2025-only tenure (Darnold→SEA) is legitimately unanswerable. Worth a cron/
+  reminder to re-run ingest when 2025 lands.
+- **Crowd-sourced rarity.** Today rarity is offline stars from answer-count at generation time
+  (`grid.py:_rarity_stars`). Real parity = "% of players who picked this," which needs logging
+  every submitted guess per cell and surfacing the distribution — a server-side aggregate + a
+  new `grid_guesses` table. Rewarding-obscurity is the meta-game that gives IG its legs.
+- **No-reuse rule + emoji share-grid** — smaller: track picked player-ids across the 9 cells and
+  reject a repeat; render the 3×3 result as a shareable emoji/text grid (the app already has a
+  share-card system to hang it on).
