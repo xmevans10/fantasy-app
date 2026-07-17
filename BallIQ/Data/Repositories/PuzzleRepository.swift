@@ -10,7 +10,16 @@ protocol PuzzleRepository {
     /// The Grid (M5 Phase E) — server-generated only, no bundled offline fallback (it's
     /// Pro-gated content anyway; a signed-out/local-only session can't play it either way).
     func gridPuzzle(for filter: SportFilter, date: Date) async -> GridPuzzle?
+    /// Sport-wide distinct player names for The Grid's guess typeahead. Deliberately
+    /// sport-wide, never cell-scoped — a cell-filtered list would hand the player the answers.
+    /// Empty when unavailable (local-only / offline): the Grid degrades to free-text entry.
+    func playerNameIndex(for sport: Sport) async -> [String]
     var availableSports: [Sport] { get }
+}
+
+extension PuzzleRepository {
+    /// Default: no index (bundled/offline repos). Only `RemotePuzzleRepository` overrides it.
+    func playerNameIndex(for sport: Sport) async -> [String] { [] }
 }
 
 /// Loads bundled JSON; resolves the daily puzzle deterministically by UTC date.

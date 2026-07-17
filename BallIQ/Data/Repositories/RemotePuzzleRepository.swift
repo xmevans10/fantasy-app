@@ -59,6 +59,26 @@ final class RemotePuzzleRepository: PuzzleRepository {
         return pick(rows, date: date)
     }
 
+    /// Sport-wide player-name index for the Grid typeahead, via the `grid_player_names` RPC
+    /// (one array — bypasses PostgREST's 1000-row table cap). Names change rarely, so a cached
+    /// copy is honored for a week before refetching; a failed fetch falls back to any stale
+    /// copy, then to `[]` (the Grid simply offers no suggestions, still fully playable).
+    private struct NameIndexArgs: Encodable { let p_sport: String }
+    func playerNameIndex(for sport: Sport) async -> [String] {
+        let key = "grid-names-\(sport.rawValue)"
+        if let entry = await DiskCache.read([String].self, key: key),
+           Date().timeIntervalSince(entry.writtenAt) < 7 * 24 * 3600 {
+            return entry.value
+        }
+        if let data = try? await client.rpc("grid_player_names", args: NameIndexArgs(p_sport: sport.rawValue)),
+           let names = try? JSONDecoder().decode([String].self, from: data), !names.isEmpty {
+            await DiskCache.write(names, key: key)
+            return names
+        }
+        if let stale = await DiskCache.read([String].self, key: key) { return stale.value }
+        return []
+    }
+
     /// Prefer the row minted for this exact UTC day (`active_date`, written by
     /// tools/ingest/daily_puzzle.py) — every day gets its own genuinely new puzzle. Falls back
     /// to the old modulo pick over the full ordered pool when no row matches today (a day

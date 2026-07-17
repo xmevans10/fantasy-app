@@ -75,6 +75,8 @@ struct CreateWhoAmIView: View {
 
     private func plain(_ placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
+            // These fields carry player names and aliases; iOS autocorrect mangles surnames.
+            .autocorrectionDisabled()
             .padding(.horizontal, 12).padding(.vertical, 11)
             .background(Color.surfaceMuted)
             .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))

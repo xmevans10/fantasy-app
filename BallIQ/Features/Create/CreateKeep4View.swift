@@ -96,6 +96,7 @@ struct CreateKeep4View: View {
             field("Title") {
                 TextField("e.g. One-hit wonders: 2010s WRs", text: $title)
                     .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
                     .padding(.horizontal, 12).padding(.vertical, 11)
                     .background(Color.surfaceMuted)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))

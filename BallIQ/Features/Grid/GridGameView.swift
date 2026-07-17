@@ -14,7 +14,8 @@ struct GridGameView: View {
     @State private var solved: [Int: String] = [:]
     @State private var wrong: Set<Int> = []
     @State private var activeCell: Int?
-    @State private var guessText = ""
+    /// Sport-wide player names powering the guess autocomplete (empty offline → free text).
+    @State private var nameIndex: [String] = []
     @State private var result: (score: Int, correctCount: Int)?
     @State private var rewards: RepositoryContainer.SessionRewards?
 
@@ -49,14 +50,16 @@ struct GridGameView: View {
             // Screenshot flows target the board/result — skip the setup screen.
             if DebugLaunch.autoOpenGrid { await load() }
         }
-        .alert("Name that player", isPresented: Binding(get: { activeCell != nil }, set: { if !$0 { activeCell = nil } })) {
-            TextField("Player name", text: $guessText)
-                .textInputAutocapitalization(.words)
-            Button("Guess") { submitGuess() }
-            Button("Cancel", role: .cancel) { activeCell = nil; guessText = "" }
-        } message: {
+        .sheet(isPresented: Binding(get: { activeCell != nil }, set: { if !$0 { activeCell = nil } })) {
             if let activeCell, let puzzle {
-                Text(cellPrompt(puzzle, index: activeCell))
+                GridGuessSheet(
+                    prompt: cellPrompt(puzzle, index: activeCell),
+                    names: nameIndex,
+                    onGuess: { submitGuess($0) },
+                    onCancel: { self.activeCell = nil }
+                )
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
             }
         }
     }
@@ -70,6 +73,8 @@ struct GridGameView: View {
         puzzle = await container.puzzles.gridPuzzle(for: resolvedFilter, date: Date())
         container.track(.gameStarted, ["format": "grid", "sport": sport.rawValue])
         loading = false
+        // Populate the guess autocomplete in the background — the board is playable without it.
+        Task { nameIndex = await container.puzzles.playerNameIndex(for: sport) }
         if DebugLaunch.autoSubmitGrid, let puzzle { autoSolveForScreenshot(puzzle) }
     }
 
@@ -197,11 +202,9 @@ struct GridGameView: View {
 
     // MARK: - Logic
 
-    private func submitGuess() {
+    private func submitGuess(_ guess: String) {
         guard let index = activeCell, let puzzle else { return }
         let row = index / 3, col = index % 3
-        let guess = guessText
-        guessText = ""
         activeCell = nil
 
         if puzzle.isCorrect(row: row, col: col, guess: guess) {

@@ -1040,6 +1040,25 @@ $$;
 revoke all on function public.get_app_store_config() from public, anon, authenticated;
 grant execute on function public.get_app_store_config() to service_role;
 
+-- Sport-wide distinct player-name index for The Grid's guess autocomplete (2026-07-17, applied
+-- live as migration `grid_player_names_index`). security definer to read the full catalog past
+-- player_seasons RLS, and returns one array so PostgREST's 1000-row table cap doesn't truncate
+-- it. Sport-wide by design — a cell-scoped list would hand the player the grid's answers.
+create or replace function public.grid_player_names(p_sport text)
+returns text[]
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(array_agg(distinct name order by name), '{}')
+  from public.player_seasons
+  where sport = p_sport and not career and name <> '';
+$$;
+
+revoke all on function public.grid_player_names(text) from public;
+grant execute on function public.grid_player_names(text) to anon, authenticated, service_role;
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Storage: profile photo uploads (M20)
 -- ─────────────────────────────────────────────────────────────────────────────
