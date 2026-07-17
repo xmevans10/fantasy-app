@@ -1275,10 +1275,16 @@ pipeline is one command sequence now — see the `testflight-release` skill).
 > and a real device token registered 2026-07-16 17:13 UTC. **Push is live end-to-end**;
 > the hourly streak-risk cron will send real pushes whenever one is due. Remaining 1.2
 > work is only the items below.
-- [user→agent] Resolve the two audit product calls: (a) should Daily Draft bypass the Pro
-  sport gate on locked-sport days (like the daily Keep4/WhoAmI do) or keep paywalling at
-  Start (current, safe default)? (b) onboarding copy still says "A fresh Keep4 and Who Am
-  I? every day" — refresh to cover the four daily surfaces, or keep the two-daily framing?
+- ~~[user→agent] Resolve the two audit product calls~~ — **both decided by the user and
+  shipped 2026-07-17**: (a) Daily Draft now bypasses the Pro sport gate for the forced
+  sport-of-the-day (`GameSetupScreen.sportGateExempt`, passed as `isDailyDraft`; *choosing*
+  a different locked sport stays gated, and an exempt start never persists a locked sport
+  as the app-wide filter). Screenshot-verified on the 2026-07-17 MLB day: guest setup shows
+  MLB as a normal active chip, Free Play still locks it. (b) onboarding now pitches all
+  four daily surfaces ("Four fresh challenges every day — Keep4, Who Am I?, The Grid, and
+  Daily Draft", es included); the es tagline's pre-existing ellipsis got fixed in the same
+  pass (scale-down instead of truncate — the screen is a fixed VStack, so wrapping pushed
+  the guest button off-screen; caught by screenshotting the es variant).
 - [user] Two-account TestFlight QA pass (`prompts/QA-testflight-social-flows.md`, ~25 min)
   — 1.2 is the right forcing function since pushes make the social flows fully testable.
 - [user] Native-speaker pass over the Spanish catalog (418 machine-translated strings).
