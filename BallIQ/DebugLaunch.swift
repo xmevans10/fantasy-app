@@ -35,7 +35,11 @@ enum DebugLaunch {
     static var autoSubmitDraftSpin: Bool { has("-screenshotDraftSpinResult") }
     /// Stops on the pre-game setup screen instead of skipping into the board
     /// (the other DraftSpin flags exist to capture the board/result, so they skip setup).
-    static var holdDraftSpinSetup: Bool { has("-screenshotDraftSpinSetup") }
+    static var holdDraftSpinSetup: Bool { has("-screenshotDraftSpinSetup") || has("-screenshotDailyDraftSetup") }
+    /// Opens Draft & Spin already in Daily Draft mode (Home's daily-loop row path) and holds
+    /// on setup — the MODE toggle needs a tap simctl can't do, and the Daily Draft setup
+    /// state (forced sport-of-the-day, gate exemption) is exactly what needs capturing.
+    static var autoOpenDailyDraft: Bool { has("-screenshotDailyDraftSetup") }
     /// Freezes the slot-machine reveal in its settled ("LOCKED IN") state instead of
     /// advancing to the board, so the casino styling itself can be screenshot.
     static var holdDraftSpinReveal: Bool { has("-screenshotDraftSpinReveal") }
@@ -116,6 +120,7 @@ enum DebugLaunch {
     static let autoOpenDraftSpin = false
     static let autoSubmitDraftSpin = false
     static let holdDraftSpinSetup = false
+    static let autoOpenDailyDraft = false
     static let holdDraftSpinReveal = false
     static let autoOpenGrid = false
     static let autoSubmitGrid = false

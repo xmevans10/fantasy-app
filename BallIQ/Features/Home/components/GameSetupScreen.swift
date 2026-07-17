@@ -19,6 +19,12 @@ struct GameSetupScreen<Options: View>: View {
     @Binding var sport: Sport
     let onStart: () -> Void
     let onClose: () -> Void
+    /// Daily surfaces (Daily Draft) force the sport-of-the-day and stay playable regardless
+    /// of the Pro sport gate — same rule as the daily Keep4/Who Am I?, which never route
+    /// through a sport picker at all (product call, 2026-07-17). Exempts the Start guard and
+    /// the locked-default snap-back for the forced sport only; *choosing* a locked sport is
+    /// still Pro-gated.
+    var sportGateExempt: Bool = false
     @ViewBuilder var options: () -> Options
 
     @State private var showPaywall = false
@@ -59,10 +65,15 @@ struct GameSetupScreen<Options: View>: View {
                 // user ever tapping a locked chip — that path skips the picker's own lock
                 // check entirely, so re-check here or Start would launch a real paid-tier
                 // session for free.
-                guard container.entitlements.canSelect(filter) else { showPaywall = true; return }
+                guard sportGateExempt || container.entitlements.canSelect(filter) else {
+                    showPaywall = true; return
+                }
                 // Persist the choice as the app-wide default (rank widget, daily previews,
-                // and the next setup screen all follow the last sport actually played).
-                container.sportFilter = filter
+                // and the next setup screen all follow the last sport actually played) — but
+                // never persist a sport the user couldn't select themselves: an exempt daily
+                // launch on a locked-sport day must not flip the app-wide default to a Pro
+                // sport.
+                if container.entitlements.canSelect(filter) { container.sportFilter = filter }
                 onStart()
             } label: {
                 Text(startLabel)
@@ -92,6 +103,9 @@ struct GameSetupScreen<Options: View>: View {
     }
 
     private func correctLockedDefault() {
+        // An exempt screen's sport is forced externally (sport-of-the-day) and legitimately
+        // allowed to be Pro-locked — snapping it to NFL would fight that forcing.
+        guard !sportGateExempt else { return }
         let filter = SportFilter(rawValue: sport.rawValue) ?? .all
         if !container.entitlements.canSelect(filter) { sport = .nfl }
     }
@@ -104,7 +118,10 @@ struct GameSetupScreen<Options: View>: View {
         return LazyVGrid(columns: columns, spacing: 8) {
             ForEach(Sport.allCases, id: \.self) { candidate in
                 let filter = SportFilter(rawValue: candidate.rawValue) ?? .all
+                // On an exempt screen the forced (active) sport plays for free today, so it
+                // renders as a normal selection even when it'd otherwise be Pro-locked.
                 let isLocked = !container.entitlements.canSelect(filter)
+                    && !(sportGateExempt && candidate == sport)
                 let active = sport == candidate
                 Button {
                     if isLocked { showPaywall = true }

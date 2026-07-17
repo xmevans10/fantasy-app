@@ -232,6 +232,8 @@ struct HomeView: View {
             showBrowse = true
         } else if DebugLaunch.autoOpenOverUnder {
             showOverUnder = true
+        } else if DebugLaunch.autoOpenDailyDraft {
+            showDailyDraft = true
         } else if DebugLaunch.autoOpenDraftSpin {
             showDraftSpin = true
         } else if DebugLaunch.autoOpenGrid {

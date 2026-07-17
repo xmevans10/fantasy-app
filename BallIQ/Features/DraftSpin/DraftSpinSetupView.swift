@@ -41,7 +41,8 @@ struct DraftSpinSetupView: View {
                         startLabel: isDailyDraft ? "Start the Daily Draft" : "Spin to draft",
                         sport: lockableSport,
                         onStart: onStart,
-                        onClose: onClose)
+                        onClose: onClose,
+                        sportGateExempt: isDailyDraft)
         {
             SetupOptionCard(
                 title: "MODE",
