@@ -1240,17 +1240,17 @@ post-approval. No planned content; cut from `main` with the fix, same-day submis
 pipeline is one command sequence now — see the `testflight-release` skill).
 
 **1.2 — "It remembers you": push notifications + the retention loop's last mile.**
-The single biggest already-paid-for lever (§9 P0 #1): all 5 edge functions and 4 cron jobs
-are deployed and verified in `[apns:stub]` mode; only real key material is missing.
-- [user] Generate/confirm an APNs auth key on team `8K5ZVPCQ42` (three `AuthKey_*.p8`
-  candidates already on disk — see the Tier 2 push entry above), enable the Push
-  Notifications capability on `com.balliqfantasy.app`, and paste the four `APNS_*` secrets
-  into Edge Functions → Secrets (or `supabase login` first — the local CLI is on the wrong
-  account).
-- [agent] Add the `aps-environment` entitlement (deliberately not added before the
-  capability exists — it would break archive signing), flip `apns.ts` out of stub mode,
-  E2E-verify device-token registration → streak-risk push on a real device/TestFlight, and
-  wire the notification-settings screen to reality.
+> **Gates CLEARED, verified 2026-07-16 evening:** the user provided a real APNs key
+> (`F92WNG523G`, production-environment-scoped — sandbox pushes will NOT work with it,
+> which is fine: TestFlight/App Store use production APNs) — functionally verified
+> (production APNs accepts its provider token; probe returned `BadDeviceToken` for a fake
+> device, i.e. auth OK). PUSH_NOTIFICATIONS is enabled on the App ID, the `aps-environment
+> production` entitlement is in the app (shipped in build 9), all four `APNS_*` values are
+> in Supabase Vault (`get_apns_config()` returns the complete config — byte-identical
+> keypair to the verified key — so `apns.ts` is out of stub mode with no deploy needed),
+> and a real device token registered 2026-07-16 17:13 UTC. **Push is live end-to-end**;
+> the hourly streak-risk cron will send real pushes whenever one is due. Remaining 1.2
+> work is only the items below.
 - [user→agent] Resolve the two audit product calls: (a) should Daily Draft bypass the Pro
   sport gate on locked-sport days (like the daily Keep4/WhoAmI do) or keep paywalling at
   Start (current, safe default)? (b) onboarding copy still says "A fresh Keep4 and Who Am
@@ -1264,8 +1264,12 @@ are deployed and verified in `[apns:stub]` mode; only real key material is missi
 Every rail exists (StoreKit 2 store, gating, paywall, server-validated entitlements,
 deployed-but-inert `app-store-notifications` function). Nothing here is code-first; it's
 ASC-first.
-- [user] Sign the Paid Applications agreement (ASC → Business); create the four products
-  (`pro.monthly`, `pro.yearly`, `pack.draftspin`, `pack.grid`) with real prices.
+- [user] ~~Sign the Paid Applications agreement; create the four products~~ — **done,
+  verified 2026-07-16**: all four exist in ASC (`Pro Monthly`/`Pro Yearly` in subscription
+  group "Pro" id 22239725, both packs as IAPs 6791226005/6791225648) with product IDs
+  exactly matching `StoreProduct`'s rawValues. All are `MISSING_METADATA` — still needed:
+  **[user] price points** (a real product decision), then [agent] localized display
+  copy + review screenshots + attach to a review submission.
 - [agent] Set `APPLE_ROOT_CA_PEM` as an edge secret, point the production App Store Server
   Notifications URL at the function, sandbox-verify a purchase → webhook → `entitlements`
   row → client union end-to-end, and build the "companion client-transaction verify" belt
