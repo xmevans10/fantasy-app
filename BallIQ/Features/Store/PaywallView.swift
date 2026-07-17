@@ -16,6 +16,16 @@ struct PaywallView: View {
             .sorted { $0.price < $1.price }
     }
 
+    /// One-time format unlocks (Draft & Spin, The Grid) — hidden once owned, and for Pro
+    /// (whose subscription already covers every format).
+    private var packs: [Product] {
+        guard !container.entitlements.isPro else { return [] }
+        return container.products
+            .filter { StoreProduct(rawValue: $0.id)?.isSubscription == false }
+            .filter { !container.entitlements.unlockedPacks.contains($0.id) }
+            .sorted { $0.price < $1.price }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -23,7 +33,8 @@ struct PaywallView: View {
                     hero.heroReveal(0)
                     benefits.heroReveal(1)
                     plans.heroReveal(2)
-                    restoreButton.heroReveal(3)
+                    packSection.heroReveal(3)
+                    restoreButton.heroReveal(4)
                 }
                 .padding(16)
             }
@@ -116,6 +127,43 @@ struct PaywallView: View {
                 .disabled(purchasingID != nil)
                 .accessibilityLabel("\(product.displayName), \(product.displayPrice)")
             }
+        }
+    }
+
+    @ViewBuilder
+    private var packSection: some View {
+        if !packs.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Just want one format? Unlock it forever.")
+                    .font(.label12)
+                    .foregroundStyle(Color.textMuted)
+                ForEach(packs, id: \.id) { product in
+                    Button {
+                        Task { await buy(product) }
+                    } label: {
+                        HStack {
+                            Text(product.displayName.uppercased())
+                                .font(.heading)
+                                .foregroundStyle(Color.textPrimary)
+                            Spacer()
+                            if purchasingID == product.id {
+                                ProgressView().tint(Color.textPrimary)
+                            } else {
+                                Text(product.displayPrice)
+                                    .font(.label12)
+                                    .foregroundStyle(Color.proText)
+                            }
+                        }
+                        .padding(.vertical, 6)
+                    }
+                    .buttonStyle(PrimePressStyle())
+                    .disabled(purchasingID != nil)
+                    .accessibilityLabel("\(product.displayName), \(product.displayPrice)")
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardSurface()
         }
     }
 

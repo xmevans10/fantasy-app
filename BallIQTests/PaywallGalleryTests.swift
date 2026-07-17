@@ -58,5 +58,31 @@ final class PaywallGalleryTests: XCTestCase {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("paywall_gallery.png")
         try XCTUnwrap(image.pngData()).write(to: url)
         print("PAYWALL_GALLERY: \(url.path) (\(container.products.count) products)")
+
+        // Second capture scrolled to the bottom, so the one-time pack rows (below the
+        // subscription plans) are fully in frame — that's the shot the pack IAPs'
+        // App Store review screenshots need.
+        if let scrollView = firstScrollView(in: host.view) {
+            let bottom = CGPoint(
+                x: 0,
+                y: max(0, scrollView.contentSize.height + scrollView.adjustedContentInset.bottom - scrollView.bounds.height))
+            scrollView.setContentOffset(bottom, animated: false)
+            await Task.yield()
+            try await Task.sleep(nanoseconds: 400_000_000)
+            let bottomImage = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+                window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+            }
+            let bottomURL = FileManager.default.temporaryDirectory.appendingPathComponent("paywall_gallery_bottom.png")
+            try XCTUnwrap(bottomImage.pngData()).write(to: bottomURL)
+            print("PAYWALL_GALLERY_BOTTOM: \(bottomURL.path)")
+        }
+    }
+
+    private func firstScrollView(in view: UIView) -> UIScrollView? {
+        if let scroll = view as? UIScrollView { return scroll }
+        for sub in view.subviews {
+            if let found = firstScrollView(in: sub) { return found }
+        }
+        return nil
     }
 }

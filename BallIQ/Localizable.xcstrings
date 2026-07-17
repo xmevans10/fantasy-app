@@ -1824,6 +1824,16 @@
         }
       }
     },
+    "Just want one format? Unlock it forever." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Solo quieres un formato? Desbloquéalo para siempre."
+          }
+        }
+      }
+    },
     "K4C4" : {
       "shouldTranslate" : false
     },
