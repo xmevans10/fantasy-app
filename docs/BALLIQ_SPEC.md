@@ -1409,10 +1409,14 @@ whenever a gate above stalls.
 - Exit: no sport's archive has fewer than ~6 themes; WhoAmI pool ≥ 2× current.
 
 **Candidate pool (unscheduled — needs user appetite before any lands in a version):**
-Home-screen widget (streak + daily countdown — pairs naturally with 1.2's pushes), App
-Store product-page refresh (1.1's screenshots predate arcade formats/leaderboards),
+Home-screen widget (streak + daily countdown — pairs naturally with 1.2's pushes),
 Game Center achievements mirroring the XP system, iPad layout pass. None are commitments;
-each is a conversation first.
+each is a conversation first. ~~App Store product-page refresh~~ — **done 2026-07-17** on
+user request: new description/keywords/promo/subtitle ("Daily Grid, Trivia & Arcade") and
+6 fresh screenshots per device set (Home, Grid immaculate result, Draft & Spin reveal,
+Keep4, Over/Under, WhoAmI; iPhone 6.7" 1290×2796 + iPad 2064×2752), uploaded via the
+pull-from-review → edit → restage flow (see the asc-first-iap-submission memory for the
+screenshot-lock gotcha).
 
 ### 9.2 The Grid — Immaculate-Grid-parity roadmap (user directive 2026-07-17: "give it a lot of love")
 
