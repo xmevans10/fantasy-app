@@ -1,0 +1,51 @@
+name: weekly-fresh-week-refresh
+
+# In-season freshness: providers cache season files for up to 30 days, so mid-season stats
+# (and therefore Grid answers, Keep4 pools, the typeahead catalog) lag without a forced
+# refetch. This run evicts current/previous-year caches and re-ingests weekly.
+#
+# Tuesday 10:00 UTC is the one slot that works for every sport's "week": NFL's week ends
+# with Monday Night Football (stats posted overnight into Tuesday), European soccer
+# matchweeks end Sunday/Monday, tennis tournaments end Sunday, and NBA/MLB are daily so any
+# weekly slot is equally fine. Out of season the eviction just refetches unchanged files —
+# cheap and idempotent — so there's no per-sport season gating to maintain.
+
+on:
+  schedule:
+    - cron: "0 10 * * 2"    # Tuesdays 10:00 UTC
+  workflow_dispatch:        # allow manual fresh-week runs (e.g. right after a data drop)
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt
+      - run: python -m pytest tools/ingest/tests -q
+
+  refresh:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Same cross-run cache as ingest.yml — the eviction flag removes only the
+      # current-season entries from it, so historical files still skip the network.
+      - uses: actions/cache@v4
+        with:
+          path: tools/ingest/.cache
+          key: ingest-cache-${{ github.run_id }}
+          restore-keys: |
+            ingest-cache-
+      - run: python -m tools.ingest.main --evict-current-season --backfill 7 --upsert --catalog
+      # Re-mint today's grids off the freshened catalog (full-roster NFL answers included).
+      - run: python -m tools.ingest.main --grid nfl nba soccer tennis --upsert

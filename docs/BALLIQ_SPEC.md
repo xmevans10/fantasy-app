@@ -137,7 +137,10 @@ python3 -m tools.ingest.main [--dry-run] [--write-fallback] [--write-themes]
 - **Providers** (`providers/`, shared 24h on-disk cache in `.cache/`, MLB careers cached a
   week — see `mlb_stats.py`):
   `nfl_nflverse` (season aggregates, 1999–present, year range **computed from today's date**
-  in `main.py` so it never goes stale — `fetch_years` skips any year not yet published) +
+  in `main.py` so it never goes stale — `fetch_years` skips any year not yet published;
+  **2025+ come from nflverse's new `stats_player` release** — the legacy `player_stats`
+  asset is frozen at 2024, columns identical except `interceptions` →
+  `passing_interceptions`, bridged by `_num_any`; discovered+cut over 2026-07-17) +
   `nfl_nflverse_games` (weekly grain, bounded by `--game-years`, same dynamic-year
   treatment) + `nfl_players` (bio join: draft round, height, age); NBA is
   `espn_nba_pool`/`espn_nba` (853-player keyless ESPN star pool, ~1993–2026, primary since
@@ -1440,8 +1443,13 @@ upstream-blocked freshness item:
   guess sheet with the grader's own typo-tolerant matcher (blocks with inline feedback rather
   than burning the cell's single attempt; used names also drop out of the typeahead), and an
   Immaculate-style 🟩/⬛ ShareLink on the result (`GridResultView.shareText`, test-locked).
-- **Data freshness (open, upstream-blocked).** Catalog tops out at 2024 because nflverse's
-  2025 season aggregate 404s as of 2026-07-17; `range(1999, current+1)` auto-ingests it once
-  published. Meanwhile the daily ingest cron now also mints the day's grids
-  (`--grid nfl nba soccer tennis` added to `ingest.yml` — previously grids were only ever
-  minted by hand, so the daily `active_date` row usually didn't exist).
+- ~~**Data freshness**~~ — **closed 2026-07-17, twice over.** (1) The "2025 404s" turned out
+  to be nflverse *restructuring releases*, not unpublished data: 2025+ live under the new
+  `stats_player` asset (legacy `player_stats` frozen at 2024). Provider cut over, 615-row
+  2025 NFL season ingested live — `nfl-sam-darnold-2025` (SEA) is in the catalog, closing the
+  original user bug at the data root. (2) In-season staleness: new
+  `weekly-refresh.yml` cron (Tuesdays 10:00 UTC — after MNF stats post; soccer matchweeks/
+  tennis tournaments end Sun-Mon; NBA/MLB daily) runs `--evict-current-season` (drops
+  current/previous-year + live ESPN NBA cache entries, `http.evict_current_season`) then a
+  full re-ingest + grid re-mint. The daily cron also now mints grids (`--grid` step in
+  `ingest.yml`).

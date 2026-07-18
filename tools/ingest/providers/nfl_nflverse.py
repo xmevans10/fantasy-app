@@ -1,10 +1,15 @@
 """NFL provider — real season stats from nflverse public data (no API key).
 
-Uses the pre-aggregated `player_stats_season_{year}.csv` release assets from
-https://github.com/nflverse/nflverse-data/releases/tag/player_stats, which
-already sum each player's regular/post/combined season. We take regular-season
-(`season_type == 'REG'`) rows. Coverage is 1999-present; pre-1999 legends come
-from the curated seed instead.
+Uses pre-aggregated per-season release assets that already sum each player's
+regular/post/combined season; we take regular-season (`season_type == 'REG'`)
+rows. Coverage is 1999-present; pre-1999 legends come from the curated seed.
+
+nflverse restructured their releases after the 2024 season: the legacy
+`player_stats/player_stats_season_{year}.csv` asset is frozen at 2024 (2025
+404s — discovered 2026-07-17 chasing why Sam Darnold's SEA season was missing),
+and 2025+ live under `stats_player/stats_player_reg_{year}.csv`. The columns are
+identical for everything we read except `interceptions`, renamed
+`passing_interceptions` — `_num_any` reads whichever is present.
 """
 from __future__ import annotations
 
@@ -18,6 +23,12 @@ _BASE = (
     "https://github.com/nflverse/nflverse-data/releases/download/"
     "player_stats/player_stats_season_{year}.csv"
 )
+_BASE_2025 = (
+    "https://github.com/nflverse/nflverse-data/releases/download/"
+    "stats_player/stats_player_reg_{year}.csv"
+)
+# First season published only under the new stats_player release scheme.
+_STATS_PLAYER_FROM = 2025
 
 # nflverse-season coverage. Season files exist from 1999 onward.
 MIN_YEAR = 1999
@@ -33,12 +44,22 @@ def _num(row: dict, key: str) -> float:
         return 0.0
 
 
+def _num_any(row: dict, *keys: str) -> float:
+    """First key actually present in the row wins — bridges the legacy/stats_player
+    column rename (`interceptions` vs `passing_interceptions`)."""
+    for key in keys:
+        if key in row:
+            return _num(row, key)
+    return 0.0
+
+
 def fetch_year(year: int, *, ttl_hours: float = 24 * 30) -> list[RawSeason]:
     """All regular-season offensive player-seasons for one year."""
     if year < MIN_YEAR:
         return []
+    base = _BASE_2025 if year >= _STATS_PLAYER_FROM else _BASE
     text = fetch_text(
-        _BASE.format(year=year),
+        base.format(year=year),
         cache_key=f"nflverse_season_{year}.csv",
         ttl_hours=ttl_hours,
     )
@@ -60,7 +81,7 @@ def fetch_year(year: int, *, ttl_hours: float = 24 * 30) -> list[RawSeason]:
             "games": games,
             "passing_yards": _num(row, "passing_yards"),
             "passing_tds": _num(row, "passing_tds"),
-            "interceptions": _num(row, "interceptions"),
+            "interceptions": _num_any(row, "interceptions", "passing_interceptions"),
             "attempts": attempts,
             "completions": completions,
             "completion_pct": round(100 * completions / attempts, 1) if attempts else 0.0,

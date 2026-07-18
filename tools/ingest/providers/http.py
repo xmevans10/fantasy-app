@@ -20,6 +20,26 @@ def _cache_path(key: str) -> Path:
     return CACHE_DIR / key
 
 
+def evict_current_season(now_year: int) -> int:
+    """Delete cache entries that can go stale mid-season, so the next fetch is guaranteed
+    fresh: anything keyed by the current or previous calendar year (a season can span both —
+    NBA 2025-26, soccer 2025/26), plus the per-athlete ESPN NBA stat files, which aren't
+    year-keyed but hold live current-season lines. Everything else (historical years,
+    player-id lookups) is immutable and keeps its cache. Returns the number of files removed.
+    Used by the weekly in-season refresh (`--evict-current-season`)."""
+    if not CACHE_DIR.exists():
+        return 0
+    markers = (str(now_year), str(now_year - 1))
+    removed = 0
+    for path in CACHE_DIR.iterdir():
+        if not path.is_file():
+            continue
+        if any(m in path.name for m in markers) or path.name.startswith("espn_nba_stats_"):
+            path.unlink()
+            removed += 1
+    return removed
+
+
 def is_cached(cache_key: str | None, ttl_hours: float = 24.0) -> bool:
     """Would `fetch_text`/`fetch_json` serve this from disk right now, with no network call?
     Callers that rate-limit-delay themselves between requests (mlb_stats, espn_nba) use this

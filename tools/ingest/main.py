@@ -560,7 +560,16 @@ def main() -> int:
     ap.add_argument("--grid", nargs="+", choices=["nfl", "nba", "baseball", "soccer", "tennis"],
                     help="generate today's Grid puzzle for the given sport(s) from the live "
                          "player_seasons catalog (standalone — skips the season gather pull)")
+    ap.add_argument("--evict-current-season", action="store_true",
+                    help="delete current/previous-year cache entries (and the live ESPN NBA "
+                         "stat files) before fetching, so in-season data is refetched fresh — "
+                         "the weekly refresh workflow's flag; historical caches are untouched")
     args = ap.parse_args()
+
+    if args.evict_current_season:
+        from .providers.http import evict_current_season
+        removed = evict_current_season(dt.date.today().year)
+        print(f"[cache] evicted {removed} current-season cache file(s)")
 
     if args.write_themes and not (args.upsert or args.write_fallback or args.dry_run):
         write_themes_fallback()      # standalone: themes are static, skip the data pull
