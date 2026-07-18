@@ -99,10 +99,17 @@ final class RemotePuzzleRepository: PuzzleRepository {
     private func fetch<T: Codable>(format: String, filter: SportFilter, as type: T.Type) async -> [PuzzleContentRow<T>]? {
         let key = "puzzles-\(format)-\(filter.rawValue)"
         let today = PuzzleStore.todayUTCString()
+        // A same-day cache only counts when it actually holds today's dated row. Written-today
+        // alone isn't enough: a launch BEFORE the day's ingest mints the row caches a pool
+        // without it, and `pick()` would then silently modulo-pick an old puzzle for the rest
+        // of the day (hit live 2026-07-17 — a morning launch pinned the Grid to July 8's
+        // board all day). Formats with no dated rows at all (WhoAmI today) refetch once per
+        // launch instead — small pools, and the stale-cache path still covers offline.
         if let entry = await DiskCache.read([PuzzleContentRow<T>].self, key: key),
-           PuzzleStore.todayUTCString(entry.writtenAt) == today {
+           PuzzleStore.todayUTCString(entry.writtenAt) == today,
+           entry.value.contains(where: { $0.activeDate == today }) {
             #if DEBUG
-            print("[puzzles] \(Date()) \(key): disk hit (today)")
+            print("[puzzles] \(Date()) \(key): disk hit (today's row present)")
             #endif
             return entry.value
         }

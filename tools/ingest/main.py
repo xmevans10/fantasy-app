@@ -472,7 +472,12 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
     from .upsert import fetch_player_seasons
 
     load_dotenv()
-    today = dt.date.today().isoformat()
+    # Mint today AND tomorrow (UTC): pick() prefers the row whose active_date matches the
+    # current UTC day, so without a next-day row every player between 00:00 UTC and the
+    # morning cron (8pm ET onward in the US) silently falls back to the modulo pick over old
+    # boards — observed live 2026-07-17. Generation is deterministic per (sport, date), so
+    # re-minting tomorrow's row the next morning is an idempotent no-op upsert.
+    dates = [dt.date.today().isoformat(), (dt.date.today() + dt.timedelta(days=1)).isoformat()]
     rows: list[dict] = []
     for sport in sports:
         raw = fetch_player_seasons(sport)
@@ -488,17 +493,18 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
             from .providers import nfl_rosters
             extra_members = nfl_rosters.fetch_years(list(range(nfl_rosters.MIN_YEAR, _CURRENT_YEAR + 1)))
             print(f"[grid] nfl: {len(extra_members)} roster memberships widen the answer pools")
-        puzzle = grid.generate_grid(seasons, sport=sport, date=today, extra_members=extra_members)
-        if puzzle is None:
-            print(f"[grid] {sport}: no viable grid from {len(seasons)} seasons — skipped")
-            continue
-        content = grid.to_content(puzzle)
-        print(f"[grid] {sport}: rows={puzzle.row_teams} cols={puzzle.col_decades} "
-              f"rarity={[c.rarity_stars for c in puzzle.cells]}")
-        rows.append({
-            "id": grid.puzzle_id(sport, today), "sport": sport, "format": "grid",
-            "content": content, "active_date": today,
-        })
+        for date in dates:
+            puzzle = grid.generate_grid(seasons, sport=sport, date=date, extra_members=extra_members)
+            if puzzle is None:
+                print(f"[grid] {sport} {date}: no viable grid from {len(seasons)} seasons — skipped")
+                continue
+            content = grid.to_content(puzzle)
+            print(f"[grid] {sport} {date}: rows={puzzle.row_teams} cols={puzzle.col_decades} "
+                  f"rarity={[c.rarity_stars for c in puzzle.cells]}")
+            rows.append({
+                "id": grid.puzzle_id(sport, date), "sport": sport, "format": "grid",
+                "content": content, "active_date": date,
+            })
 
     if dry_run or not upsert:
         print(f"\n(grid: {len(rows)} puzzle(s) built" + ("" if upsert else ", pass --upsert to write") + ")")
