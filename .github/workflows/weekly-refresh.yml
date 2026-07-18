@@ -49,3 +49,33 @@ jobs:
       - run: python -m tools.ingest.main --evict-current-season --backfill 7 --upsert --catalog
       # Re-mint today's grids off the freshened catalog (full-roster NFL answers included).
       - run: python -m tools.ingest.main --grid nfl nba soccer tennis --upsert
+
+  # The hoopR full-league NBA sweep lives as a committed CSV (data/nba_hoopr_seasons.csv)
+  # because its refresh needs pyarrow, which the daily stdlib-only pipeline must never
+  # depend on (see hoopr_nba.py's header). Refresh it weekly here and commit the diff —
+  # in season the sweep gains the week's games; out of season the file is byte-identical
+  # and the commit step no-ops. refresh() rewrites the WHOLE file, so the range must
+  # always be 2002..current (a partial range would drop history).
+  hoopr-sweep:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt pyarrow
+      - run: python -m tools.ingest.providers.hoopr_nba --from 2002 --to $(date +%Y)
+      - name: Commit refreshed sweep if changed
+        run: |
+          if ! git diff --quiet -- tools/ingest/data/nba_hoopr_seasons.csv; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add tools/ingest/data/nba_hoopr_seasons.csv
+            git commit -m "Weekly hoopR NBA sweep refresh (automated)"
+            git push
+          else
+            echo "sweep unchanged — nothing to commit"
+          fi
