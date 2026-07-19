@@ -402,12 +402,12 @@ final class RepositoryContainer: ObservableObject {
         struct Row: Encodable {
             let userId: String
             let streakAtRisk: Bool, leaguePosition: Bool, versusChallenge: Bool, seasonEnd: Bool
-            let friendRequest: Bool
+            let friendRequest: Bool, dailyDrop: Bool
         }
         try? await client.upsert("notification_settings",
             values: Row(userId: uid, streakAtRisk: settings.streakAtRisk, leaguePosition: settings.leaguePosition,
                        versusChallenge: settings.versusChallenge, seasonEnd: settings.seasonEnd,
-                       friendRequest: settings.friendRequest),
+                       friendRequest: settings.friendRequest, dailyDrop: settings.dailyDrop),
             onConflict: "user_id")
     }
 

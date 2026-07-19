@@ -13,7 +13,8 @@ export type NotificationCategory =
   | "league_position"
   | "versus_challenge"
   | "season_end"
-  | "friend_request";
+  | "friend_request"
+  | "daily_drop";
 
 export interface PushPayload {
   category: NotificationCategory;
@@ -28,6 +29,19 @@ export function buildStreakAtRiskPayload(streak: number): PushPayload {
     category: "streak_at_risk",
     title: "Your streak is at risk!",
     body: `You're on a ${streak}-day streak. Play today's puzzle before midnight to keep it alive.`,
+    data: { tab: "home" },
+  };
+}
+
+/** `theme` is today's minted K4C4 theme when known — naming it makes the push concrete proof
+ * of fresh content; null (row not landed yet, or lookup failed) falls back to generic copy. */
+export function buildDailyDropPayload(theme: string | null): PushPayload {
+  return {
+    category: "daily_drop",
+    title: "Today's puzzles just dropped",
+    body: theme
+      ? `New K4C4: “${theme}” — plus a new mystery player. Both are live now.`
+      : "A new K4C4 and a new mystery player are live now.",
     data: { tab: "home" },
   };
 }

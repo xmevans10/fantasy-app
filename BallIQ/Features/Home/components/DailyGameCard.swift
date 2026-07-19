@@ -28,12 +28,23 @@ struct DailyGameCard: View {
     /// True when this session moves the player's competitive rating (the daily K4C4/WhoAmI
     /// cards). Off by default so community/archive cards — XP-only by design — stay unmarked.
     var ranked: Bool = false
+    /// Optional freshness stamp ("TODAY · SAT, JUL 19") — only the true daily cards pass
+    /// `DailyGameCard.todayDateBadge`, so archive/community cards never falsely claim to be new.
+    var dateBadge: String? = nil
     let action: () -> Void
     /// Optional secondary action — an explicit overflow icon in the header band, distinct from
     /// the card's primary tap-to-play. nil (default) hides it; only Community cards pass one
     /// (report puzzle). A nested `Button` here works cleanly since its tap frame (a small icon in
     /// the header) never overlaps the rest of the card's tap area.
     var secondaryAction: (() -> Void)? = nil
+
+    /// "TODAY · SAT, JUL 19" — the device-local calendar date, not the UTC `active_date` key:
+    /// the badge answers "is this fresh?" in the user's own calendar, and showing the UTC day
+    /// would read as tomorrow's date every US evening.
+    static var todayDateBadge: String {
+        let day = Date.now.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
+        return String(localized: "TODAY · \(day)").uppercased()
+    }
 
     var body: some View {
         Button(action: action) {
@@ -67,6 +78,9 @@ struct DailyGameCard: View {
                             // Puzzle-TYPE signifier — its own solid-color chip since the header
                             // band itself is now colored by sport, not type.
                             badge(symbol: symbol, text: formatName.uppercased(), fill: typeColor, foreground: onTypeColor)
+                            if let dateBadge {
+                                badge(symbol: "calendar", text: dateBadge)
+                            }
                             if ranked {
                                 badge(symbol: "chart.line.uptrend.xyaxis", text: String(localized: "RANKED"))
                             }

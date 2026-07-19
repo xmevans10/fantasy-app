@@ -166,7 +166,8 @@ struct BrowseView: View {
                           completed: container.hasCompletedToday(puzzleID: p.id),
                           favoriteTeamMatch: container.favoriteTeams.team(for: p.sport)
                               .map(p.features(teamAbbr:)) ?? false,
-                          ranked: true) {
+                          ranked: true,
+                          dateBadge: DailyGameCard.todayDateBadge) {
                 activeDailyKeep4 = p
             }
             secondaryAction: { shareTarget = SharablePuzzle(keep4: p) }
@@ -176,7 +177,8 @@ struct BrowseView: View {
                           subtitle: String(localized: "\(p.clues.count) clues"),
                           completed: container.hasCompletedToday(puzzleID: p.id),
                           typeColor: .voltFill, onTypeColor: .onVolt,
-                          ranked: true) {
+                          ranked: true,
+                          dateBadge: DailyGameCard.todayDateBadge) {
                 activeDailyWhoAmI = p
             }
             secondaryAction: { shareTarget = SharablePuzzle(whoAmI: p) }

@@ -8,6 +8,7 @@ struct NotificationSettings: Codable, Equatable {
     var versusChallenge = true
     var seasonEnd = true
     var friendRequest = true
+    var dailyDrop = true
 
     static let allEnabled = NotificationSettings()
 
@@ -17,5 +18,6 @@ struct NotificationSettings: Codable, Equatable {
         case versusChallenge = "versus_challenge"
         case seasonEnd = "season_end"
         case friendRequest = "friend_request"
+        case dailyDrop = "daily_drop"
     }
 }

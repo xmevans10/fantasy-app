@@ -1,5 +1,6 @@
 import { assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
+  buildDailyDropPayload,
   buildFriendRequestPayload,
   buildLeaguePositionPayload,
   buildSeasonEndPayload,
@@ -188,4 +189,15 @@ Deno.test("friend-request payload names the requester", () => {
   const payload = buildFriendRequestPayload("xander");
   assertStringIncludes(payload.body, "xander");
   assertEquals(payload.data?.tab, "friends");
+});
+
+Deno.test("daily-drop payload names today's theme when known, stays generic otherwise", () => {
+  const themed = buildDailyDropPayload("One-Team Legends");
+  assertEquals(themed.category, "daily_drop");
+  assertStringIncludes(themed.body, "One-Team Legends");
+  assertEquals(themed.data?.tab, "home");
+
+  const generic = buildDailyDropPayload(null);
+  assertEquals(generic.category, "daily_drop");
+  assertStringIncludes(generic.body, "mystery player");
 });

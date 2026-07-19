@@ -119,6 +119,14 @@ M5/M18 sessions — treat as standing direction, apply proactively to new work):
   yet either — `weekly-cohort-rollover` bootstraps one on first run, which hasn't happened; it
   fires naturally next Monday, or needs an explicit user go-ahead to trigger sooner (it
   mutates real rating-based cohort assignments for every rated user, not a no-op).
+  **`notify-daily-drop` added 2026-07-19** (deployed + scheduled hourly, `active: true`):
+  the "today's puzzles just dropped" push at ~9am device-local time, naming today's minted
+  K4C4 theme in the copy (falls back to generic copy if the row hasn't landed). Skips anyone
+  who already played that local day; no streak gate (new/lapsed users are the point). Opt-out
+  is `notification_settings.daily_drop` (migration `0002_notify_daily_drop.sql`) with a
+  "Daily puzzle drop" toggle in Profile. Same day, the daily cards on Home and the format
+  hubs grew a `TODAY · SUN, JUL 19` date badge (`DailyGameCard.todayDateBadge`, device-local
+  date) so freshness is visible in-app too; archive/community cards deliberately never get it.
 - **Design system "Prime Time"** ([DESIGN.md](../BallIQ/DesignSystem/DESIGN.md)): arcade-pop ×
   sports-broadcast. Anton + Saira (OFL, runtime-registered), electric-blue dominant + volt
   accent, ink outlines + hard ledge shadows (`cardSurface`/`blockCard`), one orchestrated

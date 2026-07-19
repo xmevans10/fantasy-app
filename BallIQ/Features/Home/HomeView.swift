@@ -73,7 +73,8 @@ struct HomeView: View {
                                                   completed: container.hasCompletedToday(puzzleID: puzzle.id),
                                                   favoriteTeamMatch: container.favoriteTeams.team(for: puzzle.sport)
                                                       .map(puzzle.features(teamAbbr:)) ?? false,
-                                                  ranked: true) {
+                                                  ranked: true,
+                                                  dateBadge: DailyGameCard.todayDateBadge) {
                                         // The daily card IS the puzzle — it opens directly
                                         // (explicit feedback: no intermediate setup screen when
                                         // the puzzle is already loaded and shown on the card).
@@ -91,7 +92,8 @@ struct HomeView: View {
                                                   subtitle: String(localized: "\(puzzle.clues.count) clues"),
                                                   completed: container.hasCompletedToday(puzzleID: puzzle.id),
                                                   typeColor: .voltFill, onTypeColor: .onVolt,
-                                                  ranked: true) {
+                                                  ranked: true,
+                                                  dateBadge: DailyGameCard.todayDateBadge) {
                                         activeWhoAmI = puzzle
                                     }
                                     secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }

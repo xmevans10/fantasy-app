@@ -497,6 +497,10 @@ create table if not exists public.notification_settings (
   season_end       boolean not null default true,
   updated_at       timestamptz not null default now()
 );
+-- "Today's puzzles just dropped" 9am-local push (notify-daily-drop, pg_cron scheduling:
+-- supabase/migrations/0002_notify_daily_drop.sql).
+alter table public.notification_settings
+  add column if not exists daily_drop boolean not null default true;
 
 alter table public.seasons              enable row level security;
 alter table public.cohorts              enable row level security;

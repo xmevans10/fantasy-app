@@ -234,6 +234,7 @@ struct ProfileView: View {
     private var notificationsCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("NOTIFICATIONS").font(.label12).foregroundStyle(Color.textMuted)
+            notificationToggle("Daily puzzle drop", \.dailyDrop)
             notificationToggle("Streak at risk", \.streakAtRisk)
             notificationToggle("League position", \.leaguePosition)
             notificationToggle("Versus challenges", \.versusChallenge)
