@@ -615,8 +615,63 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("wins", "W", "int"),
         ],
     ),
-    # ── Soccer (seed-only for now — no live club-stats source verified working;
-    # see providers/seed.py's module docstring) ─────────────────────────
+    # ── Soccer (live since the 38-league catalog landed: transfermarkt + espn sweeps,
+    # ~78k season rows; the old "seed-only" note is history). League-cohort themes are
+    # only viable where `league` meta is dense (espn-sourced MLS today) — the
+    # transfermarkt bulk carries no league label, so the other cohorts are stat-based. ──
+    Theme(
+        key="soccer-goal-machines",
+        title="20-goal seasons",
+        sport="soccer",
+        scale="soccer_attacker_fantasy",
+        positions=frozenset({"FW", "MF"}),
+        min_stats={"goals": 20},
+        columns=[
+            StatColumn("goals", "Goals", "int"),
+            StatColumn("assists", "Assists", "int"),
+            StatColumn("appearances", "Apps", "int"),
+        ],
+    ),
+    Theme(
+        key="soccer-playmakers",
+        title="Elite playmaker seasons",
+        sport="soccer",
+        scale="soccer_attacker_fantasy",
+        positions=frozenset({"FW", "MF"}),
+        min_stats={"assists": 10, "appearances": 15},
+        columns=[
+            StatColumn("assists", "Assists", "int"),
+            StatColumn("goals", "Goals", "int"),
+            StatColumn("appearances", "Apps", "int"),
+        ],
+    ),
+    Theme(
+        key="soccer-iron-men",
+        title="Every-week iron man seasons",
+        sport="soccer",
+        scale="soccer_defender_fantasy",
+        positions=frozenset({"DF", "GK"}),
+        min_stats={"appearances": 35},
+        columns=[
+            StatColumn("appearances", "Apps", "int"),
+            StatColumn("clean_sheets", "Clean Sheets", "int"),
+            StatColumn("goals", "Goals", "int"),
+        ],
+    ),
+    Theme(
+        key="soccer-mls",
+        title="MLS standout seasons",
+        sport="soccer",
+        scale="soccer_attacker_fantasy",
+        positions=frozenset({"FW", "MF"}),
+        min_stats={"appearances": 15},
+        filters=(Filter(field="league", op="eq", value="USA (MLS)"),),
+        columns=[
+            StatColumn("goals", "Goals", "int"),
+            StatColumn("assists", "Assists", "int"),
+            StatColumn("appearances", "Apps", "int"),
+        ],
+    ),
     Theme(
         key="soccer-attackers",
         title="Elite goal-scoring seasons",
@@ -644,8 +699,69 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("assists", "Assists", "int"),
         ],
     ),
-    # ── Tennis (seed-only — no live source verified working; see
-    # providers/seed.py's module docstring) ─────────────────────────────
+    # ── Tennis (live since the WTA/ATP match sweeps: ~8.5k season rows spanning the
+    # 1960s-2020s; the old "seed-only" note is history). Era slices + a country cohort,
+    # per the audit's depth ask — every cohort below clears 250+ qualifying rows. ──
+    Theme(
+        key="tennis-wood-era",
+        title="Wood-to-graphite era seasons (70s-80s)",
+        sport="tennis",
+        scale="tennis_fantasy",
+        positions=frozenset({"Player"}),
+        min_stats={"matches_won": 30},
+        filters=(Filter(field="decade", op="in", value=(1970, 1980)),),
+        columns=[
+            StatColumn("matches_won", "Wins", "int"),
+            StatColumn("titles", "Titles", "int"),
+            StatColumn("grand_slams", "Slams", "int"),
+            StatColumn("matches_lost", "Losses", "int"),
+        ],
+    ),
+    Theme(
+        key="tennis-golden-90s-00s",
+        title="Golden-era seasons (90s-2000s)",
+        sport="tennis",
+        scale="tennis_fantasy",
+        positions=frozenset({"Player"}),
+        min_stats={"matches_won": 35},
+        filters=(Filter(field="season_year", op="range", value=(1990, 2009)),),
+        columns=[
+            StatColumn("matches_won", "Wins", "int"),
+            StatColumn("titles", "Titles", "int"),
+            StatColumn("grand_slams", "Slams", "int"),
+            StatColumn("matches_lost", "Losses", "int"),
+        ],
+    ),
+    Theme(
+        key="tennis-modern",
+        title="Modern-era tour seasons (2010s+)",
+        sport="tennis",
+        scale="tennis_fantasy",
+        positions=frozenset({"Player"}),
+        min_stats={"matches_won": 30},
+        filters=(Filter(field="season_year", op="gte", value=2010),),
+        columns=[
+            StatColumn("matches_won", "Wins", "int"),
+            StatColumn("titles", "Titles", "int"),
+            StatColumn("grand_slams", "Slams", "int"),
+            StatColumn("matches_lost", "Losses", "int"),
+        ],
+    ),
+    Theme(
+        key="tennis-usa",
+        title="American tennis seasons",
+        sport="tennis",
+        scale="tennis_fantasy",
+        positions=frozenset({"Player"}),
+        min_stats={"matches_won": 25},
+        filters=(Filter(field="team", op="eq", value="USA"),),
+        columns=[
+            StatColumn("matches_won", "Wins", "int"),
+            StatColumn("titles", "Titles", "int"),
+            StatColumn("grand_slams", "Slams", "int"),
+            StatColumn("matches_lost", "Losses", "int"),
+        ],
+    ),
     Theme(
         key="tennis-tour-dominance",
         title="Dominant tour seasons",

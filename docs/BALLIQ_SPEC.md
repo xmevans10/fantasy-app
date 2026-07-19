@@ -1398,15 +1398,22 @@ Explicitly deferred by the user 2026-07-14; do not start from inference.
 **1.5 — "Deep bench": content depth where the catalog is thinnest.**
 All [agent], no gates — the release valve between user-gated versions; pull items forward
 whenever a gate above stalls.
-- Tennis daily/archive depth: the live archive holds exactly 2 tennis Keep4 themes today
-  (audit observation) against 9,615 catalog rows — add themed slices (Grand-Slam eras,
-  country cohorts) via the established themes.py pattern.
-- Soccer league-cohort themes off the now-38-league catalog; more single-game themes for
-  NBA/MLB now that the grain ships (the NBA hoopR games sweep needs its documented manual
-  re-run to stay fresh).
-- WhoAmI pool expansion (the curated entry list is the bottleneck for variety) + backlog
-  #8 defunct-franchise styling, the last unshipped Tier-3 crumb.
-- Exit: no sport's archive has fewer than ~6 themes; WhoAmI pool ≥ 2× current.
+- ~~Tennis daily/archive depth~~ — **shipped 2026-07-18** (pulled forward while 1.3 sat on
+  its ASC user gates): 4 new tennis themes (wood-era 70s-80s, golden 90s-00s, modern
+  2010s+, American cohort — every one clears 250+ qualifying live rows) and 4 new soccer
+  themes (20-goal seasons, playmakers, iron-men, MLS cohort; league-cohorts beyond MLS wait
+  on denser `league` meta — the transfermarkt bulk carries none). Live archive now: every
+  sport ≥ 6 Keep4 themes (soccer 2→6, tennis 2→6; 42 themes in the shared contract, count
+  locked by Keep4ThemeTests). The stale "seed-only" comments in themes.py are corrected.
+- ~~WhoAmI pool expansion~~ — **shipped 2026-07-18**: 12→24 curated entries (exactly the
+  2× exit target), now spanning baseball (Griffey Jr., Jeter) and soccer (Henry,
+  Ronaldinho) alongside the new NFL/NBA legends (Emmitt, Montana, LT, Megatron, Bird,
+  Magic, Hakeem, Nash). All facts curated-verifiable; live table holds all 24.
+- Still open: more single-game themes for NBA/MLB now that the grain ships (the NBA hoopR
+  games sweep is now auto-refreshed weekly by `weekly-refresh.yml`), and backlog #8
+  defunct-franchise styling, the last unshipped Tier-3 crumb.
+- Exit: ~~no sport's archive has fewer than ~6 themes; WhoAmI pool ≥ 2× current~~ — **met,
+  verified in the live puzzles table 2026-07-18**.
 
 **Candidate pool (unscheduled — needs user appetite before any lands in a version):**
 Home-screen widget (streak + daily countdown — pairs naturally with 1.2's pushes),

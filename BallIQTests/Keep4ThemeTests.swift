@@ -9,7 +9,7 @@ final class Keep4ThemeTests: XCTestCase {
     private let themes = Keep4Theme.loadBundled()
 
     func testBundleDecodesAllThemes() {
-        XCTAssertEqual(themes.count, 34, "bundled keep4_themes.json out of sync with themes.py")
+        XCTAssertEqual(themes.count, 42, "bundled keep4_themes.json out of sync with themes.py")
         XCTAssertEqual(Set(themes.map(\.key)).count, themes.count, "duplicate theme keys")
     }
 

@@ -2,11 +2,19 @@
   {
     "sport": "nfl",
     "canonical": "Brett Favre",
-    "aliases": ["favre", "brett favre"],
+    "aliases": [
+      "favre",
+      "brett favre"
+    ],
     "position": "Quarterback",
     "first_year": 1991,
     "last_year": 2010,
-    "teams": ["Falcons", "Packers", "Jets", "Vikings"],
+    "teams": [
+      "Falcons",
+      "Packers",
+      "Jets",
+      "Vikings"
+    ],
     "stat_line": "Over 71,000 passing yards and 508 touchdown passes",
     "jersey": "4",
     "fact": "Started 297 consecutive games — the quarterback iron-man record"
@@ -14,11 +22,17 @@
   {
     "sport": "nfl",
     "canonical": "Peyton Manning",
-    "aliases": ["peyton manning", "manning"],
+    "aliases": [
+      "peyton manning",
+      "manning"
+    ],
     "position": "Quarterback",
     "first_year": 1998,
     "last_year": 2015,
-    "teams": ["Colts", "Broncos"],
+    "teams": [
+      "Colts",
+      "Broncos"
+    ],
     "stat_line": "71,940 passing yards and 539 touchdown passes",
     "jersey": "18",
     "fact": "Five-time MVP who won Super Bowls with two different franchises"
@@ -26,11 +40,17 @@
   {
     "sport": "nfl",
     "canonical": "Tom Brady",
-    "aliases": ["tom brady", "brady"],
+    "aliases": [
+      "tom brady",
+      "brady"
+    ],
     "position": "Quarterback",
     "first_year": 2000,
     "last_year": 2022,
-    "teams": ["Patriots", "Buccaneers"],
+    "teams": [
+      "Patriots",
+      "Buccaneers"
+    ],
     "stat_line": "Over 89,000 passing yards and 649 touchdown passes",
     "jersey": "12",
     "fact": "Drafted 199th overall, then won seven Super Bowl titles"
@@ -38,11 +58,18 @@
   {
     "sport": "nfl",
     "canonical": "Jerry Rice",
-    "aliases": ["jerry rice", "rice"],
+    "aliases": [
+      "jerry rice",
+      "rice"
+    ],
     "position": "Wide Receiver",
     "first_year": 1985,
     "last_year": 2004,
-    "teams": ["49ers", "Raiders", "Seahawks"],
+    "teams": [
+      "49ers",
+      "Raiders",
+      "Seahawks"
+    ],
     "stat_line": "22,895 receiving yards and 197 receiving touchdowns",
     "jersey": "80",
     "fact": "The NFL's all-time leader in receptions, receiving yards, and touchdowns"
@@ -50,11 +77,16 @@
   {
     "sport": "nfl",
     "canonical": "Barry Sanders",
-    "aliases": ["barry sanders", "sanders"],
+    "aliases": [
+      "barry sanders",
+      "sanders"
+    ],
     "position": "Running Back",
     "first_year": 1989,
     "last_year": 1998,
-    "teams": ["Lions"],
+    "teams": [
+      "Lions"
+    ],
     "stat_line": "15,269 rushing yards in just ten seasons",
     "jersey": "20",
     "fact": "Retired at 30 while still within reach of the all-time rushing record"
@@ -62,11 +94,19 @@
   {
     "sport": "nfl",
     "canonical": "Randy Moss",
-    "aliases": ["randy moss", "moss"],
+    "aliases": [
+      "randy moss",
+      "moss"
+    ],
     "position": "Wide Receiver",
     "first_year": 1998,
     "last_year": 2012,
-    "teams": ["Vikings", "Raiders", "Patriots", "49ers"],
+    "teams": [
+      "Vikings",
+      "Raiders",
+      "Patriots",
+      "49ers"
+    ],
     "stat_line": "156 receiving touchdowns, including a record 23 in 2007",
     "jersey": "84",
     "fact": "Set the single-season receiving touchdown record in 2007"
@@ -74,11 +114,18 @@
   {
     "sport": "nba",
     "canonical": "Michael Jordan",
-    "aliases": ["michael jordan", "jordan", "mj"],
+    "aliases": [
+      "michael jordan",
+      "jordan",
+      "mj"
+    ],
     "position": "Shooting Guard",
     "first_year": 1984,
     "last_year": 2003,
-    "teams": ["Bulls", "Wizards"],
+    "teams": [
+      "Bulls",
+      "Wizards"
+    ],
     "stat_line": "32,292 career points at 30.1 per game",
     "jersey": "23",
     "fact": "Won six titles and six Finals MVPs; highest career scoring average in NBA history"
@@ -86,11 +133,17 @@
   {
     "sport": "nba",
     "canonical": "Kobe Bryant",
-    "aliases": ["kobe bryant", "kobe", "bryant"],
+    "aliases": [
+      "kobe bryant",
+      "kobe",
+      "bryant"
+    ],
     "position": "Shooting Guard",
     "first_year": 1996,
     "last_year": 2016,
-    "teams": ["Lakers"],
+    "teams": [
+      "Lakers"
+    ],
     "stat_line": "33,643 career points and five championships",
     "jersey": "8 and 24",
     "fact": "Scored 81 points in a single game and spent his entire career with one team"
@@ -98,11 +151,16 @@
   {
     "sport": "nba",
     "canonical": "Tim Duncan",
-    "aliases": ["tim duncan", "duncan"],
+    "aliases": [
+      "tim duncan",
+      "duncan"
+    ],
     "position": "Power Forward",
     "first_year": 1997,
     "last_year": 2016,
-    "teams": ["Spurs"],
+    "teams": [
+      "Spurs"
+    ],
     "stat_line": "Five championships and 15 All-Star selections",
     "jersey": "21",
     "fact": "'The Big Fundamental' — one franchise for his entire 19-year career"
@@ -110,11 +168,21 @@
   {
     "sport": "nba",
     "canonical": "Shaquille O'Neal",
-    "aliases": ["shaquille oneal", "shaq", "oneal"],
+    "aliases": [
+      "shaquille oneal",
+      "shaq",
+      "oneal"
+    ],
     "position": "Center",
     "first_year": 1992,
     "last_year": 2011,
-    "teams": ["Magic", "Lakers", "Heat", "Suns", "Cavaliers"],
+    "teams": [
+      "Magic",
+      "Lakers",
+      "Heat",
+      "Suns",
+      "Cavaliers"
+    ],
     "stat_line": "28,596 career points and four championships",
     "jersey": "34",
     "fact": "A dominant center who won three straight Finals MVPs from 2000 to 2002"
@@ -122,11 +190,20 @@
   {
     "sport": "nba",
     "canonical": "Allen Iverson",
-    "aliases": ["allen iverson", "iverson", "ai"],
+    "aliases": [
+      "allen iverson",
+      "iverson",
+      "ai"
+    ],
     "position": "Point Guard",
     "first_year": 1996,
     "last_year": 2010,
-    "teams": ["76ers", "Nuggets", "Pistons", "Grizzlies"],
+    "teams": [
+      "76ers",
+      "Nuggets",
+      "Pistons",
+      "Grizzlies"
+    ],
     "stat_line": "2001 MVP at 26.7 points per game for his career",
     "jersey": "3",
     "fact": "'The Answer' — won MVP standing just six feet tall"
@@ -134,13 +211,246 @@
   {
     "sport": "nba",
     "canonical": "Dirk Nowitzki",
-    "aliases": ["dirk nowitzki", "dirk", "nowitzki"],
+    "aliases": [
+      "dirk nowitzki",
+      "dirk",
+      "nowitzki"
+    ],
     "position": "Power Forward",
     "first_year": 1998,
     "last_year": 2019,
-    "teams": ["Mavericks"],
+    "teams": [
+      "Mavericks"
+    ],
     "stat_line": "31,560 career points, the 2007 MVP, and a 2011 title",
     "jersey": "41",
     "fact": "Spent all 21 seasons with one franchise and popularized the one-legged fadeaway"
+  },
+  {
+    "sport": "nfl",
+    "canonical": "Emmitt Smith",
+    "aliases": [
+      "emmitt",
+      "emmitt smith",
+      "smith"
+    ],
+    "position": "Running Back",
+    "first_year": 1990,
+    "last_year": 2004,
+    "teams": [
+      "Cowboys",
+      "Cardinals"
+    ],
+    "stat_line": "The NFL's all-time leading rusher with 18,355 yards",
+    "jersey": "22",
+    "fact": "Won the rushing title, league MVP, and Super Bowl MVP in the same 1993 season"
+  },
+  {
+    "sport": "nfl",
+    "canonical": "Joe Montana",
+    "aliases": [
+      "montana",
+      "joe montana",
+      "joe cool"
+    ],
+    "position": "Quarterback",
+    "first_year": 1979,
+    "last_year": 1994,
+    "teams": [
+      "49ers",
+      "Chiefs"
+    ],
+    "stat_line": "Over 40,000 passing yards and four Super Bowl titles",
+    "jersey": "16",
+    "fact": "Never threw an interception in four Super Bowl appearances"
+  },
+  {
+    "sport": "nfl",
+    "canonical": "Lawrence Taylor",
+    "aliases": [
+      "lawrence taylor",
+      "taylor",
+      "lt"
+    ],
+    "position": "Linebacker",
+    "first_year": 1981,
+    "last_year": 1993,
+    "teams": [
+      "Giants"
+    ],
+    "stat_line": "132.5 career sacks and three Defensive Player of the Year awards",
+    "jersey": "56",
+    "fact": "The last defensive player to be named league MVP (1986)"
+  },
+  {
+    "sport": "nfl",
+    "canonical": "Calvin Johnson",
+    "aliases": [
+      "calvin johnson",
+      "johnson",
+      "megatron"
+    ],
+    "position": "Wide Receiver",
+    "first_year": 2007,
+    "last_year": 2015,
+    "teams": [
+      "Lions"
+    ],
+    "stat_line": "Over 11,600 receiving yards and 83 touchdowns in just nine seasons",
+    "jersey": "81",
+    "fact": "Nicknamed Megatron — set the single-season receiving record with 1,964 yards in 2012"
+  },
+  {
+    "sport": "nba",
+    "canonical": "Larry Bird",
+    "aliases": [
+      "bird",
+      "larry bird",
+      "larry legend"
+    ],
+    "position": "Forward",
+    "first_year": 1979,
+    "last_year": 1992,
+    "teams": [
+      "Celtics"
+    ],
+    "stat_line": "Three straight MVP awards and three championships",
+    "jersey": "33",
+    "fact": "Won the NBA's first three 3-Point Contests"
+  },
+  {
+    "sport": "nba",
+    "canonical": "Magic Johnson",
+    "aliases": [
+      "magic",
+      "magic johnson"
+    ],
+    "position": "Point Guard",
+    "first_year": 1979,
+    "last_year": 1996,
+    "teams": [
+      "Lakers"
+    ],
+    "stat_line": "Over 10,000 career assists and five championships",
+    "jersey": "32",
+    "fact": "Started at center as a rookie in the 1980 Finals clincher and scored 42 points"
+  },
+  {
+    "sport": "nba",
+    "canonical": "Hakeem Olajuwon",
+    "aliases": [
+      "hakeem olajuwon",
+      "olajuwon",
+      "hakeem",
+      "the dream"
+    ],
+    "position": "Center",
+    "first_year": 1984,
+    "last_year": 2002,
+    "teams": [
+      "Rockets",
+      "Raptors"
+    ],
+    "stat_line": "The NBA's all-time blocks leader with 3,830",
+    "jersey": "34",
+    "fact": "Won MVP, Defensive Player of the Year, and Finals MVP in the same 1994 season"
+  },
+  {
+    "sport": "nba",
+    "canonical": "Steve Nash",
+    "aliases": [
+      "nash",
+      "steve nash"
+    ],
+    "position": "Point Guard",
+    "first_year": 1996,
+    "last_year": 2014,
+    "teams": [
+      "Suns",
+      "Mavericks",
+      "Lakers"
+    ],
+    "stat_line": "Back-to-back MVP awards running the seven-seconds-or-less offense",
+    "jersey": "13",
+    "fact": "Led the league in assists per game five times"
+  },
+  {
+    "sport": "baseball",
+    "canonical": "Ken Griffey Jr.",
+    "aliases": [
+      "griffey",
+      "ken griffey",
+      "ken griffey jr",
+      "junior"
+    ],
+    "position": "Outfielder",
+    "first_year": 1989,
+    "last_year": 2010,
+    "teams": [
+      "Mariners",
+      "Reds",
+      "White Sox"
+    ],
+    "stat_line": "630 career home runs with the sweetest swing in baseball",
+    "jersey": "24",
+    "fact": "Drafted first overall and played in the same outfield as his father in Seattle"
+  },
+  {
+    "sport": "baseball",
+    "canonical": "Derek Jeter",
+    "aliases": [
+      "jeter",
+      "derek jeter"
+    ],
+    "position": "Shortstop",
+    "first_year": 1995,
+    "last_year": 2014,
+    "teams": [
+      "Yankees"
+    ],
+    "stat_line": "3,465 career hits, all in pinstripes",
+    "jersey": "2",
+    "fact": "Nicknamed Mr. November — five World Series titles with one franchise"
+  },
+  {
+    "sport": "soccer",
+    "canonical": "Thierry Henry",
+    "aliases": [
+      "henry",
+      "thierry henry"
+    ],
+    "position": "Forward",
+    "first_year": 1994,
+    "last_year": 2014,
+    "teams": [
+      "Monaco",
+      "Juventus",
+      "Arsenal",
+      "Barcelona",
+      "Red Bulls"
+    ],
+    "stat_line": "Arsenal's all-time leading scorer with 228 goals",
+    "jersey": "14",
+    "fact": "Won the Premier League Golden Boot four times"
+  },
+  {
+    "sport": "soccer",
+    "canonical": "Ronaldinho",
+    "aliases": [
+      "ronaldinho",
+      "dinho"
+    ],
+    "position": "Forward",
+    "first_year": 1998,
+    "last_year": 2015,
+    "teams": [
+      "Grêmio",
+      "PSG",
+      "Barcelona",
+      "Milan"
+    ],
+    "stat_line": "Two FIFA World Player of the Year awards",
+    "jersey": "10",
+    "fact": "Won the 2002 World Cup with Brazil and the 2005 Ballon d'Or"
   }
 ]

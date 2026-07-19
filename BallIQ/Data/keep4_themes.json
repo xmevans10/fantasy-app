@@ -1108,6 +1108,139 @@
     "eraAdjusted": false
   },
   {
+    "key": "soccer-goal-machines",
+    "title": "20-goal seasons",
+    "sport": "soccer",
+    "scale": "soccer_attacker_fantasy",
+    "positions": [
+      "FW",
+      "MF"
+    ],
+    "minStats": {
+      "goals": 20
+    },
+    "columns": [
+      {
+        "stat": "goals",
+        "label": "Goals",
+        "fmt": "int"
+      },
+      {
+        "stat": "assists",
+        "label": "Assists",
+        "fmt": "int"
+      },
+      {
+        "stat": "appearances",
+        "label": "Apps",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "soccer-playmakers",
+    "title": "Elite playmaker seasons",
+    "sport": "soccer",
+    "scale": "soccer_attacker_fantasy",
+    "positions": [
+      "FW",
+      "MF"
+    ],
+    "minStats": {
+      "appearances": 15,
+      "assists": 10
+    },
+    "columns": [
+      {
+        "stat": "assists",
+        "label": "Assists",
+        "fmt": "int"
+      },
+      {
+        "stat": "goals",
+        "label": "Goals",
+        "fmt": "int"
+      },
+      {
+        "stat": "appearances",
+        "label": "Apps",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "soccer-iron-men",
+    "title": "Every-week iron man seasons",
+    "sport": "soccer",
+    "scale": "soccer_defender_fantasy",
+    "positions": [
+      "DF",
+      "GK"
+    ],
+    "minStats": {
+      "appearances": 35
+    },
+    "columns": [
+      {
+        "stat": "appearances",
+        "label": "Apps",
+        "fmt": "int"
+      },
+      {
+        "stat": "clean_sheets",
+        "label": "Clean Sheets",
+        "fmt": "int"
+      },
+      {
+        "stat": "goals",
+        "label": "Goals",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "soccer-mls",
+    "title": "MLS standout seasons",
+    "sport": "soccer",
+    "scale": "soccer_attacker_fantasy",
+    "positions": [
+      "FW",
+      "MF"
+    ],
+    "minStats": {
+      "appearances": 15
+    },
+    "columns": [
+      {
+        "stat": "goals",
+        "label": "Goals",
+        "fmt": "int"
+      },
+      {
+        "stat": "assists",
+        "label": "Assists",
+        "fmt": "int"
+      },
+      {
+        "stat": "appearances",
+        "label": "Apps",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
     "key": "soccer-attackers",
     "title": "Elite goal-scoring seasons",
     "sport": "soccer",
@@ -1171,6 +1304,154 @@
       {
         "stat": "assists",
         "label": "Assists",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "tennis-wood-era",
+    "title": "Wood-to-graphite era seasons (70s-80s)",
+    "sport": "tennis",
+    "scale": "tennis_fantasy",
+    "positions": [
+      "Player"
+    ],
+    "minStats": {
+      "matches_won": 30
+    },
+    "columns": [
+      {
+        "stat": "matches_won",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "titles",
+        "label": "Titles",
+        "fmt": "int"
+      },
+      {
+        "stat": "grand_slams",
+        "label": "Slams",
+        "fmt": "int"
+      },
+      {
+        "stat": "matches_lost",
+        "label": "Losses",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "tennis-golden-90s-00s",
+    "title": "Golden-era seasons (90s-2000s)",
+    "sport": "tennis",
+    "scale": "tennis_fantasy",
+    "positions": [
+      "Player"
+    ],
+    "minStats": {
+      "matches_won": 35
+    },
+    "columns": [
+      {
+        "stat": "matches_won",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "titles",
+        "label": "Titles",
+        "fmt": "int"
+      },
+      {
+        "stat": "grand_slams",
+        "label": "Slams",
+        "fmt": "int"
+      },
+      {
+        "stat": "matches_lost",
+        "label": "Losses",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "tennis-modern",
+    "title": "Modern-era tour seasons (2010s+)",
+    "sport": "tennis",
+    "scale": "tennis_fantasy",
+    "positions": [
+      "Player"
+    ],
+    "minStats": {
+      "matches_won": 30
+    },
+    "columns": [
+      {
+        "stat": "matches_won",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "titles",
+        "label": "Titles",
+        "fmt": "int"
+      },
+      {
+        "stat": "grand_slams",
+        "label": "Slams",
+        "fmt": "int"
+      },
+      {
+        "stat": "matches_lost",
+        "label": "Losses",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "tennis-usa",
+    "title": "American tennis seasons",
+    "sport": "tennis",
+    "scale": "tennis_fantasy",
+    "positions": [
+      "Player"
+    ],
+    "minStats": {
+      "matches_won": 25
+    },
+    "columns": [
+      {
+        "stat": "matches_won",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "titles",
+        "label": "Titles",
+        "fmt": "int"
+      },
+      {
+        "stat": "grand_slams",
+        "label": "Slams",
+        "fmt": "int"
+      },
+      {
+        "stat": "matches_lost",
+        "label": "Losses",
         "fmt": "int"
       }
     ],

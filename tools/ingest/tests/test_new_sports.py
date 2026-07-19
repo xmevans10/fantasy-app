@@ -11,8 +11,20 @@ from tools.ingest.validate import validate
 # career.build_career_rows over real multi-season pulls — baseball's career themes are
 # exercised against live MLB data in test_career.py/test_assemble.py instead), so a
 # career-grain theme like baseball-career-hitters can never produce a puzzle from seed data.
+#
+# Also scoped to themes the SEED pools can actually satisfy: the 2026-07-18 depth themes
+# (tennis era/country slices, soccer stat cohorts + MLS) are designed against the live
+# 78k-row soccer / 8.5k-row tennis catalogs and legitimately find nothing in a
+# dozens-of-rows seed CSV — their production is verified by the pipeline dry run, and
+# their catalog sync by test_export_themes. This file keeps guarding the guaranteed-real
+# seed fallback path, which only ever serves the original broad themes.
+_LIVE_CATALOG_ONLY = {
+    "soccer-goal-machines", "soccer-playmakers", "soccer-iron-men", "soccer-mls",
+    "tennis-wood-era", "tennis-golden-90s-00s", "tennis-modern", "tennis-usa",
+}
 NEW_SPORT_THEMES = [t for t in KEEP4_THEMES
-                    if t.sport in ("baseball", "soccer", "tennis") and t.grain == "season"]
+                    if t.sport in ("baseball", "soccer", "tennis") and t.grain == "season"
+                    and t.key not in _LIVE_CATALOG_ONLY]
 ALL_SEASONS = seed.load_baseball() + seed.load_soccer() + seed.load_tennis()
 
 
