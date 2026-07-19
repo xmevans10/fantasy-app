@@ -407,7 +407,7 @@ struct DraftSpinView: View {
         } label: {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 12) {
-                    PlayerHeadshotBadge(headshot: player.headshot, tint: team.primary, size: 40)
+                    PlayerHeadshotBadge(headshot: player.headshot, tint: team.primary, size: 40, name: player.name)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(player.name).font(.custom(FontName.condBlack, size: 16)).foregroundStyle(Color.textPrimary)
                         Text(CardLabel.dotJoined(player.teamAbbr.uppercased(), String(player.seasonYear)))

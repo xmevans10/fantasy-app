@@ -10,6 +10,7 @@ struct GridResultView: View {
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
+    @Environment(\.requestReview) private var requestReview
     @State private var confetti = 0
     @State private var showLeaderboard = false
     /// cell index → (name → pct of that cell's correct picks). Empty until the crowd stats
@@ -19,13 +20,14 @@ struct GridResultView: View {
     private var isPerfect: Bool { correctCount == 9 }
 
     /// The Immaculate-Grid-style emoji recap: 🟩 solved / ⬛ missed, row-major 3×3. Pure so
-    /// the exact share text is locked by tests.
+    /// the exact share text is locked by tests. Ends with the store link — the share IS the
+    /// funnel (docs/MARKETING.md §1); Immaculate Grid includes its link too.
     static func shareText(sport: Sport, score: Int, solved: [Int: String], date: Date = Date()) -> String {
         let rows = (0..<3).map { row in
             (0..<3).map { col in solved[row * 3 + col] != nil ? "🟩" : "⬛" }.joined()
         }.joined(separator: "\n")
         let day = OverUnderRoundGenerator.dayString(date)
-        return "Playbook Grid — \(sport.displayName) \(day)\n\(rows)\nScore \(score)"
+        return "Playbook Grid — \(sport.displayName) \(day)\n\(rows)\nScore \(score)\nhttps://apps.apple.com/app/id6785275045"
     }
 
     var body: some View {
@@ -43,7 +45,14 @@ struct GridResultView: View {
         }
         .background(Color.appBackground)
         .celebrate(on: $confetti, intensity: isPerfect ? 90 : 40)
-        .onAppear { if isPerfect { confetti += 1 } }
+        .onAppear {
+            if isPerfect {
+                confetti += 1
+                // Rating ask at the pride moment, never after a miss (ReviewPrompter
+                // self-throttles; the system sheet may still decline to appear).
+                if ReviewPrompter.shouldAsk(immaculateGrid: true) { requestReview() }
+            }
+        }
         .task {
             let day = OverUnderRoundGenerator.dayString(Date())
             let stats = await container.gridGuessStats(day: day, sport: sport)

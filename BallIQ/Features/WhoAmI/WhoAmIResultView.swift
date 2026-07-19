@@ -63,7 +63,7 @@ struct WhoAmIResultView: View {
     private var answerCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
-                PlayerHeadshotBadge(headshot: answerHeadshot, tint: Color.onAccent, size: 44)
+                PlayerHeadshotBadge(headshot: answerHeadshot, tint: Color.onAccent, size: 44, name: puzzle.answer.canonical)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("THE ANSWER WAS")
                         .font(.label11)

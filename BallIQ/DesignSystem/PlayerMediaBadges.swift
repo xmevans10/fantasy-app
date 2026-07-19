@@ -1,19 +1,43 @@
 import SwiftUI
 
-/// Player headshot in a team-tinted circle; falls back to a person glyph when absent. Shared
-/// by every card that shows a player photo (Keep4, Over/Under, Draft & Spin) — one
-/// implementation instead of a per-card copy (AGENTS.md §4). Originally lived only on
-/// `Keep4CardView`; extracted so newer formats get the same "best feature" treatment.
+/// Player headshot in a team-tinted circle. Shared by every card that shows a player photo
+/// (Keep4, Over/Under, Draft & Spin, WhoAmI reveal) — one implementation instead of a
+/// per-card copy (AGENTS.md §4). Originally lived only on `Keep4CardView`; extracted so
+/// newer formats get the same "best feature" treatment.
+///
+/// When no photo exists (pre-2002 NBA has no photo source at all; a handful of NFL rows
+/// resist even the name+era registry join), the fallback is the player's INITIALS in the
+/// team tint — a deliberate monogram, not the gray person glyph that read as broken UI
+/// ("no blank headshots", user directive 2026-07-18). The glyph remains only when no name
+/// is available either.
 struct PlayerHeadshotBadge: View {
     let headshot: String?
     let tint: Color
     var size: CGFloat = 48
+    var name: String? = nil
+
+    private var initials: String {
+        guard let name else { return "" }
+        let parts = name.split(separator: " ").filter { $0.first?.isLetter == true }
+        let letters = [parts.first, parts.count > 1 ? parts.last : nil]
+            .compactMap { $0?.first.map(String.init) }
+        return letters.joined().uppercased()
+    }
+
+    @ViewBuilder private var fallback: some View {
+        if initials.isEmpty {
+            Image(systemName: "person.fill")
+                .font(.system(size: size * 0.46))
+                .foregroundStyle(tint.opacity(0.55))
+        } else {
+            Text(initials)
+                .font(.custom(FontName.condBlack, size: size * 0.38))
+                .foregroundStyle(tint)
+        }
+    }
 
     var body: some View {
-        let fallback = Image(systemName: "person.fill")
-            .font(.system(size: size * 0.46))
-            .foregroundStyle(tint.opacity(0.55))
-        return Group {
+        Group {
             if let headshot, let url = URL(string: headshot) {
                 AsyncImage(url: url) { phase in
                     if let img = phase.image { img.resizable().scaledToFill() } else { fallback }

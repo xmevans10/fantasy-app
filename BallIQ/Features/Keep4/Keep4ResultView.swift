@@ -8,6 +8,7 @@ struct Keep4ResultView: View {
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
+    @Environment(\.requestReview) private var requestReview
     @State private var confetti = 0
 
     private var heroFill: Color { result.isPerfect ? .voltFill : .accentFill }
@@ -32,6 +33,9 @@ struct Keep4ResultView: View {
         .onAppear {
             let gained = (rewards?.ratingChange.delta ?? 0) > 0
             if result.isPerfect || gained { confetti += 1 }
+            // Rating ask when the daily just extended a week-plus streak — a pride moment,
+            // and self-throttled (see ReviewPrompter).
+            if ReviewPrompter.shouldAsk(streak: rewards?.newStreak ?? 0) { requestReview() }
         }
     }
 

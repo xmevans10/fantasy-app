@@ -52,3 +52,34 @@ def test_evict_current_season_removes_only_live_entries(tmp_path, monkeypatch):
     assert removed == len(live)
     remaining = {p.name for p in tmp_path.iterdir()}
     assert remaining == set(keep)
+
+
+# MARK: name-based headshot fallback (nfl_players.pick_headshot)
+
+from tools.ingest.providers.nfl_players import pick_headshot
+
+
+def test_pick_headshot_single_compatible_candidate_wins():
+    cands = [{"headshot": "http://x/a.png", "rookie_season": "1989", "last_season": "1998"}]
+    assert pick_headshot(cands, 1994) == "http://x/a.png"
+
+
+def test_pick_headshot_missing_era_bounds_pass():
+    cands = [{"headshot": "http://x/a.png", "rookie_season": "", "last_season": "1998"}]
+    assert pick_headshot(cands, 1971) == "http://x/a.png"
+
+
+def test_pick_headshot_era_mismatch_rejected():
+    cands = [{"headshot": "http://x/a.png", "rookie_season": "2015", "last_season": "2024"}]
+    assert pick_headshot(cands, 1985) == ""
+
+
+def test_pick_headshot_ambiguous_names_yield_nothing():
+    cands = [
+        {"headshot": "http://x/sr.png", "rookie_season": "1980", "last_season": "1995"},
+        {"headshot": "http://x/jr.png", "rookie_season": "1985", "last_season": "1999"},
+    ]
+    # 1990 falls in both eras — two compatible candidates, so refuse to guess.
+    assert pick_headshot(cands, 1990) == ""
+    # 1982 predates junior's era — exactly one compatible candidate remains.
+    assert pick_headshot(cands, 1982) == "http://x/sr.png"

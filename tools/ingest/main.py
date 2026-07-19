@@ -133,6 +133,29 @@ def merge_nfl_bio(seasons: list[RawSeason]) -> None:
           f"({headshots_backfilled} headshots backfilled from the bio registry)")
 
 
+def backfill_nfl_headshots_by_name(seasons: list[RawSeason]) -> None:
+    """Last-resort headshot join by NAME for rows with no gsis_id at all — the 1970-98
+    history provider and the curated seed, which is where the remaining ~2,700 blank NFL
+    headshots lived (user directive 2026-07-18: no blank headshots). Era-checked and
+    ambiguity-safe via `pick_headshot` (a wrong photo is worse than no photo). Runs as its
+    own pass AFTER the history sweep is unioned in — `merge_nfl_bio` runs before it, so a
+    join there silently missed every history row (0 filled on the first live run)."""
+    try:
+        by_name = nfl_players.load_headshots_by_name()
+    except Exception as err:  # noqa: BLE001
+        print(f"[nfl] name-based headshot join skipped ({err})")
+        return
+    name_filled = 0
+    for s in seasons:
+        if s.sport != "nfl" or s.headshot:
+            continue
+        if candidates := by_name.get(s.name):
+            if headshot := nfl_players.pick_headshot(candidates, s.season_year):
+                object.__setattr__(s, "headshot", headshot)
+                name_filled += 1
+    print(f"[nfl] {name_filled} headshots joined by name+era (no gsis_id rows)")
+
+
 def derive_nba_totals(seasons: list[RawSeason]) -> None:
     """Bake NBA season totals (points/rebounds/assists/steals/blocks) from the per-game
     averages every NBA source serves: total = round(per_game × games). The `nba_fantasy`
@@ -177,6 +200,8 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
         by_id.update({s.player_id: s for s in seasons})
         print(f"[nfl] historical sweep: {len(history)} rows (1970–1998)")
         seasons = list(by_id.values())
+
+    backfill_nfl_headshots_by_name(seasons)   # must follow the history union (see docstring)
 
     # ESPN (keyless, historical) is primary; balldontlie (needs a key) then the curated
     # seed are fallbacks so the pipeline always yields real, factual NBA content.
@@ -412,9 +437,22 @@ def filter_new_catalog_rows(rows: list[dict]) -> list[dict]:
     new_closed: list[dict] = []
     for sport, sport_rows in by_sport.items():
         existing_ids = fetch_existing_catalog_ids(sport)
-        skipped = [r for r in sport_rows if r["id"] in existing_ids]
+        # "Already stored" rows are normally immutable — but a stored row with NO headshot
+        # is still improvable: the name+era registry join (backfill_nfl_headshots_by_name)
+        # can supply one later, and skipping the row would strand the blank forever (the
+        # exact failure mode of the first backfill run, 2026-07-18: 8,309 joins, 0 reached
+        # the DB). Resend any already-stored row whose stored copy lacks the headshot this
+        # run has.
+        from .upsert import fetch_catalog_ids_missing_headshot
+        needs_headshot = fetch_catalog_ids_missing_headshot(sport)
+        improvable = [r for r in sport_rows
+                      if r["id"] in existing_ids and r["id"] in needs_headshot and r.get("headshot")]
+        skipped = len([r for r in sport_rows if r["id"] in existing_ids]) - len(improvable)
         new_closed.extend(r for r in sport_rows if r["id"] not in existing_ids)
-        print(f"[catalog] {sport}: {len(skipped)} already stored, {len(sport_rows) - len(skipped)} new")
+        new_closed.extend(improvable)
+        print(f"[catalog] {sport}: {skipped} already stored, "
+              f"{len(sport_rows) - skipped - len(improvable)} new, "
+              f"{len(improvable)} headshot-improvable resends")
 
     return always_send + new_closed
 

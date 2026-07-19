@@ -139,7 +139,7 @@ struct DraftSpinResultView: View {
         let team = TeamColors.palette(sport: sport, abbr: player.teamAbbr)
         return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
-                PlayerHeadshotBadge(headshot: player.headshot, tint: team.primary, size: 32)
+                PlayerHeadshotBadge(headshot: player.headshot, tint: team.primary, size: 32, name: player.name)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(player.name).font(.custom(FontName.condBold, size: 14)).foregroundStyle(Color.textPrimary)
                     Text(CardLabel.dotJoined(player.teamAbbr.uppercased(), String(player.seasonYear)))

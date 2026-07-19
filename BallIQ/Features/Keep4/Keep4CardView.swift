@@ -77,7 +77,7 @@ struct Keep4CardView: View {
 
     private var teamBand: some View {
         HStack(alignment: .center, spacing: 11) {
-            PlayerHeadshotBadge(headshot: player.headshot, tint: team.onPrimary)
+            PlayerHeadshotBadge(headshot: player.headshot, tint: team.onPrimary, name: player.name)
             VStack(alignment: .leading, spacing: 3) {
                 Text(player.name.uppercased())
                     .font(.custom(FontName.condBlack, size: 21))

@@ -160,7 +160,7 @@ struct OverUnderGameView: View {
         let tint: Color? = dragX > commitThreshold ? .successFill : (dragX < -commitThreshold ? .dangerFill : nil)
         return VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 11) {
-                PlayerHeadshotBadge(headshot: round.player.headshot, tint: team.onPrimary)
+                PlayerHeadshotBadge(headshot: round.player.headshot, tint: team.onPrimary, name: round.player.name)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(round.player.name.uppercased())
                         .font(.custom(FontName.condBlack, size: 21))

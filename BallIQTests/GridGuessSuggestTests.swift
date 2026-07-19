@@ -64,11 +64,11 @@ final class GridGuessSuggestTests: XCTestCase {
     // MARK: - Emoji share grid
 
     func testShareTextEmojiLayout() {
-        // Solved 0,1,4,8 → 🟩🟩⬛ / ⬛🟩⬛ / ⬛⬛🟩, row-major.
+        // Solved 0,1,4,8 → 🟩🟩⬛ / ⬛🟩⬛ / ⬛⬛🟩, row-major, store link last.
         let solved = [0: "A", 1: "B", 4: "C", 8: "D"]
         let date = ISO8601DateFormatter().date(from: "2026-07-17T12:00:00Z")!
         let text = GridResultView.shareText(sport: .nfl, score: 480, solved: solved, date: date)
-        XCTAssertEqual(text, "Playbook Grid — NFL 2026-07-17\n🟩🟩⬛\n⬛🟩⬛\n⬛⬛🟩\nScore 480")
+        XCTAssertEqual(text, "Playbook Grid — NFL 2026-07-17\n🟩🟩⬛\n⬛🟩⬛\n⬛⬛🟩\nScore 480\nhttps://apps.apple.com/app/id6785275045")
     }
 
     func testShareTextPerfectGrid() {
@@ -77,5 +77,20 @@ final class GridGuessSuggestTests: XCTestCase {
         let text = GridResultView.shareText(sport: .nba, score: 1500, solved: solved, date: date)
         XCTAssertTrue(text.contains("🟩🟩🟩\n🟩🟩🟩\n🟩🟩🟩"))
         XCTAssertFalse(text.contains("⬛"))
+    }
+
+    // MARK: - ReviewPrompter gating
+
+    func testReviewPrompterOnlyFiresAtPrideMoments() {
+        let defaults = UserDefaults(suiteName: "test-review-prompter")!
+        defaults.removePersistentDomain(forName: "test-review-prompter")
+
+        XCTAssertFalse(ReviewPrompter.shouldAsk(streak: 3, defaults: defaults), "ordinary day never asks")
+        XCTAssertTrue(ReviewPrompter.shouldAsk(immaculateGrid: true, defaults: defaults))
+        XCTAssertFalse(ReviewPrompter.shouldAsk(immaculateGrid: true, defaults: defaults),
+                       "second qualifying moment inside the 60-day window stays quiet")
+        let later = Date().addingTimeInterval(61 * 24 * 3600)
+        XCTAssertTrue(ReviewPrompter.shouldAsk(streak: 7, defaults: defaults, now: later),
+                      "window elapsed → a 7-day streak asks again")
     }
 }

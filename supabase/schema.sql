@@ -1098,6 +1098,14 @@ $$;
 revoke all on function public.grid_guess_stats(text, text) from public;
 grant execute on function public.grid_guess_stats(text, text) to anon, authenticated, service_role;
 
+-- Trigram index for catalog name search (2026-07-18, applied live as migration
+-- `player_seasons_name_trgm_idx`). The app filters with name ilike '%…%' (creation search,
+-- WhoAmI photo reveal); at ~315k rows a cold seq scan under bulk-upsert load hit the anon
+-- role's statement timeout (observed 500s → silent bundled-catalog fallback → blank photos).
+create extension if not exists pg_trgm;
+create index if not exists player_seasons_name_trgm_idx
+  on public.player_seasons using gin (name gin_trgm_ops);
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Storage: profile photo uploads (M20)
 -- ─────────────────────────────────────────────────────────────────────────────

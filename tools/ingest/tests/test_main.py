@@ -124,7 +124,8 @@ def test_filter_new_catalog_rows_treats_game_rows_as_always_skippable():
         _season("Current Game Guy", season_year=current_year, sport="nfl", week=3, opponent="KC"),
     ])
     with patch("tools.ingest.upsert.fetch_existing_catalog_ids",
-               return_value={f"nfl-current-game-guy-{current_year}-wk03"}):
+               return_value={f"nfl-current-game-guy-{current_year}-wk03"}), \
+         patch("tools.ingest.upsert.fetch_catalog_ids_missing_headshot", return_value=set()):
         out = filter_new_catalog_rows(rows)
     names = {r["name"] for r in out}
     # The season row is always resent (current year, still growing); the game row was
