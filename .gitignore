@@ -34,3 +34,6 @@ client_*.apps.googleusercontent.com.plist
 
 # GitHub PAT for git CLI operations (workflow-scope push, etc.)
 /.env
+
+# Ad-hoc iPad build output (xcodebuild -derivedDataPath build-ipad)
+build-ipad/
