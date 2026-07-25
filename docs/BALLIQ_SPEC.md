@@ -340,8 +340,19 @@ One template definition, consumed by both sides:
 
 ## 6. Content lifecycle
 
-- **Daily rows:** deterministic ids (`<theme-key>-<variant>`); client picks the day's puzzle
-  by index over the pool; `active_date` is archival. Regeneration+upsert overwrites them.
+- **Daily rows (canonical, per sport per day — 2026-07-20):** every sport gets its own
+  genuinely-novel minted daily. Keep4: `daily_puzzle.py` picks per (date, sport) from a
+  per-sport candidate space, deduped forever against `puzzle_history` (unique
+  `served_date, sport, format`). WhoAmI: `daily_whoami.py` picks least-recently-served per
+  sport (`whoami_history`; the small hand-authored pool cycles honestly instead of the old
+  day-of-year modulo). Grid: minted per (sport, date) as before, now with a `grid_history`
+  trailing-window rejection (no verbatim team×decade repeats) and skip-if-present idempotency
+  (a live board never shifts content mid-day). The client treats a puzzle as "today's" only
+  on an exact `active_date` match (`DailyPick.isCanonicalToday`); the modulo index survives
+  purely as an offline/content-unavailability fallback and never claims the TODAY badge.
+- **Archival rows:** deterministic ids (`<theme-key>-<variant>`); `active_date` on them is
+  archival spread only (never today — reserved for the minted picks).
+  Regeneration+upsert overwrites them.
 - **Community rows:** author-owned (`community_puzzles`, RLS), grade baked at publish from
   the author's rule, deep link `balliq://play/<id>`, plays logged for Popular sort.
   Unranked. Never re-graded (rows published before raw-PPR keep 0–100 grades forever; the
@@ -370,7 +381,7 @@ One template definition, consumed by both sides:
 | Milestone | Status |
 |-----------|--------|
 | M1–M4 core app, backend, social retention | ✅ shipped. M4's backend tables (`seasons`/`cohorts`/`versus_*`/`device_tokens`/`notification_settings`) were missing from production until 2026-07-05 despite the app-side feature being live the whole time — now applied, see below |
-| M5 breadth/scoring | ✅ breadth shipped; monetization in progress — StoreKit 2 foundation + gating, server-validated entitlements (2026-07-07), and Over/Under + Draft & Spin + The Grid (2026-07-08) all shipped (see below); only the 8-week rating-season structure (Phase F) still open |
+| M5 breadth/scoring | ✅ **fully shipped.** Breadth + monetization (StoreKit 2 foundation + gating, server-validated entitlements 2026-07-07; Over/Under + Draft & Spin + The Grid 2026-07-08), and **Phase F 8-week rating seasons shipped 2026-07-20** (roadmap v1.4 — see §9.1): `rating_seasons`/`season_ratings`/`season_badges` + leaderboard RPCs + `rating-season-rollover` cron, a parallel season ladder reusing the same `RatingEngine`, SEASON scope on Leagues + Profile badges. Only the ASC-UI monetization submission steps (§9.1 1.3) remain, and those are user-gated |
 | M6 community fixes + hardening | ✅ shipped |
 | M7 content scale + CI | ✅ shipped |
 | M8 single-game grain | ✅ shipped |
@@ -400,11 +411,25 @@ the 2026-07-16 audit fixes. TestFlight external-tester build link:
 Pipeline mechanics live in the `testflight-release` skill (now including the proven
 end-to-end 1.1 submission flow and the persistent `tools/release/asc.py` REST helper).
 
+**1.1 rejection + resubmission (2026-07-22):** Apple rejected 1.1 (build 11) under
+**Guideline 3.1.2(c)** — the auto-renewable-subscription purchase flow lacked a functional
+**Terms of Use (EULA)** link (both in-app and in metadata). Fix shipped as **build 12**:
+[PaywallView.swift](../BallIQ/Features/Store/PaywallView.swift) now renders a legal footer with
+an auto-renewal disclosure + functional **Terms of Use (EULA)** (Apple standard EULA) and
+**Privacy Policy** links, plus an explicit per-plan billing-period line. App Store **description**
+was updated to carry the EULA + Privacy links (Privacy Policy URL field was already set). Reviewer
+notes updated to point at the new links. Build 12 = the working tree at resubmission time, so it
+also carries the concurrent 1.4 rating-seasons / team-identity WIP. **Manual step remaining:** the
+Resolution Center reply (with a screen recording confirming the links) is UI-only — not exposed in
+the ASC REST API. Note: the parallel **soccer data-coverage audit** (`tools/ingest/providers/
+espn_soccer.py` + `transfermarkt_soccer.py`) is *data-pipeline* work → Supabase, delivered by
+`--upsert`, not by the app binary — it is independent of this App Store build.
+
 **Open items / hand-offs**
-1. ~~M5 monetization fully unstarted / M14 Spanish~~ — stale: M5 Phases A–E and M14 Spanish
-   both shipped (see the table above). What remains of M5 is (a) the **user-side ASC setup**
-   (Paid Applications agreement + creating the IAP products — hand-off 7 below) and (b) the
-   **deferred Phase F rating seasons** (user scoping conversation first; see §9).
+1. ~~M5 monetization fully unstarted / M14 Spanish~~ — stale: M5 Phases A–E, M14 Spanish, and
+   ~~Phase F rating seasons~~ (**shipped 2026-07-20**, roadmap v1.4) are all done. The only
+   remaining M5 item is the **user-side ASC monetization submission** (Paid Applications agreement
+   done; the two ASC-UI submission clicks in §9.1 1.3 remain — hand-off 7 below).
 2. ~~**Per-format daily completion bug**~~ — fixed (shipped in the 2026-07-04 commit): the two
    Home cards now check `hasCompletedToday(_ card:)` backed by a per-day
    `completedCardsToday: Set<DailyCard>`; `hasPlayedToday` remains "played anything" and
@@ -1111,11 +1136,9 @@ app claims to do and what actually works today:
   its entry below. **#2 (post-completion daily loop) and #4 (daily Draft & Spin
   challenge) shipped 2026-07-13; #6 (Leagues season bootstrap) confirmed already
   resolved live** — see their own entries below for detail.
-- Backlog #7 (Phase F rating seasons) — **explicitly DEFERRED by the user 2026-07-14**
-  ("defer", in response to the scoping ask). Still do not start from inference: the
-  written scope remains three one-line mentions with no schema, no reset/decay decision,
-  and no definition of "rewards". When the user re-opens it, run the scoping conversation
-  first (questions logged 2026-07-12 in `prompts/HANDOFF-next-agent-2026-07-12c.md`).
+- Backlog #7 (Phase F rating seasons) — **✅ SHIPPED 2026-07-20** (roadmap v1.4). Was deferred
+  2026-07-14; the scoping conversation was later held and the user chose the parallel-ladder /
+  carry-over-seed / cosmetic-badge / free-and-independent design. Full detail in §9.1's 1.4 entry.
 - **Soccer data breadth (new 2026-07-12)** — ✅ shipped 2026-07-13. Migrated the
   genuinely multi-day local sequential sweep (~2 min/league-season × ~570 total) to
   `.github/workflows/espn-soccer-backfill.yml`, a `workflow_dispatch` matrix (one leg
@@ -1200,7 +1223,7 @@ Applications agreement + ASC in-app-purchase products (gates M5 Phase B).
 
 | Milestone | Theme | One-line scope |
 |-----------|-------|-----------------|
-| **M5** | Monetization + breadth | StoreKit foundation + gating shipped; **Phase F 8-week rating seasons** is the unbuilt piece |
+| **M5** | Monetization + breadth | ✅ fully shipped — StoreKit foundation + gating, and **Phase F 8-week rating seasons shipped 2026-07-20** (roadmap v1.4). Only the user-gated ASC-UI submission steps (§9.1 1.3) remain |
 | **M14** | Accessibility & localization | VoiceOver shipped; first non-English locale (Spanish) is the remaining piece |
 
 **Prioritized product backlog** (full-app audit against the §1 feedback themes; ordered by
@@ -1254,8 +1277,8 @@ expected retention/quality impact per unit of effort):
    members. Leagues has never actually shown an empty state in production.
 
 *P2 — monetization (finish M5):*
-7. **Phase F rating seasons** (8-week cycles, placement, end-of-season rewards) — the
-   remaining M5 build; the paywall/entitlement rails it sells through are done.
+7. **Phase F rating seasons** (8-week cycles, seed/no-placement, cosmetic peak-tier rewards) —
+   **✅ shipped 2026-07-20** (roadmap v1.4; parallel ladder, free & independent of Pro). See §9.1 1.4.
 
 *P3 — quality/polish:*
 8. **Historical-era presentation** — ✅ shipped 2026-07-13. Real colors for every
@@ -1312,6 +1335,9 @@ version ships only when both test suites are green and its own exit criterion is
 **1.1.1 — reserved patch slot.** Only if 1.1's review rejects or a live regression surfaces
 post-approval. No planned content; cut from `main` with the fix, same-day submission (the
 pipeline is one command sequence now — see the `testflight-release` skill).
+> **Used 2026-07-22 (as build 12, version string still 1.1 since 1.1 never went live):** the
+> 3.1.2(c) EULA-link rejection fix — see the "1.1 rejection + resubmission" note in §8's Release
+> status.
 
 **1.2 — "It remembers you": push notifications + the retention loop's last mile.**
 > **Gates CLEARED, verified 2026-07-16 evening:** the user provided a real APNs key
@@ -1392,16 +1418,34 @@ ASC-UI click + one ASC-UI URL field.
 - Exit: a sandbox Pro purchase unlocks hard mode/archive/sports on a second signed-in
   device via the server path alone (StoreKit store wiped) — gated on the two [user] steps.
 
-**1.4 — "Seasons": M5 Phase F rating seasons — the deferred competitive spine.**
-Explicitly deferred by the user 2026-07-14; do not start from inference.
-- [user] The scoping conversation first — the open questions are already logged in
-  `prompts/HANDOFF-next-agent-2026-07-12c.md` (cycle length/reset semantics, placement,
-  what "rewards" concretely are, how seasons interact with the weekly leagues and the
-  Pro entitlement it's meant to sell).
-- [agent] Then: schema + RPCs following the `seasons`/`cohorts` and arcade-leaderboard
-  precedents, season UI on Leagues/Profile, locked-value tests for placement/decay math.
-- Exit: a full simulated 8-week cycle (clock-injected, unit-tested) plus a live season row
-  visible in the app.
+**1.4 — "Seasons": M5 Phase F rating seasons — the deferred competitive spine. ✅ SHIPPED 2026-07-20.**
+The scoping conversation (deferred 2026-07-14) was held and the user locked in all four decisions:
+**parallel season ladder** (all-time rating stays permanent — it had to, since it's
+client-authoritative with a `max(local,remote)` merge that would silently undo any server reset;
+each season is a fresh server-mirrored ladder seeded from a soft-reset snapshot,
+`1000 + (allTime-1000)×0.5`), **carry-over seed / no placement games**, **cosmetic peak-tier
+badge** as the reward (foil for Legend), **free & independent** of both the weekly XP cohorts and
+Pro (no entitlement checks).
+- Backend (live on `nhccgufqwndtoasdbkhc`, mirrored in `schema.sql`): `rating_seasons` (8-week
+  cycle, one active row via a partial unique index), `season_ratings` (per user/sport/season,
+  own-row RLS pinned to the active season), `season_badges` (rollover-written, world-readable);
+  `current_rating_season()` + `season_leaderboard(p_sport, p_season)` RPCs cloned from
+  `arcade_leaderboard`. Rollover Edge Function `rating-season-rollover` (deployed ACTIVE) clones
+  `weekly-cohort-rollover`: self-gates to the real 8-week boundary (weekly cron `0 6 * * 1`,
+  migration `0003`), mints each participant's peak-tier badge, closes the season, opens the next.
+- Client: the season ladder reuses the *same* pure `RatingEngine` on a per-season
+  `LocalSeasonRatingRepository`, applied in `RepositoryContainer.complete()`'s ranked branch
+  beside the all-time rating; SEASON scope on Leagues (default, reuses `RankWidget` hero +
+  season-end countdown + tier-colored board) and a foil season-badge shelf on Profile.
+- Caught + fixed a latent shared bug in passing: `JSONDecoder.supabase` used `.iso8601` (rejects
+  Postgres microsecond timestamps) *and* structs paired `.convertFromSnakeCase` with explicit
+  snake_case `CodingKeys` (unfindable keys) — the weekly-league countdown silently hit both. Now a
+  microsecond-tolerant `SupabaseDate` + camelCase-only structs, regression-locked.
+- Exit MET: full simulated 8-week cycle unit-tested (clock-injected seed/peak/badge math, 14 new
+  `RatingSeasonTests`); live-verified the whole chain via MCP (backdated-season rollover minted a
+  Diamond badge + opened season 2, then reset to a pristine single active season) and the DB→
+  function cron path returns 200 + self-gates. 354 Swift + 12 Deno + 277 Python tests green;
+  SEASON scope screenshot-confirmed (SILVER hero, "SEASON ENDS 55d 23h", populated board).
 
 **1.5 — "Deep bench": content depth where the catalog is thinnest.**
 All [agent], no gates — the release valve between user-gated versions; pull items forward
