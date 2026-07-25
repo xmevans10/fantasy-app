@@ -7,7 +7,9 @@ habits, shared-vs-duplicated logic, blast-radius judgment) — this file is proj
 one is process. **When picking what to work on next, check BALLIQ_SPEC.md §9.1's version
 roadmap first** (1.2 push → 1.3 monetization → 1.4 rating seasons → 1.5 content depth;
 §9.0's tier rule still governs anything outside that roadmap). The app is LIVE on the App
-Store as of 2026-07-16 (v1.0 approved; v1.1 in review) — treat `main` as production.
+Store as of 2026-07-16 (v1.0 approved; v1.1 build 11 was rejected 2026-07-22 on Guideline
+3.1.2(c) and resubmitted as build 12 with the subscription EULA/Privacy-link fix — see
+BALLIQ_SPEC.md §8 Release status) — treat `main` as production.
 
 ## Supabase DB operations — execute directly, don't ask first
 

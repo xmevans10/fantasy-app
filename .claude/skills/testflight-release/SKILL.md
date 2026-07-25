@@ -49,6 +49,23 @@ metadata via its REST API — lives in gitignored `tools/release/`:
   <id>/relationships/build` → `POST /v1/reviewSubmissions` + `POST /v1/reviewSubmissionItems`
   → `PATCH /v1/reviewSubmissions/<id>` `{"submitted": true}`. Export compliance never blocks:
   `ITSAppUsesNonExemptEncryption=false` is baked into Info.plist.
+- **Resubmit-after-rejection flow, proven 2026-07-22 (build 12 for the 3.1.2(c) EULA fix):** when
+  a version is `REJECTED`, do NOT create a new `appStoreVersion` — reuse the existing one. Fix code
+  → bump build → archive/export-upload → poll build to `VALID` → `PATCH .../relationships/build`
+  to attach the new build (the version flips `REJECTED` → `PREPARE_FOR_SUBMISSION`). The original
+  rejected `reviewSubmission` stays in state `UNRESOLVED_ISSUES` (its item is `REJECTED`); resubmit
+  through it with `PATCH /v1/reviewSubmissions/<id>` `{"submitted": true}` — do NOT try to POST a
+  new submission (only one open submission allowed). **Gotcha:** for several minutes after
+  attaching the build the submit `PATCH` returns `409 STATE_ERROR` "Version is not ready to be
+  submitted yet, please try again later" even though `appStoreState` already reads
+  `PREPARE_FOR_SUBMISSION` — it's a backend propagation lag, not a real error. Retry the same PATCH
+  on a ~60s loop until it 200s. **Metadata edits** (e.g. adding a required link to `description`):
+  `PATCH /v1/appStoreVersionLocalizations/<loc-id>` `{attributes:{description}}` works while the
+  version is editable. **Reviewer notes:** `PATCH /v1/appStoreReviewDetails/<id>` `{attributes:{notes}}`.
+  **One UI-only step remains:** the Resolution Center reply (and any screen recording Apple asks
+  for) is not exposed in the REST API — the user must post it manually.
+  - `-authenticationKeyPath` for `-exportArchive` **must be an absolute path** — a repo-relative
+    path fails with "must be an absolute path to an existing file". Wrap in `$(pwd)/…`.
 - App identity: app record id `6785275045` (bundle `com.balliqfantasy.app`, ASC name
   "BallIQ - Fantasy", on-device `CFBundleDisplayName` "Playbook" — the mismatch is intentional/
   pre-existing, not a bug to fix).

@@ -10,6 +10,12 @@ struct PaywallView: View {
     @State private var purchasingID: String?
     @State private var errorMessage: String?
 
+    /// App Store guideline 3.1.2(c) requires functional Terms of Use (EULA) + Privacy Policy
+    /// links inside the subscription purchase flow. Apple's standard EULA (the app ships no
+    /// custom terms) + our GitHub Pages privacy page.
+    private static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+    private static let privacyURL = URL(string: "https://xmevans10.github.io/fantasy-app/privacy.html")!
+
     private var subscriptions: [Product] {
         container.products
             .filter { StoreProduct(rawValue: $0.id)?.isSubscription == true }
@@ -35,6 +41,7 @@ struct PaywallView: View {
                     plans.heroReveal(2)
                     packSection.heroReveal(3)
                     restoreButton.heroReveal(4)
+                    legalFooter.heroReveal(5)
                 }
                 .padding(16)
             }
@@ -114,7 +121,7 @@ struct PaywallView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(product.displayName.uppercased()).font(.heading)
-                            Text(product.displayPrice).font(.label12).opacity(0.85)
+                            Text(priceLine(for: product)).font(.label12).opacity(0.85)
                         }
                         Spacer()
                         if purchasingID == product.id {
@@ -177,6 +184,44 @@ struct PaywallView: View {
         }
         .buttonStyle(.plain)
         .disabled(purchasingID != nil)
+    }
+
+    /// Legal disclosures required for auto-renewable subscriptions (App Store 3.1.2(c)):
+    /// renewal terms plus functional Terms of Use (EULA) + Privacy Policy links.
+    private var legalFooter: some View {
+        VStack(spacing: 10) {
+            Text("Subscriptions renew automatically unless canceled at least 24 hours before the end of the period. Your Apple Account is charged at confirmation of purchase. Manage or cancel anytime in Settings › Apple Account.")
+                .font(.label12)
+                .foregroundStyle(Color.textMuted)
+                .multilineTextAlignment(.center)
+            HStack(spacing: 16) {
+                Link("Terms of Use (EULA)", destination: Self.termsURL)
+                Text("·").foregroundStyle(Color.textMuted)
+                Link("Privacy Policy", destination: Self.privacyURL)
+            }
+            .font(.label12)
+            .tint(Color.accentText)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 4)
+    }
+
+    /// Price plus the billing period, so "length of subscription" is explicit
+    /// (App Store 3.1.2(c)) — e.g. "$4.99 / month".
+    private func priceLine(for product: Product) -> String {
+        guard let period = periodText(for: product) else { return product.displayPrice }
+        return "\(product.displayPrice) / \(period)"
+    }
+
+    private func periodText(for product: Product) -> String? {
+        guard let unit = product.subscription?.subscriptionPeriod.unit else { return nil }
+        switch unit {
+        case .day: return String(localized: "day")
+        case .week: return String(localized: "week")
+        case .month: return String(localized: "month")
+        case .year: return String(localized: "year")
+        @unknown default: return nil
+        }
     }
 
     private func buy(_ product: Product) async {
