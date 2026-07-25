@@ -109,3 +109,45 @@ def test_load_seasons_round_trips_committed_csv(tmp_path, monkeypatch):
 def test_load_seasons_empty_when_refresh_not_run(tmp_path, monkeypatch):
     monkeypatch.setattr(transfermarkt_soccer, "CSV_PATH", tmp_path / "missing.csv")
     assert load_seasons() == []
+
+
+def test_load_seasons_populates_league_meta_when_column_present(tmp_path, monkeypatch):
+    csv_path = tmp_path / "soccer_transfermarkt_seasons.csv"
+    csv_path.write_text(
+        "name,team_abbr,season_year,position,appearances,goals,assists,clean_sheets,"
+        "headshot,league\n"
+        "Alisson,LIV,2019,GK,38,0,0,21,https://img.a.transfermarkt.technology/alisson.jpg,"
+        "England\n",
+        encoding="utf-8")
+    monkeypatch.setattr(transfermarkt_soccer, "CSV_PATH", csv_path)
+    s = load_seasons()[0]
+    assert s.meta == {"league": "England"}
+
+
+def test_load_seasons_tolerates_a_committed_csv_without_the_league_column(tmp_path, monkeypatch):
+    # The committed CSV won't gain the `league` column until the next full refresh() —
+    # an old file must still load cleanly (no KeyError), with empty meta.
+    csv_path = tmp_path / "soccer_transfermarkt_seasons.csv"
+    csv_path.write_text(
+        "name,team_abbr,season_year,position,appearances,goals,assists,clean_sheets,headshot\n"
+        "Alisson,LIV,2019,GK,38,0,0,21,https://img.a.transfermarkt.technology/alisson.jpg\n",
+        encoding="utf-8")
+    monkeypatch.setattr(transfermarkt_soccer, "CSV_PATH", csv_path)
+    s = load_seasons()[0]
+    assert s.meta == {}
+
+
+def test_short_code_is_reexported_from_club_codes():
+    from tools.ingest.providers.club_codes import _short_code as club_codes_short_code
+    assert transfermarkt_soccer._short_code is club_codes_short_code
+
+
+def test_previously_colliding_codes_now_resolve_distinctly_via_club_codes():
+    # The bug this module was fixed for: two different clubs' derived codes used to
+    # collide. transfermarkt_soccer.py's own aggregation path now routes through
+    # club_codes.resolve_code, which disambiguates them.
+    from tools.ingest.providers import club_codes
+    burnley = club_codes.resolve_code("Burnley Football Club", country="England")
+    bursaspor = club_codes.resolve_code("Bursaspor", country="Turkey")
+    assert burnley == "BUR"
+    assert bursaspor != "BUR"

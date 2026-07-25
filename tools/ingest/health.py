@@ -34,6 +34,12 @@ DRAFT_SPIN_SLOT_POSITIONS: frozenset[tuple[str, str]] = frozenset({
 # twice in the M5 Phase D session (soccer GK/DF slots empty, then DF stuck at 1 candidate).
 MIN_ROWS_FOR_DRAFT_SLOT = 3
 
+# Soccer's Draft & Spin formation is 8 slots (GK/DF/DF/MF/MF/MF/FW/FW) — a single
+# (team_abbr, season_year, league) combo below this many rows can't field even that
+# formation from one real squad, a thinner bar than `MIN_ROWS_FOR_DRAFT_SLOT` (which is
+# about one *position* across the whole catalog, not one team's actual roster depth).
+DRAFT_SPIN_MIN_ROSTER = 8
+
 
 def theme_health(theme: Theme, seasons: list[RawSeason],
                  baselines: BaselineTable | None = None) -> dict:
@@ -102,11 +108,42 @@ def catalog_depth_report(seasons: list[RawSeason]) -> list[dict]:
     return rows
 
 
+def thin_team_seasons(seasons: list[RawSeason],
+                      min_roster: int = DRAFT_SPIN_MIN_ROSTER) -> list[dict]:
+    """Season-grain soccer rows grouped by (team_abbr, season_year, league), flagging
+    every combo with fewer than `min_roster` real player-seasons — the club-code
+    collision bug's blast radius made visible: a team/season/league combo that's
+    artificially thin (or, before the fix, artificially padded by a DIFFERENT club's
+    rows under the same code) shows up here. Informational only — callers must not use
+    this to filter the catalog, only to surface a health signal in content_health.json.
+
+    Only `sport == "soccer"` rows are considered (this is soccer's Draft & Spin formation
+    depth check specifically — see `DRAFT_SPIN_MIN_ROSTER`); career/game-grain rows are
+    excluded the same way `catalog_depth_report` excludes them."""
+    counts: collections.Counter[tuple[str, int, str]] = collections.Counter()
+    for s in seasons:
+        if s.sport != "soccer" or s.career or s.week is not None:
+            continue
+        league = s.meta.get("league", "")
+        counts[(s.team_abbr, s.season_year, league)] += 1
+
+    thin = [
+        {"team_abbr": team_abbr, "season_year": season_year, "league": league,
+         "roster_size": count}
+        for (team_abbr, season_year, league), count in counts.items()
+        if count < min_roster
+    ]
+    thin.sort(key=lambda r: (r["roster_size"], r["team_abbr"], r["season_year"]))
+    return thin
+
+
 def build_report(theme_stats: list[dict], keep4_built: dict[str, int],
-                 whoami_count: int, catalog_depth: list[dict] | None = None) -> dict:
+                 whoami_count: int, catalog_depth: list[dict] | None = None,
+                 thin_teams: list[dict] | None = None) -> dict:
     """Assemble the run-level artifact from per-theme stats + actual puzzle counts."""
     themes = [dict(t, puzzles_built=keep4_built.get(t["key"], 0)) for t in theme_stats]
     catalog_depth = catalog_depth or []
+    thin_teams = thin_teams or []
     return {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "totals": {
@@ -116,9 +153,15 @@ def build_report(theme_stats: list[dict], keep4_built: dict[str, int],
             "keep4_puzzles": sum(keep4_built.values()),
             "whoami_puzzles": whoami_count,
             "draft_slot_positions_too_thin": sum(1 for c in catalog_depth if not c["draft_slot_viable"]),
+            "thin_team_seasons": len(thin_teams),
         },
         "themes": themes,
         "catalog_depth": catalog_depth,
+        # Informational only (see `thin_team_seasons()`'s docstring) — never used to
+        # filter the catalog. Capped to the 10 thinnest combos so the artifact doesn't
+        # balloon when soccer coverage is broadly shallow; `totals.thin_team_seasons`
+        # above still carries the full count.
+        "thin_team_seasons_worst": thin_teams[:10],
     }
 
 

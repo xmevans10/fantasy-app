@@ -96,3 +96,72 @@ def test_build_report_surfaces_thin_position_total():
     report = health.build_report([], {}, whoami_count=0,
                                  catalog_depth=health.catalog_depth_report([]))
     assert report["totals"]["draft_slot_positions_too_thin"] == len(health.DRAFT_SPIN_SLOT_POSITIONS)
+
+
+# ── thin_team_seasons — soccer Draft & Spin roster-depth health signal ────────────────
+
+def _soccer_season(team_abbr, season_year, position="FW", league="England", name="P"):
+    return RawSeason(name=name, team_abbr=team_abbr, season_year=season_year, sport="soccer",
+                     position=position, stats={}, meta={"league": league} if league else {})
+
+
+def test_thin_team_seasons_flags_a_combo_below_min_roster():
+    seasons = [_soccer_season("BRO", 2023, name=f"P{i}") for i in range(5)]
+    thin = health.thin_team_seasons(seasons, min_roster=8)
+    assert len(thin) == 1
+    assert thin[0] == {"team_abbr": "BRO", "season_year": 2023, "league": "England",
+                       "roster_size": 5}
+
+
+def test_thin_team_seasons_does_not_flag_a_full_roster():
+    seasons = [_soccer_season("MCI", 2023, name=f"P{i}") for i in range(11)]
+    assert health.thin_team_seasons(seasons, min_roster=8) == []
+
+
+def test_thin_team_seasons_groups_by_team_season_and_league_separately():
+    # Same team_abbr, different league — must never be summed into one roster (this is
+    # exactly the club-code-collision failure mode: two different clubs' rows merging
+    # under one key). Both stay independently thin.
+    seasons = ([_soccer_season("BRO", 2010, league="England", name=f"A{i}") for i in range(4)]
+              + [_soccer_season("BRO", 2010, league="Australia", name=f"B{i}") for i in range(3)])
+    thin = health.thin_team_seasons(seasons, min_roster=8)
+    assert len(thin) == 2
+    sizes = {(t["league"], t["roster_size"]) for t in thin}
+    assert sizes == {("England", 4), ("Australia", 3)}
+
+
+def test_thin_team_seasons_ignores_non_soccer_and_non_season_grain_rows():
+    nfl_row = RawSeason(name="Q", team_abbr="KC", season_year=2023, sport="nfl",
+                        position="QB", stats={})
+    career_row = RawSeason(name="C", team_abbr="BRO", season_year=2023, sport="soccer",
+                           position="FW", stats={}, career=True)
+    game_row = RawSeason(name="G", team_abbr="BRO", season_year=2023, sport="soccer",
+                         position="FW", stats={}, week=3)
+    assert health.thin_team_seasons([nfl_row, career_row, game_row], min_roster=1) == []
+
+
+def test_thin_team_seasons_uses_the_module_default_of_eight():
+    assert health.DRAFT_SPIN_MIN_ROSTER == 8
+    seasons = [_soccer_season("BRO", 2023, name=f"P{i}") for i in range(7)]
+    assert health.thin_team_seasons(seasons) == health.thin_team_seasons(seasons, min_roster=8)
+
+
+def test_thin_team_seasons_sorted_thinnest_first():
+    seasons = ([_soccer_season("AAA", 2023, name=f"A{i}") for i in range(6)]
+              + [_soccer_season("BBB", 2023, name=f"B{i}") for i in range(1)])
+    thin = health.thin_team_seasons(seasons, min_roster=8)
+    assert [t["team_abbr"] for t in thin] == ["BBB", "AAA"]
+
+
+def test_build_report_surfaces_thin_team_seasons_summary():
+    thin = health.thin_team_seasons(
+        [_soccer_season("BRO", 2023, name=f"P{i}") for i in range(3)], min_roster=8)
+    report = health.build_report([], {}, whoami_count=0, thin_teams=thin)
+    assert report["totals"]["thin_team_seasons"] == 1
+    assert report["thin_team_seasons_worst"] == thin
+
+
+def test_build_report_thin_team_seasons_defaults_to_empty():
+    report = health.build_report([], {}, whoami_count=0)
+    assert report["totals"]["thin_team_seasons"] == 0
+    assert report["thin_team_seasons_worst"] == []

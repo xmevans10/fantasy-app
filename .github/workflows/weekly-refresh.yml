@@ -79,3 +79,124 @@ jobs:
           else
             echo "sweep unchanged — nothing to commit"
           fi
+
+  # Transfermarkt's own full-squad soccer sweep (data/soccer_transfermarkt_seasons.csv) —
+  # same "committed CSV, network-heavy refresh, commit-if-changed" shape as hoopr-sweep
+  # above. Unlike hoopR's, this refresh() takes no range args: it always re-downloads and
+  # re-aggregates the whole dataset (14 first-tier leagues, 2012+), so a weekly run picks
+  # up newly-completed matchdays without any incremental-range bookkeeping. Also now runs
+  # club_codes.resolve_code's global-uniqueness assertion at the end of refresh() — a
+  # bad/colliding club code fails this job loudly instead of silently corrupting the CSV.
+  transfermarkt-sweep:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Per-source cache key — this leg re-downloads ~150 MB (appearances.csv) each run;
+      # a cross-run cache keyed by run_id still lets a same-day retry skip the network.
+      - uses: actions/cache@v4
+        with:
+          path: tools/ingest/.cache
+          key: transfermarkt-cache-${{ github.run_id }}
+          restore-keys: |
+            transfermarkt-cache-
+      - run: pip install -r tools/ingest/requirements.txt
+      - run: python -m tools.ingest.providers.transfermarkt_soccer
+      - name: Commit refreshed sweep if changed
+        run: |
+          if ! git diff --quiet -- tools/ingest/data/soccer_transfermarkt_seasons.csv; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add tools/ingest/data/soccer_transfermarkt_seasons.csv
+            git commit -m "Weekly Transfermarkt soccer sweep refresh (automated)"
+            git push
+          else
+            echo "sweep unchanged — nothing to commit"
+          fi
+      # Additive/merge-duplicate upsert into the live catalog — same on_conflict=id,
+      # resolution=merge-duplicates guarantee CLAUDE.md already blesses as safe to just run.
+      - run: python -m tools.ingest.main --upsert --catalog
+
+  # ESPN soccer (data/soccer_espn_seasons.csv) is a real historical backfill
+  # (espn-soccer-backfill.yml, manual/one-time — many hours across ~38 leagues), NOT
+  # something this weekly job repeats. This job only refreshes the CURRENT season across
+  # every league, so in-progress campaigns stay fresh week to week without re-running the
+  # multi-hour historical sweep. `refresh()` rewrites its whole output on every call (see
+  # hoopr-sweep's own comment on the same hazard), so a naive `--from <year> --to <year>`
+  # straight at the committed CSV would silently DELETE every other season already
+  # backfilled — instead this strips just the current season's rows from the committed
+  # CSV, sweeps a fresh copy of only that season, and remerges via the module's own
+  # `--merge-dir` (the same recombination path espn-soccer-backfill.yml's
+  # merge-and-upsert job uses for its per-league partitions).
+  espn-soccer-current-season-refresh:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/cache@v4
+        with:
+          path: tools/ingest/.cache
+          key: espn-soccer-current-cache-${{ github.run_id }}
+          restore-keys: |
+            espn-soccer-current-cache-
+      - run: pip install -r tools/ingest/requirements.txt
+      - name: Compute the current season end year
+        id: season
+        run: |
+          YEAR=$(python -c "import datetime as dt; d = dt.date.today(); print(d.year + (1 if d.month >= 7 else 0))")
+          echo "year=$YEAR" >> "$GITHUB_OUTPUT"
+      - name: Sweep just the current season, every league
+        run: |
+          python -m tools.ingest.providers.espn_soccer \
+            --from ${{ steps.season.outputs.year }} --to ${{ steps.season.outputs.year }} \
+            --out espn-current/fresh_current_season.csv
+      - name: Strip this season's stale rows from the committed CSV, then remerge
+        run: |
+          python -c "
+          import csv
+          from pathlib import Path
+          from tools.ingest.providers.espn_soccer import CSV_FIELDS
+          committed = Path('tools/ingest/data/soccer_espn_seasons.csv')
+          year = ${{ steps.season.outputs.year }}
+          rows = []
+          if committed.exists():
+              with committed.open(encoding='utf-8') as f:
+                  rows = [r for r in csv.DictReader(f) if int(r['season_year']) != year]
+          baseline = Path('espn-current/baseline_other_seasons.csv')
+          baseline.parent.mkdir(parents=True, exist_ok=True)
+          with baseline.open('w', encoding='utf-8', newline='') as f:
+              w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+              w.writeheader()
+              w.writerows(rows)
+          "
+          python -m tools.ingest.providers.espn_soccer \
+            --merge-dir espn-current \
+            --out tools/ingest/data/soccer_espn_seasons.csv
+      - name: Commit the refreshed current-season rows if changed
+        run: |
+          if ! git diff --quiet -- tools/ingest/data/soccer_espn_seasons.csv; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add tools/ingest/data/soccer_espn_seasons.csv
+            git commit -m "Weekly ESPN soccer current-season refresh (automated)"
+            git push
+          else
+            echo "current-season sweep unchanged — nothing to commit"
+          fi
+      - run: python -m tools.ingest.main --upsert --catalog

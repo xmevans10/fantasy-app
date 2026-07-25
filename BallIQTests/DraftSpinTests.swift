@@ -112,6 +112,73 @@ final class DraftSpinTests: XCTestCase {
         XCTAssertNil(DraftSpinConstraint.spinRound(from: [], sport: .nfl, openRoles: ["QB"], using: &g))
     }
 
+    /// Live repro (2026-07-19): "BRO 2006" (Blackburn Rovers 2005-06) spun in with only 4
+    /// players — 2 DF, 1 GK, 1 MF, zero FW — against soccer's 8-slot formation, because the old
+    /// eligibility check only required ONE matching candidate for ANY open role, not enough
+    /// distinct candidates to cover every open slot. A combo this thin must never spin as long as
+    /// a real fillable alternative exists.
+    private var soccerFormationRoles: [String] {
+        DraftSpinConstraint.formations[.soccer]!.map(\.role)   // GK, DF, DF, MF, MF, MF, FW, FW
+    }
+
+    private var thinSoccerRoster: [CatalogSeason] {
+        [
+            season("bro-gk", position: "GK", stats: [:], team: "BRO", year: 2006),
+            season("bro-df0", position: "DF", stats: [:], team: "BRO", year: 2006),
+            season("bro-df1", position: "DF", stats: [:], team: "BRO", year: 2006),
+            season("bro-mf0", position: "MF", stats: [:], team: "BRO", year: 2006),
+        ]
+    }
+
+    private var fullSoccerRoster: [CatalogSeason] {
+        [
+            season("che-gk", position: "GK", stats: [:], team: "CHE", year: 2006),
+            season("che-df0", position: "DF", stats: [:], team: "CHE", year: 2006),
+            season("che-df1", position: "DF", stats: [:], team: "CHE", year: 2006),
+            season("che-mf0", position: "MF", stats: [:], team: "CHE", year: 2006),
+            season("che-mf1", position: "MF", stats: [:], team: "CHE", year: 2006),
+            season("che-mf2", position: "MF", stats: [:], team: "CHE", year: 2006),
+            season("che-fw0", position: "FW", stats: [:], team: "CHE", year: 2006),
+            season("che-fw1", position: "FW", stats: [:], team: "CHE", year: 2006),
+        ]
+    }
+
+    func testSpinRoundNeverPicksAComboWithFewerDistinctCandidatesThanOpenRoles() {
+        let pool = thinSoccerRoster + fullSoccerRoster
+        for i in 0...8 {
+            var g = spinRNG("thin-vs-full-\(i)")
+            let spun = DraftSpinConstraint.spinRound(from: pool, sport: .soccer, openRoles: soccerFormationRoles, using: &g)
+            XCTAssertEqual(spun?.team, "CHE", "stream \(i) spun the too-thin BRO combo")
+        }
+    }
+
+    func testSpinRoundReturnsNilWhenOnlyATooThinComboExists() {
+        var g = spinRNG("only-thin")
+        XCTAssertNil(DraftSpinConstraint.spinRound(from: thinSoccerRoster, sport: .soccer, openRoles: soccerFormationRoles, using: &g))
+    }
+
+    func testSpinRoundStillViableWhenDistinctCandidatesExactlyCoverOpenRoles() {
+        // fullSoccerRoster has exactly 8 distinct players for 8 open roles — the boundary case
+        // (>=), not just comfortably-over-provisioned rosters.
+        var g = spinRNG("exact-cover")
+        let spun = DraftSpinConstraint.spinRound(from: fullSoccerRoster, sport: .soccer, openRoles: soccerFormationRoles, using: &g)
+        XCTAssertEqual(spun?.team, "CHE")
+    }
+
+    func testSpinRoundDedupesDuplicatePlayerRowsForTheSameCombo() {
+        // Same player, two rows (e.g. overlapping ingest sources) for the same (team, year) —
+        // must count once, not twice, when judging viability.
+        let duplicatedRows = [
+            season("dup-gk", position: "GK", stats: [:], team: "BRO", year: 2006),
+            season("dup-gk", position: "GK", stats: [:], team: "BRO", year: 2006),   // same id/name, duplicate row
+            season("bro-df0", position: "DF", stats: [:], team: "BRO", year: 2006),
+        ]
+        var g = spinRNG("dup-rows")
+        // Only 2 distinct players (dup-gk counted once, plus bro-df0) against 8 open roles —
+        // still too thin even though there are 3 rows.
+        XCTAssertNil(DraftSpinConstraint.spinRound(from: duplicatedRows, sport: .soccer, openRoles: soccerFormationRoles, using: &g))
+    }
+
     // MARK: - spinRound setup options (one-team lock, season variations)
 
     private var twoTeamPool: [CatalogSeason] {
@@ -197,6 +264,57 @@ final class DraftSpinTests: XCTestCase {
         var g = spinRNG("no-league-filter")
         XCTAssertNotNil(DraftSpinConstraint.spinRound(from: twoLeaguePool, sport: .soccer,
                                                        openRoles: ["GK"], using: &g))
+    }
+
+    func testSpinRoundReturnsTheSpunCombosLeagueSoTheRosterFetchCanScope() {
+        var g = spinRNG("league-in-result")
+        let spun = DraftSpinConstraint.spinRound(from: twoLeaguePool, sport: .soccer, openRoles: ["GK"],
+                                                 league: "Spain", using: &g)
+        XCTAssertEqual(spun?.team, "FCB")
+        XCTAssertEqual(spun?.league, "Spain")
+    }
+
+    // MARK: - spinRound league-collision (defense in depth, live collision: "BRO" is both
+    // Blackburn Rovers, England and Brisbane Roar, Australia)
+
+    func testSpinRoundTreatsSameTeamCodeInDifferentLeaguesAsDistinctCombos() {
+        // Both leagues field a full, equally-viable roster under the same "BRO" code — if league
+        // weren't part of the combo's identity, these would collapse into one dictionary entry
+        // and silently mix an English and an Australian roster into one "combo".
+        let englandBRO = fullSoccerRoster.map { s in
+            season(s.id, position: s.position, stats: [:], team: "BRO", year: 2010, league: "England")
+        }
+        let australiaBRO = fullSoccerRoster.map { s in
+            season("aus-" + s.id, position: s.position, stats: [:], team: "BRO", year: 2010, league: "Australia")
+        }
+        let pool = englandBRO + australiaBRO
+        var sawEngland = false
+        var sawAustralia = false
+        for i in 0...20 {
+            var g = spinRNG("collision-\(i)")
+            let spun = DraftSpinConstraint.spinRound(from: pool, sport: .soccer, openRoles: soccerFormationRoles, using: &g)
+            XCTAssertEqual(spun?.team, "BRO")
+            if spun?.league == "England" { sawEngland = true }
+            if spun?.league == "Australia" { sawAustralia = true }
+        }
+        XCTAssertTrue(sawEngland && sawAustralia,
+                      "both same-code leagues should be independently viable and spinnable, not merged into one combo")
+    }
+
+    func testSpinRoundLeagueCollisionKeepsAThinLeagueOutEvenIfTheOtherIsFull() {
+        // Only England's "BRO" has enough distinct candidates to cover every open role;
+        // Australia's "BRO" (same code, same year) is too thin — the collision must not let the
+        // thin Australian roster ride in on the back of the full English one.
+        let englandBRO = fullSoccerRoster.map { s in
+            season(s.id, position: s.position, stats: [:], team: "BRO", year: 2010, league: "England")
+        }
+        let australiaBRO = [season("aus-gk", position: "GK", stats: [:], team: "BRO", year: 2010, league: "Australia")]
+        let pool = englandBRO + australiaBRO
+        for i in 0...5 {
+            var g = spinRNG("collision-thin-\(i)")
+            let spun = DraftSpinConstraint.spinRound(from: pool, sport: .soccer, openRoles: soccerFormationRoles, using: &g)
+            XCTAssertEqual(spun?.league, "England", "stream \(i) let the thin Australian BRO combo through")
+        }
     }
 
     // MARK: - Daily Draft (backlog #4)

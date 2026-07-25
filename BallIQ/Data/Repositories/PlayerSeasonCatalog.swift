@@ -15,6 +15,12 @@ struct CatalogQuery: Equatable {
     /// forgiving substring match; game queries should not download every team in a season
     /// only to discard them on-device.
     var exactTeam: String?
+    /// Exact `CatalogSeason.league` match, alongside `exactTeam` — defense in depth against team
+    /// codes that collide across countries (e.g. "BRO" is both Blackburn Rovers, England and
+    /// Brisbane Roar, Australia; live collision in seasons 2009-2011). nil = no league predicate,
+    /// matching every row regardless of league — required for rows that don't populate league yet
+    /// (Transfermarkt-sourced soccer rows, `season.league == nil`).
+    var league: String?
     var name: String = ""
     /// Which of the three grains to search — season (default), career-aggregate, or
     /// single-game. Always applied (never "any") so one template's pool never accidentally
@@ -138,15 +144,18 @@ final class PlayerSeasonCatalog {
 
     /// Complete roster for the team/year that the reel actually landed on. The exact server
     /// predicate is important: the previous sport+year fetch could return every franchise in
-    /// that season and then filter locally.
-    func draftSpinRoster(sport: Sport, team: String, year: Int) async -> [CatalogSeason] {
-        let key = "\(sport.rawValue)|\(team)|\(year)"
+    /// that season and then filter locally. `league` (from the spun `TeamYear`, nil for sports/
+    /// rows that don't carry one) scopes the predicate further — team codes collide across
+    /// countries (e.g. "BRO" is Blackburn Rovers, England AND Brisbane Roar, Australia), so
+    /// sport+team+year alone can pull a roster that mixes two different clubs' players.
+    func draftSpinRoster(sport: Sport, team: String, year: Int, league: String? = nil) async -> [CatalogSeason] {
+        let key = "\(sport.rawValue)|\(team)|\(year)|\(league ?? "")"
         if let cached = draftSpinRosters[key] { return cached }
         if let task = draftSpinRosterTasks[key] { return await task.value }
         let task = Task<[CatalogSeason], Never> { [weak self] in
             guard let self else { return [] }
             return await self.search(CatalogQuery(sport: sport, minYear: year, maxYear: year,
-                                                  exactTeam: team), limit: 1_000)
+                                                  exactTeam: team, league: league), limit: 1_000)
         }
         draftSpinRosterTasks[key] = task
         let roster = await task.value
@@ -202,6 +211,9 @@ final class PlayerSeasonCatalog {
             items.append(URLQueryItem(name: "team_abbr", value: "eq.\(team)"))
         } else if let team = q.team, !team.isEmpty {
             items.append(URLQueryItem(name: "team_abbr", value: "ilike.*\(team)*"))
+        }
+        if let league = q.league, !league.isEmpty {
+            items.append(URLQueryItem(name: "league", value: "eq.\(league)"))
         }
         let name = q.name.trimmingCharacters(in: .whitespaces)
         if !name.isEmpty {

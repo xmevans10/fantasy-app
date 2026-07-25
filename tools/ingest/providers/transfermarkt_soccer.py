@@ -61,6 +61,8 @@ from pathlib import Path
 from typing import Iterable, Iterator
 
 from ..models import RawSeason
+from . import club_codes
+from .club_codes import _short_code  # re-exported: existing tests/callers import it from here
 from .http import CACHE_DIR, _USER_AGENT
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -80,64 +82,26 @@ _CROSS_YEAR_SHARE = 0.25
 
 _POSITION_MAP = {"Attack": "FW", "Midfield": "MF", "Defender": "DF", "Goalkeeper": "GK"}
 
-# Transfermarkt club_id → the short code the existing catalog already uses (seed codes
-# first — MCI/LIV/CHE/... must match soccer_seed.csv exactly so rosters merge — then
-# common broadcast codes for other famous clubs where the derived fallback is ugly).
-_KNOWN_CODES = {
-    # England
-    "281": "MCI", "985": "MUN", "31": "LIV", "631": "CHE", "11": "ARS", "148": "TOT",
-    "405": "AVL", "1132": "BUR", "762": "NEW", "379": "WHU", "29": "EVE", "543": "WOL",
-    "873": "CRY", "1237": "BHA", "703": "NFO", "989": "BOU", "1148": "BRE", "399": "LEE",
-    # Spain
-    "418": "RMA", "131": "FCB", "13": "ATM", "368": "SEV", "1049": "VAL", "1050": "VIL",
-    "150": "BET", "621": "ATH", "681": "RSO",
-    # Germany
-    "27": "BAY", "16": "BVB", "15": "LEV", "23826": "RBL", "18": "BMG", "24": "EIN",
-    "33": "S04", "79": "STU", "82": "WOB",
-    # Italy
-    "506": "JUV", "46": "INT", "5": "MIL", "6195": "NAP", "12": "ROM", "398": "LAZ",
-    "800": "ATA", "430": "FIO",
-    # France
-    "583": "PSG", "244": "MAR", "1041": "LYO", "162": "MON", "1082": "LIL",
-    # Portugal / Netherlands / Scotland / Turkey
-    "720": "POR", "294": "BEN", "336": "SPO",
-    "610": "AJA", "383": "PSV", "234": "FEY",
-    "371": "CEL", "124": "RAN",
-    "141": "GAL", "36": "FEN", "114": "BES",
-}
-
-# Tokens that are legal/organizational boilerplate in Transfermarkt's long-form club
-# names ("Manchester City Football Club", "Real Madrid Club de Fútbol"), not identity.
-_FILLER = {
-    "fc", "cf", "afc", "cfc", "ssc", "ac", "as", "ss", "sv", "sk", "fk", "bk", "jk",
-    "nk", "rc", "cd", "ca", "sad", "spa", "ev", "ag",
-    "club", "clube", "football", "futbol", "fútbol", "futebol", "fußball", "calcio",
-    "balompié", "association", "associazione", "sociedade", "sport", "sports",
-    "sporting", "sportive", "spor", "kulübü", "verein", "vereniging",
-    "voetbalvereniging", "de", "do", "da", "di", "la", "le", "el", "of", "and", "und",
-    "e", "the", "aş", "sa", "sdd", "team",
+# Competition id -> country/league label, for the 14 first-tier competitions this
+# provider actually has appearance rows for (see the module docstring). Values match
+# `espn_soccer.py`'s own `_LEAGUES` labels exactly (e.g. "Turkey" not Transfermarkt's own
+# "Türkiye") so `player_seasons.league` reads the same regardless of source, and so
+# `club_codes.resolve_code`'s name+country curated layer agrees between both providers.
+_COMPETITION_COUNTRY = {
+    "GB1": "England", "ES1": "Spain", "IT1": "Italy", "L1": "Germany", "FR1": "France",
+    "PO1": "Portugal", "NL1": "Netherlands", "BE1": "Belgium", "TR1": "Turkey",
+    "RU1": "Russia", "GR1": "Greece", "SC1": "Scotland", "UKR1": "Ukraine", "DK1": "Denmark",
 }
 
 CSV_FIELDS = ["name", "team_abbr", "season_year", "position",
-              "appearances", "goals", "assists", "clean_sheets", "headshot"]
+              "appearances", "goals", "assists", "clean_sheets", "headshot", "league"]
 
 
 # ---------------------------------------------------------------------------
 # pure helpers (unit-tested directly)
-
-def _short_code(club_name: str) -> str:
-    """Display short code for a club without a curated entry: strip boilerplate tokens,
-    then 1 word → first 3 letters, 2+ words → initial + first 2 of the second word
-    (reproduces MCI / MUN / RMA from their full names by itself)."""
-    words = ["".join(ch for ch in w if ch.isalnum())
-             for w in club_name.replace("-", " ").split()]
-    words = [w for w in words
-             if len(w) > 1 and w.lower() not in _FILLER and not w.isdigit()]
-    if not words:  # nothing but boilerplate ("B SAD") — fall back to raw letters
-        words = ["".join(ch for ch in club_name if ch.isalnum()) or club_name]
-    if len(words) == 1:
-        return words[0][:3].upper()
-    return (words[0][0] + words[1][:2]).upper()
+# `_short_code` (the word-initials heuristic) now lives in `club_codes.py`, shared with
+# `espn_soccer.py` — imported above, re-exported here so existing callers/tests importing
+# it from this module keep working unchanged.
 
 
 def _index_games(rows: Iterable[dict]) -> tuple[dict[str, tuple], dict[tuple[str, int], int]]:
@@ -243,8 +207,19 @@ def refresh() -> None:
     players = {r["player_id"]: (r["name"], _POSITION_MAP.get(r["position"], ""),
                                 _real_image(r["image_url"]))
                for r in _read_csv(players_path)}
-    club_codes = {r["club_id"]: _KNOWN_CODES.get(r["club_id"]) or _short_code(r["name"])
-                  for r in _read_csv(clubs_path)}
+    club_rows = list(_read_csv(clubs_path))
+    club_names = {r["club_id"]: r["name"] for r in club_rows}
+    # Resolve every club's code once, keyed by club_id — resolve_code checks the curated
+    # club_id map first, so this reproduces the pre-fix behavior for every club that isn't
+    # part of a cross-club collision, and picks a disambiguated code (via the committed
+    # override table) for the ones that are.
+    club_code_map = {
+        r["club_id"]: club_codes.resolve_code(
+            r["name"],
+            country=_COMPETITION_COUNTRY.get(r["domestic_competition_id"], ""),
+            club_key=r["club_id"])
+        for r in club_rows
+    }
 
     agg = _aggregate(_read_csv(appearances_path), games, first_tier)
     print(f"[transfermarkt] {len(agg)} raw (player, club, season) lines")
@@ -264,7 +239,7 @@ def refresh() -> None:
             continue
         rows.append({
             "name": name,
-            "team_abbr": club_codes.get(club_id) or club_id,
+            "team_abbr": club_code_map.get(club_id) or club_id,
             "season_year": end_years[(comp, season)],
             "position": position,
             "appearances": line["appearances"],
@@ -273,8 +248,19 @@ def refresh() -> None:
             # Seed convention: clean sheets are a GK/DF stat; attackers carry 0.
             "clean_sheets": line["clean_sheets"] if position in ("GK", "DF") else 0,
             "headshot": image,
+            "league": _COMPETITION_COUNTRY.get(comp, ""),
+            "_club_identity": club_names.get(club_id, club_id),
         })
     rows.sort(key=lambda r: (r["name"], r["season_year"], r["team_abbr"]))
+
+    # CI regression guard: the exact bug this module was fixed for (BRO/BRE/BUR ...) —
+    # two different clubs must never land on the same team_abbr in the final output.
+    club_codes.assert_globally_unique([
+        {"team_abbr": r["team_abbr"], "club_identity": r["_club_identity"], "league": r["league"]}
+        for r in rows
+    ])
+    for r in rows:
+        del r["_club_identity"]
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with CSV_PATH.open("w", encoding="utf-8", newline="") as f:
@@ -295,7 +281,11 @@ def refresh() -> None:
 def load_seasons() -> list[RawSeason]:
     """Full-squad soccer player-seasons from the committed CSV (empty list until the
     one-time refresh has been run). Identical column layout and stat keys to
-    seed.load_soccer, so both sources merge cleanly downstream."""
+    seed.load_soccer, so both sources merge cleanly downstream.
+
+    `league` is read defensively (`row.get`, not `row[...]`) — it's a new column as of
+    the club-code-collision fix, and the committed CSV won't gain it until the next full
+    `refresh()` sweep regenerates it; an older CSV without the column must still load."""
     if not CSV_PATH.exists():
         return []
     out: list[RawSeason] = []
@@ -315,6 +305,7 @@ def load_seasons() -> list[RawSeason]:
                 },
                 source="transfermarkt",
                 headshot=row["headshot"],
+                meta={"league": row["league"]} if row.get("league") else {},
             ))
     return out
 

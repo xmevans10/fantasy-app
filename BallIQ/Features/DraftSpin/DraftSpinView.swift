@@ -161,7 +161,7 @@ struct DraftSpinView: View {
     private func spinNextRound() async {
         expandedPlayerID = nil
         rerollUsedThisRound = false
-        let spin: (team: String, year: Int)?
+        let spin: (team: String, year: Int, league: String?)?
         if isDailyDraft {
             // Same seed for everyone on the same day — see `dailyDraftRoundGenerator`'s doc
             // comment for the (accepted) determinism caveat once picks diverge.
@@ -177,11 +177,11 @@ struct DraftSpinView: View {
                 lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
                 excludeNames: excludedNames, league: settings.soccerLeague, using: &rng)
         }
-        guard let (team, year) = spin else {
+        guard let (team, year, league) = spin else {
             finish()
             return
         }
-        await loadRoundRoster(team: team, year: year)
+        await loadRoundRoster(team: team, year: year, league: league)
     }
 
     private func reroll() async {
@@ -190,26 +190,28 @@ struct DraftSpinView: View {
         guard !rerollUsedThisRound, !isDailyDraft else { return }
         rerollUsedThisRound = true
         var rng = SystemRandomNumberGenerator()
-        guard let (team, year) = DraftSpinConstraint.spinRound(
+        guard let (team, year, league) = DraftSpinConstraint.spinRound(
             from: sample, sport: sport, openRoles: openSlots.map(\.role),
             lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
             excludeNames: excludedNames, league: settings.soccerLeague, using: &rng
         ) else { return }
-        await loadRoundRoster(team: team, year: year)
+        await loadRoundRoster(team: team, year: year, league: league)
     }
 
     /// The sample that picked (team, year) is only broad enough for discovery, not guaranteed to
     /// carry that combo's complete roster (the same sample-vs-complete gap the earlier
-    /// single-spin design hit) — re-fetch the real thing before showing it.
-    private func loadRoundRoster(team: String, year: Int) async {
+    /// single-spin design hit) — re-fetch the real thing before showing it. `league` scopes that
+    /// fetch too (see `DraftSpinRound.league`'s doc comment) so a team-code collision across
+    /// countries can't mix two clubs' players into one roster.
+    private func loadRoundRoster(team: String, year: Int, league: String?) async {
         // Start the reveal as soon as the random team/year is known. The reel gives the exact,
         // narrow roster request time to complete instead of making the player stare at a spinner.
-        currentRound = DraftSpinRound(team: team, year: year, roster: [])
+        currentRound = DraftSpinRound(team: team, year: year, league: league, roster: [])
         expandedPlayerID = nil
         roundRosterReady = false
         showingReveal = true
 
-        let fetched = await container.catalog.draftSpinRoster(sport: sport, team: team, year: year)
+        let fetched = await container.catalog.draftSpinRoster(sport: sport, team: team, year: year, league: league)
         // Excluded names (season variations OFF) are dropped from display too — `spinRound`
         // already guaranteed at least one placeable candidate survives this filter. Rows with
         // no position at all (espn_nba's `_norm_position` stores "" when ESPN doesn't carry
@@ -218,7 +220,7 @@ struct DraftSpinView: View {
         let roster = fetched.filter {
             $0.teamAbbr == team && !$0.position.isEmpty && !excludedNames.contains($0.name)
         }
-        currentRound = DraftSpinRound(team: team, year: year, roster: roster)
+        currentRound = DraftSpinRound(team: team, year: year, league: league, roster: roster)
         roundRosterReady = true
         if DebugLaunch.autoSubmitDraftSpin { autoPickForScreenshot(roster) }
     }

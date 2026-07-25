@@ -13,10 +13,16 @@ struct DraftSpinLineupSlot: Identifiable, Equatable {
 struct DraftSpinRound: Equatable {
     let team: String
     let year: Int
+    /// `CatalogSeason.league` of the spun combo, carried alongside `team`/`year` so the roster
+    /// fetch can scope by league too — team codes collide across countries (e.g. "BRO" is both
+    /// Blackburn Rovers, England and Brisbane Roar, Australia), and a fetch keyed on sport+team+
+    /// year alone can silently mix two different clubs' players into one "roster".
+    let league: String?
     let roster: [CatalogSeason]
 
     static func == (lhs: DraftSpinRound, rhs: DraftSpinRound) -> Bool {
-        lhs.team == rhs.team && lhs.year == rhs.year && lhs.roster.map(\.id) == rhs.roster.map(\.id)
+        lhs.team == rhs.team && lhs.year == rhs.year && lhs.league == rhs.league
+            && lhs.roster.map(\.id) == rhs.roster.map(\.id)
     }
 }
 
@@ -35,6 +41,10 @@ enum RoleFilter: Equatable {
 private struct TeamYear: Hashable {
     let team: String
     let year: Int
+    /// Part of the key, not just a tag along for the ride — two clubs in different countries can
+    /// share a team code (see `DraftSpinRound.league`'s doc comment), so grouping only by
+    /// (team, year) would silently merge their rosters into one fictitious "combo".
+    let league: String?
 }
 
 /// Pre-game options chosen on the setup screen (reference app's config, mapped onto what
@@ -135,12 +145,13 @@ enum DraftSpinConstraint {
     /// Spins a real (team, year) for this round from a *sample* pool — **truly random per
     /// spin** (explicit product decision 2026-07-09, replacing the original date-seeded
     /// same-spin-on-every-install design): the RNG is injected so gameplay uses the system
-    /// generator while tests stay reproducible with a `SeededGenerator`. Requires at least
-    /// one real candidate that fits one of the *currently open* lineup roles, so a round can
-    /// never spin a team/year where nothing is placeable. The sample only needs to be broad
-    /// enough to discover a good combo; the caller re-fetches that exact (team, year)'s
-    /// complete roster before showing it (see `DraftSpinView.spinNextRound` — the same
-    /// sample-vs-complete-roster distinction that mattered for the single-spin design).
+    /// generator while tests stay reproducible with a `SeededGenerator`. Requires at least as
+    /// many distinct real candidates fitting the *currently open* lineup roles as there are open
+    /// roles (see `viableCombos` below), so a round can never spin a team/year too thin to fill
+    /// out the lineup. The sample only needs to be broad enough to discover a good combo; the
+    /// caller re-fetches that exact (team, year)'s complete roster before showing it (see
+    /// `DraftSpinView.spinNextRound` — the same sample-vs-complete-roster distinction that
+    /// mattered for the single-spin design).
     /// `lockedTeam` (one-team mode) restricts the spin to that franchise's years; if the lock
     /// leaves nothing viable the spin falls back to every team rather than dead-ending.
     /// `excludeNames` (season-variations OFF) treats already-drafted players as absent when
@@ -152,18 +163,29 @@ enum DraftSpinConstraint {
     static func spinRound(from pool: [CatalogSeason], sport: Sport, openRoles: [String],
                         lockedTeam: String? = nil, usedLockedYears: Set<Int> = [],
                         excludeNames: Set<String> = [], league: String? = nil,
-                        using gen: inout some RandomNumberGenerator) -> (team: String, year: Int)? {
+                        using gen: inout some RandomNumberGenerator) -> (team: String, year: Int, league: String?)? {
         let openFilters = (formations[sport] ?? []).filter { openRoles.contains($0.role) }.map(\.filter)
         guard !openFilters.isEmpty else { return nil }
 
+        // A combo is viable only if it has at least as many DISTINCT placeable candidates as
+        // there are currently-open roles — "at least one match somewhere" let a 4-player combo
+        // (2 DF/1 GK/1 MF, zero FW) spin in against soccer's 8-slot formation (live repro: "BRO
+        // 2006" / Blackburn Rovers 2005-06). This is a conservative proxy, not exact bipartite
+        // matching of players to specific slots (it doesn't verify a distinct candidate exists
+        // for EACH open role individually, only that the pool of qualifying distinct players is
+        // large enough overall) — cheap to compute per spin and enough to kill the observed
+        // failure mode without solving a full assignment problem.
         func viableCombos(in seasons: [CatalogSeason]) -> [TeamYear] {
-            var eligibleByCombo: [TeamYear: Bool] = [:]
-            for season in seasons where !season.teamAbbr.isEmpty && !excludeNames.contains(season.name) {
-                let key = TeamYear(team: season.teamAbbr, year: season.seasonYear)
-                if eligibleByCombo[key] == true { continue }
-                eligibleByCombo[key] = openFilters.contains { $0.matches(season.position) }
+            var namesByCombo: [TeamYear: Set<String>] = [:]
+            for season in seasons where !season.teamAbbr.isEmpty && !excludeNames.contains(season.name)
+                                      && openFilters.contains(where: { $0.matches(season.position) }) {
+                let key = TeamYear(team: season.teamAbbr, year: season.seasonYear, league: season.league)
+                // Dedupe by name: a sample can carry more than one row for the same player in the
+                // same (team, year, league) (overlapping ingest sources) — counting those as
+                // separate candidates would inflate viability past what the roster can fill.
+                namesByCombo[key, default: []].insert(season.name)
             }
-            return eligibleByCombo.compactMap { combo, isEligible in isEligible ? combo : nil }
+            return namesByCombo.compactMap { combo, names in names.count >= openRoles.count ? combo : nil }
         }
 
         var viable: [TeamYear]
@@ -185,15 +207,18 @@ enum DraftSpinConstraint {
         }
         // Sorting before the draw still matters even with a random RNG: `Dictionary`
         // iteration order varies run to run, so a seeded test generator would otherwise
-        // see a different candidate order (and thus a different pick) per run.
+        // see a different candidate order (and thus a different pick) per run. League is a
+        // tertiary tiebreak only relevant when two combos share a team code across countries.
         viable.sort { lhs, rhs in
-            lhs.team == rhs.team ? lhs.year < rhs.year : lhs.team < rhs.team
+            if lhs.team != rhs.team { return lhs.team < rhs.team }
+            if lhs.year != rhs.year { return lhs.year < rhs.year }
+            return (lhs.league ?? "") < (rhs.league ?? "")
         }
         guard !viable.isEmpty else { return nil }
         // `next()` + modulo, not `randomElement(using:)` — same rationale as
         // `sportOfTheDay`: randomElement is measurably biased under SeededGenerator.
         let chosen = viable[Int(gen.next() % UInt64(viable.count))]
-        return (chosen.team, chosen.year)
+        return (chosen.team, chosen.year, chosen.league)
     }
 
     /// Daily Draft mode (backlog #4): every player who opens Daily Draft on the same UTC day

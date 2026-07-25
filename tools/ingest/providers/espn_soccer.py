@@ -70,12 +70,19 @@ from pathlib import Path
 from typing import Iterable
 
 from ..models import RawSeason
+from . import club_codes
 from .http import fetch_json
-from .transfermarkt_soccer import _short_code
 from .wikimedia import headshot as wiki_headshot
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 CSV_PATH = DATA_DIR / "soccer_espn_seasons.csv"
+# Per-club identity (M-teams): espn_id/logo/colors/full name, captured for free from the
+# same match-summary payload this module already downloads for player box scores — see
+# `_lineup_rows`'s `identity_rows` return and `_build_team_identity` below. Consumed by
+# `tools/ingest/teams.py`'s `build_teams`/`build_leagues`, never by the puzzle pipeline.
+TEAM_IDENTITY_CSV_PATH = DATA_DIR / "soccer_team_identity.csv"
+TEAM_IDENTITY_FIELDS = ["team_abbr", "league", "full_name", "espn_id", "logo_url",
+                        "primary_color", "secondary_color"]
 
 _API = "http://site.api.espn.com/apis/site/v2/sports/soccer/{league}/{endpoint}"
 
@@ -215,17 +222,29 @@ def _match_ids_for_day(league: str, day: str, *, is_current_season: bool) -> lis
     return [e["id"] for e in data.get("events", [])]
 
 
-def _lineup_rows(league: str, event_id: str, season_end_year: int) -> list[dict]:
-    """One match's both-rosters box score -> flat per-player dict rows (see
-    `_aggregate_rows`'s docstring for the shape)."""
+def _lineup_rows(league: str, event_id: str, season_end_year: int) -> tuple[list[dict], list[dict]]:
+    """One match's both-rosters box score -> (flat per-player dict rows (see
+    `_aggregate_rows`'s docstring for the shape), per-team identity rows (see
+    `_build_team_identity`'s docstring for the shape) — the same payload carries both, so
+    this is one fetch, not two)."""
     data = _get(f"summary?event={event_id}", league,
                 cache_key=f"espn_soccer_{league}_match_{event_id}.json",
                 ttl_hours=24 * 365 * 5)   # a played match's boxscore is immutable
     rows: list[dict] = []
+    identity_rows: list[dict] = []
     for roster in data.get("rosters", []):
-        team = roster.get("team", {}).get("displayName") or ""
+        team_obj = roster.get("team", {})
+        team = team_obj.get("displayName") or ""
         if not team:
             continue
+        identity_rows.append({
+            "team": team,
+            "espn_id": team_obj.get("id") or "",
+            "logo_url": team_obj.get("logo") or "",
+            "primary_color": team_obj.get("color") or "",       # hex WITHOUT leading '#'
+            "secondary_color": team_obj.get("alternateColor") or "",
+            "league": league,
+        })
         for p in roster.get("roster", []):
             stats = {s["name"]: s.get("value") for s in p.get("stats", [])}
             rows.append({
@@ -239,7 +258,44 @@ def _lineup_rows(league: str, event_id: str, season_end_year: int) -> list[dict]
                 "goals_conceded": stats.get("goalsConceded"),
                 "league": league,
             })
-    return rows
+    return rows, identity_rows
+
+
+def _build_team_identity(identity_rows: Iterable[dict]) -> list[dict]:
+    """Per-match team identity sightings (many matches see the same club) -> one row per
+    (team_abbr, league), team_abbr resolved via the same `club_codes.resolve_code` the
+    player-season rows use so the two datasets always agree on a club's code. Later
+    sightings only fill in fields an earlier sighting left blank (a club's identity fields
+    are effectively constant across matches, but a defensive fill costs nothing). Pure +
+    testable, no pandas — same discipline as `_aggregate_rows`.
+
+    Expected row shape: {"team": str, "espn_id": str, "logo_url": str,
+    "primary_color": str (hex, no leading '#'), "secondary_color": str (hex, no leading
+    '#'), "league": str (ESPN slug)}."""
+    by_key: dict[tuple[str, str], dict] = {}
+    for row in identity_rows:
+        league_label = _LEAGUES.get(row["league"], row["league"])
+        team_abbr = club_codes.resolve_code(row["team"], country=league_label)
+        key = (team_abbr, league_label)
+        primary = f"#{row['primary_color']}" if row.get("primary_color") else ""
+        secondary = f"#{row['secondary_color']}" if row.get("secondary_color") else ""
+        existing = by_key.get(key)
+        if existing is None:
+            by_key[key] = {
+                "team_abbr": team_abbr, "league": league_label, "full_name": row["team"],
+                "espn_id": row.get("espn_id") or "", "logo_url": row.get("logo_url") or "",
+                "primary_color": primary, "secondary_color": secondary,
+            }
+        else:
+            if not existing["logo_url"] and row.get("logo_url"):
+                existing["logo_url"] = row["logo_url"]
+            if not existing["espn_id"] and row.get("espn_id"):
+                existing["espn_id"] = row["espn_id"]
+            if not existing["primary_color"] and primary:
+                existing["primary_color"] = primary
+            if not existing["secondary_color"] and secondary:
+                existing["secondary_color"] = secondary
+    return sorted(by_key.values(), key=lambda r: (r["league"], r["team_abbr"]))
 
 
 def refresh(leagues: list[str] | None = None,
@@ -256,6 +312,7 @@ def refresh(leagues: list[str] | None = None,
     season_to = season_to or dt.date.today().year + (1 if dt.date.today().month >= 7 else 0)
 
     all_rows: list[dict] = []
+    all_identity_rows: list[dict] = []
     for league in leagues:
         floor = _LEAGUE_FLOORS.get(league, season_from or 2015)
         lo = max(season_from or floor, floor)
@@ -284,11 +341,12 @@ def refresh(leagues: list[str] | None = None,
             season_rows = 0
             for event_id in event_ids:
                 try:
-                    rows = _lineup_rows(league, event_id, season_end)
+                    rows, identity_rows = _lineup_rows(league, event_id, season_end)
                 except Exception as err:  # noqa: BLE001 — one bad match shouldn't sink the season
                     print(f"[espn-soccer] {league} {season_end} match {event_id}: skipped ({err})")
                     continue
                 all_rows.extend(rows)
+                all_identity_rows.extend(identity_rows)
                 season_rows += len(rows)
                 time.sleep(_RATE_DELAY)
             print(f"[espn-soccer] {league} {season_end}: {len(event_ids)} matches, "
@@ -306,12 +364,16 @@ def refresh(leagues: list[str] | None = None,
             dropped_cameo += 1
             continue
         players_needing_headshot.add(name)
+        league_label = _LEAGUES.get(league, league)
         kept.append({
-            "name": name, "team_abbr": _short_code(team), "season_year": season_end_year,
+            "name": name,
+            "team_abbr": club_codes.resolve_code(team, country=league_label),
+            "season_year": season_end_year,
             "position": positions.get(name, "MF"),
             "appearances": stats["appearances"], "goals": stats["goals"],
             "assists": stats["assists"], "clean_sheets": stats["clean_sheets"],
-            "league": _LEAGUES.get(league, league),
+            "league": league_label,
+            "club_identity": team,
         })
     print(f"[espn-soccer] {len(kept)} qualifying player-seasons "
           f"({dropped_cameo} dropped as cameos)")
@@ -329,6 +391,13 @@ def refresh(leagues: list[str] | None = None,
             final.append(row)
     final.sort(key=lambda r: (r["name"], r["season_year"], r["team_abbr"]))
 
+    # CI regression guard: the exact bug this module was fixed for (BRO = Blackburn AND
+    # Brisbane Roar, live-confirmed in this CSV's own team_abbr column) — two different
+    # clubs must never land on the same team_abbr in one run's output.
+    club_codes.assert_globally_unique(final)
+    for row in final:
+        del row["club_identity"]
+
     dest = out_path or CSV_PATH
     dest.parent.mkdir(parents=True, exist_ok=True)
     with dest.open("w", encoding="utf-8", newline="") as f:
@@ -337,6 +406,20 @@ def refresh(leagues: list[str] | None = None,
         w.writerows(final)
     print(f"[espn-soccer] wrote {len(final)} player-seasons (M16 photo gate: "
           f"{len(kept) - len(final)} dropped, no confident photo) → {dest}")
+
+    # Per-club identity (M-teams) — same sweep, essentially free. Written alongside the
+    # season CSV: to the committed identity file for a normal full run, or to a sibling of
+    # a custom `--out` (a CI matrix leg's own partition) so parallel legs never race on one
+    # shared file — mirrors `dest` itself just above.
+    identity = _build_team_identity(all_identity_rows)
+    identity_dest = (TEAM_IDENTITY_CSV_PATH if out_path is None
+                     else out_path.with_name(f"{out_path.stem}_team_identity.csv"))
+    identity_dest.parent.mkdir(parents=True, exist_ok=True)
+    with identity_dest.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=TEAM_IDENTITY_FIELDS)
+        w.writeheader()
+        w.writerows(identity)
+    print(f"[espn-soccer] wrote {len(identity)} club identities → {identity_dest}")
 
 
 def merge_csvs(inputs: list[Path], out_path: Path) -> None:
@@ -388,6 +471,17 @@ def load_seasons() -> list[RawSeason]:
                 meta={"league": row["league"]} if row.get("league") else {},
             ))
     return out
+
+
+def load_team_identity() -> list[dict]:
+    """Committed per-club identity rows (team_abbr, league, full_name, espn_id, logo_url,
+    primary_color, secondary_color) for `tools/ingest/teams.py`'s soccer teams/leagues
+    builders — stdlib-only, tolerant of a missing file (empty list until `refresh()` has
+    been run at least once)."""
+    if not TEAM_IDENTITY_CSV_PATH.exists():
+        return []
+    with TEAM_IDENTITY_CSV_PATH.open(encoding="utf-8") as f:
+        return list(csv.DictReader(f))
 
 
 def main() -> int:
