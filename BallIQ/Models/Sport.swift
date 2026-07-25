@@ -84,10 +84,24 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         "LIV": "364", "MCI": "382", "MUN": "360", "PSG": "160", "RMA": "86", "TOT": "367",
     ]
 
-    /// Team-crest URL on the ESPN CDN for a club abbreviation, or nil when the sport is
-    /// teamless, the abbreviation is empty, or (soccer only) the club isn't mapped. Callers
-    /// render a neutral fallback on nil rather than a broken image.
-    func teamLogoURL(forAbbr abbr: String) -> URL? {
+    /// Team-crest URL for `abbr` — prefers the fetched `teams.logo_url` (the real, current crest,
+    /// keyed by (sport, abbr, league) since abbreviations collide across leagues/countries) over
+    /// the hardcoded ESPN CDN lookup below. `league` is optional so pre-existing call sites (which
+    /// never had one to give) keep compiling, just skipping straight to the ESPN path; `index`
+    /// defaults to the shared production instance, with tests injecting a fresh one so they can
+    /// exercise the data-driven path without touching state `SportLogoTests` depends on staying
+    /// empty. Callers render a neutral fallback on nil rather than a broken image either way.
+    func teamLogoURL(forAbbr abbr: String, league: String? = nil,
+                     index: TeamIdentityIndex = .shared) -> URL? {
+        if let identity = index.identity(sport: self, abbr: abbr, league: league), let url = identity.logoURL {
+            return url
+        }
+        return legacyTeamLogoURL(forAbbr: abbr)
+    }
+
+    /// The original ESPN CDN lookup — kept as the offline/pre-data fallback for `teamLogoURL`
+    /// above, and as the last resort when a team simply isn't in the fetched `teams` table yet.
+    private func legacyTeamLogoURL(forAbbr abbr: String) -> URL? {
         guard let league = espnLeagueSlug, !abbr.isEmpty else { return nil }
         let key: String
         if self == .soccer {

@@ -1,0 +1,202 @@
+team_abbr,league,full_name,espn_id,logo_url,primary_color,secondary_color
+AMG,Brazil,Atlético-MG,7632,,#000000,#fafafc
+AMI,Brazil,América Mineiro,6154,,#417505,#fafafc
+APA,Brazil,Athletico Paranaense,3458,,#D80518,#C60000
+BAH,Brazil,Bahia,9967,,#C60000,#0093EC
+BOT,Brazil,Botafogo,6086,,#000000,#fafafc
+COR,Brazil,Corinthians,874,,#000000,#fafafc
+CRU,Brazil,Cruzeiro,2022,,#0093EC,#fafafc
+CUI,Brazil,Cuiabá,17313,,#004526,#FFD65A
+FLA,Brazil,Flamengo,819,,#C60000,#000000
+FLU,Brazil,Fluminense,3445,,#7E0202,#417505
+FOR,Brazil,Fortaleza,6272,,,
+GOI,Brazil,Goiás,3395,,#417505,#fafafc
+GRÊ,Brazil,Grêmio,6273,,#0093EC,#000000
+INTB,Brazil,Internacional,1936,,#C60000,#000000
+PAL,Brazil,Palmeiras,2029,,#417505,#fafafc
+RBU,Brazil,Red Bull Bragantino,6079,,#000000,#fafafc
+SAN,Brazil,Santos,2674,,#000000,#fafafc
+SÃPA,Brazil,São Paulo,2026,,#C60000,#000000
+VGA,Brazil,Vasco da Gama,3454,,#000000,#fafafc
+ARS,England,Arsenal,359,,#e20520,#003399
+AVL,England,Aston Villa,362,,#660e36,#333333
+BHA,England,Brighton & Hove Albion,331,,#0606fa,#ffdd00
+BOU,England,AFC Bournemouth,349,,#f42727,#0000CC
+BRE,England,Brentford,337,,#f42727,#f8ced9
+BUR,England,Burnley,379,,#6C1D45,#00FFFF
+CHE,England,Chelsea,363,,#144992,#FFFFFF
+CRY,England,Crystal Palace,384,,#0202fb,#ffdd00
+EVE,England,Everton,368,,#0606fa,#132257
+FUL,England,Fulham,370,,#ffffff,#00CC00
+LIV,England,Liverpool,364,,#d11317,#FFFFFF
+LTO,England,Luton Town,301,,#ff4f00,#1D428A
+MCI,England,Manchester City,382,,#99c5ea,#000000
+MUN,England,Manchester United,360,,#da020e,#FFFFFF
+NEW,England,Newcastle United,361,,#000000,#ffffff
+NFO,England,Nottingham Forest,393,,#c8102e,#132257
+SUN,England,Sheffield United,398,,#f42727,#1D428A
+TOT,England,Tottenham Hotspur,367,,#ffffff,#000000
+WHU,England,West Ham United,371,,#7c2c3b,#F1E7E0
+WOL,England,Wolverhampton Wanderers,380,,#fdb913,#32A8DD
+BRE,France,Brest,6997,,#ef2f24,#ffffff
+CFO,France,Clermont Foot,3171,,#8C3140,#ffffff
+HAV,France,Le Havre AC,3236,,#011F68,#ededed
+LEN,France,Lens,175,,#E91514,#004c37
+LIL,France,Lille,166,,#c2051b,#e2d3d7
+LOR,France,Lorient,273,,#f46100,#1a1a1a
+LYO,France,Lyon,167,,#ffffff,#1a1a1a
+MAR,France,Marseille,176,,#ffffff,#011F68
+MET,France,Metz,177,,#8C3140,#e6c168
+MON,France,AS Monaco,174,,#E91514,#004c37
+MTP,France,Montpellier,274,,#011F68,#ffffff
+NAN,France,Nantes,165,,#ffff00,#011F68
+NIC,France,Nice,2502,,#ef2f24,#e2d3d7
+PSG,France,Paris Saint-Germain,160,,#011F68,#ffffff
+SRE,France,Stade de Reims,3243,,#ef2f24,#0000bf
+SREN,France,Stade Rennais,169,,#ef2f24,#ffffff
+STR,France,Strasbourg,180,,#0000bf,#ffffff
+TOU,France,Toulouse,179,,#560080,#ffff00
+AUG,Germany,FC Augsburg,3841,,#ffffff,#03915c
+BAY,Germany,Bayern Munich,132,,#dc052d,#1a1a1a
+BMG,Germany,Borussia Mönchengladbach,268,,#ffffff,#03915c
+BVB,Germany,Borussia Dortmund,124,,#ffee00,#272726
+COL,Germany,FC Cologne,122,,#ffffff,#DA0308
+DAR,Germany,SV Darmstadt 98,3812,,#003399,#fafafc
+EIN,Germany,Eintracht Frankfurt,125,,#ffffff,#272726
+HEI,Germany,1. FC Heidenheim 1846,6418,,#DA0308,#003399
+LEV,Germany,Bayer Leverkusen,131,,#DA0308,#f9fbfc
+MAI,Germany,Mainz,2950,,#DA0308,#000055
+RBL,Germany,RB Leipzig,11420,,#ffffff,#740c14
+SFR,Germany,SC Freiburg,126,,#DA0308,#ffffff
+STU,Germany,VfB Stuttgart,134,,#ffffff,#DA0308
+THO,Germany,TSG Hoffenheim,7911,,#003399,#000055
+UBE,Germany,1. FC Union Berlin,598,,#DA0308,#d4d4d4
+VBO,Germany,VfL Bochum,121,,#000055,#aac4f2
+WBR,Germany,Werder Bremen,137,,#03915c,#ffffff
+WOB,Germany,VfL Wolfsburg,138,,#81f733,#1a1a1a
+ATA,Italy,Atalanta,105,,#1157bf,#ffffff
+BOL,Italy,Bologna,107,,#04043d,#ffffff
+CAG,Italy,Cagliari,2925,,#282846,#ffffff
+EMP,Italy,Empoli,2574,,#005bdd,#ffffff
+FIO,Italy,Fiorentina,109,,#4c1d84,#ffffff
+FRO,Italy,Frosinone,4057,,#ffff00,#ffffff
+GEN,Italy,Genoa,3263,,#08305d,#ffffff
+HVE,Italy,Hellas Verona,119,,#00239c,#ffffff
+INT,Italy,Internazionale,110,,#00239c,#ffffff
+JUV,Italy,Juventus,111,,#000000,#ffef32
+LAZ,Italy,Lazio,112,,#74bde7,#ffef32
+LEC,Italy,Lecce,113,,#e4002b,#08305d
+MIL,Italy,AC Milan,103,,#e4002b,#ffffff
+MONI,Italy,Monza,4007,,#C8142F,#ffffff
+NAP,Italy,Napoli,114,,#0677d2,#ffffff
+ROM,Italy,AS Roma,104,,#990a2c,#eae9e7
+SAL,Italy,Salernitana,3240,,#990000,#ffffff
+SAS,Italy,Sassuolo,3997,,#0fa653,#000000
+TOR,Italy,Torino,239,,#9f0000,#ffffff
+UDI,Italy,Udinese,118,,#19161D,#ffef32
+AMÉ,Mexico,América,227,,#ffff91,#001C58
+ASAN,Mexico,Atlético de San Luis,15720,,#EF0107,#dfa829
+ATL,Mexico,Atlas,216,,#EF0107,#e1e1e1
+CAZ,Mexico,Cruz Azul,218,,#0000ff,#ffffff
+GUA,Mexico,Guadalajara,219,,#EF0107,#104e8a
+JUA,Mexico,FC Juarez,17851,,#89f442,#ffffff
+LEÓ,Mexico,León,228,,#008000,#FFF61B
+MAZ,Mexico,Mazatlán FC,20702,,#9400D3,#000000
+MTY,Mexico,Monterrey,220,,#001C58,#ffffff
+NEC,Mexico,Necaxa,229,,#EF0107,#000000
+PAC,Mexico,Pachuca,234,,#001C58,#02b0d0
+PUE,Mexico,Puebla,231,,#ffffff,#0032a8
+PUM,Mexico,Pumas UNAM,233,,#ffffff,#060040
+QUE,Mexico,Querétaro,222,,#212121,#02b0d0
+SAN,Mexico,Santos,225,,#15926d,#00331b
+TIJ,Mexico,Tijuana,10125,,#EF0107,#e1e1e1
+TOL,Mexico,Toluca,223,,#EF0107,#ffffff
+TUA,Mexico,Tigres UANL,232,,#ffd011,#0000ff
+AAL,Netherlands,AZ Alkmaar,140,,#ef2f24,#ffffff
+ACI,Netherlands,Almere City,5291,,#C60000,#9df9f7
+AJA,Netherlands,Ajax Amsterdam,139,,#DF1B27,#4d6286
+EXC,Netherlands,Excelsior,2566,,#000000,#b41226
+FEY,Netherlands,Feyenoord Rotterdam,142,,#ef2f24,#000000
+FSI,Netherlands,Fortuna Sittard,143,,#FCEE33,#ffffff
+GAH,Netherlands,Go Ahead Eagles,3706,,#F80017,#8f0058
+HAL,Netherlands,Heracles Almelo,3708,,#000000,#ffffff
+HEE,Netherlands,Heerenveen,146,,#003eff,#1a316b
+NNI,Netherlands,NEC Nijmegen,147,,#ef2f24,#84aee7
+PSV,Netherlands,PSV Eindhoven,148,,#ef2f24,#000000
+PZW,Netherlands,PEC Zwolle,2565,,#0000d4,#000000
+RWA,Netherlands,RKC Waalwijk,155,,#0c57f2,#84aee7
+SRO,Netherlands,Sparta Rotterdam,151,,#F31522,#84aee7
+TWE,Netherlands,FC Twente,152,,#F31522,#9df9f7
+UTR,Netherlands,FC Utrecht,153,,#F31522,#1a316b
+VIT,Netherlands,Vitesse,154,,#FCEE33,#ffffff
+VOL,Netherlands,FC Volendam,2727,,#F7AA25,#9de1ff
+AROP,Portugal,Arouca,15784,,#ffea01,#293dc2
+BEN,Portugal,Benfica,1929,,#ca281d,#1a1a1a
+BOA,Portugal,Boavista,2256,,#1a1a1a,#cdcdcd
+BRA,Portugal,Braga,2994,,#de1f26,#2b6a36
+CPI,Portugal,Casa Pia,21581,,#000000,#C60000
+EST,Portugal,Estrela,21610,,#3B8132,#DE0A26
+FAM,Portugal,FC Famalicao,12698,,#FFFFFF,#183760
+GCH,Portugal,GD Chaves,12705,,#288A00,#005099
+GVI,Portugal,Gil Vicente,3699,,#de1f26,#FFFFFF
+MOR,Portugal,Moreirense,3696,,#288A00,#000000
+POR,Portugal,Portimonense,3719,,#000000,#ffea01
+RAV,Portugal,Rio Ave,3822,,#3b8649,#FF621A
+SFA,Portugal,SC Farense,20740,,#000000,#C60000
+SPO,Portugal,Sporting CP,2250,,#008127,#ffffff
+VGU,Portugal,Vitória de Guimaraes,5309,,#ffffff,#000000
+VIZ,Portugal,Vizela,20995,,#293dc2,#ff541c
+ALA,Spain,Alavés,96,,#0000ff,#c3c3c3
+ALM,Spain,Almería,6832,,#C8142F,#1a1a1a
+ATH,Spain,Athletic Club,93,,#C8142F,#0000ff
+ATM,Spain,Atlético Madrid,1068,,#ca3624,#000099
+BET,Spain,Real Betis,244,,#288A00,#ccff00
+CVI,Spain,Celta Vigo,85,,#6cace4,#004996
+CÁD,Spain,Cádiz,3842,,#ffff00,#1a1a1a
+ELC,Spain,Elche,3751,,#ffffff,#288A00
+ESP,Spain,Espanyol,88,,#3366CC,#C8142F
+FCB,Spain,Barcelona,83,,#990000,#FCE38A
+GET,Spain,Getafe,2922,,#0000ff,#C8142F
+GIR,Spain,Girona,9812,,#C60000,#004996
+GRA,Spain,Granada,3747,,#C8142F,#3366CC
+LPA,Spain,Las Palmas,98,,#ffff00,#3366CC
+MAL,Spain,Mallorca,84,,#C8142F,#ccff00
+OSA,Spain,Osasuna,97,,#cd0000,#ffffff
+RMA,Spain,Real Madrid,86,,#ffffff,#00529F
+RSO,Spain,Real Sociedad,89,,#3366CC,#ffdd00
+RVA,Spain,Rayo Vallecano,101,,#ffffff,#cd0000
+RVAL,Spain,Real Valladolid,95,,#7a2d9d,#ffffff
+SEV,Spain,Sevilla,243,,#ffffff,#d81022
+VAL,Spain,Valencia,94,,#ffffff,#004996
+VIL,Spain,Villarreal,102,,#ffff00,#6cace4
+ARS,USA (MLS),Arsenal,359,,#e20520,#003399
+AUN,USA (MLS),Atlanta United FC,18418,,#9d2235,#aa9767
+AUS,USA (MLS),Austin FC,20906,,#00b140,#000000
+CCR,USA (MLS),Columbus Crew,183,,#000000,#fedd00
+CFI,USA (MLS),Chicago Fire FC,182,,#7ccdef,#ff0000
+CHA,USA (MLS),Charlotte FC,21300,,#0085ca,#000000
+CIN,USA (MLS),FC Cincinnati,18267,,#003087,#fe5000
+CRA,USA (MLS),Colorado Rapids,184,,#8a2432,#8ab7e9
+DAL,USA (MLS),FC Dallas,185,,#c6093b,#001f5b
+DUN,USA (MLS),D.C. United,193,,#000000,#d61018
+GAL,USA (MLS),LA Galaxy,187,,#00235d,#ffffff
+HDY,USA (MLS),Houston Dynamo FC,6077,,#ff6b00,#101820
+IMI,USA (MLS),Inter Miami CF,20232,,#231f20,#f7b5cd
+KCI,USA (MLS),Sporting Kansas City,186,,#a7c6ed,#0a2240
+LAF,USA (MLS),LAFC,18966,,#000000,#c7a36f
+MAL,USA (MLS),MLS All-Stars,9817,,#000000,#C60000
+MNU,USA (MLS),Minnesota United FC,17362,,#000000,#9bcde4
+MTL,USA (MLS),CF Montréal,9720,,#003da6,#c1c5c8
+NEN,USA (MLS),New England Revolution,189,,#022166,#ce0e2d
+NSC,USA (MLS),Nashville SC,18986,,#ece83a,#1f1646
+NYO,USA (MLS),New York City FC,17606,,#9fd2ff,#000229
+OCI,USA (MLS),Orlando City SC,12011,,#60269e,#f0d283
+PHU,USA (MLS),Philadelphia Union,10739,,#051f31,#e0d0a6
+PTI,USA (MLS),Portland Timbers,9723,,#2c5234,#c99700
+RBU,USA (MLS),Red Bull New York,190,,#ba0c2f,#ffc72c
+RSA,USA (MLS),Real Salt Lake,4771,,#a32035,#daa900
+SJO,USA (MLS),San Jose Earthquakes,191,,#003da6,#ffffff
+SLO,USA (MLS),St. Louis CITY SC,21812,,#ec1458,#001544
+SSO,USA (MLS),Seattle Sounders FC,9726,,#2dc84d,#0033a0
+TOR,USA (MLS),Toronto FC,7318,,#aa182c,#a2a9ad
+VWH,USA (MLS),Vancouver Whitecaps,9727,,#ffffff,#12284c

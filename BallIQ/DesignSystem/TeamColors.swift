@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Team-at-the-time color identity for K4C4 cards. We deliberately use color (not logos or
 /// headshots) as the franchise signal — no licensed assets, instant recognizability, and it
@@ -25,6 +26,26 @@ enum TeamColors {
                            onSecondary: onColor(for: pair.1))
     }
 
+    /// Data-driven overload — prefers the fetched team's real colors (the `teams` table's
+    /// `primary_color`/`secondary_color`) over the hardcoded tables above, falling back to
+    /// `palette(sport:abbr:)` when the identity index hasn't warmed yet (cold launch, offline)
+    /// or carries no color for that team. `league` disambiguates abbreviation collisions across
+    /// countries (soccer) the same way `CatalogSeason.league` does elsewhere; pass nil when the
+    /// caller doesn't have one — the index's own lookup is already league-tolerant.
+    /// `index` defaults to the shared production instance; tests inject a fresh one so they can
+    /// exercise this path without mutating state `SportLogoTests`/`TeamColorsTests` depend on
+    /// staying empty.
+    static func palette(sport: Sport, abbr: String, league: String?,
+                       index: TeamIdentityIndex = .shared) -> TeamPalette {
+        guard let identity = index.identity(sport: sport, abbr: abbr, league: league),
+              let primary = identity.primary else {
+            return palette(sport: sport, abbr: abbr)
+        }
+        let secondary = identity.secondary ?? primary
+        return TeamPalette(primary: primary, secondary: secondary,
+                           onPrimary: onColor(for: primary), onSecondary: onColor(for: secondary))
+    }
+
     /// Neutral slate for unknown/old franchises — still on-brand, never a blank card.
     static let fallback = TeamPalette(primary: Color(hex: 0x2B2B2A),
                                       secondary: Color(hex: 0x1E50FF),
@@ -38,6 +59,16 @@ enum TeamColors {
         let r = Double((hex >> 16) & 0xFF) / 255.0
         let g = Double((hex >> 8) & 0xFF) / 255.0
         let b = Double(hex & 0xFF) / 255.0
+        let luma = 0.299 * r + 0.587 * g + 0.114 * b
+        return luma > 0.6 ? Color(hex: 0x15120B) : .white
+    }
+
+    /// Same perceptual-luma test as the hex overload above, for identities whose color already
+    /// decoded straight to a `Color` (the data-driven path) instead of one of this file's own
+    /// hex literals.
+    private static func onColor(for color: Color) -> Color {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        UIColor(color).getRed(&r, green: &g, blue: &b, alpha: &a)
         let luma = 0.299 * r + 0.587 * g + 0.114 * b
         return luma > 0.6 ? Color(hex: 0x15120B) : .white
     }

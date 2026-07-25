@@ -588,6 +588,37 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
     return 0
 
 
+def run_teams(*, do_teams: bool, do_leagues: bool, upsert: bool, dry_run: bool) -> int:
+    """Build + (optionally) upsert `teams`/`leagues` club/league identity rows. Standalone
+    branch, same early-return posture as --grid: skips the season-gather pull entirely —
+    this data need (club logos/colors/full names) is independent of it."""
+    from . import teams as teams_module
+    from .upsert import upsert_leagues, upsert_teams
+
+    load_dotenv()
+    team_rows: list[dict] = []
+    league_rows: list[dict] = []
+    if do_teams:
+        team_rows = teams_module.build_teams()
+        print(f"[teams] built {len(team_rows)} team row(s)")
+    if do_leagues:
+        league_rows = teams_module.build_leagues()
+        print(f"[leagues] built {len(league_rows)} league row(s)")
+
+    if dry_run or not upsert:
+        if not dry_run:
+            print("\n(teams/leagues: pass --upsert to write)")
+        return 0
+
+    if team_rows:
+        sent = upsert_teams(team_rows)
+        print(f"[upsert] sent {sent} team rows to Supabase")
+    if league_rows:
+        sent = upsert_leagues(league_rows)
+        print(f"[upsert] sent {sent} league rows to Supabase")
+    return 0
+
+
 def write_fallback(keep4: list[PuzzleRow], whoami: list[PuzzleRow]) -> None:
     """Regenerate the bundled offline JSON from real data (one keep4 per theme)."""
     seen_theme: set[str] = set()
@@ -638,6 +669,14 @@ def main() -> int:
     ap.add_argument("--grid", nargs="+", choices=["nfl", "nba", "baseball", "soccer", "tennis"],
                     help="generate today's Grid puzzle for the given sport(s) from the live "
                          "player_seasons catalog (standalone — skips the season gather pull)")
+    ap.add_argument("--teams", action="store_true",
+                    help="build (and, with --upsert, write) `teams` club identity rows "
+                         "(logos rehosted to Storage, colors, full names) — standalone, "
+                         "skips the season gather pull")
+    ap.add_argument("--leagues", action="store_true",
+                    help="build (and, with --upsert, write) `leagues` identity rows — "
+                         "standalone, skips the season gather pull; combine with --teams "
+                         "to do both in one run")
     ap.add_argument("--evict-current-season", action="store_true",
                     help="delete current/previous-year cache entries (and the live ESPN NBA "
                          "stat files) before fetching, so in-season data is refetched fresh — "
@@ -655,6 +694,10 @@ def main() -> int:
 
     if args.grid:
         return run_grid(args.grid, upsert=args.upsert, dry_run=args.dry_run)
+
+    if args.teams or args.leagues:
+        return run_teams(do_teams=args.teams, do_leagues=args.leagues,
+                         upsert=args.upsert, dry_run=args.dry_run)
 
     load_dotenv()
     seasons = gather_seasons(args.nfl_years, args.game_years)

@@ -49,6 +49,10 @@ jobs:
       - run: python -m tools.ingest.main --evict-current-season --backfill 7 --upsert --catalog
       # Re-mint today's grids off the freshened catalog (full-roster NFL answers included).
       - run: python -m tools.ingest.main --grid nfl nba soccer tennis --upsert
+      # Team/league identity (logos rehosted to Storage, colors, full names) — idempotent
+      # (logos.rehost skips re-upload when the object already exists), so a weekly re-run
+      # is cheap; picks up new soccer clubs as espn_soccer's own committed identity CSV grows.
+      - run: python -m tools.ingest.main --teams --leagues --upsert
 
   # The hoopR full-league NBA sweep lives as a committed CSV (data/nba_hoopr_seasons.csv)
   # because its refresh needs pyarrow, which the daily stdlib-only pipeline must never

@@ -78,6 +78,16 @@ def upsert_catalog(rows: list[dict]) -> int:
     return _upsert_table("player_seasons", rows)
 
 
+def upsert_teams(rows: list[dict]) -> int:
+    """Upsert club identity rows into `teams` (on_conflict on the league-qualified PK)."""
+    return _upsert_table("teams", rows, conflict="sport,team_abbr,league")
+
+
+def upsert_leagues(rows: list[dict]) -> int:
+    """Upsert league/competition identity rows into `leagues`."""
+    return _upsert_table("leagues", rows, conflict="sport,league")
+
+
 def fetch_existing_catalog_ids(sport: str, page_size: int = 1000) -> set[str]:
     """Every `id` already stored in `player_seasons` for `sport` — lets the daily run skip
     re-sending closed-season rows that can never change (see `main.filter_new_catalog_rows`),

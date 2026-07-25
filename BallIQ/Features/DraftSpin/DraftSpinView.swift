@@ -287,10 +287,16 @@ struct DraftSpinView: View {
             Text("Build your \(sport.displayName) squad").font(.title).foregroundStyle(Color.textPrimary)
             if let round = currentRound {
                 HStack(spacing: 10) {
+                    // The spun club's real crest (league-qualified so same-code clubs across
+                    // countries never render the wrong badge) — falls back to the color chip's
+                    // own treatment when no logo is loaded.
+                    TeamLogoBadge(sport: sport, teamAbbr: round.team,
+                                  tint: TeamColors.palette(sport: sport, abbr: round.team, league: round.league).primary,
+                                  league: round.league, size: 34)
                     // Team's own color instead of a generic accent — the same identity signal
                     // every player-card header band already carries via `TeamColors`.
                     chip(label: String(localized: "TEAM"), value: round.team.uppercased(),
-                         tint: TeamColors.palette(sport: sport, abbr: round.team).primary)
+                         tint: TeamColors.palette(sport: sport, abbr: round.team, league: round.league).primary)
                     chip(label: String(localized: "YEAR"), value: String(round.year), tint: .successFill)
                     Spacer()
                     if isDailyDraft {

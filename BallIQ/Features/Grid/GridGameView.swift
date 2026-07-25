@@ -73,7 +73,7 @@ struct GridGameView: View {
         // carries no sport and would fetch every sport's grid row and silently pick
         // whichever sorts first (a real bug the old filter-derived flow hit).
         let resolvedFilter = SportFilter(rawValue: sport.rawValue) ?? .nfl
-        puzzle = await container.puzzles.gridPuzzle(for: resolvedFilter, date: Date())
+        puzzle = await container.puzzles.gridPuzzle(for: resolvedFilter, date: Date())?.content
         container.track(.gameStarted, ["format": "grid", "sport": sport.rawValue])
         loading = false
         // Populate the guess autocomplete in the background — the board is playable without it.
@@ -131,7 +131,7 @@ struct GridGameView: View {
                         labelCell("\(puzzle.colDecades[col - 1])s")
                     }
                 } else if col == 0 {
-                    TeamAbbrChip(sport: puzzle.sport, abbr: puzzle.rowTeams[row - 1])
+                    TeamAbbrChip(sport: puzzle.sport, abbr: puzzle.rowTeams[row - 1], showLogo: true)
                 } else {
                     answerCell(puzzle, row: row - 1, col: col - 1)
                 }

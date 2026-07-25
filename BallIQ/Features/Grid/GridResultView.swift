@@ -113,7 +113,7 @@ struct GridResultView: View {
                             recapLabel("\(puzzle.colDecades[col - 1])s")
                         }
                     } else if col == 0 {
-                        TeamAbbrChip(sport: puzzle.sport, abbr: puzzle.rowTeams[row - 1], fontSize: 12, minHeight: 36)
+                        TeamAbbrChip(sport: puzzle.sport, abbr: puzzle.rowTeams[row - 1], fontSize: 12, minHeight: 36, showLogo: true)
                     } else {
                         recapCell(row: row - 1, col: col - 1)
                     }

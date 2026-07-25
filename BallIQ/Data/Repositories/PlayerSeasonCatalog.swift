@@ -131,8 +131,13 @@ final class PlayerSeasonCatalog {
 
     /// Safe to call when a setup screen first appears or its sport changes. In-flight requests
     /// are coalesced above, so pressing Start while this is still loading never doubles traffic.
+    /// Also warms the team/league identity index (design-system foundation slice) — every arcade
+    /// setup screen that prefetches a pool is exactly the moment a card is about to render team
+    /// colors/logos, so this is the one place that reliably fires before that without touching
+    /// any feature view directly.
     func prefetchDraftSpinSample(for sport: Sport) {
         Task { _ = await draftSpinSample(for: sport) }
+        warmIdentities(for: sport)
     }
 
     /// Every arcade format's session pool, served from the same cached broad sample Draft &
@@ -235,6 +240,114 @@ final class PlayerSeasonCatalog {
         return rows.isEmpty ? nil : rows
     }
 
+    // MARK: - Team/league identities (data-driven colors/logos foundation)
+
+    /// Team/league rows are essentially static week to week (a franchise doesn't change colors
+    /// mid-season) — a much longer TTL than the arcade pool's, since there's no freshness
+    /// pressure to trade off against, just cold-launch network avoidance.
+    private static let identityCacheTTL: TimeInterval = 7 * 24 * 60 * 60
+    private var teamIdentityTasks: [Sport: Task<[TeamIdentity], Never>] = [:]
+    private var leagueIdentityTasks: [Sport: Task<[LeagueIdentity], Never>] = [:]
+
+    /// Fetches every `teams` row for `sport`, disk-cached for a week. Also stores the result
+    /// into `TeamIdentityIndex.shared` so `TeamColors`/`TeamLogoBadge` can resolve colors/logos
+    /// synchronously without threading this catalog through every call site — callers that just
+    /// want the warm side-effect should use `warmIdentities(for:)` instead of awaiting this.
+    func teamIdentities(for sport: Sport) async -> [TeamIdentity] {
+        if let task = teamIdentityTasks[sport] { return await task.value }
+        let task = Task<[TeamIdentity], Never> { [weak self] in
+            guard let self else { return [] }
+            return await self.loadTeamIdentities(for: sport)
+        }
+        teamIdentityTasks[sport] = task
+        let items = await task.value
+        teamIdentityTasks[sport] = nil
+        return items
+    }
+
+    private func loadTeamIdentities(for sport: Sport) async -> [TeamIdentity] {
+        let key = "teams-\(sport.rawValue)"
+        if let entry = await DiskCache.read([TeamIdentity.Row].self, key: key),
+           Date().timeIntervalSince(entry.writtenAt) < Self.identityCacheTTL {
+            return store(TeamIdentity.init(row:), entry.value)
+        }
+        let query = [URLQueryItem(name: "select", value: "sport,team_abbr,league,full_name,logo_url,"
+                                   + "primary_color,secondary_color"),
+                     URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)")]
+        if let client, let rows: [TeamIdentity.Row] = try? await client.select("teams", query: query) {
+            await DiskCache.write(rows, key: key)
+            return store(TeamIdentity.init(row:), rows)
+        }
+        if let stale = await DiskCache.read([TeamIdentity.Row].self, key: key) {
+            return store(TeamIdentity.init(row:), stale.value)
+        }
+        return []
+    }
+
+    /// Same shape as `teamIdentities(for:)`, for the `leagues` table's per-(sport, league)
+    /// display name + crest.
+    func leagueIdentities(for sport: Sport) async -> [LeagueIdentity] {
+        if let task = leagueIdentityTasks[sport] { return await task.value }
+        let task = Task<[LeagueIdentity], Never> { [weak self] in
+            guard let self else { return [] }
+            return await self.loadLeagueIdentities(for: sport)
+        }
+        leagueIdentityTasks[sport] = task
+        let items = await task.value
+        leagueIdentityTasks[sport] = nil
+        return items
+    }
+
+    private func loadLeagueIdentities(for sport: Sport) async -> [LeagueIdentity] {
+        let key = "leagues-\(sport.rawValue)"
+        if let entry = await DiskCache.read([LeagueIdentity.Row].self, key: key),
+           Date().timeIntervalSince(entry.writtenAt) < Self.identityCacheTTL {
+            return store(LeagueIdentity.init(row:), entry.value)
+        }
+        let query = [URLQueryItem(name: "select", value: "sport,league,display_name,logo_url"),
+                     URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)")]
+        if let client, let rows: [LeagueIdentity.Row] = try? await client.select("leagues", query: query) {
+            await DiskCache.write(rows, key: key)
+            return store(LeagueIdentity.init(row:), rows)
+        }
+        if let stale = await DiskCache.read([LeagueIdentity.Row].self, key: key) {
+            return store(LeagueIdentity.init(row:), stale.value)
+        }
+        return []
+    }
+
+    private func store(_ makeTeam: (TeamIdentity.Row) -> TeamIdentity, _ rows: [TeamIdentity.Row]) -> [TeamIdentity] {
+        let items = rows.map(makeTeam)
+        TeamIdentityIndex.shared.store(teams: items)
+        return items
+    }
+
+    private func store(_ makeLeague: (LeagueIdentity.Row) -> LeagueIdentity, _ rows: [LeagueIdentity.Row]) -> [LeagueIdentity] {
+        let items = rows.map(makeLeague)
+        TeamIdentityIndex.shared.store(leagues: items)
+        return items
+    }
+
+    /// Synchronous lookups the design system (and, later, feature views) can use once
+    /// `warmIdentities(for:)` has populated the shared index — safe to call before that too
+    /// (returns nil), since every consumer already has a hardcoded/ESPN-CDN fallback for the
+    /// "not loaded yet" case.
+    func identity(sport: Sport, abbr: String, league: String? = nil) -> TeamIdentity? {
+        TeamIdentityIndex.shared.identity(sport: sport, abbr: abbr, league: league)
+    }
+
+    func leagueIdentity(sport: Sport, league: String) -> LeagueIdentity? {
+        TeamIdentityIndex.shared.leagueIdentity(sport: sport, league: league)
+    }
+
+    /// Fire-and-forget warm of both identity tables for `sport` — pair with any pool prefetch
+    /// (setup screens, Home) so synchronous design-system lookups are already populated by the
+    /// time a card actually renders.
+    func warmIdentities(for sport: Sport) {
+        Task { _ = await teamIdentities(for: sport) }
+        Task { _ = await leagueIdentities(for: sport) }
+    }
+
     // MARK: - Bundled fallback
 
     private func filterBundled(_ q: CatalogQuery) -> [CatalogSeason] {
@@ -247,6 +360,7 @@ final class PlayerSeasonCatalog {
                 && (q.maxYear == nil || s.seasonYear <= q.maxYear!)
                 && (q.exactTeam == nil || q.exactTeam!.isEmpty || s.teamAbbr == q.exactTeam!)
                 && (q.exactTeam != nil || team == nil || team!.isEmpty || s.teamAbbr.lowercased().contains(team!))
+                && (q.league == nil || s.league == q.league)
                 && (name.isEmpty || s.name.lowercased().contains(name))
                 && s.isCareer == (q.grain == .career)
                 && (q.grain == .career || s.isGame == (q.grain == .singleGame))

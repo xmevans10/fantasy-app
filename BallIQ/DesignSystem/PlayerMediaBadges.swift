@@ -61,6 +61,10 @@ struct TeamLogoBadge: View {
     let sport: Sport
     let teamAbbr: String
     let tint: Color
+    /// Disambiguates abbreviation collisions across leagues/countries when resolving the
+    /// data-driven crest (`Sport.teamLogoURL(forAbbr:league:)` already tolerates nil — this
+    /// just narrows the lookup when a caller happens to have one).
+    var league: String? = nil
     var size: CGFloat = 40
 
     private var abbrText: some View {
@@ -71,9 +75,10 @@ struct TeamLogoBadge: View {
 
     /// ESPN team-logo CDN 404s (defunct teams like the Sonics) degrade to the abbr badge,
     /// never an empty disc — mirrors the original `Keep4CardView.teamLogoView` fallback chain.
+    /// `teamLogoURL` itself already prefers the fetched `teams.logo_url` over the CDN guess.
     @ViewBuilder private var content: some View {
         if sport.hasTeams {
-            if let url = sport.teamLogoURL(forAbbr: teamAbbr) {
+            if let url = sport.teamLogoURL(forAbbr: teamAbbr, league: league) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let img): img.resizable().scaledToFit()
@@ -109,18 +114,78 @@ struct TeamLogoBadge: View {
 struct TeamAbbrChip: View {
     let sport: Sport
     let abbr: String
+    /// Threaded through to both the data-driven color lookup and (when `showLogo`) the crest
+    /// fetch — same collision rationale as `TeamLogoBadge.league`.
+    var league: String? = nil
     var fontSize: CGFloat = 14
     var minHeight: CGFloat = 44
+    /// Small crest to the left of the abbreviation — opt-in since Grid's board needs the plain
+    /// color chip's full-width legibility at its smallest size; a recap row (or any future
+    /// consumer with more room) can turn this on instead of duplicating the chip.
+    var showLogo: Bool = false
 
-    private var team: TeamPalette { TeamColors.palette(sport: sport, abbr: abbr) }
+    private var team: TeamPalette { TeamColors.palette(sport: sport, abbr: abbr, league: league) }
+    private var logoURL: URL? { showLogo ? sport.teamLogoURL(forAbbr: abbr, league: league) : nil }
 
     var body: some View {
-        Text(abbr.uppercased())
-            .font(.custom(FontName.condBlack, size: fontSize))
-            .foregroundStyle(team.onPrimary)
-            .lineLimit(1).minimumScaleFactor(0.6)
-            .frame(maxWidth: .infinity, minHeight: minHeight)
-            .background(team.primary)
-            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        HStack(spacing: 4) {
+            if let logoURL {
+                AsyncImage(url: logoURL) { phase in
+                    if let img = phase.image { img.resizable().scaledToFit() } else { Color.clear }
+                }
+                .frame(width: minHeight * 0.5, height: minHeight * 0.5)
+            }
+            Text(abbr.uppercased())
+                .font(.custom(FontName.condBlack, size: fontSize))
+                .foregroundStyle(team.onPrimary)
+                .lineLimit(1).minimumScaleFactor(0.6)
+        }
+        .frame(maxWidth: .infinity, minHeight: minHeight)
+        .background(team.primary)
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+    }
+}
+
+/// League/competition crest (e.g. an NFL shield, a soccer confederation badge) — the same faint-
+/// disc treatment as `TeamLogoBadge`, for the surfaces that show league-level rather than
+/// team-level identity. Falls back to the league's display name (or its raw code, pre-fetch) as
+/// text rather than a broken image.
+struct LeagueLogoBadge: View {
+    let sport: Sport
+    let league: String
+    let tint: Color
+    var size: CGFloat = 40
+
+    private var identity: LeagueIdentity? { TeamIdentityIndex.shared.leagueIdentity(sport: sport, league: league) }
+
+    private var fallbackText: some View {
+        Text((identity?.displayName ?? league).uppercased())
+            .font(.custom(FontName.condBlack, size: size * 0.22))
+            .foregroundStyle(tint)
+            .lineLimit(1).minimumScaleFactor(0.5)
+            .padding(.horizontal, 2)
+    }
+
+    @ViewBuilder private var content: some View {
+        if let url = identity?.logoURL {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img): img.resizable().scaledToFit()
+                case .failure: fallbackText
+                default: Color.clear
+                }
+            }
+        } else {
+            fallbackText
+        }
+    }
+
+    var body: some View {
+        content
+            .frame(width: size, height: size)
+            .background(Color.white.opacity(0.15))
+            .clipShape(Circle())
+            .overlay(Circle().strokeBorder(tint.opacity(0.35), lineWidth: 1))
+            .accessibilityHidden(true)   // decorative — the league is already read as text nearby
     }
 }
