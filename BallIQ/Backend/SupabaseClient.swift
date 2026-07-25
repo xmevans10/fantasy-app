@@ -207,9 +207,36 @@ extension JSONDecoder {
     static let supabase: JSONDecoder = {
         let d = JSONDecoder()
         d.keyDecodingStrategy = .convertFromSnakeCase
-        d.dateDecodingStrategy = .iso8601
+        // Postgres `timestamptz` comes back with fractional seconds (e.g.
+        // "2026-07-20T00:03:09.088143+00:00"), which the plain `.iso8601` strategy rejects. Accept
+        // both fractional and whole-second ISO8601 so raw timestamp columns decode (the weekly
+        // Season countdown and the rating-season end date both rely on this).
+        d.dateDecodingStrategy = .custom { decoder in
+            let raw = try decoder.singleValueContainer().decode(String.self)
+            if let date = SupabaseDate.parse(raw) { return date }
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: decoder.codingPath, debugDescription: "Unparseable ISO8601 date: \(raw)"))
+        }
         return d
     }()
+}
+
+/// ISO8601 parsing that tolerates Postgres's fractional seconds. Two cached formatters (with and
+/// without `.withFractionalSeconds`) since a single `ISO8601DateFormatter` can't match both.
+enum SupabaseDate {
+    private static let fractional: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+    private static let plain: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+    static func parse(_ string: String) -> Date? {
+        fractional.date(from: string) ?? plain.date(from: string)
+    }
 }
 
 extension JSONEncoder {

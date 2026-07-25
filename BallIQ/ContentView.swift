@@ -55,7 +55,7 @@ struct ContentView: View {
             if DebugLaunch.autoOpenStats { selectedTab = 4 }   // Profile tab; it auto-pushes Stats
             if DebugLaunch.autoOpenProfile { selectedTab = 4 }
             if DebugLaunch.autoOpenModeration { selectedTab = 4 }   // ditto for the review queue
-            if DebugLaunch.autoOpenLeagues { selectedTab = 1 }
+            if DebugLaunch.autoOpenLeagues || DebugLaunch.autoOpenSeason { selectedTab = 1 }
             if DebugLaunch.autoOpenVersus { selectedTab = 2 }
             if DebugLaunch.autoOpenCommunity { selectedTab = 3 }
             if DebugLaunch.autoOpenPaywall { debugPaywall = true }

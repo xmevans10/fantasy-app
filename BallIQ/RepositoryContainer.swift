@@ -12,6 +12,8 @@ final class RepositoryContainer: ObservableObject {
     let catalog: PlayerSeasonCatalog
     let community: CommunityPuzzleRepository?
     let cohorts: CohortRepository?
+    /// Rating seasons — the 8-week competitive ladder (M5 Phase F). Nil when local-only.
+    let seasons: SeasonRepository?
     let versus: VersusRepository?
     let dailyDraftBoard: DailyDraftLeaderboardRepository?
     /// Weekly arcade boards for Over/Under + Grid (backlog #5). Nil when local-only.
@@ -29,12 +31,18 @@ final class RepositoryContainer: ObservableObject {
     private let analytics: AnalyticsClient?
     private let localProgress = LocalProgressRepository()
     private let localRating = LocalRatingRepository()
+    private let localSeasonRating = LocalSeasonRatingRepository()
     private var sync: RemoteSync?
     private var pendingDeviceToken: String?
     private var storeCancellable: AnyCancellable?
 
     @Published private(set) var progressSnapshot = ProgressSnapshot()
     @Published private(set) var ratings: [Sport: Int] = [:]
+    /// The active 8-week rating season (M5 Phase F), fetched from `current_rating_season()`.
+    /// Nil offline / between seasons; drives the SEASON scope on Leagues.
+    @Published private(set) var currentSeason: RatingSeason?
+    /// The signed-in user's earned end-of-season badges (peak tier per season/sport), newest first.
+    @Published private(set) var seasonBadges: [SeasonBadge] = []
     /// Operator flag (`profiles.is_admin`) — gates the moderation review surface in Profile.
     @Published private(set) var isAdmin = false
     /// One team per sport the user follows (`profiles.favorite_teams`) — cached here (rather
@@ -71,6 +79,7 @@ final class RepositoryContainer: ObservableObject {
         self.catalog = PlayerSeasonCatalog(client: client)
         self.community = client.map { CommunityPuzzleRepository(client: $0) }
         self.cohorts = client.map { CohortRepository(client: $0) }
+        self.seasons = client.map { SeasonRepository(client: $0) }
         self.versus = client.map { VersusRepository(client: $0) }
         self.dailyDraftBoard = client.map { DailyDraftLeaderboardRepository(client: $0) }
         self.arcadeBoard = client.map { ArcadeLeaderboardRepository(client: $0) }
@@ -102,7 +111,14 @@ final class RepositoryContainer: ObservableObject {
     /// Load persisted local state on launch, then sync if already signed in.
     func bootstrap() async {
         await refreshFromLocal()
+        await refreshCurrentSeason()
         await syncIfSignedIn()
+    }
+
+    /// Fetch the active rating season (server-defined). No-op local-only. Safe to call for guests —
+    /// it just populates the SEASON surface; season-rating writes still require a signed-in user.
+    func refreshCurrentSeason() async {
+        currentSeason = await seasons?.current()
     }
 
     /// Build the sync mirror for the current user and reconcile remote → local.
@@ -110,9 +126,15 @@ final class RepositoryContainer: ObservableObject {
         guard let client, let uid = auth.userID else { sync = nil; isAdmin = false; return }
         await auth.refreshIfNeeded()
         let mirror = RemoteSync(client: client, userID: uid,
-                                localProgress: localProgress, localRating: localRating)
+                                localProgress: localProgress, localRating: localRating,
+                                localSeasonRating: localSeasonRating)
         sync = mirror
         await mirror.pull()
+        if currentSeason == nil { await refreshCurrentSeason() }
+        if let season = currentSeason {
+            await mirror.pullSeasonRatings(seasonID: season.id)
+            seasonBadges = await seasons?.badges(userID: uid) ?? []
+        }
         await refreshFromLocal()
         await pushPendingDeviceTokenIfNeeded()
         isAdmin = await community?.isAdmin(userID: uid) ?? false
@@ -207,6 +229,15 @@ final class RepositoryContainer: ObservableObject {
         ratings = map
     }
 
+    /// This user's rating in the active season for `sport` — the soft-reset seed if unplayed, or
+    /// their moved value otherwise. Nil when there's no active season. Synchronous (reads the local
+    /// season store) so the SEASON hero renders without a fetch; the board's rank comes from the RPC.
+    func seasonRating(for sport: Sport) -> Int? {
+        guard let season = currentSeason else { return nil }
+        let seed = SeasonSeed.seed(fromAllTime: ratings[sport] ?? RatingEngine.startingRating)
+        return localSeasonRating.rating(seasonID: season.id, sport: sport, seed: seed)
+    }
+
     // MARK: - Convenience reads
 
     var streak: Int { progressSnapshot.streak }
@@ -265,12 +296,23 @@ final class RepositoryContainer: ObservableObject {
         let snap = await localProgress.recordCompletion(format: format, puzzleID: puzzleID,
                                                          awardingXP: xp, date: date)
         let change: RatingChange
+        let outcome = GameOutcome(format: format, sport: sport, performance: performance)
         if ranked {
-            change = await localRating.apply(
-                GameOutcome(format: format, sport: sport, performance: performance), date: date)
+            change = await localRating.apply(outcome, date: date)
         } else {
             let current = await localRating.rating(for: sport)
             change = RatingChange(old: current, new: current)   // unranked: no rating movement
+        }
+
+        // Season ladder (M5 Phase F): same Elo engine, on a parallel per-season row seeded from a
+        // soft-reset snapshot of the all-time rating. Only when ranked and a season is active; the
+        // all-time rating above is untouched by this.
+        var seasonMove: (seasonID: Int, rating: Int, peak: Int)?
+        if ranked, let season = currentSeason {
+            let seed = SeasonSeed.seed(fromAllTime: change.old)
+            let seasonChange = localSeasonRating.apply(outcome, seasonID: season.id, seed: seed, date: date)
+            let peak = localSeasonRating.peak(seasonID: season.id, sport: sport, seed: seed)
+            seasonMove = (season.id, seasonChange.new, peak)
         }
 
         progressSnapshot = snap
@@ -281,6 +323,10 @@ final class RepositoryContainer: ObservableObject {
             Task { await sync.pushProgress(snap)
                    if ranked {
                        await sync.pushRating(sport: sport, rating: change.new, recordHistory: true)
+                   }
+                   if let move = seasonMove {
+                       await sync.pushSeasonRating(seasonID: move.seasonID, sport: sport,
+                                                   rating: move.rating, peak: move.peak)
                    } }
         }
         // Weekly league XP mirrors lifetime XP earning (both ranked and unranked sessions count).

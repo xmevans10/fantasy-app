@@ -30,6 +30,7 @@ struct ProfileView: View {
                     }
                     heroCard.heroReveal(1)
                     statRow.heroReveal(2)
+                    if !container.seasonBadges.isEmpty { seasonBadgesCard.heroReveal(2) }
                     statsRow.heroReveal(3)
                     if auth.isSignedIn { friendsRow.heroReveal(4) }
                     ratingsCard.heroReveal(5)
@@ -353,6 +354,41 @@ struct ProfileView: View {
             Text(value).font(.hero(26)).foregroundStyle(Color.textPrimary)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Season badges (M5 Phase F — end-of-season peak-tier reward)
+
+    /// Earned rating-season badges: one pill per closed season/sport showing the peak tier reached.
+    /// Legend badges wear the Balatro foil shimmer, matching the rank hero's "one rare card" motif.
+    private var seasonBadgesCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("SEASON BADGES").font(.label12).foregroundStyle(Color.textMuted)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(container.seasonBadges) { badge in seasonBadgePill(badge) }
+                }
+                .padding(.horizontal, 1)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .cardSurface()
+    }
+
+    private func seasonBadgePill(_ badge: SeasonBadge) -> some View {
+        let tier = badge.tier
+        return VStack(spacing: 4) {
+            Image(systemName: tier.symbol)
+                .font(.system(size: 20, weight: .black))
+                .foregroundStyle(tier.onColor)
+            Text(tier.name.uppercased())
+                .font(.label11).foregroundStyle(tier.onColor)
+            Text(badge.sport.uppercased())
+                .font(.label11).foregroundStyle(tier.onColor.opacity(0.75))
+        }
+        .frame(width: 76, height: 76)
+        .blockCard(fill: tier.color)
+        .foil(active: tier == .legend, cornerRadius: Radius.card)
     }
 
     // MARK: - Ratings (per sport)

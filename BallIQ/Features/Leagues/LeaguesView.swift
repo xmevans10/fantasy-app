@@ -19,15 +19,25 @@ struct LeaguesView: View {
 
     // MARK: - FRIENDS scope (M20)
 
-    /// Which ranking this tab is showing. `LEAGUE` is the pre-existing weekly-cohort
-    /// standings (unchanged); `FRIENDS` is a client-side ranking over the caller + every
-    /// accepted friend, keyed by whichever sport's rating the chip row currently selects.
+    /// Which ranking this tab is showing. `SEASON` is the 8-week rating ladder (M5 Phase F) and
+    /// the default landing; `LEAGUE` is the pre-existing weekly-cohort XP standings (unchanged);
+    /// `FRIENDS` is a client-side ranking over the caller + every accepted friend, keyed by
+    /// whichever sport's rating the chip row currently selects.
     private enum LeagueScope: Int, CaseIterable {
-        case league, friends
-        var title: LocalizedStringKey { self == .league ? "LEAGUE" : "FRIENDS" }
+        case season, league, friends
+        var title: LocalizedStringKey {
+            switch self {
+            case .season: return "SEASON"
+            case .league: return "LEAGUE"
+            case .friends: return "FRIENDS"
+            }
+        }
     }
 
-    @State private var scope: LeagueScope = .league
+    @State private var scope: LeagueScope = .season
+    @State private var seasonBoard: [SeasonStandingRow] = []
+    @State private var seasonBoardSport: Sport?
+    @State private var showSeasonInfo = false
     @State private var friendProfiles: [PublicProfile] = []
     /// Defaults to the signed-in user's best sport on load (see `bestSport()`), then tracks
     /// whatever the chip row picks.
@@ -36,13 +46,14 @@ struct LeaguesView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if !auth.isSignedIn {
+                if !auth.isSignedIn && !DebugLaunch.autoOpenSeason {
                     signInPrompt
                 } else {
                     VStack(spacing: 16) {
                         scopeSwitcher
                         Group {
                             switch scope {
+                            case .season: seasonContent
                             case .league: leagueContent
                             case .friends: friendsContent
                             }
@@ -57,20 +68,27 @@ struct LeaguesView: View {
             .toolbar {
                 Wordmark.toolbarItem()
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { showLeaguesInfo = true } label: {
+                    Button { if scope == .season { showSeasonInfo = true } else { showLeaguesInfo = true } } label: {
                         Image(systemName: "info.circle")
                     }
-                    .accessibilityLabel("How leagues work")
+                    .accessibilityLabel(scope == .season ? "How seasons work" : "How leagues work")
                 }
             }
         }
         .task { await load() }
+        .onChange(of: selectedSport) { _, _ in
+            if scope == .season { Task { await loadSeasonBoard() } }
+        }
+        .onChange(of: scope) { _, newScope in
+            if newScope == .season, seasonBoardSport != selectedSport { Task { await loadSeasonBoard() } }
+        }
         .onAppear {
             if DebugLaunch.autoOpenLeaguesInfo || HowItWorksSheet.shouldAutoPresent(feature: "leagues") {
                 showLeaguesInfo = true
             }
         }
         .sheet(isPresented: $showLeaguesInfo) { leaguesInfoSheet }
+        .sheet(isPresented: $showSeasonInfo) { seasonInfoSheet }
     }
 
     private var signInPrompt: some View {
@@ -323,6 +341,160 @@ struct LeaguesView: View {
         }
     }
 
+    // MARK: - SEASON scope content (M5 Phase F — 8-week rating ladder)
+
+    @ViewBuilder
+    private var seasonContent: some View {
+        if !loaded {
+            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if container.currentSeason == nil {
+            noSeasonYet
+        } else {
+            seasonStandingsList
+        }
+    }
+
+    /// Between seasons or offline: the rollover opens the next season server-side, so this is an
+    /// honest "check back" rather than implying play right now counts toward a season that isn't open.
+    private var noSeasonYet: some View {
+        EmptyStateView(symbol: "trophy.fill",
+                       title: "Season starting soon",
+                       message: "The next 8-week rating season hasn't opened yet. Your ranked games will place you on the ladder the moment it does.")
+    }
+
+    private var seasonStandingsList: some View {
+        ScrollView {
+            VStack(spacing: 18) {
+                if let season = container.currentSeason {
+                    seasonHero.heroReveal(0)
+                    seasonCountdownCard(season).heroReveal(1)
+                }
+                sportChipRow.heroReveal(2)
+                if seasonBoard.isEmpty {
+                    Text("No ranked games yet this season — play a ranked daily to land on the board.")
+                        .font(.body14)
+                        .foregroundStyle(Color.textMuted)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 12)
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(seasonBoard) { row in seasonStandingRow(row) }
+                    }
+                    .heroReveal(3)
+                }
+            }
+            .padding(16)
+        }
+    }
+
+    /// My season rank + rating hero. Rating is the instant local season value (seeded from a
+    /// soft-reset of the all-time rating); rank comes from the board's own-row. Reuses `RankWidget`
+    /// (the Home rank hero) so tier metal/foil-for-Legend is identical to the all-time rating card.
+    private var seasonHero: some View {
+        let rating = container.seasonRating(for: selectedSport)
+            ?? seasonBoard.first(where: \.isMe)?.rating
+            ?? RatingEngine.startingRating
+        let myRank = seasonBoard.first(where: \.isMe)?.rank
+        return VStack(spacing: 10) {
+            RankWidget(sport: selectedSport, rating: rating)
+            if let myRank {
+                Text("SEASON RANK #\(myRank)")
+                    .font(.label11)
+                    .foregroundStyle(Color.textMuted)
+            }
+        }
+    }
+
+    private func seasonCountdownCard(_ season: RatingSeason) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("SEASON ENDS").font(.label11).foregroundStyle(Color.onAccent.opacity(0.75))
+                TimelineView(.periodic(from: .now, by: 60)) { context in
+                    Text(RatingSeasonRules.remainingText(now: context.date, end: season.endsAt))
+                        .font(.heading).foregroundStyle(Color.onAccent)
+                }
+                Text("Top the ladder to earn this season's tier badge")
+                    .font(.label11).foregroundStyle(Color.onAccent.opacity(0.75))
+            }
+            Spacer()
+            Image(systemName: "hourglass").font(.system(size: 22)).foregroundStyle(Color.onAccent)
+        }
+        .padding(16)
+        .blockCard(fill: .accentFill)
+    }
+
+    @ViewBuilder
+    private func seasonStandingRow(_ row: SeasonStandingRow) -> some View {
+        if row.isMe {
+            seasonStandingRowContent(row)
+        } else {
+            NavigationLink {
+                PublicProfileView(userID: row.userId, usernameHint: row.username)
+            } label: {
+                seasonStandingRowContent(row)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func seasonStandingRowContent(_ row: SeasonStandingRow) -> some View {
+        HStack(spacing: 12) {
+            Text("\(row.rank)")
+                .font(.hero(18))
+                .foregroundStyle(row.tier.color)
+                .frame(width: 28, alignment: .leading)
+            AvatarView(avatar: row.avatar, size: 28, emojiFallback: nil)
+            Text(row.displayName)
+                .font(row.isMe ? .bodyStrong : .body14)
+                .foregroundStyle(Color.textPrimary)
+            Spacer()
+            Image(systemName: row.tier.symbol)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(row.tier.color)
+            Text("\(row.rating)")
+                .font(.statValue)
+                .foregroundStyle(Color.textPrimary)
+        }
+        .padding(12)
+        .background(row.isMe ? Color.accentBg : Color.clear)
+        .cardSurface()
+    }
+
+    private var seasonInfoSheet: some View {
+        HowItWorksSheet(
+            title: "Rating Seasons",
+            intro: "An 8-week competitive ladder. Every ranked daily moves your season rating — climb as high as you can before the season ends.",
+            symbol: "trophy.fill",
+            tint: Color.accentText,
+            tintBackground: Color.accentBg,
+            rules: [
+                .init(symbol: "arrow.triangle.2.circlepath",
+                      title: "A fresh ladder every 8 weeks",
+                      detail: "Each season starts you partway back toward the middle, so the ladder is always up for grabs — your all-time rating never resets."),
+                .init(symbol: "bolt.fill",
+                      title: "Ranked games move you",
+                      detail: "Only ranked daily games count toward your season rating. Community and unranked play don't move it."),
+                .init(symbol: "medal.fill",
+                      title: "Earn a tier badge",
+                      detail: "When the season closes, the highest tier you reached is minted as a badge on your Profile — Legend badges shimmer."),
+            ],
+            footnote: "Season ratings are separate from your permanent all-time rating and from weekly Leagues.",
+            startExpanded: false)
+    }
+
+    /// Fetches the active-season board for the currently-selected sport. Cached by sport so
+    /// re-selecting the same chip doesn't refetch (mirrors how the FRIENDS list recomputes on
+    /// `selectedSport`, just async because the season board is server-ranked).
+    private func loadSeasonBoard() async {
+        guard container.currentSeason != nil, let seasons = container.seasons else {
+            seasonBoard = []; return
+        }
+        let sport = selectedSport
+        seasonBoard = await seasons.leaderboard(sport: sport)
+        seasonBoardSport = sport
+    }
+
     // MARK: - FRIENDS scope content
 
     @ViewBuilder
@@ -464,6 +636,8 @@ struct LeaguesView: View {
     private func load() async {
         defer { loaded = true }
         selectedSport = bestSport()
+        if container.currentSeason == nil { await container.refreshCurrentSeason() }
+        await loadSeasonBoard()
         guard let userID = auth.userID else { return }
         async let friendsFetch: [PublicProfile] = container.social?.friendProfiles() ?? []
         if let cohorts = container.cohorts, let membership = await cohorts.myMembership(userID: userID) {

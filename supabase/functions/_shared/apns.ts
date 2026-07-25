@@ -75,6 +75,17 @@ export function buildSeasonEndPayload(hoursRemaining: number): PushPayload {
   };
 }
 
+// The 8-week RATING season closed (M5 Phase F) — distinct from the weekly-league "ending soon"
+// push above. Sent by `rating-season-rollover` to everyone who earned a peak-tier badge.
+export function buildRatingSeasonClosedPayload(peakTier: string): PushPayload {
+  return {
+    category: "season_end",
+    title: "Season complete!",
+    body: `You finished the season at ${peakTier[0].toUpperCase()}${peakTier.slice(1)} — your badge is on your profile. A fresh ladder just opened.`,
+    data: { tab: "leagues" },
+  };
+}
+
 export function buildFriendRequestPayload(requesterUsername: string): PushPayload {
   return {
     category: "friend_request",

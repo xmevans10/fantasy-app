@@ -9,13 +9,16 @@ final class RemoteSync {
     private let userID: String
     private let localProgress: LocalProgressRepository
     private let localRating: LocalRatingRepository
+    private let localSeasonRating: LocalSeasonRatingRepository
 
     init(client: SupabaseClient, userID: String,
-         localProgress: LocalProgressRepository, localRating: LocalRatingRepository) {
+         localProgress: LocalProgressRepository, localRating: LocalRatingRepository,
+         localSeasonRating: LocalSeasonRatingRepository) {
         self.client = client
         self.userID = userID
         self.localProgress = localProgress
         self.localRating = localRating
+        self.localSeasonRating = localSeasonRating
     }
 
     static func mergeRating(local: Int, remote: Int?) -> Int { max(local, remote ?? local) }
@@ -94,6 +97,37 @@ final class RemoteSync {
             try? await client.insert("rating_history",
                 values: Hist(userId: userID, sport: sport.rawValue, rating: rating))
         }
+    }
+
+    // MARK: - Rating seasons (M5 Phase F)
+
+    /// Restore this user's season ratings for the active season on sign-in/launch. Server-authoritative
+    /// (server wins) — unlike all-time rating there's no `max`-merge, because the row is keyed by
+    /// `season_id`: a brand-new season has no server row, so nothing is restored and the first ranked
+    /// game seeds fresh. That's what keeps the soft-reset from being clobbered.
+    func pullSeasonRatings(seasonID: Int) async {
+        struct Row: Decodable { let sport: String; let rating: Int; let peakRating: Int }
+        let rows: [Row] = (try? await client.select("season_ratings", query: [
+            item("select", "sport,rating,peak_rating"),
+            item("season_id", "eq.\(seasonID)"),
+            item("user_id", "eq.\(userID)"),
+        ])) ?? []
+        for row in rows {
+            guard let sport = Sport(rawValue: row.sport) else { continue }
+            localSeasonRating.setRating(row.rating, peak: row.peakRating, seasonID: seasonID, sport: sport)
+        }
+    }
+
+    /// Mirror one season-rating move up to `season_ratings` (RLS pins writes to the active season).
+    func pushSeasonRating(seasonID: Int, sport: Sport, rating: Int, peak: Int) async {
+        struct Up: Encodable {
+            let seasonId: Int; let userId: String; let sport: String
+            let rating: Int; let peakRating: Int
+        }
+        try? await client.upsert("season_ratings",
+            values: Up(seasonId: seasonID, userId: userID, sport: sport.rawValue,
+                       rating: rating, peakRating: peak),
+            onConflict: "season_id,user_id,sport")
     }
 
     private func item(_ name: String, _ value: String) -> URLQueryItem {
