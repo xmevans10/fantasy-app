@@ -1,15 +1,25 @@
 import Foundation
 
+/// A daily puzzle pick alongside whether it's actually *today's* canonical row (an
+/// `active_date` match, minted by `tools/ingest/daily_puzzle.py`) or a modulo fallback that
+/// merely stood in for it. Callers that render a "TODAY" freshness badge must gate on
+/// `isCanonicalToday` — otherwise an archive puzzle picked by the day-of-year fallback reads
+/// as if it were freshly minted for today, which it isn't.
+struct DailyPick<T> {
+    let content: T
+    let isCanonicalToday: Bool
+}
+
 /// Source of daily puzzles. Async so the Milestone 2 `Remote*` (Supabase) impl is a drop-in.
 protocol PuzzleRepository {
-    func keep4Puzzle(for filter: SportFilter, date: Date) async -> Keep4Puzzle?
-    func whoAmIPuzzle(for filter: SportFilter, date: Date) async -> WhoAmIPuzzle?
+    func keep4Puzzle(for filter: SportFilter, date: Date) async -> DailyPick<Keep4Puzzle>?
+    func whoAmIPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<WhoAmIPuzzle>?
     /// The full pool (for the Browse/Archive surface), not just today's pick.
     func allKeep4(for filter: SportFilter) async -> [Keep4Puzzle]
     func allWhoAmI(for filter: SportFilter) async -> [WhoAmIPuzzle]
     /// The Grid (M5 Phase E) — server-generated only, no bundled offline fallback (it's
     /// Pro-gated content anyway; a signed-out/local-only session can't play it either way).
-    func gridPuzzle(for filter: SportFilter, date: Date) async -> GridPuzzle?
+    func gridPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<GridPuzzle>?
     /// Sport-wide distinct player names for The Grid's guess typeahead. Deliberately
     /// sport-wide, never cell-scoped — a cell-filtered list would hand the player the answers.
     /// Empty when unavailable (local-only / offline): the Grid degrades to free-text entry.
@@ -39,11 +49,11 @@ final class LocalPuzzleRepository: PuzzleRepository {
         }
     }
 
-    func keep4Puzzle(for filter: SportFilter, date: Date) async -> Keep4Puzzle? {
+    func keep4Puzzle(for filter: SportFilter, date: Date) async -> DailyPick<Keep4Puzzle>? {
         pick(from: filtered(keep4, by: filter), date: date)
     }
 
-    func whoAmIPuzzle(for filter: SportFilter, date: Date) async -> WhoAmIPuzzle? {
+    func whoAmIPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<WhoAmIPuzzle>? {
         pick(from: filtered(whoami, by: filter), date: date)
     }
 
@@ -52,7 +62,7 @@ final class LocalPuzzleRepository: PuzzleRepository {
 
     /// No bundled Grid content in v1 (see protocol doc comment) — local-only sessions simply
     /// can't play it, same as any other Pro-only surface without a network connection.
-    func gridPuzzle(for filter: SportFilter, date: Date) async -> GridPuzzle? { nil }
+    func gridPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<GridPuzzle>? { nil }
 
     // MARK: - Helpers
 
@@ -62,9 +72,12 @@ final class LocalPuzzleRepository: PuzzleRepository {
     }
 
     /// Deterministic daily pick — same puzzle for everyone that day (reuses `PuzzleStore` seeding).
-    private func pick<P>(from pool: [P], date: Date) -> P? {
+    /// This IS the offline modulo path, never a genuinely-dated row, so it's always
+    /// `isCanonicalToday: false` — that's a truthful label here, not a regression.
+    private func pick<P>(from pool: [P], date: Date) -> DailyPick<P>? {
         guard !pool.isEmpty else { return nil }
-        return pool[PuzzleStore.dailyIndex(count: pool.count, date: date)]
+        return DailyPick(content: pool[PuzzleStore.dailyIndex(count: pool.count, date: date)],
+                          isCanonicalToday: false)
     }
 
     private static func loadBundle<T: Decodable>(_ name: String) -> [T] {

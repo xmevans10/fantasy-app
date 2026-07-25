@@ -29,8 +29,8 @@ struct BrowseView: View {
     @State private var searchExpanded = false
     @State private var keep4: [Keep4Puzzle] = []
     @State private var whoami: [WhoAmIPuzzle] = []
-    @State private var dailyKeep4: Keep4Puzzle?
-    @State private var dailyWhoAmI: WhoAmIPuzzle?
+    @State private var dailyKeep4: DailyPick<Keep4Puzzle>?
+    @State private var dailyWhoAmI: DailyPick<WhoAmIPuzzle>?
     @State private var loading = false
 
     @State private var activeKeep4: Keep4Puzzle?
@@ -159,7 +159,8 @@ struct BrowseView: View {
     /// Today's ranked daily for the chosen sport — the same card Home shows, so the hub
     /// reads as "the daily, then everything else this format has".
     @ViewBuilder private var dailySection: some View {
-        if format == .keep4, let p = dailyKeep4 {
+        if format == .keep4, let pick = dailyKeep4 {
+            let p = pick.content
             DailyGameCard(formatName: "K4C4", symbol: "rectangle.stack.fill", sport: p.sport,
                           title: p.theme, subtitle: "\(p.players.count) \(p.puzzleGrain().countNoun)",
                           scoring: p.scoringKind(), grain: p.puzzleGrain(),
@@ -167,18 +168,19 @@ struct BrowseView: View {
                           favoriteTeamMatch: container.favoriteTeams.team(for: p.sport)
                               .map(p.features(teamAbbr:)) ?? false,
                           ranked: true,
-                          dateBadge: DailyGameCard.todayDateBadge) {
+                          dateBadge: pick.isCanonicalToday ? DailyGameCard.todayDateBadge : nil) {
                 activeDailyKeep4 = p
             }
             secondaryAction: { shareTarget = SharablePuzzle(keep4: p) }
-        } else if format == .whoami, let p = dailyWhoAmI {
+        } else if format == .whoami, let pick = dailyWhoAmI {
+            let p = pick.content
             DailyGameCard(formatName: "Who am I?", symbol: "questionmark.circle.fill", sport: p.sport,
                           title: String(localized: "Guess today's mystery player"),
                           subtitle: String(localized: "\(p.clues.count) clues"),
                           completed: container.hasCompletedToday(puzzleID: p.id),
                           typeColor: .voltFill, onTypeColor: .onVolt,
                           ranked: true,
-                          dateBadge: DailyGameCard.todayDateBadge) {
+                          dateBadge: pick.isCanonicalToday ? DailyGameCard.todayDateBadge : nil) {
                 activeDailyWhoAmI = p
             }
             secondaryAction: { shareTarget = SharablePuzzle(whoAmI: p) }

@@ -22,14 +22,14 @@ final class RemotePuzzleRepository: PuzzleRepository {
 
     var availableSports: [Sport] { fallback.availableSports }
 
-    func keep4Puzzle(for filter: SportFilter, date: Date) async -> Keep4Puzzle? {
+    func keep4Puzzle(for filter: SportFilter, date: Date) async -> DailyPick<Keep4Puzzle>? {
         if let rows = await fetch(format: "keep4", filter: filter, as: Keep4Puzzle.self), !rows.isEmpty {
             return pick(rows, date: date)
         }
         return await fallback.keep4Puzzle(for: filter, date: date)
     }
 
-    func whoAmIPuzzle(for filter: SportFilter, date: Date) async -> WhoAmIPuzzle? {
+    func whoAmIPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<WhoAmIPuzzle>? {
         if let rows = await fetch(format: "whoami", filter: filter, as: WhoAmIPuzzle.self), !rows.isEmpty {
             return pick(rows, date: date)
         }
@@ -52,7 +52,7 @@ final class RemotePuzzleRepository: PuzzleRepository {
 
     /// Grid has no bundled offline fallback (see protocol doc comment) — nil when the table
     /// has nothing for `filter`'s sport today, rather than falling through to anything local.
-    func gridPuzzle(for filter: SportFilter, date: Date) async -> GridPuzzle? {
+    func gridPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<GridPuzzle>? {
         guard let rows = await fetch(format: "grid", filter: filter, as: GridPuzzle.self), !rows.isEmpty else {
             return nil
         }
@@ -83,12 +83,15 @@ final class RemotePuzzleRepository: PuzzleRepository {
     /// tools/ingest/daily_puzzle.py) — every day gets its own genuinely new puzzle. Falls back
     /// to the old modulo pick over the full ordered pool when no row matches today (a day
     /// before this shipped, a missed Action run, or WhoAmI which never gets a dated row yet).
-    private func pick<T>(_ rows: [PuzzleContentRow<T>], date: Date) -> T {
+    /// The `isCanonicalToday` flag on the result IS that match/fallback distinction — callers
+    /// (the "TODAY" badge) must not claim freshness on the fallback branch.
+    private func pick<T>(_ rows: [PuzzleContentRow<T>], date: Date) -> DailyPick<T> {
         let today = PuzzleStore.todayUTCString(date)
         if let match = rows.first(where: { $0.activeDate == today }) {
-            return match.content
+            return DailyPick(content: match.content, isCanonicalToday: true)
         }
-        return rows[PuzzleStore.dailyIndex(count: rows.count, date: date)].content
+        return DailyPick(content: rows[PuzzleStore.dailyIndex(count: rows.count, date: date)].content,
+                          isCanonicalToday: false)
     }
 
     /// Same shape as `PlayerSeasonCatalog`'s arcade-pool disk cache: a fresh copy skips the

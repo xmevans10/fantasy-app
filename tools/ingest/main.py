@@ -507,17 +507,41 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
     early-return posture as --write-themes: skips the heavy season pull entirely."""
     from . import grid
     from .models import RawSeason
-    from .upsert import fetch_player_seasons
+    from .upsert import (fetch_existing_puzzle_ids, fetch_grid_history, fetch_player_seasons,
+                         upsert_grid, upsert_grid_history)
 
     load_dotenv()
     # Mint today AND tomorrow (UTC): pick() prefers the row whose active_date matches the
     # current UTC day, so without a next-day row every player between 00:00 UTC and the
     # morning cron (8pm ET onward in the US) silently falls back to the modulo pick over old
-    # boards — observed live 2026-07-17. Generation is deterministic per (sport, date), so
-    # re-minting tomorrow's row the next morning is an idempotent no-op upsert.
+    # boards — observed live 2026-07-17.
     dates = [dt.date.today().isoformat(), (dt.date.today() + dt.timedelta(days=1)).isoformat()]
+    # Once a (sport, date) row exists, never re-mint it: generation is deterministic per
+    # (sport, date) only for a FIXED catalog, and the catalog shifts between same-day runs
+    # (daily ingest + weekly refresh both re-mint) — merge-duplicates would silently swap a
+    # board's content mid-day under players who already started it. Skip-if-present makes a
+    # minted board immutable for its day instead.
+    existing = fetch_existing_puzzle_ids(
+        [grid.puzzle_id(s, d) for s in sports for d in dates]) if upsert else set()
+    # Trailing-window rejection set (grid_history): a fresh board must not repeat a recent
+    # team-set x decade-set verbatim. Window is deliberately modest — long enough that a
+    # repeat feels impossible, short enough to never exhaust the combo space.
+    since = (dt.date.today() - dt.timedelta(days=grid.GRID_HISTORY_WINDOW_DAYS)).isoformat()
+    recent_rows = fetch_grid_history(since) if upsert else []
+    recent_by_sport: dict[str, set[tuple[str, str]]] = {}
+    for r in recent_rows:
+        recent_by_sport.setdefault(r["sport"], set()).add((r["row_teams"], r["col_decades"]))
+
     rows: list[dict] = []
+    history: list[dict] = []
     for sport in sports:
+        pending = [d for d in dates if grid.puzzle_id(sport, d) not in existing]
+        for d in dates:
+            if d not in pending:
+                print(f"[grid] {sport} {d}: already minted — skipping (a live board never "
+                      "shifts content mid-day)")
+        if not pending:
+            continue
         raw = fetch_player_seasons(sport)
         seasons = [
             RawSeason(name=r["name"], team_abbr=r["team_abbr"], season_year=r["season_year"],
@@ -531,8 +555,10 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
             from .providers import nfl_rosters
             extra_members = nfl_rosters.fetch_years(list(range(nfl_rosters.MIN_YEAR, _CURRENT_YEAR + 1)))
             print(f"[grid] nfl: {len(extra_members)} roster memberships widen the answer pools")
-        for date in dates:
-            puzzle = grid.generate_grid(seasons, sport=sport, date=date, extra_members=extra_members)
+        recent = recent_by_sport.setdefault(sport, set())
+        for date in pending:
+            puzzle = grid.generate_grid(seasons, sport=sport, date=date,
+                                        extra_members=extra_members, recently_served=recent)
             if puzzle is None:
                 print(f"[grid] {sport} {date}: no viable grid from {len(seasons)} seasons — skipped")
                 continue
@@ -543,14 +569,22 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
                 "id": grid.puzzle_id(sport, date), "sport": sport, "format": "grid",
                 "content": content, "active_date": date,
             })
+            row_key, col_key = grid.combo_key(puzzle.row_teams, puzzle.col_decades)
+            # Same-run dedup too: today's and tomorrow's boards must differ from each other,
+            # not just from the stored trailing window.
+            recent.add((row_key, col_key))
+            history.append({"sport": sport, "row_teams": row_key, "col_decades": col_key,
+                            "served_date": date})
 
     if dry_run or not upsert:
         print(f"\n(grid: {len(rows)} puzzle(s) built" + ("" if upsert else ", pass --upsert to write") + ")")
         return 0
 
-    from .upsert import upsert_grid
     sent = upsert_grid(rows)
     print(f"[upsert] sent {sent} grid puzzle rows to Supabase")
+    if history:
+        hist_sent = upsert_grid_history(history)
+        print(f"[upsert] recorded {hist_sent} grid history row(s)")
     return 0
 
 

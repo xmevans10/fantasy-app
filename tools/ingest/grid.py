@@ -14,6 +14,11 @@ from dataclasses import dataclass
 
 from .models import RawSeason, slug
 
+# Trailing window (days) of `grid_history` combos a fresh board must not repeat. Modest by
+# design: long enough that a verbatim team-set x decade-set repeat feels impossible in play,
+# short enough that even a small sport's combo space can't be exhausted by the rejection set.
+GRID_HISTORY_WINDOW_DAYS = 60
+
 
 @dataclass(frozen=True)
 class GridAnswer:
@@ -95,8 +100,17 @@ def _build_cell(pool: list[RawSeason], team: str, decade: int,
     return GridCell(valid_answers=answers, rarity_stars=stars)
 
 
+def combo_key(row_teams: tuple[str, ...], col_decades: tuple[int, ...]) -> tuple[str, str]:
+    """Canonical identity of a team-set x decade-set combo, order-independent — the shape
+    stored in `grid_history` (row_teams / col_decades text columns) and matched against by
+    `generate_grid`'s recently-served rejection."""
+    return ("|".join(sorted(row_teams)), "|".join(str(d) for d in sorted(col_decades)))
+
+
 def generate_grid(seasons: list[RawSeason], sport: str, date: str,
-                  max_attempts: int = 200, extra_members: list | None = None) -> GridPuzzle | None:
+                  max_attempts: int = 200, extra_members: list | None = None,
+                  recently_served: frozenset[tuple[str, str]] | set[tuple[str, str]] = frozenset(),
+                  ) -> GridPuzzle | None:
     """Deterministic per (sport, date). Tries successive seeded team/decade combos (drawn from
     what's actually present in `seasons`) until every one of the 9 cells has >=1 valid answer,
     or gives up after `max_attempts` (returns None -- caller skips today's Grid rather than
@@ -104,7 +118,13 @@ def generate_grid(seasons: list[RawSeason], sport: str, date: str,
 
     `extra_members` (e.g. nfl_rosters.RosterMember) widen each cell's VALID answers to full
     rosters -- Immaculate-Grid-style "anyone who was on the team counts" -- without touching
-    team/decade selection, viability, or rarity stars (all still graded-pool-driven)."""
+    team/decade selection, viability, or rarity stars (all still graded-pool-driven).
+
+    `recently_served` (combo_key tuples, from `grid_history`'s trailing window) is one more
+    rejection condition in the same retry loop: a combo served recently is skipped exactly
+    like a non-viable one, so a fresh board can't repeat a recent team-set x decade-set
+    verbatim. Deliberately lighter than Keep4's signature-level novelty -- determinism per
+    (sport, date) is preserved given the same history snapshot."""
     pool = [s for s in seasons if s.sport == sport and not s.career]
     # A blank team_abbr is missing/unresolved data, not a real team -- never a valid row label.
     teams = sorted({s.team_abbr for s in pool if s.team_abbr})
@@ -116,6 +136,8 @@ def generate_grid(seasons: list[RawSeason], sport: str, date: str,
         rng = random.Random(f"grid-{sport}-{date}-{attempt}")
         row_teams = tuple(rng.sample(teams, 3))
         col_decades = tuple(sorted(rng.sample(decades, 3)))
+        if combo_key(row_teams, col_decades) in recently_served:
+            continue
         cells: list[GridCell] = []
         viable = True
         for team, decade in itertools.product(row_teams, col_decades):

@@ -176,12 +176,14 @@ def upsert_history(rows: list[dict]) -> int:
     return _upsert_table("puzzle_history", rows, conflict="signature")
 
 
-def fetch_served_dates(dates: list[str]) -> set[str]:
-    """Which of `dates` already have a daily_puzzle.py-minted keep4 pick, per `puzzle_history`
-    (served_date) — the picker's own exclusive bookkeeping. Lets daily_puzzle.py stay
-    idempotent per day: a retried/re-dispatched run shouldn't mint a second competing puzzle
-    for a date that already has one (two rows sharing one active_date makes the client's
-    "today" pick ambiguous).
+def fetch_served_pairs(dates: list[str]) -> set[tuple[str, str]]:
+    """Which (served_date, sport) pairs among `dates` already have a daily_puzzle.py-minted
+    keep4 pick, per `puzzle_history` — the picker's own exclusive bookkeeping. Lets
+    daily_puzzle.py stay idempotent per (day, sport): a retried/re-dispatched run shouldn't
+    mint a second competing puzzle for a slot that already has one (two rows sharing one
+    active_date makes the client's "today" pick ambiguous). Sport-scoped (not just date)
+    since every sport now mints its own canonical pick each day — a date that already has
+    NFL's row must still allow the other four sports to mint theirs.
 
     Deliberately checks `puzzle_history`, NOT `puzzles.active_date`: the latter is *also*
     stamped in bulk by main.py's `assign_active_dates` on every regular pipeline run, purely
@@ -189,16 +191,16 @@ def fetch_served_dates(dates: list[str]) -> set[str]:
     multiple rows per day — Browse never reads it). Checking `puzzles` directly previously
     let an unrelated archival row's incidental active_date collision false-positive this
     check and silently skip a genuine daily mint. `puzzle_history` is written only here, so
-    it can't cross-contaminate. A `served_date, format` unique constraint (schema.sql) is the
-    hard backstop against the underlying race this replaces (two processes both passing this
-    read-then-act check before either writes) -- it turns a silent duplicate into a loud
-    upsert failure instead of leaving two puzzles live for the same day, which is exactly
-    what happened once in production before this fix (see BALLIQ_SPEC.md)."""
+    it can't cross-contaminate. A `served_date, sport, format` unique constraint (schema.sql)
+    is the hard backstop against the underlying race this replaces (two processes both
+    passing this read-then-act check before either writes) -- it turns a silent duplicate
+    into a loud upsert failure instead of leaving two puzzles live for the same slot, which
+    is exactly what happened once in production before this fix (see BALLIQ_SPEC.md)."""
     if not dates:
         return set()
     base, key = _require_env()
     in_list = ",".join(dates)
-    endpoint = (f"{base}/rest/v1/puzzle_history?select=served_date&format=eq.keep4"
+    endpoint = (f"{base}/rest/v1/puzzle_history?select=served_date,sport&format=eq.keep4"
                 f"&served_date=in.({in_list})")
     headers = {"apikey": key, "Authorization": f"Bearer {key}"}
     req = urllib.request.Request(endpoint, headers=headers, method="GET")
@@ -208,7 +210,74 @@ def fetch_served_dates(dates: list[str]) -> set[str]:
     except urllib.error.HTTPError as err:
         body = err.read().decode("utf-8", "ignore")
         raise RuntimeError(f"puzzle_history lookup failed ({err.code}): {body}") from err
-    return {r["served_date"] for r in rows}
+    return {(r["served_date"], r["sport"]) for r in rows}
+
+
+def fetch_whoami_history() -> list[dict]:
+    """Every Who Am I? pick ever served (sport, player_key, served_date) — small,
+    service-role-only table (one row per day per sport), so a full pull is fine. Feeds
+    daily_whoami.py's least-recently-served ranking AND its per-(date, sport) idempotency
+    check in one round trip."""
+    base, key = _require_env()
+    endpoint = f"{base}/rest/v1/whoami_history?select=sport,player_key,served_date"
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    req = urllib.request.Request(endpoint, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as err:
+        body = err.read().decode("utf-8", "ignore")
+        raise RuntimeError(f"whoami_history fetch failed ({err.code}): {body}") from err
+
+
+def upsert_whoami_history(rows: list[dict]) -> int:
+    """Record daily Who Am I? picks (on_conflict=served_date,sport — re-running the same
+    day's mint is a safe no-op, mirroring upsert_history's posture for keep4)."""
+    return _upsert_table("whoami_history", rows, conflict="served_date,sport")
+
+
+def fetch_grid_history(since_date: str) -> list[dict]:
+    """Grid combos served on/after `since_date` (sport, row_teams, col_decades) — the
+    trailing-window rejection set grid.py uses to keep a freshly-minted board from
+    repeating a recent team-set x decade-set verbatim."""
+    base, key = _require_env()
+    endpoint = (f"{base}/rest/v1/grid_history?select=sport,row_teams,col_decades"
+                f"&served_date=gte.{since_date}")
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    req = urllib.request.Request(endpoint, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as err:
+        body = err.read().decode("utf-8", "ignore")
+        raise RuntimeError(f"grid_history fetch failed ({err.code}): {body}") from err
+
+
+def upsert_grid_history(rows: list[dict]) -> int:
+    """Record newly-minted grid combos (on_conflict=served_date,sport — same idempotent
+    re-run posture as the other history writers)."""
+    return _upsert_table("grid_history", rows, conflict="served_date,sport")
+
+
+def fetch_existing_puzzle_ids(ids: list[str]) -> set[str]:
+    """Which of `ids` already exist in `puzzles`. Grid minting uses this to skip a
+    (sport, date) whose row was already written — once minted for a day, a board must not
+    silently shift content mid-day just because the underlying catalog changed between two
+    same-day pipeline runs (merge-duplicates would happily overwrite it)."""
+    if not ids:
+        return set()
+    base, key = _require_env()
+    in_list = ",".join(urllib.parse.quote(i) for i in ids)
+    endpoint = f"{base}/rest/v1/puzzles?select=id&id=in.({in_list})"
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    req = urllib.request.Request(endpoint, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            rows = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as err:
+        body = err.read().decode("utf-8", "ignore")
+        raise RuntimeError(f"puzzles id lookup failed ({err.code}): {body}") from err
+    return {r["id"] for r in rows}
 
 
 def fetch_player_seasons(sport: str, *, career: bool = False, page_size: int = 1000) -> list[dict]:

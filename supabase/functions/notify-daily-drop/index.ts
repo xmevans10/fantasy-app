@@ -15,13 +15,22 @@ Deno.serve(async (_req) => {
   const sb = serviceClient();
   const nowMs = Date.now();
 
-  // Today's minted K4C4 theme, if daily-puzzle.yml has landed it. The daily is keyed by UTC
-  // day (`active_date`, same as the app's fetch) — one lookup shared by every push this run,
-  // since all devices at 9am local share this same UTC instant.
+  // Today's minted K4C4 themes, if daily-puzzle.yml has landed them — one row PER SPORT now
+  // (daily_puzzle.py mints every sport its own canonical pick), so this is a sport→theme map
+  // rather than a single shared theme. One lookup shared by every push this run, since all
+  // devices at 9am local share this same UTC instant (`active_date` is keyed by UTC day,
+  // same as the app's fetch).
   const utcToday = new Date(nowMs).toISOString().slice(0, 10);
   const { data: dailyRows } = await sb
-    .from("puzzles").select("content").eq("format", "keep4").eq("active_date", utcToday).limit(1);
-  const theme = (dailyRows?.[0]?.content as { theme?: string } | undefined)?.theme ?? null;
+    .from("puzzles").select("sport, content").eq("format", "keep4").eq("active_date", utcToday);
+  const themesBySport = new Map<string, string>();
+  for (const row of dailyRows ?? []) {
+    const theme = (row.content as { theme?: string } | undefined)?.theme;
+    if (theme) themesBySport.set(row.sport as string, theme);
+  }
+  // Copy fallback when a user's sport can't be resolved: any minted theme beats a bare
+  // "new puzzles dropped" assertion, same reasoning as the original single-theme design.
+  const anyTheme = themesBySport.values().next().value ?? null;
 
   const { data: tokens } = await sb
     .from("device_tokens").select("user_id, token, utc_offset_minutes");
@@ -43,13 +52,19 @@ Deno.serve(async (_req) => {
       .from("progress").select("last_played_day").eq("user_id", t.user_id).maybeSingle();
     if (progress?.last_played_day === localToday) continue;
 
+    // Lead with the user's own sport's theme when their profile declares one — with every
+    // sport minting daily, a generic theme could name a sport this user never plays.
+    const { data: profile } = await sb
+      .from("profiles").select("primary_sport").eq("id", t.user_id).maybeSingle();
+    const theme = (profile?.primary_sport && themesBySport.get(profile.primary_sport)) || anyTheme;
+
     await sendApnsPush(t.token, buildDailyDropPayload(theme))
       .catch((e) => console.error("push failed", e));
     sent++;
   }
 
-  console.log(`[daily-drop] theme=${theme ?? "(none)"} checked=${tokens?.length ?? 0} sent=${sent}`);
-  return new Response(JSON.stringify({ checked: tokens?.length ?? 0, sent, theme }), {
+  console.log(`[daily-drop] themes=${themesBySport.size} checked=${tokens?.length ?? 0} sent=${sent}`);
+  return new Response(JSON.stringify({ checked: tokens?.length ?? 0, sent, themes: themesBySport.size }), {
     headers: { "Content-Type": "application/json" },
   });
 });

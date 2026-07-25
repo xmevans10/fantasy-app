@@ -2,19 +2,19 @@
 import datetime as dt
 
 from tools.ingest.assemble import PuzzleRow
-from tools.ingest.daily_puzzle import _signature, mint_batch, pick_novel_puzzle
+from tools.ingest.daily_puzzle import _signature, group_by_sport, mint_batch, pick_novel_puzzle
 from tools.ingest.themes import Theme
 
 TODAY = dt.date(2026, 1, 1)
 
 
-def _theme(key: str) -> Theme:
-    return Theme(key=key, title=key, sport="nfl", scale="nfl_skill_ppr",
+def _theme(key: str, sport: str = "nfl") -> Theme:
+    return Theme(key=key, title=key, sport=sport, scale="nfl_skill_ppr",
                 positions=frozenset({"WR"}), min_stats={}, columns=[])
 
 
-def _row(row_id: str, player_ids: list[str]) -> PuzzleRow:
-    return PuzzleRow(id=row_id, sport="nfl", format="keep4",
+def _row(row_id: str, player_ids: list[str], sport: str = "nfl") -> PuzzleRow:
+    return PuzzleRow(id=row_id, sport=sport, format="keep4",
                      content={"id": row_id, "players": [{"id": pid} for pid in player_ids]})
 
 
@@ -66,33 +66,75 @@ def test_pick_novel_puzzle_is_deterministic_for_the_same_date():
     assert pick_a[2] == pick_b[2]
 
 
+def _targets(dates: list[dt.date], sports: list[str]) -> list[tuple[dt.date, str]]:
+    return [(d, s) for d in dates for s in sports]
+
+
 def test_mint_batch_never_repeats_a_signature_within_the_same_batch():
     theme = _theme("gen-wr-test")
     rows = [_row(f"r{i}", [f"p{i}-{j}" for j in range(8)]) for i in range(20)]
-    candidates = [(theme, r) for r in rows]
+    by_sport = group_by_sport([(theme, r) for r in rows])
     dates = [TODAY + dt.timedelta(days=i) for i in range(5)]
-    minted = mint_batch(candidates, set(), dates)
+    minted = mint_batch(by_sport, set(), _targets(dates, ["nfl"]))
     sigs = [sig for _, _, _, sig in minted]
     assert len(minted) == 5
     assert len(set(sigs)) == 5   # every date in the batch got a distinct signature
 
 
-def test_mint_batch_stops_early_when_candidate_space_runs_out():
+def test_mint_batch_skips_exhausted_slots_instead_of_minting_duplicates():
     theme = _theme("gen-wr-test")
     rows = [_row(f"r{i}", [f"p{i}-{j}" for j in range(8)]) for i in range(3)]
-    candidates = [(theme, r) for r in rows]
+    by_sport = group_by_sport([(theme, r) for r in rows])
     dates = [TODAY + dt.timedelta(days=i) for i in range(10)]
-    minted = mint_batch(candidates, set(), dates)
+    minted = mint_batch(by_sport, set(), _targets(dates, ["nfl"]))
     assert len(minted) == 3   # only 3 distinct signatures exist to give out
 
 
 def test_mint_batch_respects_signatures_served_before_the_batch_started():
     theme = _theme("gen-wr-test")
     rows = [_row(f"r{i}", [f"p{i}-{j}" for j in range(8)]) for i in range(5)]
-    candidates = [(theme, r) for r in rows]
+    by_sport = group_by_sport([(theme, r) for r in rows])
     pre_served = {_signature(theme.key, rows[i]) for i in range(3)}
     dates = [TODAY + dt.timedelta(days=i) for i in range(2)]
-    minted = mint_batch(candidates, set(pre_served), dates)
+    minted = mint_batch(by_sport, set(pre_served), _targets(dates, ["nfl"]))
     assert len(minted) == 2
     for _, _, _, sig in minted:
         assert sig not in pre_served
+
+
+def test_mint_batch_mints_one_row_per_sport_per_date():
+    candidates = []
+    for sport in ["nfl", "nba"]:
+        theme = _theme(f"gen-{sport}-test", sport=sport)
+        candidates += [(theme, _row(f"{sport}-r{i}", [f"{sport}-p{i}-{j}" for j in range(8)],
+                                    sport=sport)) for i in range(10)]
+    dates = [TODAY, TODAY + dt.timedelta(days=1)]
+    minted = mint_batch(group_by_sport(candidates), set(), _targets(dates, ["nfl", "nba"]))
+    assert len(minted) == 4
+    slots = {(date, theme.sport) for date, theme, _, _ in minted}
+    assert slots == {(d, s) for d in dates for s in ["nfl", "nba"]}
+    # Every minted row's content matches its slot's sport — no cross-sport leakage.
+    for _, theme, row, _ in minted:
+        assert row.sport == theme.sport
+
+
+def test_mint_batch_one_sports_exhaustion_never_blocks_another_sport():
+    thin_theme = _theme("gen-nfl-thin", sport="nfl")
+    deep_theme = _theme("gen-nba-deep", sport="nba")
+    candidates = [(thin_theme, _row("nfl-only", [f"p{j}" for j in range(8)]))]
+    candidates += [(deep_theme, _row(f"nba-r{i}", [f"nba-p{i}-{j}" for j in range(8)],
+                                     sport="nba")) for i in range(10)]
+    dates = [TODAY + dt.timedelta(days=i) for i in range(3)]
+    minted = mint_batch(group_by_sport(candidates), set(), _targets(dates, ["nfl", "nba"]))
+    by_sport = {}
+    for _, theme, _, _ in minted:
+        by_sport[theme.sport] = by_sport.get(theme.sport, 0) + 1
+    assert by_sport == {"nfl": 1, "nba": 3}   # nfl exhausts after day 1; nba keeps minting
+
+
+def test_group_by_sport_preserves_candidate_order_within_a_sport():
+    niche = _theme("gen-wr-niche")
+    curated = _theme("nfl-wr-receiving")
+    pairs = [(niche, _row("n", ["a"])), (curated, _row("c", ["b"]))]
+    grouped = group_by_sport(pairs)
+    assert [t.key for t, _ in grouped["nfl"]] == ["gen-wr-niche", "nfl-wr-receiving"]

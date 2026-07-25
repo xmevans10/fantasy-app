@@ -393,10 +393,10 @@ final class RepositoryContainer: ObservableObject {
         }
         guard opponentID != uid else { throw VersusError.cannotChallengeSelf }
         let filter = SportFilter(rawValue: sport.rawValue) ?? .all
-        guard let puzzle = await puzzles.keep4Puzzle(for: filter, date: Date()) else {
+        guard let pick = await puzzles.keep4Puzzle(for: filter, date: Date()) else {
             throw VersusError.opponentNotFound
         }
-        let challengeID = try await versus.createChallenge(opponentID: opponentID, sport: sport, puzzleID: puzzle.id)
+        let challengeID = try await versus.createChallenge(opponentID: opponentID, sport: sport, puzzleID: pick.content.id)
         await refreshVersusBadge()   // the new challenge is itself unplayed by me
         return challengeID
     }

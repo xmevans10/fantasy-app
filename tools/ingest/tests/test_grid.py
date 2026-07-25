@@ -151,6 +151,44 @@ def test_puzzle_id_is_stable_and_namespaced_by_sport_and_date():
     assert grid.puzzle_id("nba", "2026-07-08") != grid.puzzle_id("nfl", "2026-07-08")
 
 
+# MARK: recently-served rejection (grid_history trailing window)
+
+
+def test_recently_served_combo_is_rejected_in_favor_of_the_next_viable_one():
+    # 5 teams x 4 decades so an alternative combo exists once the first is vetoed.
+    seasons = []
+    for team in ["SF", "GB", "DAL", "NYG", "CHI"]:
+        for decade in [1990, 2000, 2010, 2020]:
+            for i in range(3):
+                seasons.append(_season(f"{team}{decade}Player{i}", team, decade + i))
+    first = grid.generate_grid(seasons, sport="nfl", date="2026-07-08")
+    assert first is not None
+    served = {grid.combo_key(first.row_teams, first.col_decades)}
+    second = grid.generate_grid(seasons, sport="nfl", date="2026-07-08", recently_served=served)
+    assert second is not None
+    assert grid.combo_key(second.row_teams, second.col_decades) not in served
+
+
+def test_recently_served_rejection_is_order_independent():
+    first = grid.generate_grid(_rich_pool(), sport="nfl", date="2026-07-08")
+    assert first is not None
+    # Store the key with teams listed in a different order than the puzzle's row order —
+    # combo_key must canonicalize (sorted) so a shuffled repeat is still caught.
+    shuffled = tuple(reversed(first.row_teams))
+    assert grid.combo_key(shuffled, first.col_decades) == \
+        grid.combo_key(first.row_teams, first.col_decades)
+
+
+def test_fully_served_space_returns_none_rather_than_repeating():
+    # _rich_pool has exactly 3 teams x 3 decades — only one possible combo. Once it's in the
+    # trailing window, there's nothing novel left to mint.
+    only = grid.generate_grid(_rich_pool(), sport="nfl", date="2026-07-08")
+    assert only is not None
+    served = {grid.combo_key(only.row_teams, only.col_decades)}
+    assert grid.generate_grid(_rich_pool(), sport="nfl", date="2026-07-09",
+                              max_attempts=50, recently_served=served) is None
+
+
 # MARK: roster extras (nfl_rosters -> extra_members) — validity widens, stars/viability don't
 
 from tools.ingest.providers.nfl_rosters import RosterMember

@@ -5,8 +5,15 @@ struct HomeView: View {
     /// Root tab selection (0 Home…4 Profile) — the formats grid uses this to jump to the
     /// Versus tab, since Versus is a full tab/repository, not a sheet Home can present itself.
     @Binding var selectedTab: Int
-    @State private var keep4: Keep4Puzzle?
-    @State private var whoami: WhoAmIPuzzle?
+    /// Today's daily K4C4/Who Am I? pick per sport, keyed as pages fill in — see
+    /// `loadDaily(for:)`. A missing key means "not fetched yet", not "no puzzle"; `loadedSports`
+    /// disambiguates that from a genuine empty result once the fetch resolves.
+    @State private var keep4BySport: [Sport: DailyPick<Keep4Puzzle>] = [:]
+    @State private var whoAmIBySport: [Sport: DailyPick<WhoAmIPuzzle>] = [:]
+    @State private var loadedSports: Set<Sport> = []
+    /// The sport page currently visible in the daily-games pager. Browsing only — swiping
+    /// never writes back to `container.sportFilter` (2026-07-09 decision, see `body` below).
+    @State private var dailyPage: Sport = .nfl
     @State private var activePuzzle: Keep4Puzzle?
     @State private var activeWhoAmI: WhoAmIPuzzle?
     @State private var showBrowse = false
@@ -29,9 +36,14 @@ struct HomeView: View {
     private var rankSport: Sport { container.sportFilter.sport ?? .nfl }
 
     /// nil when the puzzle hasn't loaded (or failed to) — kept distinct from `false` so a
-    /// load failure never gets counted as "completed" by `HomeDailyLoop`.
-    private var keep4CompletedToday: Bool? { keep4.map { container.hasCompletedToday(puzzleID: $0.id) } }
-    private var whoAmICompletedToday: Bool? { whoami.map { container.hasCompletedToday(puzzleID: $0.id) } }
+    /// load failure never gets counted as "completed" by `HomeDailyLoop`. Tracks whichever
+    /// sport's page is currently visible in the pager, not necessarily `container.sportFilter`.
+    private var keep4CompletedToday: Bool? {
+        keep4BySport[dailyPage].map { container.hasCompletedToday(puzzleID: $0.content.id) }
+    }
+    private var whoAmICompletedToday: Bool? {
+        whoAmIBySport[dailyPage].map { container.hasCompletedToday(puzzleID: $0.content.id) }
+    }
     private var bothDailiesComplete: Bool {
         HomeDailyLoop.bothDailiesComplete(keep4Completed: keep4CompletedToday, whoAmICompleted: whoAmICompletedToday)
     }
@@ -60,44 +72,12 @@ struct HomeView: View {
                             // Still visible (tapping either reopens today's result/recap, same
                             // as before) but visually secondary once the countdown card above
                             // is doing the selling — a dimmed "DONE" pair reads as evidence of
-                            // completion, not the next thing to do.
-                            VStack(spacing: 14) {
-                                if let puzzle = keep4 {
-                                    DailyGameCard(formatName: "K4C4",
-                                                  symbol: "rectangle.stack.fill",
-                                                  sport: puzzle.sport,
-                                                  title: puzzle.theme,
-                                                  subtitle: "\(puzzle.players.count) \(puzzle.puzzleGrain().countNoun)",
-                                                  scoring: puzzle.scoringKind(),
-                                                  grain: puzzle.puzzleGrain(),
-                                                  completed: container.hasCompletedToday(puzzleID: puzzle.id),
-                                                  favoriteTeamMatch: container.favoriteTeams.team(for: puzzle.sport)
-                                                      .map(puzzle.features(teamAbbr:)) ?? false,
-                                                  ranked: true,
-                                                  dateBadge: DailyGameCard.todayDateBadge) {
-                                        // The daily card IS the puzzle — it opens directly
-                                        // (explicit feedback: no intermediate setup screen when
-                                        // the puzzle is already loaded and shown on the card).
-                                        // The formats grid below still routes through setup,
-                                        // where picking a sport is the point.
-                                        activePuzzle = puzzle
-                                    }
-                                    secondaryAction: { shareTarget = SharablePuzzle(keep4: puzzle) }
-                                }
-                                if let puzzle = whoami {
-                                    DailyGameCard(formatName: "Who am I?",
-                                                  symbol: "questionmark.circle.fill",
-                                                  sport: puzzle.sport,
-                                                  title: String(localized: "Guess today's mystery player"),
-                                                  subtitle: String(localized: "\(puzzle.clues.count) clues"),
-                                                  completed: container.hasCompletedToday(puzzleID: puzzle.id),
-                                                  typeColor: .voltFill, onTypeColor: .onVolt,
-                                                  ranked: true,
-                                                  dateBadge: DailyGameCard.todayDateBadge) {
-                                        activeWhoAmI = puzzle
-                                    }
-                                    secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }
-                                }
+                            // completion, not the next thing to do. Swiping browses every
+                            // sport's pair (2026-07-20); it never writes `container.sportFilter`
+                            // (2026-07-09: sport is chosen per-game on each format's own setup
+                            // screen, not globally) — that's still the only writer.
+                            DailyGamesPager(sports: Sport.allCases, selection: $dailyPage) { sport in
+                                dailyCardStack(for: sport)
                             }
                             .opacity(bothDailiesComplete ? 0.6 : 1)
                         }
@@ -223,21 +203,24 @@ struct HomeView: View {
         }
     }
 
+    /// Lands the pager on the last-played sport and makes sure that page's dailies are ready
+    /// before any debug/screenshot auto-open runs. Every other sport's page lazy-loads itself
+    /// via `dailyCardStack(for:)`'s own `.task` once the pager actually mounts it (a swipe, or
+    /// whatever neighbor pages `DailyGamesPager`'s scroll view keeps warm on its own) —
+    /// `loadDaily(for:)` is idempotent via `loadedSports`, so this never double-fetches the
+    /// initial sport.
     private func loadDaily() async {
-        // These are independent reads. Starting them together removes an avoidable network
-        // round trip from Home's first meaningful paint.
-        async let keep4Task = container.puzzles.keep4Puzzle(for: container.sportFilter, date: Date())
-        async let whoAmITask = container.puzzles.whoAmIPuzzle(for: container.sportFilter, date: Date())
+        let initial = container.sportFilter.sport ?? .nfl
+        dailyPage = initial
         // Warm the arcade pool for the sport the player is most likely to spin next (their
         // last-played sport) while they're still looking at Home — Draft & Spin and
         // Over/Under then open with a hot cache instead of a first-fetch spinner.
-        container.catalog.prefetchDraftSpinSample(for: container.sportFilter.sport ?? .nfl)
-        keep4 = await keep4Task
-        whoami = await whoAmITask
+        container.catalog.prefetchDraftSpinSample(for: initial)
+        await loadDaily(for: initial)
         if DebugLaunch.autoOpenWhoAmI, activeWhoAmI == nil {
-            activeWhoAmI = whoami
+            activeWhoAmI = whoAmIBySport[initial]?.content
         } else if DebugLaunch.autoOpenGame, activePuzzle == nil {
-            activePuzzle = keep4
+            activePuzzle = keep4BySport[initial]?.content
         } else if DebugLaunch.autoOpenBrowse {
             showBrowse = true
         } else if DebugLaunch.autoOpenOverUnder {
@@ -248,6 +231,88 @@ struct HomeView: View {
             showDraftSpin = true
         } else if DebugLaunch.autoOpenGrid {
             showGrid = true
+        }
+    }
+
+    /// Fetches one sport's daily pair exactly once per Home session — `RemotePuzzleRepository`
+    /// disk-caches per (format, sport) underneath this, so a first-time fetch for a sport the
+    /// player swipes to is the only real network hit; every page after that is instant.
+    private func loadDaily(for sport: Sport) async {
+        guard !loadedSports.contains(sport) else { return }
+        loadedSports.insert(sport)
+        let filter = SportFilter(rawValue: sport.rawValue) ?? .all
+        // Independent reads — starting them together removes an avoidable round trip.
+        async let keep4Task = container.puzzles.keep4Puzzle(for: filter, date: Date())
+        async let whoAmITask = container.puzzles.whoAmIPuzzle(for: filter, date: Date())
+        keep4BySport[sport] = await keep4Task
+        whoAmIBySport[sport] = await whoAmITask
+    }
+
+    /// One pager page: that sport's K4C4 + Who Am I? daily cards, stacked exactly like the
+    /// former single-sport layout. Its own `.task(id:)` is the lazy-load trigger for every
+    /// sport besides the initial one (see `loadDaily()`'s doc comment).
+    @ViewBuilder
+    private func dailyCardStack(for sport: Sport) -> some View {
+        VStack(spacing: 14) {
+            if let pick = keep4BySport[sport] {
+                let puzzle = pick.content
+                DailyGameCard(formatName: "K4C4",
+                              symbol: "rectangle.stack.fill",
+                              sport: puzzle.sport,
+                              title: puzzle.theme,
+                              subtitle: "\(puzzle.players.count) \(puzzle.puzzleGrain().countNoun)",
+                              scoring: puzzle.scoringKind(),
+                              grain: puzzle.puzzleGrain(),
+                              completed: container.hasCompletedToday(puzzleID: puzzle.id),
+                              favoriteTeamMatch: container.favoriteTeams.team(for: puzzle.sport)
+                                  .map(puzzle.features(teamAbbr:)) ?? false,
+                              ranked: true,
+                              dateBadge: pick.isCanonicalToday ? DailyGameCard.todayDateBadge : nil) {
+                    // The daily card IS the puzzle — it opens directly (explicit feedback: no
+                    // intermediate setup screen when the puzzle is already loaded and shown on
+                    // the card). The formats grid below still routes through setup, where
+                    // picking a sport is the point.
+                    activePuzzle = puzzle
+                }
+                secondaryAction: { shareTarget = SharablePuzzle(keep4: puzzle) }
+            } else {
+                dailyCardPlaceholder(loaded: loadedSports.contains(sport))
+            }
+            if let pick = whoAmIBySport[sport] {
+                let puzzle = pick.content
+                DailyGameCard(formatName: "Who am I?",
+                              symbol: "questionmark.circle.fill",
+                              sport: puzzle.sport,
+                              title: String(localized: "Guess today's mystery player"),
+                              subtitle: String(localized: "\(puzzle.clues.count) clues"),
+                              completed: container.hasCompletedToday(puzzleID: puzzle.id),
+                              typeColor: .voltFill, onTypeColor: .onVolt,
+                              ranked: true,
+                              dateBadge: pick.isCanonicalToday ? DailyGameCard.todayDateBadge : nil) {
+                    activeWhoAmI = puzzle
+                }
+                secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }
+            } else {
+                dailyCardPlaceholder(loaded: loadedSports.contains(sport))
+            }
+        }
+        .task(id: sport) { await loadDaily(for: sport) }
+    }
+
+    /// Fills a daily card's spot while its sport's page is still loading, so the pager doesn't
+    /// visibly collapse/reflow mid-swipe. `loaded` true with no puzzle is a genuine empty
+    /// result (no spinner — there's nothing coming), matching the pre-pager single-sport
+    /// behavior of simply omitting the card.
+    @ViewBuilder
+    private func dailyCardPlaceholder(loaded: Bool) -> some View {
+        if !loaded {
+            HStack {
+                Spacer()
+                ProgressView().tint(.accentFill)
+                Spacer()
+            }
+            .frame(height: 96)
+            .cardSurface()
         }
     }
 

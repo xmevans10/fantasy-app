@@ -42,3 +42,11 @@ jobs:
           python -m tools.ingest.daily_puzzle --upsert \
             --count "${{ github.event.inputs.count || '1' }}" \
             ${{ github.event.inputs.start_date != '' && format('--date {0}', github.event.inputs.start_date) || '' }}
+      # The Who Am I? daily mint (least-recently-served per sport — see daily_whoami.py).
+      # No provider pull, runs in seconds; kept as its own step so a keep4 exhaustion
+      # failure above doesn't also lose the day's whoami picks (and vice versa).
+      - if: always()
+        run: |
+          python -m tools.ingest.daily_whoami --upsert \
+            --count "${{ github.event.inputs.count || '1' }}" \
+            ${{ github.event.inputs.start_date != '' && format('--date {0}', github.event.inputs.start_date) || '' }}

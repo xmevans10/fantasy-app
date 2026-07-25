@@ -31,7 +31,12 @@ final class PuzzleStore {
         return cal.ordinality(of: .day, in: .year, for: date) ?? 1
     }
 
-    /// Deterministic index into a pool given a count and date — same for all users that day.
+    /// Content-unavailability fallback: a deterministic index into a pool given a count and
+    /// date, same for all users that day. NOT the definition of "today's puzzle" — that's
+    /// `active_date` on the server row (see `RemotePuzzleRepository.pick`). This only stands
+    /// in when no row is actually minted for today (offline, a missed ingest run, or a format
+    /// with no dated rows yet), and callers must track that distinction (`DailyPick
+    /// .isCanonicalToday`) rather than assume a modulo pick is fresh content.
     static func dailyIndex(count: Int, date: Date = Date()) -> Int {
         guard count > 0 else { return 0 }
         return (dayOfYearUTC(date) - 1) % count
