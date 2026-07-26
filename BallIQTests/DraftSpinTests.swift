@@ -143,6 +143,56 @@ final class DraftSpinTests: XCTestCase {
         ]
     }
 
+    // MARK: - Fillability against the COMPLETE roster (the real BRO-2006 guarantee)
+    //
+    // `spinRound`'s pool at runtime is the 2,000-row discovery sample, which live holds ~1.3
+    // players per soccer (team, year, league) combo — so requiring 8 THERE rejected every soccer
+    // combo and dead-ended every soccer draft into an empty lineup. The bar moved to the fetched
+    // roster; these lock that it still catches a genuinely-thin club-season.
+
+    func testCanFillLineupRejectsATooThinRosterAndAcceptsAnExactCover() {
+        XCTAssertFalse(DraftSpinConstraint.canFillLineup(
+            roster: thinSoccerRoster, sport: .soccer, openRoles: soccerFormationRoles),
+            "4 players can never fill soccer's 8 slots — the live BRO 2006 bug")
+        XCTAssertTrue(DraftSpinConstraint.canFillLineup(
+            roster: fullSoccerRoster, sport: .soccer, openRoles: soccerFormationRoles),
+            "exactly 8 distinct players for 8 open roles is the boundary case, and must pass")
+    }
+
+    func testCanFillLineupCountsDistinctNamesAndHonoursExcludedNames() {
+        // Duplicate rows for one player (overlapping ingest sources) must not inflate depth...
+        let duplicated = fullSoccerRoster + fullSoccerRoster
+        XCTAssertTrue(DraftSpinConstraint.canFillLineup(
+            roster: duplicated, sport: .soccer, openRoles: soccerFormationRoles))
+        // ...and an already-drafted player no longer counts toward filling what's left.
+        let drafted = Set(fullSoccerRoster.prefix(1).map(\.name))
+        XCTAssertFalse(DraftSpinConstraint.canFillLineup(
+            roster: fullSoccerRoster, sport: .soccer, openRoles: soccerFormationRoles,
+            excludeNames: drafted),
+            "8 slots with one player excluded leaves only 7 placeable")
+    }
+
+    func testSpinRoundInDiscoveryModeSurfacesThinCombosForTheRosterCheckToJudge() {
+        // The live path passes minCandidates: 1 precisely so a sample-thin combo is NOT
+        // pre-rejected — otherwise soccer has no candidates at all.
+        var g = spinRNG("discovery")
+        let spun = DraftSpinConstraint.spinRound(
+            from: thinSoccerRoster, sport: .soccer, openRoles: soccerFormationRoles,
+            minCandidates: 1, using: &g)
+        XCTAssertEqual(spun?.team, "BRO", "discovery mode must still offer a thin combo")
+    }
+
+    func testSpinRoundSkipsExcludedCombos() {
+        // How the view retries past a combo whose complete roster turned out unfillable.
+        let pool = thinSoccerRoster + fullSoccerRoster
+        var g = spinRNG("excluded")
+        let spun = DraftSpinConstraint.spinRound(
+            from: pool, sport: .soccer, openRoles: soccerFormationRoles, minCandidates: 1,
+            excludeCombos: [DraftSpinConstraint.comboKey(team: "BRO", year: 2006, league: nil)],
+            using: &g)
+        XCTAssertEqual(spun?.team, "CHE", "the rejected BRO combo must not come back")
+    }
+
     func testSpinRoundNeverPicksAComboWithFewerDistinctCandidatesThanOpenRoles() {
         let pool = thinSoccerRoster + fullSoccerRoster
         for i in 0...8 {

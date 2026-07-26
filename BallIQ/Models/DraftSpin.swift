@@ -163,12 +163,22 @@ enum DraftSpinConstraint {
     static func spinRound(from pool: [CatalogSeason], sport: Sport, openRoles: [String],
                         lockedTeam: String? = nil, usedLockedYears: Set<Int> = [],
                         excludeNames: Set<String> = [], league: String? = nil,
+                        minCandidates: Int? = nil, excludeCombos: Set<String> = [],
                         using gen: inout some RandomNumberGenerator) -> (team: String, year: Int, league: String?)? {
         let openFilters = (formations[sport] ?? []).filter { openRoles.contains($0.role) }.map(\.filter)
         guard !openFilters.isEmpty else { return nil }
 
+        // How many DISTINCT placeable candidates a combo needs to be worth spinning. Callers
+        // working from the COMPLETE roster (the tests) leave this at `openRoles.count`, which is
+        // the real "can fill every open slot" bar. The live spin passes 1, because `pool` there
+        // is the 2,000-row discovery sample, not a roster: live it spreads across ~1,485 soccer
+        // (team, year, league) combos at ~1.3 players each, so NO combo could ever clear 8 and
+        // every soccer draft dead-ended into an empty lineup. The real bar is enforced after the
+        // roster fetch instead — see `canFillLineup`, which judges complete data.
+        let requiredCandidates = max(1, minCandidates ?? openRoles.count)
+
         // A combo is viable only if it has at least as many DISTINCT placeable candidates as
-        // there are currently-open roles — "at least one match somewhere" let a 4-player combo
+        // `requiredCandidates` — "at least one match somewhere" let a 4-player combo
         // (2 DF/1 GK/1 MF, zero FW) spin in against soccer's 8-slot formation (live repro: "BRO
         // 2006" / Blackburn Rovers 2005-06). This is a conservative proxy, not exact bipartite
         // matching of players to specific slots (it doesn't verify a distinct candidate exists
@@ -185,7 +195,10 @@ enum DraftSpinConstraint {
                 // separate candidates would inflate viability past what the roster can fill.
                 namesByCombo[key, default: []].insert(season.name)
             }
-            return namesByCombo.compactMap { combo, names in names.count >= openRoles.count ? combo : nil }
+            return namesByCombo.compactMap { combo, names in
+                let key = comboKey(team: combo.team, year: combo.year, league: combo.league)
+                return names.count >= requiredCandidates && !excludeCombos.contains(key) ? combo : nil
+            }
         }
 
         var viable: [TeamYear]
@@ -219,6 +232,32 @@ enum DraftSpinConstraint {
         // `sportOfTheDay`: randomElement is measurably biased under SeededGenerator.
         let chosen = viable[Int(gen.next() % UInt64(viable.count))]
         return (chosen.team, chosen.year, chosen.league)
+    }
+
+    /// Stable identity for a spun (team, year, league) combo — `TeamYear` itself is file-private,
+    /// so this is how a caller names a combo it wants `spinRound` to skip (`excludeCombos`).
+    /// League is part of the key for the same reason it is part of `TeamYear`: one code can mean
+    /// two different clubs in two countries.
+    static func comboKey(team: String, year: Int, league: String?) -> String {
+        "\(team)|\(year)|\(league ?? "")"
+    }
+
+    /// Can this roster actually fill every open role? This is the real "BRO 2006" guarantee, and
+    /// it belongs here rather than in `spinRound` because only the post-spin roster fetch returns
+    /// COMPLETE data: `spinRound`'s pool is a 2,000-row discovery sample that holds ~1.3 players
+    /// per soccer (team, year, league) combo, so judging fillability there rejected literally
+    /// every soccer combo. Same conservative distinct-name proxy as `spinRound`, just applied to
+    /// data that can actually support it.
+    static func canFillLineup(roster: [CatalogSeason], sport: Sport, openRoles: [String],
+                              excludeNames: Set<String> = []) -> Bool {
+        let openFilters = (formations[sport] ?? []).filter { openRoles.contains($0.role) }.map(\.filter)
+        guard !openFilters.isEmpty else { return false }
+        var placeable: Set<String> = []
+        for season in roster where !excludeNames.contains(season.name)
+                                 && openFilters.contains(where: { $0.matches(season.position) }) {
+            placeable.insert(season.name)
+        }
+        return placeable.count >= openRoles.count
     }
 
     /// Daily Draft mode (backlog #4): every player who opens Daily Draft on the same UTC day

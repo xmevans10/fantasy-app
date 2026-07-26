@@ -161,27 +161,19 @@ struct DraftSpinView: View {
     private func spinNextRound() async {
         expandedPlayerID = nil
         rerollUsedThisRound = false
-        let spin: (team: String, year: Int, league: String?)?
+        let filled: Bool
         if isDailyDraft {
             // Same seed for everyone on the same day — see `dailyDraftRoundGenerator`'s doc
-            // comment for the (accepted) determinism caveat once picks diverge.
+            // comment for the (accepted) determinism caveat once picks diverge. The fillability
+            // re-spin is itself driven by this same seeded generator, so a rejected combo is
+            // rejected identically for every player and the shared spin stays shared.
             var rng = DraftSpinConstraint.dailyDraftRoundGenerator(sport: sport, date: Date(), roundIndex: roundIndex)
-            spin = DraftSpinConstraint.spinRound(
-                from: sample, sport: sport, openRoles: openSlots.map(\.role),
-                lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
-                excludeNames: excludedNames, using: &rng)
+            filled = await spinUntilFillable(rng: &rng)
         } else {
             var rng = SystemRandomNumberGenerator()   // every spin is genuinely random
-            spin = DraftSpinConstraint.spinRound(
-                from: sample, sport: sport, openRoles: openSlots.map(\.role),
-                lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
-                excludeNames: excludedNames, league: settings.soccerLeague, using: &rng)
+            filled = await spinUntilFillable(rng: &rng)
         }
-        guard let (team, year, league) = spin else {
-            finish()
-            return
-        }
-        await loadRoundRoster(team: team, year: year, league: league)
+        if !filled { finish() }
     }
 
     private func reroll() async {
@@ -190,12 +182,39 @@ struct DraftSpinView: View {
         guard !rerollUsedThisRound, !isDailyDraft else { return }
         rerollUsedThisRound = true
         var rng = SystemRandomNumberGenerator()
-        guard let (team, year, league) = DraftSpinConstraint.spinRound(
-            from: sample, sport: sport, openRoles: openSlots.map(\.role),
-            lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
-            excludeNames: excludedNames, league: settings.soccerLeague, using: &rng
-        ) else { return }
-        await loadRoundRoster(team: team, year: year, league: league)
+        await spinUntilFillable(rng: &rng)
+    }
+
+    /// Spin, then keep spinning until the COMPLETE roster can actually fill the open slots.
+    ///
+    /// `spinRound` only sees the 2,000-row discovery sample, which holds ~1.3 players per soccer
+    /// (team, year, league) combo — it cannot tell a genuinely thin roster (the "BRO 2006" bug)
+    /// from a combo the sample merely under-represents. Asking it to prove fillability there
+    /// rejected every soccer combo and dead-ended every soccer draft into an empty lineup. So the
+    /// spin now discovers loosely (`minCandidates: 1`) and the real bar is checked against the
+    /// fetched roster, re-spinning past any combo that genuinely can't fill.
+    @discardableResult
+    private func spinUntilFillable(rng: inout some RandomNumberGenerator) async -> Bool {
+        var rejected: Set<String> = []
+        let roles = openSlots.map(\.role)
+        // Bounded: each attempt is one indexed roster fetch (~ms). A handful is plenty given
+        // most combos are fillable; the cap just stops a pathological sport/filter from looping.
+        for _ in 0..<6 {
+            guard let (team, year, league) = DraftSpinConstraint.spinRound(
+                from: sample, sport: sport, openRoles: roles,
+                lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
+                excludeNames: excludedNames, league: settings.soccerLeague,
+                minCandidates: 1, excludeCombos: rejected, using: &rng
+            ) else { return false }
+            let roster = await fetchRoundRoster(team: team, year: year, league: league)
+            if DraftSpinConstraint.canFillLineup(roster: roster, sport: sport, openRoles: roles,
+                                                 excludeNames: excludedNames) {
+                await presentRound(team: team, year: year, league: league, roster: roster)
+                return true
+            }
+            rejected.insert(DraftSpinConstraint.comboKey(team: team, year: year, league: league))
+        }
+        return false
     }
 
     /// The sample that picked (team, year) is only broad enough for discovery, not guaranteed to
@@ -203,23 +222,22 @@ struct DraftSpinView: View {
     /// single-spin design hit) — re-fetch the real thing before showing it. `league` scopes that
     /// fetch too (see `DraftSpinRound.league`'s doc comment) so a team-code collision across
     /// countries can't mix two clubs' players into one roster.
-    private func loadRoundRoster(team: String, year: Int, league: String?) async {
-        // Start the reveal as soon as the random team/year is known. The reel gives the exact,
-        // narrow roster request time to complete instead of making the player stare at a spinner.
+    private func fetchRoundRoster(team: String, year: Int, league: String?) async -> [CatalogSeason] {
+        let fetched = await container.catalog.draftSpinRoster(sport: sport, team: team, year: year, league: league)
+        // Rows with no position at all (espn_nba's `_norm_position` stores "" when ESPN doesn't
+        // carry one, e.g. Eddy Curry's whole career) can never be placed in any slot, so they'd
+        // only render an unplaceable row under a blank position tab — drop them here.
+        return fetched.filter {
+            $0.teamAbbr == team && !$0.position.isEmpty && !excludedNames.contains($0.name)
+        }
+    }
+
+    /// Show a spun round whose roster has already been fetched and vetted by `spinUntilFillable`.
+    private func presentRound(team: String, year: Int, league: String?, roster: [CatalogSeason]) async {
         currentRound = DraftSpinRound(team: team, year: year, league: league, roster: [])
         expandedPlayerID = nil
         roundRosterReady = false
         showingReveal = true
-
-        let fetched = await container.catalog.draftSpinRoster(sport: sport, team: team, year: year, league: league)
-        // Excluded names (season variations OFF) are dropped from display too — `spinRound`
-        // already guaranteed at least one placeable candidate survives this filter. Rows with
-        // no position at all (espn_nba's `_norm_position` stores "" when ESPN doesn't carry
-        // one, e.g. Eddy Curry's whole career) can never be placed in any slot, so they'd
-        // only render an unplaceable row under a blank position tab — drop them here too.
-        let roster = fetched.filter {
-            $0.teamAbbr == team && !$0.position.isEmpty && !excludedNames.contains($0.name)
-        }
         currentRound = DraftSpinRound(team: team, year: year, league: league, roster: roster)
         roundRosterReady = true
         if DebugLaunch.autoSubmitDraftSpin { autoPickForScreenshot(roster) }
