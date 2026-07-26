@@ -33,13 +33,27 @@ product configuration needs touching — this is purely the act of submitting th
 
 ---
 
+## State as of 2026-07-26 — everything up to the UI step is done
+
+- **1.1 was pulled from review** (its submission is canceled; the version record was renamed to
+  **1.2**, keeping all screenshots, description and review details).
+- **Build 14 is uploaded, VALID, and attached to 1.2.**
+- **1.2 is in `PREPARE_FOR_SUBMISSION`** — the editable state the IAP attachment requires.
+- Release notes are written.
+
+**1.2 was deliberately NOT submitted.** Submitting via the API would lock the version page and
+make the four products un-attachable — which is the exact trap that made this a hand-off in the
+first place. The version is being held open *for* step 3 below. Attach the products, then submit
+once, from the UI.
+
+---
+
 ## Steps
 
 1. Go to **App Store Connect → Apps → BallIQ - Fantasy → App Store** tab.
 
-2. Select the **1.2** version in the left sidebar. It must be in **Prepare for Submission**
-   (yellow dot). If it still says Waiting for Review, stop — the submission is still queued and
-   you cannot edit it.
+2. Select the **1.2** version in the left sidebar. It should already be in **Prepare for
+   Submission** (yellow dot) with build 14 attached.
 
 3. Scroll to the **In-App Purchases and Subscriptions** section of that version page.
    (On newer ASC layouts this reads **"In-App Purchases"** with an **Add** / **+** button, or a
