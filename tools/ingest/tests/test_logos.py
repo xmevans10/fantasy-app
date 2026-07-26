@@ -31,6 +31,17 @@ def test_logo_key_is_league_qualified_and_slugged():
     assert logos.logo_key("nfl", "", "SF") == "nfl/_/sf.png"
 
 
+def test_logo_key_is_pure_ascii_even_for_accented_codes():
+    # Accented club codes exist (GRÊ Grêmio, SÃPA São Paulo, CÁD Cádiz). `str.isalnum()` is
+    # Unicode-aware and would keep the accent, leaving a non-ASCII key that urllib can't put in
+    # an HTTP request line -> the whole rehost aborted with UnicodeEncodeError. Keys must be ASCII.
+    for key in (logos.logo_key("soccer", "Brazil", "GRÊ"),
+                logos.logo_key("soccer", "Mexico", "LEÓ"),
+                logos.league_logo_key("soccer", "Fenerbahçe")):
+        assert key.isascii(), key
+    assert logos.logo_key("soccer", "Brazil", "GRÊ") == "soccer/brazil/gr.png"
+
+
 def test_rehost_returns_none_for_missing_source():
     assert logos.rehost(None, "soccer/england/bro.png") is None
     assert logos.rehost("", "soccer/england/bro.png") is None

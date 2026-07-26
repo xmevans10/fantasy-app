@@ -240,6 +240,20 @@ def test_build_team_identity_fills_missing_fields_from_a_later_sighting():
     assert row["secondary_color"] == "#1c2c5b"
 
 
+def test_build_team_identity_derives_logo_from_espn_id_when_payload_has_none():
+    # ESPN's soccer roster.team object carries an id but no `logo` field — every sighting has
+    # logo_url="", so the crest must be derived from the espn_id (the live 0/201-logos bug).
+    rows = [_identity_row(espn_id="382", logo_url=""),
+            _identity_row(espn_id="382", logo_url="")]
+    row = _build_team_identity(rows)[0]
+    assert row["logo_url"] == "https://a.espncdn.com/i/teamlogos/soccer/500/382.png"
+    assert row["logo_url"] == espn_soccer.soccer_logo_url("382")
+
+
+def test_soccer_logo_url_is_empty_without_an_id():
+    assert espn_soccer.soccer_logo_url("") == ""
+
+
 def test_build_team_identity_keeps_same_derived_code_distinct_across_leagues():
     # The exact collision this module already guards against for player rows (BRO =
     # Blackburn Rovers AND Brisbane Roar) — team identity rows must resolve just as

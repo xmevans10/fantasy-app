@@ -261,6 +261,15 @@ def _lineup_rows(league: str, event_id: str, season_end_year: int) -> tuple[list
     return rows, identity_rows
 
 
+def soccer_logo_url(espn_id: str) -> str:
+    """ESPN's soccer club crest CDN, keyed by the club's ESPN id. Unlike ESPN's other sports,
+    the soccer match-summary `roster.team` object carries `id`/`color`/`alternateColor` but NOT
+    `logo`, so the crest is derived from the id rather than read off the payload (verified: the
+    `/soccer/500/<id>.png` path 200s for every club we cover). Empty string when there's no id
+    (the client then renders the abbr/color fallback, same as any other missing crest)."""
+    return f"https://a.espncdn.com/i/teamlogos/soccer/500/{espn_id}.png" if espn_id else ""
+
+
 def _build_team_identity(identity_rows: Iterable[dict]) -> list[dict]:
     """Per-match team identity sightings (many matches see the same club) -> one row per
     (team_abbr, league), team_abbr resolved via the same `club_codes.resolve_code` the
@@ -295,6 +304,11 @@ def _build_team_identity(identity_rows: Iterable[dict]) -> list[dict]:
                 existing["primary_color"] = primary
             if not existing["secondary_color"] and secondary:
                 existing["secondary_color"] = secondary
+    # ESPN's soccer payload never carries `logo` (see `soccer_logo_url`), so derive the crest
+    # from the espn_id once per club after all sightings have merged the id in.
+    for row in by_key.values():
+        if not row["logo_url"] and row["espn_id"]:
+            row["logo_url"] = soccer_logo_url(row["espn_id"])
     return sorted(by_key.values(), key=lambda r: (r["league"], r["team_abbr"]))
 
 

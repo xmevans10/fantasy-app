@@ -108,14 +108,21 @@ def rehost(source_url: str | None, key: str) -> str | None:
     return public_url(base, key)
 
 
+def _safe_segment(s: str) -> str:
+    """One path segment of a Storage object key: lowercase, ASCII-alphanumerics kept, everything
+    else (spaces, punctuation, AND non-ASCII letters) collapsed to '-'. The ASCII restriction is
+    load-bearing: `str.isalnum()` is Unicode-aware and returns True for accented letters, so a
+    club/league label like "São Paulo" or "Fenerbahçe" would otherwise leave an 'ã'/'ç' in the
+    key — which urllib then can't encode into the (ASCII-only) HTTP request line, aborting the
+    whole rehost with a UnicodeEncodeError."""
+    return "".join(c if (c.isascii() and c.isalnum()) else "-" for c in s.lower()).strip("-") or "_"
+
+
 def logo_key(sport: str, league: str, team_abbr: str) -> str:
     """Content-stable object key. League-qualified so post-collision same-code clubs don't
     overwrite each other's crest (BRO Blackburn vs BROA Brisbane)."""
-    league_part = league.strip() or "_"
-    safe = lambda s: "".join(c if c.isalnum() else "-" for c in s.lower()).strip("-") or "_"
-    return f"{safe(sport)}/{safe(league_part)}/{safe(team_abbr)}.png"
+    return f"{_safe_segment(sport)}/{_safe_segment(league.strip() or '_')}/{_safe_segment(team_abbr)}.png"
 
 
 def league_logo_key(sport: str, league: str) -> str:
-    safe = lambda s: "".join(c if c.isalnum() else "-" for c in s.lower()).strip("-") or "_"
-    return f"{safe(sport)}/_leagues/{safe(league)}.png"
+    return f"{_safe_segment(sport)}/_leagues/{_safe_segment(league)}.png"
