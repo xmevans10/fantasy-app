@@ -155,6 +155,28 @@ create table if not exists public.leagues (
   updated_at   timestamptz not null default now(),
   primary key (sport, league)
 );
+-- FIFA-style Nation -> League -> Club hierarchy (2026-07-26). `league` stays the COUNTRY label
+-- that `teams`/`player_seasons` join on; `country`/`tier`/`espn_slug` add the competition layer
+-- so a country can carry its whole division ladder (Bundesliga + 2. Bundesliga). The PK had to
+-- widen to include `tier` for the same reason -- keyed (sport, league) a country could only ever
+-- hold ONE competition, which is why lower divisions were unreachable.
+alter table public.leagues add column if not exists country   text;
+alter table public.leagues add column if not exists tier      int;
+alter table public.leagues add column if not exists espn_slug text;
+update public.leagues set tier = 1 where tier is null;
+alter table public.leagues alter column tier set default 1;
+alter table public.leagues alter column tier set not null;
+do $$ begin
+  alter table public.leagues drop constraint leagues_pkey;
+exception when undefined_object then null;
+end $$;
+do $$ begin
+  alter table public.leagues add constraint leagues_pkey primary key (sport, league, tier);
+exception when duplicate_table or invalid_table_definition then null;
+end $$;
+create index if not exists leagues_country_tier_idx
+  on public.leagues (sport, country, tier) where country is not null;
+
 alter table public.leagues enable row level security;
 do $$ begin
   create policy "leagues are world-readable" on public.leagues for select using (true);

@@ -73,28 +73,50 @@ def test_build_teams_handles_a_none_logo_gracefully(monkeypatch):
     assert rows[0]["espn_id"] is None
 
 
-def test_build_leagues_soccer_uses_the_display_name_mapping_with_a_fallback(monkeypatch):
+def test_build_leagues_soccer_comes_from_the_committed_competition_table(monkeypatch):
+    # League identity no longer derives from whichever clubs a sweep happened to land — it reads
+    # the committed competition table, so a competition with no ingested clubs YET still gets a
+    # row (that gap is what rendered a bare "AUSTRALIA" text badge in Draft & Spin).
     monkeypatch.setattr(teams.logos, "rehost", lambda source_url, key: None)
-    monkeypatch.setattr(teams.espn_soccer, "load_team_identity", lambda: [
-        {"team_abbr": "MCI", "league": "England"},
-        {"team_abbr": "FLA", "league": "Brazil"},
-        {"team_abbr": "XYZ", "league": "Some Obscure Country"},
+    monkeypatch.setattr(teams.espn_soccer, "load_team_identity", lambda: [])
+    monkeypatch.setattr(teams, "load_soccer_leagues", lambda: [
+        {"espn_slug": "eng.1", "country": "England", "display_name": "Premier League",
+         "tier": 1, "espn_logo_id": "23"},
+        {"espn_slug": "ger.2", "country": "Germany", "display_name": "2. Bundesliga",
+         "tier": 2, "espn_logo_id": ""},
     ])
-    rows = teams.build_leagues()
-    by_league = {r["league"]: r for r in rows if r["sport"] == "soccer"}
-    assert by_league["England"]["display_name"] == "Premier League"
-    assert by_league["Brazil"]["display_name"] == "Brasileirão"
-    assert by_league["Some Obscure Country"]["display_name"] == "Some Obscure Country"
+    soccer = [r for r in teams.build_leagues() if r["sport"] == "soccer"]
+    by_name = {r["display_name"]: r for r in soccer}
+    assert by_name["Premier League"]["country"] == "England"
+    assert by_name["Premier League"]["tier"] == 1
+    # The whole point of the model change: a second division is representable at all.
+    assert by_name["2. Bundesliga"]["country"] == "Germany"
+    assert by_name["2. Bundesliga"]["tier"] == 2
+    assert by_name["2. Bundesliga"]["espn_slug"] == "ger.2"
 
 
 def test_build_leagues_includes_the_three_us_leagues_with_empty_league_code(monkeypatch):
     monkeypatch.setattr(teams.espn_soccer, "load_team_identity", lambda: [])
+    monkeypatch.setattr(teams, "load_soccer_leagues", lambda: [])
     monkeypatch.setattr(teams.logos, "rehost", lambda source_url, key: f"https://cdn.example/{key}")
 
     rows = teams.build_leagues()
     by_sport = {r["sport"]: r for r in rows}
     assert set(by_sport) == {"nfl", "nba", "baseball"}
     assert by_sport["nfl"] == {"sport": "nfl", "league": "", "display_name": "NFL",
-                              "logo_url": "https://cdn.example/nfl/_leagues/_.png"}
+                              "logo_url": "https://cdn.example/nfl/_leagues/_.png",
+                              "country": None, "tier": 1, "espn_slug": "nfl"}
     assert by_sport["nba"]["display_name"] == "NBA"
     assert by_sport["baseball"]["display_name"] == "MLB"
+
+
+def test_load_soccer_leagues_reads_the_real_committed_table():
+    # Guards the shipped file itself: every row needs the hierarchy fields a picker groups by,
+    # and lower divisions must actually be present (that is the coverage this unlocked).
+    rows = teams.load_soccer_leagues()
+    assert len(rows) >= 40
+    assert all(r["espn_slug"] and r["country"] and r["display_name"] for r in rows)
+    assert all(isinstance(r["tier"], int) for r in rows)
+    names = {r["display_name"] for r in rows}
+    assert {"Premier League", "Bundesliga", "2. Bundesliga", "EFL Championship"} <= names
+    assert {r["espn_slug"] for r in rows if r["tier"] > 1} >= {"ger.2", "eng.2"}

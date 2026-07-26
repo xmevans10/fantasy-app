@@ -84,8 +84,10 @@ def upsert_teams(rows: list[dict]) -> int:
 
 
 def upsert_leagues(rows: list[dict]) -> int:
-    """Upsert league/competition identity rows into `leagues`."""
-    return _upsert_table("leagues", rows, conflict="sport,league")
+    """Upsert league/competition identity rows into `leagues`. Conflict includes `tier`: the key
+    is (sport, league, tier) because `league` is a COUNTRY label, so a country with more than one
+    division (Germany -> Bundesliga + 2. Bundesliga) needs a row per tier."""
+    return _upsert_table("leagues", rows, conflict="sport,league,tier")
 
 
 def fetch_existing_catalog_ids(sport: str, page_size: int = 1000) -> set[str]:

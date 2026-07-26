@@ -35,24 +35,25 @@ US_SPORTS = ("nfl", "nba", "baseball")
 # `mlb`, not `baseball` — kept as an explicit mapping rather than a guess.
 _ESPN_LOGO_SLUG = {"nfl": "nfl", "nba": "nba", "baseball": "mlb"}
 
-# Mirrors `BallIQ/Models/DraftSpin.swift`'s `majorSoccerLeagues` value -> display-name
-# pairs. Any country/league label this dict doesn't cover (most of the ~38 ESPN sweeps)
-# falls back to the raw label itself as its display name.
-_SOCCER_LEAGUE_DISPLAY_NAMES: dict[str, str] = {
-    "England": "Premier League", "Spain": "La Liga", "Germany": "Bundesliga",
-    "Italy": "Serie A", "France": "Ligue 1", "USA (MLS)": "MLS",
-    "Netherlands": "Eredivisie", "Portugal": "Primeira Liga",
-    "Brazil": "Brasileirão", "Mexico": "Liga MX",
-}
+SOCCER_LEAGUES_PATH = DATA_DIR / "soccer_leagues.csv"
 
-# ESPN's soccer league-crest ids (a.espncdn.com/i/leaguelogos/soccer/500/<id>.png), keyed by
-# the same country/competition label build_leagues emits — read once off ESPN's per-league
-# scoreboard `leagues[0].logos`. Only the leagues this pipeline actually sweeps; an unmapped
-# league gets a null logo (the client falls back to the display name text).
-_SOCCER_LEAGUE_ESPN_LOGO_ID: dict[str, str] = {
-    "England": "23", "Spain": "15", "Germany": "10", "Italy": "12", "France": "9",
-    "Portugal": "14", "Netherlands": "11", "Brazil": "85", "USA (MLS)": "19", "Mexico": "22",
-}
+
+def load_soccer_leagues() -> list[dict]:
+    """The committed soccer competition table: one row per ESPN league slug with its country,
+    broadcast display name, tier and crest id. Replaces the two hardcoded 10-entry dicts this
+    module used to carry — those could only ever describe a country's TOP flight, because the
+    `league` key they were keyed on IS the country label ("Germany"), so a second division had
+    nowhere to live. That is why "give me Bundesliga 2" was impossible: not a UI gap, a model
+    gap. `tier` + `espn_slug` are the missing middle layer of the FIFA-style
+    Nation -> League -> Club hierarchy; the client groups a picker by `country` and orders by
+    `tier`. Tolerant of a missing file (empty list, never an exception), like `load_us_colors`."""
+    if not SOCCER_LEAGUES_PATH.exists():
+        return []
+    with SOCCER_LEAGUES_PATH.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    for r in rows:
+        r["tier"] = int(r["tier"]) if str(r.get("tier", "")).strip() else 1
+    return rows
 
 
 def load_us_colors() -> list[dict]:
@@ -122,26 +123,33 @@ def build_leagues() -> list[dict]:
     single-league US sports (league='' matches `teams`' own league column for them)."""
     rows: list[dict] = []
 
-    soccer_leagues = sorted({entry["league"] for entry in espn_soccer.load_team_identity()})
+    # Every competition the pipeline knows, not just the ones a club sweep has landed yet —
+    # identity is cheap and a league row with no clubs is harmless, whereas a club whose league
+    # has no row renders a bare text badge (live: the "AUSTRALIA" fallback in Draft & Spin).
     soccer_logo_count = 0
-    for league in soccer_leagues:
-        display_name = _SOCCER_LEAGUE_DISPLAY_NAMES.get(league, league)
-        logo_id = _SOCCER_LEAGUE_ESPN_LOGO_ID.get(league)
+    for entry in load_soccer_leagues():
+        logo_id = (entry.get("espn_logo_id") or "").strip()
         logo_url = logos.rehost(
             f"https://a.espncdn.com/i/leaguelogos/soccer/500/{logo_id}.png",
-            logos.league_logo_key("soccer", league)) if logo_id else None
+            logos.league_logo_key("soccer", entry["espn_slug"])) if logo_id else None
         if logo_url:
             soccer_logo_count += 1
-        rows.append({"sport": "soccer", "league": league,
-                    "display_name": display_name, "logo_url": logo_url})
-    print(f"[leagues] soccer: {len(soccer_leagues)} league(s), {soccer_logo_count} logo(s) rehosted")
+        rows.append({"sport": "soccer", "league": entry["country"],
+                    "display_name": entry["display_name"], "logo_url": logo_url,
+                    "country": entry["country"], "tier": entry["tier"],
+                    "espn_slug": entry["espn_slug"]})
+    # One row per (sport, league) survives the upsert's PK, so a country with several tiers
+    # currently collapses to its last-written row — harmless while only tier 1 has club data,
+    # and the `espn_slug`/`tier` columns are what a future per-competition key will switch to.
+    print(f"[leagues] soccer: {len(rows)} competition(s), {soccer_logo_count} logo(s) rehosted")
 
     us_league_rows = [("nfl", "NFL", "nfl"), ("nba", "NBA", "nba"), ("baseball", "MLB", "mlb")]
     for sport, display_name, slug in us_league_rows:
         source_url = f"https://a.espncdn.com/i/teamlogos/leagues/500/{slug}.png"
         logo_url = logos.rehost(source_url, logos.league_logo_key(sport, ""))
+        # US sports are single-competition: no country grouping, tier 1 by definition.
         rows.append({"sport": sport, "league": "", "display_name": display_name,
-                    "logo_url": logo_url})
+                    "logo_url": logo_url, "country": None, "tier": 1, "espn_slug": slug})
     print(f"[leagues] {len(us_league_rows)} US league(s)")
 
     return rows

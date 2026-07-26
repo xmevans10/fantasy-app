@@ -1,0 +1,45 @@
+espn_slug,country,display_name,tier,espn_logo_id
+arg.1,Argentina,Liga Profesional,1,1
+aus.1,Australia,A-League,1,1308
+aut.1,Austria,Austrian Bundesliga,1,5
+bel.1,Belgium,Belgian Pro League,1,6
+bol.1,Bolivia,Bolivian Liga Profesional,1,1949
+bra.1,Brazil,Brasileirão,1,85
+chi.1,Chile,Chilean Primera División,1,86
+chn.1,China,Chinese Super League,1,2350
+col.1,Colombia,Colombian Primera A,1,1543
+den.1,Denmark,Danish Superliga,1,
+ecu.1,Ecuador,LigaPro Ecuador,1,1944
+eng.1,England,Premier League,1,23
+eng.2,England,EFL Championship,2,24
+eng.3,England,EFL League One,3,25
+fra.1,France,Ligue 1,1,9
+fra.2,France,Ligue 2,2,96
+ger.1,Germany,Bundesliga,1,10
+ger.2,Germany,2. Bundesliga,2,97
+gre.1,Greece,Super League Greece,1,98
+ind.1,India,Indian Super League,1,2334
+irl.1,Ireland,Irish Premier Division,1,116
+isr.1,Israel,Israeli Premier League,1,
+ita.1,Italy,Serie A,1,12
+ita.2,Italy,Serie B,2,99
+jpn.1,Japan,J1 League,1,2199
+mex.1,Mexico,Liga MX,1,22
+ned.1,Netherlands,Eredivisie,1,11
+ned.2,Netherlands,Eerste Divisie,2,105
+nor.1,Norway,Eliteserien,1,
+per.1,Peru,Peruvian Liga 1,1,1813
+por.1,Portugal,Primeira Liga,1,14
+rou.1,Romania,Romanian Liga 1,1,
+rus.1,Russia,Russian Premier League,1,106
+ksa.1,Saudi Arabia,Saudi Pro League,1,2488
+sco.1,Scotland,Scottish Premiership,1,45
+rsa.1,South Africa,South African Premiership,1,
+esp.1,Spain,La Liga,1,15
+esp.2,Spain,LaLiga 2,2,107
+swe.1,Sweden,Allsvenskan,1,16
+sui.1,Switzerland,Swiss Super League,1,17
+tur.1,Turkey,Süper Lig,1,18
+usa.1,USA (MLS),MLS,1,19
+uru.1,Uruguay,Liga AUF Uruguaya,1,1592
+ven.1,Venezuela,Venezuelan Primera División,1,1947
