@@ -159,13 +159,22 @@ final class PlayerSeasonCatalog {
         if let task = draftSpinRosterTasks[key] { return await task.value }
         let task = Task<[CatalogSeason], Never> { [weak self] in
             guard let self else { return [] }
-            return await self.search(CatalogQuery(sport: sport, minYear: year, maxYear: year,
-                                                  exactTeam: team, league: league), limit: 1_000)
+            let query = CatalogQuery(sport: sport, minYear: year, maxYear: year,
+                                     exactTeam: team, league: league)
+            let rows = await self.search(query, limit: 1_000)
+            // `search` collapses a failed fetch and a genuinely-empty result into the same
+            // empty array (the remote call is wrapped in `try?`, then falls through to the
+            // small bundled catalog). A real team-season is never actually empty, so treat
+            // empty as "we didn't get an answer" and give it one more chance before the board
+            // renders "No players match." on a roster that does exist server-side.
+            return rows.isEmpty ? await self.search(query, limit: 1_000) : rows
         }
         draftSpinRosterTasks[key] = task
         let roster = await task.value
         draftSpinRosterTasks[key] = nil
-        draftSpinRosters[key] = roster
+        // Never memoize an empty roster: a transient failure would otherwise stay "empty" for
+        // the rest of the session, so even rerolling back onto this combo could not recover.
+        if !roster.isEmpty { draftSpinRosters[key] = roster }
         return roster
     }
 
