@@ -11,6 +11,8 @@ struct ProfileView: View {
     @State private var showModeration = false
     @State private var showIdentityEditor = false
     @State private var showFriends = false
+    /// Which sport's club picker is open (`TeamPicker` sheet) — nil = closed.
+    @State private var pickingTeamFor: Sport?
 
     /// The player's strongest sport headlines the hero (ties favor NFL — `allCases` order).
     private var bestSport: Sport {
@@ -188,6 +190,12 @@ struct ProfileView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .cardSurface()
+        .sheet(item: $pickingTeamFor) { sport in
+            TeamPicker(selection: Binding(
+                get: { container.favoriteTeams.team(for: sport) },
+                set: { setFavoriteTeam($0, for: sport) }),
+                sport: sport, fallbackAbbrs: container.catalog.teams(for: sport))
+        }
     }
 
     private func favoriteTeamRow(_ sport: Sport) -> some View {
@@ -199,12 +207,9 @@ struct ProfileView: View {
             Image(systemName: sport.symbol).font(.system(size: 14)).foregroundStyle(sport.cardFill)
             Text(sport.displayName).font(.body14).foregroundStyle(Color.textPrimary)
             Spacer()
-            Menu {
-                Button("None") { setFavoriteTeam(nil, for: sport) }
-                ForEach(container.catalog.teams(for: sport), id: \.self) { abbr in
-                    Button(abbr) { setFavoriteTeam(abbr, for: sport) }
-                }
-            } label: {
+            // A sheet, not a Menu: soccer carries 201 clubs, and a flat unsearchable menu of
+            // bare abbreviations is unusable at that scale (see `TeamPicker`).
+            Button { pickingTeamFor = sport } label: {
                 HStack(spacing: 6) {
                     if let selected, let url = sport.teamLogoURL(forAbbr: selected) {
                         AsyncImage(url: url) { phase in

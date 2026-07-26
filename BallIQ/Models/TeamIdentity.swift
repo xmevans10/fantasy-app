@@ -7,10 +7,14 @@ import SwiftUI
 /// fallback. PK (sport, team_abbr, league); `league` is '' for NFL/NBA/MLB and a country label
 /// for soccer, the same collision rationale `CatalogSeason.league` documents (team codes collide
 /// across countries — e.g. "BRO" is both Blackburn Rovers, England and Brisbane Roar, Australia).
-struct TeamIdentity: Equatable {
+struct TeamIdentity: Equatable, Identifiable {
     let sport: Sport
     let abbr: String
     let league: String
+
+    /// League-qualified, because an abbreviation alone is not unique across countries — "BRO" is
+    /// both Blackburn Rovers (England) and Brisbane Roar (Australia).
+    var id: String { "\(sport.rawValue)|\(abbr)|\(league)" }
     let fullName: String?
     let logoURL: URL?
     let primary: Color?
@@ -166,6 +170,19 @@ final class TeamIdentityIndex {
         return leagues.values
             .filter { $0.sport == sport && $0.league == league }
             .min { $0.tier < $1.tier }
+    }
+
+    /// Every club stored for `sport`, grouped-ready: ordered by league then full name (falling
+    /// back to the abbreviation), so a picker can section by competition without re-sorting.
+    func allTeams(sport: Sport) -> [TeamIdentity] {
+        lock.lock(); defer { lock.unlock() }
+        return teams.values
+            .filter { $0.sport == sport }
+            .sorted {
+                if $0.league != $1.league { return $0.league < $1.league }
+                return ($0.fullName ?? $0.abbr).localizedCaseInsensitiveCompare($1.fullName ?? $1.abbr)
+                    == .orderedAscending
+            }
     }
 
     /// League labels we actually hold clubs for. A competition can exist in the `leagues` catalog
