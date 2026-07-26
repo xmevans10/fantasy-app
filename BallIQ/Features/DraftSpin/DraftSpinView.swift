@@ -293,6 +293,17 @@ struct DraftSpinView: View {
                     TeamLogoBadge(sport: sport, teamAbbr: round.team,
                                   tint: TeamColors.palette(sport: sport, abbr: round.team, league: round.league).primary,
                                   league: round.league, size: 34)
+                    // Soccer clubs also carry a competition — show its crest so a Premier League
+                    // vs. La Liga spin reads at a glance. Resolved through the `teams` catalog
+                    // rather than `round.league`, which is nil on the ~94% of soccer rows that
+                    // come from the league-less Transfermarkt bulk (see `TeamIdentityIndex.league`).
+                    // US sports resolve to nil (single-league), so the badge is soccer-only by
+                    // construction rather than by a sport special-case.
+                    if let league = roundLeague(round) {
+                        LeagueLogoBadge(sport: sport, league: league,
+                                        tint: TeamColors.palette(sport: sport, abbr: round.team, league: league).primary,
+                                        size: 26)
+                    }
                     // Team's own color instead of a generic accent — the same identity signal
                     // every player-card header band already carries via `TeamColors`.
                     chip(label: String(localized: "TEAM"), value: round.team.uppercased(),
@@ -335,6 +346,14 @@ struct DraftSpinView: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 6)
         .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(tint, lineWidth: 2))
+    }
+
+    /// The competition to badge this round with: the spun row's own league when it has one
+    /// (ESPN-sourced soccer rows), otherwise the club's league from the `teams` catalog. Nil
+    /// for the single-league US sports, which is what hides the badge there.
+    private func roundLeague(_ round: DraftSpinRound) -> String? {
+        if let league = round.league, !league.isEmpty { return league }
+        return TeamIdentityIndex.shared.league(sport: sport, abbr: round.team)
     }
 
     /// Every real position present in this round's roster, "All" first, in the sport's own

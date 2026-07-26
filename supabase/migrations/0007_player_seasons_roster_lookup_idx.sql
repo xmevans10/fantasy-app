@@ -1,0 +1,21 @@
+-- Applied live 2026-07-26 via the Supabase MCP. Idempotent, so re-running is a no-op —
+-- schema.sql remains the source of truth (CLAUDE.md).
+--
+-- This index was already DECLARED in schema.sql but had never been applied to production:
+-- live `pg_indexes` on player_seasons carried only the pkey, (sport, id) and the name trigram.
+-- The repo↔prod drift had a live gameplay consequence.
+--
+-- Draft & Spin (and Over/Under) fetch an exact team-season roster:
+--   where sport = ? and career = ? and team_abbr = ? and season_year between ? and ?
+--   and week is null order by id limit 1000
+-- With only (sport, id) usable, the planner walked a whole sport partition (nfl = 105k rows)
+-- to find ~20 matches. Warm that ran ~0.4s; cold it exceeded the anon role's statement_timeout
+-- and PostgREST returned 57014 ("canceling statement due to statement timeout"). The catalog
+-- client wraps that fetch in `try?`, so the error was indistinguishable from "no rows" and fell
+-- through to the 4.4k-row bundled catalog — which holds no such roster. The player saw
+-- "No players match." on a real, fully-populated team-season.
+--
+-- Live-repro'd 2026-07-26 on nfl|IND|2025: 20 real rows in the table, `fetched=0` in the app.
+-- After the index: Index Scan, ~0.9ms warm (was a 105k-row walk).
+create index if not exists player_seasons_roster_lookup_idx
+  on public.player_seasons (sport, career, team_abbr, season_year);

@@ -144,6 +144,18 @@ final class TeamIdentityIndex {
         return leagues[Self.leagueKey(sport, league)]
     }
 
+    /// The competition a club plays in, for callers that only have an abbreviation. Needed
+    /// because `player_seasons.league` is only populated on the ESPN-sourced soccer rows —
+    /// live, 87,644 of 93,098 soccer rows (94%) carry a NULL league, since the Transfermarkt
+    /// bulk never had one. The `teams` catalog *is* league-qualified for every club, so it's
+    /// the reliable place to answer "what league is this club in?" — anything keyed off the
+    /// player row alone would resolve for only ~6% of soccer spins.
+    /// Returns nil for the single-league US sports (their `teams` rows carry league '').
+    func league(sport: Sport, abbr: String) -> String? {
+        guard let found = identity(sport: sport, abbr: abbr, league: nil) else { return nil }
+        return found.league.isEmpty ? nil : found.league
+    }
+
     private static func teamKey(_ sport: Sport, _ abbr: String, _ league: String) -> String {
         "\(sport.rawValue)|\(abbr.uppercased())|\(league)"
     }

@@ -95,6 +95,25 @@ final class TeamIdentityTests: XCTestCase {
                        "San Francisco 49ers")
     }
 
+    /// `league(sport:abbr:)` exists because `player_seasons.league` is populated on only ~6% of
+    /// soccer rows (the ESPN-sourced ones); the `teams` catalog is league-qualified for every
+    /// club, so a club's competition must resolve from an abbreviation alone.
+    func testLeagueForAbbrResolvesFromTheTeamsCatalogAndIsNilForUSSports() {
+        let index = TeamIdentityIndex()
+        index.store(teams: [
+            TeamIdentity(sport: .soccer, abbr: "ARS", league: "England", fullName: "Arsenal",
+                         logoURL: nil, primary: nil, secondary: nil),
+            // US rows carry league '' — must read as "no competition", not an empty badge.
+            TeamIdentity(sport: .nfl, abbr: "SF", league: "", fullName: "San Francisco 49ers",
+                         logoURL: nil, primary: nil, secondary: nil),
+        ])
+
+        XCTAssertEqual(index.league(sport: .soccer, abbr: "ARS"), "England")
+        XCTAssertEqual(index.league(sport: .soccer, abbr: "ars"), "England")   // case-insensitive
+        XCTAssertNil(index.league(sport: .nfl, abbr: "SF"))
+        XCTAssertNil(index.league(sport: .soccer, abbr: "NOPE"))
+    }
+
     func testIdentityLookupReturnsNilWhenNothingStored() {
         let index = TeamIdentityIndex()
         XCTAssertNil(index.identity(sport: .nfl, abbr: "SF", league: nil))

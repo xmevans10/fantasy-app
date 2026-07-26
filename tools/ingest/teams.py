@@ -45,6 +45,15 @@ _SOCCER_LEAGUE_DISPLAY_NAMES: dict[str, str] = {
     "Brazil": "Brasileirão", "Mexico": "Liga MX",
 }
 
+# ESPN's soccer league-crest ids (a.espncdn.com/i/leaguelogos/soccer/500/<id>.png), keyed by
+# the same country/competition label build_leagues emits — read once off ESPN's per-league
+# scoreboard `leagues[0].logos`. Only the leagues this pipeline actually sweeps; an unmapped
+# league gets a null logo (the client falls back to the display name text).
+_SOCCER_LEAGUE_ESPN_LOGO_ID: dict[str, str] = {
+    "England": "23", "Spain": "15", "Germany": "10", "Italy": "12", "France": "9",
+    "Portugal": "14", "Netherlands": "11", "Brazil": "85", "USA (MLS)": "19", "Mexico": "22",
+}
+
 
 def load_us_colors() -> list[dict]:
     """Stdlib-only read of the committed NFL/NBA/MLB color seed; tolerant of a missing
@@ -114,11 +123,18 @@ def build_leagues() -> list[dict]:
     rows: list[dict] = []
 
     soccer_leagues = sorted({entry["league"] for entry in espn_soccer.load_team_identity()})
+    soccer_logo_count = 0
     for league in soccer_leagues:
         display_name = _SOCCER_LEAGUE_DISPLAY_NAMES.get(league, league)
+        logo_id = _SOCCER_LEAGUE_ESPN_LOGO_ID.get(league)
+        logo_url = logos.rehost(
+            f"https://a.espncdn.com/i/leaguelogos/soccer/500/{logo_id}.png",
+            logos.league_logo_key("soccer", league)) if logo_id else None
+        if logo_url:
+            soccer_logo_count += 1
         rows.append({"sport": "soccer", "league": league,
-                    "display_name": display_name, "logo_url": None})
-    print(f"[leagues] soccer: {len(soccer_leagues)} league(s)")
+                    "display_name": display_name, "logo_url": logo_url})
+    print(f"[leagues] soccer: {len(soccer_leagues)} league(s), {soccer_logo_count} logo(s) rehosted")
 
     us_league_rows = [("nfl", "NFL", "nfl"), ("nba", "NBA", "nba"), ("baseball", "MLB", "mlb")]
     for sport, display_name, slug in us_league_rows:
