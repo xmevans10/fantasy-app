@@ -123,6 +123,12 @@ struct DraftSpinView: View {
             sport = container.entitlements.canSelect(SportFilter(rawValue: seeded.rawValue) ?? .all)
                 ? seeded : .nfl
         }
+        // Division-scoped draft without tapping through the picker — see
+        // `DebugLaunch.draftSpinCompetition`.
+        if let competition = DebugLaunch.draftSpinCompetition {
+            settings.clubFilter = ClubFilter(nation: DebugLaunch.draftSpinNation,
+                                             competition: competition, club: nil)
+        }
         loading = false
         if showingSetup { container.catalog.prefetchDraftSpinSample(for: sport) }
         // Screenshot flows target the board/result, not the setup screen — skip straight in

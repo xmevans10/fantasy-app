@@ -111,6 +111,20 @@ enum DebugLaunch {
         guard let i = args.firstIndex(of: "-draftSpinSport"), i + 1 < args.count else { return nil }
         return Sport(rawValue: args[i + 1])
     }
+    /// Seed Draft & Spin's Nation → League → Club filter so a division-scoped draft can be
+    /// driven without tapping through the picker: `-draftSpinCompetition ger.2 -draftSpinNation Germany`.
+    /// This is how "does a 2. Bundesliga draft actually return 2. Bundesliga players?" gets
+    /// verified on device rather than asserted.
+    static var draftSpinCompetition: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-draftSpinCompetition"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+    static var draftSpinNation: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-draftSpinNation"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
     /// Open the Nation → League → Club picker already drilled into one nation, so the DIVISION
     /// level is reachable without a tap (simctl can't tap a list row — the same reason
     /// `-screenshotLeaguePicker` exists at all): `-screenshotLeagueNation Germany`.
@@ -157,6 +171,8 @@ enum DebugLaunch {
     static let autoOpenDailyDraftInfo = false
     static let autoOpenLeaguePicker = false
     static let screenshotLeagueNation: String? = nil
+    static let draftSpinCompetition: String? = nil
+    static let draftSpinNation: String? = nil
     static let forcePriorZone: String? = nil
     static let forceLeagueCountdown = false
     static let searchQuery: String? = nil
