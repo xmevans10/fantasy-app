@@ -57,24 +57,38 @@ struct TeamIdentity: Equatable {
 /// One row of the `leagues` table — a (sport, league) pair's display name + crest (e.g.
 /// nfl/'' -> "NFL"; soccer/'England' -> the FA/Premier League badge). Same fallback posture as
 /// `TeamIdentity`: nil fields degrade to text, never a broken image.
-struct LeagueIdentity: Equatable {
+struct LeagueIdentity: Equatable, Identifiable {
     let sport: Sport
     let league: String
     let displayName: String?
     let logoURL: URL?
+    /// The nation this competition belongs to — the grouping level of the FIFA-style
+    /// Nation → League → Club hierarchy. Nil for the single-competition US sports.
+    let country: String?
+    /// Division within `country`: 1 = top flight, 2 = second tier, … Lets one nation carry its
+    /// whole ladder (Bundesliga + 2. Bundesliga), which the old country-keyed model could not.
+    let tier: Int
+
+    /// `league` is the country label and no longer unique on its own — tier disambiguates.
+    var id: String { "\(sport.rawValue)|\(league)|\(tier)" }
 
     struct Row: Codable {
         let sport: Sport
         let league: String
         let displayName: String?
         let logoUrl: String?
+        let country: String?
+        let tier: Int?
     }
 
-    init(sport: Sport, league: String, displayName: String?, logoURL: URL?) {
+    init(sport: Sport, league: String, displayName: String?, logoURL: URL?,
+         country: String? = nil, tier: Int = 1) {
         self.sport = sport
         self.league = league
         self.displayName = displayName
         self.logoURL = logoURL
+        self.country = country
+        self.tier = tier
     }
 
     init(row: Row) {
@@ -82,6 +96,8 @@ struct LeagueIdentity: Equatable {
         league = row.league
         displayName = row.displayName
         logoURL = row.logoUrl.flatMap(URL.init(string:))
+        country = row.country
+        tier = row.tier ?? 1
     }
 }
 
@@ -123,7 +139,10 @@ final class TeamIdentityIndex {
 
     func store(leagues items: [LeagueIdentity]) {
         lock.lock(); defer { lock.unlock() }
-        for item in items { leagues[Self.leagueKey(item.sport, item.league)] = item }
+        // Keyed by tier as well as league: `league` is a country label, so a nation with a
+        // division ladder (Germany → Bundesliga + 2. Bundesliga) would otherwise overwrite
+        // itself and only the last-fetched tier would survive.
+        for item in items { leagues[item.id] = item }
     }
 
     /// League-tolerant lookup: exact (abbr, league) first, then (abbr, '') — most US-sport rows
@@ -139,9 +158,37 @@ final class TeamIdentityIndex {
         return teams.values.first { $0.sport == sport && $0.abbr.uppercased() == key }
     }
 
+    /// A nation's headline competition — the top flight (lowest `tier`) stored for that league
+    /// label. Callers that badge a club (which only knows its country label, not its division)
+    /// want exactly this; a picker wanting the full ladder uses `allLeagues`.
     func leagueIdentity(sport: Sport, league: String) -> LeagueIdentity? {
         lock.lock(); defer { lock.unlock() }
-        return leagues[Self.leagueKey(sport, league)]
+        return leagues.values
+            .filter { $0.sport == sport && $0.league == league }
+            .min { $0.tier < $1.tier }
+    }
+
+    /// League labels we actually hold clubs for. A competition can exist in the `leagues` catalog
+    /// long before any club/player sweep lands for it (every lower division does today), and
+    /// filtering the arcade to one of those would search an empty pool — so a picker uses this to
+    /// decide what is genuinely selectable. Derived from the fetched clubs rather than a curated
+    /// list, so a competition becomes selectable the moment its first sweep lands.
+    func leaguesWithTeams(sport: Sport) -> Set<String> {
+        lock.lock(); defer { lock.unlock() }
+        return Set(teams.values.filter { $0.sport == sport && !$0.league.isEmpty }.map(\.league))
+    }
+
+    /// Every competition stored for `sport`, top flights first then deeper tiers, alphabetical by
+    /// nation — the order a nation-grouped picker renders in. Empty until `warmIdentities` lands.
+    func allLeagues(sport: Sport) -> [LeagueIdentity] {
+        lock.lock(); defer { lock.unlock() }
+        return leagues.values
+            .filter { $0.sport == sport }
+            .sorted {
+                let a = ($0.country ?? $0.league), b = ($1.country ?? $1.league)
+                if a != b { return a.localizedCaseInsensitiveCompare(b) == .orderedAscending }
+                return $0.tier < $1.tier
+            }
     }
 
     /// The competition a club plays in, for callers that only have an abbreviation. Needed
@@ -159,7 +206,6 @@ final class TeamIdentityIndex {
     private static func teamKey(_ sport: Sport, _ abbr: String, _ league: String) -> String {
         "\(sport.rawValue)|\(abbr.uppercased())|\(league)"
     }
-    private static func leagueKey(_ sport: Sport, _ league: String) -> String {
-        "\(sport.rawValue)|\(league)"
-    }
+    // League rows key off `LeagueIdentity.id` (sport|league|tier) rather than a helper here —
+    // see `store(leagues:)` for why tier has to be part of the key.
 }

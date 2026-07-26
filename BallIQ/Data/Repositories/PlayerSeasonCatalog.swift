@@ -313,7 +313,7 @@ final class PlayerSeasonCatalog {
            Date().timeIntervalSince(entry.writtenAt) < Self.identityCacheTTL {
             return store(LeagueIdentity.init(row:), entry.value)
         }
-        let query = [URLQueryItem(name: "select", value: "sport,league,display_name,logo_url"),
+        let query = [URLQueryItem(name: "select", value: "sport,league,display_name,logo_url,country,tier"),
                      URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)")]
         if let client, let rows: [LeagueIdentity.Row] = try? await client.select("leagues", query: query) {
             await DiskCache.write(rows, key: key)

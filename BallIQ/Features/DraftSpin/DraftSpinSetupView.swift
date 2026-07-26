@@ -19,12 +19,24 @@ struct DraftSpinSetupView: View {
 
     @State private var showingHowItWorks = false
 
-    /// The competition name for the chosen league value (falls back to the raw value if it's
-    /// somehow not in the curated list) — used in the caption so it reads "restricted to
-    /// Premier League", not the underlying "England" country tag.
+    /// The competition name for the chosen league value — prefers live league identity (which now
+    /// covers 44 competitions) and falls back to the curated list, then the raw value, so the
+    /// caption reads "restricted to Premier League", not the underlying "England" country tag.
     private var selectedLeagueName: String {
         guard let value = settings.soccerLeague else { return "" }
+        if let name = TeamIdentityIndex.shared.leagueIdentity(sport: .soccer, league: value)?.displayName {
+            return name
+        }
         return DraftSpinConstraint.majorSoccerLeagues.first { $0.value == value }?.name ?? value
+    }
+
+    /// Competitions the catalog actually holds clubs for. Everything else is listed but not
+    /// selectable — filtering to a competition with no players would spin against an empty pool.
+    private var playableSoccerLeagues: Set<String> {
+        let live = TeamIdentityIndex.shared.leaguesWithTeams(sport: .soccer)
+        // Before identity warms (cold launch/offline) fall back to the curated majors rather
+        // than showing every row disabled.
+        return live.isEmpty ? Set(DraftSpinConstraint.majorSoccerLeagues.map(\.value)) : live
     }
 
     /// Passed to `GameSetupScreen` instead of `$sport` directly: in Daily Draft mode its getter
@@ -111,7 +123,8 @@ struct DraftSpinSetupView: View {
                         ? "Spins draw from any of the ~38 countries' top flights we track."
                         : "Spins are restricted to \(selectedLeagueName) — if a round can't fill an open slot from just that league, it falls back to any league rather than getting stuck.")
                 {
-                    LeagueChipPicker(selected: $settings.soccerLeague)
+                    LeaguePickerButton(selection: $settings.soccerLeague, sport: .soccer,
+                                       playableLeagues: playableSoccerLeagues)
                 }
             }
 
@@ -166,35 +179,45 @@ struct DraftSpinSetupView: View {
 /// A wrapping chip row for a choice with more options than `SetupSegmentedControl` comfortably
 /// fits (LEAGUE: "ALL LEAGUES" + `DraftSpinConstraint.majorSoccerLeagues`, 11 total) — same
 /// capsule-chip visual language as the in-draft position tabs (`DraftSpinView.rosterList`).
-private struct LeagueChipPicker: View {
-    @Binding var selected: String?
+/// Compact "current value, tap to change" control that opens `LeaguePicker` — the iOS pattern for
+/// a field whose option list is too long to inline. Replaced a 2-column grid of 10 hardcoded
+/// chips, which could not scale to the 44 competitions league identity now covers.
+private struct LeaguePickerButton: View {
+    @Binding var selection: String?
+    let sport: Sport
+    let playableLeagues: Set<String>
+    @State private var showingPicker = false
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 2)
-
-    var body: some View {
-        LazyVGrid(columns: columns, spacing: 6) {
-            chip(label: String(localized: "ALL LEAGUES"), active: selected == nil) { selected = nil }
-            // Chip shows the competition name; the filter still matches on `league.value`
-            // (the country label the catalog is tagged by) — see `SoccerLeague`'s doc comment.
-            ForEach(DraftSpinConstraint.majorSoccerLeagues, id: \.self) { league in
-                chip(label: league.name.uppercased(), active: selected == league.value) {
-                    selected = league.value
-                }
-            }
-        }
+    private var current: LeagueIdentity? {
+        selection.flatMap { TeamIdentityIndex.shared.leagueIdentity(sport: sport, league: $0) }
     }
 
-    private func chip(label: String, active: Bool, onTap: @escaping () -> Void) -> some View {
-        Button(action: onTap) {
-            Text(label)
-                .font(.custom(active ? FontName.condBlack : FontName.condBold, size: 13))
-                .foregroundStyle(active ? Color.onAccent : Color.textPrimary)
-                .lineLimit(1).minimumScaleFactor(0.8)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(active ? Color.accentFill : Color.surfaceMuted)
-                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+    var body: some View {
+        Button { showingPicker = true } label: {
+            HStack(spacing: 10) {
+                if let url = current?.logoURL {
+                    AsyncImage(url: url) { phase in
+                        if let img = phase.image { img.resizable().scaledToFit() } else { Color.clear }
+                    }
+                    .frame(width: 22, height: 22)
+                }
+                Text((current?.displayName ?? selection ?? String(localized: "All leagues")).uppercased())
+                    .font(.custom(FontName.condBlack, size: 14))
+                    .foregroundStyle(Color.textPrimary)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color.textMuted)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(Color.surfaceMuted)
+            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
         }
         .buttonStyle(.plain)
+        .sheet(isPresented: $showingPicker) {
+            LeaguePicker(selection: $selection, sport: sport, playableLeagues: playableLeagues)
+        }
     }
 }
