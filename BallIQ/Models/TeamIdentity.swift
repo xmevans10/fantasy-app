@@ -19,6 +19,9 @@ struct TeamIdentity: Equatable, Identifiable {
     let logoURL: URL?
     let primary: Color?
     let secondary: Color?
+    /// The COMPETITION this club plays in ("ger.1"), the middle level of Nation → League →
+    /// Club. `league` above is the club's NATION, which cannot distinguish divisions.
+    let competition: String?
 
     /// Wire row from the `teams` fetch, decoded with the default `.supabase` decoder
     /// (`convertFromSnakeCase`) — plain camelCase properties, no explicit `CodingKeys`, same
@@ -34,10 +37,11 @@ struct TeamIdentity: Equatable, Identifiable {
         let logoUrl: String?
         let primaryColor: String?
         let secondaryColor: String?
+        let competition: String?
     }
 
     init(sport: Sport, abbr: String, league: String, fullName: String?,
-        logoURL: URL?, primary: Color?, secondary: Color?) {
+        logoURL: URL?, primary: Color?, secondary: Color?, competition: String? = nil) {
         self.sport = sport
         self.abbr = abbr
         self.league = league
@@ -45,6 +49,7 @@ struct TeamIdentity: Equatable, Identifiable {
         self.logoURL = logoURL
         self.primary = primary
         self.secondary = secondary
+        self.competition = competition
     }
 
     init(row: Row) {
@@ -55,6 +60,7 @@ struct TeamIdentity: Equatable, Identifiable {
         logoURL = row.logoUrl.flatMap(URL.init(string:))
         primary = row.primaryColor.flatMap { Color(hexString: $0) }
         secondary = row.secondaryColor.flatMap { Color(hexString: $0) }
+        competition = row.competition
     }
 }
 
@@ -72,6 +78,9 @@ struct LeagueIdentity: Equatable, Identifiable {
     /// Division within `country`: 1 = top flight, 2 = second tier, … Lets one nation carry its
     /// whole ladder (Bundesliga + 2. Bundesliga), which the old country-keyed model could not.
     let tier: Int
+    /// Stable competition key ("ger.1"/"ger.2") — what a club's `competition` points at, and
+    /// the identity a league filter should eventually carry instead of the nation label.
+    let competition: String?
 
     /// `league` is the country label and no longer unique on its own — tier disambiguates.
     var id: String { "\(sport.rawValue)|\(league)|\(tier)" }
@@ -83,16 +92,18 @@ struct LeagueIdentity: Equatable, Identifiable {
         let logoUrl: String?
         let country: String?
         let tier: Int?
+        let espnSlug: String?
     }
 
     init(sport: Sport, league: String, displayName: String?, logoURL: URL?,
-         country: String? = nil, tier: Int = 1) {
+         country: String? = nil, tier: Int = 1, competition: String? = nil) {
         self.sport = sport
         self.league = league
         self.displayName = displayName
         self.logoURL = logoURL
         self.country = country
         self.tier = tier
+        self.competition = competition
     }
 
     init(row: Row) {
@@ -102,6 +113,7 @@ struct LeagueIdentity: Equatable, Identifiable {
         logoURL = row.logoUrl.flatMap(URL.init(string:))
         country = row.country
         tier = row.tier ?? 1
+        competition = row.espnSlug
     }
 }
 
@@ -183,6 +195,40 @@ final class TeamIdentityIndex {
                 return ($0.fullName ?? $0.abbr).localizedCaseInsensitiveCompare($1.fullName ?? $1.abbr)
                     == .orderedAscending
             }
+    }
+
+    /// The nations that have at least one competition, for the first level of a
+    /// Nation → League → Club drill-down. Alphabetical; nations we hold clubs for come first so
+    /// the opening screen is not a wall of unplayable options.
+    func nations(sport: Sport) -> [String] {
+        let playable = leaguesWithTeams(sport: sport)
+        lock.lock()
+        let all = Set(leagues.values.filter { $0.sport == sport }.compactMap(\.country))
+        lock.unlock()
+        let sorted = all.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+        return sorted.filter(playable.contains) + sorted.filter { !playable.contains($0) }
+    }
+
+    /// The competitions inside one nation, top flight first — level two of the drill-down.
+    func leagues(sport: Sport, nation: String) -> [LeagueIdentity] {
+        lock.lock(); defer { lock.unlock() }
+        return leagues.values
+            .filter { $0.sport == sport && ($0.country ?? $0.league) == nation }
+            .sorted { $0.tier < $1.tier }
+    }
+
+    /// The clubs inside one competition — level three. Falls back to matching on the nation
+    /// label for clubs ingested before `competition` was backfilled.
+    func clubs(sport: Sport, competition: String?, nation: String) -> [TeamIdentity] {
+        lock.lock(); defer { lock.unlock() }
+        return teams.values
+            .filter {
+                guard $0.sport == sport else { return false }
+                if let competition, let own = $0.competition { return own == competition }
+                return $0.league == nation
+            }
+            .sorted { ($0.fullName ?? $0.abbr).localizedCaseInsensitiveCompare($1.fullName ?? $1.abbr)
+                        == .orderedAscending }
     }
 
     /// League labels we actually hold clubs for. A competition can exist in the `leagues` catalog

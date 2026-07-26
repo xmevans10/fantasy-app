@@ -64,6 +64,10 @@ struct DraftSpinSettings: Equatable {
     /// carries — see that constant's doc comment for why the setup screen only offers a
     /// curated subset rather than every ingested league.
     var soccerLeague: String? = nil
+    /// Nation → League → Club selection from `NationLeagueClubPicker`. `soccerLeague` above
+    /// stays the value the spin filters on (it is the nation, which is what player rows carry);
+    /// this holds the full three-level choice so the club level can pin the spin too.
+    var clubFilter = ClubFilter.all
 
     static let `default` = DraftSpinSettings()
 }

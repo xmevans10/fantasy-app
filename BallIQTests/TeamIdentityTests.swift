@@ -229,7 +229,7 @@ final class TeamIdentityTests: XCTestCase {
     func testTeamIdentitiesDiskCacheSkipsNetworkWhenFresh() async {
         let row = TeamIdentity.Row(sport: .nba, teamAbbr: "ZQXTEST2", league: "",
                                    fullName: "Cached Fixture", logoUrl: nil,
-                                   primaryColor: nil, secondaryColor: nil)
+                                   primaryColor: nil, secondaryColor: nil, competition: nil)
         await DiskCache.write([row], key: "teams-nba")
 
         var hits = 0

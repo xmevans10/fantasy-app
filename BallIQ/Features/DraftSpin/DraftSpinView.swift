@@ -200,9 +200,13 @@ struct DraftSpinView: View {
         // Bounded: each attempt is one indexed roster fetch (~ms). A handful is plenty given
         // most combos are fillable; the cap just stops a pathological sport/filter from looping.
         for _ in 0..<6 {
+            // A club chosen in the Nation → League → Club picker pins every spin to that club
+            // (different YEAR each round, same as the ONE TEAM toggle's own lock); otherwise the
+            // lock is whatever round 1 happened to spin.
+            let pinnedClub = settings.clubFilter.club ?? lockedTeam
             guard let (team, year, league) = DraftSpinConstraint.spinRound(
                 from: sample, sport: sport, openRoles: roles,
-                lockedTeam: lockedTeam, usedLockedYears: usedLockedYears,
+                lockedTeam: pinnedClub, usedLockedYears: usedLockedYears,
                 excludeNames: excludedNames, league: settings.soccerLeague,
                 minCandidates: 1, excludeCombos: rejected, using: &rng
             ) else { return false }

@@ -123,8 +123,9 @@ struct DraftSpinSetupView: View {
                         ? "Spins draw from any of the ~38 countries' top flights we track."
                         : "Spins are restricted to \(selectedLeagueName) — if a round can't fill an open slot from just that league, it falls back to any league rather than getting stuck.")
                 {
-                    LeaguePickerButton(selection: $settings.soccerLeague, sport: .soccer,
-                                       playableLeagues: playableSoccerLeagues)
+                    LeaguePickerButton(filter: $settings.clubFilter, sport: .soccer,
+                                       playableNations: playableSoccerLeagues,
+                                       league: $settings.soccerLeague)
                 }
             }
 
@@ -183,25 +184,50 @@ struct DraftSpinSetupView: View {
 /// a field whose option list is too long to inline. Replaced a 2-column grid of 10 hardcoded
 /// chips, which could not scale to the 44 competitions league identity now covers.
 private struct LeaguePickerButton: View {
-    @Binding var selection: String?
+    @Binding var filter: ClubFilter
     let sport: Sport
-    let playableLeagues: Set<String>
+    let playableNations: Set<String>
+    /// The nation the spin actually filters on. Kept in sync with `filter` because player rows
+    /// carry a nation, not a competition — see `ClubFilter`.
+    @Binding var league: String?
     @State private var showingPicker = false
 
-    private var current: LeagueIdentity? {
-        selection.flatMap { TeamIdentityIndex.shared.leagueIdentity(sport: sport, league: $0) }
+    /// Deepest level chosen wins the label: club → competition → nation → all.
+    private var label: String {
+        if let club = filter.club {
+            return TeamIdentityIndex.shared.identity(sport: sport, abbr: club,
+                                                     league: filter.nation)?.fullName ?? club
+        }
+        if let nation = filter.nation {
+            let leagues = TeamIdentityIndex.shared.leagues(sport: sport, nation: nation)
+            if let comp = filter.competition,
+               let match = leagues.first(where: { $0.competition == comp }) {
+                return match.displayName ?? nation
+            }
+            return nation
+        }
+        return String(localized: "All leagues")
+    }
+
+    private var crest: URL? {
+        if let club = filter.club {
+            return TeamIdentityIndex.shared.identity(sport: sport, abbr: club,
+                                                     league: filter.nation)?.logoURL
+        }
+        guard let nation = filter.nation else { return nil }
+        return TeamIdentityIndex.shared.leagues(sport: sport, nation: nation).first?.logoURL
     }
 
     var body: some View {
         Button { showingPicker = true } label: {
             HStack(spacing: 10) {
-                if let url = current?.logoURL {
-                    AsyncImage(url: url) { phase in
+                if let crest {
+                    AsyncImage(url: crest) { phase in
                         if let img = phase.image { img.resizable().scaledToFit() } else { Color.clear }
                     }
                     .frame(width: 22, height: 22)
                 }
-                Text((current?.displayName ?? selection ?? String(localized: "All leagues")).uppercased())
+                Text(label.uppercased())
                     .font(.custom(FontName.condBlack, size: 14))
                     .foregroundStyle(Color.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.8)
@@ -217,10 +243,12 @@ private struct LeaguePickerButton: View {
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $showingPicker) {
-            LeaguePicker(selection: $selection, sport: sport, playableLeagues: playableLeagues)
+            NationLeagueClubPicker(filter: $filter, sport: sport,
+                                   playableNations: playableNations)
         }
+        .onChange(of: filter) { _, new in league = new.nation }
         .onAppear {
-            // simctl can neither scroll this row into view nor tap it — see the flag's doc comment.
+            // simctl can neither scroll this row into view nor tap it.
             if DebugLaunch.autoOpenLeaguePicker { showingPicker = true }
         }
     }

@@ -72,6 +72,10 @@ def build_teams() -> list[dict]:
     rows: list[dict] = []
 
     soccer_identity = espn_soccer.load_team_identity()
+    # Nation -> League -> Club: a club belongs to a COMPETITION ("ger.1"), and its nation is
+    # then derived from that competition rather than stored on the club. Every club ingested so
+    # far is top-flight, so its competition is its nation's tier-1 entry.
+    top_flight = {e["country"]: e["espn_slug"] for e in load_soccer_leagues() if e["tier"] == 1}
     soccer_logo_count = 0
     for entry in soccer_identity:
         logo_url = logos.rehost(entry.get("logo_url") or None,
@@ -87,6 +91,7 @@ def build_teams() -> list[dict]:
             "primary_color": entry.get("primary_color") or None,
             "secondary_color": entry.get("secondary_color") or None,
             "espn_id": entry.get("espn_id") or None,
+            "competition": top_flight.get(entry["league"]),
         })
     print(f"[teams] soccer: {len(soccer_identity)} clubs, {soccer_logo_count} logo(s) rehosted")
 
@@ -110,6 +115,7 @@ def build_teams() -> list[dict]:
                 "primary_color": r.get("primary_color") or None,
                 "secondary_color": r.get("secondary_color") or None,
                 "espn_id": None,
+                "competition": slug,
             })
         print(f"[teams] {sport}: {len(sport_rows)} teams, {logo_count} logo(s) rehosted")
 
