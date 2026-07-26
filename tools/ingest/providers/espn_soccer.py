@@ -312,9 +312,21 @@ def _build_team_identity(identity_rows: Iterable[dict]) -> list[dict]:
     return sorted(by_key.values(), key=lambda r: (r["league"], r["team_abbr"]))
 
 
+def keep_without_photo(has_photo: bool, require_headshot: bool) -> bool:
+    """Should a player-season survive the M16 photo gate?
+
+    M16 shipped soccer at 100% photo coverage by dropping every player Wikipedia had no
+    confident photo for. That is affordable in a top flight and ruinous below it: a measured
+    ger.2 2024-25 sweep found photos for 11 of 603 players, turning 778 real player-seasons
+    into 13. With `require_headshot=False` the row survives and the client renders its existing
+    initial-avatar fallback — already the shipped reality elsewhere in the catalog (nba is
+    13.4% photo-less, nfl 1.2%)."""
+    return has_photo or not require_headshot
+
+
 def refresh(leagues: list[str] | None = None,
             season_from: int | None = None, season_to: int | None = None,
-            out_path: Path | None = None) -> None:
+            out_path: Path | None = None, require_headshot: bool = True) -> None:
     """Discover + aggregate every (league, season) in range, resolve headshots, write
     to `out_path` (default: the committed CSV). Safe to re-run/resume: each network call
     is cached on disk keyed by (league, day/event), so a re-run after a partial/
@@ -400,8 +412,16 @@ def refresh(leagues: list[str] | None = None,
 
     final = []
     for row in kept:
-        if shot := headshots.get(row["name"], ""):
+        shot = headshots.get(row["name"], "")
+        if shot:
             row["headshot"] = shot
+        # M16 shipped soccer at 100% photo coverage by DROPPING every player Wikipedia had no
+        # confident photo for. That is affordable in a top flight; in a lower division it is
+        # not — a measured ger.2 2024-25 sweep found photos for 11 of 603 players, so the gate
+        # turned 778 real player-seasons into 13. `require_headshot=False` keeps the row and
+        # lets the client's existing initial-avatar fallback do its job, which is already the
+        # shipped reality elsewhere in the catalog (nba is 13.4% photo-less, nfl 1.2%).
+        if keep_without_photo(bool(shot), require_headshot):
             final.append(row)
     final.sort(key=lambda r: (r["name"], r["season_year"], r["team_abbr"]))
 
@@ -418,8 +438,9 @@ def refresh(leagues: list[str] | None = None,
         w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
         w.writeheader()
         w.writerows(final)
-    print(f"[espn-soccer] wrote {len(final)} player-seasons (M16 photo gate: "
-          f"{len(kept) - len(final)} dropped, no confident photo) → {dest}")
+    gate = (f"M16 photo gate: {len(kept) - len(final)} dropped, no confident photo"
+            if require_headshot else "photo gate OFF, photo-less rows kept")
+    print(f"[espn-soccer] wrote {len(final)} player-seasons ({gate}) → {dest}")
 
     # Per-club identity (M-teams) — same sweep, essentially free. Written alongside the
     # season CSV: to the committed identity file for a normal full run, or to a sibling of

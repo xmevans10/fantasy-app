@@ -291,3 +291,25 @@ def test_load_team_identity_round_trips_the_committed_csv_format(tmp_path, monke
     assert len(identity) == 1
     assert identity[0]["team_abbr"] == "MCI"
     assert identity[0]["primary_color"] == "#6cabdd"
+
+
+# ── M16 photo gate: strict by default, switchable for lower divisions ─────────────────
+
+def test_photo_gate_is_strict_by_default():
+    # M16's contract for the top flights: no confident photo, no row.
+    assert espn_soccer.keep_without_photo(True, require_headshot=True) is True
+    assert espn_soccer.keep_without_photo(False, require_headshot=True) is False
+
+
+def test_photo_gate_can_be_relaxed_for_lower_divisions():
+    # Measured: a real ger.2 2024-25 sweep matched photos for 11 of 603 players, so the strict
+    # gate turned 778 qualifying player-seasons into 13 — lower divisions are uningestable
+    # under it. Relaxed, the row survives and the client shows its initial-avatar fallback.
+    assert espn_soccer.keep_without_photo(False, require_headshot=False) is True
+    assert espn_soccer.keep_without_photo(True, require_headshot=False) is True
+
+
+def test_refresh_exposes_the_photo_gate_and_defaults_to_strict():
+    import inspect
+    sig = inspect.signature(espn_soccer.refresh)
+    assert sig.parameters["require_headshot"].default is True
