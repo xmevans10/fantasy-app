@@ -219,5 +219,9 @@ private struct LeaguePickerButton: View {
         .sheet(isPresented: $showingPicker) {
             LeaguePicker(selection: $selection, sport: sport, playableLeagues: playableLeagues)
         }
+        .onAppear {
+            // simctl can neither scroll this row into view nor tap it — see the flag's doc comment.
+            if DebugLaunch.autoOpenLeaguePicker { showingPicker = true }
+        }
     }
 }

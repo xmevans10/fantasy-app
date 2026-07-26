@@ -71,6 +71,10 @@ enum DebugLaunch {
     static var autoOpenLeaguesInfo: Bool { has("-screenshotLeaguesInfo") }
     static var autoOpenVersusInfo: Bool { has("-screenshotVersusInfo") }
     static var autoOpenDailyDraftInfo: Bool { has("-screenshotDailyDraftInfo") }
+    /// Auto-present the nation-grouped league picker sheet (simctl can neither scroll the setup
+    /// screen down to the LEAGUE row nor tap it). Combination flag like the ones above:
+    /// `-screenshotPro -screenshotDraftSpinSetup -draftSpinSport soccer -screenshotLeaguePicker`.
+    static var autoOpenLeaguePicker: Bool { has("-screenshotLeaguePicker") }
     /// Force the Leagues promotion/relegation recap banner for capture (real state needs a
     /// prior rollover): `-forcePriorZone promoted` or `-forcePriorZone relegated`.
     static var forcePriorZone: String? {
@@ -143,6 +147,7 @@ enum DebugLaunch {
     static let autoOpenLeaguesInfo = false
     static let autoOpenVersusInfo = false
     static let autoOpenDailyDraftInfo = false
+    static let autoOpenLeaguePicker = false
     static let forcePriorZone: String? = nil
     static let forceLeagueCountdown = false
     static let searchQuery: String? = nil

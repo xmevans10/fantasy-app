@@ -34,7 +34,10 @@ struct LeaguePicker: View {
         }
     }
 
-    /// Nation → its competitions, ordered by tier. Preserves `allLeagues`' nation ordering.
+    /// Nation → its competitions, ordered by tier. Nations we can actually play come first:
+    /// straight alphabetical buried the handful of playable leagues under ~30 nations of SOON
+    /// rows, so the first screenful was entirely unusable options. Within each half the order
+    /// stays alphabetical (from `allLeagues`), keeping the list predictable to scan.
     private var grouped: [(nation: String, leagues: [LeagueIdentity])] {
         var order: [String] = []
         var bucket: [String: [LeagueIdentity]] = [:]
@@ -43,7 +46,11 @@ struct LeaguePicker: View {
             if bucket[nation] == nil { order.append(nation) }
             bucket[nation, default: []].append(league)
         }
-        return order.map { ($0, bucket[$0] ?? []) }
+        let playableNations = order.filter { nation in
+            (bucket[nation] ?? []).contains { playableLeagues.contains($0.league) }
+        }
+        let rest = order.filter { !playableNations.contains($0) }
+        return (playableNations + rest).map { ($0, bucket[$0] ?? []) }
     }
 
     var body: some View {
@@ -59,7 +66,12 @@ struct LeaguePicker: View {
                 ForEach(grouped, id: \.nation) { group in
                     Section(group.nation.uppercased()) {
                         ForEach(group.leagues) { league in
-                            let playable = playableLeagues.contains(league.league)
+                            // Tier 1 only: the arcade filter carries a COUNTRY label
+                            // (`CatalogSeason.league`), not a competition, so every tier of a
+                            // nation resolves to the same rows. Marking a lower division
+                            // selectable would silently hand back the top flight's players —
+                            // it stays SOON until player rows carry their competition.
+                            let playable = playableLeagues.contains(league.league) && league.tier == 1
                             row(title: league.displayName ?? league.league,
                                 subtitle: league.tier > 1
                                     ? String(localized: "Tier \(league.tier)") : nil,
