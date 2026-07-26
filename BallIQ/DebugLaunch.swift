@@ -27,6 +27,14 @@ enum DebugLaunch {
     static var autoOpenBrowse: Bool { has("-screenshotBrowse") }
     static var autoOpenModeration: Bool { has("-screenshotModeration") }
     static var autoOpenPaywall: Bool { has("-screenshotPaywall") }
+    /// Grants Pro for the session so the Pro-gated surfaces can be driven/screenshot without a
+    /// StoreKit purchase or a signed-in entitled account: `-screenshotPro`. Without it, a plain
+    /// `simctl` session is free-tier, and every soccer/MLB/tennis flag silently lands on NFL —
+    /// `GameSetupScreen.correctLockedDefault` snaps the locked sport back, which for Draft & Spin
+    /// looks exactly like a content bug (soccer's 8 lineup slots against an NFL pool → an instant
+    /// empty-lineup result). Reads through `Entitlements.isPro`, so it also unlocks Hard mode, the
+    /// archive, The Grid and unlimited Over/Under lives.
+    static var forcePro: Bool { has("-screenshotPro") }
     static var autoOpenOverUnder: Bool { has("-screenshotOverUnder") || has("-screenshotOverUnderResult") }
     /// Forces an immediate out-of-lives finish once the session loads (simctl can't play a real
     /// round-by-round session): `-screenshotOverUnderResult`.
@@ -120,6 +128,7 @@ enum DebugLaunch {
     static let autoOpenBrowse = false
     static let autoOpenModeration = false
     static let autoOpenPaywall = false
+    static let forcePro = false
     static let autoOpenOverUnder = false
     static let autoSubmitOverUnder = false
     static let autoOpenDraftSpin = false

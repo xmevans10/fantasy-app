@@ -96,7 +96,7 @@ final class RepositoryContainer: ObservableObject {
 
     private func recomputeEntitlements() {
         entitlements = Entitlements(
-            isPro: deviceEntitlements.isPro || serverEntitlements.isPro,
+            isPro: deviceEntitlements.isPro || serverEntitlements.isPro || DebugLaunch.forcePro,
             unlockedPacks: deviceEntitlements.unlockedPacks.union(serverEntitlements.unlockedPacks),
             isAdmin: isAdmin)
     }
