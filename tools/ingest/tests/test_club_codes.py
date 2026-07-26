@@ -157,3 +157,26 @@ def test_globally_unique_across_the_known_club_universe():
     collisions = {code: identities for code, identities in by_code.items()
                  if len(identities) > 1}
     assert not collisions, f"{len(collisions)} club-code collision(s) remain: {collisions}"
+
+
+def test_globally_unique_allows_a_refounded_clubs_predecessor_record():
+    # Transfermarkt keeps the pre-refoundation entity as its own club_id with an era suffix.
+    # `normalize_name` strips that suffix, so both records ARE the same club by this module's
+    # own key — sharing one code (and one continuous history) is correct, not a collision.
+    club_codes.assert_globally_unique([
+        {"team_abbr": "KLV", "club_identity": "FK Karpaty Lviv", "league": "Ukraine"},
+        {"team_abbr": "KLV", "club_identity": "Karpaty Lviv (-2021)", "league": "Ukraine"},
+    ])
+
+
+def test_globally_unique_still_catches_two_genuinely_different_clubs():
+    # The original bug: Blackburn Rovers and Brisbane Roar both derived to "BRO".
+    try:
+        club_codes.assert_globally_unique([
+            {"team_abbr": "BRO", "club_identity": "Blackburn Rovers", "league": "England"},
+            {"team_abbr": "BRO", "club_identity": "Brisbane Roar", "league": "Australia"},
+        ])
+    except ValueError as err:
+        assert "BRO" in str(err)
+    else:
+        raise AssertionError("expected a ValueError for the collision")

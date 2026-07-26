@@ -17,7 +17,11 @@ KEEP_COUNT = 8
 
 # Sources whose photo-less rows are catalog/roster depth only, never puzzle cards
 # (see the gate in `grade_pool`). Their photo-CARRYING rows compete normally.
-DEPTH_ONLY_WITHOUT_PHOTO = {"bref", "pfr"}
+# `espn` joined 2026-07-26 with the lower-division soccer sweeps: `--allow-missing-photos`
+# keeps player-seasons Wikipedia has no photo for (11 of 609 ger.2 players did), which is
+# right for a Draft & Spin roster row — the client renders an initial-avatar circle — and
+# wrong for a Keep4 card, which IS the photo.
+DEPTH_ONLY_WITHOUT_PHOTO = {"bref", "pfr", "espn"}
 
 
 @dataclass
@@ -80,9 +84,10 @@ def grade_pool(theme: Theme, seasons: list[RawSeason],
         # 1950–2001, pfr = NFL 1970–1998) deliberately carry photo-less rows for
         # catalog/roster depth (Draft & Spin, Create-search) — those rows must never
         # become puzzle CARDS, or the bundle headshot guard trips on every refresh
-        # (caught live: Mark Clayton/James Wilder 1984). Scoped to those sources so the
-        # curated seed fallback (whose offline puzzles are the whole point) and test
-        # fixtures are untouched — every other source guarantees a headshot URL.
+        # (caught live: Mark Clayton/James Wilder 1984), and the same now applies to the
+        # photo-less lower-division soccer rows. Scoped to those sources so the curated seed
+        # fallback (whose offline puzzles are the whole point) and test fixtures are
+        # untouched — the remaining sources guarantee a headshot URL.
         if not s.headshot and s.source in DEPTH_ONLY_WITHOUT_PHOTO:
             continue
         g = (grade_era(s.stats, theme.scale, s.sport, s.position, s.season_year, baselines)

@@ -125,9 +125,52 @@ def test_filter_new_catalog_rows_treats_game_rows_as_always_skippable():
     ])
     with patch("tools.ingest.upsert.fetch_existing_catalog_ids",
                return_value={f"nfl-current-game-guy-{current_year}-wk03"}), \
-         patch("tools.ingest.upsert.fetch_catalog_ids_missing_headshot", return_value=set()):
+         patch("tools.ingest.upsert.fetch_catalog_ids_missing", return_value=set()):
         out = filter_new_catalog_rows(rows)
     names = {r["name"] for r in out}
     # The season row is always resent (current year, still growing); the game row was
     # already stored, so it's skipped even though it shares the same in-progress year.
     assert names == {"Current Season Guy"}
+
+
+def test_filter_new_catalog_rows_resends_a_stored_row_missing_its_competition():
+    # The 2026-07-26 case: ~75k soccer rows were stored from a CSV that predated the
+    # `competition` column, so they sat unfilterable. A closed season is normally skipped
+    # forever once stored — this is what lets the relabel actually reach the DB.
+    rows = catalog_rows([
+        _season("Labelled Guy", sport="soccer", season_year=2019, position="MF",
+                meta={"league": "Germany", "competition": "ger.1"}),
+    ])
+    stored = {"soccer-labelled-guy-2019"}
+    with patch("tools.ingest.upsert.fetch_existing_catalog_ids", return_value=stored), \
+         patch("tools.ingest.upsert.fetch_catalog_ids_missing", return_value=stored):
+        out = filter_new_catalog_rows(rows)
+    assert {r["name"] for r in out} == {"Labelled Guy"}
+
+
+def test_filter_new_catalog_rows_still_skips_a_stored_row_that_is_already_complete():
+    rows = catalog_rows([
+        _season("Complete Guy", sport="soccer", season_year=2019, position="MF",
+                meta={"league": "Germany", "competition": "ger.1"}),
+    ])
+    stored = {"soccer-complete-guy-2019"}
+    with patch("tools.ingest.upsert.fetch_existing_catalog_ids", return_value=stored), \
+         patch("tools.ingest.upsert.fetch_catalog_ids_missing", return_value=set()):
+        out = filter_new_catalog_rows(rows)
+    assert out == []
+
+
+def test_filter_new_catalog_rows_never_queries_a_column_no_row_can_fill():
+    # NFL rows carry no competition, so the pipeline must not pay for (or depend on) a
+    # missing-competition fetch that would match every NFL row in the table.
+    rows = catalog_rows([_season("Plain Guy", season_year=2015, sport="nfl")])
+    queried: list[str] = []
+
+    def _record(sport, column, *a, **kw):
+        queried.append(column)
+        return set()
+
+    with patch("tools.ingest.upsert.fetch_existing_catalog_ids", return_value=set()), \
+         patch("tools.ingest.upsert.fetch_catalog_ids_missing", side_effect=_record):
+        filter_new_catalog_rows(rows)
+    assert queried == []

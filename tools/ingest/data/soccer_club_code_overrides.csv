@@ -85,7 +85,11 @@ malmö fotbollförening,Sweden,MFOT
 mariupol,Ukraine,MARU
 melbourne city,Australia,MCIT
 millonarios,,MILX
+minnesota united,USA (MLS),MNU
 minnesota united,United States,MUNI
+monterrey,Mexico,MTY
+montpellier,France,MTP
+montréal,USA (MLS),MTL
 monza,Italy,MONI
 morski klub sportowy pogoń szczecin,Poland,MKLU
 panionios athens,Greece,PATH
@@ -94,6 +98,7 @@ pardubice,Czech Republic,PARC
 parma,Italy,PARI
 pendikspor,Turkey,PENT
 pfk stal kamyanske,Ukraine,PSTA
+pumas unam,Mexico,PUM
 real valladolid,Spain,RVAL
 red bull new york,United States,RBUL
 regatas vasco gama,Brazil,RVAS
@@ -109,6 +114,7 @@ sarpsborg fotballforening,Norway,SAFO
 sc cambuur leeuwarden,Netherlands,SCAM
 sc dinamo,Romania,SDIN
 sc fotbal fcsb,Romania,SCFO
+sc paderborn,Germany,SCP
 sevastopol,Ukraine,SEVU
 shonan bellmare,Japan,SHBE
 sigma olomouc,Czech Republic,SOLO
@@ -118,6 +124,7 @@ spal,Italy,SPAI
 sparta praha,Czech Republic,SPRA
 spartak moskva,Russia,SMOS
 sportsklubben brann,Norway,SBRA
+st pauli,Germany,STP
 st pauli von,Germany,SPAU
 stade rennais,France,SREN
 stal mielec,Poland,SMIE
@@ -137,8 +144,3 @@ viking fotballklubb,Norway,VFOT
 wigan athletic,England,WATH
 yokohama marinos,Japan,YMAR
 zorya lugansk,Ukraine,ZLUG
-montréal,USA (MLS),MTL
-monterrey,Mexico,MTY
-montpellier,France,MTP
-minnesota united,USA (MLS),MNU
-pumas unam,Mexico,PUM

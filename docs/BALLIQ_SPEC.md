@@ -1076,6 +1076,49 @@ formats + every tab, cross-checked against live SQL):**
   clip shape (`foil(active:in:)`) so the sheen respects the banner's `DiagonalBlock` cut.
   Screenshot-verified light + dark.
 
+**Shipped 2026-07-26 (soccer competition layer — the catalog becomes filterable):**
+- **94% of the soccer catalog carried no league at all.** Found by querying prod rather than
+  reading the committed CSV: 87,644 of 93,098 soccer `player_seasons` rows had `league IS NULL`.
+  Cause: `transfermarkt_soccer.py` gained its `league` column in the club-code-collision fix, but
+  the committed `data/soccer_transfermarkt_seasons.csv` was written 2026-07-10, *before* it —
+  and `load_seasons` reads that column defensively (`row.get`), so 74,920 rows loaded silently
+  unlabelled every run. The nation filter therefore matched ~6% of the pool and Draft & Spin's
+  league selection fell through to "any league" almost always. Fixed by regenerating the CSV
+  from the cached source snapshot (same 74,920 rows, now all labelled — a pure relabel, no
+  content churn). **The lesson generalizes: a column added to a provider's `CSV_FIELDS` does
+  nothing until a `refresh()` regenerates the committed file.**
+- **`competition` now flows end to end** (nation → division → club). Both soccer providers write
+  the ESPN competition slug (`ger.1`, `ger.2`) alongside the nation; `main.py` carries it onto
+  the catalog row; `CatalogSeason`/`CatalogQuery` carry and filter on it; `ClubFilter.matches`
+  is the single definition of what a Nation → League → Club selection selects, and
+  `DraftSpinConstraint.spinRound` takes the whole filter instead of a bare league string (so the
+  club level finally pins the spin, which the picker had recorded but nothing enforced).
+- **Lower divisions are genuinely playable.** 2. Bundesliga swept for 2024-25 → **788 real
+  player-seasons** with the M16 photo gate relaxed (`--allow-missing-photos`; Wikipedia had
+  photos for 11 of 609 players, so the default gate would have kept 13). Defensible because the
+  shipped catalog is already photo-less in places — NBA 13.4%, NFL 1.2% — and the client renders
+  initial-avatar circles. `NationLeagueClubPicker` drops its tier-1-only restriction in favor of
+  `TeamIdentityIndex.competitionsWithTeams`, so a division becomes selectable the moment its
+  first sweep lands, with no curated list to maintain.
+- **Two guards had to be corrected to allow real data through:**
+  `club_codes.assert_globally_unique` compared raw display names, so Transfermarkt's
+  predecessor records for refounded clubs ("Karpaty Lviv (-2021)" vs "FK Karpaty Lviv") looked
+  like collisions no override could fix — it now compares the *normalized* name, which is the
+  key every resolution layer above it already uses. Genuinely distinct clubs (Blackburn Rovers
+  vs Brisbane Roar, both heuristic "BRO") still fail it. Separately, SC Paderborn 07 and
+  St. Pauli both derive to "SPA" within ger.2 → new `soccer_club_code_overrides.csv` entries
+  (SCP/STP).
+- **`filter_new_catalog_rows` can now heal any missing column, not just headshots.** A closed
+  season is skipped forever once stored, which would have stranded the relabel; the
+  headshot-only "improvable" carve-out is generalized to `IMPROVABLE_COLUMNS`
+  (`headshot`, `competition`) over one `fetch_catalog_ids_missing(sport, column)`. A column is
+  only queried for sports whose rows can actually fill it, so NFL pays nothing.
+- **One shared competition table.** `espn_soccer._LEAGUES` (38 slugs → country) and
+  `transfermarkt_soccer._COMPETITION_COUNTRY` were two copies of the same fact and could only
+  describe top flights. Both now derive from `tools/ingest/soccer_leagues.py` reading the
+  committed `data/soccer_leagues.csv` (46 competitions incl. Paraguay + Ukraine, added here).
+  It lives outside `teams.py` because `teams.py` imports the providers — the reverse would cycle.
+
 ## 9. Roadmap — remaining milestones + product backlog (PM audit 2026-07-09)
 
 Full briefs live in `prompts/` (same self-contained format: goal, why-now, current state,

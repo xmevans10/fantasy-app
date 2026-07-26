@@ -1,5 +1,7 @@
 """Tests for tools/ingest/teams.py — build_teams/build_leagues shape, no network
 (`logos.rehost` monkeypatched to a stub) and no pandas."""
+from unittest.mock import patch
+
 from tools.ingest import teams
 
 
@@ -120,3 +122,38 @@ def test_load_soccer_leagues_reads_the_real_committed_table():
     names = {r["display_name"] for r in rows}
     assert {"Premier League", "Bundesliga", "2. Bundesliga", "EFL Championship"} <= names
     assert {r["espn_slug"] for r in rows if r["tier"] > 1} >= {"ger.2", "eng.2"}
+
+
+def test_build_teams_files_a_club_under_its_own_competition_not_the_top_flight():
+    # A 2. Bundesliga club must not be filed under Bundesliga: `teams.competition` is what the
+    # app's picker reads to decide a division is selectable, so guessing the nation's top flight
+    # would make the lower division both wrong and unreachable.
+    identity = [
+        {"team_abbr": "SCP", "league": "Germany", "full_name": "SC Paderborn 07",
+         "espn_id": "1", "logo_url": "", "primary_color": "", "secondary_color": "",
+         "competition": "ger.2"},
+        {"team_abbr": "BAY", "league": "Germany", "full_name": "Bayern Munich",
+         "espn_id": "2", "logo_url": "", "primary_color": "", "secondary_color": "",
+         "competition": "ger.1"},
+    ]
+    with patch.object(teams.espn_soccer, "load_team_identity", return_value=identity), \
+         patch.object(teams.logos, "rehost", return_value=None), \
+         patch.object(teams, "load_us_colors", return_value=[]):
+        rows = teams.build_teams()
+    by_abbr = {r["team_abbr"]: r for r in rows if r["sport"] == "soccer"}
+    assert by_abbr["SCP"]["competition"] == "ger.2"
+    assert by_abbr["BAY"]["competition"] == "ger.1"
+    # Nation stays the same for both — that is exactly why competition had to be stored.
+    assert by_abbr["SCP"]["league"] == by_abbr["BAY"]["league"] == "Germany"
+
+
+def test_build_teams_falls_back_to_the_top_flight_for_a_pre_competition_identity_row():
+    identity = [
+        {"team_abbr": "BAY", "league": "Germany", "full_name": "Bayern Munich",
+         "espn_id": "2", "logo_url": "", "primary_color": "", "secondary_color": ""},
+    ]
+    with patch.object(teams.espn_soccer, "load_team_identity", return_value=identity), \
+         patch.object(teams.logos, "rehost", return_value=None), \
+         patch.object(teams, "load_us_colors", return_value=[]):
+        rows = teams.build_teams()
+    assert next(r for r in rows if r["team_abbr"] == "BAY")["competition"] == "ger.1"

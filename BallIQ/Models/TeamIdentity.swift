@@ -241,6 +241,16 @@ final class TeamIdentityIndex {
         return Set(teams.values.filter { $0.sport == sport && !$0.league.isEmpty }.map(\.league))
     }
 
+    /// The competition-level counterpart to `leaguesWithTeams`, and the reason a lower division
+    /// can finally be offered: a nation is "playable" as soon as ANY of its divisions has clubs,
+    /// which says nothing about whether 2. Bundesliga specifically does. Same derived-from-clubs
+    /// rationale — a division becomes selectable the moment its first sweep lands, with no
+    /// curated list to update.
+    func competitionsWithTeams(sport: Sport) -> Set<String> {
+        lock.lock(); defer { lock.unlock() }
+        return Set(teams.values.filter { $0.sport == sport }.compactMap(\.competition))
+    }
+
     /// Every competition stored for `sport`, top flights first then deeper tiers, alphabetical by
     /// nation — the order a nation-grouped picker renders in. Empty until `warmIdentities` lands.
     func allLeagues(sport: Sport) -> [LeagueIdentity] {

@@ -130,18 +130,23 @@ def fetch_existing_catalog_ids(sport: str, page_size: int = 1000) -> set[str]:
     return ids
 
 
-def fetch_catalog_ids_missing_headshot(sport: str, page_size: int = 1000) -> set[str]:
-    """Ids of stored `player_seasons` rows for `sport` with a NULL/empty headshot — the
+def fetch_catalog_ids_missing(sport: str, column: str, page_size: int = 1000) -> set[str]:
+    """Ids of stored `player_seasons` rows for `sport` whose `column` is NULL/empty — the
     set `main.filter_new_catalog_rows` treats as still-improvable (resendable) even though
     they're "already stored". Same keyset pagination as `fetch_existing_catalog_ids` and
-    for the same statement-timeout reason; the result is small (thousands, shrinking as
-    registry joins fill photos in)."""
+    for the same statement-timeout reason.
+
+    Generalized from the headshot-only version because a second column turned out to need
+    exactly the same treatment: `competition` (and `league`) were NULL on ~75k stored soccer
+    rows written before those columns existed, and a closed-season row is otherwise skipped
+    forever. Any column the pipeline can fill in later belongs here rather than in a third
+    near-identical copy of this function."""
     base, key = _require_env()
     headers = {"apikey": key, "Authorization": f"Bearer {key}"}
     ids: set[str] = set()
     last: str | None = None
     while True:
-        query = (f"select=id&sport=eq.{sport}&or=(headshot.is.null,headshot.eq.)"
+        query = (f"select=id&sport=eq.{sport}&or=({column}.is.null,{column}.eq.)"
                  f"&order=id.asc&limit={page_size}")
         if last is not None:
             query += f"&id=gt.{urllib.parse.quote(last)}"
@@ -152,12 +157,18 @@ def fetch_catalog_ids_missing_headshot(sport: str, page_size: int = 1000) -> set
                 page = json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as err:
             body = err.read().decode("utf-8", "ignore")
-            raise RuntimeError(f"missing-headshot id fetch failed ({err.code}): {body}") from err
+            raise RuntimeError(
+                f"missing-{column} id fetch failed ({err.code}): {body}") from err
         if not page:
             break
         ids.update(r["id"] for r in page)
         last = page[-1]["id"]
     return ids
+
+
+def fetch_catalog_ids_missing_headshot(sport: str, page_size: int = 1000) -> set[str]:
+    """Back-compat alias for the headshot case (see `fetch_catalog_ids_missing`)."""
+    return fetch_catalog_ids_missing(sport, "headshot", page_size)
 
 
 def upsert_grid(rows: list[dict]) -> int:

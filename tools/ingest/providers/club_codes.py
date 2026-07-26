@@ -267,11 +267,22 @@ def assert_globally_unique(rows: list[dict]) -> None:
     the CI regression guard that should have caught the BRO/BRE/BUR collisions originally.
     `rows` must have `team_abbr` plus either `club_name`/`league` or `name`/`league` keys
     identifying the club (callers pass whatever they have; see the two providers'
-    `refresh()` for the exact shape)."""
+    `refresh()` for the exact shape).
+
+    Identity is compared on the NORMALIZED name, not the raw display string — two records
+    that normalize alike in one country are the same club by this module's own definition
+    (it is the key every resolution layer above is written against), so treating them as
+    distinct here would contradict `resolve_code` and flag a collision no override could
+    ever fix. Transfermarkt is full of these: a refounded club keeps a separate club_id for
+    its predecessor ('Karpaty Lviv (-2021)' alongside 'FK Karpaty Lviv', 'Metalist Kharkiv
+    (- 2016)' alongside 'Metalist Kharkiv'), and `normalize_name` strips the era suffix, so
+    both records legitimately share one code and one continuous club history. The real
+    collisions this guards against — Blackburn Rovers vs Brisbane Roar, both heuristic
+    'BRO' — normalize differently and are still caught."""
     by_code: dict[str, set[tuple[str, str]]] = {}
     for row in rows:
         code = row["team_abbr"]
-        identity = (row["club_identity"], row.get("league") or "")
+        identity = (normalize_name(row["club_identity"]), row.get("league") or "")
         by_code.setdefault(code, set()).add(identity)
     collisions = {code: identities for code, identities in by_code.items()
                   if len(identities) > 1}

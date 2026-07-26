@@ -69,6 +69,7 @@ import time
 from pathlib import Path
 from typing import Iterable
 
+from .. import soccer_leagues
 from ..models import RawSeason
 from . import club_codes
 from .http import fetch_json
@@ -82,7 +83,7 @@ CSV_PATH = DATA_DIR / "soccer_espn_seasons.csv"
 # `tools/ingest/teams.py`'s `build_teams`/`build_leagues`, never by the puzzle pipeline.
 TEAM_IDENTITY_CSV_PATH = DATA_DIR / "soccer_team_identity.csv"
 TEAM_IDENTITY_FIELDS = ["team_abbr", "league", "full_name", "espn_id", "logo_url",
-                        "primary_color", "secondary_color"]
+                        "primary_color", "secondary_color", "competition"]
 
 _API = "http://site.api.espn.com/apis/site/v2/sports/soccer/{league}/{endpoint}"
 
@@ -93,24 +94,25 @@ _RATE_DELAY = 0.15
 
 MIN_APPEARANCES = 5   # a real squad season, not a cameo
 
-CSV_FIELDS = ["name", "team_abbr", "season_year", "position",
-              "appearances", "goals", "assists", "clean_sheets", "headshot", "league"]
+CSV_FIELDS = ["name", "team_abbr", "season_year", "position", "appearances", "goals",
+              "assists", "clean_sheets", "headshot", "league", "competition"]
 
-# ESPN league slug -> country/league label (for logging only). Every entry here was
-# live-verified 2026-07-12 to return real teams and, for a spot-checked sample across
-# every continent, real per-match goalkeeper box-score stats.
-_LEAGUES: dict[str, str] = {
-    "eng.1": "England", "esp.1": "Spain", "ger.1": "Germany", "ita.1": "Italy",
-    "fra.1": "France", "por.1": "Portugal", "ned.1": "Netherlands", "bel.1": "Belgium",
-    "sco.1": "Scotland", "tur.1": "Turkey", "rus.1": "Russia", "gre.1": "Greece",
-    "den.1": "Denmark", "sui.1": "Switzerland", "aut.1": "Austria", "swe.1": "Sweden",
-    "nor.1": "Norway", "irl.1": "Ireland", "isr.1": "Israel", "rou.1": "Romania",
-    "bra.1": "Brazil", "arg.1": "Argentina", "usa.1": "USA (MLS)", "mex.1": "Mexico",
-    "chi.1": "Chile", "col.1": "Colombia", "per.1": "Peru", "uru.1": "Uruguay",
-    "ecu.1": "Ecuador", "ven.1": "Venezuela", "bol.1": "Bolivia", "par.1": "Paraguay",
-    "jpn.1": "Japan", "chn.1": "China", "ind.1": "India", "ksa.1": "Saudi Arabia",
-    "rsa.1": "South Africa", "aus.1": "Australia",
-}
+# ESPN league slug -> country/league label. Derived from the committed competition table
+# (`soccer_leagues.py`) rather than the 38-entry dict this module used to hardcode: that dict
+# and `transfermarkt_soccer._COMPETITION_COUNTRY` were two copies of the same fact, and it
+# could only ever describe top flights. Every slug there was live-verified 2026-07-12 to
+# return real teams and, for a spot-checked sample across every continent, real per-match
+# goalkeeper box-score stats; the 7 lower divisions added since are verified below.
+#
+# NOTE both divisions of a country share one label ("ger.1" and "ger.2" are both "Germany").
+# The nation is the label; the DIVISION is the `competition` slug, which is why rows now
+# carry both — see `refresh`'s row builder.
+_LEAGUES: dict[str, str] = soccer_leagues.nations_by_slug()
+
+# What a default `refresh()` sweeps: top flights only. Lower divisions are opt-in per run
+# (`--leagues ger.2`) — they're thinner, need their own club-code overrides, and sweeping all
+# 45 competitions by default would multiply an already-long run for little coverage gain.
+_DEFAULT_SWEEP: list[str] = soccer_leagues.slugs(tier=1)
 
 # Empirical season floor (the season END year ESPN's own clamp resolves an
 # out-of-range request to) — probed live 2026-07-12 via `scoreboard?dates=<early date>`.
@@ -128,6 +130,11 @@ _LEAGUE_FLOORS: dict[str, int] = {
     "col.1": 2006, "per.1": 2006, "uru.1": 2006, "ecu.1": 2006, "ven.1": 2006,
     "bol.1": 2006, "par.1": 2006, "jpn.1": 2007, "chn.1": 2017, "ind.1": 2016,
     "ksa.1": 2023, "rsa.1": 2007, "aus.1": 2006,
+    # Lower divisions (2026-07-26). ESPN serves these at `.2`/`.3`; `por.2` 400s and is
+    # deliberately absent from the competition table. Floors are conservative — a season with
+    # zero discovered matches is skipped, so guessing late costs depth, never correctness.
+    "eng.2": 2007, "eng.3": 2007, "esp.2": 2007, "fra.2": 2007, "ger.2": 2007,
+    "ita.2": 2007, "ned.2": 2007,
 }
 
 _POSITION_KEYWORDS = (
@@ -278,6 +285,11 @@ def _build_team_identity(identity_rows: Iterable[dict]) -> list[dict]:
     are effectively constant across matches, but a defensive fill costs nothing). Pure +
     testable, no pandas — same discipline as `_aggregate_rows`.
 
+    A club's own `competition` is carried through rather than inferred downstream: `teams.py`
+    otherwise has only the nation to go on and has to assume the country's TOP flight, which
+    would file every 2. Bundesliga club under Bundesliga and make the division unselectable in
+    the picker (which reads `teams.competition`).
+
     Expected row shape: {"team": str, "espn_id": str, "logo_url": str,
     "primary_color": str (hex, no leading '#'), "secondary_color": str (hex, no leading
     '#'), "league": str (ESPN slug)}."""
@@ -294,6 +306,7 @@ def _build_team_identity(identity_rows: Iterable[dict]) -> list[dict]:
                 "team_abbr": team_abbr, "league": league_label, "full_name": row["team"],
                 "espn_id": row.get("espn_id") or "", "logo_url": row.get("logo_url") or "",
                 "primary_color": primary, "secondary_color": secondary,
+                "competition": row["league"],
             }
         else:
             if not existing["logo_url"] and row.get("logo_url"):
@@ -334,7 +347,7 @@ def refresh(leagues: list[str] | None = None,
     CI matrix job (one leg per league — see `.github/workflows/espn-soccer-backfill.yml`)
     can write its own partition instead of every parallel leg colliding on one file;
     `merge_csvs` below recombines those partitions into the single committed CSV."""
-    leagues = leagues or list(_LEAGUES)
+    leagues = leagues or list(_DEFAULT_SWEEP)
     season_to = season_to or dt.date.today().year + (1 if dt.date.today().month >= 7 else 0)
 
     all_rows: list[dict] = []
@@ -399,6 +412,10 @@ def refresh(leagues: list[str] | None = None,
             "appearances": stats["appearances"], "goals": stats["goals"],
             "assists": stats["assists"], "clean_sheets": stats["clean_sheets"],
             "league": league_label,
+            # The DIVISION this row was actually played in. `league` above is the nation, so
+            # Bundesliga and 2. Bundesliga rows are indistinguishable by it — this is the
+            # column a "give me 2. Bundesliga" filter can enforce.
+            "competition": league,
             "club_identity": team,
         })
     print(f"[espn-soccer] {len(kept)} qualifying player-seasons "
@@ -503,7 +520,7 @@ def load_seasons() -> list[RawSeason]:
                 },
                 source="espn",
                 headshot=row["headshot"],
-                meta={"league": row["league"]} if row.get("league") else {},
+                meta=soccer_leagues.season_meta(row),
             ))
     return out
 
@@ -536,12 +553,17 @@ def main() -> int:
                     help="skip the live sweep; merge every *.csv in this directory "
                          "(matrix legs' --out partitions) into --out (or the committed "
                          "CSV if --out is omitted)")
+    ap.add_argument("--allow-missing-photos", action="store_true",
+                    help="keep player-seasons Wikipedia has no confident headshot for "
+                         "(the client renders an initial-avatar circle). Required for lower "
+                         "divisions: a measured ger.2 sweep found photos for 11 of 603 "
+                         "players, so the default gate turns 778 real player-seasons into 13")
     args = ap.parse_args()
     if args.merge_dir:
         merge_csvs(sorted(args.merge_dir.glob("*.csv")), args.out or CSV_PATH)
         return 0
     refresh(leagues=args.leagues, season_from=args.season_from, season_to=args.season_to,
-            out_path=args.out)
+            out_path=args.out, require_headshot=not args.allow_missing_photos)
     return 0
 
 

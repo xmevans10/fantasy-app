@@ -106,3 +106,21 @@ def test_whoami_rows_valid():
         validate(row)
         assert row.content["clues"][0]["kind"] == "era"
         assert row.content["answer"]["canonical"]
+
+
+def test_photo_less_lower_division_soccer_row_never_becomes_a_puzzle_card():
+    # `--allow-missing-photos` keeps ger.2 rows Wikipedia has no photo for, because a Draft &
+    # Spin roster row renders an initial-avatar circle. A Keep4 card IS the photo, so the same
+    # row must not reach the bundle — otherwise test_headshot_coverage trips on every refresh.
+    theme = Theme(key="soccer-fw", title="Soccer FW", sport="soccer",
+                  scale="soccer_attacker_fantasy", positions=["FW"], min_stats={},
+                  columns=[], pool_cap=50, grain="season")
+    photoless = RawSeason(name="Lower Division Guy", team_abbr="SCP", season_year=2025,
+                          sport="soccer", position="FW", stats={"goals": 20.0},
+                          source="espn", headshot="")
+    withphoto = RawSeason(name="Top Flight Guy", team_abbr="BAY", season_year=2025,
+                          sport="soccer", position="FW", stats={"goals": 20.0},
+                          source="espn", headshot="https://example/photo.jpg")
+    pool = assemble.grade_pool(theme, [photoless, withphoto])
+    names = {s.name for s, _ in pool}
+    assert names == {"Top Flight Guy"}

@@ -4,10 +4,12 @@ import XCTest
 final class DraftSpinTests: XCTestCase {
 
     private func season(_ id: String, position: String, stats: [String: Double],
-                       team: String = "SF", year: Int = 2020, league: String? = nil) -> CatalogSeason {
+                       team: String = "SF", year: Int = 2020, league: String? = nil,
+                       competition: String? = nil) -> CatalogSeason {
         var s = CatalogSeason(id: id, sport: .nfl, name: "Player \(id)", teamAbbr: team,
                               seasonYear: year, position: position, stats: stats)
         s.league = league
+        s.competition = competition
         return s
     }
 
@@ -282,12 +284,24 @@ final class DraftSpinTests: XCTestCase {
                                                    excludeNames: ["Player qb-sf20", "Player qb-dal"], using: &g))
     }
 
-    // MARK: - spinRound league filter (soccer LEAGUE setup option)
+    // MARK: - spinRound Nation → League → Club filter (soccer LEAGUE setup option)
 
     private var twoLeaguePool: [CatalogSeason] {
         [
-            season("gk-eng", position: "GK", stats: [:], team: "MCI", year: 2022, league: "England"),
-            season("gk-esp", position: "GK", stats: [:], team: "FCB", year: 2022, league: "Spain"),
+            season("gk-eng", position: "GK", stats: [:], team: "MCI", year: 2022,
+                   league: "England", competition: "eng.1"),
+            season("gk-esp", position: "GK", stats: [:], team: "FCB", year: 2022,
+                   league: "Spain", competition: "esp.1"),
+        ]
+    }
+
+    /// Both German divisions, which is the case a nation label alone cannot express.
+    private var twoDivisionPool: [CatalogSeason] {
+        [
+            season("gk-ger1", position: "GK", stats: [:], team: "BAY", year: 2025,
+                   league: "Germany", competition: "ger.1"),
+            season("gk-ger2", position: "GK", stats: [:], team: "SPA", year: 2025,
+                   league: "Germany", competition: "ger.2"),
         ]
     }
 
@@ -295,7 +309,7 @@ final class DraftSpinTests: XCTestCase {
         for i in 0...5 {
             var g = spinRNG("league-\(i)")
             let spun = DraftSpinConstraint.spinRound(from: twoLeaguePool, sport: .soccer, openRoles: ["GK"],
-                                                     league: "England", using: &g)
+                                                     filter: ClubFilter(nation: "England"), using: &g)
             XCTAssertEqual(spun?.team, "MCI", "stream \(i) escaped the league filter")
         }
     }
@@ -306,7 +320,7 @@ final class DraftSpinTests: XCTestCase {
         let pool = [season("gk-esp", position: "GK", stats: [:], team: "FCB", year: 2022, league: "Spain")]
         var g = spinRNG("league-fallback")
         let spun = DraftSpinConstraint.spinRound(from: pool, sport: .soccer, openRoles: ["GK"],
-                                                 league: "England", using: &g)
+                                                 filter: ClubFilter(nation: "England"), using: &g)
         XCTAssertEqual(spun?.team, "FCB")
     }
 
@@ -319,9 +333,54 @@ final class DraftSpinTests: XCTestCase {
     func testSpinRoundReturnsTheSpunCombosLeagueSoTheRosterFetchCanScope() {
         var g = spinRNG("league-in-result")
         let spun = DraftSpinConstraint.spinRound(from: twoLeaguePool, sport: .soccer, openRoles: ["GK"],
-                                                 league: "Spain", using: &g)
+                                                 filter: ClubFilter(nation: "Spain"), using: &g)
         XCTAssertEqual(spun?.team, "FCB")
         XCTAssertEqual(spun?.league, "Spain")
+    }
+
+    // The whole point of the `competition` column: two divisions of ONE nation are now
+    // separable, where a nation-label filter matched both.
+
+    func testSpinRoundCompetitionSelectsOneDivisionOfANation() {
+        for i in 0...5 {
+            var g = spinRNG("competition-\(i)")
+            let spun = DraftSpinConstraint.spinRound(
+                from: twoDivisionPool, sport: .soccer, openRoles: ["GK"],
+                filter: ClubFilter(nation: "Germany", competition: "ger.2"), using: &g)
+            XCTAssertEqual(spun?.team, "SPA", "stream \(i) leaked a Bundesliga club into a 2. Bundesliga draft")
+        }
+    }
+
+    func testSpinRoundNationAloneStillSpansEveryDivisionOfThatNation() {
+        var seen: Set<String> = []
+        for i in 0...20 {
+            var g = spinRNG("nation-wide-\(i)")
+            let spun = DraftSpinConstraint.spinRound(
+                from: twoDivisionPool, sport: .soccer, openRoles: ["GK"],
+                filter: ClubFilter(nation: "Germany"), using: &g)
+            if let team = spun?.team { seen.insert(team) }
+        }
+        XCTAssertEqual(seen, ["BAY", "SPA"], "\"All of Germany\" must reach both divisions")
+    }
+
+    func testSpinRoundClubLevelPinsTheSpinToThatClub() {
+        for i in 0...5 {
+            var g = spinRNG("club-\(i)")
+            let spun = DraftSpinConstraint.spinRound(
+                from: twoDivisionPool, sport: .soccer, openRoles: ["GK"],
+                filter: ClubFilter(nation: "Germany", competition: "ger.1", club: "BAY"), using: &g)
+            XCTAssertEqual(spun?.team, "BAY", "stream \(i) escaped the club filter")
+        }
+    }
+
+    func testClubFilterDoesNotMatchARowThatDoesNotKnowItsCompetition() {
+        // A soccer row written before the column existed must not be silently swept into a
+        // division draft — the fall-back-to-the-full-pool path is what stops that from
+        // dead-ending a spin while the backfill catches up.
+        let unlabelled = season("gk-old", position: "GK", stats: [:], team: "XYZ", year: 2015,
+                                league: "Germany")
+        XCTAssertFalse(ClubFilter(nation: "Germany", competition: "ger.2").matches(unlabelled))
+        XCTAssertTrue(ClubFilter(nation: "Germany").matches(unlabelled))
     }
 
     // MARK: - spinRound league-collision (defense in depth, live collision: "BRO" is both

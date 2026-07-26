@@ -160,13 +160,16 @@ enum DraftSpinConstraint {
     /// leaves nothing viable the spin falls back to every team rather than dead-ending.
     /// `excludeNames` (season-variations OFF) treats already-drafted players as absent when
     /// judging a combo viable, so a spin can never land on a roster whose only placeable
-    /// candidates are players you already own. `league` (soccer LEAGUE setup option)
-    /// restricts the spin to `CatalogSeason.league == league`; same never-dead-end shape as
-    /// `lockedTeam` — a league with thin/not-yet-backfilled coverage for the currently open
-    /// roles falls back to the full pool rather than showing nothing.
+    /// candidates are players you already own. `filter` (the soccer Nation → League → Club
+    /// setup option) narrows the spin to a nation, a competition, and/or a club; same
+    /// never-dead-end shape as `lockedTeam` — a selection with thin/not-yet-backfilled
+    /// coverage for the currently open roles falls back to the full pool rather than showing
+    /// nothing. It takes the whole `ClubFilter` rather than a bare league string because the
+    /// three levels are one choice: a nation matches every division under it, while a
+    /// competition matches exactly one, and only the filter as a whole knows which was picked.
     static func spinRound(from pool: [CatalogSeason], sport: Sport, openRoles: [String],
                         lockedTeam: String? = nil, usedLockedYears: Set<Int> = [],
-                        excludeNames: Set<String> = [], league: String? = nil,
+                        excludeNames: Set<String> = [], filter: ClubFilter = .all,
                         minCandidates: Int? = nil, excludeCombos: Set<String> = [],
                         using gen: inout some RandomNumberGenerator) -> (team: String, year: Int, league: String?)? {
         let openFilters = (formations[sport] ?? []).filter { openRoles.contains($0.role) }.map(\.filter)
@@ -206,11 +209,11 @@ enum DraftSpinConstraint {
         }
 
         var viable: [TeamYear]
-        if let league {
-            let narrowed = viableCombos(in: pool.filter { $0.league == league })
-            viable = narrowed.isEmpty ? viableCombos(in: pool) : narrowed
-        } else {
+        if filter.isAll {
             viable = viableCombos(in: pool)
+        } else {
+            let narrowed = viableCombos(in: pool.filter { filter.matches($0) })
+            viable = narrowed.isEmpty ? viableCombos(in: pool) : narrowed
         }
         if let lockedTeam {
             // Different year each round for the locked franchise; fall back to other teams

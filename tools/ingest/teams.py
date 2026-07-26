@@ -22,7 +22,7 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-from . import logos
+from . import logos, soccer_leagues
 from .providers import espn_soccer
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -35,7 +35,6 @@ US_SPORTS = ("nfl", "nba", "baseball")
 # `mlb`, not `baseball` — kept as an explicit mapping rather than a guess.
 _ESPN_LOGO_SLUG = {"nfl": "nfl", "nba": "nba", "baseball": "mlb"}
 
-SOCCER_LEAGUES_PATH = DATA_DIR / "soccer_leagues.csv"
 
 
 def load_soccer_leagues() -> list[dict]:
@@ -46,14 +45,12 @@ def load_soccer_leagues() -> list[dict]:
     nowhere to live. That is why "give me Bundesliga 2" was impossible: not a UI gap, a model
     gap. `tier` + `espn_slug` are the missing middle layer of the FIFA-style
     Nation -> League -> Club hierarchy; the client groups a picker by `country` and orders by
-    `tier`. Tolerant of a missing file (empty list, never an exception), like `load_us_colors`."""
-    if not SOCCER_LEAGUES_PATH.exists():
-        return []
-    with SOCCER_LEAGUES_PATH.open(encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
-    for r in rows:
-        r["tier"] = int(r["tier"]) if str(r.get("tier", "")).strip() else 1
-    return rows
+    `tier`.
+
+    The loader itself moved to `soccer_leagues.py` so the soccer PROVIDERS can read the same
+    table without importing this module (which imports them — it would cycle). Kept as a thin
+    delegate because `build_teams`/`build_leagues` below call it by this name."""
+    return [dict(r) for r in soccer_leagues.load()]
 
 
 def load_us_colors() -> list[dict]:
@@ -73,8 +70,10 @@ def build_teams() -> list[dict]:
 
     soccer_identity = espn_soccer.load_team_identity()
     # Nation -> League -> Club: a club belongs to a COMPETITION ("ger.1"), and its nation is
-    # then derived from that competition rather than stored on the club. Every club ingested so
-    # far is top-flight, so its competition is its nation's tier-1 entry.
+    # then derived from that competition rather than stored on the club. The sweep now records
+    # each club's own competition, so this only falls back to "the nation's top flight" for
+    # identity rows written before that column existed — guessing it for a club swept from a
+    # lower division would file every 2. Bundesliga side under Bundesliga.
     top_flight = {e["country"]: e["espn_slug"] for e in load_soccer_leagues() if e["tier"] == 1}
     soccer_logo_count = 0
     for entry in soccer_identity:
@@ -91,7 +90,7 @@ def build_teams() -> list[dict]:
             "primary_color": entry.get("primary_color") or None,
             "secondary_color": entry.get("secondary_color") or None,
             "espn_id": entry.get("espn_id") or None,
-            "competition": top_flight.get(entry["league"]),
+            "competition": entry.get("competition") or top_flight.get(entry["league"]),
         })
     print(f"[teams] soccer: {len(soccer_identity)} clubs, {soccer_logo_count} logo(s) rehosted")
 

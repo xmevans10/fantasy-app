@@ -402,11 +402,20 @@ def catalog_rows(seasons: list[RawSeason]) -> list[dict]:
             "first_year": int(s.meta["first_year"]) if s.career else None,
             "last_year": int(s.meta["last_year"]) if s.career else None,
             "league": s.meta.get("league") or None,
+            # Soccer division key ("ger.2"); `league` above is only the nation, so this is
+            # what a lower-division filter can enforce. None for every other sport.
+            "competition": s.meta.get("competition") or None,
             "week": s.week,
             "opponent": s.opponent or None,
             "game_date": s.game_date or None,
         }
     return list(by_id.values())
+
+
+# Columns an "already stored" catalog row can still be improved by — see the resend logic in
+# `filter_new_catalog_rows`. Add a column here when the pipeline gains the ability to fill it
+# in for rows that were written before it existed.
+IMPROVABLE_COLUMNS = ("headshot", "competition")
 
 
 def filter_new_catalog_rows(rows: list[dict]) -> list[dict]:
@@ -437,22 +446,32 @@ def filter_new_catalog_rows(rows: list[dict]) -> list[dict]:
     new_closed: list[dict] = []
     for sport, sport_rows in by_sport.items():
         existing_ids = fetch_existing_catalog_ids(sport)
-        # "Already stored" rows are normally immutable — but a stored row with NO headshot
-        # is still improvable: the name+era registry join (backfill_nfl_headshots_by_name)
-        # can supply one later, and skipping the row would strand the blank forever (the
-        # exact failure mode of the first backfill run, 2026-07-18: 8,309 joins, 0 reached
-        # the DB). Resend any already-stored row whose stored copy lacks the headshot this
-        # run has.
-        from .upsert import fetch_catalog_ids_missing_headshot
-        needs_headshot = fetch_catalog_ids_missing_headshot(sport)
-        improvable = [r for r in sport_rows
-                      if r["id"] in existing_ids and r["id"] in needs_headshot and r.get("headshot")]
+        # "Already stored" rows are normally immutable — but a stored row missing a column
+        # this run CAN fill is still improvable, and skipping it would strand the blank
+        # forever. Two columns have hit this for real:
+        #   headshot    — the name+era registry join (backfill_nfl_headshots_by_name) supplies
+        #                 photos later; the first backfill run (2026-07-18) made 8,309 joins
+        #                 and landed 0 of them in the DB for exactly this reason.
+        #   competition — ~75k soccer rows were written from a CSV that predated the column,
+        #                 leaving them unfilterable by nation OR division (found 2026-07-26).
+        # A column is only queried for a sport whose rows actually carry it, so this costs
+        # nothing for e.g. NFL, where no row has a competition to improve with.
+        from .upsert import fetch_catalog_ids_missing
+
+        improvable_ids: set[str] = set()
+        for column in IMPROVABLE_COLUMNS:
+            fillable = {r["id"] for r in sport_rows if r.get(column)}
+            if not fillable:
+                continue
+            improvable_ids |= fillable & fetch_catalog_ids_missing(sport, column) & existing_ids
+
+        improvable = [r for r in sport_rows if r["id"] in improvable_ids]
         skipped = len([r for r in sport_rows if r["id"] in existing_ids]) - len(improvable)
         new_closed.extend(r for r in sport_rows if r["id"] not in existing_ids)
         new_closed.extend(improvable)
         print(f"[catalog] {sport}: {skipped} already stored, "
               f"{len(sport_rows) - skipped - len(improvable)} new, "
-              f"{len(improvable)} headshot-improvable resends")
+              f"{len(improvable)} improvable resends")
 
     return always_send + new_closed
 

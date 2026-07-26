@@ -3,18 +3,52 @@ import SwiftUI
 /// The filter a Nation → League → Club drill-down produces. Each level is optional and narrows
 /// the one above it, so "Germany" and "Germany → Bundesliga → Bayern" are both valid states.
 struct ClubFilter: Equatable {
-    /// Nation label — what `CatalogSeason.league` actually stores today, so this is the level
-    /// the arcade filter can enforce.
+    /// Nation label — what `CatalogSeason.league` stores. Selecting a nation matches EVERY
+    /// division under it (both Bundesliga and 2. Bundesliga rows read "Germany"), which is
+    /// what "All of Germany" should mean.
     var nation: String?
-    /// Competition key ("ger.1"). Recorded so the selection survives, but not yet enforceable
-    /// on player rows: `player_seasons.competition` exists and is unbackfilled, so filtering on
-    /// it would match nothing. Enforced the moment a sweep populates it.
+    /// Competition key ("ger.1") — `CatalogSeason.competition`, the division. This is the
+    /// level a nation cannot express, and it is enforced whenever it's set.
     var competition: String?
-    /// Club abbreviation — enforceable today via the spin's own locked-team path.
+    /// Club abbreviation — the narrowest level.
     var club: String?
 
     static let all = ClubFilter()
     var isAll: Bool { self == .all }
+
+    /// Does this season fall inside the selection? Each level that is set must match, so the
+    /// three compose: nation alone = every division of that country; nation + competition =
+    /// one division; + club = one team.
+    ///
+    /// A `nil` value on the SEASON never matches a set level — a soccer row written before the
+    /// `competition` column existed genuinely doesn't know its division, and quietly letting it
+    /// through would put Bundesliga players in a 2. Bundesliga draft. `spinRound`'s
+    /// fall-back-to-the-full-pool behavior is what keeps that strictness from dead-ending a
+    /// spin while the backfill is still catching up.
+    func matches(_ season: CatalogSeason) -> Bool {
+        if let nation, season.league != nation { return false }
+        if let competition, season.competition != competition { return false }
+        if let club, season.teamAbbr != club { return false }
+        return true
+    }
+
+    /// What this selection is called, deepest level first: club → competition → nation → all.
+    /// Lives on the filter rather than in the picker button because the setup screen's caption
+    /// has to name the same thing the button shows — two copies drifted the moment competitions
+    /// became selectable and only the button knew about them.
+    func displayName(sport: Sport) -> String {
+        if let club {
+            return TeamIdentityIndex.shared.identity(sport: sport, abbr: club,
+                                                     league: nation)?.fullName ?? club
+        }
+        guard let nation else { return String(localized: "All leagues") }
+        if let competition,
+           let match = TeamIdentityIndex.shared.leagues(sport: sport, nation: nation)
+               .first(where: { $0.competition == competition }) {
+            return match.displayName ?? nation
+        }
+        return nation
+    }
 }
 
 /// Nation → League → Club, as navigation rather than one flat list.
@@ -32,6 +66,9 @@ struct NationLeagueClubPicker: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
+    /// Drives the drill-down so an automated run can land on the DIVISION level directly —
+    /// see `DebugLaunch.screenshotLeagueNation`. Normal taps push onto the same path.
+    @State private var path: [String] = []
 
     private var nations: [String] { TeamIdentityIndex.shared.nations(sport: sport) }
 
@@ -47,7 +84,7 @@ struct NationLeagueClubPicker: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 Section {
                     Button {
@@ -65,10 +102,20 @@ struct NationLeagueClubPicker: View {
                     }
                 }
             }
+            .navigationDestination(for: String.self) { nation in
+                LeagueLevel(filter: $filter, sport: sport, nation: nation,
+                            playable: playableNations.contains(nation),
+                            dismissAll: { dismiss() })
+            }
             .listStyle(.insetGrouped)
             .navigationTitle(Text("League"))
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, prompt: Text("Search nations & leagues"))
+            .onAppear {
+                if let nation = DebugLaunch.screenshotLeagueNation, path.isEmpty {
+                    path = [nation]
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(String(localized: "Done")) { dismiss() }
@@ -81,10 +128,7 @@ struct NationLeagueClubPicker: View {
     private func nationRow(_ nation: String) -> some View {
         let playable = playableNations.contains(nation)
         let crest = TeamIdentityIndex.shared.leagues(sport: sport, nation: nation).first?.logoURL
-        NavigationLink {
-            LeagueLevel(filter: $filter, sport: sport, nation: nation, playable: playable,
-                        dismissAll: { dismiss() })
-        } label: {
+        NavigationLink(value: nation) {
             PickerRow(title: nation, subtitle: nil, logo: crest,
                       trailing: playable ? (filter.nation == nation ? .check : .none) : .soon)
         }
@@ -103,6 +147,14 @@ private struct LeagueLevel: View {
 
     private var leagues: [LeagueIdentity] {
         TeamIdentityIndex.shared.leagues(sport: sport, nation: nation)
+    }
+
+    /// Read live, NOT passed in from the setup screen: a `Set` handed to `.sheet` is captured
+    /// when the sheet is presented, and identity warms asynchronously — so an auto-opened
+    /// picker captured an empty set and rendered every division "SOON" (caught in the
+    /// simulator 2026-07-26). The nation level hid the same bug behind its curated fallback.
+    private var playableCompetitions: Set<String> {
+        TeamIdentityIndex.shared.competitionsWithTeams(sport: sport)
     }
 
     var body: some View {
@@ -133,9 +185,10 @@ private struct LeagueLevel: View {
 
     @ViewBuilder
     private func leagueRow(_ league: LeagueIdentity) -> some View {
-        // Only the top flight is selectable: player rows carry a nation, not a competition, so a
-        // lower division would silently return the top flight's players (see `ClubFilter`).
-        let selectable = playable && league.tier == 1
+        // Every tier whose competition actually has player rows is selectable now that rows
+        // carry `competition`. Before that column was populated a lower division would have
+        // silently returned the top flight's players, so only tier 1 could be offered.
+        let selectable = playable && playableCompetitions.contains(league.competition ?? "")
         NavigationLink {
             ClubLevel(filter: $filter, sport: sport, nation: nation,
                       competition: league.competition, leagueName: league.displayName ?? nation,
@@ -173,7 +226,7 @@ private struct ClubLevel: View {
                 } label: {
                     PickerRow(title: String(localized: "All clubs"), subtitle: nil, logo: nil,
                               trailing: filter.club == nil && filter.nation == nation
-                                  ? .check : .none)
+                                  && filter.competition == competition ? .check : .none)
                 }
                 .buttonStyle(.plain)
             }

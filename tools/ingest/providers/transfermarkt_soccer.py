@@ -60,6 +60,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Iterable, Iterator
 
+from .. import soccer_leagues
 from ..models import RawSeason
 from . import club_codes
 from .club_codes import _short_code  # re-exported: existing tests/callers import it from here
@@ -82,19 +83,29 @@ _CROSS_YEAR_SHARE = 0.25
 
 _POSITION_MAP = {"Attack": "FW", "Midfield": "MF", "Defender": "DF", "Goalkeeper": "GK"}
 
-# Competition id -> country/league label, for the 14 first-tier competitions this
-# provider actually has appearance rows for (see the module docstring). Values match
-# `espn_soccer.py`'s own `_LEAGUES` labels exactly (e.g. "Turkey" not Transfermarkt's own
-# "Türkiye") so `player_seasons.league` reads the same regardless of source, and so
-# `club_codes.resolve_code`'s name+country curated layer agrees between both providers.
-_COMPETITION_COUNTRY = {
-    "GB1": "England", "ES1": "Spain", "IT1": "Italy", "L1": "Germany", "FR1": "France",
-    "PO1": "Portugal", "NL1": "Netherlands", "BE1": "Belgium", "TR1": "Turkey",
-    "RU1": "Russia", "GR1": "Greece", "SC1": "Scotland", "UKR1": "Ukraine", "DK1": "Denmark",
+# Transfermarkt competition id -> ESPN league slug, for the 14 first-tier competitions this
+# provider actually has appearance rows for (see the module docstring). Mapping onto ESPN's
+# slug rather than straight onto a country label is what lets both soccer providers write the
+# SAME `competition` key for the same real competition, so a row's division is source-agnostic
+# — and the nation is then derived from `soccer_leagues.csv`, which is why the country labels
+# these produce match `espn_soccer.py`'s exactly (e.g. "Turkey", not Transfermarkt's "Türkiye").
+# That agreement also matters to `club_codes.resolve_code`'s name+country curated layer, which
+# both providers key on.
+_COMPETITION_SLUG = {
+    "GB1": "eng.1", "ES1": "esp.1", "IT1": "ita.1", "L1": "ger.1", "FR1": "fra.1",
+    "PO1": "por.1", "NL1": "ned.1", "BE1": "bel.1", "TR1": "tur.1",
+    "RU1": "rus.1", "GR1": "gre.1", "SC1": "sco.1", "UKR1": "ukr.1", "DK1": "den.1",
 }
 
-CSV_FIELDS = ["name", "team_abbr", "season_year", "position",
-              "appearances", "goals", "assists", "clean_sheets", "headshot", "league"]
+
+def _country(comp: str) -> str:
+    """Nation label for a Transfermarkt competition id, via the shared competition table."""
+    slug = _COMPETITION_SLUG.get(comp)
+    return soccer_leagues.nation_for(slug) if slug else ""
+
+
+CSV_FIELDS = ["name", "team_abbr", "season_year", "position", "appearances", "goals",
+              "assists", "clean_sheets", "headshot", "league", "competition"]
 
 
 # ---------------------------------------------------------------------------
@@ -216,7 +227,7 @@ def refresh() -> None:
     club_code_map = {
         r["club_id"]: club_codes.resolve_code(
             r["name"],
-            country=_COMPETITION_COUNTRY.get(r["domestic_competition_id"], ""),
+            country=_country(r["domestic_competition_id"]),
             club_key=r["club_id"])
         for r in club_rows
     }
@@ -248,7 +259,8 @@ def refresh() -> None:
             # Seed convention: clean sheets are a GK/DF stat; attackers carry 0.
             "clean_sheets": line["clean_sheets"] if position in ("GK", "DF") else 0,
             "headshot": image,
-            "league": _COMPETITION_COUNTRY.get(comp, ""),
+            "league": _country(comp),
+            "competition": _COMPETITION_SLUG.get(comp, ""),
             "_club_identity": club_names.get(club_id, club_id),
         })
     rows.sort(key=lambda r: (r["name"], r["season_year"], r["team_abbr"]))
@@ -283,9 +295,10 @@ def load_seasons() -> list[RawSeason]:
     one-time refresh has been run). Identical column layout and stat keys to
     seed.load_soccer, so both sources merge cleanly downstream.
 
-    `league` is read defensively (`row.get`, not `row[...]`) — it's a new column as of
-    the club-code-collision fix, and the committed CSV won't gain it until the next full
-    `refresh()` sweep regenerates it; an older CSV without the column must still load."""
+    `league`/`competition` are read defensively by `soccer_leagues.season_meta` — both are
+    columns the committed CSV only gains when a full `refresh()` regenerates it, and an older
+    CSV without them must still load. That tolerance is not hypothetical: the CSV committed
+    2026-07-10 predates `league`, which is how ~75k prod rows ended up with no nation at all."""
     if not CSV_PATH.exists():
         return []
     out: list[RawSeason] = []
@@ -305,7 +318,7 @@ def load_seasons() -> list[RawSeason]:
                 },
                 source="transfermarkt",
                 headshot=row["headshot"],
-                meta={"league": row["league"]} if row.get("league") else {},
+                meta=soccer_leagues.season_meta(row),
             ))
     return out
 

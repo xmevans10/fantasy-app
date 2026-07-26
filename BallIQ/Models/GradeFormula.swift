@@ -112,6 +112,12 @@ struct CatalogSeason: Identifiable, Codable, Equatable {
     /// and for soccer rows from providers that don't carry league data yet
     /// (`transfermarkt_soccer.py`, `seed.py`).
     var league: String? = nil
+    /// Soccer only: the DIVISION this season was played in, as an ESPN competition slug
+    /// ("ger.1", "ger.2") — mirrors `RawSeason.meta["competition"]`. `league` above is only the
+    /// nation, so Bundesliga and 2. Bundesliga rows are indistinguishable by it; this is the key
+    /// a lower-division filter can actually enforce. nil for every other sport, and for soccer
+    /// rows written before the column existed.
+    var competition: String? = nil
     /// Single-game grain, mirrors `RawSeason.week`/`.opponent`/`.game_date` — nil/nil/nil
     /// for a season or career row. `gameDate` is nil for NFL game rows (they use `week`
     /// for the "Wk W" label instead); non-nil for MLB/NBA game rows. All three optional so
@@ -141,7 +147,8 @@ struct CatalogSeason: Identifiable, Codable, Equatable {
     // (e.g. "rushing_yards") must stay snake_case for GradeFormula, so we must not
     // use the shared `.convertFromSnakeCase` decoder here.
     enum CodingKeys: String, CodingKey {
-        case id, sport, name, position, stats, headshot, career, league, week, opponent
+        case id, sport, name, position, stats, headshot, career, league, competition
+        case week, opponent
         case teamAbbr = "team_abbr"
         case seasonYear = "season_year"
         case firstYear = "first_year"

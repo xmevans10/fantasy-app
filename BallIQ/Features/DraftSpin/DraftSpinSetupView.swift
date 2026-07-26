@@ -19,15 +19,11 @@ struct DraftSpinSetupView: View {
 
     @State private var showingHowItWorks = false
 
-    /// The competition name for the chosen league value — prefers live league identity (which now
-    /// covers 44 competitions) and falls back to the curated list, then the raw value, so the
-    /// caption reads "restricted to Premier League", not the underlying "England" country tag.
+    /// What the caption names the current selection — the same string the picker button shows,
+    /// so the two can't disagree. Reads the deepest chosen level, meaning it says "2. Bundesliga"
+    /// (or a club) where it used to only ever be able to say the nation.
     private var selectedLeagueName: String {
-        guard let value = settings.soccerLeague else { return "" }
-        if let name = TeamIdentityIndex.shared.leagueIdentity(sport: .soccer, league: value)?.displayName {
-            return name
-        }
-        return DraftSpinConstraint.majorSoccerLeagues.first { $0.value == value }?.name ?? value
+        settings.clubFilter.displayName(sport: .soccer)
     }
 
     /// Competitions the catalog actually holds clubs for. Everything else is listed but not
@@ -119,9 +115,9 @@ struct DraftSpinSetupView: View {
             if sport == .soccer && !isDailyDraft {
                 SetupOptionCard(
                     title: "LEAGUE",
-                    caption: settings.soccerLeague == nil
-                        ? "Spins draw from any of the ~38 countries' top flights we track."
-                        : "Spins are restricted to \(selectedLeagueName) — if a round can't fill an open slot from just that league, it falls back to any league rather than getting stuck.")
+                    caption: settings.clubFilter.isAll
+                        ? "Spins draw from every nation, division and club we track."
+                        : "Spins are restricted to \(selectedLeagueName) — if a round can't fill an open slot from just that, it falls back to any league rather than getting stuck.")
                 {
                     LeaguePickerButton(filter: $settings.clubFilter, sport: .soccer,
                                        playableNations: playableSoccerLeagues,
@@ -187,27 +183,13 @@ private struct LeaguePickerButton: View {
     @Binding var filter: ClubFilter
     let sport: Sport
     let playableNations: Set<String>
-    /// The nation the spin actually filters on. Kept in sync with `filter` because player rows
-    /// carry a nation, not a competition — see `ClubFilter`.
+    /// Legacy flat league value, kept in sync with `filter.nation` so the setup screen's caption
+    /// and any stored settings keep working. The spin itself now filters on the whole
+    /// `ClubFilter` — see `DraftSpinConstraint.spinRound`.
     @Binding var league: String?
     @State private var showingPicker = false
 
-    /// Deepest level chosen wins the label: club → competition → nation → all.
-    private var label: String {
-        if let club = filter.club {
-            return TeamIdentityIndex.shared.identity(sport: sport, abbr: club,
-                                                     league: filter.nation)?.fullName ?? club
-        }
-        if let nation = filter.nation {
-            let leagues = TeamIdentityIndex.shared.leagues(sport: sport, nation: nation)
-            if let comp = filter.competition,
-               let match = leagues.first(where: { $0.competition == comp }) {
-                return match.displayName ?? nation
-            }
-            return nation
-        }
-        return String(localized: "All leagues")
-    }
+    private var label: String { filter.displayName(sport: sport) }
 
     private var crest: URL? {
         if let club = filter.club {

@@ -207,7 +207,7 @@ struct DraftSpinView: View {
             guard let (team, year, league) = DraftSpinConstraint.spinRound(
                 from: sample, sport: sport, openRoles: roles,
                 lockedTeam: pinnedClub, usedLockedYears: usedLockedYears,
-                excludeNames: excludedNames, league: settings.soccerLeague,
+                excludeNames: excludedNames, filter: settings.clubFilter,
                 minCandidates: 1, excludeCombos: rejected, using: &rng
             ) else { return false }
             let roster = await fetchRoundRoster(team: team, year: year, league: league)

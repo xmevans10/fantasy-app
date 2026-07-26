@@ -111,6 +111,14 @@ enum DebugLaunch {
         guard let i = args.firstIndex(of: "-draftSpinSport"), i + 1 < args.count else { return nil }
         return Sport(rawValue: args[i + 1])
     }
+    /// Open the Nation → League → Club picker already drilled into one nation, so the DIVISION
+    /// level is reachable without a tap (simctl can't tap a list row — the same reason
+    /// `-screenshotLeaguePicker` exists at all): `-screenshotLeagueNation Germany`.
+    static var screenshotLeagueNation: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-screenshotLeagueNation"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
     /// Feed a deep link straight to `ContentView.handle` (bypasses SpringBoard's
     /// "Open in …?" confirm, which automated runs can't tap): `-openURL balliq://play/<id>`.
     static var openURL: URL? {
@@ -148,6 +156,7 @@ enum DebugLaunch {
     static let autoOpenVersusInfo = false
     static let autoOpenDailyDraftInfo = false
     static let autoOpenLeaguePicker = false
+    static let screenshotLeagueNation: String? = nil
     static let forcePriorZone: String? = nil
     static let forceLeagueCountdown = false
     static let searchQuery: String? = nil

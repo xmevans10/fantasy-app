@@ -21,6 +21,11 @@ struct CatalogQuery: Equatable {
     /// matching every row regardless of league — required for rows that don't populate league yet
     /// (Transfermarkt-sourced soccer rows, `season.league == nil`).
     var league: String?
+    /// Exact `CatalogSeason.competition` match — the soccer DIVISION ("ger.2"), the one level
+    /// `league` (a nation) cannot express. Set instead of `league` when the player picked a
+    /// specific competition; leaving it nil and setting `league` means "all divisions of this
+    /// nation". nil = no competition predicate.
+    var competition: String?
     var name: String = ""
     /// Which of the three grains to search — season (default), career-aggregate, or
     /// single-game. Always applied (never "any") so one template's pool never accidentally
@@ -193,7 +198,8 @@ final class PlayerSeasonCatalog {
         guard let client else { return nil }
         var items = [
             URLQueryItem(name: "select", value: "id,sport,name,team_abbr,season_year,position,stats,"
-                         + "headshot,career,first_year,last_year,league,week,opponent,game_date"),
+                         + "headshot,career,first_year,last_year,league,competition,"
+                         + "week,opponent,game_date"),
             // Stable order is required, not cosmetic: without it, *which* rows a capped response
             // contains isn't even guaranteed consistent across calls (verified in the Grid
             // pipeline bug) — a paginated fetch built on an unordered result could silently drop
@@ -228,6 +234,9 @@ final class PlayerSeasonCatalog {
         }
         if let league = q.league, !league.isEmpty {
             items.append(URLQueryItem(name: "league", value: "eq.\(league)"))
+        }
+        if let competition = q.competition, !competition.isEmpty {
+            items.append(URLQueryItem(name: "competition", value: "eq.\(competition)"))
         }
         let name = q.name.trimmingCharacters(in: .whitespaces)
         if !name.isEmpty {
@@ -370,6 +379,7 @@ final class PlayerSeasonCatalog {
                 && (q.exactTeam == nil || q.exactTeam!.isEmpty || s.teamAbbr == q.exactTeam!)
                 && (q.exactTeam != nil || team == nil || team!.isEmpty || s.teamAbbr.lowercased().contains(team!))
                 && (q.league == nil || s.league == q.league)
+                && (q.competition == nil || s.competition == q.competition)
                 && (name.isEmpty || s.name.lowercased().contains(name))
                 && s.isCareer == (q.grain == .career)
                 && (q.grain == .career || s.isGame == (q.grain == .singleGame))
