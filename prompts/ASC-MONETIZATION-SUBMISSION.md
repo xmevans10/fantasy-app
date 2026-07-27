@@ -33,6 +33,40 @@ product configuration needs touching — this is purely the act of submitting th
 
 ---
 
+## 2026-07-27 — first submit attempt, and exactly what was wrong
+
+The UI reported three errors. Diagnosed against the live submission
+(`b1766fe4-ac6b-475e-ba80-075fdcf01bbd`) by decoding its item ids:
+
+| item type | what it was | status |
+|---|---|---|
+| 17 | Draft & Spin Pack | present |
+| 17 | The Grid Pack | present |
+| 19 | "Pro" subscription **group version** | present |
+| 6 | **app version 1.2** | **was MISSING — added via API** |
+| — | **Pro Monthly** | **still missing (UI-only)** |
+| — | **Pro Yearly** | **still missing (UI-only)** |
+
+- Errors 1 and 2 ("must be submitted with a new app version") were **not** about product
+  configuration — the products were sitting in a submission with no app version in it. Fixed
+  by `POST /v1/reviewSubmissionItems` with an `appStoreVersion` relationship, which the API
+  *does* support (unlike products).
+- Error 3 is real and remains. Submitting returns:
+  `STATE_ERROR.SUBSCRIPTION_GROUP_SUBMISSION_NOT_ALLOWED` — *"This is a new subscription
+  group, you need to submit at least one subscription first."* The group version is in the
+  submission; neither subscription is.
+- **Adding a subscription via the API is impossible**, re-confirmed 2026-07-27:
+  `POST /v1/reviewSubmissionItems` with a `subscription` relationship returns
+  `ENTITY_ERROR.RELATIONSHIP.UNKNOWN` — *"'subscription' is not a relationship on the resource
+  'reviewSubmissionItems'"*. Same for IAPs. This is the irreducible UI step.
+
+**Remaining action: add Pro Monthly + Pro Yearly to the submission in the ASC UI, then submit.**
+The subscriptions live under **Monetization → Subscriptions**, not on the version page — which
+is likely why selecting products on the 1.2 page picked up the two packs and the group but not
+the subs themselves.
+
+---
+
 ## State as of 2026-07-26 — everything up to the UI step is done
 
 - **1.1 was pulled from review** (its submission is canceled; the version record was renamed to
