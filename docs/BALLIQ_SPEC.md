@@ -1568,6 +1568,20 @@ largest closed 2026-07-27**:
   ⚠️ **Do not `--grid --upsert` until the client build ships** — a non-classic board has no
   legacy fallback, and minted boards are immutable for their day. As of 2026-07-27 that build
   is **1.2 build 15**, uploaded and awaiting review (see §8). The gate lifts when it's approved.
+  - 🔴 **THE DAILY GRID MINT IS PAUSED AND MUST BE TURNED BACK ON.** `ingest.yml`'s cron runs
+    `--grid ... --upsert` from `main` at 09:00 UTC daily, and `main` now carries the v2
+    generator — so the gate above was one scheduled run away from being violated automatically.
+    The step is commented out (commit `138c4a2`). **Until someone uncomments it, no new Grid
+    boards are minted for any sport** and clients fall back to the modulo pick over existing
+    rows. That degradation is deliberate and safe (old v1 boards still decode) but it is not
+    a resting state — re-enable the moment build 15 is approved. The commented line already
+    includes `baseball`.
+  - **Baseball's Grid drought was a config omission, not a data problem** (found 2026-07-27):
+    the cron's sport list was `nfl nba soccer tennis`. That is the whole reason baseball has
+    one board ever minted (2026-07-08) while the others get dailies. Baseball in fact has the
+    richest team×team space of any sport — all 435 of its C(30,2) club pairs share 5+ players.
+    By contrast soccer's *ragged* gaps are genuine viability failures (only 1,545 of its 19,989
+    player-sharing pairs share 5+), which is why `max_attempts` is now 500.
 
 - **Random / practice boards** — **shipped 2026-07-27.** The Grid setup screen has a second
   button, "new random grid", drawing a board from the sport's minted pool instead of the daily.
