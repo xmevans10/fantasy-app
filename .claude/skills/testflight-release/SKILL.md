@@ -64,6 +64,21 @@ metadata via its REST API — lives in gitignored `tools/release/`:
   version is editable. **Reviewer notes:** `PATCH /v1/appStoreReviewDetails/<id>` `{attributes:{notes}}`.
   **One UI-only step remains:** the Resolution Center reply (and any screen recording Apple asks
   for) is not exposed in the REST API — the user must post it manually.
+- **Cancel-a-queued-submission flow, proven 2026-07-27 (build 15, to fold the Grid work into the
+  in-flight 1.2):** Apple allows only **one open review submission per app**, so you cannot cut a
+  new version while another sits in `WAITING_FOR_REVIEW` — the only ways forward are to wait it
+  out or cancel it. Cancel with `PATCH /v1/reviewSubmissions/<id>` `{"canceled": true}`; it
+  returns state `CANCELING` and settles to `COMPLETE` within a minute or two, and the
+  `appStoreVersion` lands in **`DEVELOPER_REJECTED`**. From there it's the resubmit flow — attach
+  the new build (`PATCH .../relationships/build`, which flips the version to
+  `PREPARE_FOR_SUBMISSION`) — with **one critical difference from the rejection path above**: a
+  *canceled* submission is `COMPLETE`, not `UNRESOLVED_ISSUES`, so there is nothing to resubmit
+  through. You must `POST /v1/reviewSubmissions` + `POST /v1/reviewSubmissionItems` for a **new**
+  submission, which is exactly what the rejection path tells you *not* to do. Getting this
+  backwards is the easy mistake. The `409 STATE_ERROR` propagation lag did **not** appear on this
+  path (submit `PATCH` 200'd on the first attempt), but keep the retry loop — it's cheap.
+  Cost to weigh before cancelling: the queued version loses its place in the review queue and
+  restarts review from scratch.
   - `-authenticationKeyPath` for `-exportArchive` **must be an absolute path** — a repo-relative
     path fails with "must be an absolute path to an existing file". Wrap in `$(pwd)/…`.
 - App identity: app record id `6785275045` (bundle `com.balliqfantasy.app`, ASC name
