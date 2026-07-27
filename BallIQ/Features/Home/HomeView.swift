@@ -18,6 +18,11 @@ struct HomeView: View {
     @State private var activeWhoAmI: WhoAmIPuzzle?
     @State private var showBrowse = false
     @State private var showPaywall = false
+    /// Home gates two different things behind the same sheet — the archive row and The Grid —
+    /// so the trigger has to be carried rather than hardcoded at the presentation site, or
+    /// both would report as one surface and the "which gate sells Pro" question stays
+    /// unanswerable.
+    @State private var paywallTrigger: PaywallTrigger = .other
     @State private var showOverUnder = false
     @State private var showDraftSpin = false
     @State private var showDailyDraft = false
@@ -94,7 +99,7 @@ struct HomeView: View {
 
                     Button {
                         if container.entitlements.canAccessArchive { showBrowse = true }
-                        else { showPaywall = true }
+                        else { paywallTrigger = .archive; showPaywall = true }
                     } label: { browseRow }
                         .buttonStyle(PrimePressStyle())
                         .heroReveal(3)
@@ -144,7 +149,7 @@ struct HomeView: View {
                     .environmentObject(container)
             }
             .sheet(isPresented: $showPaywall) {
-                PaywallView().environmentObject(container)
+                PaywallView(trigger: paywallTrigger).environmentObject(container)
             }
             .task(id: container.sportFilter) { await loadDaily() }
         }
@@ -198,7 +203,8 @@ struct HomeView: View {
         case "overunder": showOverUnder = true
         case "draft": showDraftSpin = true
         case "grid":
-            if container.entitlements.canPlayGrid() { showGrid = true } else { showPaywall = true }
+            if container.entitlements.canPlayGrid() { showGrid = true }
+            else { paywallTrigger = .grid; showPaywall = true }
         default: break
         }
     }

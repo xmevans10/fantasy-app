@@ -106,8 +106,11 @@ struct GameSetupScreen<Options: View>: View {
         // opens pre-selected as the active choice (confusing, and see the Start button's own
         // guard for why that state is more than just cosmetic).
         .onChange(of: sport) { _, _ in correctLockedDefault(); warmTeamIdentities() }
+        // Both of this screen's paywall routes — the locked-chip tap and the Start-button
+        // entitlement guard — are the same surface (a Pro sport the user tried to play), so
+        // the trigger is fixed here rather than carried in state.
         .sheet(isPresented: $showPaywall) {
-            PaywallView().environmentObject(container)
+            PaywallView(trigger: .sportPicker).environmentObject(container)
         }
     }
 

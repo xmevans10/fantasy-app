@@ -646,3 +646,141 @@ def test_extra_members_can_never_satisfy_a_stat_axis():
     assert puzzle is not None
     all_names = {a.name for cell in puzzle.cells for a in cell.valid_answers}
     assert not any(n.startswith("NoStats") for n in all_names)
+
+
+# MARK: the mint window (`grid_dates`) and the pool backfill it enables
+#
+# `run_grid` minted exactly today+tomorrow until 2026-07-27. That is the right *daily* window
+# but it caps the pool at ~1 board per sport per day, and the pool is what the Grid's "new
+# random board" draws from — it stood at nfl 13 / nba 12 / tennis 12 / soccer 3 / baseball 1,
+# thin enough that "random" barely meant anything.
+
+import datetime as dt
+
+from tools.ingest.main import grid_dates
+
+
+def test_default_window_is_today_and_tomorrow():
+    """The daily contract, unchanged: pick() prefers the row whose active_date is the current
+    UTC day, so a missing next-day row silently drops every player between 00:00 UTC and the
+    morning cron back to the modulo pick over old boards."""
+    today = dt.date.today()
+    assert grid_dates(today, 2) == [today.isoformat(),
+                                    (today + dt.timedelta(days=1)).isoformat()]
+
+
+def test_window_spans_consecutive_days_from_an_explicit_start():
+    assert grid_dates(dt.date(2026, 1, 30), 4) == [
+        "2026-01-30", "2026-01-31", "2026-02-01", "2026-02-02"]
+
+
+def test_a_single_day_window_is_legal_but_an_empty_one_is_not():
+    assert grid_dates(dt.date(2026, 1, 1), 1) == ["2026-01-01"]
+    with pytest.raises(ValueError):
+        grid_dates(dt.date(2026, 1, 1), 0)
+
+
+def test_backfilling_a_wide_window_yields_distinct_boards_not_the_same_one_repeated():
+    """The point of a deep pool is *variety*, so a backfill must not mint 30 copies of one
+    board. `run_grid` threads its accumulating `recently_served` set through every date in the
+    window, which is what forces each new board to be a combo no earlier one used."""
+    seasons = []
+    for team in ["SF", "GB", "DAL", "NYG", "CHI", "SEA", "MIA", "KC"]:
+        for decade in [1980, 1990, 2000, 2010, 2020]:
+            for i in range(3):
+                seasons.append(_season(f"{team}{decade}Player{i}", team, decade + i))
+    served: set[tuple[str, str]] = set()
+    boards = []
+    for date in grid_dates(dt.date(2026, 8, 1), 30):
+        puzzle = grid.generate_grid(seasons, sport="nfl", date=date, recently_served=served)
+        assert puzzle is not None, f"backfill went dry at {date}"
+        served.add(grid.combo_key(puzzle.rows, puzzle.cols))
+        boards.append(puzzle)
+    assert len(served) == 30
+    # Depth in shape too, not just in axis sets — a pool of 30 teams-x-decades boards is a
+    # thinner pool than the archetype rotation can actually offer.
+    assert len({b.archetype for b in boards}) > 1
+
+
+# MARK: run_grid over a backfill window (upsert path, fully stubbed — no network)
+
+from tools.ingest import main as ingest_main
+from tools.ingest import upsert as ingest_upsert
+
+
+def _raw_rows(sport, teams, decades):
+    """`fetch_player_seasons`-shaped dicts (the live catalog's column names)."""
+    return [{"name": f"{t}{d}Player{i}", "team_abbr": t, "season_year": d + i, "sport": sport,
+             "position": "G", "stats": {"points": 1500.0}, "league": ""}
+            for t in teams for d in decades for i in range(3)]
+
+
+@pytest.fixture
+def stub_supabase(monkeypatch):
+    """Every network edge of run_grid, replaced. Returns the recorder the tests assert on."""
+    calls = {"id_lookups": [], "upserts": [], "history": []}
+    monkeypatch.setattr(ingest_main, "load_dotenv", lambda: None)
+    monkeypatch.setattr(ingest_upsert, "fetch_grid_history", lambda since: [])
+    monkeypatch.setattr(ingest_upsert, "fetch_player_seasons",
+                        lambda sport: _raw_rows(sport, ["BOS", "LAL", "CHI", "NYK", "PHI",
+                                                        "MIA", "GSW", "DET"],
+                                                [1980, 1990, 2000, 2010, 2020]))
+    monkeypatch.setattr(ingest_upsert, "upsert_grid",
+                        lambda rows: (calls["upserts"].append([r["id"] for r in rows]), len(rows))[1])
+    monkeypatch.setattr(ingest_upsert, "upsert_grid_history",
+                        lambda rows: (calls["history"].extend(rows), len(rows))[1])
+    return calls
+
+
+def test_backfill_never_re_mints_a_date_that_already_has_a_board(stub_supabase, monkeypatch):
+    """The immutability rule survives the wider window: generation is deterministic per
+    (sport, date) only against a FIXED catalog, so re-minting a live date would swap a board's
+    content under a player who already opened it. A backfill may only ever ADD."""
+    already = {"grid-nba-2026-08-02", "grid-nba-2026-08-04"}
+    monkeypatch.setattr(ingest_upsert, "fetch_existing_puzzle_ids",
+                        lambda ids: {i for i in ids if i in already})
+
+    assert ingest_main.run_grid(["nba"], upsert=True, dry_run=False,
+                                start=dt.date(2026, 8, 1), days=5) == 0
+
+    minted = [i for batch in stub_supabase["upserts"] for i in batch]
+    assert minted == ["grid-nba-2026-08-01", "grid-nba-2026-08-03", "grid-nba-2026-08-05"]
+    assert not already & set(minted)
+    assert [h["served_date"] for h in stub_supabase["history"]] == [
+        "2026-08-01", "2026-08-03", "2026-08-05"]
+
+
+def test_a_deep_backfill_chunks_the_skip_check_instead_of_one_giant_url(stub_supabase,
+                                                                       monkeypatch):
+    """`fetch_existing_puzzle_ids` sends the id list as a PostgREST `id=in.(...)` GET, so it
+    rides in the URL. Ten ids always fit; 500 do not, and blowing the server's URL cap would
+    fail the backfill at its very first call."""
+    seen: list[int] = []
+
+    def _lookup(ids):
+        seen.append(len(ids))
+        return set(ids)          # everything already minted -> no generation, no writes
+
+    monkeypatch.setattr(ingest_upsert, "fetch_existing_puzzle_ids", _lookup)
+
+    assert ingest_main.run_grid(["nba", "soccer"], upsert=True, dry_run=False,
+                                start=dt.date(2026, 8, 1), days=250) == 0
+
+    assert sum(seen) == 500                                   # 2 sports x 250 dates
+    assert max(seen) <= ingest_main.GRID_ID_LOOKUP_CHUNK
+    assert stub_supabase["upserts"] == []                     # nothing re-minted
+
+
+def test_a_deep_backfill_chunks_the_upsert_so_no_request_carries_the_whole_pool(stub_supabase,
+                                                                               monkeypatch):
+    """Grid `content` is the heaviest payload this pipeline writes (~70 KB per NFL board).
+    upsert.py batches every table at 200 rows — right for 1 KB catalog rows, ~14 MB per
+    request for these."""
+    monkeypatch.setattr(ingest_upsert, "fetch_existing_puzzle_ids", lambda ids: set())
+
+    assert ingest_main.run_grid(["nba"], upsert=True, dry_run=False,
+                                start=dt.date(2026, 8, 1), days=60) == 0
+
+    sizes = [len(batch) for batch in stub_supabase["upserts"]]
+    assert sum(sizes) == 60
+    assert max(sizes) <= ingest_main.GRID_UPSERT_CHUNK

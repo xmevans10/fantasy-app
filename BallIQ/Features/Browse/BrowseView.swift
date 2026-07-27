@@ -74,7 +74,7 @@ struct BrowseView: View {
                 .environmentObject(container)
         }
         .sheet(isPresented: $showPaywall) {
-            PaywallView().environmentObject(container)
+            PaywallView(trigger: .archive).environmentObject(container)
         }
     }
 

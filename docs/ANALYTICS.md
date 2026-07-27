@@ -24,8 +24,95 @@ Raw values of `AnalyticsEvent` (treat as a stable schema — the queries below g
 | `community_puzzle_played` | Community feed open + deep link | `source` (community/link), `puzzle_id` |
 | `share_tapped` | Result share, publish-link share, pre-play puzzle share (M13) | `surface` (result/publish_link/puzzle_home/puzzle_browse/puzzle_community), `puzzle_id` (pre-play only) |
 | `report_filed` | RepositoryContainer.reportCommunity() | `puzzle_id` |
+| `paywall_viewed` | PaywallView `.task` (once per presentation) | `trigger` |
+| `purchase_attempted` | PaywallView.buy(), before StoreKit is called | `product_id`, `trigger` |
+| `purchase_failed` | PaywallView.buy(), on cancel or throw | `product_id`, `trigger`, `reason` (`cancelled`/`error`) |
+| `purchase_completed` | RepositoryContainer.purchase(), on a verified transaction | `product_id` |
+
+### The purchase funnel's `trigger` dimension
+
+`paywall_viewed` → `purchase_attempted` → `purchase_completed` is the whole money funnel, and
+`trigger` (raw values of `PaywallTrigger`) is what makes it actionable — it says *which gate*
+sent the user to the paywall:
+
+| `trigger` | Gate |
+|---|---|
+| `sport_picker` | A Pro-locked sport on a game setup screen (chip tap or the Start guard) |
+| `grid` | The Grid, from Home's format launcher |
+| `hard_mode` | Keep4 hard mode |
+| `archive` | Full archive — Home's Browse row and Browse's own row taps |
+| `over_under_lives` | The unlimited-lives upsell on the Over/Under result screen |
+| `other` | The `-screenshotPaywall` debug hook. In production this means a presentation site shipped unattributed |
+
+`purchase_failed.reason` splits `cancelled` (StoreKit returned no transaction — the user backed
+out of Apple's sheet) from `error` (the purchase threw). Cancellation is a pricing/intent
+signal; an error is a bug. Both raw-value sets are locked by
+[`AnalyticsClientTests`](../BallIQTests/AnalyticsClientTests.swift) — renaming one breaks a
+test rather than silently splitting a funnel in the warehouse.
+
+**`purchase_completed` carries no `trigger`.** It's logged one layer down, in
+`RepositoryContainer.purchase()`, which serves the paywall and (future) any other buy site, so
+it doesn't know the presentation context. The funnel query below recovers the attribution by
+joining a completion to that user's most recent preceding `purchase_attempted`.
 
 ## The questions that matter right now
+
+### Purchase funnel by gate (paywall → attempt → sale, last 30 days)
+
+The money query: for each gate, how many paywall views became a trip to Apple's sheet, and how
+many of those became a sale.
+
+```sql
+with recent as (
+  select * from events where created_at > now() - interval '30 days'
+),
+attempts as (
+  select user_id, created_at,
+         properties->>'trigger'    as trigger,
+         properties->>'product_id' as product_id
+  from recent where event_name = 'purchase_attempted'
+),
+stages as (
+  select 'viewed' as stage, properties->>'trigger' as trigger, user_id
+    from recent where event_name = 'paywall_viewed'
+  union all
+  select 'attempted', trigger, user_id from attempts
+  union all
+  -- purchase_completed has no trigger of its own (it's logged a layer below the paywall), so
+  -- borrow it from the same user's most recent attempt on the same product.
+  select 'completed', last_attempt.trigger, c.user_id
+    from recent c
+    cross join lateral (
+      select a.trigger from attempts a
+       where a.user_id = c.user_id
+         and a.product_id = c.properties->>'product_id'
+         and a.created_at <= c.created_at
+       order by a.created_at desc limit 1
+    ) last_attempt
+   where c.event_name = 'purchase_completed'
+)
+select trigger,
+       count(*) filter (where stage = 'viewed')    as views,
+       count(*) filter (where stage = 'attempted') as attempts,
+       count(*) filter (where stage = 'completed') as purchases,
+       round(100.0 * count(*) filter (where stage = 'attempted')
+                   / nullif(count(*) filter (where stage = 'viewed'), 0), 1)    as view_to_attempt_pct,
+       round(100.0 * count(*) filter (where stage = 'completed')
+                   / nullif(count(*) filter (where stage = 'attempted'), 0), 1) as attempt_to_buy_pct
+from stages
+group by 1 order by views desc;
+```
+
+Two things this query will not tell you, by construction:
+
+- **Signed-out purchases drop out of `purchases`.** `cross join lateral` needs `a.user_id =
+  c.user_id`, which is never true for `null`, so a purchase made before sign-in is counted in
+  `views`/`attempts` but not attributed to a gate. Cross-check the raw total with
+  `select count(*) from events where event_name = 'purchase_completed'` — a gap is signed-out
+  buyers, not a broken funnel.
+- **These are event counts, not people.** A user who opens the paywall three times counts
+  three views. Swap in `count(distinct user_id)` for a per-user funnel, remembering that every
+  signed-out row collapses into a single `null` user.
 
 ### Day-1 / day-7 retention (by first-seen cohort)
 

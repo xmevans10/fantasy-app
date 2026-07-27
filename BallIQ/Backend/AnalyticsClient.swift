@@ -12,7 +12,34 @@ enum AnalyticsEvent: String {
     case communityPuzzlePlayed = "community_puzzle_played"
     case shareTapped           = "share_tapped"
     case reportFiled           = "report_filed"
+    // Purchase funnel. `purchaseCompleted` shipped alone, which meant the only measurable
+    // point was the very bottom — you could see a sale but never how many people reached the
+    // paywall, from where, or where they dropped. These three make it a funnel:
+    // paywallViewed -> purchaseAttempted -> purchaseCompleted | purchaseFailed.
+    /// Carries `trigger` — WHICH gate sent the user here (see `PaywallTrigger`). Five
+    /// different surfaces present the paywall; without this they're indistinguishable, and
+    /// "which gate actually sells Pro" is the first question worth asking of this data.
+    case paywallViewed         = "paywall_viewed"
+    case purchaseAttempted     = "purchase_attempted"
+    /// Carries `reason`: `cancelled` (StoreKit returned without a transaction — usually the
+    /// user dismissing Apple's sheet) or `error` (the purchase threw). Distinguishing them
+    /// matters: cancellation is a pricing/intent signal, an error is a bug.
+    case purchaseFailed        = "purchase_failed"
     case purchaseCompleted     = "purchase_completed"
+}
+
+/// Where a paywall presentation came from. String-backed because it lands in
+/// `events.properties->>'trigger'` and is grouped by in SQL — treat these as a stable schema,
+/// same rule as `AnalyticsEvent`'s raw values.
+enum PaywallTrigger: String {
+    case sportPicker      = "sport_picker"       // a Pro-locked sport chip on a setup screen
+    case grid             = "grid"               // The Grid (Pro-only format)
+    case hardMode         = "hard_mode"          // Keep4 hard mode
+    case archive          = "archive"            // Browse / full archive
+    case overUnderLives   = "over_under_lives"   // out of Over/Under lives
+    /// The `-screenshotPaywall` debug hook and any future site that hasn't been attributed.
+    /// A real `other` in production means a presentation site was added without a trigger.
+    case other            = "other"
 }
 
 /// First-party, fire-and-forget event logging to the `events` table. Mirrors

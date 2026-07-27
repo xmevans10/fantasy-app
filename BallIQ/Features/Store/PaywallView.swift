@@ -10,6 +10,11 @@ struct PaywallView: View {
     @State private var purchasingID: String?
     @State private var errorMessage: String?
 
+    /// Which gate sent the user here, logged with `paywallViewed`. Defaults to `.other` so an
+    /// un-updated call site degrades to an honest "unknown" bucket rather than silently
+    /// attributing itself to whatever surface happens to be listed first.
+    var trigger: PaywallTrigger = .other
+
     /// App Store guideline 3.1.2(c) requires functional Terms of Use (EULA) + Privacy Policy
     /// links inside the subscription purchase flow. Apple's standard EULA (the app ships no
     /// custom terms) + our GitHub Pages privacy page.
@@ -60,6 +65,11 @@ struct PaywallView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
+            // `.task` rather than `.onAppear`: this view is presented in a `.sheet`, and
+            // onAppear re-fires when the sheet returns to front (e.g. after Apple's purchase
+            // sheet dismisses), which would double-count a single visit and inflate the top
+            // of the funnel against the attempts below it.
+            .task { container.track(.paywallViewed, ["trigger": trigger.rawValue]) }
         }
     }
 
@@ -227,11 +237,33 @@ struct PaywallView: View {
     private func buy(_ product: Product) async {
         purchasingID = product.id
         defer { purchasingID = nil }
+        container.track(.purchaseAttempted, ["product_id": product.id, "trigger": trigger.rawValue])
         do {
-            _ = try await container.purchase(product)
+            // `purchase` returns false without throwing when StoreKit came back with no
+            // transaction — overwhelmingly the user dismissing Apple's sheet. That's a
+            // different signal from a thrown error (intent vs bug), so they're logged apart
+            // rather than both collapsing into "no sale".
+            let purchased = try await container.purchase(product)
+            if !purchased {
+                container.track(.purchaseFailed,
+                                Self.failureProperties(productID: product.id, trigger: trigger, error: nil))
+            }
         } catch {
+            container.track(.purchaseFailed,
+                            Self.failureProperties(productID: product.id, trigger: trigger, error: error))
             errorMessage = String(localized: "Something went wrong. Please try again.")
         }
+    }
+
+    /// The `purchase_failed` payload, split out pure so the `reason` strings — which SQL
+    /// groups by, same stable-schema rule as the event names — are testable without a
+    /// StoreKit `Product` (which a unit test can't construct). `error == nil` is the
+    /// no-transaction return, i.e. the user backed out; a thrown error is a real failure.
+    nonisolated static func failureProperties(productID: String, trigger: PaywallTrigger,
+                                              error: Error?) -> [String: String] {
+        ["product_id": productID,
+         "trigger": trigger.rawValue,
+         "reason": error == nil ? "cancelled" : "error"]
     }
 }
 

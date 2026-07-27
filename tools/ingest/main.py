@@ -519,33 +519,72 @@ def write_themes_fallback() -> None:
     print(f"[themes] wrote {len(KEEP4_THEMES)} themes → BallIQ/Data/keep4_themes.json")
 
 
-def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
-    """Generate today's Grid puzzle for each requested sport directly from the live
-    `player_seasons` catalog (not the nflverse/provider gather pipeline — Grid's data need,
-    team x decade slicing, is already satisfied by that table). Standalone branch, same
-    early-return posture as --write-themes: skips the heavy season pull entirely."""
+# PostgREST takes the skip-if-already-minted lookup as an `id=in.(...)` GET, so the whole id
+# list lands in the URL. Ten ids (today+tomorrow) always fit; a multi-hundred-day backfill x 5
+# sports does not — chunk it rather than discovering the server's URL cap mid-run.
+GRID_ID_LOOKUP_CHUNK = 100
+# Grid `content` is by far the heaviest payload this pipeline writes (NFL boards run to ~70 KB
+# each — cells carry hundreds of answer names). upsert.py batches every table at 200 rows,
+# which is right for 1 KB catalog rows and ~14 MB of JSON per request for these. Send them in
+# smaller slices; the upsert stays idempotent per slice (on_conflict=id, merge-duplicates).
+GRID_UPSERT_CHUNK = 25
+
+
+def grid_dates(start: dt.date, days: int) -> list[str]:
+    """The consecutive UTC days a `--grid` run mints, as ISO strings.
+
+    Default is `(today, 2)` — today AND tomorrow. Tomorrow is not optional padding: pick()
+    prefers the row whose active_date matches the current UTC day, so without a next-day row
+    every player between 00:00 UTC and the morning cron (8pm ET onward in the US) silently
+    falls back to the modulo pick over old boards — observed live 2026-07-17.
+
+    Anything wider is the pool backfill (`--grid-days`/`--grid-start`). The pool is what
+    `random_grid_puzzle` draws from, and at 13 nfl / 12 nba / 12 tennis / 3 soccer / 1 baseball
+    boards "random" barely means anything; minting over a wide range deepens it with the
+    generator that already exists.
+    """
+    if days < 1:
+        raise ValueError(f"--grid-days must be at least 1, got {days}")
+    return [(start + dt.timedelta(days=n)).isoformat() for n in range(days)]
+
+
+def run_grid(sports: list[str], *, upsert: bool, dry_run: bool,
+             start: dt.date | None = None, days: int = 2) -> int:
+    """Generate Grid puzzles for each requested sport directly from the live `player_seasons`
+    catalog (not the nflverse/provider gather pipeline — Grid's data need, team x decade
+    slicing, is already satisfied by that table). Standalone branch, same early-return posture
+    as --write-themes: skips the heavy season pull entirely.
+
+    Mints `days` consecutive dates from `start` (default: today and tomorrow — see
+    `grid_dates`). The catalog is fetched once per sport regardless of how many dates are
+    pending, so a deep backfill costs one extra generator pass per board and no extra I/O.
+    """
     from . import grid
     from .models import RawSeason
     from .upsert import (fetch_existing_puzzle_ids, fetch_grid_history, fetch_player_seasons,
                          upsert_grid, upsert_grid_history)
 
     load_dotenv()
-    # Mint today AND tomorrow (UTC): pick() prefers the row whose active_date matches the
-    # current UTC day, so without a next-day row every player between 00:00 UTC and the
-    # morning cron (8pm ET onward in the US) silently falls back to the modulo pick over old
-    # boards — observed live 2026-07-17.
-    dates = [dt.date.today().isoformat(), (dt.date.today() + dt.timedelta(days=1)).isoformat()]
+    start = start or dt.date.today()
+    dates = grid_dates(start, days)
     # Once a (sport, date) row exists, never re-mint it: generation is deterministic per
     # (sport, date) only for a FIXED catalog, and the catalog shifts between same-day runs
     # (daily ingest + weekly refresh both re-mint) — merge-duplicates would silently swap a
     # board's content mid-day under players who already started it. Skip-if-present makes a
-    # minted board immutable for its day instead.
-    existing = fetch_existing_puzzle_ids(
-        [grid.puzzle_id(s, d) for s in sports for d in dates]) if upsert else set()
+    # minted board immutable for its day instead. That holds for a backfill too: it may only
+    # ever ADD boards to the pool, never rewrite one a player could already have opened.
+    wanted = [grid.puzzle_id(s, d) for s in sports for d in dates]
+    existing: set[str] = set()
+    if upsert:
+        for n in range(0, len(wanted), GRID_ID_LOOKUP_CHUNK):
+            existing |= fetch_existing_puzzle_ids(wanted[n:n + GRID_ID_LOOKUP_CHUNK])
     # Trailing-window rejection set (grid_history): a fresh board must not repeat a recent
     # team-set x decade-set verbatim. Window is deliberately modest — long enough that a
-    # repeat feels impossible, short enough to never exhaust the combo space.
-    since = (dt.date.today() - dt.timedelta(days=grid.GRID_HISTORY_WINDOW_DAYS)).isoformat()
+    # repeat feels impossible, short enough to never exhaust the combo space. Anchored to the
+    # earliest date being minted rather than to today, so a backfill that reaches into the past
+    # still sees the history that was live around the dates it is filling.
+    since = (min(start, dt.date.today())
+             - dt.timedelta(days=grid.GRID_HISTORY_WINDOW_DAYS)).isoformat()
     recent_rows = fetch_grid_history(since) if upsert else []
     recent_by_sport: dict[str, set[tuple[str, str]]] = {}
     for r in recent_rows:
@@ -555,10 +594,12 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
     history: list[dict] = []
     for sport in sports:
         pending = [d for d in dates if grid.puzzle_id(sport, d) not in existing]
-        for d in dates:
-            if d not in pending:
-                print(f"[grid] {sport} {d}: already minted — skipping (a live board never "
-                      "shifts content mid-day)")
+        # One line rather than one per date: a backfill can carry hundreds of dates, and
+        # "already minted" is the expected outcome for most of them on a re-run.
+        if len(pending) < len(dates):
+            skipped = [d for d in dates if d not in set(pending)]
+            print(f"[grid] {sport}: {len(skipped)} date(s) already minted, skipping "
+                  f"({skipped[0]}..{skipped[-1]}) — a live board never shifts content mid-day")
         if not pending:
             continue
         raw = fetch_player_seasons(sport)
@@ -578,10 +619,12 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
             extra_members = nfl_rosters.fetch_years(list(range(nfl_rosters.MIN_YEAR, _CURRENT_YEAR + 1)))
             print(f"[grid] nfl: {len(extra_members)} roster memberships widen the answer pools")
         recent = recent_by_sport.setdefault(sport, set())
+        misses = 0
         for date in pending:
             puzzle = grid.generate_grid(seasons, sport=sport, date=date,
                                         extra_members=extra_members, recently_served=recent)
             if puzzle is None:
+                misses += 1
                 print(f"[grid] {sport} {date}: no viable grid from {len(seasons)} seasons — skipped")
                 continue
             content = grid.to_content(puzzle)
@@ -598,12 +641,18 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
             recent.add((row_key, col_key))
             history.append({"sport": sport, "row_teams": row_key, "col_decades": col_key,
                             "served_date": date})
+        # A backfill's whole point is pool depth, so "how many of the dates I asked for
+        # actually produced a board" is the number to report — a per-date miss scrolls past.
+        print(f"[grid] {sport}: {len(pending) - misses}/{len(pending)} board(s) built"
+              + (f", {misses} with no viable grid" if misses else ""))
 
     if dry_run or not upsert:
         print(f"\n(grid: {len(rows)} puzzle(s) built" + ("" if upsert else ", pass --upsert to write") + ")")
         return 0
 
-    sent = upsert_grid(rows)
+    sent = 0
+    for n in range(0, len(rows), GRID_UPSERT_CHUNK):
+        sent += upsert_grid(rows[n:n + GRID_UPSERT_CHUNK])
     print(f"[upsert] sent {sent} grid puzzle rows to Supabase")
     if history:
         hist_sent = upsert_grid_history(history)
@@ -690,8 +739,15 @@ def main() -> int:
                     help="rewrite BallIQ/Data/keep4_themes.json only (no data pull)")
     ap.add_argument("--dry-run", action="store_true", help="build + validate + print, no writes")
     ap.add_argument("--grid", nargs="+", choices=["nfl", "nba", "baseball", "soccer", "tennis"],
-                    help="generate today's Grid puzzle for the given sport(s) from the live "
+                    help="generate Grid puzzles for the given sport(s) from the live "
                          "player_seasons catalog (standalone — skips the season gather pull)")
+    ap.add_argument("--grid-days", type=int, default=2, metavar="N",
+                    help="how many consecutive days of Grid boards to mint (default 2: today "
+                         "and tomorrow). Raise it to backfill a deep pool — the pool is what "
+                         "the Grid's 'new random board' draws from")
+    ap.add_argument("--grid-start", type=dt.date.fromisoformat, metavar="YYYY-MM-DD",
+                    help="first day of the --grid-days window (default today, UTC). Backfilling "
+                         "into the past deepens the pool without pre-committing future dailies")
     ap.add_argument("--teams", action="store_true",
                     help="build (and, with --upsert, write) `teams` club identity rows "
                          "(logos rehosted to Storage, colors, full names) — standalone, "
@@ -716,7 +772,8 @@ def main() -> int:
         return 0
 
     if args.grid:
-        return run_grid(args.grid, upsert=args.upsert, dry_run=args.dry_run)
+        return run_grid(args.grid, upsert=args.upsert, dry_run=args.dry_run,
+                        start=args.grid_start, days=args.grid_days)
 
     if args.teams or args.leagues:
         return run_teams(do_teams=args.teams, do_leagues=args.leagues,

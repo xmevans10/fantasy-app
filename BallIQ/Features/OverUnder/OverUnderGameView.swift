@@ -19,7 +19,6 @@ struct OverUnderGameView: View {
     @State private var dragX: CGFloat = 0
     @State private var lastVerdict: Bool?
     @State private var showResult = false
-    @State private var showPaywall = false
     @State private var beatHighScore = false
     @State private var rewards: RepositoryContainer.SessionRewards?
     @State private var loading = true
@@ -61,9 +60,6 @@ struct OverUnderGameView: View {
         .onChange(of: sport) { _, selected in
             // Warm the pool while the player is still on setup (same pattern as Draft & Spin).
             if showingSetup { container.catalog.prefetchDraftSpinSample(for: selected) }
-        }
-        .sheet(isPresented: $showPaywall) {
-            PaywallView().environmentObject(container)
         }
     }
 

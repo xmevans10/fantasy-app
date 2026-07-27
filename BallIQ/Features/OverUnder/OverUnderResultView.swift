@@ -37,7 +37,7 @@ struct OverUnderResultView: View {
             if beatHighScore || gained { confetti += 1 }
         }
         .sheet(isPresented: $showPaywall) {
-            PaywallView().environmentObject(container)
+            PaywallView(trigger: .overUnderLives).environmentObject(container)
         }
         .sheet(isPresented: $showLeaderboard) {
             ArcadeLeaderboardView(game: .overUnder, sport: sport)

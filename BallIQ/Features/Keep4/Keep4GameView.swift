@@ -70,7 +70,7 @@ struct Keep4GameView: View {
             Text("Thanks — we'll take a look.")
         }
         .sheet(isPresented: $showPaywall) {
-            PaywallView().environmentObject(container)
+            PaywallView(trigger: .hardMode).environmentObject(container)
         }
     }
 
