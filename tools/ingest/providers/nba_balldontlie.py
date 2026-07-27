@@ -1,8 +1,10 @@
 """NBA provider — real season averages from balldontlie.io (requires API key).
 
-Set BALLDONTLIE_API_KEY (free tier) in the environment. When the key is absent,
-`available()` is False and the orchestrator falls back to the curated seed, so
-the pipeline still produces real, factual NBA content offline.
+Set BALLDONTLIE_API_KEY (free tier) in the environment. When the key is absent this
+provider simply yields nothing, and `main.py` falls back to ESPN and then to the curated
+seed (`data/nba_seed.csv`) on an *empty result*, so the pipeline still produces real,
+factual NBA content offline. That fallback is driven by emptiness, not by a capability
+check — an `available()` predicate existed here once and nothing ever called it.
 
 Docs: https://docs.balldontlie.io  (v1: /players, /season_averages)
 """
@@ -22,10 +24,6 @@ _API = "https://api.balldontlie.io/v1"
 # second reliably 429s. Pause between them (the per-target pause in `fetch_targets`
 # only spaces *targets*, not the two calls within one).
 _INTER_CALL_DELAY = 1.2
-
-
-def available() -> bool:
-    return bool(os.getenv("BALLDONTLIE_API_KEY"))
 
 
 def _headers() -> dict[str, str]:

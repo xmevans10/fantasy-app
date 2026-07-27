@@ -26,10 +26,6 @@ _HEADSHOT = "https://a.espncdn.com/i/headshots/nba/players/full/{id}.png"
 _RATE_DELAY = 0.3
 
 
-def available() -> bool:
-    return True  # no key required
-
-
 def _search_athlete_id(name: str) -> str | None:
     """Resolve a player name to an ESPN athlete id (the `a:<id>` part of its uid)."""
     q = urllib.parse.quote(name)

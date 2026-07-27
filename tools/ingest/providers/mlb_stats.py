@@ -46,10 +46,6 @@ _RATE_DELAY = 0.2
 _CAREER_TTL_HOURS = 24.0 * 7
 
 
-def available() -> bool:
-    return True  # no key required
-
-
 def _num(stat: dict, key: str) -> float:
     try:
         return float(stat.get(key) or 0)

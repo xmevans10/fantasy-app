@@ -207,10 +207,6 @@ def grade(stats: dict[str, float], scale_key: str) -> float:
     return round(total, 1)
 
 
-def scale_keys() -> list[str]:
-    return list(_SCALES) + list(_FANTASY)
-
-
 # ── Era-adjusted fantasy grading (M10) ────────────────────────────────────────
 #
 # The era adjustment is a SINGLE per-(sport, position, year) volume index applied to

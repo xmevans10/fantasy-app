@@ -178,11 +178,6 @@ def fetch_catalog_ids_missing(sport: str, column: str, page_size: int = 1000) ->
     return ids
 
 
-def fetch_catalog_ids_missing_headshot(sport: str, page_size: int = 1000) -> set[str]:
-    """Back-compat alias for the headshot case (see `fetch_catalog_ids_missing`)."""
-    return fetch_catalog_ids_missing(sport, "headshot", page_size)
-
-
 def upsert_grid(rows: list[dict]) -> int:
     """Upsert Grid puzzle rows (already-shaped id/sport/format/content/active_date dicts —
     unlike `upsert()`, which takes `PuzzleRow` objects) into `puzzles`."""
