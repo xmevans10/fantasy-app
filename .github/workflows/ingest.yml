@@ -50,4 +50,19 @@ jobs:
       # pools are widened to full rosters (nfl_rosters.py); previously grids were only minted
       # by hand, so the daily active_date row often didn't exist and clients fell back to the
       # modulo pick over stale rows.
-      - run: python -m tools.ingest.main --grid nfl nba soccer tennis --upsert
+      #
+      # ⚠️ PAUSED 2026-07-27 — RE-ENABLE WHEN 1.2 BUILD 15 IS APPROVED. ⚠️
+      # `main` now carries the v2 Grid generator, which emits non-classic archetypes
+      # (teams-x-teams, mixed-x-teams, ...). Those have NO legacy rowTeams/colDecades fallback,
+      # so the shipped App Store client (1.2 build 14) decodes them as "No Grid today" — and a
+      # minted board is immutable for its day, so there is no undo. Build 15 is the client that
+      # can read them; it was submitted 2026-07-27 13:26 UTC and is still WAITING_FOR_REVIEW.
+      # This cron would otherwise have pushed v2 boards to live users at the next 09:00 UTC run.
+      # See docs/BALLIQ_SPEC.md §9.2 and docs/grid-axes-research.md §9 (Gate 0).
+      #
+      # To re-enable: delete this comment block and uncomment the line below. `baseball` is
+      # added deliberately — it was missing, which is the whole reason baseball has exactly one
+      # Grid board ever minted (2026-07-08) while the other four sports get dailies, despite
+      # baseball having the richest team-pair space of any sport (all 435 of its C(30,2) club
+      # pairs share 5+ players; verified against live data 2026-07-27).
+      # - run: python -m tools.ingest.main --grid nfl nba baseball soccer tennis --upsert
