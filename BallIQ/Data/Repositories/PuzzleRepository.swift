@@ -20,6 +20,13 @@ protocol PuzzleRepository {
     /// The Grid (M5 Phase E) — server-generated only, no bundled offline fallback (it's
     /// Pro-gated content anyway; a signed-out/local-only session can't play it either way).
     func gridPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<GridPuzzle>?
+    /// A board picked at random from the sport's full minted pool, for the setup screen's
+    /// "new random grid" — the one Grid entry point that isn't the daily. `excludingDate`
+    /// drops today's canonical row so a re-roll can't just hand back the daily the player is
+    /// already there to play (and, since practice runs award nothing, can't be used to preview
+    /// it either). Nil when the pool holds nothing else — a real state today: baseball has one
+    /// board ever minted, soccer three.
+    func randomGridPuzzle(for filter: SportFilter, excludingDate: String?) async -> GridPuzzle?
     /// Sport-wide distinct player names for The Grid's guess typeahead. Deliberately
     /// sport-wide, never cell-scoped — a cell-filtered list would hand the player the answers.
     /// Empty when unavailable (local-only / offline): the Grid degrades to free-text entry.
@@ -30,6 +37,9 @@ protocol PuzzleRepository {
 extension PuzzleRepository {
     /// Default: no index (bundled/offline repos). Only `RemotePuzzleRepository` overrides it.
     func playerNameIndex(for sport: Sport) async -> [String] { [] }
+    /// Default: no pool. Grid content is server-only (see `gridPuzzle`), so every local/
+    /// bundled repo correctly has nothing to draw a random board from.
+    func randomGridPuzzle(for filter: SportFilter, excludingDate: String?) async -> GridPuzzle? { nil }
 }
 
 /// Loads bundled JSON; resolves the daily puzzle deterministically by UTC date.

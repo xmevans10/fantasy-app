@@ -23,6 +23,16 @@ struct GridGameView: View {
 
     @State private var showingSetup = true
     @State private var sport: Sport = .nfl
+    /// A practice board is any board that isn't today's daily — spawned from the setup screen's
+    /// "new random grid". Practice runs award **nothing**: no rating, no XP, no arcade score, no
+    /// crowd-rarity log. That's not stinginess, it's the only non-exploitable option — the board
+    /// is re-rollable without limit, so anything it awarded could be farmed by re-rolling until
+    /// an easy board came up. `complete(...)` is skipped entirely rather than called with
+    /// `ranked: false`, because `recordCompletion` still adds XP on the unranked path.
+    @State private var isPractice = false
+    /// Set once the random pool is exhausted, so the empty state can say so honestly rather
+    /// than claiming there's no Grid at all.
+    @State private var practicePoolEmpty = false
     private var attemptedCount: Int { solved.count + wrong.count }
 
     var body: some View {
@@ -35,11 +45,20 @@ struct GridGameView: View {
                 GameSetupScreen(formatName: "The Grid", title: "Pick your sport",
                                 startLabel: "Open the grid", sport: $sport,
                                 onStart: { Task { await load() } },
-                                onClose: { dismiss() }) { EmptyView() }
+                                onClose: { dismiss() },
+                                secondaryLabel: "New random grid",
+                                onSecondary: { Task { await load(random: true) } }) { EmptyView() }
             } else if loading {
                 ProgressView().tint(Color.accentText).frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let puzzle {
                 board(puzzle)
+            } else if practicePoolEmpty {
+                // Distinct from "No Grid today": the daily may well exist, there just isn't a
+                // *second* board to re-roll into. Real today — baseball has one board ever
+                // minted, soccer three — so this state is reachable, not theoretical.
+                EmptyStateView(symbol: "shuffle", title: "No other grids yet",
+                              message: "\(sport.displayName) has no past grids to shuffle into yet. Try the daily grid, or another sport.",
+                              actionTitle: "Back", action: { showingSetup = true; practicePoolEmpty = false })
             } else {
                 EmptyStateView(symbol: "square.grid.3x3", title: "No Grid today",
                               message: "Check back tomorrow for a new Grid.",
@@ -49,8 +68,9 @@ struct GridGameView: View {
         .background(Color.appBackground)
         .task {
             sport = container.sportFilter.sport ?? .nfl
-            // Screenshot flows target the board/result — skip the setup screen.
-            if DebugLaunch.autoOpenGrid { await load() }
+            // Screenshot flows target the board/result — skip the setup screen, unless the
+            // setup screen is itself the thing being captured.
+            if DebugLaunch.autoOpenGrid && !DebugLaunch.holdGridSetup { await load() }
         }
         .sheet(isPresented: Binding(get: { activeCell != nil }, set: { if !$0 { activeCell = nil } })) {
             if let activeCell, let puzzle {
@@ -67,8 +87,9 @@ struct GridGameView: View {
         }
     }
 
-    private func load() async {
+    private func load(random: Bool = false) async {
         showingSetup = false
+        isPractice = random
         // GameSetupScreen warms this for the normal path, but `-screenshotGrid*` skips the setup
         // screen entirely — without this the board's row crests fall back to the ESPN CDN.
         container.catalog.warmIdentities(for: sport)
@@ -76,8 +97,17 @@ struct GridGameView: View {
         // carries no sport and would fetch every sport's grid row and silently pick
         // whichever sorts first (a real bug the old filter-derived flow hit).
         let resolvedFilter = SportFilter(rawValue: sport.rawValue) ?? .nfl
-        puzzle = await container.puzzles.gridPuzzle(for: resolvedFilter, date: Date())?.content
-        container.track(.gameStarted, ["format": "grid", "sport": sport.rawValue])
+        if random {
+            // Exclude today's canonical board so a re-roll can't hand back the daily the player
+            // came here to play — and, since practice awards nothing, can't be used to scout it.
+            let today = OverUnderRoundGenerator.dayString(Date())
+            puzzle = await container.puzzles.randomGridPuzzle(for: resolvedFilter, excludingDate: today)
+            practicePoolEmpty = puzzle == nil
+        } else {
+            puzzle = await container.puzzles.gridPuzzle(for: resolvedFilter, date: Date())?.content
+        }
+        container.track(.gameStarted, ["format": "grid", "sport": sport.rawValue,
+                                       "mode": random ? "practice" : "daily"])
         loading = false
         // Populate the guess autocomplete in the background — the board is playable without it.
         Task { nameIndex = await container.puzzles.playerNameIndex(for: sport) }
@@ -106,7 +136,10 @@ struct GridGameView: View {
                 Spacer()
                 Text("\(attemptedCount) OF 9 GUESSED").font(.label12).foregroundStyle(Color.textMuted)
             }
-            Text("THE GRID").font(.label12).foregroundStyle(Color.proText)
+            // Say up front that a practice board doesn't count — finding that out only on the
+            // result screen, after nine final-answer guesses, would feel like a bait and switch.
+            Text(isPractice ? "THE GRID · PRACTICE" : "THE GRID")
+                .font(.label12).foregroundStyle(Color.proText)
             Text("\(sport.displayName) legends").font(.title).foregroundStyle(Color.textPrimary)
         }
         .padding(16)
@@ -252,6 +285,13 @@ struct GridGameView: View {
         }
         let score = solved.count * 100 + totalStars * 20
         let performance = Double(solved.count) / 9.0
+        // A practice board is re-rollable without limit, so it awards nothing at all — not even
+        // the unranked path, which still grants XP via `recordCompletion`. Score and the answer
+        // reveal are the whole reward.
+        guard !isPractice else {
+            withAnimation(Motion.snap) { result = (score, solved.count) }
+            return
+        }
         let day = OverUnderRoundGenerator.dayString(Date())
         let dailyID = "grid-\(sport.rawValue)-\(day)"
         let ranked = !container.hasCompletedToday(puzzleID: dailyID)

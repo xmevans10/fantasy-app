@@ -59,6 +59,28 @@ final class RemotePuzzleRepository: PuzzleRepository {
         return pick(rows, date: date)
     }
 
+    /// Deliberately the `random_grid_puzzle` RPC rather than reusing `fetch` + `randomElement()`.
+    /// `fetch` pulls the sport's *entire* grid pool, and NFL board content averages 64 KB (cells
+    /// carry 149-425 answer names), so a client-side pick would grow the payload linearly with
+    /// the pool — the exact thing that blocks deepening the pool enough for "random" to feel
+    /// random. The RPC returns one board whatever the pool size.
+    private struct RandomGridArgs: Encodable {
+        let p_sport: String
+        let p_exclude_date: String?
+    }
+    func randomGridPuzzle(for filter: SportFilter, excludingDate: String?) async -> GridPuzzle? {
+        guard let sport = filter.sport else { return nil }
+        let args = RandomGridArgs(p_sport: sport.rawValue, p_exclude_date: excludingDate)
+        guard let data = try? await client.rpc("random_grid_puzzle", args: args) else { return nil }
+        // The RPC returns SQL NULL (encoded as `null`) once the pool is exhausted — a real state
+        // today, not an error: baseball has exactly one board ever minted, so excluding today's
+        // leaves nothing. Decode failure and "no board" are the same outcome for the caller.
+        // `contentDecoder` (plain), not `JSONDecoder.supabase` — board content is camelCase,
+        // mirroring grid.to_content's JSON exactly, and the shared Supabase decoder's
+        // snake_case key strategy would silently fail to decode it.
+        return try? contentDecoder.decode(GridPuzzle.self, from: data)
+    }
+
     /// Sport-wide player-name index for the Grid typeahead, via the `grid_player_names` RPC
     /// (one array — bypasses PostgREST's 1000-row table cap). Names change rarely, so a cached
     /// copy is honored for a week before refetching; a failed fetch falls back to any stale

@@ -25,6 +25,12 @@ struct GameSetupScreen<Options: View>: View {
     /// the locked-default snap-back for the forced sport only; *choosing* a locked sport is
     /// still Pro-gated.
     var sportGateExempt: Bool = false
+    /// Optional second way out of this screen, rendered under the start button (The Grid's
+    /// "new random grid"). Routed through the *same* entitlement guard and sport-persistence
+    /// as Start rather than getting its own copy — a second copy is exactly how one of the two
+    /// ends up drifting into launching a Pro session for free.
+    var secondaryLabel: LocalizedStringKey? = nil
+    var onSecondary: (() -> Void)? = nil
     @ViewBuilder var options: () -> Options
 
     @State private var showPaywall = false
@@ -58,34 +64,37 @@ struct GameSetupScreen<Options: View>: View {
                 .padding(16)
             }
 
-            Button {
-                let filter = SportFilter(rawValue: sport.rawValue) ?? .all
-                // The picker's own default can seed a Pro-locked sport (date-seeded "sport of
-                // the day", or the last sport played before a Pro trial lapsed) without the
-                // user ever tapping a locked chip — that path skips the picker's own lock
-                // check entirely, so re-check here or Start would launch a real paid-tier
-                // session for free.
-                guard sportGateExempt || container.entitlements.canSelect(filter) else {
-                    showPaywall = true; return
+            VStack(spacing: 10) {
+                Button {
+                    begin(onStart)
+                } label: {
+                    Text(startLabel)
+                        .textCase(.uppercase)
+                        .font(.custom(FontName.condBlack, size: 18))
+                        .foregroundStyle(Color.onAccent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.accentFill)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
-                // Persist the choice as the app-wide default (rank widget, daily previews,
-                // and the next setup screen all follow the last sport actually played) — but
-                // never persist a sport the user couldn't select themselves: an exempt daily
-                // launch on a locked-sport day must not flip the app-wide default to a Pro
-                // sport.
-                if container.entitlements.canSelect(filter) { container.sportFilter = filter }
-                onStart()
-            } label: {
-                Text(startLabel)
-                    .textCase(.uppercase)
-                    .font(.custom(FontName.condBlack, size: 18))
-                    .foregroundStyle(Color.onAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.accentFill)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .buttonStyle(PrimePressStyle())
+
+                if let secondaryLabel, let onSecondary {
+                    Button {
+                        begin(onSecondary)
+                    } label: {
+                        Text(secondaryLabel)
+                            .textCase(.uppercase)
+                            .font(.custom(FontName.condBold, size: 15))
+                            .foregroundStyle(Color.textPrimary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .background(Color.surfaceMuted)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(PrimePressStyle())
+                }
             }
-            .buttonStyle(PrimePressStyle())
             .padding(16)
         }
         .background(Color.appBackground)
@@ -100,6 +109,28 @@ struct GameSetupScreen<Options: View>: View {
         .sheet(isPresented: $showPaywall) {
             PaywallView().environmentObject(container)
         }
+    }
+
+    /// The entitlement guard + sport persistence every way off this screen shares. Both the
+    /// start button and the optional secondary action run through here so neither can drift
+    /// into launching a Pro-tier session for free.
+    private func begin(_ action: () -> Void) {
+        let filter = SportFilter(rawValue: sport.rawValue) ?? .all
+        // The picker's own default can seed a Pro-locked sport (date-seeded "sport of
+        // the day", or the last sport played before a Pro trial lapsed) without the
+        // user ever tapping a locked chip — that path skips the picker's own lock
+        // check entirely, so re-check here or Start would launch a real paid-tier
+        // session for free.
+        guard sportGateExempt || container.entitlements.canSelect(filter) else {
+            showPaywall = true; return
+        }
+        // Persist the choice as the app-wide default (rank widget, daily previews,
+        // and the next setup screen all follow the last sport actually played) — but
+        // never persist a sport the user couldn't select themselves: an exempt daily
+        // launch on a locked-sport day must not flip the app-wide default to a Pro
+        // sport.
+        if container.entitlements.canSelect(filter) { container.sportFilter = filter }
+        action()
     }
 
     /// Warms the team/league identity index for the sport about to be played. This screen is the

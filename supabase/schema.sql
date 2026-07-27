@@ -1297,6 +1297,31 @@ $$;
 revoke all on function public.grid_player_names(text) from public;
 grant execute on function public.grid_player_names(text) to anon, authenticated, service_role;
 
+-- One random minted Grid board, for the setup screen's "new random grid" (2026-07-27, applied
+-- live as migration `random_grid_puzzle_rpc`). An RPC rather than a client-side pick over the
+-- pool because the client's normal grid fetch pulls EVERY board for the sport, and NFL board
+-- content averages 64 KB (cells carry 149-425 answer names) — picking client-side would grow
+-- the payload linearly with the pool, which is the exact thing that blocks deepening it.
+-- Returns one row regardless of pool size. Null when the pool holds nothing else, a real state
+-- today: baseball has one board ever minted.
+create or replace function public.random_grid_puzzle(p_sport text, p_exclude_date text default null)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select p.content
+  from public.puzzles p
+  where p.format = 'grid'
+    and p.sport = p_sport
+    and (p_exclude_date is null or p.active_date is distinct from p_exclude_date::date)
+  order by random()
+  limit 1;
+$$;
+
+grant execute on function public.random_grid_puzzle(text, text) to anon, authenticated;
+
 -- Crowd-sourced Grid rarity (2026-07-17, applied live as migration `grid_guesses_crowd_rarity`).
 -- Every submitted Grid guess is logged; grid_guess_stats aggregates correct picks per cell to
 -- power "X% picked this" on the result screen. Display-only — star scoring untouched.

@@ -55,7 +55,14 @@ enum DebugLaunch {
     /// Freezes the slot-machine reveal in its settled ("LOCKED IN") state instead of
     /// advancing to the board, so the casino styling itself can be screenshot.
     static var holdDraftSpinReveal: Bool { has("-screenshotDraftSpinReveal") }
-    static var autoOpenGrid: Bool { has("-screenshotGrid") || has("-screenshotGridResult") }
+    static var autoOpenGrid: Bool {
+        has("-screenshotGrid") || has("-screenshotGridResult") || has("-screenshotGridSetup")
+    }
+    /// Opens The Grid but holds on its setup screen instead of loading a board — same reason
+    /// `holdDraftSpinSetup` exists: the setup screen is itself what needs capturing (the
+    /// sport picker and the "new random grid" button), and reaching it otherwise needs a tap
+    /// simctl can't do.
+    static var holdGridSetup: Bool { has("-screenshotGridSetup") }
     /// Auto-answers every cell with its first valid answer (simctl can't type into the guess field).
     static var autoSubmitGrid: Bool { has("-screenshotGridResult") }
     /// Browse: auto-open the pre-play share sheet for the first archive puzzle. Consumed
@@ -164,6 +171,7 @@ enum DebugLaunch {
     static let holdDraftSpinReveal = false
     static let autoOpenGrid = false
     static let autoSubmitGrid = false
+    static let holdGridSetup = false
     static let autoOpenShare = false
     static let autoOpenScoringInfo = false
     static let autoOpenLeaguesInfo = false
