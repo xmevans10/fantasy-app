@@ -183,16 +183,30 @@ ARCHETYPES: tuple[Archetype, ...] = (
     Archetype("teams-x-stats", "team", "stat", weight=4),
     Archetype("teams-x-teams", "team_career", "team_career", weight=3),
     Archetype("teams-x-mixed", "team", "mixed", weight=4),
+    # The one shape where a single dimension is heterogeneous *including* teams: a left edge
+    # reading "MIA / 30+ Pass TD / 1980s" against three team columns. Every other archetype
+    # fixes one kind per dimension, so until this one the rows were always teams and only the
+    # columns ever varied. `mixed_any` is legal ONLY opposite an all-team dimension — that's
+    # what keeps every cell team-anchored (see below) even though the row kinds vary.
+    Archetype("mixed-x-teams", "mixed_any", "team_career", weight=3),
 )
 
-# Every archetype anchors at least one dimension to a team, and that is a product rule, not an
-# accident of this list. A first pass also shipped `decades-x-stats` and `positions-x-decades`;
-# a live dry run made the problem obvious — "Midfielders x 2020s" and "2010s x 10+ Assists" have
-# thousands of valid answers each and came back rarity 1 across all nine cells, because the
-# question is really "name any midfielder" rather than "name the player who connects these two
-# facts". A team is what makes a cell specific. Immaculate Grid follows the same rule.
-# `test_every_archetype_is_anchored_to_a_team` pins it.
+# EVERY CELL must be anchored to a team, and that is a product rule, not an accident of this
+# list. A first pass also shipped `decades-x-stats` and `positions-x-decades`; a live dry run
+# made the problem obvious — "Midfielders x 2020s" and "2010s x 10+ Assists" have thousands of
+# valid answers each and came back rarity 1 across all nine cells, because the question is
+# really "name any midfielder" rather than "name the player who connects these two facts". A
+# team is what makes a cell specific. Immaculate Grid follows the same rule.
+#
+# Note the invariant is per *cell*, not per dimension. A fixed team dimension is the easy way to
+# satisfy it, but not the only one: `mixed_any` varies kinds within its dimension (teams
+# included) and stays legal because it may only ever face an all-team dimension, so each of the
+# nine cells still crosses at least one team. `test_every_cell_is_anchored_to_a_team` pins the
+# real rule and `test_mixed_any_only_faces_a_team_dimension` pins the condition that upholds it.
 TEAM_DIMENSIONS = frozenset({"team", "team_career"})
+# Dimensions whose kinds vary per axis. They cannot supply the team anchor for a cell on their
+# own (any individual axis may be a non-team), so the opposite dimension must be all-team.
+HETEROGENEOUS_DIMENSIONS = frozenset({"mixed", "mixed_any"})
 
 
 def _axis_pool(dimension: str, sport: str, pool: list[RawSeason],
@@ -221,6 +235,18 @@ def _axis_pool(dimension: str, sport: str, pool: list[RawSeason],
         # their place: "Chiefs x RB" alone is a weak cell, but as one column of three varied
         # constraints it reads as a change of pace rather than the whole board's premise.
         return position_axes(sport) + stat_axes(sport) + [decade_axis(d) for d in decades]
+    if dimension == "mixed_any":
+        # `mixed`, plus teams — the only pool where a single dimension can hold a team on one
+        # axis and a stat or decade on the next. Teams here take *career* grain to match the
+        # all-team dimension opposite (which is `team_career`): a season-grain team crossed with
+        # a career-grain team asks "same club the same year", a different and much emptier
+        # question than "played for both" — the same grain reasoning that makes team x team work
+        # at all (see grid_axes' module docstring).
+        if sport not in TEAM_MOBILE_SPORTS:
+            return []
+        team_pool = [team_axis(abbr, league=league, grain="career")
+                     for abbr, league in _prominent_teams(pool, teams)]
+        return team_pool + position_axes(sport) + stat_axes(sport) + [decade_axis(d) for d in decades]
     raise ValueError(f"unknown axis dimension {dimension!r}")
 
 
@@ -258,8 +284,28 @@ def _prominent_teams(pool: list[RawSeason],
     return ranked[:TEAM_X_TEAM_POOL]
 
 
+def _is_varied(dimension: str, axes: tuple[GridAxis, ...]) -> bool:
+    """Whether `axes` satisfy `dimension`'s variety requirement. Only `mixed_any` has one.
+
+    Deliberately NOT applied to `mixed`. Both dimensions vary their kinds, but only `mixed_any`
+    can contain a *team*, and a team is the kind that makes an all-same draw indistinguishable
+    from an existing archetype (all-team rows on a mixed-x-teams board is just teams-x-teams).
+    A `mixed` column that happens to draw three stats is merely a teams-x-stats-shaped board,
+    which was always an accepted outcome — narrowing it here rejected viable boards for no gain
+    and cost soccer a daily board outright.
+
+    Floor is two distinct kinds, not three. Three ("a team, a stat and a decade" exactly) is the
+    ideal this shape aims at, but requiring it would reject a lot of otherwise-viable boards for
+    sports whose axis vocabulary is thin — and two already guarantees the dimension never
+    silently collapses into a uniform one.
+    """
+    if dimension != "mixed_any":
+        return True
+    return len({a.kind for a in axes}) >= 2
+
+
 def generate_grid(seasons: list[RawSeason], sport: str, date: str,
-                  max_attempts: int = 200, extra_members: list | None = None,
+                  max_attempts: int = 500, extra_members: list | None = None,
                   recently_served: frozenset[tuple[str, str]] | set[tuple[str, str]] = frozenset(),
                   archetypes: tuple[Archetype, ...] | None = None,
                   ) -> GridPuzzle | None:
@@ -267,6 +313,12 @@ def generate_grid(seasons: list[RawSeason], sport: str, date: str,
     (drawn from what's actually present in `seasons`) until every one of the 9 cells has >=1 valid
     answer, or gives up after `max_attempts` (returns None -- caller skips today's Grid rather
     than shipping a broken puzzle, same posture as daily_puzzle.py's viability gate).
+
+    `max_attempts` is 500 rather than a token number because soccer is genuinely marginal: 961
+    clubs, most of them obscure, so most team pairings share no player and a lot of draws are
+    dead. Measured 2026-07-27: only 1,545 of soccer's 19,989 player-sharing club pairs share 5+
+    players. It ran out at 200 and skipped a daily board outright, which is worse than the
+    extra tries cost.
 
     `extra_members` (e.g. nfl_rosters.RosterMember) widen each cell's VALID answers to full
     rosters -- Immaculate-Grid-style "anyone who was on the team counts" -- without touching axis
@@ -292,23 +344,50 @@ def generate_grid(seasons: list[RawSeason], sport: str, date: str,
     by_player = _group_by_player(pool)
     extra_by_player = _group_by_player(_as_seasons(extra_members, sport)) if extra_members else None
 
+    # Resolve each archetype's axis pools ONCE, and drop the shapes this sport can't offer
+    # before the rotation is built rather than inside the retry loop.
+    #
+    # Doing this per-attempt was survivable while every sport could serve most shapes, but it
+    # silently taxes the sports that can't: tennis has no `team_career` pool (it isn't in
+    # TEAM_MOBILE_SPORTS), so both teams-x-teams and mixed-x-teams are impossible for it, and
+    # each attempt that drew one burned a retry on a shape that could never work. Adding a fifth
+    # archetype pushed that waste from 3/14 to 6/17 of attempts and started exhausting
+    # max_attempts outright — tennis and soccer both went from a board to "no viable grid" on
+    # 2026-07-27. Filtering up front makes the attempt budget buy only real candidates, and skips
+    # recomputing `_prominent_teams` (a full scan of `pool`) up to 200 times.
+    pools: dict[str, tuple[list[GridAxis], list[GridAxis]]] = {}
+    feasible: list[Archetype] = []
+    for candidate in (archetypes or ARCHETYPES):
+        row_pool = _axis_pool(candidate.rows, sport, pool, teams, decades)
+        col_pool = _axis_pool(candidate.cols, sport, pool, teams, decades)
+        if len(row_pool) < 3 or len(col_pool) < 3:
+            continue        # this sport can't offer this shape at all
+        pools[candidate.key] = (row_pool, col_pool)
+        feasible.append(candidate)
+    if not feasible:
+        return None
+
     # Weighted rotation, expanded once so a seeded `choice` picks by weight without re-deriving
     # the distribution on every attempt.
-    rotation = [a for a in (archetypes or ARCHETYPES) for _ in range(a.weight)]
+    rotation = [a for a in feasible for _ in range(a.weight)]
 
     for attempt in range(max_attempts):
         rng = random.Random(f"grid-{sport}-{date}-{attempt}")
         archetype = rng.choice(rotation)
-        row_pool = _axis_pool(archetype.rows, sport, pool, teams, decades)
-        col_pool = _axis_pool(archetype.cols, sport, pool, teams, decades)
-        if len(row_pool) < 3 or len(col_pool) < 3:
-            continue        # this sport can't offer this shape -- try another archetype
+        row_pool, col_pool = pools[archetype.key]
         rows = tuple(rng.sample(row_pool, 3))
         cols = tuple(rng.sample(col_pool, 3))
         # Same-dimension pools can overlap across dimensions (teams x teams is the whole point of
         # that archetype) -- but a board with the SAME axis on a row and a column produces a
         # degenerate cell (e.g. "KC and KC"), so reject that.
         if {a.key for a in rows} & {a.key for a in cols}:
+            continue
+        # `mixed_any` has to actually be mixed. `rng.sample` draws uniformly from a pool that
+        # mixes kinds in whatever proportion the sport happens to offer, so it lands on three
+        # teams often enough to matter — and a mixed-x-teams board whose rows came out all-team
+        # is just teams-x-teams wearing a different archetype label, which is exactly the
+        # sameness this shape exists to break.
+        if not _is_varied(archetype.rows, rows) or not _is_varied(archetype.cols, cols):
             continue
         if combo_key(rows, cols) in recently_served:
             continue

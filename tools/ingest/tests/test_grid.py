@@ -445,14 +445,36 @@ def test_rotation_produces_more_than_one_board_shape_over_time():
     assert len(shapes) > 1, f"expected shape variety across a month, only saw {shapes}"
 
 
-def test_every_archetype_is_anchored_to_a_team():
+def test_every_cell_is_anchored_to_a_team():
     """A cell is only specific because a team narrows it. Boards with no team dimension at all
     ("Midfielders x 2020s", "2010s x 10+ Assists") shipped in a first pass and came back rarity 1
     across all nine cells on live data — thousands of valid answers each, because the question is
-    really "name any midfielder". See ARCHETYPES' comment."""
+    really "name any midfielder". See ARCHETYPES' comment.
+
+    Stated per *cell*, not per dimension: a heterogeneous dimension can't be relied on for the
+    anchor (any one of its axes may be a non-team), so it only counts when the dimension facing
+    it is all-team."""
     for archetype in grid.ARCHETYPES:
-        assert grid.TEAM_DIMENSIONS & {archetype.rows, archetype.cols}, \
-            f"{archetype.key} has no team dimension"
+        dims = {archetype.rows, archetype.cols}
+        if dims & grid.HETEROGENEOUS_DIMENSIONS:
+            # The varying side can't anchor, so the other side must be wholly team.
+            other = archetype.cols if archetype.rows in grid.HETEROGENEOUS_DIMENSIONS else archetype.rows
+            assert other in grid.TEAM_DIMENSIONS, \
+                f"{archetype.key} pairs a heterogeneous dimension with a non-team one"
+        else:
+            assert grid.TEAM_DIMENSIONS & dims, f"{archetype.key} has no team dimension"
+
+
+def test_mixed_any_only_faces_a_team_dimension():
+    """`mixed_any` may itself contain a team axis, which makes it tempting to treat as
+    self-anchoring — it isn't. Two `mixed_any` dimensions could put a stat opposite a decade and
+    produce exactly the rarity-1 "name any player who ever rushed for 1,000" cell the anchoring
+    rule exists to prevent."""
+    for archetype in grid.ARCHETYPES:
+        for dim, other in ((archetype.rows, archetype.cols), (archetype.cols, archetype.rows)):
+            if dim == "mixed_any":
+                assert other in grid.TEAM_DIMENSIONS, \
+                    f"{archetype.key}: mixed_any must face an all-team dimension, got {other!r}"
 
 
 def test_archetype_is_skipped_when_the_sport_cannot_offer_three_axes():
