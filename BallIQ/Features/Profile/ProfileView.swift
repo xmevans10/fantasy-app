@@ -212,10 +212,8 @@ struct ProfileView: View {
             Button { pickingTeamFor = sport } label: {
                 HStack(spacing: 6) {
                     if let selected, let url = sport.teamLogoURL(forAbbr: selected) {
-                        AsyncImage(url: url) { phase in
-                            if let img = phase.image { img.resizable().scaledToFit() }
-                        }
-                        .frame(width: 18, height: 18)
+                        RemoteImage(url: url, targetSize: CGSize(width: 18, height: 18))
+                            .frame(width: 18, height: 18)
                     }
                     Text(selected ?? "Pick a team").font(.label12)
                         .foregroundStyle(team?.onPrimary ?? Color.textMuted)

@@ -1,10 +1,20 @@
-"""The Grid: a 3x3 team x decade puzzle. Guarantees every cell has >=1 real, valid answer
-(the same viability-gate philosophy as generate.py's _is_viable) -- picked deterministically
-per (sport, date), retrying across seeded team/decade combos until one is fully viable.
+"""The Grid: a 3x3 board whose rows and columns are *axes* — a team, a decade, a position, or a
+statistical milestone — rather than the fixed teams x decades it was until 2026-07-27.
 
-Rarity v1 is offline-deterministic: a cell's rarity is derived purely from how many valid
-answers exist for it at generation time (baked into content), not from live player guesses --
-a server-side "X% of players guessed this" rarity is a deferred follow-up (see BALLIQ_SPEC.md).
+Every board minted before that date had the identical shape: rows were three team abbreviations,
+columns three decades, hardcoded from this generator through the content JSON to the SwiftUI
+layout. The axis vocabulary now lives in `grid_axes.py`; this module picks axes and guarantees
+viability. See docs/grid-axes-research.md for the Immaculate Grid research this follows, and
+`grid_axes`'s module docstring for the grain model (which season has to satisfy which axis) —
+that part is subtle and is the reason team x team boards are possible at all.
+
+Guarantees kept from the original: every cell has >=1 real, valid answer (the same viability-gate
+philosophy as generate.py's `_is_viable`), and generation is deterministic per (sport, date),
+retrying across seeded combinations until one is fully viable.
+
+Rarity v1 is still offline-deterministic: a cell's rarity is derived purely from how many valid
+answers exist for it at generation time (baked into content), not from live player guesses -- a
+server-side "X% of players guessed this" rarity is a deferred follow-up (see BALLIQ_SPEC.md).
 """
 from __future__ import annotations
 
@@ -12,12 +22,27 @@ import itertools
 import random
 from dataclasses import dataclass
 
+from .grid_axes import (LEAGUE_SCOPED_SPORTS, TEAM_MOBILE_SPORTS, GridAxis, decade_axis,
+                        position_axes, stat_axes, team_axis)
 from .models import RawSeason, slug
 
 # Trailing window (days) of `grid_history` combos a fresh board must not repeat. Modest by
-# design: long enough that a verbatim team-set x decade-set repeat feels impossible in play,
-# short enough that even a small sport's combo space can't be exhausted by the rejection set.
+# design: long enough that a verbatim repeat feels impossible in play, short enough that even a
+# small sport's combo space can't be exhausted by the rejection set.
 GRID_HISTORY_WINDOW_DAYS = 60
+
+# Content schema version baked into every board. v1 was the implicit teams x decades shape
+# (`rowTeams`/`colDecades`); v2 is the symmetric `rows`/`cols` axis lists. The client decodes
+# both -- a v1 board already minted must keep playing correctly, since a live board is immutable
+# for its day and players may be mid-grid when a new build ships.
+CONTENT_VERSION = 2
+
+# How many teams a team x team board may draw from, ranked by how many distinct players they
+# have. Two randomly-chosen clubs out of soccer's 961 almost never share a player, so an
+# unrestricted draw would burn every attempt on unviable boards; capping to the most-represented
+# franchises makes the pairing both viable and recognisable (Immaculate Grid likewise builds
+# team x team boards out of major franchises, not the long tail).
+TEAM_X_TEAM_POOL = 60
 
 
 @dataclass(frozen=True)
@@ -37,9 +62,10 @@ class GridCell:
 @dataclass(frozen=True)
 class GridPuzzle:
     sport: str
-    row_teams: tuple[str, str, str]
-    col_decades: tuple[int, int, int]
+    rows: tuple[GridAxis, ...]
+    cols: tuple[GridAxis, ...]
     cells: tuple[GridCell, ...]   # length 9, row-major: cells[row*3 + col]
+    archetype: str = ""           # which board shape produced this, for history/telemetry
 
     def cell(self, row: int, col: int) -> GridCell:
         return self.cells[row * 3 + col]
@@ -62,105 +88,279 @@ def _rarity_stars(count: int) -> int:
     return 1
 
 
-def _build_cell(pool: list[RawSeason], team: str, decade: int,
-                extra_members: list | None = None) -> GridCell | None:
-    matches = [s for s in pool if s.team_abbr == team and _decade(s.season_year) == decade]
-    # One answer per distinct player (their most recent qualifying season, for display).
-    by_name: dict[str, RawSeason] = {}
-    for s in matches:
-        existing = by_name.get(s.name)
-        if existing is None or s.season_year > existing.season_year:
-            by_name[s.name] = s
-    if not by_name:
+def _group_by_player(pool: list[RawSeason]) -> dict[str, list[RawSeason]]:
+    """Seasons keyed by player name. Grouping once up front (rather than per cell, as the
+    teams x decades version did) is what makes career-grain axes cheap: "did this player ever
+    play for X" is a scan of one already-materialised list."""
+    by_player: dict[str, list[RawSeason]] = {}
+    for season in pool:
+        by_player.setdefault(season.name, []).append(season)
+    return by_player
+
+
+def _satisfying_season(seasons: list[RawSeason], row: GridAxis, col: GridAxis) -> RawSeason | None:
+    """The season to display for a player who satisfies this cell, or None if they don't.
+
+    Implements the grain rule documented in `grid_axes`: every `season`-grain axis must be
+    satisfied by ONE common season, while each `career`-grain axis may be satisfied by any season
+    in the player's history. That is Immaculate Grid's own rule -- "1,000 yards *as a Bear*" is
+    one season, "played for both" is not.
+    """
+    axes = (row, col)
+    for axis in axes:
+        if axis.grain == "career" and not any(axis.matches(s) for s in seasons):
+            return None
+    season_axes = [a for a in axes if a.grain == "season"]
+    candidates = [s for s in seasons if all(a.matches(s) for a in season_axes)]
+    if season_axes and not candidates:
         return None
-    # Rarity stars come from the GRADED pool only — that's the stable "how many notable
-    # answers exist" signal the star economy was tuned on. Roster extras (below) widen
-    # *validity* without inflating every cell to 1-star.
-    stars = _rarity_stars(len(by_name))
+    # Most recent qualifying season, for display -- matches the original's per-player choice.
+    return max(candidates or seasons, key=lambda s: s.season_year)
+
+
+def _build_cell(by_player: dict[str, list[RawSeason]], row: GridAxis, col: GridAxis,
+                extra_by_player: dict[str, list[RawSeason]] | None = None) -> GridCell | None:
+    graded_hits: dict[str, RawSeason] = {}
+    for name, seasons in by_player.items():
+        hit = _satisfying_season(seasons, row, col)
+        if hit is not None:
+            graded_hits[name] = hit
+    if not graded_hits:
+        return None
+    # Rarity stars come from the GRADED pool only -- that's the stable "how many notable answers
+    # exist" signal the star economy was tuned on. Roster extras (below) widen *validity* without
+    # inflating every cell to 1-star.
+    stars = _rarity_stars(len(graded_hits))
     graded = [
-        GridAnswer(player_id=slug(s.name), name=s.name, team_abbr=s.team_abbr, season_year=s.season_year)
-        for s in by_name.values()
+        GridAnswer(player_id=slug(s.name), name=s.name, team_abbr=s.team_abbr,
+                   season_year=s.season_year)
+        for s in graded_hits.values()
     ]
     # Full-roster members (nfl_rosters.py) matching this cell, minus players the graded pool
-    # already covers. Validity-only: they never affect stars, and never create viability —
-    # a cell with zero graded answers stays None (team/decade combos are drawn from the
-    # graded pool anyway, and stars would be undefined).
-    extra_by_name: dict[str, object] = {}
-    for m in (extra_members or []):
-        if m.team_abbr != team or _decade(m.season_year) != decade or m.name in by_name:
+    # already covers. Validity-only: they never affect stars, and never create viability -- a
+    # cell with zero graded answers stays None. They carry no stats, so they can only ever
+    # satisfy team/decade/position axes; a stat axis rejects them automatically via `Filter`,
+    # which is exactly right (we can't assert a roster-only player hit 1,000 yards).
+    extras: list[GridAnswer] = []
+    for name, seasons in (extra_by_player or {}).items():
+        if name in graded_hits:
             continue
-        existing = extra_by_name.get(m.name)
-        if existing is None or m.season_year > existing.season_year:
-            extra_by_name[m.name] = m
-    extras = [
-        GridAnswer(player_id=slug(m.name), name=m.name, team_abbr=m.team_abbr, season_year=m.season_year)
-        for m in extra_by_name.values()
-    ]
+        hit = _satisfying_season(seasons, row, col)
+        if hit is not None:
+            extras.append(GridAnswer(player_id=slug(hit.name), name=hit.name,
+                                     team_abbr=hit.team_abbr, season_year=hit.season_year))
     answers = tuple(sorted(graded + extras, key=lambda a: a.name))
     return GridCell(valid_answers=answers, rarity_stars=stars)
 
 
-def combo_key(row_teams: tuple[str, ...], col_decades: tuple[int, ...]) -> tuple[str, str]:
-    """Canonical identity of a team-set x decade-set combo, order-independent — the shape
-    stored in `grid_history` (row_teams / col_decades text columns) and matched against by
-    `generate_grid`'s recently-served rejection."""
-    return ("|".join(sorted(row_teams)), "|".join(str(d) for d in sorted(col_decades)))
+def combo_key(rows: tuple[GridAxis, ...], cols: tuple[GridAxis, ...]) -> tuple[str, str]:
+    """Canonical, order-independent identity of a board's axis sets — the shape stored in
+    `grid_history` (still the `row_teams`/`col_decades` text columns, whose names are now
+    historical) and matched against by `generate_grid`'s recently-served rejection."""
+    return ("|".join(sorted(a.key for a in rows)), "|".join(sorted(a.key for a in cols)))
+
+
+# MARK: - Board archetypes
+
+@dataclass(frozen=True)
+class Archetype:
+    """A coherent board shape. Archetypes exist instead of free-form axis mixing because the
+    grain rules make arbitrary pairings hard to reason about (a career-grain team axis crossed
+    with a decade axis would accept "played for KC in 2010, played *somewhere* in the 1980s" —
+    technically satisfiable, but not the question the board appears to ask). Each archetype
+    fixes the semantics of both dimensions, so every cell it produces asks something coherent.
+    """
+
+    key: str
+    rows: str          # 'team' | 'team_career' | 'decade' | 'position' | 'stat'
+    cols: str
+    weight: int        # relative frequency in the rotation
+
+
+ARCHETYPES: tuple[Archetype, ...] = (
+    # The original shape, kept in rotation — it's a good board, it was just the *only* board.
+    Archetype("teams-x-decades", "team", "decade", weight=3),
+    Archetype("teams-x-stats", "team", "stat", weight=4),
+    Archetype("teams-x-teams", "team_career", "team_career", weight=3),
+    Archetype("teams-x-mixed", "team", "mixed", weight=4),
+)
+
+# Every archetype anchors at least one dimension to a team, and that is a product rule, not an
+# accident of this list. A first pass also shipped `decades-x-stats` and `positions-x-decades`;
+# a live dry run made the problem obvious — "Midfielders x 2020s" and "2010s x 10+ Assists" have
+# thousands of valid answers each and came back rarity 1 across all nine cells, because the
+# question is really "name any midfielder" rather than "name the player who connects these two
+# facts". A team is what makes a cell specific. Immaculate Grid follows the same rule.
+# `test_every_archetype_is_anchored_to_a_team` pins it.
+TEAM_DIMENSIONS = frozenset({"team", "team_career"})
+
+
+def _axis_pool(dimension: str, sport: str, pool: list[RawSeason],
+               teams: list[tuple[str, str]], decades: list[int]) -> list[GridAxis]:
+    """Candidate axes for one dimension of one archetype, or [] when this sport can't offer
+    enough of them (fewer than 3 → the archetype is skipped rather than producing a short board).
+
+    `teams` is a list of (abbr, league) pairs, not bare abbreviations — see `_team_keys`.
+    """
+    if dimension == "team":
+        return [team_axis(abbr, league=league) for abbr, league in teams]
+    if dimension == "team_career":
+        if sport not in TEAM_MOBILE_SPORTS:
+            return []
+        return [team_axis(abbr, league=league, grain="career")
+                for abbr, league in _prominent_teams(pool, teams)]
+    if dimension == "decade":
+        return [decade_axis(d) for d in decades]
+    if dimension == "position":
+        return position_axes(sport)
+    if dimension == "stat":
+        return stat_axes(sport)
+    if dimension == "mixed":
+        # One dimension drawing from every non-team kind at once — the shape that produces a
+        # board like "KC / DAL / SEA" x "1980s / 30+ Pass TD / RB". This is where positions earn
+        # their place: "Chiefs x RB" alone is a weak cell, but as one column of three varied
+        # constraints it reads as a change of pace rather than the whole board's premise.
+        return position_axes(sport) + stat_axes(sport) + [decade_axis(d) for d in decades]
+    raise ValueError(f"unknown axis dimension {dimension!r}")
+
+
+def _team_key(season: RawSeason, league_scoped: bool) -> tuple[str, str]:
+    """A franchise's identity within one sport: the abbreviation alone for the US sports, or
+    (abbreviation, league) where codes collide across countries — see
+    `grid_axes.LEAGUE_SCOPED_SPORTS`."""
+    return (season.team_abbr, season.meta.get("league", "") if league_scoped else "")
+
+
+def _team_keys(pool: list[RawSeason], league_scoped: bool) -> list[tuple[str, str]]:
+    """Every distinct franchise in `pool`, as (abbr, league) pairs.
+
+    A blank team_abbr is missing/unresolved data, not a real team — never a valid axis label.
+    A blank *league* under a league-scoped sport is dropped for the same reason: an axis with no
+    league filter would match every club sharing that code, which is exactly the merging this
+    scoping exists to prevent.
+    """
+    keys = {_team_key(s, league_scoped) for s in pool if s.team_abbr}
+    if league_scoped:
+        keys = {k for k in keys if k[1]}
+    return sorted(keys)
+
+
+def _prominent_teams(pool: list[RawSeason],
+                     teams: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    """Teams ranked by distinct player count, capped at `TEAM_X_TEAM_POOL`. Sorted by
+    (-count, key) so the result is deterministic under ties rather than dict-order dependent."""
+    league_scoped = any(league for _, league in teams)
+    counts: dict[tuple[str, str], set[str]] = {}
+    for season in pool:
+        if season.team_abbr:
+            counts.setdefault(_team_key(season, league_scoped), set()).add(season.name)
+    ranked = sorted(teams, key=lambda t: (-len(counts.get(t, set())), t))
+    return ranked[:TEAM_X_TEAM_POOL]
 
 
 def generate_grid(seasons: list[RawSeason], sport: str, date: str,
                   max_attempts: int = 200, extra_members: list | None = None,
                   recently_served: frozenset[tuple[str, str]] | set[tuple[str, str]] = frozenset(),
+                  archetypes: tuple[Archetype, ...] | None = None,
                   ) -> GridPuzzle | None:
-    """Deterministic per (sport, date). Tries successive seeded team/decade combos (drawn from
-    what's actually present in `seasons`) until every one of the 9 cells has >=1 valid answer,
-    or gives up after `max_attempts` (returns None -- caller skips today's Grid rather than
-    shipping a broken puzzle, same posture as daily_puzzle.py's viability gate).
+    """Deterministic per (sport, date). Tries successive seeded archetype + axis combinations
+    (drawn from what's actually present in `seasons`) until every one of the 9 cells has >=1 valid
+    answer, or gives up after `max_attempts` (returns None -- caller skips today's Grid rather
+    than shipping a broken puzzle, same posture as daily_puzzle.py's viability gate).
 
     `extra_members` (e.g. nfl_rosters.RosterMember) widen each cell's VALID answers to full
-    rosters -- Immaculate-Grid-style "anyone who was on the team counts" -- without touching
-    team/decade selection, viability, or rarity stars (all still graded-pool-driven).
+    rosters -- Immaculate-Grid-style "anyone who was on the team counts" -- without touching axis
+    selection, viability, or rarity stars (all still graded-pool-driven).
 
     `recently_served` (combo_key tuples, from `grid_history`'s trailing window) is one more
-    rejection condition in the same retry loop: a combo served recently is skipped exactly
-    like a non-viable one, so a fresh board can't repeat a recent team-set x decade-set
+    rejection condition in the same retry loop, so a fresh board can't repeat a recent axis-set
     verbatim. Deliberately lighter than Keep4's signature-level novelty -- determinism per
-    (sport, date) is preserved given the same history snapshot."""
+    `archetypes` overrides the default rotation — used by tests to pin a board shape, and by
+    anyone wanting to preview a single shape from the CLI. Leave it None in production so the
+    weighted rotation applies."""
     pool = [s for s in seasons if s.sport == sport and not s.career]
-    # A blank team_abbr is missing/unresolved data, not a real team -- never a valid row label.
-    teams = sorted({s.team_abbr for s in pool if s.team_abbr})
-    decades = sorted({_decade(s.season_year) for s in pool})
-    if len(teams) < 3 or len(decades) < 3:
+    if not pool:
         return None
+    teams = _team_keys(pool, league_scoped=sport in LEAGUE_SCOPED_SPORTS)
+    decades = sorted({_decade(s.season_year) for s in pool})
+    # NOTE: there is deliberately no global "at least 3 teams AND 3 decades" precondition here.
+    # That guard made sense when every board was teams x decades, but it now rejects boards that
+    # use neither dimension — a teams x teams pool spanning one decade was returning None before
+    # a single attempt ran. Sufficiency is checked per dimension inside the loop instead, against
+    # the axes that board shape actually needs.
+
+    by_player = _group_by_player(pool)
+    extra_by_player = _group_by_player(_as_seasons(extra_members, sport)) if extra_members else None
+
+    # Weighted rotation, expanded once so a seeded `choice` picks by weight without re-deriving
+    # the distribution on every attempt.
+    rotation = [a for a in (archetypes or ARCHETYPES) for _ in range(a.weight)]
 
     for attempt in range(max_attempts):
         rng = random.Random(f"grid-{sport}-{date}-{attempt}")
-        row_teams = tuple(rng.sample(teams, 3))
-        col_decades = tuple(sorted(rng.sample(decades, 3)))
-        if combo_key(row_teams, col_decades) in recently_served:
+        archetype = rng.choice(rotation)
+        row_pool = _axis_pool(archetype.rows, sport, pool, teams, decades)
+        col_pool = _axis_pool(archetype.cols, sport, pool, teams, decades)
+        if len(row_pool) < 3 or len(col_pool) < 3:
+            continue        # this sport can't offer this shape -- try another archetype
+        rows = tuple(rng.sample(row_pool, 3))
+        cols = tuple(rng.sample(col_pool, 3))
+        # Same-dimension pools can overlap across dimensions (teams x teams is the whole point of
+        # that archetype) -- but a board with the SAME axis on a row and a column produces a
+        # degenerate cell (e.g. "KC and KC"), so reject that.
+        if {a.key for a in rows} & {a.key for a in cols}:
+            continue
+        if combo_key(rows, cols) in recently_served:
             continue
         cells: list[GridCell] = []
         viable = True
-        for team, decade in itertools.product(row_teams, col_decades):
-            cell = _build_cell(pool, team, decade, extra_members=extra_members)
+        for row, col in itertools.product(rows, cols):
+            cell = _build_cell(by_player, row, col, extra_by_player=extra_by_player)
             if cell is None:
                 viable = False
                 break
             cells.append(cell)
         if viable:
-            return GridPuzzle(sport=sport, row_teams=row_teams, col_decades=col_decades,
-                              cells=tuple(cells))
+            return GridPuzzle(sport=sport, rows=rows, cols=cols, cells=tuple(cells),
+                              archetype=archetype.key)
     return None
+
+
+def _as_seasons(members: list | None, sport: str) -> list[RawSeason]:
+    """Normalise roster memberships into `RawSeason`s so axis matching is uniform.
+
+    `nfl_rosters.RosterMember` carries only (name, team_abbr, season_year) — no position, no
+    stats — so the resulting rows satisfy team and decade axes and are correctly rejected by
+    position and stat axes, which is the honest outcome: we can't assert a roster-only player was
+    a QB or hit 1,000 yards. Members that are already `RawSeason`s pass through untouched.
+    """
+    out: list[RawSeason] = []
+    for m in members or ():
+        if isinstance(m, RawSeason):
+            out.append(m)
+            continue
+        out.append(RawSeason(name=m.name, team_abbr=m.team_abbr, season_year=m.season_year,
+                             sport=sport, position="", stats={}))
+    return out
 
 
 def to_content(puzzle: GridPuzzle) -> dict:
     """camelCase JSON content for the `puzzles` row (mirrors assemble.py's convention -- the
     Swift Codable models decode camelCase). `sport` is baked into content itself (not just the
-    row's own `sport` column), matching assemble.py's keep4/whoami rows -- the Swift
-    `GridPuzzle` model decodes it from `content`, same as `Keep4Puzzle`/`WhoAmIPuzzle` do."""
-    return {
+    row's own `sport` column), matching assemble.py's keep4/whoami rows.
+
+    Emits BOTH shapes on purpose. `rows`/`cols` is the real v2 payload; `rowTeams`/`colDecades`
+    are also written whenever the board happens to be the classic teams x decades shape, so a
+    client still running the pre-v2 decoder keeps working through the rollout instead of showing
+    "No Grid today". They're dropped for any other archetype, where no honest v1 rendering
+    exists -- an old client sees no board rather than a wrong one.
+    """
+    content: dict = {
         "sport": puzzle.sport,
-        "rowTeams": list(puzzle.row_teams),
-        "colDecades": list(puzzle.col_decades),
+        "version": CONTENT_VERSION,
+        "archetype": puzzle.archetype,
+        "rows": [_axis_content(a) for a in puzzle.rows],
+        "cols": [_axis_content(a) for a in puzzle.cols],
         "cells": [
             {
                 "validAnswerIds": [a.player_id for a in cell.valid_answers],
@@ -170,6 +370,28 @@ def to_content(puzzle: GridPuzzle) -> dict:
             for cell in puzzle.cells
         ],
     }
+    if all(a.kind == "team" and a.grain == "season" for a in puzzle.rows) and \
+            all(a.kind == "decade" for a in puzzle.cols):
+        content["rowTeams"] = [a.label for a in puzzle.rows]
+        content["colDecades"] = [int(a.label.rstrip("s")) for a in puzzle.cols]
+    return content
+
+
+def _axis_content(axis: GridAxis) -> dict:
+    """`kind` is what tells the client HOW to draw the label — a team axis gets the real crest +
+    color chip, everything else is a text label. The filter predicates deliberately do NOT ship:
+    the client never re-evaluates them (valid answers are baked per cell), so sending them would
+    be dead weight and a second source of truth.
+
+    `abbr`/`league` ship for team axes only, and `league` is why they ship at all: without it the
+    client resolves "MCI" to whichever of Manchester City / Melbourne City its identity index
+    happens to hit first, so a correct answer set would still render the wrong crest and colors.
+    """
+    out = {"kind": axis.kind, "label": axis.label, "grain": axis.grain, "key": axis.key}
+    if axis.kind == "team":
+        out["abbr"] = axis.abbr
+        out["league"] = axis.league
+    return out
 
 
 def puzzle_id(sport: str, date: str) -> str:

@@ -7,6 +7,9 @@ struct BallIQApp: App {
 
     init() {
         FontRegistration.registerAll()
+        // Before any `URLSession.shared` traffic: the default URLCache (~10 MB disk) is smaller
+        // than the team-logo bucket (22.5 MB), so crests could never stay cached.
+        AppImagePipeline.configure()
     }
 
     var body: some Scene {

@@ -286,10 +286,8 @@ struct PickerRow: View {
     @ViewBuilder
     private var crest: some View {
         if let logo {
-            AsyncImage(url: logo) { phase in
-                if let img = phase.image { img.resizable().scaledToFit() } else { Color.clear }
-            }
-            .frame(width: 24, height: 24)
+            RemoteImage(url: logo, targetSize: CGSize(width: 24, height: 24))
+                .frame(width: 24, height: 24)
         } else {
             // Keeps every row's text on one baseline whether or not a crest resolved.
             Color.clear.frame(width: 24, height: 24)

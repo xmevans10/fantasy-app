@@ -128,10 +128,8 @@ struct LeaguePicker: View {
     @ViewBuilder
     private func crest(_ url: URL?) -> some View {
         if let url {
-            AsyncImage(url: url) { phase in
-                if let img = phase.image { img.resizable().scaledToFit() } else { Color.clear }
-            }
-            .frame(width: 24, height: 24)
+            RemoteImage(url: url, targetSize: CGSize(width: 24, height: 24))
+                .frame(width: 24, height: 24)
         } else {
             // Keeps every row's text on the same baseline whether or not a crest resolved.
             Color.clear.frame(width: 24, height: 24)

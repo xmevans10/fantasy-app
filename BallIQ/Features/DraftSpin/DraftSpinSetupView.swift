@@ -204,10 +204,8 @@ private struct LeaguePickerButton: View {
         Button { showingPicker = true } label: {
             HStack(spacing: 10) {
                 if let crest {
-                    AsyncImage(url: crest) { phase in
-                        if let img = phase.image { img.resizable().scaledToFit() } else { Color.clear }
-                    }
-                    .frame(width: 22, height: 22)
+                    RemoteImage(url: crest, targetSize: CGSize(width: 22, height: 22))
+                        .frame(width: 22, height: 22)
                 }
                 Text(label.uppercased())
                     .font(.custom(FontName.condBlack, size: 14))

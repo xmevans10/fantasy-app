@@ -1529,8 +1529,27 @@ team, team × award/stat, etc.); a typeahead dropdown of qualified players; a **
 player across the grid; an emoji share-grid. What makes it feel deep is (a) it accepts *anyone
 who ever appeared* for the team, and (b) the rarity meta-game rewarding deep cuts.
 
-Where BallIQ's Grid stands against that — **all five gaps closed 2026-07-17** except the
-upstream-blocked freshness item:
+Where BallIQ's Grid stands against that — five gaps closed 2026-07-17, and the **sixth and
+largest closed 2026-07-27**:
+
+- ~~**Axis variety**~~ — **shipped 2026-07-27 (code); content rollout gated on the client
+  release.** Until then every board ever minted was teams × decades: the shape was hardcoded from
+  `grid.py`'s dataclass through the content JSON and the Swift Codable to the SwiftUI layout, so
+  Immaculate Grid's signature **team × team** cell ("who played for both?") was inexpressible.
+  Rows and columns are now symmetric `GridAxis` lists — a team, decade, position or stat
+  milestone on either dimension — rotating over four archetypes (teams × decades, × stats,
+  × teams, × mixed), each anchored to at least one team axis. Axis vocabulary lives in the new
+  `tools/ingest/grid_axes.py`; predicates reuse `themes.Filter` rather than a second language.
+  Content is v2 (`rows`/`cols` + `archetype`), and classic-shaped boards still emit the legacy
+  `rowTeams`/`colDecades` so pre-v2 clients keep playing. **See
+  [grid-axes-research.md](grid-axes-research.md)** for the Immaculate Grid research, the
+  season-vs-career grain model that makes team × team correct, and the soccer club-code fix
+  (51 of 954 soccer abbreviations merged two clubs — `MCI` was Manchester City *and* Melbourne
+  City; axes are now league-scoped and labelled `MCI-ENG` / `MCI-AUS`).
+  ⚠️ **Do not `--grid --upsert` until the client build ships** — a non-classic board has no
+  legacy fallback, and minted boards are immutable for their day.
+
+The original five:
 - ~~**Guess typeahead**~~ — **shipped** (`GridGuessSheet` + `grid_player_names` RPC). The
   biggest felt gap and the direct fix for the "I typed Sam Darnold and it did nothing"
   frustration (autocorrect + no name affordance).

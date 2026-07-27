@@ -39,9 +39,9 @@ struct PlayerHeadshotBadge: View {
     var body: some View {
         Group {
             if let headshot, let url = URL(string: headshot) {
-                AsyncImage(url: url) { phase in
-                    if let img = phase.image { img.resizable().scaledToFill() } else { fallback }
-                }
+                RemoteImage(url: url, targetSize: CGSize(width: size, height: size),
+                            contentMode: .fill,
+                            placeholder: { fallback }, failure: { fallback })
             } else {
                 fallback
             }
@@ -79,13 +79,8 @@ struct TeamLogoBadge: View {
     @ViewBuilder private var content: some View {
         if sport.hasTeams {
             if let url = sport.teamLogoURL(forAbbr: teamAbbr, league: league) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let img): img.resizable().scaledToFit()
-                    case .failure: abbrText
-                    default: Color.clear
-                    }
-                }
+                RemoteImage(url: url, targetSize: CGSize(width: size, height: size),
+                            failure: { abbrText })
             } else {
                 abbrText
             }
@@ -123,6 +118,12 @@ struct TeamAbbrChip: View {
     /// color chip's full-width legibility at its smallest size; a recap row (or any future
     /// consumer with more room) can turn this on instead of duplicating the chip.
     var showLogo: Bool = false
+    /// Overrides the rendered text while `abbr` still drives colors and the crest.
+    ///
+    /// Needed because a soccer code is not unique: The Grid renders league-qualified labels
+    /// ("MCI-ENG" vs "MCI-AUS") so two clubs sharing a code are distinguishable on the board,
+    /// but the palette and crest lookups must key on the raw "MCI" the `teams` table stores.
+    var displayText: String? = nil
 
     private var team: TeamPalette { TeamColors.palette(sport: sport, abbr: abbr, league: league) }
     private var logoURL: URL? { showLogo ? sport.teamLogoURL(forAbbr: abbr, league: league) : nil }
@@ -130,15 +131,17 @@ struct TeamAbbrChip: View {
     var body: some View {
         HStack(spacing: 4) {
             if let logoURL {
-                AsyncImage(url: logoURL) { phase in
-                    if let img = phase.image { img.resizable().scaledToFit() } else { Color.clear }
-                }
-                .frame(width: minHeight * 0.5, height: minHeight * 0.5)
+                RemoteImage(url: logoURL,
+                            targetSize: CGSize(width: minHeight * 0.5, height: minHeight * 0.5))
+                    .frame(width: minHeight * 0.5, height: minHeight * 0.5)
             }
-            Text(abbr.uppercased())
+            Text((displayText ?? abbr).uppercased())
                 .font(.custom(FontName.condBlack, size: fontSize))
                 .foregroundStyle(team.onPrimary)
-                .lineLimit(1).minimumScaleFactor(0.6)
+                // A qualified label ("MCI-ENG") is meaningfully longer than a bare code, so it
+                // scales further down before truncating rather than losing the nation suffix —
+                // which is the part that disambiguates it.
+                .lineLimit(1).minimumScaleFactor(0.45)
         }
         .frame(maxWidth: .infinity, minHeight: minHeight)
         .background(team.primary)
@@ -168,13 +171,8 @@ struct LeagueLogoBadge: View {
 
     @ViewBuilder private var content: some View {
         if let url = identity?.logoURL {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let img): img.resizable().scaledToFit()
-                case .failure: fallbackText
-                default: Color.clear
-                }
-            }
+            RemoteImage(url: url, targetSize: CGSize(width: size, height: size),
+                        failure: { fallbackText })
         } else {
             fallbackText
         }

@@ -8,12 +8,23 @@ final class GridPuzzleTests: XCTestCase {
         "Peyton Manning", "Tom Brady", "Randy Moss", "Adrian Peterson",
     ]
 
-    private func puzzle() -> GridPuzzle {
-        GridPuzzle(sport: .nfl, rowTeams: ["CLE", "SEA", "LA"], colDecades: [1990, 2010, 2020],
-                  cells: (0..<9).map { i in
-                      GridPuzzle.GridCell(validAnswerIds: ["id-\(i)"], validAnswerNames: [Self.names[i]],
-                                          rarityStars: (i % 5) + 1)
-                  })
+    private static func teams(_ labels: [String]) -> [GridPuzzle.GridAxis] {
+        labels.map { GridPuzzle.GridAxis(kind: .team, label: $0) }
+    }
+
+    private static func decades(_ labels: [String]) -> [GridPuzzle.GridAxis] {
+        labels.map { GridPuzzle.GridAxis(kind: .decade, label: $0) }
+    }
+
+    private func puzzle(cells: [GridPuzzle.GridCell]? = nil) -> GridPuzzle {
+        GridPuzzle(sport: .nfl,
+                   rows: Self.teams(["CLE", "SEA", "LA"]),
+                   cols: Self.decades(["1990s", "2010s", "2020s"]),
+                   cells: cells ?? (0..<9).map { i in
+                       GridPuzzle.GridCell(validAnswerIds: ["id-\(i)"],
+                                           validAnswerNames: [Self.names[i]],
+                                           rarityStars: (i % 5) + 1)
+                   })
     }
 
     func testCellIndexingIsRowMajor() {
@@ -25,18 +36,15 @@ final class GridPuzzleTests: XCTestCase {
     }
 
     func testExactNameMatches() {
-        let p = puzzle()
-        XCTAssertTrue(p.isCorrect(row: 0, col: 0, guess: "Joe Montana"))
+        XCTAssertTrue(puzzle().isCorrect(row: 0, col: 0, guess: "Joe Montana"))
     }
 
     func testCaseInsensitiveMatch() {
-        let p = puzzle()
-        XCTAssertTrue(p.isCorrect(row: 0, col: 0, guess: "joe montana"))
+        XCTAssertTrue(puzzle().isCorrect(row: 0, col: 0, guess: "joe montana"))
     }
 
     func testWrongGuessIsRejected() {
-        let p = puzzle()
-        XCTAssertFalse(p.isCorrect(row: 0, col: 0, guess: "Someone Else"))
+        XCTAssertFalse(puzzle().isCorrect(row: 0, col: 0, guess: "Someone Else"))
     }
 
     func testGuessOnlyMatchesItsOwnCell() {
@@ -48,16 +56,53 @@ final class GridPuzzleTests: XCTestCase {
 
     func testMultipleValidAnswersInOneCellAllMatch() {
         var cells = puzzle().cells
-        cells[0] = GridPuzzle.GridCell(validAnswerIds: ["a", "b"], validAnswerNames: ["Joe Montana", "Steve Young"],
+        cells[0] = GridPuzzle.GridCell(validAnswerIds: ["a", "b"],
+                                       validAnswerNames: ["Joe Montana", "Steve Young"],
                                        rarityStars: 2)
-        let p = GridPuzzle(sport: .nfl, rowTeams: ["CLE", "SEA", "LA"], colDecades: [1990, 2010, 2020], cells: cells)
+        let p = puzzle(cells: cells)
         XCTAssertTrue(p.isCorrect(row: 0, col: 0, guess: "montana"))
         XCTAssertTrue(p.isCorrect(row: 0, col: 0, guess: "Steve Young"))
     }
 
     // MARK: - Decoding the real pipeline shape (tools/ingest/grid.py's to_content)
 
-    func testDecodesRealPipelineContentShape() throws {
+    /// The v2 symmetric payload: rows and cols are both axis lists, any kind on either side.
+    func testDecodesSymmetricAxisContent() throws {
+        let json = """
+        {
+          "sport": "nfl",
+          "version": 2,
+          "archetype": "teams-x-stats",
+          "rows": [
+            {"kind": "team", "label": "KC", "grain": "season", "key": "team:KC"},
+            {"kind": "team", "label": "DAL", "grain": "season", "key": "team:DAL"},
+            {"kind": "team", "label": "SEA", "grain": "season", "key": "team:SEA"}
+          ],
+          "cols": [
+            {"kind": "stat", "label": "1,000+ Rush Yds", "grain": "season", "key": "stat:rushing_yards:gte:1000"},
+            {"kind": "decade", "label": "1990s", "grain": "season", "key": "decade:1990"},
+            {"kind": "position", "label": "QB", "grain": "season", "key": "pos:QB"}
+          ],
+          "cells": [
+            {"validAnswerIds": ["joe-montana"], "validAnswerNames": ["Joe Montana"], "rarityStars": 3}
+          ]
+        }
+        """
+        let decoded = try JSONDecoder().decode(GridPuzzle.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.sport, .nfl)
+        XCTAssertEqual(decoded.archetype, "teams-x-stats")
+        XCTAssertEqual(decoded.rows.map(\.label), ["KC", "DAL", "SEA"])
+        XCTAssertEqual(decoded.rows.map(\.kind), [.team, .team, .team])
+        XCTAssertEqual(decoded.cols.map(\.label), ["1,000+ Rush Yds", "1990s", "QB"])
+        XCTAssertEqual(decoded.cols.map(\.kind), [.stat, .decade, .position])
+        XCTAssertEqual(decoded.cells.first?.rarityStars, 3)
+    }
+
+    /// A board minted before 2026-07-27 carries only `rowTeams`/`colDecades`. Live boards are
+    /// immutable for their day and a player can be mid-grid when a new build ships, so the legacy
+    /// shape must still decode — into equivalent team/decade axes — rather than failing and
+    /// showing "No Grid today".
+    func testDecodesLegacyTeamsByDecadesContent() throws {
         let json = """
         {
           "sport": "nfl",
@@ -69,10 +114,118 @@ final class GridPuzzleTests: XCTestCase {
         }
         """
         let decoded = try JSONDecoder().decode(GridPuzzle.self, from: Data(json.utf8))
-        XCTAssertEqual(decoded.sport, .nfl)
-        XCTAssertEqual(decoded.rowTeams, ["CLE", "SEA", "LA"])
-        XCTAssertEqual(decoded.colDecades, [1990, 2010, 2020])
+        XCTAssertEqual(decoded.rows.map(\.label), ["CLE", "SEA", "LA"])
+        XCTAssertEqual(decoded.rows.map(\.kind), [.team, .team, .team])
+        XCTAssertEqual(decoded.cols.map(\.label), ["1990s", "2010s", "2020s"])
+        XCTAssertEqual(decoded.cols.map(\.kind), [.decade, .decade, .decade])
+        XCTAssertEqual(decoded.archetype, "")
         XCTAssertEqual(decoded.cells.first?.validAnswerNames, ["Joe Montana"])
-        XCTAssertEqual(decoded.cells.first?.rarityStars, 3)
+    }
+
+    /// The generator keeps emitting the legacy keys alongside the new ones for classic-shaped
+    /// boards. The modern payload must win, or the rollout would silently keep using the old path.
+    func testSymmetricAxesWinWhenBothShapesArePresent() throws {
+        let json = """
+        {
+          "sport": "nfl",
+          "rowTeams": ["OLD", "OLD2", "OLD3"],
+          "colDecades": [1900, 1910, 1920],
+          "rows": [
+            {"kind": "team", "label": "NEW", "grain": "season", "key": "team:NEW"}
+          ],
+          "cols": [
+            {"kind": "decade", "label": "2020s", "grain": "season", "key": "decade:2020"}
+          ],
+          "cells": []
+        }
+        """
+        let decoded = try JSONDecoder().decode(GridPuzzle.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.rows.map(\.label), ["NEW"])
+        XCTAssertEqual(decoded.cols.map(\.label), ["2020s"])
+    }
+
+    /// Soccer team axes carry the league that identifies which club the code means. Without it
+    /// the crest/color lookup resolves "MCI" to whichever of Manchester City / Melbourne City
+    /// `TeamIdentityIndex` matches first — 51 of 954 soccer codes are genuinely shared.
+    func testTeamAxisCarriesAbbrAndLeagueForCrestResolution() throws {
+        let json = """
+        {
+          "sport": "soccer",
+          "rows": [{"kind": "team", "label": "MCI", "grain": "career", "key": "team:MCI@England",
+                    "abbr": "MCI", "league": "England"}],
+          "cols": [{"kind": "team", "label": "TOR", "grain": "career", "key": "team:TOR@Italy",
+                    "abbr": "TOR", "league": "Italy"}],
+          "cells": []
+        }
+        """
+        let decoded = try JSONDecoder().decode(GridPuzzle.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.rows.first?.teamAbbr, "MCI")
+        XCTAssertEqual(decoded.rows.first?.teamLeague, "England")
+        XCTAssertEqual(decoded.cols.first?.teamLeague, "Italy")
+    }
+
+    /// US-sport and legacy content carry no league; the lookup must fall back to "any league"
+    /// rather than searching for a club whose league is the empty string.
+    func testMissingOrEmptyLeagueResolvesToNil() throws {
+        let json = """
+        {
+          "sport": "nfl",
+          "rows": [{"kind": "team", "label": "KC", "grain": "season", "key": "team:KC",
+                    "abbr": "KC", "league": ""}],
+          "cols": [{"kind": "decade", "label": "1990s", "grain": "season", "key": "decade:1990"}],
+          "cells": []
+        }
+        """
+        let decoded = try JSONDecoder().decode(GridPuzzle.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.rows.first?.teamAbbr, "KC")
+        XCTAssertNil(decoded.rows.first?.teamLeague)
+        // Legacy content has no `abbr` at all — the label has to stand in.
+        let legacy = GridPuzzle.GridAxis(kind: .team, label: "CLE")
+        XCTAssertEqual(legacy.teamAbbr, "CLE")
+        XCTAssertNil(legacy.teamLeague)
+    }
+
+    /// An axis kind this build doesn't know (awards, college, draft — all on the roadmap) must
+    /// degrade to a plain text label, not fail the whole puzzle. Server content can lead the
+    /// client, and "render the label as text" is always a correct fallback.
+    func testUnknownAxisKindDecodesAsOtherRatherThanFailing() throws {
+        let json = """
+        {
+          "sport": "nfl",
+          "rows": [{"kind": "award", "label": "MVP", "grain": "season", "key": "award:mvp"}],
+          "cols": [{"kind": "team", "label": "KC", "grain": "season", "key": "team:KC"}],
+          "cells": []
+        }
+        """
+        let decoded = try JSONDecoder().decode(GridPuzzle.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.rows.first?.kind, .other)
+        XCTAssertEqual(decoded.rows.first?.label, "MVP")
+    }
+
+    // MARK: - Prompts and instructions
+
+    /// The old prompt hardcoded "\\(team) in the \\(decade)s", which reads as nonsense on any
+    /// board that isn't teams x decades ("PIT in the CARs").
+    func testPromptReadsFromBothAxisLabels() {
+        let p = GridPuzzle(sport: .nfl,
+                           rows: Self.teams(["KC", "DAL", "SEA"]),
+                           cols: [GridPuzzle.GridAxis(kind: .stat, label: "1,000+ Rush Yds"),
+                                  GridPuzzle.GridAxis(kind: .decade, label: "1990s"),
+                                  GridPuzzle.GridAxis(kind: .position, label: "QB")],
+                           cells: [])
+        XCTAssertEqual(p.prompt(row: 0, col: 0), "KC · 1,000+ RUSH YDS")
+        XCTAssertEqual(p.prompt(row: 2, col: 1), "SEA · 1990S")
+    }
+
+    /// teams x teams asks a career question ("played for both"); every other shape asks about a
+    /// single season. The footer has to say which.
+    func testInstructionsMatchTheBoardShape() {
+        let career = GridPuzzle(sport: .nfl, rows: Self.teams(["KC"]), cols: Self.teams(["DAL"]),
+                                cells: [], archetype: "teams-x-teams")
+        XCTAssertTrue(career.instructions.contains("played for both"))
+
+        let classic = puzzle()
+        XCTAssertFalse(classic.instructions.contains("played for both"))
+        XCTAssertTrue(classic.instructions.contains("row and the column"))
     }
 }

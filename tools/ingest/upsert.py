@@ -329,7 +329,12 @@ def fetch_player_seasons(sport: str, *, career: bool = False, page_size: int = 1
     practice even though the pure generator itself is deterministic given its input."""
     base, key = _require_env()
     endpoint = (f"{base}/rest/v1/player_seasons"
-                f"?select=name,team_abbr,season_year,sport,position,stats,career"
+                # `league` is load-bearing for The Grid, not decorative: soccer team codes are
+                # derived and collide hard across countries — 51 of 954 abbreviations carry rows
+                # from two different clubs, including MCI (Man City + Melbourne City),
+                # TOR (Torino + Toronto FC) and GAL (Galatasaray + LA Galaxy). Without it a
+                # single "MCI" axis accepts either club's players.
+                f"?select=name,team_abbr,season_year,sport,position,stats,career,league"
                 f"&sport=eq.{sport}&career=eq.{str(career).lower()}&order=id")
     headers = {"apikey": key, "Authorization": f"Bearer {key}"}
     rows: list[dict] = []

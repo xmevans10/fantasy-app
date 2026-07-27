@@ -214,13 +214,9 @@ struct AvatarView: View {
     var body: some View {
         Group {
             if let avatar, avatar.hasPrefix("http"), let url = URL(string: avatar) {
-                AsyncImage(url: url) { phase in
-                    if case .success(let image) = phase {
-                        image.resizable().scaledToFill()
-                    } else {
-                        fallback
-                    }
-                }
+                RemoteImage(url: url, targetSize: CGSize(width: size, height: size),
+                            contentMode: .fill,
+                            placeholder: { fallback }, failure: { fallback })
             } else if let avatar, !avatar.isEmpty {
                 Text(avatar).font(.system(size: size * 0.6))
             } else {

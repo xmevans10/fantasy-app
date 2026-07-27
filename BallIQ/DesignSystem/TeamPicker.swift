@@ -134,10 +134,8 @@ struct TeamPicker: View {
         Button(action: onTap) {
             HStack(spacing: 12) {
                 if let logo {
-                    AsyncImage(url: logo) { phase in
-                        if let img = phase.image { img.resizable().scaledToFit() } else { Color.clear }
-                    }
-                    .frame(width: 24, height: 24)
+                    RemoteImage(url: logo, targetSize: CGSize(width: 24, height: 24))
+                        .frame(width: 24, height: 24)
                 } else {
                     Color.clear.frame(width: 24, height: 24)
                 }

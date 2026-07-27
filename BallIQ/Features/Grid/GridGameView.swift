@@ -69,6 +69,9 @@ struct GridGameView: View {
 
     private func load() async {
         showingSetup = false
+        // GameSetupScreen warms this for the normal path, but `-screenshotGrid*` skips the setup
+        // screen entirely — without this the board's row crests fall back to the ESPN CDN.
+        container.catalog.warmIdentities(for: sport)
         // The setup screen's pick is already one concrete sport — never `.all`, which
         // carries no sport and would fetch every sport's grid row and silently pick
         // whichever sorts first (a real bug the old filter-derived flow hit).
@@ -89,7 +92,7 @@ struct GridGameView: View {
             Spacer(minLength: 0)
             gridLayout(puzzle).padding(16)
             Spacer(minLength: 0)
-            footer
+            footer(puzzle)
         }
     }
 
@@ -117,9 +120,9 @@ struct GridGameView: View {
     /// never appeared, even as zero-content placeholders — confirmed by temporarily forcing
     /// their background to a debug color and seeing nothing render).
     private func gridLayout(_ puzzle: GridPuzzle) -> some View {
-        let cols = puzzle.colDecades.count
-        let columns = [GridItem(.fixed(72))] + puzzle.colDecades.map { _ in GridItem(.flexible()) }
-        let totalSlots = (puzzle.rowTeams.count + 1) * (cols + 1)
+        let cols = puzzle.cols.count
+        let columns = [GridItem(.fixed(72))] + puzzle.cols.map { _ in GridItem(.flexible()) }
+        let totalSlots = (puzzle.rows.count + 1) * (cols + 1)
         return LazyVGrid(columns: columns, spacing: 6) {
             ForEach(0..<totalSlots, id: \.self) { slot in
                 let row = slot / (cols + 1)
@@ -128,10 +131,10 @@ struct GridGameView: View {
                     if col == 0 {
                         Color.clear.frame(height: 44)
                     } else {
-                        labelCell("\(puzzle.colDecades[col - 1])s")
+                        axisCell(puzzle, axis: puzzle.cols[col - 1], fontSize: 14, minHeight: 44)
                     }
                 } else if col == 0 {
-                    TeamAbbrChip(sport: puzzle.sport, abbr: puzzle.rowTeams[row - 1], showLogo: true)
+                    axisCell(puzzle, axis: puzzle.rows[row - 1], fontSize: 14, minHeight: 44)
                 } else {
                     answerCell(puzzle, row: row - 1, col: col - 1)
                 }
@@ -139,14 +142,31 @@ struct GridGameView: View {
         }
     }
 
-    private func labelCell(_ text: String) -> some View {
-        Text(text)
-            .font(.custom(FontName.condBlack, size: 14))
-            .foregroundStyle(Color.textPrimary)
-            .lineLimit(1).minimumScaleFactor(0.6)
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background(Color.surfaceMuted)
-            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+    /// One axis header. Both dimensions render through this now — before the board went
+    /// symmetric, the column headers were always decade text and the row headers always team
+    /// chips, so each had its own hardcoded builder. A team axis still gets the real crest +
+    /// color chip; every other kind is a text label.
+    @ViewBuilder
+    private func axisCell(_ puzzle: GridPuzzle, axis: GridPuzzle.GridAxis,
+                          fontSize: CGFloat, minHeight: CGFloat) -> some View {
+        if axis.kind == .team {
+            TeamAbbrChip(sport: puzzle.sport, abbr: axis.teamAbbr, league: axis.teamLeague,
+                         fontSize: fontSize, minHeight: minHeight, showLogo: true,
+                         displayText: axis.label)
+        } else {
+            Text(axis.label)
+                .font(.custom(FontName.condBlack, size: fontSize))
+                .foregroundStyle(Color.textPrimary)
+                // Stat labels ("1,000+ Rush Yds") are far longer than the decades this cell used
+                // to hold, so they wrap to two lines before shrinking rather than scaling a
+                // single line down to unreadable.
+                .multilineTextAlignment(.center)
+                .lineLimit(2).minimumScaleFactor(0.6)
+                .padding(.horizontal, 2)
+                .frame(maxWidth: .infinity, minHeight: minHeight)
+                .background(Color.surfaceMuted)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        }
     }
 
     private func answerCell(_ puzzle: GridPuzzle, row: Int, col: Int) -> some View {
@@ -191,16 +211,17 @@ struct GridGameView: View {
         return "Empty cell, rarity \(cell.rarityStars) of 5 stars"
     }
 
-    private var footer: some View {
-        Text("Tap a cell and name a player who fits both the team and the era. One guess per cell.")
+    /// Phrased for the board shape actually on screen — "the team and the era" was wrong the
+    /// moment a board could be teams x teams or teams x stats.
+    private func footer(_ puzzle: GridPuzzle) -> some View {
+        Text(puzzle.instructions)
             .font(.label11).foregroundStyle(Color.textMuted)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 16).padding(.vertical, 16)
     }
 
     private func cellPrompt(_ puzzle: GridPuzzle, index: Int) -> String {
-        let row = index / 3, col = index % 3
-        return "\(puzzle.rowTeams[row].uppercased()) in the \(puzzle.colDecades[col])s"
+        puzzle.prompt(row: index / 3, col: index % 3)
     }
 
     // MARK: - Logic

@@ -27,7 +27,10 @@ struct DraftSpinView: View {
     @State private var rewards: RepositoryContainer.SessionRewards?
     @State private var loading = true
     @State private var showingSetup = true
-    @State private var roundRosterReady = false
+    /// The reel's landed outcome — nil while a combo is still being fetched and vetted, which is
+    /// exactly the window `SpinRevealView` now rolls decoys through. Replaces the old
+    /// `roundRosterReady` flag: one source of truth instead of a bool shadowing `currentRound`.
+    @State private var revealTarget: SpinRevealTarget?
     @State private var settings = DraftSpinSettings.default
     /// One-team mode: the franchise locked by the first assigned pick, and the years
     /// already spun for it (each later round must land on a fresh year — see `spinRound`).
@@ -81,11 +84,12 @@ struct DraftSpinView: View {
                                    onClose: { dismiss() })
             } else if loading {
                 loadingScreen
-            } else if showingReveal, let round = currentRound {
-                SpinRevealView(team: round.team, year: String(round.year),
+            } else if showingReveal {
+                SpinRevealView(target: $revealTarget,
                                roundLabel: String(localized: "Round \(min(roundIndex + 1, slots.count)) of \(slots.count)"),
                                realDecoyTeams: sampleTeamAbbrs, realDecoyYears: sampleYears,
-                               rosterReady: $roundRosterReady) {
+                               // Full casino run on the opening spin only — see `totalTicks`.
+                               abbreviated: roundIndex > 0) {
                     withAnimation(Motion.snap) { showingReveal = false }
                 }
             } else {
@@ -199,10 +203,17 @@ struct DraftSpinView: View {
     /// rejected every soccer combo and dead-ended every soccer draft into an empty lineup. So the
     /// spin now discovers loosely (`minCandidates: 1`) and the real bar is checked against the
     /// fetched roster, re-spinning past any combo that genuinely can't fill.
+    ///
+    /// The reel starts **before** this runs, not after: `beginReveal()` puts `SpinRevealView` on
+    /// screen with a nil target so it rolls decoys, and `presentRound` supplies the landed
+    /// (team, year) once a combo is vetted. That hides the roster fetch (measured 0.32–0.43s,
+    /// and up to six sequential attempts in the pathological case) behind the animation that was
+    /// going to play anyway, instead of in a dead frame before it.
     @discardableResult
     private func spinUntilFillable(rng: inout some RandomNumberGenerator) async -> Bool {
         var rejected: Set<String> = []
         let roles = openSlots.map(\.role)
+        beginReveal()
         // Bounded: each attempt is one indexed roster fetch (~ms). A handful is plenty given
         // most combos are fillable; the cap just stops a pathological sport/filter from looping.
         for _ in 0..<6 {
@@ -224,7 +235,19 @@ struct DraftSpinView: View {
             }
             rejected.insert(DraftSpinConstraint.comboKey(team: team, year: year, league: league))
         }
+        // Nothing fillable: the caller finishes the draft, whose result view replaces the reel.
+        showingReveal = false
         return false
+    }
+
+    /// Put the reel on screen with no landed target yet — it rolls decoys until `presentRound`
+    /// supplies one. Kept separate from `presentRound` precisely because the two now happen at
+    /// different times; collapsing them is what made the fetch visible in the first place.
+    private func beginReveal() {
+        revealTarget = nil
+        currentRound = nil
+        expandedPlayerID = nil
+        showingReveal = true
     }
 
     /// The sample that picked (team, year) is only broad enough for discovery, not guaranteed to
@@ -242,14 +265,13 @@ struct DraftSpinView: View {
         }
     }
 
-    /// Show a spun round whose roster has already been fetched and vetted by `spinUntilFillable`.
+    /// Land a spun round whose roster has already been fetched and vetted by `spinUntilFillable`.
+    /// The reel is already on screen (see `beginReveal`); setting `revealTarget` is what tells it
+    /// to stop rolling and lock.
     private func presentRound(team: String, year: Int, league: String?, roster: [CatalogSeason]) async {
-        currentRound = DraftSpinRound(team: team, year: year, league: league, roster: [])
-        expandedPlayerID = nil
-        roundRosterReady = false
-        showingReveal = true
         currentRound = DraftSpinRound(team: team, year: year, league: league, roster: roster)
-        roundRosterReady = true
+        showingReveal = true
+        revealTarget = SpinRevealTarget(team: team, year: String(year))
         if DebugLaunch.autoSubmitDraftSpin { autoPickForScreenshot(roster) }
     }
 

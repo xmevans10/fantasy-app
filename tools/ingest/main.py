@@ -564,7 +564,10 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
         raw = fetch_player_seasons(sport)
         seasons = [
             RawSeason(name=r["name"], team_abbr=r["team_abbr"], season_year=r["season_year"],
-                     sport=r["sport"], position=r["position"], stats=r.get("stats") or {})
+                     sport=r["sport"], position=r["position"], stats=r.get("stats") or {},
+                     # `meta['league']` is the convention `themes.field_value` reads, so a
+                     # `Filter('league', ...)` on a Grid axis resolves without special-casing.
+                     meta={"league": r.get("league") or ""})
             for r in raw
         ]
         # NFL cells accept the FULL roster (every position, Immaculate-Grid-style), not just
@@ -582,13 +585,14 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
                 print(f"[grid] {sport} {date}: no viable grid from {len(seasons)} seasons — skipped")
                 continue
             content = grid.to_content(puzzle)
-            print(f"[grid] {sport} {date}: rows={puzzle.row_teams} cols={puzzle.col_decades} "
+            print(f"[grid] {sport} {date}: [{puzzle.archetype}] "
+                  f"rows={[a.label for a in puzzle.rows]} cols={[a.label for a in puzzle.cols]} "
                   f"rarity={[c.rarity_stars for c in puzzle.cells]}")
             rows.append({
                 "id": grid.puzzle_id(sport, date), "sport": sport, "format": "grid",
                 "content": content, "active_date": date,
             })
-            row_key, col_key = grid.combo_key(puzzle.row_teams, puzzle.col_decades)
+            row_key, col_key = grid.combo_key(puzzle.rows, puzzle.cols)
             # Same-run dedup too: today's and tomorrow's boards must differ from each other,
             # not just from the stored trailing window.
             recent.add((row_key, col_key))

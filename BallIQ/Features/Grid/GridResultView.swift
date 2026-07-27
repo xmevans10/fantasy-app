@@ -97,9 +97,9 @@ struct GridResultView: View {
     /// `GridGameView.gridLayout`'s single flat `ForEach` shape (a `ForEach` nested inside
     /// another `ForEach` silently drops cells in `LazyVGrid`; see that file's comment).
     private func boardRecap(_ puzzle: GridPuzzle) -> some View {
-        let cols = puzzle.colDecades.count
-        let columns = [GridItem(.fixed(60))] + puzzle.colDecades.map { _ in GridItem(.flexible()) }
-        let totalSlots = (puzzle.rowTeams.count + 1) * (cols + 1)
+        let cols = puzzle.cols.count
+        let columns = [GridItem(.fixed(60))] + puzzle.cols.map { _ in GridItem(.flexible()) }
+        let totalSlots = (puzzle.rows.count + 1) * (cols + 1)
         return VStack(alignment: .leading, spacing: 10) {
             Text("THE BOARD").font(.heading).foregroundStyle(Color.textPrimary)
             LazyVGrid(columns: columns, spacing: 6) {
@@ -110,10 +110,10 @@ struct GridResultView: View {
                         if col == 0 {
                             Color.clear.frame(height: 36)
                         } else {
-                            recapLabel("\(puzzle.colDecades[col - 1])s")
+                            recapAxis(puzzle, axis: puzzle.cols[col - 1])
                         }
                     } else if col == 0 {
-                        TeamAbbrChip(sport: puzzle.sport, abbr: puzzle.rowTeams[row - 1], fontSize: 12, minHeight: 36, showLogo: true)
+                        recapAxis(puzzle, axis: puzzle.rows[row - 1])
                     } else {
                         recapCell(row: row - 1, col: col - 1)
                     }
@@ -122,14 +122,25 @@ struct GridResultView: View {
         }
     }
 
-    private func recapLabel(_ text: String) -> some View {
-        Text(text)
-            .font(.custom(FontName.condBlack, size: 12))
-            .foregroundStyle(Color.textPrimary)
-            .lineLimit(1).minimumScaleFactor(0.6)
-            .frame(maxWidth: .infinity, minHeight: 36)
-            .background(Color.surfaceMuted)
-            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+    /// Recap-sized twin of `GridGameView.axisCell` — a team axis keeps its crest chip, any other
+    /// kind renders as a text label.
+    @ViewBuilder
+    private func recapAxis(_ puzzle: GridPuzzle, axis: GridPuzzle.GridAxis) -> some View {
+        if axis.kind == .team {
+            TeamAbbrChip(sport: puzzle.sport, abbr: axis.teamAbbr, league: axis.teamLeague,
+                         fontSize: 12, minHeight: 36, showLogo: true,
+                         displayText: axis.label)
+        } else {
+            Text(axis.label)
+                .font(.custom(FontName.condBlack, size: 12))
+                .foregroundStyle(Color.textPrimary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2).minimumScaleFactor(0.6)
+                .padding(.horizontal, 2)
+                .frame(maxWidth: .infinity, minHeight: 36)
+                .background(Color.surfaceMuted)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        }
     }
 
     private func recapCell(row: Int, col: Int) -> some View {

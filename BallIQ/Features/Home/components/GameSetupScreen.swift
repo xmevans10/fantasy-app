@@ -89,17 +89,30 @@ struct GameSetupScreen<Options: View>: View {
             .padding(16)
         }
         .background(Color.appBackground)
-        .onAppear { correctLockedDefault() }
+        .onAppear { correctLockedDefault(); warmTeamIdentities() }
         // Each format seeds `sport` asynchronously (last sport played / date-seeded "sport
         // of the day" / debug override) with no entitlement check, and that seeding often
         // lands *after* this screen's own `onAppear` already ran with the binding's initial
         // value — so re-check on every change too, or a locked sport that arrives late still
         // opens pre-selected as the active choice (confusing, and see the Start button's own
         // guard for why that state is more than just cosmetic).
-        .onChange(of: sport) { _, _ in correctLockedDefault() }
+        .onChange(of: sport) { _, _ in correctLockedDefault(); warmTeamIdentities() }
         .sheet(isPresented: $showPaywall) {
             PaywallView().environmentObject(container)
         }
+    }
+
+    /// Warms the team/league identity index for the sport about to be played. This screen is the
+    /// one surface *every* format passes through immediately before rendering crests, so warming
+    /// here covers all of them instead of each format remembering to do it.
+    ///
+    /// It was previously only warmed by `prefetchDraftSpinSample`, so a cold Grid open found an
+    /// empty index, missed `teams.logo_url`, and fell through to `Sport.legacyTeamLogoURL` — the
+    /// ESPN CDN, which serves `cache-control: max-age=123` (crests re-download every two
+    /// minutes) and which for soccer only knows 11 hardcoded clubs, so nearly every club
+    /// rendered no crest at all.
+    private func warmTeamIdentities() {
+        container.catalog.warmIdentities(for: sport)
     }
 
     private func correctLockedDefault() {
