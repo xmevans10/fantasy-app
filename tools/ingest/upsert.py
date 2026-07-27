@@ -26,6 +26,31 @@ def _require_env() -> tuple[str, str]:
     return url.rstrip("/"), key
 
 
+def _get_json(url: str, headers: dict, *, what: str, timeout: int = 60):
+    """GET + decode JSON, retrying transient socket/TLS failures.
+
+    The WRITE path was hardened against these long ago ("a matter of when, not if" — see
+    `_upsert_table`), but the paginated READ helpers below were not, and a full catalog run
+    makes hundreds of them: a single `TimeoutError` mid-pagination killed a ~2h run right
+    after the puzzle upsert (2026-07-26), before a single catalog row was written. A GET is
+    idempotent, so retrying is always safe. HTTP 4xx/5xx still fails fast — a real
+    payload/permission problem can't be retried away.
+    """
+    for attempt in range(4):
+        try:
+            req = urllib.request.Request(url, headers=headers, method="GET")
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as err:
+            body = err.read().decode("utf-8", "ignore")
+            raise RuntimeError(f"{what} failed ({err.code}): {body}") from err
+        except Exception as err:  # noqa: BLE001 — transient socket/TLS/timeout
+            if attempt == 3:
+                raise RuntimeError(f"{what} failed after 4 attempts: {err}") from err
+            time.sleep(2 ** attempt)
+    raise AssertionError("unreachable")
+
+
 def _upsert_table(table: str, payload: list[dict], *, conflict: str = "id",
                   batch_size: int = 200) -> int:
     """Upsert raw dict rows into `table` (on_conflict=`conflict`). Returns count sent."""
@@ -109,14 +134,8 @@ def fetch_existing_catalog_ids(sport: str, page_size: int = 1000) -> set[str]:
         query = f"select=id&sport=eq.{sport}&order=id.asc&limit={page_size}"
         if last is not None:
             query += f"&id=gt.{urllib.parse.quote(last)}"
-        req = urllib.request.Request(f"{base}/rest/v1/player_seasons?{query}",
-                                     headers=headers, method="GET")
-        try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                page = json.loads(resp.read().decode("utf-8"))
-        except urllib.error.HTTPError as err:
-            body = err.read().decode("utf-8", "ignore")
-            raise RuntimeError(f"player_seasons id fetch failed ({err.code}): {body}") from err
+        page = _get_json(f"{base}/rest/v1/player_seasons?{query}", headers,
+                         what="player_seasons id fetch")
         # Stop on an empty page, not `len(page) < page_size` — PostgREST/Supabase silently
         # caps a single response at its own configured max (default 1000, see
         # `fetch_player_seasons`'s docstring) regardless of a larger requested `limit`, so a
@@ -150,15 +169,8 @@ def fetch_catalog_ids_missing(sport: str, column: str, page_size: int = 1000) ->
                  f"&order=id.asc&limit={page_size}")
         if last is not None:
             query += f"&id=gt.{urllib.parse.quote(last)}"
-        req = urllib.request.Request(f"{base}/rest/v1/player_seasons?{query}",
-                                     headers=headers, method="GET")
-        try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                page = json.loads(resp.read().decode("utf-8"))
-        except urllib.error.HTTPError as err:
-            body = err.read().decode("utf-8", "ignore")
-            raise RuntimeError(
-                f"missing-{column} id fetch failed ({err.code}): {body}") from err
+        page = _get_json(f"{base}/rest/v1/player_seasons?{query}", headers,
+                         what=f"missing-{column} id fetch")
         if not page:
             break
         ids.update(r["id"] for r in page)

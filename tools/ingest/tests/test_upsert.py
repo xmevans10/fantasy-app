@@ -4,8 +4,13 @@
 bit `tools.ingest.grid`'s live verification (a viable-looking NFL grid came back "no viable
 grid from 1000 seasons" on a re-run, purely from which arbitrary 1000-row slice PostgREST
 happened to return). fetch_player_seasons must page through everything via Range headers."""
+import io
 import json
+import urllib.error
+from unittest.mock import patch
 from urllib.parse import unquote as urllib_parse_unquote
+
+import pytest
 
 from tools.ingest import upsert
 
@@ -99,3 +104,41 @@ def test_fetch_player_seasons_stops_on_empty_final_page(monkeypatch):
 
     rows = upsert.fetch_player_seasons("nfl", page_size=2)
     assert len(rows) == 2
+
+
+def test_get_json_retries_a_transient_timeout():
+    # The failure that killed a ~2h catalog run (2026-07-26): a bare socket TimeoutError
+    # mid-pagination, on a read path that had no retry while the write path did.
+    calls = {"n": 0}
+
+    class _Resp:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self): return b'[{"id": "x"}]'
+
+    def _flaky(req, timeout=None):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise TimeoutError("The read operation timed out")
+        return _Resp()
+
+    with patch("urllib.request.urlopen", side_effect=_flaky), \
+         patch("time.sleep"):
+        out = upsert._get_json("https://example/x", {}, what="probe")
+    assert out == [{"id": "x"}]
+    assert calls["n"] == 3
+
+
+def test_get_json_gives_up_after_four_attempts():
+    with patch("urllib.request.urlopen", side_effect=TimeoutError("nope")), \
+         patch("time.sleep"), \
+         pytest.raises(RuntimeError, match="probe failed after 4 attempts"):
+        upsert._get_json("https://example/x", {}, what="probe")
+
+
+def test_get_json_does_not_retry_a_real_http_error():
+    # A 4xx is a payload/permission problem — retrying can't fix it and would just stall.
+    err = urllib.error.HTTPError("https://example/x", 403, "Forbidden", {}, io.BytesIO(b"denied"))
+    with patch("urllib.request.urlopen", side_effect=err), \
+         pytest.raises(RuntimeError, match="probe failed \\(403\\)"):
+        upsert._get_json("https://example/x", {}, what="probe")
