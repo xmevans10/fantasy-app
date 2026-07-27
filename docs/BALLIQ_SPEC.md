@@ -425,6 +425,25 @@ the ASC REST API. Note: the parallel **soccer data-coverage audit** (`tools/inge
 espn_soccer.py` + `transfermarkt_soccer.py`) is *data-pipeline* work → Supabase, delivered by
 `--upsert`, not by the app binary — it is independent of this App Store build.
 
+**1.2 build 15 — the Grid build (2026-07-27):** 1.2 (build 14) was sitting in
+`WAITING_FOR_REVIEW` when the v2 Grid decoder landed. Apple allows only **one open review
+submission at a time**, so shipping the decoder as a separate 1.3 was not possible — the queued
+submission was **canceled** (`PATCH /v1/reviewSubmissions/<id>` `{"canceled": true}`, which lands
+the version in `DEVELOPER_REJECTED`) and its version record reused, per the resubmit flow in the
+`testflight-release` skill. Build 15 carries the v2 Grid decoder, the symmetric axis work, the
+`RemoteImage` pipeline, and the random/practice Grid. One review cycle instead of two.
+**Submitted 2026-07-27 13:26 UTC**, `WAITING_FOR_REVIEW`, release type `AFTER_APPROVAL`
+(review submission `f2acb0f8-100d-457d-a61f-accb0dd0c033`; the canceled one was
+`b1766fe4-…`, now `COMPLETE`). Note the flow difference from the 1.1 rejection: a *canceled*
+submission goes `COMPLETE`, not `UNRESOLVED_ISSUES`, so it can't be resubmitted through — a
+**new** `reviewSubmission` + item is required, unlike the rejected-version path.
+Release notes were updated to cover the random Grid and the crest-loading fix; they deliberately
+do **not** advertise the new grid shapes, which aren't live until the content upsert runs.
+⚠️ **This build is what gates the Grid content rollout** (§9.2): `--grid --upsert` must not run
+until it is approved, because non-classic boards have no legacy fallback and minted boards are
+immutable for their day. Cost of the cancel: 1.2's Guideline 3.1.2(c) EULA fix lost its queue
+position and restarts review.
+
 **Open items / hand-offs**
 1. ~~M5 monetization fully unstarted / M14 Spanish~~ — stale: M5 Phases A–E, M14 Spanish, and
    ~~Phase F rating seasons~~ (**shipped 2026-07-20**, roadmap v1.4) are all done. The only
@@ -1547,7 +1566,33 @@ largest closed 2026-07-27**:
   (51 of 954 soccer abbreviations merged two clubs — `MCI` was Manchester City *and* Melbourne
   City; axes are now league-scoped and labelled `MCI-ENG` / `MCI-AUS`).
   ⚠️ **Do not `--grid --upsert` until the client build ships** — a non-classic board has no
-  legacy fallback, and minted boards are immutable for their day.
+  legacy fallback, and minted boards are immutable for their day. As of 2026-07-27 that build
+  is **1.2 build 15**, uploaded and awaiting review (see §8). The gate lifts when it's approved.
+
+- **Random / practice boards** — **shipped 2026-07-27.** The Grid setup screen has a second
+  button, "new random grid", drawing a board from the sport's minted pool instead of the daily.
+  Practice runs award **nothing** (no rating, no XP, no arcade score, no crowd-rarity log): the
+  board is re-rollable without limit, so anything awarded could be farmed by re-rolling to an
+  easy board. `finish()` returns before `complete(...)` rather than passing `ranked: false`,
+  because `recordCompletion` still grants XP on the unranked path. Today's board is excluded
+  from the draw.
+  - Served by the `random_grid_puzzle` RPC, **not** a client-side pick over the pool.
+    `RemotePuzzleRepository.fetch` pulls every board for the sport, and NFL board content
+    averages **64 KB** (max 109 KB — cells carry 149–425 answer names), so 13 boards is already
+    ~830 KB per Grid open and grows linearly. The pool must get much deeper for "random" to feel
+    random, so the random path can't be what punishes depth.
+  - ⚠️ **The pool is the limit, not the feature.** Boards ever minted, 2026-07-27: nfl 13,
+    nba 12, tennis 12, **soccer 3, baseball 1**. On baseball, excluding today's board leaves
+    nothing at all — which is why the exhausted-pool empty state exists and is reachable. The
+    fix is a server-side backfill (`run_grid` already mints per `(sport, date)`; run it over a
+    wide date range), which needs no new architecture and is blocked only on the upsert gate
+    above.
+  - Client-side generation from a cached membership index is the plausible endgame — a board
+    needs only player → (team, year), which packs to roughly 420 KB for NFL's 105k memberships
+    plus ~94 KB of names, cacheable exactly like `grid_player_names` already is, and it leaks
+    nothing new because board content already ships every valid answer to the client. Deferred
+    because it's a *second generator* that must agree with `grid.py` on viability and rarity;
+    if built, scope it to practice boards so divergence can never touch ranked daily play.
 
 The original five:
 - ~~**Guess typeahead**~~ — **shipped** (`GridGuessSheet` + `grid_player_names` RPC). The
