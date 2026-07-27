@@ -27,10 +27,29 @@ constraint is **not** features.
 
 ## 2. The two facts that define the business
 
-### 2.1 The app cannot take money. It never could.
+### 2.1 The app cannot take money — because this session broke it. ⚠️
 
-All four products are **`READY_TO_SUBMIT`** — meaning created, priced, localized, and
-**never submitted for review**:
+**Correction (same day, after the user pushed back).** An earlier draft of this section said
+the products had "never been submitted." That was **wrong, and the cause was my own action.**
+
+The user *had* submitted all four products through the ASC UI. On 2026-07-27 I cancelled
+review submission `b1766fe4` in order to fold the Grid work into the in-flight 1.2 (see §7 and
+the `testflight-release` skill). **That submission carried six items** — the app version *plus*
+the four products and the "Pro" subscription group. Cancelling it set all six to `REMOVED`.
+The replacement submission I created (`f2acb0f8`) contains **one** item: the app version. So
+the products fell out of review and reverted to `READY_TO_SUBMIT`.
+
+**This is the single most expensive mistake in this session's history.** Read the cost note in
+§7 before you cancel anything at Apple.
+
+**It cannot be repaired via the API.** `reviewSubmissionItems` accepts only `appStoreVersion`
+relationships — `inAppPurchase`, `inAppPurchaseV2`, `subscription` and `subscriptionGroup` all
+return `ENTITY_ERROR.RELATIONSHIP.UNKNOWN` (verified, all four). The UI adds product items by a
+path the public API does not expose. **`[user]`, ASC UI:** Monetization → each product →
+**Add for Review** → select the current version; add the "Pro" subscription group too → attach
+to the open submission `f2acb0f8`.
+
+Current product state:
 
 ```
 com.balliqfantasy.app.pro.monthly     READY_TO_SUBMIT
@@ -39,18 +58,16 @@ com.balliqfantasy.app.pack.draftspin  READY_TO_SUBMIT
 com.balliqfantasy.app.pack.grid       READY_TO_SUBMIT
 ```
 
-`entitlements` has **0 rows**. Not "few sales" — *zero possible sales*. The app has been live
-since 2026-07-16 with a fully built paywall in front of products that don't exist in
-production StoreKit. Every rail behind it (StoreKit 2, server validation, webhook, gating)
-is finished and tested. The register is built and the door is locked.
+`entitlements` has **0 rows** — no purchase has ever completed. Every rail behind the paywall
+(StoreKit 2, server validation, webhook, gating) is finished and tested. The register is built;
+the door is currently locked, and this session is why.
 
-**This is `[user]`-only and it is two clicks of ASC UI.** The REST API cannot do it: a first
-non-consumable must be attached to a version submission through the web UI
-(`FIRST_NON_CONSUMABLE_MUST_BE_SUBMITTED_ON_VERSION`). Steps are already written up in
-`prompts/ASC-MONETIZATION-SUBMISSION.md` and §9.1's 1.3 entry.
+Steps are written up in `prompts/ASC-MONETIZATION-SUBMISSION.md` and §9.1's 1.3 entry. The
+separate `FIRST_NON_CONSUMABLE_MUST_BE_SUBMITTED_ON_VERSION` constraint still applies: a first
+non-consumable must ride a version submission, which is why these were attached to a version
+in the first place.
 
-**Nothing else in this document generates a dollar until this is done.** If you can only get
-the user to do one thing, make it this.
+**Nothing else in this document generates a dollar until the products are back in review.**
 
 ### 2.2 The app has no users.
 
@@ -189,6 +206,14 @@ architecture. Gated on 4.1.
 
 - `JSONDecoder.supabase` uses snake_case key decoding. Puzzle **content** is camelCase — use
   the plain `contentDecoder`. Using the shared one fails silently and looks like an empty pool.
+- 🔴 **Cancelling an ASC review submission destroys everything riding on it.** A submission is
+  not just "the build" — it can carry in-app purchases and subscription groups added via the
+  UI. Cancelling sets *every* item to `REMOVED`, and you cannot rebuild the product items via
+  the API (`reviewSubmissionItems` takes only `appStoreVersion`). I cancelled one to re-cut a
+  build and silently un-submitted the app's entire monetization; see §2.1. **Before cancelling
+  anything, `GET /v1/reviewSubmissions/<id>/items` and count what you're about to destroy.**
+  If it holds more than the version, the cancel needs the user's explicit say-so, because only
+  they can put the products back.
 - A **cancelled** ASC review submission goes `COMPLETE`, not `UNRESOLVED_ISSUES`, so you must
   `POST` a *new* `reviewSubmission` — the exact opposite of the rejection path. Both flows are
   now documented in the `testflight-release` skill.

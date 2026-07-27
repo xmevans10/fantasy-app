@@ -79,6 +79,19 @@ metadata via its REST API — lives in gitignored `tools/release/`:
   path (submit `PATCH` 200'd on the first attempt), but keep the retry loop — it's cheap.
   Cost to weigh before cancelling: the queued version loses its place in the review queue and
   restarts review from scratch.
+- 🔴 **BEFORE YOU CANCEL ANYTHING: `GET /v1/reviewSubmissions/<id>/items` and count them.**
+  A submission is not just the build. In-app purchases and subscription groups attached
+  through the ASC **UI** ride the same submission, and cancelling sets *every* item to
+  `REMOVED`. On 2026-07-27 a cancel done purely to re-cut a build also pulled all four
+  products and the "Pro" subscription group out of review, silently reverting them to
+  `READY_TO_SUBMIT` — i.e. it un-shipped the app's entire monetization, and nobody noticed
+  until the user said so. **You cannot undo this from the API:** `reviewSubmissionItems`
+  accepts only an `appStoreVersion` relationship; `inAppPurchase`, `inAppPurchaseV2`,
+  `subscription` and `subscriptionGroup` each return `ENTITY_ERROR.RELATIONSHIP.UNKNOWN`
+  (all four verified). Re-adding products is ASC-UI-only (Monetization → product → **Add for
+  Review** → select version). So: if the item count is greater than 1, a cancel is not a
+  reversible build-management step — it is a destructive action only the user can repair,
+  and it needs their explicit go-ahead.
   - `-authenticationKeyPath` for `-exportArchive` **must be an absolute path** — a repo-relative
     path fails with "must be an absolute path to an existing file". Wrap in `$(pwd)/…`.
 - App identity: app record id `6785275045` (bundle `com.balliqfantasy.app`, ASC name
