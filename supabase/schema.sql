@@ -52,6 +52,17 @@ create table if not exists public.puzzles (
   content     jsonb not null,
   active_date date
 );
+-- Applied live 2026-07-27 (migration `0010_puzzles_lookup_indexes`). Until then this table had
+-- nothing but its primary key, so every client fetch was a sequential scan — a precondition for
+-- deepening the Grid pool, not an optimization (see the migration for the measured plans).
+-- `id` trails the two equality columns so `order by id` (RemotePuzzleRepository.fetch's stable
+-- ordering, which the modulo daily fallback depends on) is served by the index with no sort node.
+create index if not exists puzzles_format_sport_id_idx
+  on public.puzzles (format, sport, id);
+-- The active_date lookup (notify-daily-drop) carries no sport predicate, so it can't ride the
+-- index above — `sport` sits between the two columns it needs.
+create index if not exists puzzles_format_active_date_idx
+  on public.puzzles (format, active_date);
 
 -- Every puzzle signature ever served by the daily novel-puzzle picker
 -- (tools/ingest/daily_puzzle.py) — service-role-only, no client read needed. Guarantees the
@@ -665,13 +676,30 @@ create policy "notification_settings own" on public.notification_settings
 -- Adds `amount` to the caller's weekly_xp in their *current* (most recently joined) cohort.
 -- Called from `RepositoryContainer.complete(...)` after a ranked game, alongside the existing
 -- rating/progress push. No-op (returns false) if the caller isn't in an active cohort.
+--
+-- `amount` is a client claim — nothing about a daily completion is recorded server-side, so it
+-- is clamped here rather than trusted (2026-07-27, applied live as migration
+-- `clamp_bump_weekly_xp_and_harden_random_grid_puzzle`). Before the clamp, any signed-in user
+-- could POST {"amount": 999999} to /rest/v1/rpc/bump_weekly_xp and top the weekly cohort board
+-- without playing; a negative amount subtracted. Flooring at 0 means a bump can only ever add.
+--
+-- 1075 = the maximum of `RepositoryContainer.complete(...)`'s XP expression:
+--   base 200 (`GameFormatKind.grid`, the richest baseXP)
+--   + 75  perfect bonus
+--   + 50  first play of the day
+--   + 750 streak bonus (`min(streak, 30) * 25`, only on a first play)
+-- Keep this in sync with `Progression.swift`'s `baseXP` table and `complete(...)`'s bonuses —
+-- a client that legitimately earns more would be silently short-changed.
 create or replace function public.bump_weekly_xp(amount int)
-returns boolean language plpgsql security definer as $$
+returns boolean language plpgsql security definer
+set search_path = ''
+as $$
 declare
   updated boolean;
+  award int := least(greatest(coalesce(amount, 0), 0), 1075);
 begin
   update public.cohort_members cm
-    set weekly_xp = weekly_xp + amount
+    set weekly_xp = weekly_xp + award
     where cm.user_id = auth.uid()
       and cm.cohort_id = (
         select cohort_id from public.cohort_members
@@ -1304,12 +1332,15 @@ grant execute on function public.grid_player_names(text) to anon, authenticated,
 -- the payload linearly with the pool, which is the exact thing that blocks deepening it.
 -- Returns one row regardless of pool size. Null when the pool holds nothing else, a real state
 -- today: baseball has one board ever minted.
+-- `search_path = ''` (not `public`) to match its siblings `grid_player_names`/`grid_guess_stats`
+-- — the table reference below is fully qualified, so the body can't be redirected by a caller's
+-- search_path. Not advisor-flagged (a literal `public` isn't "mutable"), just consistency.
 create or replace function public.random_grid_puzzle(p_sport text, p_exclude_date text default null)
 returns jsonb
 language sql
 stable
 security definer
-set search_path = public
+set search_path = ''
 as $$
   select p.content
   from public.puzzles p
