@@ -43,6 +43,33 @@ struct OnboardingView: View {
 
     private var step: OnboardingStep { OnboardingStep(rawValue: stepRaw) ?? .sport }
 
+    /// Scrolls when the content overflows, sits at the top when it doesn't.
+    ///
+    /// Deliberately a *bare* `ScrollView` with no measuring container around it. The steps used
+    /// `ViewThatFits(in: .vertical)` to get "centered when it fits, scrolling when it doesn't",
+    /// and on iPad that rendered a **ghost copy** of each step's secondary button ("Skip for
+    /// now", "Not now") — clipped, at the very top of the screen, on every onboarding page.
+    /// Reproduced on iPad Air 11-inch, the device class App Review tests on; never on any iPhone
+    /// size, which is why it shipped.
+    ///
+    /// Bisected 2026-07-28, and the result is worth recording because the obvious conclusion is
+    /// wrong: the trigger is **any layout-negotiating container**, not `ViewThatFits` as such.
+    /// Replacing it with a bare `ScrollView` removed the ghost; re-introducing the same layout
+    /// via `GeometryReader { ScrollView { content.frame(minHeight: proxy.size.height) } }` —
+    /// the textbook centre-or-scroll idiom — brought it straight back. Both containers render a
+    /// measurement pass that iPad makes visible here.
+    ///
+    /// So the centering is given up on purpose. On iPhone the content nearly fills the screen,
+    /// so top-aligned and centered are close to indistinguishable; on iPad the previous centered
+    /// layout left a large gap anyway. A visible duplicate button on the first screen of a
+    /// reviewed build is a worse trade than slightly higher content.
+    private func fitsOrScrolls<Content: View>(@ViewBuilder _ content: @escaping () -> Content) -> some View {
+        ScrollView {
+            content().frame(maxWidth: .infinity)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+    }
+
     var body: some View {
         // The ZStack is a stable container so the cover/sheet/task modifiers below attach once.
         // Hung directly off the `Group`, they attach to whichever step is showing and re-run
@@ -86,14 +113,11 @@ struct OnboardingView: View {
     /// Five sports, one tap, no lock badges: every sport's *daily* puzzle is free (only the
     /// arcade setup screens gate MLB/soccer/tennis behind Pro), so a lock here would be both
     /// wrong about the next screen and a paywall in the first ten seconds.
-    /// `ViewThatFits` rather than an unconditional `ScrollView`: at five sports the whole step
+    /// `fitsOrScrolls` rather than an unconditional `ScrollView`: at five sports the whole step
     /// fits and should sit centered, but the layout still has to survive an SE-class screen (the
     /// constraint the old single-screen pitch handled with a `compact` flag) and a sixth sport.
     private var sportStep: some View {
-        ViewThatFits(in: .vertical) {
-            sportStepContent
-            ScrollView { sportStepContent }.scrollBounceBehavior(.basedOnSize)
-        }
+        fitsOrScrolls { sportStepContent }
     }
 
     private var sportStepContent: some View {
@@ -178,11 +202,8 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             // Same fits-or-scrolls treatment as the sport step, with the CTA pinned below it so
             // the thing to tap never moves between the two layouts.
-            ViewThatFits(in: .vertical) {
-                howToPlayContent
-                ScrollView { howToPlayContent }.scrollBounceBehavior(.basedOnSize)
-            }
-            .frame(maxHeight: .infinity)
+            fitsOrScrolls { howToPlayContent }
+                .frame(maxHeight: .infinity)
 
             VStack(spacing: 12) {
                 Button { startFirstGame() } label: {
@@ -317,11 +338,8 @@ struct OnboardingView: View {
 
     private var accountStep: some View {
         VStack(spacing: 0) {
-            ViewThatFits(in: .vertical) {
-                accountPitch
-                ScrollView { accountPitch }.scrollBounceBehavior(.basedOnSize)
-            }
-            .frame(maxHeight: .infinity)
+            fitsOrScrolls { accountPitch }
+                .frame(maxHeight: .infinity)
 
             authButtons.heroReveal(1)
         }
