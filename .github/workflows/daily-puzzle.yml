@@ -2,14 +2,22 @@ name: daily-puzzle
 
 on:
   schedule:
-    # 00:00 UTC daily (fires ~03:00-04:00 with GitHub cron drift). Each run mints TODAY + the
-    # next 2 days (idempotent per (date, sport), so in steady state only the newest day is
-    # actually new). The lookahead is load-bearing, not padding: the client keys the daily to
-    # the DEVICE-LOCAL calendar date (a fresh puzzle at the user's own midnight), and the
-    # earliest timezone (UTC+14) reaches tomorrow's midnight at 10:00 UTC today — hours after
-    # this run, but a full missed/delayed run would blow that deadline without the extra day
-    # of buffer. Minting ahead is also what lets a client serve the new day's puzzle straight
-    # from yesterday's disk cache at the midnight flip, even offline.
+    # 00:00 UTC daily (fires ~03:00-04:00 with GitHub cron drift). Each run mints TODAY +
+    # TOMORROW (idempotent per (date, sport), so in steady state only the newest day is
+    # actually new). The one day of lookahead is load-bearing, not padding: the client keys
+    # the daily to the DEVICE-LOCAL calendar date (a fresh puzzle at the user's own midnight),
+    # and the earliest timezone (UTC+14) reaches tomorrow's local midnight at 10:00 UTC today
+    # — ~6h after this run, so tomorrow's row must already exist by then. It is also what lets
+    # a client serve the new day's puzzle straight from yesterday's disk cache at the midnight
+    # flip, even offline.
+    #
+    # Deliberately ONE day, not two, even though a second would survive a fully missed run:
+    # every minted-ahead row is visible to any client that reads the whole pool, and App Store
+    # builds up to and including 1.3/16 have no future-row filter (that ships with the
+    # local-midnight client) — so each extra day is another day of unreleased content sitting
+    # in their Pro archive, playable before it drops. One day is the minimum the timezone
+    # deadline allows; raise to 2-3 for missed-run insurance only once the filtering client
+    # is the floor in the wild.
     - cron: "0 0 * * *"
   workflow_dispatch:        # allow manual runs, optionally backfilling many days at once —
                             # the live provider pull (~25-30min) is the same regardless of
@@ -19,7 +27,7 @@ on:
       count:
         description: "How many consecutive days to mint (starting at start-date, or today)"
         required: false
-        default: "3"
+        default: "2"
       start_date:
         description: "First date to mint, YYYY-MM-DD (blank = today)"
         required: false
@@ -46,11 +54,11 @@ jobs:
           restore-keys: |
             ingest-cache-
       - run: pip install -r tools/ingest/requirements.txt
-      # `|| '3'` covers scheduled runs (no inputs): today + 2 days of lookahead — see the
-      # cron comment above for why the lookahead is required by the local-midnight rollover.
+      # `|| '2'` covers scheduled runs (no inputs): today + tomorrow — see the cron comment
+      # above for why one day of lookahead is both required and (for now) the maximum.
       - run: |
           python -m tools.ingest.daily_puzzle --upsert \
-            --count "${{ github.event.inputs.count || '3' }}" \
+            --count "${{ github.event.inputs.count || '2' }}" \
             ${{ github.event.inputs.start_date != '' && format('--date {0}', github.event.inputs.start_date) || '' }}
       # The Who Am I? daily mint (least-recently-served per sport — see daily_whoami.py).
       # No provider pull, runs in seconds; kept as its own step so a keep4 exhaustion
@@ -58,5 +66,5 @@ jobs:
       - if: always()
         run: |
           python -m tools.ingest.daily_whoami --upsert \
-            --count "${{ github.event.inputs.count || '3' }}" \
+            --count "${{ github.event.inputs.count || '2' }}" \
             ${{ github.event.inputs.start_date != '' && format('--date {0}', github.event.inputs.start_date) || '' }}

@@ -65,8 +65,9 @@ jobs:
       # Grid board ever minted (2026-07-08) while the other four sports get dailies, despite
       # baseball having the richest team-pair space of any sport (all 435 of its C(30,2) club
       # pairs share 5+ players; verified against live data 2026-07-27).
-      # `--grid-days 3` (up from the default 2): the client now keys the daily Grid to the
-      # device-LOCAL calendar date (2026-07-28 local-midnight rollover), so tomorrow's board
-      # must exist before UTC+14 reaches its midnight (10:00 UTC today) — one extra day of
-      # lookahead keeps a single missed/late run from ever blowing that deadline.
-      # - run: python -m tools.ingest.main --grid nfl nba baseball soccer tennis --grid-days 3 --upsert
+      # `--grid-days` is left at its default of 2 (today + tomorrow), which is exactly what the
+      # 2026-07-28 local-midnight rollover needs: the client keys the daily Grid to the
+      # device-LOCAL date, so tomorrow's board must exist before UTC+14 reaches its midnight
+      # (10:00 UTC today). Don't raise it — see daily-puzzle.yml's cron comment on why extra
+      # lookahead is unreleased content visible to any client without a future-row filter.
+      # - run: python -m tools.ingest.main --grid nfl nba baseball soccer tennis --upsert
