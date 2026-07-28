@@ -445,31 +445,68 @@ def test_rotation_produces_more_than_one_board_shape_over_time():
     assert len(shapes) > 1, f"expected shape variety across a month, only saw {shapes}"
 
 
-def test_every_cell_is_anchored_to_a_team():
-    """A cell is only specific because a team narrows it. Boards with no team dimension at all
-    ("Midfielders x 2020s", "2010s x 10+ Assists") shipped in a first pass and came back rarity 1
-    across all nine cells on live data — thousands of valid answers each, because the question is
-    really "name any midfielder". See ARCHETYPES' comment.
+def test_every_cell_is_specific():
+    """A cell must ask "name the player who connects these two facts", not "name any midfielder".
+    That is enforced by measuring the cell (`MAX_CELL_ANSWERS`), not by requiring a team on one
+    axis — a team is a proxy for specificity and a lossy one, which is what readmitted
+    `decades-x-stats` ("1990s x 30+ Pass TD" is 44 players; the classic "DAL x 2000s" is 78).
 
-    Stated per *cell*, not per dimension: a heterogeneous dimension can't be relied on for the
-    anchor (any one of its axes may be a non-team), so it only counts when the dimension facing
-    it is all-team."""
-    for archetype in grid.ARCHETYPES:
-        dims = {archetype.rows, archetype.cols}
-        if dims & grid.HETEROGENEOUS_DIMENSIONS:
-            # The varying side can't anchor, so the other side must be wholly team.
-            other = archetype.cols if archetype.rows in grid.HETEROGENEOUS_DIMENSIONS else archetype.rows
-            assert other in grid.TEAM_DIMENSIONS, \
-                f"{archetype.key} pairs a heterogeneous dimension with a non-team one"
-        else:
-            assert grid.TEAM_DIMENSIONS & dims, f"{archetype.key} has no team dimension"
+    A cell over the ceiling is rejected exactly like an empty one: `_build_cell` returns None and
+    the board is abandoned for the next seeded combination.
+    """
+    row = grid_axes.decade_axis(2010)
+    col = grid_axes.decade_axis(2010)
+    over = {f"P{i}": [_season(f"P{i}", "KC", 2015, sport="nfl")]
+            for i in range(grid.MAX_CELL_ANSWERS + 1)}
+    assert grid._build_cell(over, row, col) is None, "an over-broad cell must be rejected"
+
+    under = {f"P{i}": [_season(f"P{i}", "KC", 2015, sport="nfl")]
+             for i in range(grid.MAX_CELL_ANSWERS)}
+    assert grid._build_cell(under, row, col) is not None, "a cell at the ceiling must survive"
+
+
+def test_the_ceiling_rejects_the_soccer_cell_that_pulled_decades_x_stats():
+    """The concrete regression: "2010s x 10+ Assists" measured 765 players on live soccer data.
+    Shape said it was fine (it isn't) and shape said NFL's 44-player equivalent wasn't (it is);
+    size gets both right, which is the whole reason the archetype could come back."""
+    row = grid_axes.decade_axis(2010)
+    col = next(a for a in grid_axes.stat_axes("soccer") if a.label == "10+ Assists")
+    loose = {f"P{i}": [_season(f"P{i}", "ARS", 2015, sport="soccer",
+                               stats={"assists": 12.0})]
+             for i in range(765)}
+    assert grid._build_cell(loose, row, col) is None
+
+
+def test_combo_space_preference_never_costs_a_board():
+    """`_combo_space` demotes shapes too thin to sustain a rotation slot, but demotion must not
+    become rejection: it counts *axes*, not viable boards, so a shape can look rich and produce
+    nothing (stat axes exist for a sport whether or not its catalog satisfies them). A pool whose
+    only workable shape is also its thinnest must still yield a board via the fallback tier.
+    """
+    seasons = _rich_pool()   # exactly 3 teams x 3 decades -> combo space of 1, far under the window
+    row_pool = [grid_axes.team_axis(t) for t in ("SF", "GB", "DAL")]
+    col_pool = [grid_axes.decade_axis(d) for d in (1990, 2000, 2010)]
+    assert grid._combo_space(row_pool, col_pool) < grid.GRID_HISTORY_WINDOW_DAYS
+
+    puzzle = grid.generate_grid(seasons, sport="nfl", date="2026-07-08")
+    assert puzzle is not None, "a thin-but-only shape must still produce a board"
+
+
+def test_combo_space_counts_distinct_boards_a_shape_could_produce():
+    """Tennis is the case this exists for: three stat axes fill three column slots exactly, so
+    every `decades-x-stats` board it can make carries identical columns."""
+    three_stats = grid_axes.stat_axes("tennis")
+    assert len(three_stats) == 3, "fixture assumes tennis' three stat axes"
+    decades = [grid_axes.decade_axis(d) for d in range(1960, 2030, 10)]
+    # C(7,3) x C(3,3) = 35 -- under the 60-day no-repeat window, so it cannot sustain a slot.
+    assert grid._combo_space(decades, three_stats) == 35
+    assert grid._combo_space(decades, three_stats) < grid.GRID_HISTORY_WINDOW_DAYS
 
 
 def test_mixed_any_only_faces_a_team_dimension():
-    """`mixed_any` may itself contain a team axis, which makes it tempting to treat as
-    self-anchoring — it isn't. Two `mixed_any` dimensions could put a stat opposite a decade and
-    produce exactly the rarity-1 "name any player who ever rushed for 1,000" cell the anchoring
-    rule exists to prevent."""
+    """Not an anchoring rule any more (the ceiling handles specificity) — a legibility one. Two
+    heterogeneous dimensions produce a board with no describable shape; an all-team opposite is
+    what keeps `mixed-x-teams` readable as "these three things, against these three clubs"."""
     for archetype in grid.ARCHETYPES:
         for dim, other in ((archetype.rows, archetype.cols), (archetype.cols, archetype.rows)):
             if dim == "mixed_any":

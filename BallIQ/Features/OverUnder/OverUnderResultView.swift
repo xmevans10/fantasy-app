@@ -91,6 +91,33 @@ struct OverUnderResultView: View {
         .buttonStyle(PrimePressStyle())
     }
 
+    /// Over/Under also shipped with no share affordance. It gets a plain score brag rather than a
+    /// challenge: its rounds are drawn with a seeded RNG *over a sampled player pool*, so two
+    /// devices on the same day can be dealt different cards — there is no shared board to dare
+    /// anyone onto, and `ChallengeLink` deliberately excludes it for exactly that reason.
+    static func shareText(sport: Sport, score: Int, correctCount: Int, beatHighScore: Bool) -> String {
+        let headline = beatHighScore
+            ? "New personal best on \(sport.displayName) Over/Under: \(correctCount) straight."
+            : "\(correctCount) straight on \(sport.displayName) Over/Under before it got me."
+        return ShareMessage.compose(headline: headline,
+                                    detail: "\(ShareMessage.points(score)) pts. Think you'd call them better?",
+                                    campaign: "res_overunder_\(sport.rawValue)")
+    }
+
+    private var shareRow: some View {
+        ShareLink(item: Self.shareText(sport: sport, score: score, correctCount: correctCount,
+                                       beatHighScore: beatHighScore)) {
+            Label("SHARE RUN", systemImage: "square.and.arrow.up").ctaLabel()
+        }
+        .buttonStyle(PrimePressStyle())
+        // ShareLink has no tap callback — a simultaneous gesture is the standard hook.
+        .simultaneousGesture(TapGesture().onEnded {
+            container.track(.shareTapped, AnalyticsEvent.shareProperties(
+                surface: "overunder_result", format: "overunder", artifact: .challengeText,
+                extra: ["sport": sport.rawValue, "hits": String(correctCount)]))
+        })
+    }
+
     private var doneBar: some View {
         VStack(spacing: 0) {
             Rectangle().fill(Color.hairline).frame(height: Hairline.width)

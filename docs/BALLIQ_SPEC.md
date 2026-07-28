@@ -45,7 +45,7 @@ unranked (XP only).
   best-of-7 `versus_series` per (pair, sport).
 - **Daily Draft** — Draft & Spin's daily competitive mode (renamed from "Today's
   Challenge" 2026-07-13). One sport per day, everyone gets the same starting spins, no
-  rerolls; first completed run of the UTC day is the official score (local
+  rerolls; first completed run of the local calendar day is the official score (local
   `DailyDraftStore` + server `daily_draft_scores`, both first-write-wins), replays are
   XP-only. Honest caveat: spins start identical, but pick divergence steers later rosters.
 
@@ -1138,6 +1138,62 @@ formats + every tab, cross-checked against live SQL):**
   committed `data/soccer_leagues.csv` (46 competitions incl. Paraguay + Ukraine, added here).
   It lives outside `teams.py` because `teams.py` imports the providers — the reverse would cycle.
 
+**Shipped 2026-07-28 (daily rollover moves to local midnight — "new puzzle at *your*
+midnight", Wordle-style):** user report: dailies weren't visibly refreshing each day. Three
+compounding causes, all fixed together:
+- **Home never refetched across a day boundary (the big one).** `loadedSports` gated the
+  daily pair to ONE fetch per process lifetime, and iOS keeps the app in memory for days —
+  resuming tomorrow morning still showed yesterday's puzzles until the process happened to
+  die. Home now stamps the local day its cache was loaded for (`dailiesDay`) and throws the
+  whole per-sport map away on `.NSCalendarDayChanged` (live at-midnight flip while
+  frontmost) and on scenePhase→active (the resume-days-later case).
+- **The day key was UTC, which is 5pm-8pm in the US** — and inconsistent with
+  streaks/completions, which had used *local* days since day one (the exact mismatch behind
+  the 2026-07-17 notify-streak-risk bug). ALL daily-content keying is now the device-local
+  calendar day via one helper, `PuzzleStore.localDayString` (forced Gregorian + POSIX locale
+  — the old formatter would emit non-matching strings on non-Gregorian/non-Latin-digit
+  devices, permanently pinning them to the fallback): `active_date` pick + cache gate
+  (`RemotePuzzleRepository`), modulo fallback seed (`dailyIndex`), countdown target
+  (`HomeDailyLoop.nextMidnight`, local), Over/Under + Daily Draft + Grid completion ids and
+  seeds (all via `OverUnderRoundGenerator.dayString`, now delegating), and `ChallengeLink`
+  (day parses at noon *local* — noon UTC read as tomorrow in UTC+13/+14 and would resolve
+  the wrong board).
+- **The mint couldn't guarantee the row existed at any given midnight** (00:00 UTC cron
+  fires ~03:00-04:00 with drift). `daily-puzzle.yml` now mints today + tomorrow
+  (`--count 2`; idempotent per (date, sport), so steady state adds one new day per run) —
+  tomorrow's row lands ~6h before the earliest timezone (UTC+14, 10:00 UTC deadline) needs
+  it. **Exactly one day, deliberately:** a 2nd day would survive a fully missed run, but
+  every minted-ahead row is visible to any client that reads the whole pool, and no shipped
+  App Store build has the future-row filter below — so extra lookahead is extra unreleased
+  content sitting in live Pro archives. Raise it only once the filtering client is the floor
+  in the wild. The cache gate
+  became "holds today's dated row" (write-time no longer considered), so the midnight flip
+  serves the pre-minted row straight from yesterday's disk cache — instant, and works
+  offline. Grid's paused mint line gets `--grid-days 3` for the same reason when re-enabled
+  (§9.2 Gate 0 pause untouched). Same-day novelty guarantees are unchanged
+  (`puzzle_history` dedup / least-recently-served / 60-day grid window).
+- **The lookahead forced two fixes it would otherwise have broken silently:**
+  (a) `allKeep4`/`allWhoAmI` now drop rows dated after today — the pool permanently contains
+  unreleased rows, and Browse would have listed *tomorrow's daily* as a replayable archive
+  entry, letting a Pro subscriber play it a day early and spoil the puzzle they were about to
+  be served. Undated rows still pass; only a strictly-future date is held back.
+  ⚠️ **Known live exposure until this ships:** the filter is client-side, so every build
+  already in the wild (≤ 1.3/16) still lists tomorrow's daily in the Pro archive. Worse than
+  a spoiler — archive plays are unranked, so a subscriber can rehearse tomorrow's board and
+  then play it *ranked* the next day with full foreknowledge, inflating rating. Mitigated to
+  the floor by holding the mint at 1 day of lookahead (the timezone deadline forbids 0);
+  closing it fully needs either this build shipped or a server-side visibility rule on
+  `puzzles` (an RLS predicate can only cut it to `<= current_date + 1`, since UTC+14's
+  legitimate "today" is UTC-tomorrow — so shipping the client is the only true fix).
+  (b) `notify-daily-drop` resolved the theme it names by the server's UTC day for every
+  device; with content on local days, a 9am push in Auckland would name yesterday's theme
+  while the app showed today's. It now fetches all three in-play days
+  (`_shared/localtime.ts` `candidateLocalDays`, 2 new Deno tests) and picks per device.
+  Deployed live as v3 and invoked to verify (`themes=10`). `notify-streak-risk` needed no
+  change — it was already fully local-day after the 2026-07-17 fix.
+  Timezone-hopping can preview adjacent days' boards — same exposure Wordle accepts;
+  ranked plays are still one-per-(puzzle,day) locally so it's previewing, not farming.
+
 ## 9. Roadmap — remaining milestones + product backlog (PM audit 2026-07-09)
 
 Full briefs live in `prompts/` (same self-contained format: goal, why-now, current state,
@@ -1165,7 +1221,8 @@ surface, not just the ones already flagged:
   1,000-row PostgREST pages, ~1.1 MB measured — cached in memory only, so every new app
   session repaid it (~15s on a phone radio). Fix: `DiskCache` (BallIQ/Data/DiskCache.swift)
   under `PlayerSeasonCatalog.draftSpinSample` (24h TTL) and `RemotePuzzleRepository.fetch`
-  (fresh = written same UTC day, so a new day's `active_date` row is always refetched);
+  (fresh = holds today's `active_date` row, since 2026-07-28 — so a new day always
+  refetches *unless* the row was already minted ahead into yesterday's cache);
   layered memory → fresh disk → network (write-through) → stale disk on network failure →
   bundled fallback (never persisted, so an offline first launch can't poison the cache).
   Measured on-simulator 2026-07-13 (fresh install vs process-kill relaunch, timestamped
@@ -1385,6 +1442,25 @@ expected retention/quality impact per unit of effort):
     item asked for — `test_content_drift.py` passes against the current committed
     `keep4_puzzles.json`, no action needed. Full `pytest tools/ingest/tests` still green.
 
+> **Viral loop shipped 2026-07-27** (commercial brief Phase 2, the `[agent]` half). The share
+> artifact was audited across all seven surfaces and rebuilt around one template
+> (`BallIQ/Features/Share/ShareMessage.swift`): headline → spoiler-free emoji board → score →
+> campaign-tagged App Store link. Three findings drove it — the Grid's share button logged no
+> `share_tapped` **at all** (so the "6 taps ever" figure excluded the format the growth thesis
+> rests on); Keep 4 shared a rendered card that is the complete answer key, with no link on it;
+> and every puzzle-invite share sent a bare `balliq://play/<id>`, which opens nothing on a
+> device without the app — under copy promising "anyone can play". Who Am I? and Over/Under had
+> no share affordance at all and now do. New: `ChallengeLink` (a `balliq://challenge?…` codec
+> pinning a board by `(sport, calendar day)` — no puzzle content travels, because dailies are already
+> canonical per day), routed in `ContentView.accept(_:)` into the same Grid/Keep 4 board with a
+> `ChallengeResultBanner` head-to-head verdict; and the `share_tapped → share_link_opened →
+> challenge_started → challenge_completed` funnel with `format`/`artifact`/`surface` dimensions
+> (k-factor SQL in docs/ANALYTICS.md). **Install attribution is prepared but off**: every link
+> carries a `ct=` campaign token, which Apple only honours alongside a `pt` provider token that
+> has to be read out of App Store Connect — one line in `ShareMessage.storeURL` once you have
+> it. Deferred deep linking (recipient installs → lands on the challenged board) needs Universal
+> Links, i.e. a hosted domain + `associated-domains` entitlement, and is a user decision.
+
 ### 9.1 Version roadmap (planned 2026-07-16, immediately after the 1.1 submission)
 
 The tiered backlog above is exhausted (§9.0): everything agent-buildable is shipped, and
@@ -1438,6 +1514,33 @@ pipeline is one command sequence now — see the `testflight-release` skill).
   exit-criterion push. The old token stays in `device_tokens` until the 410-prune
   fast-follow lands (documented in `_shared/apns.ts`) — harmless, each send to it just
   errors in the function log.
+
+**1.2.1 — Activation: make the first session reach a first win (agent, 2026-07-27).**
+Walked the cold-start path on a genuinely clean install (`simctl uninstall` + `defaults delete`;
+uninstall alone leaves the domain behind). It was: splash → a single screen naming four unknown
+formats with Sign in with Apple as the primary action → Home's six-format wall → a niche daily.
+Now: **pick a sport (one tap) → three lines of rules while today's puzzle loads → play it → the
+account ask, framed against the streak just earned**. The sport pick writes
+`container.sportFilter`, so Home's daily pager opens on it. Nothing is gated — daily puzzles are
+free in every sport, only the arcade *setup* screens gate MLB/soccer/tennis.
+
+Instrumented as `app_opened` → `onboarding_step_viewed` → `first_game_started` →
+`first_game_completed` → `app_opened` with `day_index = 1` (docs/ANALYTICS.md). Deliberately
+identifier-free: guests write `user_id = null`, so each stage carries its own funnel position and
+the two "first" events fire once per install. Verified live in the production `events` table, and
+a duplicate-`app_opened` bug (a `.task` on a `Group` runs on every child during a transition) was
+caught and fixed by reading those rows rather than trusting the call site.
+
+**Two hard findings on the push retention loop:**
+1. `registerForRemoteNotifications()` was only ever called from Profile's settings card, so a
+   token was never re-requested at launch. `device_tokens.user_id` is `not null`, so a grant made
+   while signed out died at process exit. Live proof: **1 device token across 4 profiles**, and 2
+   of the 3 accounts that ever built a streak have no token at all — the hourly
+   `notify-streak-risk` cron has been running against a candidate pool of one device.
+   `PushNotificationManager.registerIfAuthorized()` now runs on every launch from `RootView`.
+2. Nothing ever *asked* a new player for permission. Home now shows a streak-reminder primer
+   after the first completed game (iOS grants one prompt per install; spending it cold, before a
+   streak exists, spends it for nothing).
 
 **1.3 — "Open the register": monetization switched on (M5 Phase B completion).**
 Every rail exists (StoreKit 2 store, gating, paywall, server-validated entitlements). As of

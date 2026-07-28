@@ -5,6 +5,10 @@ import SwiftUI
 /// `complete(...)` pipeline; content comes only from `PuzzleRepository.gridPuzzle` (server-
 /// generated, no offline bundle — see that protocol's doc comment).
 struct GridGameView: View {
+    /// Set when this view was opened from a `balliq://challenge` link: it pins the sport and the
+    /// board's day, skips the setup screen, and carries the challenger's score into the result.
+    var challenge: ChallengeLink? = nil
+
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
 
@@ -33,6 +37,30 @@ struct GridGameView: View {
     /// Set once the random pool is exhausted, so the empty state can say so honestly rather
     /// than claiming there's no Grid at all.
     @State private var practicePoolEmpty = false
+    /// The sport's membership relation, once fetched — the input `GridLocalGenerator` builds
+    /// practice boards from. Held for the whole session so a re-roll is instant and offline.
+    @State private var memberships: GridMembershipIndex?
+    /// Combo keys already played this session. Feeds the generator's rejection set so "new random
+    /// grid" can't hand back the board just finished — the client-side twin of the `grid_history`
+    /// trailing window the server mint uses.
+    @State private var playedCombos: Set<String> = []
+    /// A challenge named a `(sport, day)` this device's pool has no board for. Distinct from
+    /// "No Grid today": today's board may well exist, it just isn't the one being challenged —
+    /// and quietly serving a *different* board would compare two scores set on two grids.
+    @State private var challengeBoardMissing = false
+    /// Whether the board on screen is the row actually minted for today, rather than the modulo
+    /// pick `RemotePuzzleRepository.pick` falls back to when the day has no row.
+    ///
+    /// This is NOT the same as "not practice", which is what it was first written as. Live today
+    /// (2026-07-27): baseball's newest minted board is 2026-07-08 — the daily Grid cron is paused
+    /// (§4.1) — so a baseball daily *is* a fallback pick. Sharing that as "today's MLB Grid" would
+    /// mint a challenge naming a day whose board doesn't exist, and every recipient would hit
+    /// "That board's gone". Only a genuinely canonical board can be challenged.
+    @State private var isCanonicalDaily = false
+    /// The challenge actually in force. Mirrors the `challenge` input so it can be *cleared* when
+    /// the player declines the missing board and takes today's instead — otherwise the result
+    /// screen would post a head-to-head between two scores set on two different grids.
+    @State private var activeChallenge: ChallengeLink?
     private var attemptedCount: Int { solved.count + wrong.count }
 
     var body: some View {
@@ -40,7 +68,18 @@ struct GridGameView: View {
             if let result {
                 GridResultView(sport: sport, score: result.score, correctCount: result.correctCount,
                                puzzle: puzzle, solved: solved,
-                               rewards: rewards, onDone: { dismiss() })
+                               rewards: rewards, isDaily: isCanonicalDaily, challenge: activeChallenge,
+                               onDone: { dismiss() })
+            } else if challengeBoardMissing, let challenge {
+                EmptyStateView(symbol: "calendar.badge.exclamationmark",
+                               title: "That board's gone",
+                               message: "The \(challenge.displayDay) \(challenge.sport.displayName) grid isn't available on this device. Play today's grid instead and set your own score.",
+                               actionTitle: "Today's grid",
+                               action: {
+                                   challengeBoardMissing = false
+                                   activeChallenge = nil   // different board — nothing to compare
+                                   Task { await load() }
+                               })
             } else if showingSetup {
                 GameSetupScreen(formatName: "The Grid", title: "Pick your sport",
                                 startLabel: "Open the grid", sport: $sport,
@@ -67,6 +106,14 @@ struct GridGameView: View {
         }
         .background(Color.appBackground)
         .task {
+            // A challenge names its own sport; honouring the local filter here would open the
+            // wrong sport's board and then fail to find the challenged day on it.
+            if let challenge {
+                sport = challenge.sport
+                activeChallenge = challenge
+                await load(challenge: challenge)
+                return
+            }
             sport = container.sportFilter.sport ?? .nfl
             // Screenshot flows target the board/result — skip the setup screen, unless the
             // setup screen is itself the thing being captured.
@@ -87,7 +134,7 @@ struct GridGameView: View {
         }
     }
 
-    private func load(random: Bool = false) async {
+    private func load(random: Bool = false, challenge: ChallengeLink? = nil) async {
         showingSetup = false
         isPractice = random
         // GameSetupScreen warms this for the normal path, but `-screenshotGrid*` skips the setup
@@ -98,20 +145,73 @@ struct GridGameView: View {
         // whichever sorts first (a real bug the old filter-derived flow hit).
         let resolvedFilter = SportFilter(rawValue: sport.rawValue) ?? .nfl
         if random {
-            // Exclude today's canonical board so a re-roll can't hand back the daily the player
-            // came here to play — and, since practice awards nothing, can't be used to scout it.
-            let today = OverUnderRoundGenerator.dayString(Date())
-            puzzle = await container.puzzles.randomGridPuzzle(for: resolvedFilter, excludingDate: today)
+            puzzle = await practiceBoard(filter: resolvedFilter)
             practicePoolEmpty = puzzle == nil
+        } else if let challenge, let day = challenge.date {
+            // No new repository call: `gridPuzzle(for:date:)` already resolves the row whose
+            // `active_date` matches the date it's handed (`RemotePuzzleRepository.pick`), so
+            // asking for the challenge's day *is* asking for the challenged board.
+            let pick = await container.puzzles.gridPuzzle(for: resolvedFilter, date: day)
+            // `isCanonicalToday` false means the pool held no row for that day and `pick` fell
+            // back to a modulo choice — a different board wearing the right date. Refuse it.
+            if let pick, pick.isCanonicalToday {
+                puzzle = pick.content
+                isCanonicalDaily = true
+            } else {
+                puzzle = nil
+                challengeBoardMissing = true
+            }
         } else {
-            puzzle = await container.puzzles.gridPuzzle(for: resolvedFilter, date: Date())?.content
+            let pick = await container.puzzles.gridPuzzle(for: resolvedFilter, date: Date())
+            puzzle = pick?.content
+            isCanonicalDaily = pick?.isCanonicalToday ?? false
         }
+        guard !challengeBoardMissing else { loading = false; return }
         container.track(.gameStarted, ["format": "grid", "sport": sport.rawValue,
-                                       "mode": random ? "practice" : "daily"])
+                                       "mode": random ? "practice" : (challenge == nil ? "daily" : "challenge")])
+        if challenge != nil {
+            container.track(.challengeStarted, ["format": ChallengeLink.Format.grid.rawValue,
+                                                "sport": sport.rawValue])
+        }
         loading = false
         // Populate the guess autocomplete in the background — the board is playable without it.
         Task { nameIndex = await container.puzzles.playerNameIndex(for: sport) }
         if DebugLaunch.autoSubmitGrid, let puzzle { autoSolveForScreenshot(puzzle) }
+    }
+
+    /// A practice board: generated on-device from the sport's membership index when we have one,
+    /// otherwise the old draw from the minted pool.
+    ///
+    /// Local generation is preferred because the pool is the constraint the whole feature exists
+    /// to remove — 41 boards have ever been minted across all five sports, baseball has one, so
+    /// "new random grid" was re-serving the same handful. A generated board is instant, works
+    /// offline, and never runs out. The pool draw stays as the fallback for a first launch that
+    /// can't reach the RPC.
+    ///
+    /// This path is **practice only**, by construction: `load(random:)` is the sole caller and it
+    /// has already set `isPractice`, which makes `finish` skip `complete(...)`, the arcade score
+    /// and the crowd-rarity log entirely. `GridLocalGenerator` and `tools/ingest/grid.py` are two
+    /// generators that could drift; keeping the local one out of ranked play is what makes that
+    /// drift a cosmetic risk rather than a competitive-integrity one.
+    private func practiceBoard(filter: SportFilter) async -> GridPuzzle? {
+        if memberships == nil { memberships = await container.puzzles.gridMembershipIndex(for: sport) }
+        if let memberships {
+            let generator = GridLocalGenerator(index: memberships)
+            // Genuinely random per re-roll (the clock is in the seed), not a deterministic
+            // sequence — same posture as Draft & Spin, where a spin the player can predict
+            // stops being a spin. The generator itself stays seed-reproducible, which is what
+            // the tests pin and what a "share this board" feature would key on later.
+            let seed = SeededGenerator.stableHash(
+                "grid-practice-\(sport.rawValue)-\(playedCombos.count)-\(Date().timeIntervalSince1970)")
+            if let board = generator.board(seed: seed, recentlyServed: playedCombos) {
+                playedCombos.insert(board.comboKey)
+                return board.puzzle
+            }
+        }
+        // Exclude today's canonical board so a re-roll can't hand back the daily the player
+        // came here to play — and, since practice awards nothing, can't be used to scout it.
+        let today = OverUnderRoundGenerator.dayString(Date())
+        return await container.puzzles.randomGridPuzzle(for: filter, excludingDate: today)
     }
 
     // MARK: - Board

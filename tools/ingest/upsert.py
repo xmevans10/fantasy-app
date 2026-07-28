@@ -283,6 +283,13 @@ def fetch_grid_history(since_date: str) -> list[dict]:
         raise RuntimeError(f"grid_history fetch failed ({err.code}): {body}") from err
 
 
+def upsert_grid_axis_membership(rows: list[dict]) -> int:
+    """Write stat/position axis membership (on_conflict = the full primary key, so a re-run
+    after the catalog grows is a no-op for rows that already matched)."""
+    return _upsert_table("grid_axis_membership", rows,
+                         conflict="sport,axis_key,player_name,season_year")
+
+
 def upsert_grid_history(rows: list[dict]) -> int:
     """Record newly-minted grid combos (on_conflict=served_date,sport — same idempotent
     re-run posture as the other history writers)."""

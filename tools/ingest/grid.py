@@ -19,6 +19,7 @@ server-side "X% of players guessed this" rarity is a deferred follow-up (see BAL
 from __future__ import annotations
 
 import itertools
+import math
 import random
 from dataclasses import dataclass
 
@@ -43,6 +44,44 @@ CONTENT_VERSION = 2
 # franchises makes the pairing both viable and recognisable (Immaculate Grid likewise builds
 # team x team boards out of major franchises, not the long tail).
 TEAM_X_TEAM_POOL = 60
+
+# Upper bound on a cell's GRADED answers. The floor (>=1, in `_build_cell`) has always been
+# there; this is its missing other half, and without it "too easy" was a quantity the generator
+# could not express at all — `_rarity_stars` flattens everything from 15 answers upward into a
+# single 1-star bucket, so a 40-answer cell and a 4,000-answer cell were literally the same
+# value to it.
+#
+# That gap is why board *shape* was doing a job that belongs to cell *size*. `decades-x-stats`
+# was pulled after a dry run produced soccer cells like "2010s x 10+ Assists" (765 players), and
+# the fix generalised to "every cell must cross a team" — which also threw out NFL's
+# "1990s x 30+ Pass TD" at 44 players, tighter than the "DAL x 2000s" (78) that ships today.
+# Measured directly against the live catalog rather than argued from shape.
+#
+# Graded hits only, deliberately: roster extras widen validity without being the "how many
+# notable answers exist" signal (same reason `_rarity_stars` reads graded hits), so counting
+# them would reject NFL team cells for the roster coverage that is the point of having them.
+#
+# 200 is measured, not chosen. Sweeping every archetype's candidate cells against the live
+# catalog (graded answers per cell, per sport):
+#
+#   teams-x-teams        baseball  med 156  p90 209  max 1102   <- the binding constraint
+#   teams-x-mixed        baseball  med  36  p90 431  max  590
+#   teams-x-decades      baseball  med  80  p90 101  max  129
+#   decades-x-stats      nfl       med  30  p90  67  max   92
+#   decades-x-stats      soccer    med 302  p90 1780 max 4959   <- what must not survive
+#   positions-x-decades  soccer    med 2276 p90 4678 max 5011
+#
+# The floor is set by career-grain team x team, whose cells are legitimately large — "played for
+# both the Yankees and the Red Sox" across 150 years really is ~156 players, and that is the
+# single most recognisable cell the format has. The ceiling is set by soccer's decade x stat at
+# 302. Those two bracket a narrow window, and 200 is inside it: every shape that ships today
+# survives, soccer's decade x stat dies on its own numbers, and baseball's "NYY x Hitters"
+# (p90 431 on teams-x-mixed) is rejected as a bonus — a weak cell the old shape rule waved
+# through, because a team dimension was assumed sufficient rather than measured.
+#
+# positions-x-decades stays out of ARCHETYPES: at a median of 2,276 it is not a near miss that
+# a ceiling could rescue, and the ceiling would reject every board it ever proposed.
+MAX_CELL_ANSWERS = 200
 
 
 @dataclass(frozen=True)
@@ -125,7 +164,9 @@ def _build_cell(by_player: dict[str, list[RawSeason]], row: GridAxis, col: GridA
         hit = _satisfying_season(seasons, row, col)
         if hit is not None:
             graded_hits[name] = hit
-    if not graded_hits:
+    # Both bounds, same posture: a cell nobody can answer and a cell anybody can answer are
+    # equally unfit, and either one sends `generate_grid` to the next seeded combination.
+    if not graded_hits or len(graded_hits) > MAX_CELL_ANSWERS:
         return None
     # Rarity stars come from the GRADED pool only -- that's the stable "how many notable answers
     # exist" signal the star economy was tuned on. Roster extras (below) widen *validity* without
@@ -189,23 +230,36 @@ ARCHETYPES: tuple[Archetype, ...] = (
     # columns ever varied. `mixed_any` is legal ONLY opposite an all-team dimension — that's
     # what keeps every cell team-anchored (see below) even though the row kinds vary.
     Archetype("mixed-x-teams", "mixed_any", "team_career", weight=3),
+    # The one shape with no team on either side. Pulled in the first pass and readmitted once
+    # `MAX_CELL_ANSWERS` existed to judge it on the thing that actually went wrong (cell size)
+    # rather than on shape: "1990s x 30+ Pass TD" is 44 players, tighter than the "DAL x 2000s"
+    # that ships today, while the soccer cells that got it pulled ("2010s x 10+ Assists", 765)
+    # now fail the ceiling on their own. Weight 2, the lowest in the rotation — it is the least
+    # proven shape and the only one whose viability varies this sharply by sport, so it earns a
+    # smaller share until real boards back it up.
+    Archetype("decades-x-stats", "decade", "stat", weight=2),
 )
 
-# EVERY CELL must be anchored to a team, and that is a product rule, not an accident of this
-# list. A first pass also shipped `decades-x-stats` and `positions-x-decades`; a live dry run
-# made the problem obvious — "Midfielders x 2020s" and "2010s x 10+ Assists" have thousands of
-# valid answers each and came back rarity 1 across all nine cells, because the question is
-# really "name any midfielder" rather than "name the player who connects these two facts". A
-# team is what makes a cell specific. Immaculate Grid follows the same rule.
+# EVERY CELL must be SPECIFIC — few enough valid answers that it asks "name the player who
+# connects these two facts" rather than "name any midfielder". That is the product rule, and
+# `MAX_CELL_ANSWERS` is now what enforces it, per cell, on measured data.
 #
-# Note the invariant is per *cell*, not per dimension. A fixed team dimension is the easy way to
-# satisfy it, but not the only one: `mixed_any` varies kinds within its dimension (teams
-# included) and stays legal because it may only ever face an all-team dimension, so each of the
-# nine cells still crosses at least one team. `test_every_cell_is_anchored_to_a_team` pins the
-# real rule and `test_mixed_any_only_faces_a_team_dimension` pins the condition that upholds it.
+# It used to be enforced as "every cell must cross a team", which is a different claim: it is a
+# proxy for specificity, and a lossy one in both directions. It threw out cells that are
+# perfectly tight ("1990s x 30+ Pass TD", 44 players — tighter than the "DAL x 2000s" at 78 that
+# ships daily), and it silently blessed loose ones, since a team dimension was *assumed*
+# sufficient rather than checked (nothing stopped a soccer teams x stats board from carrying a
+# 700-answer cell). Measuring the cell replaces both failure modes with one honest test.
+#
+# Worth keeping in mind if a future shape tempts you back toward structural rules: the reason
+# "one whole side is teams" appeared inevitable is that it IS forced by a per-cell anchor rule —
+# if any row is a non-team, every column must be a team, and vice versa, so no diagonal
+# arrangement exists. That was sound reasoning from an unsound premise.
 TEAM_DIMENSIONS = frozenset({"team", "team_career"})
-# Dimensions whose kinds vary per axis. They cannot supply the team anchor for a cell on their
-# own (any individual axis may be a non-team), so the opposite dimension must be all-team.
+# Dimensions whose kinds vary per axis. `mixed_any` still may only face an all-team dimension —
+# not for anchoring now, but for identity: two heterogeneous dimensions produce boards with no
+# describable shape, and an all-team opposite is what keeps `mixed-x-teams` legible as "these
+# three things, against these three clubs" (`test_mixed_any_only_faces_a_team_dimension`).
 HETEROGENEOUS_DIMENSIONS = frozenset({"mixed", "mixed_any"})
 
 
@@ -284,6 +338,22 @@ def _prominent_teams(pool: list[RawSeason],
     return ranked[:TEAM_X_TEAM_POOL]
 
 
+def _combo_space(row_pool: list[GridAxis], col_pool: list[GridAxis]) -> int:
+    """How many distinct boards a shape could ever produce for this sport: C(rows,3) x C(cols,3).
+
+    A shape whose entire space is smaller than the `grid_history` no-repeat window cannot sustain
+    a rotation slot — it runs out of unseen boards inside the window and then burns attempts
+    being rejected. Worse, a dimension with exactly 3 axes has no choice to make at all: every
+    board it produces carries the *same three* labels.
+
+    Tennis is the case that found this. It has exactly three stat axes, so `decades-x-stats`
+    spans C(7,3) x C(3,3) = 35 boards, all with identical columns — and it took 20 of 21 days in
+    a dry run, because it is reliably viable while tennis's richer shapes often aren't. Viable
+    and varied are different properties, and only the first was being checked.
+    """
+    return math.comb(len(row_pool), 3) * math.comb(len(col_pool), 3)
+
+
 def _is_varied(dimension: str, axes: tuple[GridAxis, ...]) -> bool:
     """Whether `axes` satisfy `dimension`'s variety requirement. Only `mixed_any` has one.
 
@@ -357,6 +427,7 @@ def generate_grid(seasons: list[RawSeason], sport: str, date: str,
     # recomputing `_prominent_teams` (a full scan of `pool`) up to 200 times.
     pools: dict[str, tuple[list[GridAxis], list[GridAxis]]] = {}
     feasible: list[Archetype] = []
+    varied: list[Archetype] = []
     for candidate in (archetypes or ARCHETYPES):
         row_pool = _axis_pool(candidate.rows, sport, pool, teams, decades)
         col_pool = _axis_pool(candidate.cols, sport, pool, teams, decades)
@@ -364,44 +435,52 @@ def generate_grid(seasons: list[RawSeason], sport: str, date: str,
             continue        # this sport can't offer this shape at all
         pools[candidate.key] = (row_pool, col_pool)
         feasible.append(candidate)
+        if _combo_space(row_pool, col_pool) >= GRID_HISTORY_WINDOW_DAYS:
+            varied.append(candidate)
     if not feasible:
         return None
-
-    # Weighted rotation, expanded once so a seeded `choice` picks by weight without re-deriving
-    # the distribution on every attempt.
-    rotation = [a for a in feasible for _ in range(a.weight)]
-
-    for attempt in range(max_attempts):
-        rng = random.Random(f"grid-{sport}-{date}-{attempt}")
-        archetype = rng.choice(rotation)
-        row_pool, col_pool = pools[archetype.key]
-        rows = tuple(rng.sample(row_pool, 3))
-        cols = tuple(rng.sample(col_pool, 3))
-        # Same-dimension pools can overlap across dimensions (teams x teams is the whole point of
-        # that archetype) -- but a board with the SAME axis on a row and a column produces a
-        # degenerate cell (e.g. "KC and KC"), so reject that.
-        if {a.key for a in rows} & {a.key for a in cols}:
-            continue
-        # `mixed_any` has to actually be mixed. `rng.sample` draws uniformly from a pool that
-        # mixes kinds in whatever proportion the sport happens to offer, so it lands on three
-        # teams often enough to matter — and a mixed-x-teams board whose rows came out all-team
-        # is just teams-x-teams wearing a different archetype label, which is exactly the
-        # sameness this shape exists to break.
-        if not _is_varied(archetype.rows, rows) or not _is_varied(archetype.cols, cols):
-            continue
-        if combo_key(rows, cols) in recently_served:
-            continue
-        cells: list[GridCell] = []
-        viable = True
-        for row, col in itertools.product(rows, cols):
-            cell = _build_cell(by_player, row, col, extra_by_player=extra_by_player)
-            if cell is None:
-                viable = False
-                break
-            cells.append(cell)
-        if viable:
-            return GridPuzzle(sport=sport, rows=rows, cols=cols, cells=tuple(cells),
-                              archetype=archetype.key)
+    # Two tiers, tried in order: shapes with room to keep surprising (see `_combo_space`), then
+    # everything feasible. A *preference*, never a filter, and the distinction is load-bearing in
+    # both directions. `_combo_space` counts axes, not viable boards, so a shape can look rich and
+    # still produce nothing — nfl stat axes exist for every sport whether or not the catalog has
+    # the stats to satisfy them. Excluding thin shapes outright therefore risks dropping the only
+    # one that actually works, which is exactly what a sparse-pool test caught. Falling through
+    # guarantees this can only ever find a board where the old single-tier loop did, never fewer.
+    for tier in ([varied, feasible] if varied and varied != feasible else [feasible]):
+        # Weighted rotation, expanded once so a seeded `choice` picks by weight without
+        # re-deriving the distribution on every attempt.
+        rotation = [a for a in tier for _ in range(a.weight)]
+        for attempt in range(max_attempts):
+            rng = random.Random(f"grid-{sport}-{date}-{attempt}")
+            archetype = rng.choice(rotation)
+            row_pool, col_pool = pools[archetype.key]
+            rows = tuple(rng.sample(row_pool, 3))
+            cols = tuple(rng.sample(col_pool, 3))
+            # Same-dimension pools can overlap across dimensions (teams x teams is the whole point
+            # of that archetype) -- but a board with the SAME axis on a row and a column produces a
+            # degenerate cell (e.g. "KC and KC"), so reject that.
+            if {a.key for a in rows} & {a.key for a in cols}:
+                continue
+            # `mixed_any` has to actually be mixed. `rng.sample` draws uniformly from a pool that
+            # mixes kinds in whatever proportion the sport happens to offer, so it lands on three
+            # teams often enough to matter — and a mixed-x-teams board whose rows came out all-team
+            # is just teams-x-teams wearing a different archetype label, which is exactly the
+            # sameness this shape exists to break.
+            if not _is_varied(archetype.rows, rows) or not _is_varied(archetype.cols, cols):
+                continue
+            if combo_key(rows, cols) in recently_served:
+                continue
+            cells: list[GridCell] = []
+            viable = True
+            for row, col in itertools.product(rows, cols):
+                cell = _build_cell(by_player, row, col, extra_by_player=extra_by_player)
+                if cell is None:
+                    viable = False
+                    break
+                cells.append(cell)
+            if viable:
+                return GridPuzzle(sport=sport, rows=rows, cols=cols, cells=tuple(cells),
+                                  archetype=archetype.key)
     return None
 
 

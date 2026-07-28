@@ -38,9 +38,8 @@ struct DailyGameCard: View {
     /// the header) never overlaps the rest of the card's tap area.
     var secondaryAction: (() -> Void)? = nil
 
-    /// "TODAY · SAT, JUL 19" — the device-local calendar date, not the UTC `active_date` key:
-    /// the badge answers "is this fresh?" in the user's own calendar, and showing the UTC day
-    /// would read as tomorrow's date every US evening.
+    /// "TODAY · SAT, JUL 19" — the device-local calendar date, which since the local-midnight
+    /// rollover (2026-07-28) is also exactly the day the `active_date` pick is keyed on.
     static var todayDateBadge: String {
         let day = Date.now.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
         return String(localized: "TODAY · \(day)").uppercased()

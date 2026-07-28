@@ -7,6 +7,13 @@ struct GridResultView: View {
     var puzzle: GridPuzzle? = nil
     var solved: [Int: String] = [:]
     var rewards: RepositoryContainer.SessionRewards? = nil
+    /// False for a re-rolled practice board. A practice board is not pinned to `(sport, day)`,
+    /// so it cannot be challenged — the recipient would be sent to that day's *daily* board and
+    /// unknowingly compared against a score set on a different grid.
+    var isDaily: Bool = true
+    /// Set when this run was itself opened from someone's challenge link — drives the
+    /// head-to-head banner and the `challenge_completed` event.
+    var challenge: ChallengeLink? = nil
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
@@ -19,15 +26,39 @@ struct GridResultView: View {
 
     private var isPerfect: Bool { correctCount == 9 }
 
-    /// The Immaculate-Grid-style emoji recap: 🟩 solved / ⬛ missed, row-major 3×3. Pure so
-    /// the exact share text is locked by tests. Ends with the store link — the share IS the
-    /// funnel (docs/MARKETING.md §1); Immaculate Grid includes its link too.
-    static func shareText(sport: Sport, score: Int, solved: [Int: String], date: Date = Date()) -> String {
-        let rows = (0..<3).map { row in
-            (0..<3).map { col in solved[row * 3 + col] != nil ? "🟩" : "⬛" }.joined()
-        }.joined(separator: "\n")
-        let day = OverUnderRoundGenerator.dayString(date)
-        return "Playbook Grid — \(sport.displayName) \(day)\n\(rows)\nScore \(score)\nhttps://apps.apple.com/app/id6785275045"
+    /// The Immaculate-Grid-style emoji recap: 🟩 solved / ⬛ missed, row-major 3×3. Spoiler-free
+    /// by construction — it shows the *shape* of a run without naming a single answer, which is
+    /// exactly why this artifact travels and a screenshot of the board doesn't.
+    static func emojiBoard(solved: [Int: String]) -> String {
+        ShareMessage.emojiRow((0..<9).map { solved[$0] != nil }, perLine: 3)
+    }
+
+    /// The challenge this run represents — what a recipient would be playing against.
+    static func challengeLink(sport: Sport, score: Int, solved: [Int: String],
+                              date: Date = Date(), challenger: String? = nil) -> ChallengeLink {
+        ChallengeLink(format: .grid, sport: sport, day: PuzzleStore.localDayString(date),
+                      hits: solved.count, outOf: 9, score: score, challenger: challenger)
+    }
+
+    /// What actually lands in the share sheet. Pure so the exact text is locked by tests.
+    ///
+    /// The share IS the funnel (docs/MARKETING.md §1), so the message is built as a dare, not a
+    /// report: headline first (so a stranger scrolling a group chat learns the sport, the game
+    /// and the number in one line), then the spoiler-free board, then the score, then the link.
+    /// `isDaily: false` drops the dare — see the property of the same name.
+    static func shareText(sport: Sport, score: Int, solved: [Int: String], date: Date = Date(),
+                          isDaily: Bool = true, challenger: String? = nil,
+                          now: Date = Date()) -> String {
+        let board = emojiBoard(solved: solved)
+        let link = challengeLink(sport: sport, score: score, solved: solved,
+                                 date: date, challenger: challenger)
+        guard isDaily else {
+            // A practice board has no shared identity to beat, so it gets the same picture and
+            // the same link without a claim the recipient can't actually take up.
+            return ["I went \(solved.count)/9 on a \(sport.displayName) Grid.", board,
+                    link.scoreLine, link.storeURL.absoluteString].joined(separator: "\n")
+        }
+        return link.shareText(board: board, now: now)
     }
 
     var body: some View {
@@ -35,9 +66,15 @@ struct GridResultView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     scoreHeader.heroReveal(0)
-                    leaderboardEntry.heroReveal(1)
-                    if let rewards { RewardsRow(rewards: rewards).heroReveal(2) }
-                    if let puzzle { boardRecap(puzzle).heroReveal(3) }
+                    // Above the leaderboard on purpose: when you came here from a friend's dare,
+                    // the one number you want is theirs, not this week's top 10.
+                    if let challenge {
+                        ChallengeResultBanner(challenge: challenge, hits: correctCount, score: score)
+                            .heroReveal(1)
+                    }
+                    leaderboardEntry.heroReveal(challenge == nil ? 1 : 2)
+                    if let rewards { RewardsRow(rewards: rewards).heroReveal(3) }
+                    if let puzzle { boardRecap(puzzle).heroReveal(4) }
                 }
                 .padding(16)
             }
@@ -46,6 +83,13 @@ struct GridResultView: View {
         .background(Color.appBackground)
         .celebrate(on: $confetti, intensity: isPerfect ? 90 : 40)
         .onAppear {
+            if let challenge {
+                container.track(.challengeCompleted, [
+                    "format": ChallengeLink.Format.grid.rawValue,
+                    "sport": sport.rawValue,
+                    "outcome": String(describing: challenge.outcome(hits: correctCount, score: score)),
+                ])
+            }
             if isPerfect {
                 confetti += 1
                 // Rating ask at the pride moment, never after a miss (ReviewPrompter
@@ -167,12 +211,26 @@ struct GridResultView: View {
         VStack(spacing: 0) {
             Rectangle().fill(Color.hairline).frame(height: Hairline.width)
             HStack(spacing: 12) {
-                ShareLink(item: Self.shareText(sport: sport, score: score, solved: solved)) {
-                    Label("SHARE", systemImage: "square.and.arrow.up")
+                ShareLink(item: Self.shareText(sport: sport, score: score, solved: solved,
+                                               isDaily: isDaily,
+                                               challenger: container.identity.username)) {
+                    Label(isDaily ? "CHALLENGE A FRIEND" : "SHARE", systemImage: "square.and.arrow.up")
                         .font(.heading).foregroundStyle(Color.accentText)
+                        .lineLimit(1).minimumScaleFactor(0.7)
                         .frame(maxWidth: .infinity).padding(.vertical, 15)
                 }
                 .buttonStyle(.plain)
+                // ShareLink has no tap callback — a simultaneous gesture is the standard hook.
+                // Until now the Grid — the format whose share artifact is the entire growth
+                // thesis — logged nothing here at all, so none of its shares are in the 6.
+                .simultaneousGesture(TapGesture().onEnded {
+                    container.track(.shareTapped, AnalyticsEvent.shareProperties(
+                        surface: "grid_result",
+                        format: ChallengeLink.Format.grid.rawValue,
+                        artifact: .challengeText,
+                        extra: ["sport": sport.rawValue, "hits": String(correctCount),
+                                "is_daily": String(isDaily)]))
+                })
                 Button(action: onDone) {
                     Text("DONE").font(.heading).foregroundStyle(Color.accentText)
                         .frame(maxWidth: .infinity).padding(.vertical, 15)

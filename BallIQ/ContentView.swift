@@ -13,6 +13,12 @@ struct ContentView: View {
     // with communityID nil (play never logged, report action hidden, author uncredited).
     @State private var linkKeep4: LinkedPlay<Keep4Puzzle>?
     @State private var linkWhoAmI: LinkedPlay<WhoAmIPuzzle>?
+    /// An accepted `balliq://challenge` — the same-board head-to-head loop. Separate from
+    /// `linkKeep4`/`linkWhoAmI` because a challenge names a *board* (sport + day), not a puzzle
+    /// id, and resolves inside the game view rather than here.
+    @State private var linkChallenge: ChallengeLink?
+    /// A Grid challenge opened by someone without Pro — see `accept(_:)`.
+    @State private var challengePaywall = false
     @State private var debugCreate = false
     @State private var debugPaywall = false
     @State private var selectedTab = 0
@@ -68,8 +74,14 @@ struct ContentView: View {
         }
         .fullScreenCover(item: $linkKeep4) { link in
             Keep4GameView(puzzle: link.puzzle, ranked: false, communityID: link.communityID,
-                          authorName: link.author)
+                          authorName: link.author, challenge: link.challenge)
                 .environmentObject(container)
+        }
+        .fullScreenCover(item: $linkChallenge) { challenge in
+            GridGameView(challenge: challenge).environmentObject(container)
+        }
+        .sheet(isPresented: $challengePaywall) {
+            PaywallView(trigger: .grid).environmentObject(container)
         }
         .fullScreenCover(item: $linkWhoAmI) { link in
             WhoAmIGameView(puzzle: link.puzzle, ranked: false, communityID: link.communityID)
@@ -77,11 +89,20 @@ struct ContentView: View {
         }
     }
 
-    /// Resolve `balliq://play/<id>` — community puzzles first, then the daily/archive
-    /// pools (M13 pre-play sharing shares dailies too; the local fallback works offline).
+    /// Resolve an inbound link. Two shapes exist:
+    ///   - `balliq://challenge?…` — the head-to-head loop (`ChallengeLink`), which names a
+    ///     *board* (sport + calendar day) rather than a puzzle id.
+    ///   - `balliq://play/<id>` — M13 pre-play sharing: community puzzles first, then the
+    ///     daily/archive pools (the local fallback works offline).
     private func handle(_ url: URL) async {
+        if let challenge = ChallengeLink.parse(url) {
+            await accept(challenge)
+            return
+        }
         guard url.scheme == "balliq", url.host == "play",
               let id = url.pathComponents.last, !id.isEmpty else { return }
+        // Every inbound share link counts toward the loop's click-through, not just challenges.
+        container.track(.shareLinkOpened, ["kind": "play", "puzzle_id": id])
         container.track(.communityPuzzlePlayed, ["source": "link", "puzzle_id": id])
         if let community = container.community {
             switch await community.load(id: id) {
@@ -99,6 +120,47 @@ struct ContentView: View {
             linkWhoAmI = LinkedPlay(puzzle: p)
         }
     }
+
+    /// Open the challenged board.
+    ///
+    /// The Grid resolves its own board inside `GridGameView` (it already owns a load path and an
+    /// honest "that board's gone" state). Keep 4 can't — `Keep4GameView` takes a concrete puzzle
+    /// — so it is resolved here, and the challenge is attached **only** on an exact match:
+    /// `isCanonicalToday` false means the pool had no row for that day and `pick` fell back to a
+    /// modulo choice, which would be a different puzzle wearing the right date.
+    private func accept(_ challenge: ChallengeLink) async {
+        container.track(.shareLinkOpened, [
+            "kind": "challenge",
+            "format": challenge.format.rawValue,
+            "sport": challenge.sport.rawValue,
+        ])
+        switch challenge.format {
+        case .grid:
+            // The Grid is Pro-gated, and that gate lives on Home's launcher
+            // (`HomeView.launch`) — presenting `GridGameView` straight from a deep link would
+            // walk right past it and make a paid format free to anyone holding a link. Reuse
+            // the existing check and the existing `.grid` trigger rather than widening access:
+            // deciding that challenge links unlock Pro content is a pricing call, not a
+            // routing one. The funnel this produces is a good one —
+            // `share_link_opened → paywall_viewed(trigger: grid)` says exactly how much
+            // demand the loop creates for the thing it can't give away.
+            guard container.entitlements.canPlayGrid() else {
+                challengePaywall = true
+                return
+            }
+            linkChallenge = challenge
+        case .keep4:
+            guard let day = challenge.date else { return }
+            let filter = SportFilter(rawValue: challenge.sport.rawValue) ?? .all
+            guard let resolved = await container.puzzles.keep4Puzzle(for: filter, date: day)
+            else { return }
+            let exact = resolved.isCanonicalToday
+            container.track(.challengeStarted, ["format": challenge.format.rawValue,
+                                                "sport": challenge.sport.rawValue,
+                                                "board": exact ? "exact" : "fallback"])
+            linkKeep4 = LinkedPlay(puzzle: resolved.content, challenge: exact ? challenge : nil)
+        }
+    }
 }
 
 /// A deep-linked puzzle plus its presentation context, kept together so the fullScreenCover
@@ -107,13 +169,22 @@ private struct LinkedPlay<P: Identifiable>: Identifiable where P.ID == String {
     let puzzle: P
     var communityID: String? = nil
     var author: String? = nil
+    /// Set only when the resolved board is *exactly* the one challenged — a fallback board
+    /// carries nil, so the result screen can never compare two scores set on two puzzles.
+    var challenge: ChallengeLink? = nil
     var id: String { puzzle.id }
 }
 
 /// Decides between splash, onboarding, and the main app.
 struct RootView: View {
+    @EnvironmentObject private var container: RepositoryContainer
     @AppStorage("hasOnboarded") private var hasOnboarded = false
     @State private var showSplash = true
+    /// `.task` on a `Group` is applied to *each* child, and during the splash→app crossfade both
+    /// children are briefly in the hierarchy — which logged `app_opened` twice per launch, and a
+    /// double-counted launch is a halved activation rate. Verified against production `events`
+    /// rows before and after (2026-07-27).
+    @State private var recordedOpen = false
 
     var body: some View {
         Group {
@@ -128,6 +199,32 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
+        .task { await openApp() }
+    }
+
+    /// Top of the activation funnel, and the one launch-time push obligation.
+    ///
+    /// `app_opened` fires here rather than in `ContentView` because it must count the launches
+    /// that *never* reach the tab bar — a user who bounces on the onboarding screen is exactly
+    /// the cohort the funnel is trying to measure. It carries `day_index`, which is how
+    /// "next-day return" is read (see docs/ANALYTICS.md); a separate `next_day_return` event
+    /// would be the same fact stored twice.
+    private func openApp() async {
+        guard !recordedOpen else { return }
+        recordedOpen = true
+        let open = ActivationState().recordOpen()
+        // `push` on every launch is what makes the Home primer measurable without a second
+        // event: an install that reads `not_determined` on day 0 and `authorized` later
+        // converted, `denied` refused at the OS prompt, and still-`not_determined` never
+        // engaged the card at all.
+        let push = await PushNotificationManager.currentAuthorizationStatus()
+        container.track(.appOpened, open.properties.merging([
+            "signed_in": "\(container.isSignedIn)",
+            "push": push.analyticsValue,
+        ]) { current, _ in current })
+        // Tokens are not stable and were previously only requested from Profile's settings card
+        // — see `PushNotificationManager.registerIfAuthorized()`.
+        await PushNotificationManager.registerIfAuthorized()
     }
 }
 

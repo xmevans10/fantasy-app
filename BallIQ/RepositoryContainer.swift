@@ -461,6 +461,13 @@ final class RepositoryContainer: ObservableObject {
 
     var products: [Product] { store.products }
     var isLoadingProducts: Bool { store.isLoadingProducts }
+    var productLoadFailed: Bool { store.productLoadFailed }
+
+    /// Re-fetch the catalog. The paywall calls this whenever it opens with an empty catalog:
+    /// the launch-time load can lose a cold-start race against the network, and before this
+    /// existed that left the paywall permanently empty for the session (the Guideline 2.1(a)
+    /// rejection of 1.3 build 16 — see `StoreService.loadProducts`).
+    func reloadProducts() async { await store.loadProducts() }
 
     @discardableResult
     func purchase(_ product: Product) async throws -> Bool {

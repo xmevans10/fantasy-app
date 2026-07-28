@@ -15,6 +15,35 @@ struct SharablePuzzle: Identifiable, Equatable {
 
     var url: URL { URL(string: "balliq://play/\(id)")! }
 
+    /// Machine name for `events.properties->>'format'` — same vocabulary as
+    /// `game_started.format`, unlike the human `formatName` ("K4C4" / "Who am I?").
+    var analyticsFormat: String { formatName == "K4C4" ? "keep4" : "whoami" }
+
+    /// What actually goes in the message.
+    ///
+    /// Until now this was the bare `balliq://play/<id>` URL and nothing else, under the copy
+    /// "Share this link so anyone can play your puzzle" — which was false for every recipient
+    /// who didn't already have the app: a custom-scheme URL opens nothing, and most chat clients
+    /// won't even linkify it. Every share of a user-authored puzzle since M13 went out that way.
+    ///
+    /// Three lines, because with no Universal Link there is no single URL that serves both
+    /// audiences (see `ChallengeLink`): a pitch a stranger can act on, the App Store link that
+    /// works for everyone, and the deep link for people who already have the app. A hosted
+    /// redirect page would collapse the last two into one — see docs/MARKETING.md.
+    /// Note this is the one message whose App Store link is *not* last. Everywhere else the
+    /// store link ends the message (`ShareMessage.compose`); here the deep link has to come
+    /// after it, because a recipient who already has the app would otherwise land on the App
+    /// Store, tap Open, and arrive at Home with no way back to the specific puzzle they were
+    /// invited to. The daily formats don't have that problem — their board is the one the app
+    /// opens on.
+    var shareText: String {
+        """
+        My Playbook puzzle: \(title). \(subtitle)
+        Play: \(ShareMessage.storeURL(campaign: "puzzle_invite").absoluteString)
+        Already have Playbook? \(url.absoluteString)
+        """
+    }
+
     init(keep4 puzzle: Keep4Puzzle) {
         id = puzzle.id
         formatName = "K4C4"
@@ -148,14 +177,18 @@ struct PuzzleShareSheet: View {
         let card = PuzzlePreviewCardView(puzzle: puzzle)
         VStack(spacing: 16) {
             card
-            ShareLink(item: puzzle.url,
+            ShareLink(item: puzzle.shareText,
                       preview: SharePreview(puzzle.title, image: card.rendered())) {
                 Label("SHARE PUZZLE", systemImage: "square.and.arrow.up").ctaLabel()
             }
             .buttonStyle(PrimePressStyle())
             // ShareLink has no tap callback — a simultaneous gesture is the standard hook.
             .simultaneousGesture(TapGesture().onEnded {
-                container.track(.shareTapped, ["surface": surface, "puzzle_id": puzzle.id])
+                container.track(.shareTapped, AnalyticsEvent.shareProperties(
+                    surface: surface,
+                    format: puzzle.analyticsFormat,
+                    artifact: .puzzleLink,
+                    extra: ["puzzle_id": puzzle.id, "sport": puzzle.sport.rawValue]))
             })
             Button("Done") { dismiss() }.foregroundStyle(Color.textMuted)
         }

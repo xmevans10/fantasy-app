@@ -2,7 +2,7 @@ import Foundation
 
 /// UserDefaults-backed persistence for Daily Draft mode's daily score — local-only
 /// (arcade session state, not synced), mirroring `LocalOverUnderStore`'s shape. Only the
-/// FIRST Daily Draft completion of a UTC day becomes "official" (what a future leaderboard,
+/// FIRST Daily Draft completion of a local calendar day becomes "official" (what a future leaderboard,
 /// backlog #5, will eventually read); a replay that same day still earns XP via the normal
 /// `RepositoryContainer.complete` call (Draft & Spin is always `ranked: false` regardless of
 /// mode), but must never clobber the locked-in score with a luckier rerun.

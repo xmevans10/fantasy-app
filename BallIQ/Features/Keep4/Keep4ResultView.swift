@@ -5,6 +5,17 @@ struct Keep4ResultView: View {
     let placement: [String: Pile]
     let result: Keep4Scoring.Result
     var rewards: RepositoryContainer.SessionRewards? = nil
+    /// Whether this was today's daily board, and therefore something a friend can be dared onto.
+    ///
+    /// Defaults to **false**, which is the safe answer: this same view also serves the archive,
+    /// community puzzles, Versus and deep-linked plays, and a share claiming "today's NFL Keep 4"
+    /// after an archive run from 2019 would send a challenge naming a board the recipient will
+    /// never be given. `Keep4GameView` passes `ranked`, which is already exactly this distinction
+    /// at every call site (Home's daily, Browse's daily-from-hub and Onboarding's first puzzle
+    /// are ranked; archive/community/Versus/deep-link are not).
+    var isDaily: Bool = false
+    /// Set when this run came from someone's challenge link — see `ChallengeResultBanner`.
+    var challenge: ChallengeLink? = nil
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
@@ -19,10 +30,16 @@ struct Keep4ResultView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     scoreHeader.heroReveal(0)
-                    if let top = topSeason { foilCard(top).heroReveal(1) }
-                    if let rewards { RewardsRow(rewards: rewards).heroReveal(2) }
-                    breakdown.heroReveal(3)
-                    shareCardPreview.heroReveal(4)
+                    if let challenge {
+                        ChallengeResultBanner(challenge: challenge,
+                                              hits: result.correctCount,
+                                              score: result.total)
+                            .heroReveal(1)
+                    }
+                    if let top = topSeason { foilCard(top).heroReveal(2) }
+                    if let rewards { RewardsRow(rewards: rewards).heroReveal(3) }
+                    breakdown.heroReveal(4)
+                    shareCardPreview.heroReveal(5)
                 }
                 .padding(16)
             }
@@ -31,6 +48,14 @@ struct Keep4ResultView: View {
         .background(Color.appBackground)
         .celebrate(on: $confetti, intensity: result.isPerfect ? 90 : 40)
         .onAppear {
+            if let challenge {
+                container.track(.challengeCompleted, [
+                    "format": ChallengeLink.Format.keep4.rawValue,
+                    "sport": puzzle.sport.rawValue,
+                    "outcome": String(describing: challenge.outcome(hits: result.correctCount,
+                                                                   score: result.total)),
+                ])
+            }
             let gained = (rewards?.ratingChange.delta ?? 0) > 0
             if result.isPerfect || gained { confetti += 1 }
             // Rating ask when the daily just extended a week-plus streak — a pride moment,
@@ -168,17 +193,56 @@ struct Keep4ResultView: View {
         return puzzle.players.filter { !keep.contains($0.id) }.sorted { $0.grade > $1.grade }
     }
 
+    /// 🟩 correct / ⬛ wrong, in board order, four to a line. The Grid's emoji-recap idea applied
+    /// to Keep 4 — and the reason the rendered card is no longer the thing that gets sent:
+    /// `ShareCardView` lists all eight players with KEEP/CUT and a tick, which is the complete
+    /// answer key. Posting it to a group chat solves the puzzle for everyone who reads it, so
+    /// the one artifact most likely to spread was also the one guaranteed to burn the board.
+    static func emojiStrip(puzzle: Keep4Puzzle, result: Keep4Scoring.Result) -> String {
+        ShareMessage.emojiRow(puzzle.players.map { result.correctness[$0.id] ?? false }, perLine: 4)
+    }
+
+    /// What lands in the share sheet: headline, spoiler-free strip, score, link. Pure, so the
+    /// exact text is locked by tests — same contract as `GridResultView.shareText`.
+    static func shareText(puzzle: Keep4Puzzle, result: Keep4Scoring.Result, date: Date = Date(),
+                          isDaily: Bool = true, challenger: String? = nil,
+                          now: Date = Date()) -> String {
+        let board = emojiStrip(puzzle: puzzle, result: result)
+        let link = ChallengeLink(format: .keep4, sport: puzzle.sport,
+                                 day: PuzzleStore.localDayString(date),
+                                 hits: result.correctCount, outOf: puzzle.players.count,
+                                 score: result.total, challenger: challenger)
+        guard isDaily else {
+            // An archive or community board has no shared identity, so the message brags without
+            // daring — same rule as a re-rolled practice Grid.
+            return ShareMessage.compose(
+                headline: "I went \(result.correctCount)/\(puzzle.players.count) on a \(puzzle.sport.displayName) Keep 4.",
+                board: board, detail: link.scoreLine, campaign: link.campaignToken)
+        }
+        return link.shareText(board: board, now: now)
+    }
+
     private var shareCardPreview: some View {
+        // The card still fronts the share sheet as its preview thumbnail — `SharePreview` is
+        // sheet chrome, not payload, so it looks as good as it did without travelling with the
+        // message and giving the answers away.
         let card = ShareCardView(puzzle: puzzle, placement: placement, result: result)
         return VStack(spacing: 12) {
-            ShareLink(item: card.rendered(),
+            ShareLink(item: Self.shareText(puzzle: puzzle, result: result, isDaily: isDaily,
+                                           challenger: container.identity.username),
                       preview: SharePreview("My Playbook result", image: card.rendered())) {
-                Label("SHARE RESULT", systemImage: "square.and.arrow.up").ctaLabel()
+                Label(isDaily ? "CHALLENGE A FRIEND" : "SHARE RESULT",
+                      systemImage: "square.and.arrow.up").ctaLabel()
             }
             .buttonStyle(PrimePressStyle())
             // ShareLink has no tap callback — a simultaneous gesture is the standard hook.
             .simultaneousGesture(TapGesture().onEnded {
-                container.track(.shareTapped, ["surface": "result"])
+                container.track(.shareTapped, AnalyticsEvent.shareProperties(
+                    surface: "keep4_result",
+                    format: ChallengeLink.Format.keep4.rawValue,
+                    artifact: .challengeText,
+                    extra: ["sport": puzzle.sport.rawValue,
+                            "hits": String(result.correctCount)]))
             })
         }
     }

@@ -655,23 +655,37 @@ struct PublishedSheet: View {
 
     private var shareURL: URL { URL(string: "balliq://play/\(shareID)")! }
 
+    /// Reuses `SharablePuzzle.shareText`'s three-line shape rather than sending the bare
+    /// `balliq://` URL. The old copy — "share this link so anyone can play your puzzle" —
+    /// was simply untrue: a custom-scheme URL does nothing on a device without the app,
+    /// which is every recipient an author is trying to reach.
+    private var shareText: String {
+        """
+        I made a puzzle on Playbook. Can you beat it?
+        Play: \(ShareMessage.storeURL(campaign: "puzzle_invite").absoluteString)
+        Already have Playbook? \(shareURL.absoluteString)
+        """
+    }
+
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "checkmark.seal.fill").font(.system(size: 48))
                 .foregroundStyle(Color.successFill)
             Text("Published!").font(.display1).foregroundStyle(Color.textPrimary)
-            Text("Share this link so anyone can play your puzzle.")
+            Text("Share it — friends without the app get a link to install it first.")
                 .font(.body14).foregroundStyle(Color.textMuted).multilineTextAlignment(.center)
             Text(shareURL.absoluteString).font(.bodyStrong).foregroundStyle(Color.accentText)
                 .padding(12).frame(maxWidth: .infinity).background(Color.surfaceMuted)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.control))
-            ShareLink(item: shareURL) {
+            ShareLink(item: shareText) {
                 Text("SHARE").ctaLabel()
             }
             .buttonStyle(PrimePressStyle())
             // ShareLink has no tap callback — a simultaneous gesture is the standard hook.
             .simultaneousGesture(TapGesture().onEnded {
-                container.track(.shareTapped, ["surface": "publish_link"])
+                container.track(.shareTapped, AnalyticsEvent.shareProperties(
+                    surface: "publish_link", format: "keep4", artifact: .puzzleLink,
+                    extra: ["puzzle_id": shareID]))
             })
             Button("Done") { dismiss(); onDone() }.foregroundStyle(Color.textMuted)
         }

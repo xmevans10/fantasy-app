@@ -34,10 +34,49 @@ final class StoreService: ObservableObject {
 
     deinit { updateListenerTask?.cancel() }
 
+    /// Set when the last load attempt failed outright. Drives the paywall's retry affordance —
+    /// "we couldn't reach the store" is a different message, and a different user action, from
+    /// "the store has nothing for you".
+    @Published private(set) var productLoadFailed = false
+
+    /// Fetches the catalog, retrying with backoff.
+    ///
+    /// This used to be a single `try?` whose failure collapsed to `[]` with no retry, called
+    /// exactly once from `init`. That is a cold-launch race: `Product.products(for:)` needs the
+    /// network *and* StoreKit to be ready, and on a first launch neither is guaranteed. One
+    /// unlucky request left the app with no products for the entire process lifetime, and the
+    /// paywall stuck on "Plans unavailable right now" with no way back.
+    ///
+    /// It is not hypothetical — App Review rejected 1.3 (build 16) under Guideline 2.1(a) on
+    /// 2026-07-28 with exactly this symptom ("the subscriptions and the non-consumable in-app
+    /// purchases were not available at time of review"), on a fresh iPad install. A reviewer's
+    /// device is the worst case for this race: brand-new install, first launch, one attempt.
     func loadProducts() async {
         isLoadingProducts = true
         defer { isLoadingProducts = false }
-        products = (try? await Product.products(for: StoreProduct.allCases.map(\.rawValue))) ?? []
+        let ids = StoreProduct.allCases.map(\.rawValue)
+        // Three attempts, ~0.5s then ~1.5s apart. Deliberately short: this runs at launch and
+        // again when the paywall opens, so the goal is riding out a transient failure, not
+        // grinding against a genuine outage.
+        for attempt in 0..<3 {
+            do {
+                let fetched = try await Product.products(for: ids)
+                // An empty result is NOT success. StoreKit returns [] for unknown ids, which is
+                // also what a not-yet-propagated App Store Connect product looks like — worth
+                // another attempt rather than caching the empty answer for the session.
+                if !fetched.isEmpty {
+                    products = fetched
+                    productLoadFailed = false
+                    return
+                }
+            } catch {
+                // Swallowed deliberately, but only after the retries are exhausted below.
+            }
+            if attempt < 2 {
+                try? await Task.sleep(nanoseconds: attempt == 0 ? 500_000_000 : 1_500_000_000)
+            }
+        }
+        productLoadFailed = true
     }
 
     /// Returns true if the purchase completed (and entitlements were refreshed); false on

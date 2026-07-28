@@ -54,11 +54,12 @@ enum OverUnderRoundGenerator {
                               player: player, stat: stat, threshold: threshold)
     }
 
+    /// Delegates to the app-wide daily key: the Over/Under daily round is seeded per *local*
+    /// calendar day, same boundary every other daily rolls on. It also feeds the round's
+    /// completion id, which `ProgressRepository` gates by local day — a UTC day here would let
+    /// the checkmark reset at local midnight while the round itself didn't change until 5pm.
     static func dayString(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.timeZone = TimeZone(identifier: "UTC")
-        return f.string(from: date)
+        PuzzleStore.localDayString(date)
     }
 }
 

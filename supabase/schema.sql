@@ -1353,6 +1353,88 @@ $$;
 
 grant execute on function public.random_grid_puzzle(text, text) to anon, authenticated;
 
+-- The membership relation — player -> (team, league, year) — for one sport (2026-07-27, applied
+-- live as migration `grid_membership_index_rpc`). This is what lets the CLIENT generate its own
+-- Grid boards (`GridLocalGenerator.swift`) instead of being capped by the minted pool, which
+-- stood at 41 boards across all five sports. Sibling of `grid_player_names` above: same posture,
+-- one aggregate so PostgREST's 1000-row cap can't truncate it, cached a week on the device.
+--
+-- Memberships alone support exactly two board shapes — teams x decades and teams x teams — since
+-- both ask only "did this player appear for this team in this year". Stat/position axes need the
+-- `stats` jsonb and are deliberately not shipped; the client simply doesn't offer those shapes.
+--
+-- Wire format v1: `teams` [{abbr, league}] indexed by team id, `players` [name] indexed by player
+-- id, and `memberships` parallel to `players`, each `teamIdx:yearOffset[,...][;teamIdx:...]` with
+-- offsets relative to `minYear`. Measured gzipped on the wire 2026-07-27: nfl 69 KB, nba 62 KB,
+-- baseball 119 KB, soccer 254 KB, tennis 16 KB — about what a *single* NFL board's content costs.
+--
+-- League scoping mirrors grid.py's `_team_key`: for soccer the identity is (abbr, league) and
+-- blank-league rows are dropped, because soccer codes collide across countries (MCI is Manchester
+-- City and Melbourne City). Every other sport forces league to '' so a franchise can't split.
+--
+-- `set statement_timeout` is load-bearing: the aggregate runs 1.2-7.4s and anon's default is 3s,
+-- so without it the RPC would 57014 for signed-out users and look exactly like "no data" to a
+-- client wrapping it in `try?` — the same failure mode migration 0007 documents.
+create or replace function public.grid_membership_index(p_sport text)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+set statement_timeout = '30s'
+as $$
+  with base as (
+    select distinct
+      ps.name,
+      ps.team_abbr as abbr,
+      case when p_sport = 'soccer' then coalesce(ps.league, '') else '' end as league,
+      ps.season_year as yr
+    from public.player_seasons ps
+    where ps.sport = p_sport
+      and not ps.career
+      and coalesce(ps.team_abbr, '') <> ''
+      and coalesce(ps.name, '') <> ''
+      and ps.season_year is not null
+  ),
+  scoped as (
+    select * from base where p_sport <> 'soccer' or league <> ''
+  ),
+  teams as (
+    select abbr, league, (row_number() over (order by abbr, league))::int - 1 as tidx
+    from (select distinct abbr, league from scoped) d
+  ),
+  players as (
+    select name, (row_number() over (order by name))::int - 1 as pidx
+    from (select distinct name from scoped) d
+  ),
+  lo as (select min(yr) as min_year from scoped),
+  runs as (
+    select p.pidx, t.tidx,
+           string_agg((s.yr - lo.min_year)::text, ',' order by s.yr) as years
+    from scoped s
+    join players p on p.name = s.name
+    join teams t on t.abbr = s.abbr and t.league = s.league
+    cross join lo
+    group by p.pidx, t.tidx
+  ),
+  lines as (
+    select pidx, string_agg(tidx::text || ':' || years, ';' order by tidx) as line
+    from runs group by pidx
+  )
+  select jsonb_build_object(
+    'sport', p_sport,
+    'version', 1,
+    'minYear', coalesce((select min_year from lo), 0),
+    'teams', coalesce((select jsonb_agg(jsonb_build_object('abbr', abbr, 'league', league)
+                              order by tidx) from teams), '[]'::jsonb),
+    'players', coalesce((select jsonb_agg(name order by pidx) from players), '[]'::jsonb),
+    'memberships', coalesce((select jsonb_agg(line order by pidx) from lines), '[]'::jsonb)
+  );
+$$;
+
+revoke all on function public.grid_membership_index(text) from public;
+grant execute on function public.grid_membership_index(text) to anon, authenticated, service_role;
+
 -- Crowd-sourced Grid rarity (2026-07-17, applied live as migration `grid_guesses_crowd_rarity`).
 -- Every submitted Grid guess is logged; grid_guess_stats aggregates correct picks per cell to
 -- power "X% picked this" on the result screen. Display-only — star scoring untouched.

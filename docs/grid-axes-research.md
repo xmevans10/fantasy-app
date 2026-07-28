@@ -368,7 +368,62 @@ doesn't apply stored object metadata. CDN caching is fine — the problem is ent
 
 ---
 
-## 9. Where to go next
+## 9. Cell specificity is measured, not inferred from shape (fixed 2026-07-28)
+
+`MAX_CELL_ANSWERS = 200` in `grid.py` is the upper bound on a cell's graded answers — the other
+half of the `>=1` floor that had always been there. It replaces the previous *structural* rule
+("every cell must cross a team") as the thing that enforces specificity.
+
+The old rule was a proxy, and lossy in both directions. It rejected NFL's `1990s × 30+ Pass TD`
+(**44** players — tighter than the `DAL × 2000s` at **78** that ships daily), and it blessed
+loose cells wherever a team dimension existed, since the team was assumed sufficient rather than
+counted. The two examples that originally justified it are both soccer: `2010s × 10+ Assists`
+(**765**) and `Midfielders × 2020s` (**4,841**), where a 93k-row catalog meets thresholds a third
+of the league clears.
+
+The 200 came from sweeping every archetype's candidate cells against the live catalog:
+
+| archetype | sport | med | p90 | max |
+|---|---|---|---|---|
+| teams-x-teams | baseball | 156 | 209 | 1102 |
+| teams-x-mixed | baseball | 36 | 431 | 590 |
+| teams-x-decades | baseball | 80 | 101 | 129 |
+| decades-x-stats | nfl | 30 | 67 | 92 |
+| decades-x-stats | soccer | 302 | 1780 | 4959 |
+| positions-x-decades | soccer | 2276 | 4678 | 5011 |
+
+Career-grain `teams-x-teams` sets the floor (its cells are legitimately large — "played for both
+the Yankees and the Red Sox" over 150 years really is ~156 players, and it is the format's most
+recognisable cell); soccer's decade × stat at 302 sets the ceiling. 200 sits in that window.
+
+Consequences: **`decades-x-stats` is back in `ARCHETYPES`** at weight 2, viable for NFL/NBA/
+baseball/tennis and self-rejecting for soccer. Baseball's `NYY × Hitters` (p90 431 on
+teams-x-mixed) is now rejected too — a weak cell the shape rule waved through.
+`positions-x-decades` stays out: at a median of 2,276 it is not a near miss.
+
+Worth recording because the reasoning *looked* airtight: a per-cell team-anchor rule really does
+force one whole side of the board to be teams (if any row is a non-team, every column must be a
+team, and vice versa — no diagonal arrangement exists). Sound logic, unsound premise.
+
+**Viable and varied are different properties, and only the first was checked.** Readmitting
+`decades-x-stats` made that gap visible immediately: in a 21-day dry run tennis took it on **20 of
+21 days**, and because tennis has exactly three stat axes, every one of those boards carried
+*identical columns*. The shape spans C(7,3) × C(3,3) = 35 boards total — fewer than the 60-day
+`grid_history` no-repeat window, so it exhausts itself. It dominated precisely because it is
+reliably viable while tennis's richer shapes often aren't.
+
+`_combo_space(rows, cols)` now measures how many distinct boards a shape could ever produce, and
+`generate_grid` runs two tiers: shapes at or above `GRID_HISTORY_WINDOW_DAYS` first, then
+everything feasible. **A preference, never a filter** — the count is over *axes*, not viable
+boards, so a shape can look rich and produce nothing (stat axes exist for a sport whether or not
+its catalog satisfies them). A single-tier version of this was written first and a sparse-pool
+test caught it excluding the only shape that worked. The fallback makes it impossible for this to
+find fewer boards than the old loop did.
+
+The real fix for tennis is content, not machinery: three stat axes is too thin a vocabulary, and
+`_STATS["tennis"]` is where that gets fixed.
+
+## 10. Where to go next
 
 Ordered by value-per-unit-risk, grounded in what this session actually measured rather than in
 what sounds ambitious. Items 1–2 are release hygiene and should happen before anything new.
@@ -420,7 +475,11 @@ what sounds ambitious. Items 1–2 are release hygiene and should happen before 
 8. **Rarity-star thresholds are calibrated for a catalog that no longer exists.**
    `_rarity_stars` buckets at 1/3/7/14 valid answers, which was tuned before `nfl_rosters`
    widened NFL cells to 149–425 answers. Either recalibrate against the live distribution or
-   retire stars entirely in favour of item 3.
+   retire stars entirely in favour of item 3. Note this is *why* board shape ended up policing
+   specificity for so long: everything from 15 answers upward collapses into one 1-star bucket,
+   so "too easy" was a quantity the generator could not express. `MAX_CELL_ANSWERS` (above) now
+   expresses it, but only as a pass/fail at 200 — the 15–200 range is still undifferentiated,
+   and that is the range most cells live in.
 
 ### Tier 3 — polish with real numbers behind it
 

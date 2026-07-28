@@ -167,7 +167,9 @@ struct DraftSpinResultView: View {
         }
         .buttonStyle(PrimePressStyle())
         .simultaneousGesture(TapGesture().onEnded {
-            container.track(.shareTapped, ["surface": "draftspin_result"])
+            container.track(.shareTapped, AnalyticsEvent.shareProperties(
+                surface: "draftspin_result", format: "draftspin", artifact: .resultImage,
+                extra: ["sport": sport.rawValue]))
         })
     }
 

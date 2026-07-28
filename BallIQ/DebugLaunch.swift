@@ -140,6 +140,20 @@ enum DebugLaunch {
         guard let i = args.firstIndex(of: "-screenshotLeagueNation"), i + 1 < args.count else { return nil }
         return args[i + 1]
     }
+    /// Jump the first-run flow to a given step so each one can be captured without tapping
+    /// through the previous ones (simctl can't tap): `-screenshotOnboardingStep how_to_play`.
+    /// Values are `OnboardingStep` raw values. Only has an effect on a genuinely fresh install —
+    /// `hasOnboarded` still gates whether onboarding renders at all, and `simctl uninstall`
+    /// alone does NOT clear it (cfprefsd caches the domain; `defaults delete` first).
+    static var onboardingStep: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-screenshotOnboardingStep"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+    /// Force Home's streak-reminder primer card visible regardless of streak or notification
+    /// status: `-screenshotPushPrimer`. Real state needs a completed game *and* an untouched
+    /// system prompt, which can't both be arranged from a launch argument.
+    static var forcePushPrimer: Bool { has("-screenshotPushPrimer") }
     /// Feed a deep link straight to `ContentView.handle` (bypasses SpringBoard's
     /// "Open in …?" confirm, which automated runs can't tap): `-openURL balliq://play/<id>`.
     static var openURL: URL? {
@@ -186,6 +200,8 @@ enum DebugLaunch {
     static let searchQuery: String? = nil
     static let browseSport: String? = nil
     static let createTemplateKey: String? = nil
+    static let onboardingStep: String? = nil
+    static let forcePushPrimer = false
     static let openURL: URL? = nil
     static let draftSpinSport: Sport? = nil
     #endif

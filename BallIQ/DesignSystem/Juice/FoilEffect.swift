@@ -32,12 +32,27 @@ final class FoilMotion: ObservableObject {
     }
 }
 
-/// Balatro-style holographic "foil" treatment: a rainbow `AngularGradient` overlaid on the card
-/// with `.blendMode(.overlay)`, its sweep driven by device tilt (CoreMotion) plus a gentle time
-/// drift so it's alive even when the phone is still. A delight treatment for a single "rare" card.
-/// Gated on Reduce Motion (renders the card untouched, never starts the motion manager).
+/// Balatro-style holographic "foil" treatment: a rainbow `AngularGradient` whose sweep is driven
+/// by device tilt (CoreMotion) plus a gentle time drift, so it's alive even when the phone is
+/// still. Gated on Reduce Motion (renders the content untouched, never starts the motion manager)
+/// — anything relying on this for its *color* must therefore carry a static fallback fill of its
+/// own, since under Reduce Motion this draws nothing at all.
 struct Foil: ViewModifier {
+    /// How the rainbow relates to what it covers. The distinction is which one owns the color.
+    enum Style {
+        /// A sheen *over* an existing fill: `.overlay` at half strength, so the base color still
+        /// dominates and only shifts iridescently. For surfaces with art or a colour of their own
+        /// to protect — `Keep4ResultView`'s rare card.
+        case sheen
+        /// The rainbow *is* the surface, drawn opaque. For elements with no colour of their own
+        /// to preserve. `sheen` over a saturated base can never look like this: overlay blending
+        /// keeps the base's hue by construction, which is why the lower-third banner read as gold
+        /// with a faint shimmer rather than as a rainbow.
+        case surface
+    }
+
     var active: Bool
+    var style: Style = .sheen
     /// The sheen is clipped to this shape — a rounded rect for cards, `DiagonalBlock` for
     /// the lower-third banners. Any shape works; it just needs to match the view's own clip.
     var shape: AnyShape
@@ -69,25 +84,31 @@ struct Foil: ViewModifier {
                                y: 0.5 + CGFloat(sin(motion.pitch)) * 0.35)
         return shape
             .fill(AngularGradient(gradient: Self.rainbow, center: center, angle: drift + tilt))
-            .blendMode(.overlay)
-            .opacity(0.5)
+            .blendMode(style == .sheen ? .overlay : .normal)
+            .opacity(style == .sheen ? 0.5 : 1)
             .allowsHitTesting(false)
     }
 
-    private static let rainbow = Gradient(colors: stride(from: 0.0, through: 1.0, by: 1.0 / 6.0)
+    /// Full hue circle. `through: 1.0` closes the loop on red so an `AngularGradient` has no seam
+    /// where its sweep wraps.
+    static let rainbow = Gradient(colors: stride(from: 0.0, through: 1.0, by: 1.0 / 6.0)
         .map { Color(hue: $0, saturation: 0.85, brightness: 1.0) })
+
+    /// The same spectrum, standing still — what a `.surface` foil must fall back to under Reduce
+    /// Motion, where the modifier itself draws nothing.
+    static let staticRainbow = AngularGradient(gradient: rainbow, center: .center)
 }
 
 extension View {
     /// Apply a holographic "foil" shimmer (see `Foil`). `cornerRadius` should match the card's
     /// own clip so the sheen stays within its rounded bounds.
-    func foil(active: Bool, cornerRadius: CGFloat = 14) -> some View {
-        modifier(Foil(active: active,
+    func foil(active: Bool, style: Foil.Style = .sheen, cornerRadius: CGFloat = 14) -> some View {
+        modifier(Foil(active: active, style: style,
                       shape: AnyShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))))
     }
 
     /// Foil clipped to an arbitrary shape (e.g. the lower-third banners' `DiagonalBlock`).
-    func foil(active: Bool, in shape: some Shape) -> some View {
-        modifier(Foil(active: active, shape: AnyShape(shape)))
+    func foil(active: Bool, style: Foil.Style = .sheen, in shape: some Shape) -> some View {
+        modifier(Foil(active: active, style: style, shape: AnyShape(shape)))
     }
 }

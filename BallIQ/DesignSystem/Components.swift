@@ -3,7 +3,7 @@ import SwiftUI
 // Shared "Prime Time" controls — one segmented control, one empty state, one CTA treatment,
 // one press feedback. Screens compose these instead of hand-rolling per-screen variants.
 
-/// Broadcast lower-third section header — condensed white caps on an accent block with a
+/// Broadcast lower-third section header — condensed ink caps on a holographic block with a
 /// diagonal-cut bottom edge and the sticker ink ledge. Home's section headers and the
 /// format-hub sections share this one chip instead of drifting copies.
 struct LowerThirdHeader: View {
@@ -13,18 +13,30 @@ struct LowerThirdHeader: View {
         Text(title)
             .font(.heading)
             .textCase(.uppercase)
+            // Near-black ink, and it stays legible across the whole sweep because every stop in
+            // `Foil.rainbow` sits at full brightness — there is no dark hue for it to fight.
             .foregroundStyle(Color.onGold)
             .padding(.horizontal, 12)
             .padding(.top, 5).padding(.bottom, 9)
             .background(
                 ZStack {
                     DiagonalBlock(cut: 8).fill(Color.borderInk).offset(x: 3, y: 3)
-                    DiagonalBlock(cut: 8).fill(Color.goldFill)
+                    // The still spectrum underneath is not redundant: `.foil` draws nothing at
+                    // all under Reduce Motion, so without this the banner would vanish there.
+                    DiagonalBlock(cut: 8).fill(Foil.staticRainbow)
+                        // Full-spectrum, not a tint over gold (user call, 2026-07-28):
+                        // `.surface` makes the rainbow the banner's own colour. The earlier
+                        // `.sheen` default blended `.overlay` onto `goldFill`, and overlay
+                        // preserves the base hue by construction — which is exactly why it read
+                        // as gold with a faint iridescence rather than as a rainbow.
+                        //
+                        // Applied to the background SHAPE, not to the labelled view: `Foil` is
+                        // an `.overlay`, so at `.surface`'s full opacity it paints over whatever
+                        // it modifies — hung on the `Text` (where `.sheen` sat harmlessly) it
+                        // erases the title outright.
+                        .foil(active: true, style: .surface, in: DiagonalBlock(cut: 8))
                 }
             )
-            // Gold + polychrome shimmer (user call, 2026-07-17) — the foil sheen is clipped
-            // to the same diagonal shape so it never spills past the banner's cut corner.
-            .foil(active: true, in: DiagonalBlock(cut: 8))
     }
 }
 

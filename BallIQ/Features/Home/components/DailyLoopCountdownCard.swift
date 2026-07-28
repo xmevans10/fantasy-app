@@ -50,7 +50,7 @@ struct DailyLoopCountdownCard: View {
 
     private var countdownBlock: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            let target = HomeDailyLoop.nextUTCMidnight(after: context.date)
+            let target = HomeDailyLoop.nextMidnight(after: context.date)
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
                     Image(systemName: "flame.fill")
@@ -62,7 +62,7 @@ struct DailyLoopCountdownCard: View {
                 Text(HomeDailyLoop.countdownString(now: context.date, target: target))
                     .font(.hero(46))
                     .monospacedDigit()
-                Text("NEXT DAILY AT MIDNIGHT UTC")
+                Text("NEXT DAILY AT MIDNIGHT")
                     .font(.label11)
                     .opacity(0.75)
             }

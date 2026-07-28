@@ -132,13 +132,13 @@ final class DiskCacheTests: XCTestCase {
 
     // MARK: - RemotePuzzleRepository daily-puzzle cache
 
-    /// A same-UTC-day cache entry that CONTAINS today's dated row is fresh — no network.
-    /// (Written-today alone is not enough; see the companion test below.)
+    /// A cache entry that CONTAINS today's dated row is fresh — no network. (Its write time is
+    /// irrelevant in both directions; see the companion tests below.)
     func testDailyPuzzleCacheServesSameDayWithTodaysRowWithoutNetwork() async throws {
         struct Row: Codable { let content: Keep4Puzzle; let activeDate: String?
             private enum CodingKeys: String, CodingKey { case content; case activeDate = "active_date" } }
         let puzzle = Keep4Puzzle(id: "p1", theme: "T", sport: .nfl, players: [])
-        let today = PuzzleStore.todayUTCString()
+        let today = PuzzleStore.localDayString()
         await DiskCache.write([Row(content: puzzle, activeDate: today)], key: "puzzles-keep4-all")
 
         let counter = RequestCounter()
@@ -151,9 +151,9 @@ final class DiskCacheTests: XCTestCase {
         XCTAssertEqual(counter.count, 0, "same-day cache holding today's row must never call the network")
     }
 
-    /// A same-UTC-day cache entry WITHOUT today's dated row must refetch: it was written
-    /// before the day's ingest minted the row, and serving it would pin the day to the modulo
-    /// fallback (an old puzzle) until midnight UTC — hit live 2026-07-17 with the Grid.
+    /// A same-day cache entry WITHOUT today's dated row must refetch: it was written before
+    /// the day's ingest minted the row, and serving it would pin the day to the modulo
+    /// fallback (an old puzzle) until midnight — hit live 2026-07-17 with the Grid.
     /// Network failure still falls back to the same-day cache rather than losing the pool.
     func testDailyPuzzleCacheWithoutTodaysRowRefetches() async throws {
         struct Row: Codable { let content: Keep4Puzzle; let activeDate: String?
@@ -162,7 +162,7 @@ final class DiskCacheTests: XCTestCase {
         await DiskCache.write([Row(content: preMint, activeDate: nil)], key: "puzzles-keep4-all")
 
         let counter = RequestCounter()
-        let today = PuzzleStore.todayUTCString()
+        let today = PuzzleStore.localDayString()
         MockURLProtocol.handler = { req in
             counter.hit()
             return self.respond(req, status: 200,
@@ -176,8 +176,30 @@ final class DiskCacheTests: XCTestCase {
         XCTAssertEqual(rows.map(\.id), ["minted-today"])
     }
 
-    /// A cache entry from a previous UTC day is stale (not just old — a fresh row minted today
-    /// wouldn't be in it at all) and must trigger a refetch rather than being served as-is.
+    /// A cache written *yesterday* that already holds today's dated row (the normal state,
+    /// since the pipeline mints days ahead) must serve without any network — this is what
+    /// makes the local-midnight rollover instant, and what keeps a fresh daily available
+    /// offline the moment the day flips.
+    func testDailyPuzzleCacheFromYesterdayHoldingTodaysRowServesWithoutNetwork() async throws {
+        struct Row: Codable { let content: Keep4Puzzle; let activeDate: String?
+            private enum CodingKeys: String, CodingKey { case content; case activeDate = "active_date" } }
+        let mintedAhead = Keep4Puzzle(id: "minted-ahead", theme: "T", sport: .nfl, players: [])
+        await DiskCache.write([Row(content: mintedAhead, activeDate: PuzzleStore.localDayString())],
+                              key: "puzzles-keep4-all",
+                              writtenAt: Date().addingTimeInterval(-25 * 60 * 60))
+
+        let counter = RequestCounter()
+        MockURLProtocol.handler = { req in counter.hit(); return self.respond(req, status: 500, json: "{}") }
+
+        let repo = RemotePuzzleRepository(client: makeClient())
+        let rows = await repo.allKeep4(for: .all)
+
+        XCTAssertEqual(rows.map(\.id), ["minted-ahead"])
+        XCTAssertEqual(counter.count, 0, "a cache holding today's row is fresh regardless of write time")
+    }
+
+    /// A cache entry from a previous day without today's row is stale (a fresh row minted
+    /// today wouldn't be in it at all) and must trigger a refetch rather than being served as-is.
     func testDailyPuzzleCacheRefetchesOnNewDay() async throws {
         struct Row: Codable { let content: Keep4Puzzle; let activeDate: String?
             private enum CodingKeys: String, CodingKey { case content; case activeDate = "active_date" } }

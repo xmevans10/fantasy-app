@@ -2,8 +2,8 @@ import Foundation
 
 /// Minimal disk-backed cache for the two payloads expensive enough to dominate cold-launch
 /// latency (the arcade catalog pool, ~1MB, and daily puzzle rows) — see BALLIQ_SPEC §9
-/// backlog #3. Callers own their own freshness policy (a flat TTL for the catalog, "same
-/// UTC day" for daily puzzles), so this only persists a value alongside the moment it was
+/// backlog #3. Callers own their own freshness policy (a flat TTL for the catalog, "holds
+/// today's dated row" for daily puzzles), so this only persists a value alongside the moment it was
 /// written and hands back both. Encode/decode runs off the main actor via `Task.detached`
 /// since `PlayerSeasonCatalog` is `@MainActor` and these payloads are large enough to jank
 /// launch if decoded inline.

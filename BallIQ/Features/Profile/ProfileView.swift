@@ -155,7 +155,9 @@ struct ProfileView: View {
         }
         .buttonStyle(PrimePressStyle())
         .simultaneousGesture(TapGesture().onEnded {
-            container.track(.shareTapped, ["surface": "profile_card"])
+            container.track(.shareTapped, AnalyticsEvent.shareProperties(
+                surface: "profile", format: "profile", artifact: .profileImage,
+                extra: ["sport": bestSport.rawValue]))
         })
     }
 

@@ -10,6 +10,11 @@ struct Keep4GameView: View {
     var authorName: String? = nil
     /// Set when played from the Versus tab, so the score is submitted to the challenge.
     var versusChallengeID: Int? = nil
+    /// Set when opened from a `balliq://challenge` link. Distinct from `versusChallengeID`:
+    /// that is a server-mediated series between two signed-in accounts, this is a link anyone
+    /// can send anyone with no account on either end. Only ever non-nil when the resolved board
+    /// is exactly the one challenged (see `ContentView.accept`).
+    var challenge: ChallengeLink? = nil
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
@@ -48,6 +53,12 @@ struct Keep4GameView: View {
                                 placement: placement,
                                 result: result,
                                 rewards: rewards,
+                                // `ranked` is already "this is today's daily" at every call
+                                // site — see `Keep4ResultView.isDaily`. An accepted challenge
+                                // is the one unranked path that IS on the canonical board:
+                                // `ContentView.accept` only attaches one on an exact match.
+                                isDaily: ranked || challenge != nil,
+                                challenge: challenge,
                                 onDone: { dismiss() })
             } else {
                 playBoard

@@ -1,7 +1,9 @@
 import SwiftUI
+import UserNotifications
 
 struct HomeView: View {
     @EnvironmentObject private var container: RepositoryContainer
+    @Environment(\.scenePhase) private var scenePhase
     /// Root tab selection (0 Home…4 Profile) — the formats grid uses this to jump to the
     /// Versus tab, since Versus is a full tab/repository, not a sheet Home can present itself.
     @Binding var selectedTab: Int
@@ -11,6 +13,12 @@ struct HomeView: View {
     @State private var keep4BySport: [Sport: DailyPick<Keep4Puzzle>] = [:]
     @State private var whoAmIBySport: [Sport: DailyPick<WhoAmIPuzzle>] = [:]
     @State private var loadedSports: Set<Sport> = []
+    /// The local calendar day the maps above were loaded for. iOS keeps the app in memory for
+    /// days, so without this the `loadedSports` guard would pin every user to the FIRST day's
+    /// puzzles until the process happened to die — the daily loop's cardinal sin (a "daily"
+    /// that doesn't change daily). Compared against the current day at every foregrounding and
+    /// at the live midnight tick; a mismatch throws the whole cache away and refetches.
+    @State private var dailiesDay = PuzzleStore.localDayString()
     /// The sport page currently visible in the daily-games pager. Browsing only — swiping
     /// never writes back to `container.sportFilter` (2026-07-09 decision, see `body` below).
     @State private var dailyPage: Sport = .nfl
@@ -33,6 +41,13 @@ struct HomeView: View {
     @State private var showKeep4Hub = false
     @State private var showWhoAmIHub = false
     @State private var shareTarget: SharablePuzzle?
+    /// Which daily the player just opened. The game runs in a `fullScreenCover(item:)`, whose
+    /// `onDismiss` can no longer see the item, so the activation milestone needs the puzzle
+    /// stashed alongside it.
+    @State private var launchedDaily: LaunchedDaily?
+    /// Streak-reminder primer (see `pushPrimerCard`). State rather than a computed property
+    /// because deciding it requires an `await` on the system's authorization status.
+    @State private var showPushPrimer = false
 
     private let gridColumns = [GridItem(.flexible(), spacing: 12),
                                GridItem(.flexible(), spacing: 12)]
@@ -61,6 +76,8 @@ struct HomeView: View {
                     // each format's own setup screen, which writes the choice back to
                     // `container.sportFilter` so these daily previews follow the last pick.
                     streakRow.heroReveal(0)
+
+                    if showPushPrimer { pushPrimerCard.heroReveal(1) }
 
                     section("Today's daily games") {
                         VStack(spacing: 14) {
@@ -120,10 +137,10 @@ struct HomeView: View {
             .navigationDestination(isPresented: $showBrowse) {
                 BrowseView().environmentObject(container)
             }
-            .fullScreenCover(item: $activePuzzle) { puzzle in
+            .fullScreenCover(item: $activePuzzle, onDismiss: finishDailyGame) { puzzle in
                 Keep4GameView(puzzle: puzzle).environmentObject(container)
             }
-            .fullScreenCover(item: $activeWhoAmI) { puzzle in
+            .fullScreenCover(item: $activeWhoAmI, onDismiss: finishDailyGame) { puzzle in
                 WhoAmIGameView(puzzle: puzzle).environmentObject(container)
             }
             .fullScreenCover(isPresented: $showOverUnder) {
@@ -152,7 +169,37 @@ struct HomeView: View {
                 PaywallView(trigger: paywallTrigger).environmentObject(container)
             }
             .task(id: container.sportFilter) { await loadDaily() }
+            .task { await refreshPushPrimer() }
+            // The two triggers that catch a day rollover while the process stays alive:
+            // `.NSCalendarDayChanged` fires at local midnight (and on timezone/clock changes)
+            // when the app is frontmost — the countdown card hits 00:00:00 and the fresh
+            // daily appears live; scenePhase catches the far more common case of resuming
+            // from background on a later day, which the notification (delivered only to a
+            // running, scheduled runloop) can sleep straight through.
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)
+                .receive(on: RunLoop.main)) { _ in refreshDailiesIfNewDay() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { refreshDailiesIfNewDay() }
+            }
         }
+    }
+
+    /// Throw away the per-sport daily cache when the local calendar day has moved on from the
+    /// one it was loaded for. No-op within the same day, so scenePhase churn (control center,
+    /// notification shade) never causes spurious refetches.
+    ///
+    /// Deliberately does NOT kick off the reload itself: every page's own
+    /// `.task(id:)` keys on `dailiesDay` (see `dailyCardStack`), so mounted pages re-fire the
+    /// moment this changes and unmounted ones load when first swiped to. Calling `loadDaily()`
+    /// here instead would reset the pager to the last-played sport under a reader mid-swipe,
+    /// and re-run the DEBUG auto-open flags — a midnight rollover would launch a game by itself.
+    private func refreshDailiesIfNewDay() {
+        let today = PuzzleStore.localDayString()
+        guard today != dailiesDay else { return }
+        dailiesDay = today
+        loadedSports.removeAll()
+        keep4BySport.removeAll()
+        whoAmIBySport.removeAll()
     }
 
     /// Current streak, shown inline in the page body (not a nav-bar icon — that read as a
@@ -162,10 +209,83 @@ struct HomeView: View {
             Image(systemName: "flame.fill")
                 .font(.system(size: 15, weight: .black))
                 .foregroundStyle(container.streak > 0 ? Color.warningFill : Color.textMuted)
-            Text(container.streak == 1 ? "1 day streak" : "\(container.streak) day streak")
+            Text(HomeDailyLoop.streakLabel(streak: container.streak))
                 .font(.label12)
                 .foregroundStyle(Color.textPrimary)
         }
+    }
+
+    // MARK: - Streak reminders (activation)
+
+    /// The only place the app asks for notification permission outside Profile's settings card.
+    ///
+    /// It shows up *after* the first completed game rather than at launch, because iOS gives one
+    /// prompt per install and a cold ask (no streak yet, no reason given) spends it for nothing.
+    /// Answering either way retires the card for good — the OS prompt can't be shown twice, so a
+    /// second ask would be a dead button.
+    ///
+    /// No dedicated event: `app_opened` carries the authorization status on every launch, which
+    /// splits installs three ways (`authorized` converted, `denied` refused at the OS prompt,
+    /// still `not_determined` never engaged) without a second event to keep in sync.
+    private var pushPrimerCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "bell.badge.fill")
+                    .font(.system(size: 16, weight: .black))
+                    .foregroundStyle(Color.warningFill)
+                Text("DON'T LOSE YOUR STREAK")
+                    .font(.heading)
+                    .foregroundStyle(Color.textPrimary)
+            }
+            Text("One nudge at 8pm if today's puzzles are still open. Nothing else.")
+                .font(.label12)
+                .foregroundStyle(Color.textMuted)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 10) {
+                Button { Task { await enableReminders() } } label: {
+                    Text("TURN ON REMINDERS")
+                        .font(.custom(FontName.condBlack, size: 14))
+                        .foregroundStyle(Color.onAccent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 11)
+                        .background(Color.accentFill)
+                        .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+                }
+                .buttonStyle(PrimePressStyle())
+
+                Button { answerPrimer() } label: {
+                    Text("Not now")
+                        .font(.bodyStrong)
+                        .foregroundStyle(Color.textMuted)
+                        .padding(.horizontal, 4)
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .blockCard()
+    }
+
+    /// Offered only once a streak actually exists (i.e. a game was completed) and only while the
+    /// system prompt is still unspent — a `denied` install must never see it again.
+    private func refreshPushPrimer() async {
+        if DebugLaunch.forcePushPrimer { showPushPrimer = true; return }
+        guard ActivationState().shouldOfferPushPrimer, container.streak > 0 else {
+            showPushPrimer = false
+            return
+        }
+        showPushPrimer = await PushNotificationManager.currentAuthorizationStatus() == .notDetermined
+    }
+
+    private func enableReminders() async {
+        Haptics.tap()
+        await PushNotificationManager.requestAuthorizationAndRegister()
+        answerPrimer()
+    }
+
+    private func answerPrimer() {
+        ActivationState().markOnce(.pushPrimerAnswered)
+        withAnimation(Motion.easeOut) { showPushPrimer = false }
     }
 
     /// Entry point to the full archive (every daily puzzle, not just today's). Pro-gated —
@@ -193,6 +313,29 @@ struct HomeView: View {
         .padding(16)
         .frame(maxWidth: .infinity)
         .cardSurface()
+    }
+
+    /// Home's daily cards are one of exactly two surfaces a brand-new player's first game can
+    /// start from (onboarding's guided game is the other), so both record the same milestone —
+    /// `ActivationMilestone` de-dupes, and a player who skipped the guided game still counts.
+    private func launchDaily(format: String, id: String, sport: Sport) {
+        launchedDaily = LaunchedDaily(format: format, puzzleID: id, sport: sport)
+        ActivationMilestone.noteFirstGameStarted(container, format: format, sport: sport,
+                                                 surface: "home_daily")
+    }
+
+    /// Reads the win back off progress once the game's cover closes — `hasCompletedToday` is
+    /// true only for a puzzle that was actually finished, so quitting mid-round records a start
+    /// with no completion (which is the drop-off worth seeing).
+    private func finishDailyGame() {
+        if let launched = launchedDaily, container.hasCompletedToday(puzzleID: launched.puzzleID) {
+            ActivationMilestone.noteFirstGameCompleted(container, format: launched.format,
+                                                       sport: launched.sport, surface: "home_daily")
+        }
+        launchedDaily = nil
+        // A first completion is exactly when the streak becomes worth protecting, so re-evaluate
+        // the reminder primer here rather than waiting for the next launch.
+        Task { await refreshPushPrimer() }
     }
 
     private func launch(_ format: GameFormat) {
@@ -278,6 +421,7 @@ struct HomeView: View {
                     // intermediate setup screen when the puzzle is already loaded and shown on
                     // the card). The formats grid below still routes through setup, where
                     // picking a sport is the point.
+                    launchDaily(format: "keep4", id: puzzle.id, sport: puzzle.sport)
                     activePuzzle = puzzle
                 }
                 secondaryAction: { shareTarget = SharablePuzzle(keep4: puzzle) }
@@ -295,6 +439,7 @@ struct HomeView: View {
                               typeColor: .voltFill, onTypeColor: .onVolt,
                               ranked: true,
                               dateBadge: pick.isCanonicalToday ? DailyGameCard.todayDateBadge : nil) {
+                    launchDaily(format: "whoami", id: puzzle.id, sport: puzzle.sport)
                     activeWhoAmI = puzzle
                 }
                 secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }
@@ -302,7 +447,10 @@ struct HomeView: View {
                 dailyCardPlaceholder(loaded: loadedSports.contains(sport))
             }
         }
-        .task(id: sport) { await loadDaily(for: sport) }
+        // Keyed on the day as well as the sport: `refreshDailiesIfNewDay` only clears state,
+        // and a bare `id: sport` would never re-fire for an already-mounted page — the cards
+        // would sit on an empty map showing a spinner that nothing ever resolves.
+        .task(id: "\(sport.rawValue)-\(dailiesDay)") { await loadDaily(for: sport) }
     }
 
     /// Fills a daily card's spot while its sport's page is still loading, so the pager doesn't
@@ -334,6 +482,14 @@ struct HomeView: View {
             content()
         }
     }
+}
+
+/// The daily a `fullScreenCover(item:)` is currently showing, kept beside the item because the
+/// cover's `onDismiss` closure runs after the item has already been cleared.
+private struct LaunchedDaily {
+    let format: String
+    let puzzleID: String
+    let sport: Sport
 }
 
 #Preview {

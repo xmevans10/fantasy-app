@@ -38,16 +38,34 @@ final class RemotePuzzleRepository: PuzzleRepository {
 
     func allKeep4(for filter: SportFilter) async -> [Keep4Puzzle] {
         if let rows = await fetch(format: "keep4", filter: filter, as: Keep4Puzzle.self), !rows.isEmpty {
-            return rows.map(\.content)
+            let released = Self.released(rows)
+            if !released.isEmpty { return released.map(\.content) }
         }
         return await fallback.allKeep4(for: filter)
     }
 
     func allWhoAmI(for filter: SportFilter) async -> [WhoAmIPuzzle] {
         if let rows = await fetch(format: "whoami", filter: filter, as: WhoAmIPuzzle.self), !rows.isEmpty {
-            return rows.map(\.content)
+            let released = Self.released(rows)
+            if !released.isEmpty { return released.map(\.content) }
         }
         return await fallback.allWhoAmI(for: filter)
+    }
+
+    /// Drops rows dated later than today — the archive is "everything up to and including
+    /// today", never a preview of content that hasn't dropped.
+    ///
+    /// This became load-bearing when the mint moved to a 2-day lookahead (2026-07-28): the
+    /// pool now *always* contains unreleased rows, and Browse would otherwise list tomorrow's
+    /// daily as a replayable archive entry — letting a Pro subscriber play tomorrow's puzzle
+    /// today and spoiling the daily it's about to be served as. Undated rows (the older
+    /// non-canonical pool) are always released; only a date strictly in the future is held back.
+    private static func released<T>(_ rows: [PuzzleContentRow<T>]) -> [PuzzleContentRow<T>] {
+        let today = PuzzleStore.localDayString()
+        return rows.filter { row in
+            guard let date = row.activeDate else { return true }
+            return date <= today
+        }
     }
 
     /// Grid has no bundled offline fallback (see protocol doc comment) — nil when the table
@@ -101,14 +119,46 @@ final class RemotePuzzleRepository: PuzzleRepository {
         return []
     }
 
-    /// Prefer the row minted for this exact UTC day (`active_date`, written by
-    /// tools/ingest/daily_puzzle.py) — every day gets its own genuinely new puzzle. Falls back
-    /// to the old modulo pick over the full ordered pool when no row matches today (a day
-    /// before this shipped, a missed Action run, or WhoAmI which never gets a dated row yet).
-    /// The `isCanonicalToday` flag on the result IS that match/fallback distinction — callers
+    /// The sport's membership relation, powering client-side board generation. Same shape as
+    /// `playerNameIndex` above — one sport-wide RPC, one array, a week of disk cache — because it
+    /// is the same kind of payload: rarely-changing reference data whose whole value is not
+    /// having to ask the server per board. Measured on the wire (gzipped): nfl 69 KB, nba 62 KB,
+    /// baseball 119 KB, soccer 254 KB, tennis 16 KB, versus 64 KB for a *single* NFL board.
+    ///
+    /// `contentDecoder`, not `JSONDecoder.supabase`: the payload is camelCase (`minYear`), and
+    /// the shared decoder's snake_case key strategy would fail to decode it silently — the exact
+    /// trap that made Grid content look like an empty pool once already.
+    private struct MembershipArgs: Encodable { let p_sport: String }
+    func gridMembershipIndex(for sport: Sport) async -> GridMembershipIndex? {
+        let key = "grid-memberships-\(sport.rawValue)"
+        if let entry = await DiskCache.read(GridMembershipIndex.self, key: key),
+           Date().timeIntervalSince(entry.writtenAt) < 7 * 24 * 3600, entry.value.isUsable {
+            return entry.value
+        }
+        if let data = try? await client.rpc("grid_membership_index",
+                                            args: MembershipArgs(p_sport: sport.rawValue)),
+           let index = try? contentDecoder.decode(GridMembershipIndex.self, from: data),
+           index.isUsable {
+            await DiskCache.write(index, key: key)
+            return index
+        }
+        // A stale index is still a complete, playable one — memberships are historical facts, so
+        // the only thing a week-old copy misses is the current season's new signings.
+        if let stale = await DiskCache.read(GridMembershipIndex.self, key: key), stale.value.isUsable {
+            return stale.value
+        }
+        return nil
+    }
+
+    /// Prefer the row minted for the device's *local* calendar day (`active_date`, written by
+    /// tools/ingest/daily_puzzle.py) — a fresh puzzle appears at the user's own midnight, and
+    /// the pipeline mints days ahead so that row already exists whatever the timezone. Falls
+    /// back to the old modulo pick over the full ordered pool when no row matches today (a day
+    /// before this shipped, a missed Action run, or a format/sport with no dated rows). The
+    /// `isCanonicalToday` flag on the result IS that match/fallback distinction — callers
     /// (the "TODAY" badge) must not claim freshness on the fallback branch.
     private func pick<T>(_ rows: [PuzzleContentRow<T>], date: Date) -> DailyPick<T> {
-        let today = PuzzleStore.todayUTCString(date)
+        let today = PuzzleStore.localDayString(date)
         if let match = rows.first(where: { $0.activeDate == today }) {
             return DailyPick(content: match.content, isCanonicalToday: true)
         }
@@ -117,21 +167,21 @@ final class RemotePuzzleRepository: PuzzleRepository {
     }
 
     /// Same shape as `PlayerSeasonCatalog`'s arcade-pool disk cache: a fresh copy skips the
-    /// network on every cold launch after the first. Freshness is "written today" rather than
-    /// a flat TTL — a new UTC day's daily puzzle row (`active_date`) only exists once the
-    /// ingest pipeline mints it, so a launch on a new day MUST refetch or `pick()` above would
-    /// never see today's row at all.
+    /// network on every cold launch after the first. Freshness is "holds today's dated row"
+    /// rather than a write-time TTL — the one thing a daily cache must guarantee is that
+    /// `pick()` above can find the row for the user's current local day.
     private func fetch<T: Codable>(format: String, filter: SportFilter, as type: T.Type) async -> [PuzzleContentRow<T>]? {
         let key = "puzzles-\(format)-\(filter.rawValue)"
-        let today = PuzzleStore.todayUTCString()
-        // A same-day cache only counts when it actually holds today's dated row. Written-today
-        // alone isn't enough: a launch BEFORE the day's ingest mints the row caches a pool
-        // without it, and `pick()` would then silently modulo-pick an old puzzle for the rest
-        // of the day (hit live 2026-07-17 — a morning launch pinned the Grid to July 8's
-        // board all day). Formats with no dated rows at all (WhoAmI today) refetch once per
-        // launch instead — small pools, and the stale-cache path still covers offline.
+        let today = PuzzleStore.localDayString()
+        // A cache counts only while it actually holds today's dated row. Age alone proves
+        // nothing either way: a same-day cache written BEFORE the day's row existed would pin
+        // the day to the modulo fallback (hit live 2026-07-17 — a morning launch pinned the
+        // Grid to July 8's board all day), while a cache written *yesterday* legitimately
+        // holds today's row, because the ingest pipeline mints days ahead — that's what makes
+        // the local-midnight rollover instant (and offline-tolerant) instead of a fetch race.
+        // Formats/sports with no dated row for today refetch per call instead — small pools,
+        // and the stale-cache path below still covers offline.
         if let entry = await DiskCache.read([PuzzleContentRow<T>].self, key: key),
-           PuzzleStore.todayUTCString(entry.writtenAt) == today,
            entry.value.contains(where: { $0.activeDate == today }) {
             #if DEBUG
             print("[puzzles] \(Date()) \(key): disk hit (today's row present)")

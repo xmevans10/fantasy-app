@@ -23,6 +23,7 @@ struct WhoAmIResultView: View {
                     scoreHeader.heroReveal(0)
                     if let rewards { RewardsRow(rewards: rewards).heroReveal(1) }
                     answerCard.heroReveal(2)
+                    shareRow.heroReveal(3)
                 }
                 .padding(16)
             }
@@ -85,6 +86,45 @@ struct WhoAmIResultView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Radius.card, style: .continuous).strokeBorder(Color.borderInk, lineWidth: 2))
+    }
+
+    /// Who Am I? shipped with **no share affordance at all** — a whole daily format contributing
+    /// nothing to the loop. It's also the format where a spoiler-free artifact matters most: the
+    /// answer is one name, so a result card would ruin the puzzle for every reader.
+    ///
+    /// The emoji row is clue *spend*, not correctness: ⬛ per clue burned, 🟩 on the one that got
+    /// it (nothing green at all means it was never solved). It says how close someone came
+    /// without leaking a single thing about who the player was.
+    static func emojiClues(result: WhoAmIScoring.Result, clueCount: Int) -> String {
+        let used = max(1, min(result.cluesUsed, clueCount))
+        return (1...clueCount).map { i -> String in
+            if result.solved && i == used { return "🟩" }
+            return i <= used ? "⬛" : "⬜"
+        }.joined()
+    }
+
+    static func shareText(puzzle: WhoAmIPuzzle, result: WhoAmIScoring.Result) -> String {
+        let headline = result.solved
+            ? "I got today's \(puzzle.sport.displayName) Who Am I? in \(result.cluesUsed) clue\(result.cluesUsed == 1 ? "" : "s")."
+            : "Today's \(puzzle.sport.displayName) Who Am I? beat me."
+        return ShareMessage.compose(
+            headline: headline,
+            board: emojiClues(result: result, clueCount: puzzle.clues.count),
+            detail: "\(ShareMessage.points(result.total)) pts — no spoilers, go find out who.",
+            campaign: "res_whoami_\(puzzle.sport.rawValue)")
+    }
+
+    private var shareRow: some View {
+        ShareLink(item: Self.shareText(puzzle: puzzle, result: result)) {
+            Label("SHARE (NO SPOILERS)", systemImage: "square.and.arrow.up").ctaLabel()
+        }
+        .buttonStyle(PrimePressStyle())
+        // ShareLink has no tap callback — a simultaneous gesture is the standard hook.
+        .simultaneousGesture(TapGesture().onEnded {
+            container.track(.shareTapped, AnalyticsEvent.shareProperties(
+                surface: "whoami_result", format: "whoami", artifact: .challengeText,
+                extra: ["sport": puzzle.sport.rawValue, "solved": String(result.solved)]))
+        })
     }
 
     private var doneBar: some View {

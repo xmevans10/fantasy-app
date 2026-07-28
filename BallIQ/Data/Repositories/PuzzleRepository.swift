@@ -31,18 +31,25 @@ protocol PuzzleRepository {
     /// sport-wide, never cell-scoped — a cell-filtered list would hand the player the answers.
     /// Empty when unavailable (local-only / offline): the Grid degrades to free-text entry.
     func playerNameIndex(for sport: Sport) async -> [String]
+    /// The sport's player → (team, year) membership relation, from which the client generates its
+    /// **own** practice boards (`GridLocalGenerator`) instead of re-serving the small minted pool.
+    /// Nil when unavailable — practice then falls back to `randomGridPuzzle`.
+    func gridMembershipIndex(for sport: Sport) async -> GridMembershipIndex?
     var availableSports: [Sport] { get }
 }
 
 extension PuzzleRepository {
     /// Default: no index (bundled/offline repos). Only `RemotePuzzleRepository` overrides it.
     func playerNameIndex(for sport: Sport) async -> [String] { [] }
+    /// Default: no membership index, same as above — a local-only session has no catalog to
+    /// build one from, and the Grid is server-only content there anyway.
+    func gridMembershipIndex(for sport: Sport) async -> GridMembershipIndex? { nil }
     /// Default: no pool. Grid content is server-only (see `gridPuzzle`), so every local/
     /// bundled repo correctly has nothing to draw a random board from.
     func randomGridPuzzle(for filter: SportFilter, excludingDate: String?) async -> GridPuzzle? { nil }
 }
 
-/// Loads bundled JSON; resolves the daily puzzle deterministically by UTC date.
+/// Loads bundled JSON; resolves the daily puzzle deterministically by the local calendar day.
 final class LocalPuzzleRepository: PuzzleRepository {
     private let keep4: [Keep4Puzzle]
     private let whoami: [WhoAmIPuzzle]
@@ -81,9 +88,9 @@ final class LocalPuzzleRepository: PuzzleRepository {
         return pool.filter { $0.sport == sport }
     }
 
-    /// Deterministic daily pick — same puzzle for everyone that day (reuses `PuzzleStore` seeding).
-    /// This IS the offline modulo path, never a genuinely-dated row, so it's always
-    /// `isCanonicalToday: false` — that's a truthful label here, not a regression.
+    /// Deterministic daily pick — same puzzle for everyone sharing a local calendar day
+    /// (reuses `PuzzleStore` seeding). This IS the offline modulo path, never a genuinely-dated
+    /// row, so it's always `isCanonicalToday: false` — a truthful label, not a regression.
     private func pick<P>(from pool: [P], date: Date) -> DailyPick<P>? {
         guard !pool.isEmpty else { return nil }
         return DailyPick(content: pool[PuzzleStore.dailyIndex(count: pool.count, date: date)],

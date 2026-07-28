@@ -69,7 +69,14 @@ struct PaywallView: View {
             // onAppear re-fires when the sheet returns to front (e.g. after Apple's purchase
             // sheet dismisses), which would double-count a single visit and inflate the top
             // of the funnel against the attempts below it.
-            .task { container.track(.paywallViewed, ["trigger": trigger.rawValue]) }
+            .task {
+                container.track(.paywallViewed, ["trigger": trigger.rawValue])
+                // Never trust the single launch-time fetch. If it lost a cold-start race the
+                // catalog is empty and every plan row is missing — which is precisely how
+                // 1.3 build 16 was rejected under Guideline 2.1(a). Opening the paywall is the
+                // exact moment the products are needed, so re-fetch here when we have none.
+                if container.products.isEmpty { await container.reloadProducts() }
+            }
         }
     }
 
@@ -119,10 +126,26 @@ struct PaywallView: View {
     private var plans: some View {
         VStack(spacing: 10) {
             if subscriptions.isEmpty {
-                Text(container.isLoadingProducts ? "Loading plans…" : "Plans unavailable right now.")
-                    .font(.body14)
-                    .foregroundStyle(Color.textMuted)
-                    .padding(.vertical, 8)
+                // A dead-end string was the whole failure mode here: no plans, no explanation,
+                // no way to try again. Give the state an action, so a transient store hiccup
+                // costs a tap instead of the entire session.
+                VStack(spacing: 10) {
+                    Text(container.isLoadingProducts
+                         ? "Loading plans…"
+                         : "Couldn't reach the App Store. Check your connection and try again.")
+                        .font(.body14)
+                        .foregroundStyle(Color.textMuted)
+                        .multilineTextAlignment(.center)
+                    if !container.isLoadingProducts {
+                        Button("Try again") {
+                            Task { await container.reloadProducts() }
+                        }
+                        .font(.custom(FontName.condBold, size: 15))
+                        .foregroundStyle(Color.accentText)
+                    }
+                }
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
             }
             ForEach(subscriptions, id: \.id) { product in
                 Button {

@@ -2257,12 +2257,12 @@
         }
       }
     },
-    "NEXT DAILY AT MIDNIGHT UTC" : {
+    "NEXT DAILY AT MIDNIGHT" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PRÓXIMO DIARIO A MEDIANOCHE UTC"
+            "value" : "PRÓXIMO DIARIO A MEDIANOCHE"
           }
         }
       }

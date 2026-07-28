@@ -267,8 +267,9 @@ enum DraftSpinConstraint {
         return placeable.count >= openRoles.count
     }
 
-    /// Daily Draft mode (backlog #4): every player who opens Daily Draft on the same UTC day
-    /// must see the identical round-1 (team, year) spin, so scores are comparable — seeded by
+    /// Daily Draft mode (backlog #4): every player who opens Daily Draft on the same calendar
+    /// day must see the identical round-1 (team, year) spin, so scores are comparable (local
+    /// day, Wordle-style — "the July 28 deal" is the same deal in every timezone) — seeded by
     /// day + round index only, no reroll dimension (Daily Draft has no reroll, see
     /// `DraftSpinView`). This resurrects the *seed shape* of the original date-seeded design
     /// (retired 2026-07-09 for free play — see git history on this file, commit a3916fc — free

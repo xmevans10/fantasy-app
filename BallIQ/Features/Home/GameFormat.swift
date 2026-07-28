@@ -28,7 +28,7 @@ struct GameFormat: Identifiable {
                    subtitle: "Daily + archive", tint: .voltFill, onTint: .onVolt),
         GameFormat(id: "draft", name: "Draft & Spin", symbol: "dice.fill", isPro: false, isPlayable: true, subtitle: "Arcade",
                    tint: .warningFill, onTint: .onWarning),
-        // No explicit subtitle: Over/Under's first run each UTC day is ranked (see
+        // No explicit subtitle: Over/Under's first run each local day is ranked (see
         // OverUnderGameView's `ranked` flag), so it takes the "Daily · Ranked" fallback —
         // the old "Arcade" label hid that it moves rating (user feedback 2026-07-17).
         GameFormat(id: "overunder", name: "Over / Under", symbol: "arrow.up.arrow.down", isPro: false, isPlayable: true,

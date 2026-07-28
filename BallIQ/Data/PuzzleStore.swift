@@ -24,31 +24,40 @@ final class PuzzleStore {
         }
     }
 
-    /// Day-of-year in UTC, used as the deterministic daily seed (brief: seed resolves at midnight UTC).
-    static func dayOfYearUTC(_ date: Date = Date()) -> Int {
+    /// Day-of-year in the device's local calendar day — the deterministic daily seed. Local
+    /// (not UTC) so the fallback pick below rotates at the same local midnight the canonical
+    /// `active_date` selection does; two different "today"s would make the daily appear to
+    /// change at 5pm one day and midnight the next.
+    static func localDayOfYear(_ date: Date = Date()) -> Int {
         var cal = Calendar(identifier: .gregorian)
-        cal.timeZone = TimeZone(identifier: "UTC")!
+        cal.timeZone = .current
         return cal.ordinality(of: .day, in: .year, for: date) ?? 1
     }
 
     /// Content-unavailability fallback: a deterministic index into a pool given a count and
-    /// date, same for all users that day. NOT the definition of "today's puzzle" — that's
-    /// `active_date` on the server row (see `RemotePuzzleRepository.pick`). This only stands
-    /// in when no row is actually minted for today (offline, a missed ingest run, or a format
-    /// with no dated rows yet), and callers must track that distinction (`DailyPick
-    /// .isCanonicalToday`) rather than assume a modulo pick is fresh content.
+    /// date. NOT the definition of "today's puzzle" — that's `active_date` on the server row
+    /// (see `RemotePuzzleRepository.pick`). This only stands in when no row is actually minted
+    /// for today (offline, a missed ingest run, or a format with no dated rows yet), and
+    /// callers must track that distinction (`DailyPick.isCanonicalToday`) rather than assume a
+    /// modulo pick is fresh content. Seeded by the *local* day, so users sharing a timezone
+    /// share the fallback pick and it rotates at their midnight.
     static func dailyIndex(count: Int, date: Date = Date()) -> Int {
         guard count > 0 else { return 0 }
-        return (dayOfYearUTC(date) - 1) % count
+        return (localDayOfYear(date) - 1) % count
     }
 
-    /// UTC calendar day as "yyyy-MM-dd" (matches Postgres `date` JSON serialization and the
-    /// UTC day the ingest pipeline stamps `active_date` with). Used to find *the* puzzle
-    /// minted for today, rather than a modulo pick that can land on any day's puzzle.
-    static func todayUTCString(_ date: Date = Date()) -> String {
+    /// The device's local calendar day as "yyyy-MM-dd" — THE day key for daily content. A new
+    /// puzzle appears at the user's own midnight (the ingest pipeline mints `active_date` rows
+    /// days ahead, so the row for any timezone's "today" already exists — see
+    /// .github/workflows/daily-puzzle.yml). Forced Gregorian + POSIX locale: the string must
+    /// byte-match Postgres `date` serialization, and a device set to a non-Gregorian calendar
+    /// or non-Latin digits would otherwise render a day string no server row can ever equal.
+    static func localDayString(_ date: Date = Date()) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(identifier: "UTC")!
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
         return formatter.string(from: date)
     }
 

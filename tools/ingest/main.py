@@ -548,6 +548,47 @@ def grid_dates(start: dt.date, days: int) -> list[str]:
     return [(start + dt.timedelta(days=n)).isoformat() for n in range(days)]
 
 
+def run_grid_axis_membership(sports: list[str], *, upsert: bool, dry_run: bool) -> int:
+    """Evaluate every stat/position axis against the live catalog and write the matches.
+
+    Standalone branch, same early-return posture as `--grid`: reads `player_seasons` directly and
+    skips the provider gather entirely. Rewriting is safe and idempotent — the upsert is
+    merge-duplicates on the full primary key, so a re-run after a threshold change adds the new
+    matches. It does NOT delete rows an edited threshold no longer matches; a retuned axis gets a
+    new `axis_key` (the key encodes op and value), so stale rows are unreachable rather than
+    wrong, and pruning them is a cleanup, not a correctness fix.
+    """
+    from . import grid_axis_membership
+    from .models import RawSeason
+    from .upsert import fetch_player_seasons, upsert_grid_axis_membership
+
+    load_dotenv()
+    total = 0
+    for sport in sports:
+        seasons = [
+            RawSeason(name=r["name"], team_abbr=r["team_abbr"], season_year=r["season_year"],
+                      sport=r["sport"], position=r["position"], stats=r.get("stats") or {},
+                      meta={"league": r.get("league") or ""})
+            for r in fetch_player_seasons(sport)
+        ]
+        rows = grid_axis_membership.membership_rows(seasons, sport)
+        axes = grid_axis_membership.axes_for(sport)
+        by_axis: dict[str, int] = {}
+        for row in rows:
+            by_axis[row["axis_label"]] = by_axis.get(row["axis_label"], 0) + 1
+        print(f"[grid-axes] {sport}: {len(axes)} axes, {len(rows)} (player, season) matches "
+              f"from {len(seasons)} rows")
+        for axis in axes:
+            print(f"[grid-axes]   {axis.kind:<8} {axis.label:<22} {by_axis.get(axis.label, 0)}")
+        if upsert:
+            sent = upsert_grid_axis_membership(rows)
+            print(f"[grid-axes] {sport}: upserted {sent} row(s)")
+        total += len(rows)
+    if dry_run and not upsert:
+        print(f"[grid-axes] --dry-run: {total} row(s) not written")
+    return 0
+
+
 def run_grid(sports: list[str], *, upsert: bool, dry_run: bool,
              start: dt.date | None = None, days: int = 2) -> int:
     """Generate Grid puzzles for each requested sport directly from the live `player_seasons`
@@ -748,6 +789,11 @@ def main() -> int:
     ap.add_argument("--grid-start", type=dt.date.fromisoformat, metavar="YYYY-MM-DD",
                     help="first day of the --grid-days window (default today, UTC). Backfilling "
                          "into the past deepens the pool without pre-committing future dailies")
+    ap.add_argument("--grid-axis-membership", nargs="+", metavar="SPORT",
+                    choices=["nfl", "nba", "baseball", "soccer", "tennis"],
+                    help="materialise which (player, season) pairs satisfy each stat/position "
+                         "axis into `grid_axis_membership` — the input the CLIENT needs to "
+                         "generate mixed practice boards (standalone; reads the live catalog)")
     ap.add_argument("--teams", action="store_true",
                     help="build (and, with --upsert, write) `teams` club identity rows "
                          "(logos rehosted to Storage, colors, full names) — standalone, "
@@ -774,6 +820,10 @@ def main() -> int:
     if args.grid:
         return run_grid(args.grid, upsert=args.upsert, dry_run=args.dry_run,
                         start=args.grid_start, days=args.grid_days)
+
+    if args.grid_axis_membership:
+        return run_grid_axis_membership(args.grid_axis_membership,
+                                        upsert=args.upsert, dry_run=args.dry_run)
 
     if args.teams or args.leagues:
         return run_teams(do_teams=args.teams, do_leagues=args.leagues,

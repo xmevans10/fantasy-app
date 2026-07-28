@@ -58,7 +58,7 @@ jobs:
       # minted board is immutable for its day, so there is no undo. Build 15 is the client that
       # can read them; it was submitted 2026-07-27 13:26 UTC and is still WAITING_FOR_REVIEW.
       # This cron would otherwise have pushed v2 boards to live users at the next 09:00 UTC run.
-      # See docs/BALLIQ_SPEC.md §9.2 and docs/grid-axes-research.md §9 (Gate 0).
+      # See docs/BALLIQ_SPEC.md §9.2 and docs/grid-axes-research.md §10 (Gate 0).
       #
       # To re-enable: delete this comment block and uncomment the line below. `baseball` is
       # added deliberately — it was missing, which is the whole reason baseball has exactly one

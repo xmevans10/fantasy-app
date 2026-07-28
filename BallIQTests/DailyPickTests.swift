@@ -2,8 +2,8 @@ import XCTest
 @testable import BallIQ
 
 /// Covers the match/fallback distinction `DailyPick.isCanonicalToday` exists for (2026-07-20):
-/// the TODAY badge must only show on a row actually minted for today's UTC date, never on a
-/// modulo-picked archive puzzle standing in for it. Network is faked with `MockURLProtocol`
+/// the TODAY badge must only show on a row actually minted for today's local calendar date,
+/// never on a modulo-picked archive puzzle standing in for it. Network is faked with `MockURLProtocol`
 /// (defined in `SupabaseClientTests.swift`), same as `DiskCacheTests`.
 @MainActor
 final class DailyPickTests: XCTestCase {
@@ -39,10 +39,10 @@ final class DailyPickTests: XCTestCase {
         (HTTPURLResponse(url: req.url!, statusCode: status, httpVersion: nil, headerFields: nil)!, Data(json.utf8))
     }
 
-    /// A row whose `active_date` matches today's UTC day must win, and be flagged canonical —
+    /// A row whose `active_date` matches today's local day must win, and be flagged canonical —
     /// this is the exact case the TODAY badge is allowed to trust.
     func testRemoteRowMatchingTodayIsCanonical() async {
-        let today = PuzzleStore.todayUTCString()
+        let today = PuzzleStore.localDayString()
         MockURLProtocol.handler = { req in
             self.respond(req, status: 200, json: """
             [{"content":{"id":"old","theme":"T","sport":"nfl","players":[]},"active_date":null},
@@ -81,6 +81,46 @@ final class DailyPickTests: XCTestCase {
 
         XCTAssertNotNil(pick, "the bundled fallback should still produce a puzzle")
         XCTAssertEqual(pick?.isCanonicalToday, false)
+    }
+
+    /// The archive must never list a puzzle that hasn't dropped yet. Since the mint gained a
+    /// 2-day lookahead (2026-07-28) the pool ALWAYS carries future-dated rows, so without this
+    /// filter a Pro subscriber could open Browse and play tomorrow's daily today — spoiling
+    /// the puzzle they'd be served tomorrow. Today's own row must still be present.
+    func testArchiveExcludesPuzzlesMintedForFutureDays() async {
+        let today = PuzzleStore.localDayString()
+        let tomorrow = PuzzleStore.localDayString(Date().addingTimeInterval(24 * 3600))
+        MockURLProtocol.handler = { req in
+            self.respond(req, status: 200, json: """
+            [{"content":{"id":"archive-old","theme":"T","sport":"nfl","players":[]},"active_date":"2020-01-01"},
+             {"content":{"id":"undated","theme":"T","sport":"nfl","players":[]},"active_date":null},
+             {"content":{"id":"today","theme":"T","sport":"nfl","players":[]},"active_date":"\(today)"},
+             {"content":{"id":"tomorrow","theme":"T","sport":"nfl","players":[]},"active_date":"\(tomorrow)"}]
+            """)
+        }
+        let repo = RemotePuzzleRepository(client: makeClient())
+        let ids = await repo.allKeep4(for: .all).map(\.id)
+
+        XCTAssertFalse(ids.contains("tomorrow"), "an unreleased puzzle must never reach the archive")
+        XCTAssertEqual(ids, ["archive-old", "undated", "today"])
+    }
+
+    /// The daily pick itself is unaffected by that filter — it reads the full pool, so a
+    /// future-dated row sitting in the cache can never hide today's canonical row.
+    func testFutureRowsDoNotDisturbTodaysPick() async {
+        let today = PuzzleStore.localDayString()
+        let tomorrow = PuzzleStore.localDayString(Date().addingTimeInterval(24 * 3600))
+        MockURLProtocol.handler = { req in
+            self.respond(req, status: 200, json: """
+            [{"content":{"id":"tomorrow","theme":"T","sport":"nfl","players":[]},"active_date":"\(tomorrow)"},
+             {"content":{"id":"today","theme":"T","sport":"nfl","players":[]},"active_date":"\(today)"}]
+            """)
+        }
+        let repo = RemotePuzzleRepository(client: makeClient())
+        let pick = await repo.keep4Puzzle(for: .all, date: Date())
+
+        XCTAssertEqual(pick?.content.id, "today")
+        XCTAssertEqual(pick?.isCanonicalToday, true)
     }
 
     /// `LocalPuzzleRepository` alone (the fully offline path) is always the modulo pick —

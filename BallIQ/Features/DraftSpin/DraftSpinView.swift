@@ -599,7 +599,7 @@ struct DraftSpinView: View {
         }
         // Only the day's FIRST Daily Draft completion becomes official; `recordIfFirst`'s own
         // return value is authoritative (re-derived here rather than trusting the guess made
-        // when the run started, in case the day flips over a UTC midnight mid-session).
+        // when the run started, in case the day flips over a local midnight mid-session).
         if isDailyDraft {
             isOfficialDailyDraftRun = dailyDraftStore.recordIfFirst(sport: sport, result: simulated, day: dailyDraftDay)
             // Push the locked-in official run (whether from this completion or an earlier one
