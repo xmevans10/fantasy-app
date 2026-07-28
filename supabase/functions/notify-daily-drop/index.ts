@@ -7,7 +7,7 @@
 // offset at registration, which drifts if the user travels. Good enough for a 9am-ish nudge.
 import { serviceClient } from "../_shared/supabase.ts";
 import { buildDailyDropPayload, sendApnsPush } from "../_shared/apns.ts";
-import { localDayString, localHour } from "../_shared/localtime.ts";
+import { candidateLocalDays, localDayString, localHour } from "../_shared/localtime.ts";
 
 const TARGET_LOCAL_HOUR = 9; // 9am
 
@@ -15,22 +15,28 @@ Deno.serve(async (_req) => {
   const sb = serviceClient();
   const nowMs = Date.now();
 
-  // Today's minted K4C4 themes, if daily-puzzle.yml has landed them — one row PER SPORT now
-  // (daily_puzzle.py mints every sport its own canonical pick), so this is a sport→theme map
-  // rather than a single shared theme. One lookup shared by every push this run, since all
-  // devices at 9am local share this same UTC instant (`active_date` is keyed by UTC day,
-  // same as the app's fetch).
-  const utcToday = new Date(nowMs).toISOString().slice(0, 10);
+  // The minted K4C4 themes, indexed by (day → sport → theme).
+  //
+  // Both dimensions are load-bearing. Sport, because daily_puzzle.py mints every sport its
+  // own canonical pick and a push naming a sport the user never plays is noise. Day, because
+  // the app resolves the daily by the DEVICE's local calendar day (2026-07-28 local-midnight
+  // rollover, `PuzzleStore.localDayString`) — this function used to fetch one UTC day's rows
+  // for every device on the theory that one instant is one day, which is false across a
+  // 26-hour offset range: at 9am local in Auckland the server's UTC clock still reads
+  // yesterday, so the push would have named yesterday's theme while the app showed today's.
+  // Three days is the complete set (see `candidateLocalDays`), and still one query.
+  const days = candidateLocalDays(nowMs);
   const { data: dailyRows } = await sb
-    .from("puzzles").select("sport, content").eq("format", "keep4").eq("active_date", utcToday);
-  const themesBySport = new Map<string, string>();
+    .from("puzzles").select("sport, content, active_date")
+    .eq("format", "keep4").in("active_date", days);
+  const themesByDay = new Map<string, Map<string, string>>();
   for (const row of dailyRows ?? []) {
     const theme = (row.content as { theme?: string } | undefined)?.theme;
-    if (theme) themesBySport.set(row.sport as string, theme);
+    if (!theme) continue;
+    const day = row.active_date as string;
+    if (!themesByDay.has(day)) themesByDay.set(day, new Map());
+    themesByDay.get(day)!.set(row.sport as string, theme);
   }
-  // Copy fallback when a user's sport can't be resolved: any minted theme beats a bare
-  // "new puzzles dropped" assertion, same reasoning as the original single-theme design.
-  const anyTheme = themesBySport.values().next().value ?? null;
 
   const { data: tokens } = await sb
     .from("device_tokens").select("user_id, token, utc_offset_minutes");
@@ -53,18 +59,25 @@ Deno.serve(async (_req) => {
     if (progress?.last_played_day === localToday) continue;
 
     // Lead with the user's own sport's theme when their profile declares one — with every
-    // sport minting daily, a generic theme could name a sport this user never plays.
+    // sport minting daily, a generic theme could name a sport this user never plays. Read
+    // from THIS device's local day (see the index comment above); the `anyTheme` fallback is
+    // likewise scoped to that day, so a push can never name a different day's puzzle. With
+    // no themes for the day at all, `null` degrades to the generic drop copy.
+    const themesBySport = themesByDay.get(localToday);
     const { data: profile } = await sb
       .from("profiles").select("primary_sport").eq("id", t.user_id).maybeSingle();
-    const theme = (profile?.primary_sport && themesBySport.get(profile.primary_sport)) || anyTheme;
+    const theme = (profile?.primary_sport && themesBySport?.get(profile.primary_sport)) ||
+      themesBySport?.values().next().value || null;
 
     await sendApnsPush(t.token, buildDailyDropPayload(theme))
       .catch((e) => console.error("push failed", e));
     sent++;
   }
 
-  console.log(`[daily-drop] themes=${themesBySport.size} checked=${tokens?.length ?? 0} sent=${sent}`);
-  return new Response(JSON.stringify({ checked: tokens?.length ?? 0, sent, themes: themesBySport.size }), {
+  const themeCount = [...themesByDay.values()].reduce((n, m) => n + m.size, 0);
+  console.log(`[daily-drop] days=${days.join(",")} themes=${themeCount} ` +
+    `checked=${tokens?.length ?? 0} sent=${sent}`);
+  return new Response(JSON.stringify({ checked: tokens?.length ?? 0, sent, themes: themeCount }), {
     headers: { "Content-Type": "application/json" },
   });
 });

@@ -13,7 +13,20 @@ export function localHour(utcOffsetMinutes: number, nowMs: number): number {
 }
 
 /** The device's local calendar day ("yyyy-MM-dd") at `nowMs` — the same string the app
- * stores in `progress.last_played_day`. */
+ * stores in `progress.last_played_day`, and (since 2026-07-28) the same day the app resolves
+ * daily puzzle content by (`PuzzleStore.localDayString` → `active_date`). */
 export function localDayString(utcOffsetMinutes: number, nowMs: number): string {
   return new Date(nowMs + utcOffsetMinutes * 60_000).toISOString().slice(0, 10);
+}
+
+/** Every calendar day that some device could be calling "today" at `nowMs`, ascending.
+ *
+ * A cron function handles all timezones in ONE invocation, but real device offsets span
+ * UTC-12…UTC+14 — a 26-hour spread, so at any instant devices straddle at most three
+ * calendar days. Content keyed by day (`puzzles.active_date`) therefore has to be fetched
+ * for all three and then selected per device via `localDayString`; using the server's own
+ * UTC day for everyone is the bug this exists to prevent. */
+export function candidateLocalDays(nowMs: number): string[] {
+  const day = 86_400_000;
+  return [-day, 0, day].map((delta) => new Date(nowMs + delta).toISOString().slice(0, 10));
 }
