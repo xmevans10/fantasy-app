@@ -24,12 +24,34 @@ final class StoreService: ObservableObject {
 
     private var updateListenerTask: Task<Void, Never>?
 
+    /// How many times `loadProducts` has actually asked the store. Test-visible so the retry
+    /// policy can be asserted on directly rather than inferred from the resulting catalog.
+    private(set) var productFetchAttempts = 0
+
     init() {
         updateListenerTask = listenForTransactionUpdates()
         Task { [weak self] in
             await self?.loadProducts()
             await self?.refreshEntitlements()
         }
+    }
+
+    /// Test-only init: no transaction listener, no launch fetch, and a stubbed catalog fetch.
+    /// The retry policy is the thing that was broken and got the build rejected, so it needs to
+    /// be assertable without a live StoreKit — `Product` itself can't be constructed in a unit
+    /// test, which is exactly why the original single-shot `try?` went unnoticed.
+    init(fetchStub: @escaping ([String]) async throws -> [Product]) {
+        self.fetchProducts = fetchStub
+        self.retryDelays = [0, 0]   // don't make the suite sit through real backoff
+    }
+
+    /// Pause before each retry. Two entries because there are three attempts.
+    private var retryDelays: [UInt64] = [500_000_000, 1_500_000_000]
+
+    /// Seam over `Product.products(for:)`. Production uses the real call; tests substitute a
+    /// closure that can fail, return empty, or succeed on the Nth attempt.
+    private var fetchProducts: ([String]) async throws -> [Product] = { ids in
+        try await Product.products(for: ids)
     }
 
     deinit { updateListenerTask?.cancel() }
@@ -60,7 +82,8 @@ final class StoreService: ObservableObject {
         // grinding against a genuine outage.
         for attempt in 0..<3 {
             do {
-                let fetched = try await Product.products(for: ids)
+                productFetchAttempts += 1
+                let fetched = try await fetchProducts(ids)
                 // An empty result is NOT success. StoreKit returns [] for unknown ids, which is
                 // also what a not-yet-propagated App Store Connect product looks like — worth
                 // another attempt rather than caching the empty answer for the session.
@@ -72,8 +95,8 @@ final class StoreService: ObservableObject {
             } catch {
                 // Swallowed deliberately, but only after the retries are exhausted below.
             }
-            if attempt < 2 {
-                try? await Task.sleep(nanoseconds: attempt == 0 ? 500_000_000 : 1_500_000_000)
+            if attempt < retryDelays.count, retryDelays[attempt] > 0 {
+                try? await Task.sleep(nanoseconds: retryDelays[attempt])
             }
         }
         productLoadFailed = true
