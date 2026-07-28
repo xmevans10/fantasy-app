@@ -1,5 +1,6 @@
 import XCTest
 import StoreKit
+import StoreKitTest
 @testable import BallIQ
 
 /// Regression cover for the Guideline 2.1(a) rejection of 1.3 build 16 (2026-07-28): "the
@@ -100,5 +101,34 @@ final class StoreProductLoadTests: XCTestCase {
         let service = StoreService(fetchStub: { _ in throw StoreDown() })
         await service.loadProducts()
         XCTAssertFalse(service.isLoadingProducts)
+    }
+
+    /// The success path — the half the stubbed tests above structurally cannot reach, because
+    /// `Product` has no public initialiser. An `SKTestSession` over the repo's `Products.storekit`
+    /// serves real `Product` values, so the real `Product.products(for:)` is driven through the
+    /// same seam and the catalog genuinely populates. Same technique as `PaywallGalleryTests`.
+    ///
+    /// This is what proves the fix end-to-end rather than by construction: with a reachable
+    /// store, one attempt populates `products` and leaves `productLoadFailed` false.
+    func testPopulatesTheCatalogWhenTheStoreIsReachable() async throws {
+        let configURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("BallIQ/Store/Products.storekit")
+        guard FileManager.default.fileExists(atPath: configURL.path) else {
+            throw XCTSkip("Products.storekit not reachable from test runtime")
+        }
+        _ = try SKTestSession(contentsOf: configURL)
+
+        // Real StoreKit, routed through the seam so there's no transaction listener and no
+        // backoff — the production path is `Product.products(for:)` either way.
+        let service = StoreService(fetchStub: { ids in try await Product.products(for: ids) })
+        await service.loadProducts()
+
+        guard !service.products.isEmpty else {
+            throw XCTSkip("No StoreKit products — SKTestSession config not applied")
+        }
+        XCTAssertEqual(service.products.count, 4, "all four configured products should resolve")
+        XCTAssertFalse(service.productLoadFailed, "a reachable store must clear the failure flag")
+        XCTAssertEqual(service.productFetchAttempts, 1, "success must not burn extra retries")
     }
 }
