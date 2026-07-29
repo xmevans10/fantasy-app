@@ -282,38 +282,55 @@ struct PaywallView: View {
     @ViewBuilder
     private var packSection: some View {
         if !packs.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
                 Text("Just want one format? Unlock it forever.")
                     .font(.label12)
                     .foregroundStyle(Color.textMuted)
+                    .padding(.horizontal, 4)
+                // One card per pack. Stacked as rows inside a single shared card they read as a
+                // list of line items rather than as two separate things you can buy — and the
+                // only thing distinguishing them was a product name.
                 ForEach(packs, id: \.id) { product in
-                    Button {
-                        Task { await buy(product) }
-                    } label: {
-                        HStack {
-                            Text(product.displayName.uppercased())
-                                .font(.heading)
-                                .foregroundStyle(Color.textPrimary)
-                            Spacer()
-                            if purchasingID == product.id {
-                                ProgressView().tint(Color.textPrimary)
-                            } else {
-                                Text(product.displayPrice)
-                                    .font(.label12)
-                                    .foregroundStyle(Color.proText)
-                            }
-                        }
-                        .padding(.vertical, 6)
+                    packRow(product)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func packRow(_ product: Product) -> some View {
+        Button {
+            Task { await buy(product) }
+        } label: {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(product.displayName.uppercased())
+                        .font(.heading)
+                        .foregroundStyle(Color.textPrimary)
+                        .multilineTextAlignment(.leading)
+                    if let blurb = StoreProduct(rawValue: product.id)?.packBlurb {
+                        Text(blurb)
+                            .font(.label12)
+                            .foregroundStyle(Color.textMuted)
+                            .multilineTextAlignment(.leading)
                     }
-                    .buttonStyle(PrimePressStyle())
-                    .disabled(purchasingID != nil)
-                    .accessibilityLabel("\(product.displayName), \(product.displayPrice)")
+                }
+                Spacer(minLength: 8)
+                if purchasingID == product.id {
+                    ProgressView().tint(Color.proText)
+                } else {
+                    Text(product.displayPrice)
+                        .font(.display(20))
+                        .foregroundStyle(Color.proText)
                 }
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .cardSurface()
         }
+        .buttonStyle(PrimePressStyle())
+        .disabled(purchasingID != nil)
+        .accessibilityLabel("\(product.displayName), \(product.displayPrice)")
     }
 
     private var restoreButton: some View {

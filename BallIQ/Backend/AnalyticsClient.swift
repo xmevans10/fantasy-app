@@ -94,6 +94,7 @@ extension AnalyticsEvent {
 enum PaywallTrigger: String {
     case sportPicker      = "sport_picker"       // a Pro-locked sport chip on a setup screen
     case grid             = "grid"               // The Grid (Pro-only format)
+    case draftSpin        = "draft_spin"         // Draft & Spin (Pro, admin, or the pack)
     case hardMode         = "hard_mode"          // Keep4 hard mode
     case archive          = "archive"            // Browse / full archive
     case overUnderLives   = "over_under_lives"   // out of Over/Under lives

@@ -52,8 +52,14 @@ struct HomeView: View {
     private let gridColumns = [GridItem(.flexible(), spacing: 12),
                                GridItem(.flexible(), spacing: 12)]
 
-    /// Sport whose rating the rank widget shows (selected filter, else NFL).
-    private var rankSport: Sport { container.sportFilter.sport ?? .nfl }
+    /// Sport whose rating the rank widget shows — tracks the pager's visible page
+    /// (`dailyPage`), not `container.sportFilter`. The section sits directly beneath the
+    /// daily-games pager (2026-07-17) precisely so it reads as describing whichever cards are
+    /// on screen; following the global filter instead left it stuck on the last sport chosen
+    /// on a setup screen, so swiping the pager to NBA could leave the widget reading "MLB
+    /// RATING" (verified on a user's screen recording, 2026-07-29). `dailyPage` itself still
+    /// never writes back into `sportFilter` — see `body`'s 2026-07-09 note — this only reads it.
+    private var rankSport: Sport { dailyPage }
 
     /// nil when the puzzle hasn't loaded (or failed to) — kept distinct from `false` so a
     /// load failure never gets counted as "completed" by `HomeDailyLoop`. Tracks whichever
@@ -89,7 +95,7 @@ struct HomeView: View {
                                 DailyLoopCountdownCard(streak: container.streak,
                                                        arcadeFormats: GameFormat.arcade,
                                                        launch: launch,
-                                                       launchDailyDraft: { showDailyDraft = true })
+                                                       launchDailyDraft: { launchDraftSpin(daily: true) })
                             }
                             // Still visible (tapping either reopens today's result/recap, same
                             // as before) but visually secondary once the countdown card above
@@ -344,12 +350,25 @@ struct HomeView: View {
         case "whoami": showWhoAmIHub = true
         case "versus": selectedTab = 2
         case "overunder": showOverUnder = true
-        case "draft": showDraftSpin = true
+        case "draft": launchDraftSpin(daily: false)
         case "grid":
             if container.entitlements.canPlayGrid() { showGrid = true }
             else { paywallTrigger = .grid; showPaywall = true }
         default: break
         }
+    }
+
+    /// The $1.99 draft-spin pack (or Pro/admin) gate, mirroring `canPlayGrid()`'s enforcement
+    /// exactly — `canPlayDraftSpin()` existed on `Entitlements` but was never called anywhere,
+    /// which meant the pack unlocked nothing. Covers both entry points (the formats-grid tile
+    /// and the daily-loop countdown card's Daily Draft row) so neither walks past the paywall.
+    private func launchDraftSpin(daily: Bool) {
+        guard container.entitlements.canPlayDraftSpin() else {
+            paywallTrigger = .draftSpin
+            showPaywall = true
+            return
+        }
+        if daily { showDailyDraft = true } else { showDraftSpin = true }
     }
 
     /// Lands the pager on the last-played sport and makes sure that page's dailies are ready

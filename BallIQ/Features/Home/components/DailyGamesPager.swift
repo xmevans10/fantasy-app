@@ -17,6 +17,21 @@ struct DailyGamesPager<Page: View>: View {
     @Binding var selection: Sport
     @ViewBuilder let page: (Sport) -> Page
 
+    /// Tallest page measured so far, used as a floor for every page.
+    ///
+    /// The cross-axis freedom described above has a cost the original version paid in full:
+    /// pages are genuinely different heights (a theme title that wraps to two lines, an extra
+    /// badge row, a description), so the scroll view's own height changed on every swipe and
+    /// **everything below the pager — the whole "Your rank" section and the rows under it —
+    /// jumped up and down as the user browsed sports.** Reported from a device recording
+    /// 2026-07-29.
+    ///
+    /// Holding the max rather than the current page's height means a swipe can only ever
+    /// reveal whitespace under a shorter page, never reflow the page around it. It's a floor,
+    /// not a fixed height, so a page taller than anything seen so far still grows — and
+    /// because it only ever increases, it can't oscillate.
+    @State private var tallestPage: CGFloat = 0
+
     var body: some View {
         VStack(spacing: 10) {
             ScrollView(.horizontal) {
@@ -26,6 +41,12 @@ struct DailyGamesPager<Page: View>: View {
                             // One page = exactly the scroll viewport's width, so a swipe
                             // always lands on a whole sport's pair, never a partial peek.
                             .containerRelativeFrame(.horizontal)
+                            // Measured BEFORE the frame below is applied, so this reports the
+                            // page's natural height. Measuring after would just echo back the
+                            // height we imposed — the same circular fixed point that ruled out
+                            // `TabView(.page)` in the first place.
+                            .background(heightProbe)
+                            .frame(minHeight: tallestPage > 0 ? tallestPage : nil, alignment: .top)
                             .id(sport)
                     }
                 }
@@ -34,8 +55,19 @@ struct DailyGamesPager<Page: View>: View {
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: scrollBinding)
             .scrollIndicators(.hidden)
+            .onPreferenceChange(PageHeightKey.self) { height in
+                // Lazy pages are realized as they scroll in, so the floor settles over the
+                // first pass through the sports rather than being known up front.
+                if height > tallestPage { tallestPage = height }
+            }
 
             indicator
+        }
+    }
+
+    private var heightProbe: some View {
+        GeometryReader { proxy in
+            Color.clear.preference(key: PageHeightKey.self, value: proxy.size.height)
         }
     }
 
@@ -61,5 +93,14 @@ struct DailyGamesPager<Page: View>: View {
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.85), value: selection)
         .accessibilityHidden(true)   // the cards' own content already announces the sport
+    }
+}
+
+/// Max rather than "last one wins": several pages are realized at once while a swipe is in
+/// flight, and the reduce has to settle on the tallest of them, not on whichever reported last.
+private struct PageHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }

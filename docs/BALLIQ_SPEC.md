@@ -444,6 +444,48 @@ until it is approved, because non-classic boards have no legacy fallback and min
 immutable for their day. Cost of the cancel: 1.2's Guideline 3.1.2(c) EULA fix lost its queue
 position and restarts review.
 
+**1.3 double rejection → build 18 (2026-07-29):** Apple rejected 1.3 **twice in two days** on
+the same paywall symptom, plus a new citation. Submission `5aba5f5d`, now `UNRESOLVED_ISSUES`.
+
+*Guideline 2.1(a) "The plans did not load".* Build 16 was rejected 2026-07-28 for this; build 17's
+fix went into `StoreService.loadProducts()` (a genuine bug — single-shot `try?`, no retry) and
+**missed the actual cause, so build 17 was rejected again for the identical symptom.** The real
+cause was in [RepositoryContainer.swift](../BallIQ/RepositoryContainer.swift): `products` /
+`isLoadingProducts` / `productLoadFailed` were computed passthroughs to `StoreService`, a
+*separate* `ObservableObject`, while the container subscribed only to `store.$entitlements`.
+SwiftUI does not forward a nested observable's changes, so a catalog arriving **while the paywall
+was on screen** never fired `container.objectWillChange` — the body was never re-evaluated, the
+plans never rendered, and "Try again" was inert. It only bites on a cold, fresh install where the
+launch fetch loses its race: a reviewer's device, never a developer's. Fixed by mirroring
+`store.$products` / `$productLoadState` into stored `@Published` state (the pattern the container
+already used for `$entitlements`), plus a `ProductLoadState` enum so the first frame is "Loading
+plans…" rather than an error about a request nobody had made. **Server side was verified clean via
+the ASC API before touching code** — all four products `IN_REVIEW`, priced in 175 territories
+incl. USA, and the `.storekit` config bound only to the scheme's Debug LaunchAction, never the
+archive. ⚠️ **Root-cause lesson:** the existing tests couldn't catch this —
+`StoreProductLoadTests` only ever touches a bare `StoreService`, and `PaywallGalleryTests` loads
+products *before* creating the view, so the one broken path was the only untested one. New
+`PaywallProductObservationTests` renders the paywall against an **empty** container and asserts
+the frame changes when the catalog arrives; it was confirmed red on the pre-fix container first.
+
+*Guideline 5.1.1(v) — no account deletion.* The app creates real accounts (Apple, Google) and had
+no deletion path at all. Added `delete_own_account()` (`security definer`, keyed on `auth.uid()`
+so nothing can be forged, `search_path` pinned, execute revoked from `anon`), called through the
+existing `SupabaseClient.rpc()` — no new plumbing, no edge-function deploy. Two traps found by
+testing against production rather than reasoning: (a) `versus_challenges.winner_id` was `NO
+ACTION`, so deleting anyone who had ever **won** a Versus challenge failed on the FK — now `ON
+DELETE SET NULL`; (b) Supabase's `storage.protect_delete` trigger rejects direct deletes from
+`storage.objects` (it orphans the file), so a first cut that removed the avatar row there failed
+with 42501 and took the whole deletion down with it — the client now removes the avatar via the
+Storage API instead. Proven end-to-end on a throwaway account seeded across
+ratings/progress/entitlements/community_puzzles/friends/events + a won challenge: RPC 204, every
+row gone, `events` anonymised to null rather than deleted, opponent untouched, `anon` rejected.
+Apple's `authorizationCode` is now captured at sign-in (previously discarded) so a later build can
+revoke the Apple token server-side without another round of auth plumbing.
+**Manual steps remaining (both UI-only, no ASC REST API):** the Resolution Center reply, and the
+**screen recording of the deletion flow on a physical device** that Apple explicitly demanded in
+the App Review Information notes — submitting without it invites a third rejection.
+
 **Open items / hand-offs**
 1. ~~M5 monetization fully unstarted / M14 Spanish~~ — stale: M5 Phases A–E, M14 Spanish, and
    ~~Phase F rating seasons~~ (**shipped 2026-07-20**, roadmap v1.4) are all done. The only
