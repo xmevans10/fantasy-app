@@ -20,6 +20,13 @@ enum AnalyticsEvent: String {
     /// different surfaces present the paywall; without this they're indistinguishable, and
     /// "which gate actually sells Pro" is the first question worth asking of this data.
     case paywallViewed         = "paywall_viewed"
+    /// The StoreKit catalog failed to load. Carries `reason` (the throw's description, or
+    /// "store returned no products" — opposite diagnoses) and `receipt`
+    /// (`sandbox`/`production`/`none`, which says whether this was TestFlight/review or the
+    /// live App Store). Logged because the DEBUG-only on-screen diagnostic is invisible in
+    /// exactly the builds that matter: a Release archive is what App Review runs, and 1.3 was
+    /// rejected twice for a paywall with no plans without us ever seeing why from the outside.
+    case productLoadFailed     = "product_load_failed"
     case purchaseAttempted     = "purchase_attempted"
     /// Carries `reason`: `cancelled` (StoreKit returned without a transaction — usually the
     /// user dismissing Apple's sheet) or `error` (the purchase threw). Distinguishing them

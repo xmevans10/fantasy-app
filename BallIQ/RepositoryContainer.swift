@@ -122,7 +122,13 @@ final class RepositoryContainer: ObservableObject {
             .sink { [weak self] in self?.products = $0 }
             .store(in: &storeCancellables)
         self.store.$productLoadState
-            .sink { [weak self] in self?.productLoadState = $0 }
+            .sink { [weak self] state in
+                guard let self else { return }
+                let wasFailed = self.productLoadState == .failed
+                self.productLoadState = state
+                // Only on the transition into `.failed`, so a retry loop doesn't spam the table.
+                if state == .failed, !wasFailed { self.reportProductLoadFailure() }
+            }
             .store(in: &storeCancellables)
         self.store.$lastLoadDiagnostic
             .sink { [weak self] in self?.productLoadDiagnostic = $0 }
@@ -580,6 +586,25 @@ final class RepositoryContainer: ObservableObject {
     /// existed that left the paywall permanently empty for the session (the Guideline 2.1(a)
     /// rejection of 1.3 build 16 — see `StoreService.loadProducts`).
     func reloadProducts() async { await store.loadProducts() }
+
+    /// Records WHY the catalog failed, so a paywall with no plans is diagnosable from the
+    /// outside. `receipt` distinguishes a TestFlight/App-Review run (`sandbox`) from the live
+    /// store (`production`) and from a build that has no receipt at all (`none`) — a
+    /// development build installed from Xcode, where a local `.storekit` configuration may be
+    /// standing in for the App Store and a failure means something entirely different.
+    private func reportProductLoadFailure() {
+        let receipt: String
+        switch Bundle.main.appStoreReceiptURL?.lastPathComponent {
+        case "sandboxReceipt": receipt = "sandbox"
+        case .some(let name) where !name.isEmpty: receipt = "production"
+        default: receipt = "none"
+        }
+        track(.productLoadFailed, [
+            "reason": store.lastLoadDiagnostic ?? "unknown",
+            "receipt": receipt,
+            "attempts": String(store.productFetchAttempts),
+        ])
+    }
 
     @discardableResult
     func purchase(_ product: Product) async throws -> Bool {
