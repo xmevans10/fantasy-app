@@ -15,37 +15,49 @@ struct DailyLoopCountdownCard: View {
     /// that's itself a shared daily, so it gets its own billing above the free-play arcade row.
     var launchDailyDraft: (() -> Void)? = nil
 
+    @State private var dailyDraftDismissed = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             countdownBlock
-            if launchDailyDraft != nil { dailyDraftRow }
+            if launchDailyDraft != nil, !dailyDraftDismissed { dailyDraftRow }
             arcadeNudge
         }
     }
 
     private var dailyDraftRow: some View {
-        Button {
-            launchDailyDraft?()
-            Haptics.tap()
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: "dice.fill")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(Color.accentText)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Daily Draft").font(.title).foregroundStyle(Color.textPrimary)
-                    Text("TODAY'S SHARED SPINS · ONE OFFICIAL RUN")
-                        .font(.label11).foregroundStyle(Color.textMuted)
+        HStack(spacing: 0) {
+            Button {
+                launchDailyDraft?()
+                Haptics.tap()
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "dice.fill")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(Color.accentText)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Daily Draft").font(.title).foregroundStyle(Color.textPrimary)
+                        Text("TODAY'S SHARED SPINS · ONE OFFICIAL RUN")
+                            .font(.label11).foregroundStyle(Color.textMuted)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)
                 }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity)
-            .cardSurface()
+            .buttonStyle(PrimePressStyle())
+            Button {
+                withAnimation(Motion.easeOut) { dailyDraftDismissed = true }
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color.textMuted)
+                    .padding(.leading, 10)
+            }
         }
-        .buttonStyle(PrimePressStyle())
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .cardSurface()
     }
 
     private var countdownBlock: some View {

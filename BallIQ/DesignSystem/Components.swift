@@ -13,28 +13,13 @@ struct LowerThirdHeader: View {
         Text(title)
             .font(.heading)
             .textCase(.uppercase)
-            // Near-black ink, and it stays legible across the whole sweep because every stop in
-            // `Foil.rainbow` sits at full brightness — there is no dark hue for it to fight.
-            .foregroundStyle(Color.onGold)
+            .foregroundStyle(Color.onAccent)
             .padding(.horizontal, 12)
             .padding(.top, 5).padding(.bottom, 9)
             .background(
                 ZStack {
                     DiagonalBlock(cut: 8).fill(Color.borderInk).offset(x: 3, y: 3)
-                    // The still spectrum underneath is not redundant: `.foil` draws nothing at
-                    // all under Reduce Motion, so without this the banner would vanish there.
-                    DiagonalBlock(cut: 8).fill(Foil.staticRainbow)
-                        // Full-spectrum, not a tint over gold (user call, 2026-07-28):
-                        // `.surface` makes the rainbow the banner's own colour. The earlier
-                        // `.sheen` default blended `.overlay` onto `goldFill`, and overlay
-                        // preserves the base hue by construction — which is exactly why it read
-                        // as gold with a faint iridescence rather than as a rainbow.
-                        //
-                        // Applied to the background SHAPE, not to the labelled view: `Foil` is
-                        // an `.overlay`, so at `.surface`'s full opacity it paints over whatever
-                        // it modifies — hung on the `Text` (where `.sheen` sat harmlessly) it
-                        // erases the title outright.
-                        .foil(active: true, style: .surface, in: DiagonalBlock(cut: 8))
+                    DiagonalBlock(cut: 8).fill(Color.accentFill)
                 }
             )
     }

@@ -28,7 +28,6 @@
 				Backend/Supabase.example.plist,
 				DesignSystem/DESIGN.md,
 				Info.plist,
-				Store/Products.storekit,
 				ThirdParty/ConfettiSwiftUI/LICENSE,
 			);
 			target = 1A0000000000000000000008 /* BallIQ */;

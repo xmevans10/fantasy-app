@@ -38,18 +38,6 @@ struct DailyGameCard: View {
     /// the header) never overlaps the rest of the card's tap area.
     var secondaryAction: (() -> Void)? = nil
 
-    /// Floor for the title's height, in whole `.title`-font lines — every daily card in a
-    /// sport pager reserves the same two lines up front so a one-line theme ("Multi-homer
-    /// games") renders the same overall card height as a two-line one ("2010s Day-3 TE
-    /// steals (round 5+)") without the pager's cross-axis height jumping per swipe. Derived
-    /// from the real font's `lineHeight` (not a guessed point value) so it tracks both a
-    /// font swap and Dynamic Type; `@ScaledMetric` then keeps it responsive to Dynamic Type
-    /// changes after this initial measurement the same way `Font.title`'s own `relativeTo:
-    /// .title` scaling does. A title that genuinely needs 3 lines still grows past this —
-    /// it's a minimum, not a cap (see `Text(title)`'s lack of a `lineLimit`).
-    @ScaledMetric(relativeTo: .title) private var minTitleHeight: CGFloat =
-        2 * (UIFont(name: FontName.condBlack, size: 22) ?? .systemFont(ofSize: 22, weight: .black)).lineHeight
-
     /// "TODAY · SAT, JUL 19" — the device-local calendar date, which since the local-midnight
     /// rollover (2026-07-28) is also exactly the day the `active_date` pick is keyed on.
     static var todayDateBadge: String {
@@ -125,12 +113,6 @@ struct DailyGameCard: View {
                             .foregroundStyle(Color.textPrimary)
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)
-                            // Bottom-anchored: a short one-line title gains breathing room
-                            // above it (between the header band and the text) instead of
-                            // opening a gap below it before the subtitle — keeps title and
-                            // subtitle visually glued together the way they read when the
-                            // title genuinely wraps to two lines.
-                            .frame(minHeight: minTitleHeight, alignment: .bottomLeading)
                         Text(subtitle.uppercased())
                             .font(.label11)
                             .foregroundStyle(Color.textMuted)
@@ -226,30 +208,20 @@ struct DailyGameCard: View {
 /// from its content, and a layout that lies about how tall it is makes the whole page jump.
 /// Deliberately never truncates or drops a subview: the badges are the card's metadata, and
 /// hiding one to save a row would be the bug this replaced, in a new costume.
+///
+/// Sizes to exactly the rows the chips need. An earlier version reserved a second row so every
+/// card came out the same height, which did stabilise the pager but left a band of empty header
+/// on lighter cards — height uniformity belongs to the pager's own floor
+/// (`DailyGamesPager.tallestPage`), one level up, not to every card individually.
 private struct ChipFlow: Layout {
     var spacing: CGFloat = 6
     var rowSpacing: CGFloat = 6
-    /// Rows to reserve even when the chips need fewer.
-    ///
-    /// Wrapping fixed the clipping but handed the height variance to a new owner: chip count
-    /// varies by format (Keep4 carries scoring + grain + your-team badges, Who Am I? doesn't),
-    /// so at 375pt a six-chip card wrapped to two rows while a three-chip card used one —
-    /// measured as a 29.33pt difference, which is exactly one row, and which the pager would
-    /// have turned straight back into the swipe-jump this was meant to cure. Reserving the row
-    /// costs a band of empty header on lighter cards and buys a card whose height doesn't
-    /// depend on which badges happen to apply today.
-    var minRows: Int = 2
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let maxWidth = proposal.width ?? .infinity
         let rows = layout(subviews, maxWidth: maxWidth)
-        let tallestRow = rows.map(\.height).max() ?? 0
-        let rowCount = max(rows.count, minRows)
-        // Pad with the tallest measured row rather than a guessed constant, so a Dynamic Type
-        // bump grows the reserved row by exactly as much as it grows a real one.
         let height = rows.reduce(0) { $0 + $1.height }
-            + tallestRow * CGFloat(rowCount - rows.count)
-            + rowSpacing * CGFloat(max(0, rowCount - 1))
+            + rowSpacing * CGFloat(max(0, rows.count - 1))
         // Report the widest row, not the proposal: a single short chip shouldn't claim the
         // full width and push the header's trailing content around.
         let width = rows.map(\.width).max() ?? 0

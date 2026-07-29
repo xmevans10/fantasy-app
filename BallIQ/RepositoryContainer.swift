@@ -81,6 +81,8 @@ final class RepositoryContainer: ObservableObject {
     /// `PaywallProductObservationTests`.
     @Published private(set) var products: [Product] = []
     @Published private(set) var productLoadState: ProductLoadState = .idle
+    /// Diagnosis for a failed catalog load — shown on the paywall in DEBUG builds only.
+    @Published private(set) var productLoadDiagnostic: String?
     @Published var sportFilter: SportFilter {
         didSet { UserDefaults.standard.set(sportFilter.rawValue, forKey: "sportFilter") }
     }
@@ -121,6 +123,9 @@ final class RepositoryContainer: ObservableObject {
             .store(in: &storeCancellables)
         self.store.$productLoadState
             .sink { [weak self] in self?.productLoadState = $0 }
+            .store(in: &storeCancellables)
+        self.store.$lastLoadDiagnostic
+            .sink { [weak self] in self?.productLoadDiagnostic = $0 }
             .store(in: &storeCancellables)
     }
 

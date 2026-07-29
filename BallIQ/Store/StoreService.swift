@@ -75,6 +75,16 @@ final class StoreService: ObservableObject {
     /// still-running fetch was about to contradict. Now the second caller awaits the first.
     private var inFlightLoad: Task<Void, Never>?
 
+    /// Why the last load failed, for diagnosis only — surfaced on the paywall in DEBUG builds.
+    ///
+    /// "Couldn't reach the App Store" is one message covering two opposite causes: the fetch
+    /// threw (network/StoreKit unreachable) or it succeeded and returned an empty array (ids the
+    /// store doesn't recognise, products not available in this storefront, agreement not
+    /// active). Told apart, one of those is a device problem and the other is an App Store
+    /// Connect problem; told together they cost a build cycle to guess at, which is exactly what
+    /// happened chasing the 1.3 rejections.
+    @Published private(set) var lastLoadDiagnostic: String?
+
     /// Fetches the catalog, retrying with backoff.
     ///
     /// This used to be a single `try?` whose failure collapsed to `[]` with no retry, called
@@ -100,6 +110,7 @@ final class StoreService: ObservableObject {
 
     private func runLoad() async {
         productLoadState = .loading
+        lastLoadDiagnostic = nil
         let ids = StoreProduct.allCases.map(\.rawValue)
         // Three attempts, ~0.5s then ~1.5s apart. Deliberately short: this runs at launch and
         // again when the paywall opens, so the goal is riding out a transient failure, not
@@ -116,8 +127,15 @@ final class StoreService: ObservableObject {
                     productLoadState = .loaded
                     return
                 }
+                // Reached only when the fetch succeeded but returned nothing. That is a
+                // completely different diagnosis from a throw and must not be recorded as one:
+                // StoreKit answers with [] for ids it doesn't recognise, which is what an
+                // unknown product id, a product not available in this storefront, or an
+                // inactive Paid Applications Agreement all look like.
+                lastLoadDiagnostic = "store returned no products for \(ids.count) ids"
             } catch {
                 // Swallowed deliberately, but only after the retries are exhausted below.
+                lastLoadDiagnostic = String(describing: error)
             }
             if attempt < retryDelays.count, retryDelays[attempt] > 0 {
                 try? await Task.sleep(nanoseconds: retryDelays[attempt])

@@ -14,43 +14,53 @@ import SwiftUI
 ///    size comes from its content) resized on every swipe and the entire "Your rank" section
 ///    below it jumped.
 ///
+/// Defect 2 was originally fixed by forcing every card to the same height (minTitleHeight,
+/// ChipFlow minRows=2). That made cards ugly — extra whitespace inside a card whose title
+/// was short or whose badges fit on one row. The fix (2026-07-29) moved height uniformity to
+/// the section level via `DailyGamesPager.tallestPage`'s initial safe-zone floor, so cards
+/// now size naturally and the pager stays stable.
+///
 /// These assert on *measured* geometry rather than on a screenshot, because a screenshot at the
 /// wrong width is precisely how both defects survived review. PNGs are still written for
-/// eyeballing — paths print as `DAILY_CARD:`.
+/// eyeballing — paths print as `DAILY_CARD:`. 
 @MainActor
 final class DailyGameCardLayoutTests: XCTestCase {
 
     /// The narrowest supported device (iPhone SE / 13 mini) and the reporter's iPhone 15 Pro.
     private let narrowWidths: [CGFloat] = [375, 393]
 
-    /// Two cards whose titles wrap to a different number of lines must still be the same
-    /// height, or the pager resizes when you swipe between the sports that own them.
-    func testCardHeightIsIndependentOfTitleWrapping() throws {
+    /// Cards size to their content: a title that needs two lines makes a taller card than a
+    /// one-line title. Asserted directionally rather than as "these two differ" — a bare
+    /// inequality passes for any reason at all, including a layout bug that happens to change
+    /// the number, and would fail spuriously the day two fixture titles measure the same.
+    func testATwoLineTitleMakesATallerCardThanAOneLineTitle() throws {
         for width in narrowWidths {
             let short = try height(of: card(title: "Multi-homer games"), width: width)
             let long = try height(of: card(title: "Single-game triple-double explosions"), width: width)
             print("DAILY_CARD: @\(Int(width))pt short-title=\(short) long-title=\(long)")
-            XCTAssertEqual(short, long, accuracy: 0.5,
-                "a one-line title and a two-line title must produce the same card height — "
-                + "otherwise swiping the pager between those sports moves everything below it")
+            XCTAssertGreaterThan(long, short,
+                "cards size to their content — per-card height inflation was removed because it "
+                + "left empty bands inside light cards; the pager's own floor handles stability")
         }
     }
 
-    /// The chip count differs by format (Keep4 carries scoring + grain badges, Who Am I?
-    /// doesn't), and wrapping means more chips can mean more rows. If that changes the card
-    /// height it reintroduces the pager shift through a different door.
-    func testCardHeightIsIndependentOfChipCount() throws {
+    /// The proof that chips **wrap** rather than clip. Under the old horizontal `ScrollView` the
+    /// row was always exactly one row tall, so adding badges changed nothing about the card's
+    /// height — they simply slid out of sight past the card's edge. A taller card for more
+    /// badges is therefore the observable signature of them all being laid out on screen.
+    func testMoreChipsMakeATallerCardBecauseTheyWrap() throws {
         for width in narrowWidths {
             let few = try height(of: card(title: "Multi-homer games", chips: .few), width: width)
             let many = try height(of: card(title: "Multi-homer games", chips: .many), width: width)
             print("DAILY_CARD: @\(Int(width))pt few-chips=\(few) many-chips=\(many)")
-            XCTAssertEqual(few, many, accuracy: 0.5,
-                "a 3-chip Who Am I? card and a 6-chip Keep4 card must be the same height")
+            XCTAssertGreaterThan(many, few,
+                "six badges must occupy more rows than three at \(Int(width))pt — equal heights "
+                + "would mean the overflow is being hidden again rather than wrapped")
         }
     }
 
-    /// A title long enough to need three lines must render in full. Reserving a minimum height
-    /// is fine; capping it is not — that trades a layout wobble for lost content.
+    /// A title long enough to need three lines must render in full — cards should never
+    /// truncate or cap title content.
     func testAVeryLongTitleIsNotTruncated() throws {
         let width: CGFloat = 375
         let twoLine = try height(of: card(title: "Single-game triple-double explosions"), width: width)

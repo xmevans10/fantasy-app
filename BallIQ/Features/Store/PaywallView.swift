@@ -161,6 +161,18 @@ struct PaywallView: View {
                         }
                         .font(.custom(FontName.condBold, size: 15))
                         .foregroundStyle(Color.accentText)
+                        #if DEBUG
+                        // Developer-only: distinguishes "the fetch threw" from "the store
+                        // answered with nothing", which need opposite investigations. Compiled
+                        // out of release, so a user never sees a StoreKit error string.
+                        if let diagnostic = container.productLoadDiagnostic {
+                            Text(diagnostic)
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(Color.textMuted)
+                                .multilineTextAlignment(.center)
+                                .textSelection(.enabled)
+                        }
+                        #endif
                     }
                 }
                 .padding(.vertical, 8)

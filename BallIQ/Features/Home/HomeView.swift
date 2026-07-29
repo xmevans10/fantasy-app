@@ -48,6 +48,7 @@ struct HomeView: View {
     /// Streak-reminder primer (see `pushPrimerCard`). State rather than a computed property
     /// because deciding it requires an `await` on the system's authorization status.
     @State private var showPushPrimer = false
+    @State private var streakRowDismissed = false
 
     private let gridColumns = [GridItem(.flexible(), spacing: 12),
                                GridItem(.flexible(), spacing: 12)]
@@ -81,7 +82,20 @@ struct HomeView: View {
                     // No sport chips here anymore (2026-07-09): sport is chosen per-game on
                     // each format's own setup screen, which writes the choice back to
                     // `container.sportFilter` so these daily previews follow the last pick.
-                    streakRow.heroReveal(0)
+                    if !streakRowDismissed {
+                        HStack {
+                            streakRow
+                            Spacer()
+                            Button {
+                                withAnimation(Motion.easeOut) { streakRowDismissed = true }
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(Color.textMuted)
+                            }
+                        }
+                        .heroReveal(0)
+                    }
 
                     if showPushPrimer { pushPrimerCard.heroReveal(1) }
 
