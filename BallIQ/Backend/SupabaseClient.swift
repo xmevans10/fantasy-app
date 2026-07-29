@@ -180,6 +180,17 @@ final class SupabaseClient {
         return try await perform(req)
     }
 
+    /// Removes `{bucket}/{path}`. Used by account deletion: the `auth.users` cascade covers
+    /// every `public.*` row but not Storage, and deleting the `storage.objects` row from SQL
+    /// alone would orphan the underlying file — so the object goes through this API first.
+    @discardableResult
+    func deleteObject(bucket: String, path: String) async throws -> Data {
+        var req = URLRequest(url: config.url.appendingPathComponent("storage/v1/object/\(bucket)/\(path)"))
+        req.httpMethod = "DELETE"
+        applyHeaders(&req)
+        return try await perform(req)
+    }
+
     /// Public URL for an object in a public bucket — valid without a signed-URL round trip
     /// since `avatars` is created with `public = true`.
     func publicObjectURL(bucket: String, path: String) -> URL {

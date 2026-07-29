@@ -16,6 +16,10 @@ final class LocalRatingRepository: RatingRepository {
     private func ratingKey(_ sport: Sport) -> String { "rating.\(sport.rawValue)" }
     private func historyKey(_ sport: Sport) -> String { "ratingHistory.\(sport.rawValue)" }
 
+    /// Key *prefixes* this type owns — the keys are per-sport, so there is no finite list to
+    /// enumerate. Swept by `RepositoryContainer.wipeLocalUserData()` on account deletion.
+    static let persistedKeyPrefixes = ["rating.", "ratingHistory."]
+
     func rating(for sport: Sport) async -> Int {
         let stored = defaults.integer(forKey: ratingKey(sport))
         return stored == 0 ? RatingEngine.startingRating : stored

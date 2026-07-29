@@ -14,6 +14,15 @@ struct ProfileView: View {
     /// Which sport's club picker is open (`TeamPicker` sheet) — nil = closed.
     @State private var pickingTeamFor: Sport?
 
+    // Account deletion (App Store Guideline 5.1.1(v)).
+    @State private var confirmingDelete = false
+    @State private var isDeleting = false
+    @State private var deletionError: String?
+    /// Shown after the server confirms. Apple's reviewer records this flow end to end, so the
+    /// deletion needs a visible terminal state rather than the screen quietly reverting to
+    /// signed-out — and the user deserves to be told it actually happened.
+    @State private var deletionConfirmed = false
+
     /// The player's strongest sport headlines the hero (ties favor NFL — `allCases` order).
     private var bestSport: Sport {
         Sport.allCases.reduce(Sport.nfl) {
@@ -67,6 +76,23 @@ struct ProfileView: View {
         .onAppear {
             if DebugLaunch.autoOpenStats { showStats = true }
             if DebugLaunch.autoOpenModeration { showModeration = true }
+        }
+        // Attached to the whole screen rather than to the DELETE ACCOUNT button, because that
+        // button lives inside `if auth.isSignedIn` — a successful deletion signs the user out,
+        // which tears the button (and anything modally attached to it) out of the hierarchy
+        // before the confirmation could ever appear. Apple asks for a recording of the flow
+        // "from initiation to confirmation", so the confirmation has to outlive the button.
+        .alert("Account deleted", isPresented: $deletionConfirmed) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Your account and all of its data have been permanently deleted.")
+        }
+        .alert("Couldn't delete account", isPresented: Binding(
+            get: { deletionError != nil }, set: { if !$0 { deletionError = nil } }
+        )) {
+            Button("OK", role: .cancel) { deletionError = nil }
+        } message: {
+            Text(deletionError ?? "")
         }
     }
 
@@ -467,6 +493,8 @@ struct ProfileView: View {
                         .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                 }
                 .buttonStyle(PrimePressStyle())
+
+                deleteAccountButton
             } else {
                 Text("Sign in to save your progress and climb the leaderboards.")
                     .font(.body14).foregroundStyle(Color.textSecondary)
@@ -507,6 +535,50 @@ struct ProfileView: View {
         .cardSurface()
     }
 
+    /// App Store Guideline 5.1.1(v): an app that supports account creation must offer account
+    /// deletion in-app. Deliberately styled *below* and weaker than SIGN OUT — outline rather
+    /// than filled — because the two sit next to each other and only one of them is permanent.
+    ///
+    /// One confirmation step, no support channel: Apple allows confirmation but forbids making
+    /// the user email or call anyone to finish (outside highly-regulated industries).
+    @ViewBuilder
+    private var deleteAccountButton: some View {
+        Button(role: .destructive) {
+            confirmingDelete = true
+        } label: {
+            HStack(spacing: 8) {
+                if isDeleting { ProgressView().tint(Color.dangerText) }
+                Text(isDeleting ? "DELETING…" : "DELETE ACCOUNT")
+                    .font(.heading).foregroundStyle(Color.dangerText)
+            }
+            .frame(maxWidth: .infinity).padding(.vertical, 12)
+            .overlay(
+                RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
+                    .stroke(Color.dangerText.opacity(0.5), lineWidth: 2))
+        }
+        .buttonStyle(PrimePressStyle())
+        .disabled(isDeleting)
+        .confirmationDialog("Delete your account?", isPresented: $confirmingDelete,
+                            titleVisibility: .visible) {
+            Button("Delete Account", role: .destructive) { Task { await deleteAccount() } }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This permanently deletes your account and everything in it — your rating, "
+                 + "streak, XP, friends, and any puzzles you've created. This can't be undone.")
+        }
+    }
+
+    private func deleteAccount() async {
+        isDeleting = true
+        defer { isDeleting = false }
+        do {
+            try await container.deleteAccount()
+            deletionConfirmed = true
+        } catch {
+            deletionError = error.localizedDescription
+        }
+    }
+
     private func handle(_ result: Result<ASAuthorization, Error>) {
         guard case .success(let authorization) = result,
               let cred = authorization.credential as? ASAuthorizationAppleIDCredential,
@@ -514,7 +586,10 @@ struct ProfileView: View {
               let token = String(data: tokenData, encoding: .utf8),
               let raw = currentNonce else { return }
         Task {
-            try? await container.auth.signInWithApple(identityToken: token, rawNonce: raw)
+            try? await container.auth.signInWithApple(
+                identityToken: token, rawNonce: raw,
+                authorizationCode: cred.authorizationCode
+                    .flatMap { String(data: $0, encoding: .utf8) })
             await container.syncIfSignedIn()
             if container.isSignedIn {
                 container.track(.signInCompleted, ["provider": "apple", "surface": "profile"])

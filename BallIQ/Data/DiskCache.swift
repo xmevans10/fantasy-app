@@ -47,6 +47,22 @@ enum DiskCache {
             .appendingPathComponent("\(key).json")
     }
 
+    /// Removes every cached entry. Called on account deletion: these files are content-scoped
+    /// (`puzzles-keep4-all`, `arcade-pool-*`) rather than user-scoped, so nothing here is
+    /// personal — but a user who asked for their data to be gone should not find their last
+    /// session's boards still sitting on disk.
+    static func purge() {
+        let directory = directoryOverride
+            ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        guard let directory,
+              let files = try? FileManager.default.contentsOfDirectory(
+                at: directory, includingPropertiesForKeys: nil)
+        else { return }
+        for file in files where file.pathExtension == "json" {
+            try? FileManager.default.removeItem(at: file)
+        }
+    }
+
     private struct Envelope<T: Codable>: Codable {
         let writtenAt: Date
         let value: T

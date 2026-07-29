@@ -7,6 +7,10 @@ struct Session: Codable, Equatable {
     let refreshToken: String
     let expiresAt: Date
     let userID: String
+    /// One-time code from `ASAuthorizationAppleIDCredential`, kept only for Sign in with Apple
+    /// sessions. Unused today; see `AuthService.signInWithApple` for why it's captured. Optional
+    /// with a default so sessions already in the Keychain from earlier builds still decode.
+    var appleAuthorizationCode: String?
 
     var isExpired: Bool { Date() >= expiresAt.addingTimeInterval(-60) } // refresh 60s early
 }
@@ -57,17 +61,39 @@ final class AuthService: ObservableObject {
         }
     }
 
+    /// Test-only: a service that is already signed in, with **no Keychain write**. Rendering the
+    /// signed-in Profile (and the DELETE ACCOUNT row Apple reviews) otherwise means persisting a
+    /// fake session into the real Keychain, which hosted tests share with the actual app — that
+    /// leaves a bogus session behind for the next manual launch.
+    init(client: SupabaseClient?, signedInAs session: Session) {
+        self.client = client
+        self.session = session
+        tokenBox.set(session.accessToken)
+    }
+
     // MARK: - Sign in with Apple
 
     /// Exchange an Apple identity token (+ the raw nonce used to derive the request nonce) for a session.
-    func signInWithApple(identityToken: String, rawNonce: String) async throws {
+    ///
+    /// `authorizationCode` is stored, not sent: GoTrue doesn't need it, but Apple requires that
+    /// an app deleting an account also revoke the user's Apple token
+    /// (`POST appleid.apple.com/auth/revoke`), and revocation needs a refresh token obtained by
+    /// exchanging this one-time code against an Apple client-secret JWT. That exchange is
+    /// server-side work (Apple Services ID + private key + an edge function) that this build
+    /// does not do — the in-app deletion flow Apple actually reviews ships first. Capturing the
+    /// code now means the follow-on is a backend change only, instead of another round of
+    /// auth plumbing plus a re-sign-in for every existing user.
+    func signInWithApple(identityToken: String, rawNonce: String,
+                         authorizationCode: String? = nil) async throws {
         guard let client else { throw SupabaseError.notConfigured }
         let data = try await client.authToken(grantType: "id_token", body: [
             "provider": "apple",
             "id_token": identityToken,
             "nonce": rawNonce
         ])
-        apply(try Self.parseSession(from: data))
+        var parsed = try Self.parseSession(from: data)
+        parsed.appleAuthorizationCode = authorizationCode
+        apply(parsed)
     }
 
     // MARK: - OAuth providers (Google, etc.)
@@ -131,7 +157,12 @@ final class AuthService: ObservableObject {
         do {
             let data = try await client.authToken(grantType: "refresh_token",
                                                   body: ["refresh_token": session.refreshToken])
-            apply(try Self.parseSession(from: data))
+            var refreshed = try Self.parseSession(from: data)
+            // The refresh response is GoTrue's, so it carries no Apple code — carry the stored
+            // one forward or it would be lost the first time the access token expired, which is
+            // within the hour.
+            refreshed.appleAuthorizationCode = session.appleAuthorizationCode
+            apply(refreshed)
         } catch {
             signOut()
         }

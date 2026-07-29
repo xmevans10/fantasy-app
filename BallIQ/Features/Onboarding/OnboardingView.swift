@@ -446,7 +446,10 @@ struct OnboardingView: View {
             }
             Task {
                 do {
-                    try await container.auth.signInWithApple(identityToken: token, rawNonce: raw)
+                    try await container.auth.signInWithApple(
+                        identityToken: token, rawNonce: raw,
+                        authorizationCode: cred.authorizationCode
+                            .flatMap { String(data: $0, encoding: .utf8) })
                     await container.syncIfSignedIn()
                     container.track(.signInCompleted, ["provider": "apple", "surface": "onboarding"])
                     finishOrClaimUsername()

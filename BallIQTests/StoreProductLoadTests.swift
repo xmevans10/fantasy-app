@@ -34,7 +34,7 @@ final class StoreProductLoadTests: XCTestCase {
         XCTAssertEqual(calls, 3, "a failing fetch must be retried, not accepted on the first try")
         XCTAssertEqual(service.productFetchAttempts, 3)
         XCTAssertTrue(service.products.isEmpty)
-        XCTAssertTrue(service.productLoadFailed, "exhausted retries must be reported, not silent")
+        XCTAssertEqual(service.productLoadState, .failed, "exhausted retries must be reported, not silent")
     }
 
     /// The subtler half of the bug. StoreKit returns an EMPTY ARRAY — it does not throw — for ids
@@ -50,7 +50,7 @@ final class StoreProductLoadTests: XCTestCase {
         await service.loadProducts()
 
         XCTAssertEqual(calls, 3, "an empty catalog must be retried, not cached as a valid answer")
-        XCTAssertTrue(service.productLoadFailed)
+        XCTAssertEqual(service.productLoadState, .failed)
     }
 
     /// A transient failure must not poison the later attempts: the loop keeps going after a
@@ -94,13 +94,13 @@ final class StoreProductLoadTests: XCTestCase {
         ]))
     }
 
-    /// `isLoadingProducts` drives the paywall's "Loading plans…" vs the retry affordance. If it
-    /// stuck true the user would stare at a spinner with no action; if it never went true they'd
-    /// see "couldn't reach the store" during a perfectly normal fetch.
-    func testLoadingFlagIsClearedAfterAFailedLoad() async {
+    /// `productLoadState` drives the paywall's "Loading plans…" vs the retry affordance. If it
+    /// stuck on `.loading` the user would stare at a spinner with no action; if it never left
+    /// `.idle` they'd never learn the fetch had failed at all.
+    func testLoadingStateSettlesOnFailedAfterAFailedLoad() async {
         let service = StoreService(fetchStub: { _ in throw StoreDown() })
         await service.loadProducts()
-        XCTAssertFalse(service.isLoadingProducts)
+        XCTAssertEqual(service.productLoadState, .failed)
     }
 
     /// The success path — the half the stubbed tests above structurally cannot reach, because
@@ -109,7 +109,7 @@ final class StoreProductLoadTests: XCTestCase {
     /// same seam and the catalog genuinely populates. Same technique as `PaywallGalleryTests`.
     ///
     /// This is what proves the fix end-to-end rather than by construction: with a reachable
-    /// store, one attempt populates `products` and leaves `productLoadFailed` false.
+    /// store, one attempt populates `products` and settles the state on `.loaded`.
     func testPopulatesTheCatalogWhenTheStoreIsReachable() async throws {
         let configURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent().deletingLastPathComponent()
@@ -128,7 +128,7 @@ final class StoreProductLoadTests: XCTestCase {
             throw XCTSkip("No StoreKit products — SKTestSession config not applied")
         }
         XCTAssertEqual(service.products.count, 4, "all four configured products should resolve")
-        XCTAssertFalse(service.productLoadFailed, "a reachable store must clear the failure flag")
+        XCTAssertEqual(service.productLoadState, .loaded, "a reachable store must settle on loaded")
         XCTAssertEqual(service.productFetchAttempts, 1, "success must not burn extra retries")
     }
 }

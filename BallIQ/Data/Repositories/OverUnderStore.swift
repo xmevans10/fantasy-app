@@ -10,6 +10,12 @@ final class LocalOverUnderStore {
         static func highScore(_ sport: Sport) -> String { "overUnderHighScore_\(sport.rawValue)" }
     }
 
+    /// Keys and key prefixes this type owns. Swept by
+    /// `RepositoryContainer.wipeLocalUserData()` on account deletion.
+    static let persistedKeyPrefixes = [
+        Key.livesCount, Key.livesLastLostAt, "overUnderHighScore_",
+    ]
+
     init(defaults: UserDefaults = .standard) { self.defaults = defaults }
 
     /// Loads lives, applying any regen owed since the last read, and persists the regenerated

@@ -123,20 +123,39 @@ struct PaywallView: View {
         }
     }
 
+    /// `.loaded` with nothing to show is not a connection problem — it's the store answering
+    /// with an empty catalog (products still propagating through App Store Connect, or
+    /// unavailable in this storefront). Saying "check your connection" there sends the user off
+    /// to fix something that isn't broken.
+    private var emptyStateMessage: LocalizedStringKey {
+        switch container.productLoadState {
+        case .idle, .loading:
+            return "Loading plans…"
+        case .failed:
+            return "Couldn't reach the App Store. Check your connection and try again."
+        case .loaded:
+            return "Plans aren't available in your region right now."
+        }
+    }
+
     private var plans: some View {
         VStack(spacing: 10) {
             if subscriptions.isEmpty {
                 // A dead-end string was the whole failure mode here: no plans, no explanation,
                 // no way to try again. Give the state an action, so a transient store hiccup
                 // costs a tap instead of the entire session.
+                //
+                // Branch on `productLoadState`, not on a loading boolean. The boolean version
+                // read `false` before the first fetch had even been attempted, so the *first
+                // frame* a reviewer saw was "Couldn't reach the App Store" — an error reporting
+                // a request nobody had made yet. `.idle` and `.loading` are both "wait", and
+                // only `.failed` earns the retry affordance.
                 VStack(spacing: 10) {
-                    Text(container.isLoadingProducts
-                         ? "Loading plans…"
-                         : "Couldn't reach the App Store. Check your connection and try again.")
+                    Text(emptyStateMessage)
                         .font(.body14)
                         .foregroundStyle(Color.textMuted)
                         .multilineTextAlignment(.center)
-                    if !container.isLoadingProducts {
+                    if container.productLoadState == .failed {
                         Button("Try again") {
                             Task { await container.reloadProducts() }
                         }

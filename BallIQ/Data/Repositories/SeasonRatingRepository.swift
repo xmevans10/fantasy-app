@@ -16,6 +16,10 @@ final class LocalSeasonRatingRepository {
         "seasonPeak.\(seasonID).\(sport.rawValue)"
     }
 
+    /// Key *prefixes* this type owns — keyed per (season, sport), so there is no finite list to
+    /// enumerate. Swept by `RepositoryContainer.wipeLocalUserData()` on account deletion.
+    static let persistedKeyPrefixes = ["seasonRating.", "seasonPeak."]
+
     /// Whether this (season, sport) has ever been seeded locally.
     func hasStored(seasonID: Int, sport: Sport) -> Bool {
         defaults.object(forKey: ratingKey(seasonID, sport)) != nil

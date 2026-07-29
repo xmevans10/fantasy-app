@@ -36,6 +36,14 @@ final class LocalProgressRepository: ProgressRepository {
         static let completedCards = "completedCardsToday"
     }
 
+    /// Every `UserDefaults` key this type owns, for `RepositoryContainer.wipeLocalUserData()`
+    /// (account deletion, Guideline 5.1.1(v)). Declared here rather than in the container so the
+    /// list sits next to the definitions it has to track — a new key added above and forgotten
+    /// here is data that survives a deletion the user was promised was permanent.
+    static let persistedKeyPrefixes = [
+        Key.streak, Key.lastPlayed, Key.xp, Key.completedCardsDay, Key.completedCards,
+    ]
+
     private static let dayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"

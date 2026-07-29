@@ -588,7 +588,10 @@ create table if not exists public.versus_challenges (
   opponent_score        double precision,
   challenger_completed_at timestamptz,
   opponent_completed_at   timestamptz,
-  winner_id             uuid references auth.users(id),
+  -- `on delete set null` matters: without it, deleting a user who has ever won a challenge
+  -- fails on this constraint and account deletion (Guideline 5.1.1(v)) breaks for exactly the
+  -- most engaged users. See `delete_own_account()` at the end of this file.
+  winner_id             uuid references auth.users(id) on delete set null,
   created_at            timestamptz not null default now(),
   expires_at            timestamptz not null default (now() + interval '24 hours')
 );
@@ -1543,3 +1546,37 @@ create index if not exists teams_competition_idx
   on public.teams (sport, competition) where competition is not null;
 create index if not exists player_seasons_competition_idx
   on public.player_seasons (sport, competition) where competition is not null;
+
+-- ---------------------------------------------------------------------------
+-- Account deletion (App Store Guideline 5.1.1(v))
+-- ---------------------------------------------------------------------------
+-- An app that supports account creation must let the user delete that account from inside the
+-- app. `security definer` so this runs as `postgres`, which (unlike `authenticated`) has DELETE
+-- on auth.users and BYPASSRLS. The user id comes from auth.uid() -- derived from the caller's
+-- JWT -- so there is no parameter to forge and a caller can only ever delete themselves.
+-- Deliberately does NOT touch storage.objects: Supabase guards that table with a trigger
+-- (storage.protect_delete) that rejects any direct DELETE unless `storage.allow_delete_query`
+-- is set, because deleting the row orphans the underlying file. The avatar is removed by the
+-- client through the Storage API (`RepositoryContainer.deleteAccount`), which drops the file
+-- and the row together.
+create or replace function public.delete_own_account()
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null then
+    raise exception 'not authenticated' using errcode = '28000';
+  end if;
+
+  -- Everything in public.* cascades from here (and events.user_id nulls out, so analytics stay
+  -- anonymised rather than being deleted).
+  delete from auth.users where id = uid;
+end;
+$$;
+
+revoke all on function public.delete_own_account() from public, anon;
+grant execute on function public.delete_own_account() to authenticated;

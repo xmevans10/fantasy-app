@@ -22,9 +22,10 @@ final class RepositoryContainer: ObservableObject {
     let social: SocialRepository?
     /// Era-adjustment baselines for composable scoring (bundled; empty until the pipeline ships them).
     let baselines: StatBaselines = .loadBundled()
-    /// StoreKit 2 product catalog + purchase/restore (M5). `entitlements` below mirrors its
-    /// published state so views only ever read `RepositoryContainer`, never this directly.
-    let store = StoreService()
+    /// StoreKit 2 product catalog + purchase/restore (M5). `entitlements`, `products` and
+    /// `productLoadState` below mirror its published state so views only ever read
+    /// `RepositoryContainer`, never this directly.
+    let store: StoreService
 
     private let client: SupabaseClient?
     /// First-party funnel events (M15). Nil when local-only; every call is fire-and-forget.
@@ -34,7 +35,7 @@ final class RepositoryContainer: ObservableObject {
     private let localSeasonRating = LocalSeasonRatingRepository()
     private var sync: RemoteSync?
     private var pendingDeviceToken: String?
-    private var storeCancellable: AnyCancellable?
+    private var storeCancellables = Set<AnyCancellable>()
 
     @Published private(set) var progressSnapshot = ProgressSnapshot()
     @Published private(set) var ratings: [Sport: Int] = [:]
@@ -68,13 +69,32 @@ final class RepositoryContainer: ObservableObject {
     @Published private(set) var entitlements: Entitlements = .free
     private var deviceEntitlements: Entitlements = .free
     private var serverEntitlements: Entitlements = .free
+    /// The StoreKit catalog and where its load stands, mirrored from `store`.
+    ///
+    /// These MUST be stored `@Published` state, not computed passthroughs to `store`. SwiftUI
+    /// does not forward a nested `ObservableObject`'s changes, so while these were computed the
+    /// paywall could not observe a catalog that arrived *while it was on screen*: the fetch
+    /// succeeded, `store.products` filled, and `container.objectWillChange` never fired, so the
+    /// body was never re-evaluated and the plans never rendered. That is verbatim the Guideline
+    /// 2.1(a) rejection of 1.3 build 17 ("The plans did not load"), and it also left the
+    /// paywall's "Try again" button doing nothing at all. Covered by
+    /// `PaywallProductObservationTests`.
+    @Published private(set) var products: [Product] = []
+    @Published private(set) var productLoadState: ProductLoadState = .idle
     @Published var sportFilter: SportFilter {
         didSet { UserDefaults.standard.set(sportFilter.rawValue, forKey: "sportFilter") }
     }
 
-    init(auth: AuthService, client: SupabaseClient?) {
+    /// `store` is injectable purely as a test seam: `StoreService()` starts a launch-time
+    /// catalog fetch, which makes "the paywall opened with an empty catalog" — the exact state
+    /// that got 1.3 rejected — impossible to set up deterministically in a test. The test-only
+    /// `StoreService(fetchStub:)` init does no launch fetch, so a test can start genuinely cold.
+    /// (`nil` rather than a defaulted `StoreService()` because a default argument is evaluated
+    /// in a nonisolated context, and `StoreService` is `@MainActor`.)
+    init(auth: AuthService, client: SupabaseClient?, store: StoreService? = nil) {
         self.auth = auth
         self.client = client
+        self.store = store ?? StoreService()
         self.puzzles = client.map { RemotePuzzleRepository(client: $0) } ?? LocalPuzzleRepository()
         self.catalog = PlayerSeasonCatalog(client: client)
         self.community = client.map { CommunityPuzzleRepository(client: $0) }
@@ -87,11 +107,21 @@ final class RepositoryContainer: ObservableObject {
         self.analytics = client.map { AnalyticsClient(client: $0) }
         let raw = UserDefaults.standard.string(forKey: "sportFilter") ?? SportFilter.all.rawValue
         self.sportFilter = SportFilter(rawValue: raw) ?? .all
-        storeCancellable = store.$entitlements.sink { [weak self] value in
+        self.store.$entitlements.sink { [weak self] value in
             guard let self else { return }
             self.deviceEntitlements = value
             self.recomputeEntitlements()
-        }
+        }.store(in: &storeCancellables)
+        // Seed from `store` first: it may already have a catalog (its own init starts a launch
+        // fetch), and a sink only delivers what happens next.
+        self.products = self.store.products
+        self.productLoadState = self.store.productLoadState
+        self.store.$products
+            .sink { [weak self] in self?.products = $0 }
+            .store(in: &storeCancellables)
+        self.store.$productLoadState
+            .sink { [weak self] in self?.productLoadState = $0 }
+            .store(in: &storeCancellables)
     }
 
     private func recomputeEntitlements() {
@@ -102,10 +132,11 @@ final class RepositoryContainer: ObservableObject {
     }
 
     /// Wires auth + optional Supabase client (nil → local-only). Used at launch and in previews.
-    static func make(client: SupabaseClient? = SupabaseClient()) -> RepositoryContainer {
+    static func make(client: SupabaseClient? = SupabaseClient(),
+                     store: StoreService? = nil) -> RepositoryContainer {
         let auth = AuthService(client: client)
         client?.tokenProvider = auth.tokenBox
-        return RepositoryContainer(auth: auth, client: client)
+        return RepositoryContainer(auth: auth, client: client, store: store)
     }
 
     /// Load persisted local state on launch, then sync if already signed in.
@@ -209,6 +240,82 @@ final class RepositoryContainer: ObservableObject {
         let day = OverUnderRoundGenerator.dayString(Date())
         guard let stored = DailyDraftStore().officialResult(for: day) else { return }
         await submitDailyDraftScore(day: day, stored: stored)
+    }
+
+    // MARK: - Account deletion (App Store Guideline 5.1.1(v))
+
+    enum AccountDeletionError: LocalizedError {
+        case notSignedIn
+        case serverUnavailable
+
+        var errorDescription: String? {
+            switch self {
+            case .notSignedIn:
+                return "You're not signed in."
+            case .serverUnavailable:
+                return "We couldn't reach the server. Your account has not been deleted — "
+                     + "please check your connection and try again."
+            }
+        }
+    }
+
+    /// Permanently deletes the signed-in user's account and every trace of it, server and device.
+    ///
+    /// Ordering matters and is deliberate:
+    /// 1. The avatar object goes first, through the Storage API — the `auth.users` cascade covers
+    ///    every `public.*` row but not Storage, and deleting the `storage.objects` row from SQL
+    ///    alone would leave the file orphaned. A failure here is **non-fatal**: a stranded image
+    ///    must never block a user from exercising their right to delete, and
+    ///    `delete_own_account()` clears the row regardless.
+    /// 2. `delete_own_account()` (security definer, keyed on `auth.uid()`) removes the auth row;
+    ///    every table cascades from it. A failure here **aborts** — nothing local has been
+    ///    touched yet, so the user still has an intact, working account and can simply retry.
+    ///    Wiping the device first would strand them signed-in-but-empty on a server row that
+    ///    still exists.
+    /// 3. Only once the server has confirmed do we wipe the device and sign out.
+    func deleteAccount() async throws {
+        guard let client, let uid = auth.userID else { throw AccountDeletionError.notSignedIn }
+
+        // The token has to be valid for `auth.uid()` to resolve inside the function; an expired
+        // one would surface as "not authenticated" rather than as the auth problem it is.
+        await auth.refreshIfNeeded()
+
+        try? await client.deleteObject(bucket: "avatars", path: "\(uid)/avatar.jpg")
+
+        struct NoArgs: Encodable {}
+        do {
+            try await client.rpc("delete_own_account", args: NoArgs())
+        } catch {
+            throw AccountDeletionError.serverUnavailable
+        }
+
+        wipeLocalUserData()
+        auth.signOut()
+        handleSignedOut()
+        progressSnapshot = ProgressSnapshot()
+        ratings = [:]
+        seasonBadges = []
+        await refreshFromLocal()
+    }
+
+    /// Clears every on-device trace of the account. None of these keys are namespaced by user id,
+    /// so without this a deleted account's streak, rating and scores would simply reappear for
+    /// whoever signs in next on the same device.
+    private func wipeLocalUserData() {
+        let prefixes = LocalProgressRepository.persistedKeyPrefixes
+            + LocalRatingRepository.persistedKeyPrefixes
+            + LocalSeasonRatingRepository.persistedKeyPrefixes
+            + DailyDraftStore.persistedKeyPrefixes
+            + LocalOverUnderStore.persistedKeyPrefixes
+            + ["sportFilter"]
+
+        let defaults = UserDefaults.standard
+        for key in defaults.dictionaryRepresentation().keys
+        where prefixes.contains(where: { key == $0 || key.hasPrefix($0) }) {
+            defaults.removeObject(forKey: key)
+        }
+        sportFilter = .all
+        DiskCache.purge()
     }
 
     func handleSignedOut() {
@@ -459,9 +566,9 @@ final class RepositoryContainer: ObservableObject {
 
     // MARK: - Store (M5 — StoreKit 2 monetization)
 
-    var products: [Product] { store.products }
-    var isLoadingProducts: Bool { store.isLoadingProducts }
-    var productLoadFailed: Bool { store.productLoadFailed }
+    // `products`/`productLoadState` are declared with the other `@Published` state above and
+    // fed by sinks in `init` — see the note there for why they are mirrored rather than
+    // computed off `store`.
 
     /// Re-fetch the catalog. The paywall calls this whenever it opens with an empty catalog:
     /// the launch-time load can lose a cold-start race against the network, and before this

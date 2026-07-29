@@ -16,11 +16,23 @@ private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
 /// `entitlements` into its own published state (repository-seam constraint — views read
 /// `RepositoryContainer`, never this service directly, except via `container.products`/
 /// `container.purchase(_:)` passthroughs).
+/// Where the product catalog stands. Replaces a pair of booleans whose combinations included
+/// one the UI could not tell apart from failure: before the first fetch, `isLoadingProducts` was
+/// `false` and `productLoadFailed` was `false`, and the paywall rendered that as "Couldn't reach
+/// the App Store" — an error message as the *first frame*, before a single request had been made.
+/// "Nobody has asked yet" is its own state, and `.idle` is it.
+enum ProductLoadState: Equatable {
+    case idle
+    case loading
+    case loaded
+    case failed
+}
+
 @MainActor
 final class StoreService: ObservableObject {
     @Published private(set) var products: [Product] = []
     @Published private(set) var entitlements: Entitlements = .free
-    @Published private(set) var isLoadingProducts = false
+    @Published private(set) var productLoadState: ProductLoadState = .idle
 
     private var updateListenerTask: Task<Void, Never>?
 
@@ -56,10 +68,12 @@ final class StoreService: ObservableObject {
 
     deinit { updateListenerTask?.cancel() }
 
-    /// Set when the last load attempt failed outright. Drives the paywall's retry affordance —
-    /// "we couldn't reach the store" is a different message, and a different user action, from
-    /// "the store has nothing for you".
-    @Published private(set) var productLoadFailed = false
+    /// The load currently in flight, if any. A cold start runs two callers at once — the launch
+    /// fetch from `init` and the paywall's `.task` — and before this they raced: both ran a full
+    /// three-attempt cycle, and whichever finished first published its own outcome while the
+    /// other was still going, so the paywall could drop from "Loading…" into an error a
+    /// still-running fetch was about to contradict. Now the second caller awaits the first.
+    private var inFlightLoad: Task<Void, Never>?
 
     /// Fetches the catalog, retrying with backoff.
     ///
@@ -74,8 +88,18 @@ final class StoreService: ObservableObject {
     /// purchases were not available at time of review"), on a fresh iPad install. A reviewer's
     /// device is the worst case for this race: brand-new install, first launch, one attempt.
     func loadProducts() async {
-        isLoadingProducts = true
-        defer { isLoadingProducts = false }
+        if let inFlightLoad {
+            await inFlightLoad.value
+            return
+        }
+        let task = Task { await runLoad() }
+        inFlightLoad = task
+        await task.value
+        inFlightLoad = nil
+    }
+
+    private func runLoad() async {
+        productLoadState = .loading
         let ids = StoreProduct.allCases.map(\.rawValue)
         // Three attempts, ~0.5s then ~1.5s apart. Deliberately short: this runs at launch and
         // again when the paywall opens, so the goal is riding out a transient failure, not
@@ -89,7 +113,7 @@ final class StoreService: ObservableObject {
                 // another attempt rather than caching the empty answer for the session.
                 if !fetched.isEmpty {
                     products = fetched
-                    productLoadFailed = false
+                    productLoadState = .loaded
                     return
                 }
             } catch {
@@ -99,7 +123,7 @@ final class StoreService: ObservableObject {
                 try? await Task.sleep(nanoseconds: retryDelays[attempt])
             }
         }
-        productLoadFailed = true
+        productLoadState = .failed
     }
 
     /// Returns true if the purchase completed (and entitlements were refreshed); false on

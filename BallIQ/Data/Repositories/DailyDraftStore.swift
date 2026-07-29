@@ -12,6 +12,10 @@ final class DailyDraftStore {
         static func result(_ day: String) -> String { "dailyDraftResult_\(day)" }
     }
 
+    /// Key *prefix* this type owns — one key per calendar day, so there is no finite list to
+    /// enumerate. Swept by `RepositoryContainer.wipeLocalUserData()` on account deletion.
+    static let persistedKeyPrefixes = ["dailyDraftResult_"]
+
     init(defaults: UserDefaults = .standard) { self.defaults = defaults }
 
     /// A day's locked-in Daily Draft outcome — enough to render the result screen's "today's
