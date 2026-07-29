@@ -128,11 +128,27 @@ final class RemotePuzzleRepository: PuzzleRepository {
     /// `contentDecoder`, not `JSONDecoder.supabase`: the payload is camelCase (`minYear`), and
     /// the shared decoder's snake_case key strategy would fail to decode it silently — the exact
     /// trap that made Grid content look like an empty pool once already.
-    private struct MembershipArgs: Encodable { let p_sport: String }
+    /// `p_version` is NOT optional here even though the RPC defaults it. The default is 1, and a
+    /// v1 payload carries no `axes` — which silently costs three of the five archetypes, because
+    /// `GridLocalGenerator.feasibleArchetypes` bails at `guard index.hasAxes` and is left with
+    /// teams-x-decades and teams-x-teams only. Symptom on device: every practice board comes back
+    /// teams-on-both-axes, i.e. exactly the sameness the v2 axis work existed to remove. Omitting
+    /// this argument is not a smaller request, it is a different and much worse one.
+    private struct MembershipArgs: Encodable {
+        let p_sport: String
+        let p_version = GridMembershipIndex.currentVersion
+    }
     func gridMembershipIndex(for sport: Sport) async -> GridMembershipIndex? {
         let key = "grid-memberships-\(sport.rawValue)"
+        // The version check is load-bearing, not belt-and-braces. `isUsable` deliberately accepts
+        // v1 so a payload cached by an older build still plays — but honouring a *fresh-enough*
+        // v1 here would pin an upgraded install to the axis-less shape for the rest of the
+        // week-long TTL, which is the same teams-only board the p_version fix exists to end.
+        // An out-of-date version falls through to the fetch; the stale branch below still takes
+        // v1 if that fetch fails, so nothing regresses offline.
         if let entry = await DiskCache.read(GridMembershipIndex.self, key: key),
-           Date().timeIntervalSince(entry.writtenAt) < 7 * 24 * 3600, entry.value.isUsable {
+           Date().timeIntervalSince(entry.writtenAt) < 7 * 24 * 3600, entry.value.isUsable,
+           entry.value.version >= GridMembershipIndex.currentVersion {
             return entry.value
         }
         if let data = try? await client.rpc("grid_membership_index",
