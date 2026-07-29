@@ -167,26 +167,116 @@ struct PaywallView: View {
                 .frame(maxWidth: .infinity)
             }
             ForEach(subscriptions, id: \.id) { product in
-                Button {
-                    Task { await buy(product) }
-                } label: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(product.displayName.uppercased()).font(.heading)
-                            Text(priceLine(for: product)).font(.label12).opacity(0.85)
-                        }
-                        Spacer()
-                        if purchasingID == product.id {
-                            ProgressView().tint(Color.onAccent)
-                        }
-                    }
-                    .ctaLabel()
-                }
-                .buttonStyle(PrimePressStyle())
-                .disabled(purchasingID != nil)
-                .accessibilityLabel("\(product.displayName), \(product.displayPrice)")
+                planRow(product)
             }
         }
+    }
+
+    /// One subscription option. Both plans get the `blockCard` ledge the rest of the screen
+    /// uses — as flat fills they were the only element here ignoring the app's own depth
+    /// language — and the cheaper-per-month one is promoted to the accent fill with a savings
+    /// badge, so the two read as a recommendation rather than as two identical buttons.
+    private func planRow(_ product: Product) -> some View {
+        let isBest = product.id == bestValueProductID
+        return Button {
+            Task { await buy(product) }
+        } label: {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Text(planTitle(for: product))
+                            .font(.heading)
+                            .foregroundStyle(isBest ? Color.onAccent : Color.textPrimary)
+                        if let savings = savingsBadge(for: product) {
+                            Text(savings)
+                                .font(.label12)
+                                .foregroundStyle(Color(hex: 0x15120B))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.voltFill)
+                                .clipShape(Capsule())
+                        }
+                    }
+                    Text(billingLine(for: product))
+                        .font(.label12)
+                        .foregroundStyle(isBest ? Color.onAccent.opacity(0.85) : Color.textMuted)
+                }
+                Spacer(minLength: 8)
+                if purchasingID == product.id {
+                    ProgressView().tint(isBest ? Color.onAccent : Color.accentText)
+                } else {
+                    Text(product.displayPrice)
+                        .font(.display(26))
+                        .foregroundStyle(isBest ? Color.onAccent : Color.textPrimary)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .blockCard(fill: isBest ? Color.accentFill : Color.surface1, radius: Radius.control, lift: 4)
+        }
+        .buttonStyle(PrimePressStyle())
+        .disabled(purchasingID != nil)
+        .accessibilityLabel(accessibilityLabel(for: product))
+    }
+
+    /// "PRO YEARLY" reads as a SKU; the period is what the user is choosing between.
+    private func planTitle(for product: Product) -> String {
+        guard let period = periodText(for: product) else { return product.displayName.uppercased() }
+        return period == "year" ? "YEARLY" : "MONTHLY"
+    }
+
+    /// Per-month equivalent for anything billed less often than monthly — the comparison the
+    /// user is actually making, and the reason to take the annual plan.
+    private func billingLine(for product: Product) -> String {
+        guard let permonth = monthlyEquivalent(product),
+              periodText(for: product) != "month" else {
+            return "Billed \(periodText(for: product).map { "\($0)ly" } ?? "once")"
+        }
+        return "\(permonth.formatted(product.priceFormatStyle)) / month, billed yearly"
+    }
+
+    /// The plan with the lowest per-month cost. Derived, not hardcoded to the yearly id, so a
+    /// future plan (or a storefront where the maths differs) can't leave the badge on the wrong row.
+    private var bestValueProductID: String? {
+        guard subscriptions.count > 1 else { return nil }
+        return subscriptions.min { lhs, rhs in
+            (monthlyEquivalent(lhs) ?? .greatestFiniteMagnitude)
+                < (monthlyEquivalent(rhs) ?? .greatestFiniteMagnitude)
+        }?.id
+    }
+
+    /// e.g. "SAVE 42%". Computed from the live StoreKit prices rather than written into the
+    /// copy: these products sell in 175 territories at independently-set price points, so a
+    /// hardcoded percentage would be wrong in most of them.
+    private func savingsBadge(for product: Product) -> String? {
+        guard product.id == bestValueProductID,
+              let best = monthlyEquivalent(product),
+              let dearest = subscriptions.compactMap(monthlyEquivalent).max(),
+              dearest > 0, best < dearest else { return nil }
+        let fraction = (dearest - best) / dearest
+        let percent = (fraction as NSDecimalNumber).doubleValue * 100
+        guard percent >= 1 else { return nil }
+        return "SAVE \(Int(percent.rounded()))%"
+    }
+
+    /// Price normalised to one month so plans on different billing periods are comparable.
+    private func monthlyEquivalent(_ product: Product) -> Decimal? {
+        guard let period = product.subscription?.subscriptionPeriod, period.value > 0 else { return nil }
+        let months: Decimal
+        switch period.unit {
+        case .year:  months = Decimal(12 * period.value)
+        case .month: months = Decimal(period.value)
+        // Week/day subscriptions aren't offered; normalising them would be guesswork.
+        default: return nil
+        }
+        return product.price / months
+    }
+
+    private func accessibilityLabel(for product: Product) -> String {
+        var parts = [product.displayName, product.displayPrice]
+        if let savings = savingsBadge(for: product) { parts.append(savings) }
+        return parts.joined(separator: ", ")
     }
 
     @ViewBuilder
