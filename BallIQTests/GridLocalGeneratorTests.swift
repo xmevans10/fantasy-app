@@ -232,9 +232,10 @@ final class GridLocalGeneratorTests: XCTestCase {
 
     // MARK: - v2 axes (stat / position archetypes)
 
-    /// `richIndex` plus stat and position axis membership. Player `P0_1980_0` plays for team 0 in
-    /// 1980 and team 1 in 1980 (see `richIndex`), and is given the milestone only in 1980, so a
-    /// season-grain cell can be distinguished from a career-grain one.
+    /// `richIndex` plus stat and position axis membership, in the v2 wire shape: `axisMemberships`
+    /// is the career-grain "ever satisfied" axis list, `axisTeams` the season-grain (axis, team)
+    /// pairs a single season satisfied. Every player satisfies all four axes for both of their
+    /// teams, so any drawn board is viable and a failure is the generator's, not the fixture's.
     private func axisIndex() -> GridMembershipIndex {
         var index = richIndex()
         index.axes = [
@@ -243,15 +244,18 @@ final class GridLocalGeneratorTests: XCTestCase {
             .init(key: "stat:assists:gte:500", kind: "stat", label: "500+ Assists"),
             .init(key: "pos:G", kind: "position", label: "Guards"),
         ]
-        // Every player gets all four axes in each of their membership years, so any drawn board
-        // is viable and a failure is the generator's rather than the fixture's.
-        index.axisMemberships = index.memberships.map { line in
-            let years = line.split(separator: ";").compactMap { run -> String? in
+        let axisList = (0..<4).map(String.init).joined(separator: ",")
+        index.axisMemberships = index.players.map { _ in axisList }
+        index.axisTeams = index.memberships.map { line in
+            // `richIndex` writes "t:year;other:year" — take the team ids back out and credit every
+            // axis for each, which is what makes a (team x stat) cell fillable here.
+            let teams = line.split(separator: ";").compactMap { run -> String? in
                 guard let colon = run.firstIndex(of: ":") else { return nil }
-                return String(run[run.index(after: colon)...])
+                return String(run[run.startIndex..<colon])
             }
-            guard let first = years.first else { return "" }
-            return (0..<4).map { "\($0):\(first)" }.joined(separator: ";")
+            guard !teams.isEmpty else { return "" }
+            let csv = teams.sorted().joined(separator: ",")
+            return (0..<4).map { "\($0):\(csv)" }.joined(separator: ";")
         }
         return index
     }
@@ -321,6 +325,7 @@ final class GridLocalGeneratorTests: XCTestCase {
         var index = richIndex()
         index.axes = []
         index.axisMemberships = index.players.map { _ in "" }
+        index.axisTeams = index.players.map { _ in "" }
         XCTAssertTrue(index.isUsable)
         XCTAssertFalse(index.hasAxes)
         XCTAssertEqual(Set(generator(index).feasibleArchetypes.map(\.rawValue)),

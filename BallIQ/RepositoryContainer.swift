@@ -328,7 +328,10 @@ final class RepositoryContainer: ObservableObject {
     func adoptLocalData(for uid: String) {
         let defaults = UserDefaults.standard
         if let owner = defaults.string(forKey: Self.localDataOwnerKey), owner != uid {
-            wipeLocalUserData()
+            // Not `purgingCache: true`: the disk cache holds *content* — puzzles, boards, crests —
+            // not the previous user's data, so dropping it on a switch buys no privacy and costs
+            // a full refetch. Deletion still purges it, where "remove every trace" is the point.
+            wipeLocalUserData(purgingCache: false)
         }
         defaults.set(uid, forKey: Self.localDataOwnerKey)
     }
@@ -336,7 +339,7 @@ final class RepositoryContainer: ObservableObject {
     /// Clears every on-device trace of the account. None of these keys are namespaced by user id,
     /// so without this a deleted account's streak, rating and scores would simply reappear for
     /// whoever signs in next on the same device.
-    private func wipeLocalUserData() {
+    private func wipeLocalUserData(purgingCache: Bool = true) {
         let prefixes = LocalProgressRepository.persistedKeyPrefixes
             + LocalRatingRepository.persistedKeyPrefixes
             + LocalSeasonRatingRepository.persistedKeyPrefixes
@@ -350,7 +353,7 @@ final class RepositoryContainer: ObservableObject {
             defaults.removeObject(forKey: key)
         }
         sportFilter = .all
-        DiskCache.purge()
+        if purgingCache { DiskCache.purge() }
     }
 
     func handleSignedOut() {

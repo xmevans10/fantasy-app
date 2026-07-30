@@ -167,12 +167,14 @@ final class GridCrossCheckTests: XCTestCase {
         struct Axes: Decodable {
             let axes: [GridMembershipIndex.Axis]
             let axisMemberships: [String]
+            let axisTeams: [String]
         }
         let extra = try JSONDecoder().decode(Axes.self,
                                              from: Data(GridCrossCheckFixture.axesJSON.utf8))
         var index = try loadIndex()
         index.axes = extra.axes
         index.axisMemberships = extra.axisMemberships
+        index.axisTeams = extra.axisTeams
         return index
     }
 

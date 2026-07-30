@@ -18,11 +18,25 @@ final class LocalDataOwnershipTests: XCTestCase {
     private var saved: [String: Any] = [:]
     private let touchedKeys = ["rating.nfl", "xp", "streakCount", RepositoryContainer.localDataOwnerKey]
 
+    private var previousCacheDirectory: URL?
+    private var scratchCacheDirectory: URL?
+
     override func setUp() {
         super.setUp()
         // Hosted tests share UserDefaults with the real app on this simulator, so anything
         // written here has to be put back or it corrupts the next manual launch.
         saved = touchedKeys.reduce(into: [:]) { $0[$1] = defaults.object(forKey: $1) }
+
+        // `wipeLocalUserData()` calls `DiskCache.purge()`, and the disk cache is shared with the
+        // whole suite — left pointed at the real caches directory, these tests delete fixtures
+        // other tests are mid-way through relying on (it took out `GridCrossCheckTests`).
+        // Point it at a scratch directory so the purge is real but contained.
+        previousCacheDirectory = DiskCache.directoryOverride
+        let scratch = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LocalDataOwnershipTests-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
+        scratchCacheDirectory = scratch
+        DiskCache.directoryOverride = scratch
     }
 
     override func tearDown() {
@@ -30,6 +44,8 @@ final class LocalDataOwnershipTests: XCTestCase {
             if let value = saved[key] { defaults.set(value, forKey: key) }
             else { defaults.removeObject(forKey: key) }
         }
+        DiskCache.directoryOverride = previousCacheDirectory
+        if let scratchCacheDirectory { try? FileManager.default.removeItem(at: scratchCacheDirectory) }
         super.tearDown()
     }
 

@@ -97,24 +97,29 @@ as $$
           from public.grid_axis_membership where sport = p_sport and p_version >= 2) m
   ),
   -- Career grain: which axes a player ever satisfied, blank-team aggregate rows included.
-  axis_any as (
-    select p.pidx, string_agg(distinct a.aidx::text, ',' order by a.aidx::text) as line
+  -- Deduped in a subquery rather than `string_agg(distinct ... order by ...)`, which Postgres
+  -- only allows when the ordering expression matches the distinct one — forcing a text sort that
+  -- would emit "10" before "2" unless zero-padded, and leak the padding into the wire format.
+  axis_any_pairs as (
+    select distinct p.pidx, a.aidx
     from public.grid_axis_membership gam
     join axes a on a.axis_key = gam.axis_key
     join players p on p.name = gam.player_name
     where gam.sport = p_sport and p_version >= 2
-    group by p.pidx
+  ),
+  axis_any as (
+    select pidx, string_agg(aidx::text, ',' order by aidx) as line
+    from axis_any_pairs group by pidx
   ),
   -- Season grain: (axis, team) pairs a SINGLE row satisfied. Blank-team rows are excluded here
   -- by the join to `teams` — they can't anchor a team cell, which is the entire correction.
   axis_team as (
-    select p.pidx, a.aidx, t.tidx
+    select distinct p.pidx, a.aidx, t.tidx
     from public.grid_axis_membership gam
     join axes a on a.axis_key = gam.axis_key
     join players p on p.name = gam.player_name
     join teams t on t.abbr = gam.team_abbr and t.league = gam.league
     where gam.sport = p_sport and p_version >= 2
-    group by p.pidx, a.aidx, t.tidx
   ),
   axis_team_lines as (
     select pidx,

@@ -32,11 +32,23 @@ struct GridMembershipIndex: Codable, Equatable {
     /// uses. Empty on a v1 payload, and empty is a legitimate answer — a sport whose catalog
     /// satisfies no axis simply offers no stat-flavoured board.
     var axes: [Axis] = []
-    /// Parallel to `players`, same run encoding as `memberships` but indexed into `axes`:
-    /// `axisIdx:yearOffset[,yearOffset…][;axisIdx:…]`. Unlike `memberships` this is genuinely
-    /// sparse — a player clearing no milestone is normal, not missing data — so the server emits
-    /// `""` for them rather than dropping the slot and desynchronising the index.
+    /// Parallel to `players`. Which axes this player ever satisfied, in any season:
+    /// `axisIdx[,axisIdx…]`. **Career grain** — the reduced form of "some season satisfied it",
+    /// which is all a cell needs when the axis is its only season-grain constraint.
+    ///
+    /// Genuinely sparse, unlike `memberships`: a player clearing no milestone is normal rather
+    /// than missing data, so the server emits `""` for them instead of dropping the slot and
+    /// desynchronising the index.
     var axisMemberships: [String] = []
+    /// Parallel to `players`. Which (axis, team) pairs **one single season** satisfied:
+    /// `axisIdx:teamIdx[,teamIdx…][;axisIdx:…]`. **Season grain**, and the reason it ships at all.
+    ///
+    /// This cannot be derived on-device by intersecting the two relations above. `player_seasons`
+    /// is game-grain and carries teamless season-aggregate rows for mid-season movers, so
+    /// "played for CLE in 2026" and "cleared 8 APG in 2026" can both be true of a player via
+    /// *different rows* — which is not the same claim as "cleared 8 APG as a Cavalier", and
+    /// `grid.py` says so. The pairing has to come from the row that satisfied both.
+    var axisTeams: [String] = []
 
     /// A franchise's identity. `league` is not decoration: soccer `team_abbr` values are derived
     /// from club names and collide across countries (MCI is Manchester City *and* Melbourne
@@ -82,10 +94,16 @@ struct GridMembershipIndex: Codable, Equatable {
             // A v2 payload that lost its axis alignment is worse than a v1 one: every lookup
             // would silently read another player's milestones. Degrade to no axes, not to wrong.
             && (axisMemberships.isEmpty || axisMemberships.count == players.count)
+            && (axisTeams.isEmpty || axisTeams.count == players.count)
     }
 
-    /// Whether the stat/position archetypes can be offered at all.
-    var hasAxes: Bool { !axes.isEmpty && axisMemberships.count == players.count }
+    /// Whether the stat/position archetypes can be offered at all. Both arrays are required:
+    /// `axisTeams` alone drives the season-grain shapes and `axisMemberships` the career-grain
+    /// one, so a payload carrying only one of them would half-enable the rotation.
+    var hasAxes: Bool {
+        !axes.isEmpty && axisMemberships.count == players.count
+            && axisTeams.count == players.count
+    }
 
     // MARK: - Decoding
 
@@ -147,14 +165,10 @@ struct GridMembershipTables {
     let teamDecadePlayers: [TeamDecade: Set<Int>]
     /// Every decade the catalog actually covers, ascending.
     let decades: [Int]
-    /// (axisIdx, decade) → players who satisfied that axis in a season of that decade. Season
-    /// grain, so it is keyed the same way `teamDecadePlayers` is: a stat axis crossed with a
-    /// decade asks "did ONE season clear this, in that decade".
-    let axisDecadePlayers: [AxisDecade: Set<Int>]
     /// (axisIdx, teamIdx) → players who satisfied the axis in a season played for that team.
-    /// Precomputed rather than intersected on demand: `teamPlayers ∩ axisPlayers` would be the
-    /// *career* question ("cleared 1,000 yards ever, and played here ever"), which is a different
-    /// and much easier cell than the season-grain one every stat archetype actually asks.
+    /// Read straight off `axisTeams`, never intersected on demand: `teamPlayers ∩ axisPlayers`
+    /// is the *career* question ("cleared it ever, and played here ever"), a different and much
+    /// easier cell than the season-grain one every stat archetype actually asks.
     let axisTeamPlayers: [AxisTeam: Set<Int>]
     /// axisIdx → every player who ever satisfied it, any season. Used where the axis is the cell's
     /// ONLY season-grain constraint (inside `mixed-x-teams`, facing a career-grain team): the
@@ -176,20 +190,17 @@ struct GridMembershipTables {
         let team: Int
         let decade: Int
     }
-    struct AxisDecade: Hashable {
-        let axis: Int
-        let decade: Int
-    }
     struct AxisTeam: Hashable {
         let axis: Int
         let team: Int
     }
 
-    /// Parses one run-encoded line into (slotIdx, [year]) pairs. `memberships` and
-    /// `axisMemberships` use the identical format against different index spaces, so they share
-    /// one parser — two copies would be two places for the offset arithmetic to drift.
+    /// Parses one `slot:value[,value…][;slot:…]` line. `memberships` and `axisTeams` share the
+    /// grammar against different index spaces — years-since-`minYear` for the first, team ids for
+    /// the second (pass `minYear: 0`) — so they share one parser rather than keeping two copies
+    /// of the same splitting for the offset arithmetic to drift between.
     private static func runs(_ line: String, minYear: Int,
-                             body: (_ slot: Int, _ year: Int) -> Void) {
+                             body: (_ slot: Int, _ value: Int) -> Void) {
         guard !line.isEmpty else { return }
         for run in line.split(separator: ";") {
             // "3:12,13" — slot index, then that slot's year offsets.
@@ -211,7 +222,6 @@ struct GridMembershipTables {
         // a team within the SAME season. Without it a stat axis could only be crossed with a team
         // at career grain, which is a different (and far easier) question than "1,000 yards *as a
         // Bear*" — the exact distinction `grid_axes` calls load-bearing.
-        var teamsByPlayerYear: [PlayerYear: [Int]] = [:]
         var byDecade: [Int: Set<Int>] = [:]
 
         for (playerIdx, line) in index.memberships.enumerated() {
@@ -222,32 +232,32 @@ struct GridMembershipTables {
                 decadeSet.insert(decade)
                 byDecade[decade, default: []].insert(playerIdx)
                 seasonal[TeamDecade(team: teamIdx, decade: decade), default: []].insert(playerIdx)
-                teamsByPlayerYear[PlayerYear(player: playerIdx, year: year), default: []]
-                    .append(teamIdx)
             }
         }
 
-        var axisDecade: [AxisDecade: Set<Int>] = [:]
         var axisTeam: [AxisTeam: Set<Int>] = [:]
         var axisAny = [Set<Int>](repeating: [], count: index.axes.count)
         if index.hasAxes {
-            for (playerIdx, line) in index.axisMemberships.enumerated() {
-                Self.runs(line, minYear: index.minYear) { axisIdx, year in
-                    guard axisIdx < axisAny.count else { return }
+            for (playerIdx, line) in index.axisMemberships.enumerated() where !line.isEmpty {
+                for field in line.split(separator: ",") {
+                    guard let axisIdx = Int(field), axisIdx >= 0, axisIdx < axisAny.count
+                    else { continue }
                     axisAny[axisIdx].insert(playerIdx)
-                    axisDecade[AxisDecade(axis: axisIdx, decade: (year / 10) * 10), default: []]
-                        .insert(playerIdx)
-                    for teamIdx in teamsByPlayerYear[PlayerYear(player: playerIdx, year: year)] ?? [] {
-                        axisTeam[AxisTeam(axis: axisIdx, team: teamIdx), default: []]
-                            .insert(playerIdx)
-                    }
+                }
+            }
+            // Same `slot:values` grammar as `memberships`, but the values are team ids rather
+            // than years — the pairing is already resolved server-side, so there is nothing to
+            // join here and no opportunity to join it wrongly.
+            for (playerIdx, line) in index.axisTeams.enumerated() {
+                Self.runs(line, minYear: 0) { axisIdx, teamIdx in
+                    guard axisIdx < axisAny.count, teamIdx < career.count else { return }
+                    axisTeam[AxisTeam(axis: axisIdx, team: teamIdx), default: []].insert(playerIdx)
                 }
             }
         }
 
         self.teamPlayers = career
         self.teamDecadePlayers = seasonal
-        self.axisDecadePlayers = axisDecade
         self.axisTeamPlayers = axisTeam
         self.axisPlayers = axisAny
         self.decadePlayers = byDecade
@@ -255,10 +265,5 @@ struct GridMembershipTables {
         self.teamsByProminence = career.indices.sorted {
             career[$0].count != career[$1].count ? career[$0].count > career[$1].count : $0 < $1
         }
-    }
-
-    private struct PlayerYear: Hashable {
-        let player: Int
-        let year: Int
     }
 }
