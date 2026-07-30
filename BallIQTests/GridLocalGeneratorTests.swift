@@ -229,4 +229,101 @@ final class GridLocalGeneratorTests: XCTestCase {
             players: ["x"], memberships: ["0:0"])
         XCTAssertFalse(future.isUsable, "an unknown wire version must not drive generation")
     }
+
+    // MARK: - v2 axes (stat / position archetypes)
+
+    /// `richIndex` plus stat and position axis membership. Player `P0_1980_0` plays for team 0 in
+    /// 1980 and team 1 in 1980 (see `richIndex`), and is given the milestone only in 1980, so a
+    /// season-grain cell can be distinguished from a career-grain one.
+    private func axisIndex() -> GridMembershipIndex {
+        var index = richIndex()
+        index.axes = [
+            .init(key: "stat:points:gte:2000", kind: "stat", label: "2,000+ Points"),
+            .init(key: "stat:rebounds:gte:700", kind: "stat", label: "700+ Rebounds"),
+            .init(key: "stat:assists:gte:500", kind: "stat", label: "500+ Assists"),
+            .init(key: "pos:G", kind: "position", label: "Guards"),
+        ]
+        // Every player gets all four axes in each of their membership years, so any drawn board
+        // is viable and a failure is the generator's rather than the fixture's.
+        index.axisMemberships = index.memberships.map { line in
+            let years = line.split(separator: ";").compactMap { run -> String? in
+                guard let colon = run.firstIndex(of: ":") else { return nil }
+                return String(run[run.index(after: colon)...])
+            }
+            guard let first = years.first else { return "" }
+            return (0..<4).map { "\($0):\(first)" }.joined(separator: ";")
+        }
+        return index
+    }
+
+    func testV2IndexUnlocksTheStatAndPositionArchetypes() {
+        let shapes = Set(generator(axisIndex()).feasibleArchetypes.map(\.rawValue))
+        XCTAssertTrue(shapes.contains("teams-x-stats"))
+        XCTAssertTrue(shapes.contains("teams-x-mixed"))
+        XCTAssertTrue(shapes.contains("mixed-x-teams"))
+    }
+
+    /// The compatibility promise: a v1 payload — a cached one from a previous build, or a sport
+    /// whose catalog satisfies no axis — must still generate, just from the two team shapes.
+    /// Losing generation entirely would drop practice back to the small server pool.
+    func testV1IndexStillGeneratesFromTheTeamShapesOnly() throws {
+        let gen = generator(richIndex())
+        XCTAssertEqual(Set(gen.feasibleArchetypes.map(\.rawValue)),
+                       ["teams-x-decades", "teams-x-teams"])
+        XCTAssertNotNil(try XCTUnwrap(gen.board(seed: 7)).puzzle)
+    }
+
+    /// Every board the v2 rotation can draw still has to satisfy the invariants, whichever of the
+    /// five shapes it lands on — including the answer ceiling the mixed shapes made necessary
+    /// (a position axis is the loosest thing on a board: "KC x RB" is every RB the club had).
+    func testEveryV2BoardStaysViableAndUnderTheCeiling() throws {
+        let gen = generator(axisIndex())
+        var seen: Set<String> = []
+        for seed in UInt64(1)...60 {
+            guard let board = gen.board(seed: seed) else { continue }
+            seen.insert(board.puzzle.archetype ?? "")
+            XCTAssertEqual(board.puzzle.cells.count, 9)
+            for cell in board.puzzle.cells {
+                XCTAssertFalse(cell.validAnswerNames.isEmpty)
+                XCTAssertLessThanOrEqual(cell.validAnswerNames.count,
+                                         GridLocalGenerator.maxCellAnswers)
+            }
+        }
+        XCTAssertGreaterThan(seen.count, 1, "the rotation should reach more than one shape")
+    }
+
+    /// A `mixed-x-teams` row edge that drew three teams is just teams-x-teams wearing another
+    /// label — the sameness the shape exists to break, and `grid.py` rejects it for the same
+    /// reason (`_is_varied`).
+    func testMixedRowsAreNeverAllTeams() throws {
+        let gen = generator(axisIndex())
+        for seed in UInt64(1)...80 {
+            guard let board = gen.board(seed: seed),
+                  board.puzzle.archetype == "mixed-x-teams" else { continue }
+            XCTAssertGreaterThan(Set(board.puzzle.rows.map(\.kind)).count, 1,
+                                 "mixed_any must actually mix kinds")
+        }
+    }
+
+    /// An axis array that doesn't line up with `players` would make every lookup read some other
+    /// player's milestones. Degrade to no axes, never to wrong ones.
+    func testMisalignedAxisMembershipsAreRejected() {
+        var index = axisIndex()
+        index.axisMemberships.removeLast()
+        XCTAssertFalse(index.isUsable,
+                       "a v2 payload whose axis rows don't match its players must not be used")
+    }
+
+    /// `hasAxes` is what gates the three new shapes, so a v2 payload carrying an empty axis list
+    /// (a sport whose catalog satisfies nothing) must behave exactly like v1 rather than
+    /// half-enabling a shape with no axes to draw.
+    func testV2WithNoAxesBehavesLikeV1() {
+        var index = richIndex()
+        index.axes = []
+        index.axisMemberships = index.players.map { _ in "" }
+        XCTAssertTrue(index.isUsable)
+        XCTAssertFalse(index.hasAxes)
+        XCTAssertEqual(Set(generator(index).feasibleArchetypes.map(\.rawValue)),
+                       ["teams-x-decades", "teams-x-teams"])
+    }
 }

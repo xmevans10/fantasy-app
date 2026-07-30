@@ -22,6 +22,8 @@ struct ProfileView: View {
     /// deletion needs a visible terminal state rather than the screen quietly reverting to
     /// signed-out — and the user deserves to be told it actually happened.
     @State private var deletionConfirmed = false
+    /// Surfaced when a provider sign-in fails — previously swallowed by `try?`.
+    @State private var signInError: String?
 
     /// The player's strongest sport headlines the hero (ties favor NFL — `allCases` order).
     private var bestSport: Sport {
@@ -86,6 +88,13 @@ struct ProfileView: View {
             Button("OK", role: .cancel) { }
         } message: {
             Text("Your account and all of its data have been permanently deleted.")
+        }
+        .alert("Sign-in failed", isPresented: Binding(
+            get: { signInError != nil }, set: { if !$0 { signInError = nil } }
+        )) {
+            Button("OK", role: .cancel) { signInError = nil }
+        } message: {
+            Text(signInError ?? "")
         }
         .alert("Couldn't delete account", isPresented: Binding(
             get: { deletionError != nil }, set: { if !$0 { deletionError = nil } }
@@ -515,7 +524,17 @@ struct ProfileView: View {
                 if GoogleSignIn.isConfigured {
                 Button {
                     Task {
-                        try? await container.auth.signInWithGoogle()
+                        do {
+                            try await container.auth.signInWithGoogle()
+                        } catch {
+                            // Was `try?`, which is why a rejected token looked like the button
+                            // did nothing at all: the flow completed, GoTrue 400'd, and the
+                            // error went straight in the bin. A sign-in that fails has to say so.
+                            if !(error is CancellationError) {
+                                signInError = String(localized: "Couldn't complete sign-in. Try again.")
+                            }
+                            return
+                        }
                         await container.syncIfSignedIn()
                         if container.isSignedIn {
                             container.track(.signInCompleted, ["provider": "google", "surface": "profile"])

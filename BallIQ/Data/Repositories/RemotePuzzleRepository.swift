@@ -122,8 +122,10 @@ final class RemotePuzzleRepository: PuzzleRepository {
     /// The sport's membership relation, powering client-side board generation. Same shape as
     /// `playerNameIndex` above — one sport-wide RPC, one array, a week of disk cache — because it
     /// is the same kind of payload: rarely-changing reference data whose whole value is not
-    /// having to ask the server per board. Measured on the wire (gzipped): nfl 69 KB, nba 62 KB,
-    /// baseball 119 KB, soccer 254 KB, tennis 16 KB, versus 64 KB for a *single* NFL board.
+    /// having to ask the server per board. Measured on the wire (gzipped), v1 → v2 after the axis
+    /// arrays landed: nfl 69→93 KB, nba 61→85, baseball 118→185, soccer 270→352, tennis 15→18.
+    /// Worth it against 64 KB for a *single* NFL board: the largest index still costs about what
+    /// five boards do, once a week, and then generates an unbounded number of them offline.
     ///
     /// `contentDecoder`, not `JSONDecoder.supabase`: the payload is camelCase (`minYear`), and
     /// the shared decoder's snake_case key strategy would fail to decode it silently — the exact

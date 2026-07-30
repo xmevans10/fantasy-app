@@ -52,7 +52,14 @@ enum GoogleSignIn {
         }
         let verifier = AuthService.makeNonce(length: 64)
         let challenge = base64URLEncodedSHA256(of: verifier)
-        let nonce = AuthService.makeNonce(length: 32)
+        // GoTrue hashes whatever nonce you hand it and compares that against the `nonce` claim
+        // inside the id_token, so the provider must receive the SHA-256 and the exchange must
+        // receive the raw value. Sending the raw nonce to Google puts the raw value in the claim
+        // and GoTrue then compares hash-of-raw against raw — `invalid nonce: Nonces mismatch`,
+        // a 400 that surfaces in the app as a sign-in that completes and silently does nothing.
+        // Same convention Sign in with Apple already uses here (`request.nonce = sha256(raw)`).
+        let rawNonce = AuthService.makeNonce(length: 32)
+        let hashedNonce = AuthService.sha256(rawNonce)
 
         var comps = URLComponents(string: "https://accounts.google.com/o/oauth2/v2/auth")!
         comps.queryItems = [
@@ -64,7 +71,7 @@ enum GoogleSignIn {
             URLQueryItem(name: "scope", value: "openid email profile"),
             URLQueryItem(name: "code_challenge", value: challenge),
             URLQueryItem(name: "code_challenge_method", value: "S256"),
-            URLQueryItem(name: "nonce", value: nonce),
+            URLQueryItem(name: "nonce", value: hashedNonce),
         ]
 
         let callback = try await OAuthBrowserSession.run(url: comps.url!,
@@ -74,8 +81,9 @@ enum GoogleSignIn {
             throw SupabaseError.transport("Google didn't return an authorization code")
         }
 
+        // Raw, not hashed — GoTrue does the hashing on its side.
         return Credentials(idToken: try await exchange(code: code, verifier: verifier),
-                           nonce: nonce)
+                           nonce: rawNonce)
     }
 
     /// Swaps the one-time code for an `id_token`. No client secret: the `code_verifier` is what
