@@ -486,6 +486,31 @@ revoke the Apple token server-side without another round of auth plumbing.
 **screen recording of the deletion flow on a physical device** that Apple explicitly demanded in
 the App Review Information notes — submitting without it invites a third rejection.
 
+⚠️ **Root cause of the 2.1(a) rejections was very likely the Paid Applications Agreement, not
+the app** (2026-07-30). The agreement only goes **Active** once all three of accepted-agreement,
+**bank account**, and **tax forms** are complete — banking + tax were added 2026-07-30, i.e.
+*after* both rejections. While it sits Pending, `Product.products(for:)` returns an **empty array
+with no error** in every environment: development device, TestFlight, App Review, production.
+That matches every observation: Apple saw a paywall with no plans twice, the developer's own
+device said "Couldn't reach the App Store", and every success we could produce locally came from
+`SKTestSession` reading `Products.storekit`, which bypasses Apple's servers entirely.
+
+**Why this was invisible to the API sweep:** product *state* is not product *availability*. All
+four products read `IN_REVIEW` throughout, prices and territories were correct, ids matched code
+exactly, and the bundle id matched — every check the ASC REST API exposes came back clean. There
+is **no public ASC API for agreement status** (`/v1/agreements` and
+`/v1/paidApplicationsAgreements` both 404), so the one gating fact is only visible in the ASC UI
+under **Business → Paid Applications**. Check it there first whenever products don't load.
+
+The client bugs found alongside this were real and independently reproduced (the container never
+republished the catalog, so plans that *did* arrive never rendered — proven red/green), so both
+needed fixing. But an empty catalog cannot be worked around client-side: StoreKit 2 has no way to
+start a purchase without a `Product` object, so there is nothing to display and nothing to buy.
+**Sequence for resubmission: confirm Paid Applications reads Active → wait for propagation (hours,
+occasionally ~24h) → verify plans actually render on a TestFlight build → only then submit.**
+Testing from Xcode proves nothing here: the scheme attaches `Products.storekit`, so the paywall
+fills in regardless of what Apple would serve.
+
 **Open items / hand-offs**
 1. ~~M5 monetization fully unstarted / M14 Spanish~~ — stale: M5 Phases A–E, M14 Spanish, and
    ~~Phase F rating seasons~~ (**shipped 2026-07-20**, roadmap v1.4) are all done. The only
