@@ -167,6 +167,7 @@ final class RepositoryContainer: ObservableObject {
     func syncIfSignedIn() async {
         guard let client, let uid = auth.userID else { sync = nil; isAdmin = false; return }
         await auth.refreshIfNeeded()
+        adoptLocalData(for: uid)
         let mirror = RemoteSync(client: client, userID: uid,
                                 localProgress: localProgress, localRating: localRating,
                                 localSeasonRating: localSeasonRating)
@@ -309,6 +310,29 @@ final class RepositoryContainer: ObservableObject {
         await refreshFromLocal()
     }
 
+    /// `UserDefaults` key naming which user the on-device progress belongs to. Nil means it's
+    /// guest data that nobody has claimed yet.
+    static let localDataOwnerKey = "localDataOwnerUserID"
+
+    /// Hands the device's local progress to `uid`, wiping it first if it belongs to someone else.
+    ///
+    /// Local rating/progress/streak keys are not namespaced by user, and `RemoteSync.mergeRating`
+    /// is a `max` of local and remote. That combination is deliberate for guest → first account:
+    /// a player who racks up a 1231 rating before signing up keeps it. But it cannot tell that
+    /// case apart from signing in as a *different* account on the same device, where the same
+    /// `max` silently hands the previous user's rating to the new one — reported 2026-07-30,
+    /// where a brand-new account opened showing the previous user's 1231 NFL rating.
+    ///
+    /// Recording an owner separates the two: no owner means unclaimed guest data and it migrates
+    /// as before; a different owner means this is someone else's device state and it goes.
+    func adoptLocalData(for uid: String) {
+        let defaults = UserDefaults.standard
+        if let owner = defaults.string(forKey: Self.localDataOwnerKey), owner != uid {
+            wipeLocalUserData()
+        }
+        defaults.set(uid, forKey: Self.localDataOwnerKey)
+    }
+
     /// Clears every on-device trace of the account. None of these keys are namespaced by user id,
     /// so without this a deleted account's streak, rating and scores would simply reappear for
     /// whoever signs in next on the same device.
@@ -318,7 +342,7 @@ final class RepositoryContainer: ObservableObject {
             + LocalSeasonRatingRepository.persistedKeyPrefixes
             + DailyDraftStore.persistedKeyPrefixes
             + LocalOverUnderStore.persistedKeyPrefixes
-            + ["sportFilter"]
+            + ["sportFilter", Self.localDataOwnerKey]
 
         let defaults = UserDefaults.standard
         for key in defaults.dictionaryRepresentation().keys

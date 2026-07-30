@@ -287,7 +287,7 @@ def upsert_grid_axis_membership(rows: list[dict]) -> int:
     """Write stat/position axis membership (on_conflict = the full primary key, so a re-run
     after the catalog grows is a no-op for rows that already matched)."""
     return _upsert_table("grid_axis_membership", rows,
-                         conflict="sport,axis_key,player_name,season_year")
+                         conflict="sport,axis_key,player_name,team_abbr,league,season_year")
 
 
 def upsert_grid_history(rows: list[dict]) -> int:

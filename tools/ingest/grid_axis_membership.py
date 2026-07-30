@@ -21,7 +21,7 @@ reinterpretation of these.
 """
 from __future__ import annotations
 
-from .grid_axes import GridAxis, position_axes, stat_axes
+from .grid_axes import LEAGUE_SCOPED_SPORTS, GridAxis, position_axes, stat_axes
 from .models import RawSeason
 
 
@@ -36,12 +36,25 @@ def axes_for(sport: str) -> list[GridAxis]:
 def membership_rows(seasons: list[RawSeason], sport: str) -> list[dict]:
     """`grid_axis_membership` rows for one sport.
 
-    Deduplicated on (axis, player, year) because `player_seasons` carries game-grain rows for
-    some sports — the same reason 0011's relation is ~4x smaller than the table it comes from.
-    A player satisfying an axis twice in one season is still one fact.
+    **The team is carried from the SAME row that satisfied the axis, and that is the whole point
+    of this shape.** A first version stored only (axis, player, year) and let the client join it
+    against the team relation on the year — which silently answers a different question, because
+    `player_seasons` is game-grain and also carries teamless season-aggregate rows for players who
+    moved mid-season. James Harden has 7 CLE rows for 2026 and 3 rows with a blank `team_abbr`;
+    the aggregate row is what clears "8+ APG", so a year-join concluded he cleared 8 APG *as a
+    Cavalier*, which `grid.py` (matching both predicates against one `RawSeason`) correctly
+    denies. The cross-check caught it — see `GridCrossCheckTests`.
+
+    Blank-team rows are kept, not dropped: they are exactly what a CAREER-grain axis question
+    ("cleared 8 APG in some season") should still count, and `grid.py` counts them there too.
+    Only the season-grain (axis x team) pairing needs a real team, which is a read-side concern.
+
+    Deduplicated on (axis, player, team, year) because game-grain rows would otherwise repeat a
+    single fact dozens of times.
     """
     pool = [s for s in seasons if s.sport == sport and not s.career]
-    seen: set[tuple[str, str, int]] = set()
+    league_scoped = sport in LEAGUE_SCOPED_SPORTS
+    seen: set[tuple[str, str, str, str, int]] = set()
     rows: list[dict] = []
     for axis in axes_for(sport):
         for season in pool:
@@ -49,7 +62,9 @@ def membership_rows(seasons: list[RawSeason], sport: str) -> list[dict]:
                 continue
             if not axis.matches(season):
                 continue
-            key = (axis.key, season.name, season.season_year)
+            team = season.team_abbr or ""
+            league = (season.meta.get("league", "") or "") if league_scoped else ""
+            key = (axis.key, season.name, team, league, season.season_year)
             if key in seen:
                 continue
             seen.add(key)
@@ -59,6 +74,8 @@ def membership_rows(seasons: list[RawSeason], sport: str) -> list[dict]:
                 "axis_kind": axis.kind,
                 "axis_label": axis.label,
                 "player_name": season.name,
+                "team_abbr": team,
+                "league": league,
                 "season_year": season.season_year,
             })
     return rows

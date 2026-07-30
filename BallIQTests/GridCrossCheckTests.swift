@@ -154,8 +154,105 @@ final class GridCrossCheckTests: XCTestCase {
             switch axis.kind {
             case .team: XCTAssertFalse(axis.teamAbbr.isEmpty)
             case .decade: XCTAssertTrue(axis.label.hasSuffix("s"))
-            default: XCTFail("membership boards can only carry team and decade axes")
+            default: XCTFail("a v1 board can only carry team and decade axes")
             }
         }
+    }
+
+    // MARK: - v2: the stat/position archetypes
+
+    /// The v1 payload plus the axis arrays — the same index the app builds when the RPC is asked
+    /// for v2, assembled from two fixtures so teams/players/memberships aren't duplicated.
+    private func loadV2Index() throws -> GridMembershipIndex {
+        struct Axes: Decodable {
+            let axes: [GridMembershipIndex.Axis]
+            let axisMemberships: [String]
+        }
+        let extra = try JSONDecoder().decode(Axes.self,
+                                             from: Data(GridCrossCheckFixture.axesJSON.utf8))
+        var index = try loadIndex()
+        index.axes = extra.axes
+        index.axisMemberships = extra.axisMemberships
+        return index
+    }
+
+    private func loadExpectedAxisCells() throws -> [GridCrossCheckFixture.ExpectedAxisCell] {
+        try JSONDecoder().decode([GridCrossCheckFixture.ExpectedAxisCell].self,
+                                 from: Data(GridCrossCheckFixture.expectedAxisJSON.utf8))
+    }
+
+    /// **The cell computation this whole file exists for, for the archetypes it could not reach
+    /// until now.** A `teams-x-stats` cell is season-grain on both sides: one season must satisfy
+    /// the team AND the milestone together ("1,000 yards *as a Bear*"). The tempting shortcut —
+    /// intersecting "played here ever" with "cleared it ever" — silently answers a different,
+    /// much easier question, and would pass every synthetic test in `GridLocalGeneratorTests`.
+    /// Only real data with real career movement distinguishes them, which is what this does.
+    func testSeasonGrainStatCellsMatchGridPy() throws {
+        let tables = GridMembershipTables(try loadV2Index())
+        let axisIndex = Dictionary(uniqueKeysWithValues:
+            tables.index.axes.enumerated().map { ($0.element.key, $0.offset) })
+        let cells = try loadExpectedAxisCells().filter { $0.archetype == "teams-x-stats" }
+        XCTAssertFalse(cells.isEmpty, "fixture no longer covers teams-x-stats")
+
+        for cell in cells {
+            let axis = try XCTUnwrap(axisIndex[cell.axisKey], cell.axisKey)
+            let got = tables.axisTeamPlayers[.init(axis: axis, team: cell.rowTeam)] ?? []
+            let names = Set(got.map { tables.index.players[$0] })
+            XCTAssertEqual(names, Set(cell.names),
+                           "\(cell.rowKey) x \(cell.colKey) disagrees with grid.py")
+        }
+    }
+
+    /// The career-grain half. In `mixed-x-teams` the team column is career grain, which makes the
+    /// stat row the cell's only season-grain constraint — so the rule reduces to "some season
+    /// satisfied it", and a plain set intersection becomes correct *here and nowhere else*.
+    /// Pinned because that asymmetry is exactly the kind of thing a later refactor "tidies away".
+    func testCareerGrainMixedCellsMatchGridPy() throws {
+        let tables = GridMembershipTables(try loadV2Index())
+        let axisIndex = Dictionary(uniqueKeysWithValues:
+            tables.index.axes.enumerated().map { ($0.element.key, $0.offset) })
+        let cells = try loadExpectedAxisCells().filter { $0.archetype == "mixed-x-teams" }
+        XCTAssertFalse(cells.isEmpty, "fixture no longer covers mixed-x-teams")
+
+        for cell in cells {
+            let axis = try XCTUnwrap(axisIndex[cell.axisKey], cell.axisKey)
+            let got = tables.axisPlayers[axis].intersection(tables.teamPlayers[cell.rowTeam])
+            let names = Set(got.map { tables.index.players[$0] })
+            XCTAssertEqual(names, Set(cell.names),
+                           "\(cell.rowKey) x \(cell.colKey) disagrees with grid.py")
+        }
+    }
+
+    /// Season and career grain must actually differ on this data, or the two tests above would
+    /// both pass against a generator that had collapsed them into one. Guards the guard.
+    func testTheTwoGrainsAreNotTheSameQuestionOnRealData() throws {
+        let tables = GridMembershipTables(try loadV2Index())
+        let axisIndex = Dictionary(uniqueKeysWithValues:
+            tables.index.axes.enumerated().map { ($0.element.key, $0.offset) })
+        var differed = false
+        for cell in try loadExpectedAxisCells() where cell.archetype == "teams-x-stats" {
+            guard let axis = axisIndex[cell.axisKey] else { continue }
+            let season = tables.axisTeamPlayers[.init(axis: axis, team: cell.rowTeam)] ?? []
+            let career = tables.axisPlayers[axis].intersection(tables.teamPlayers[cell.rowTeam])
+            if season != career { differed = true; break }
+        }
+        XCTAssertTrue(differed,
+                      "if career grain always equalled season grain here, the fixture proves nothing")
+    }
+
+    /// A v2 board can legitimately carry stat and position axes, which the v1 assertion above
+    /// rejects — so the vocabulary check has its own v2 form rather than a loosened shared one.
+    func testV2BoardsCarryRealAxisVocabulary() throws {
+        let generator = GridLocalGenerator(index: try loadV2Index(), leagueCode: { _ in "" })
+        var kinds: Set<GridPuzzle.GridAxis.Kind> = []
+        for seed in UInt64(0)..<60 {
+            guard let board = generator.board(seed: seed) else { continue }
+            for axis in board.puzzle.rows + board.puzzle.cols {
+                kinds.insert(axis.kind)
+                XCTAssertFalse(axis.label.isEmpty)
+            }
+        }
+        XCTAssertTrue(kinds.contains(.stat) || kinds.contains(.position),
+                      "the v2 rotation should reach a milestone axis on real data")
     }
 }
