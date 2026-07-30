@@ -24,16 +24,12 @@ enum GoogleSignIn {
     /// in Supabase → Authentication → Providers → Google → **Authorized Client IDs**, or GoTrue
     /// will reject the `id_token` even though Google issued it happily.
     ///
-    /// ⚠️ EMPTY UNTIL A NEW iOS CLIENT EXISTS. The previous id
-    /// (`392561766080-2uhj6v08…`, still sitting in the stale
-    /// `client_*.apps.googleusercontent.com.plist` at the repo root) was **deleted from Google
-    /// Cloud**, which Google reports mid-flow as "the OAuth client was deleted" — an error the
-    /// user reads as the app being broken. Left blank rather than pointing at the dead client so
-    /// the failure is a clear, early message instead of a Google error page. Create a new **iOS**
-    /// client (bundle id `com.balliqfantasy.app`), paste the id here, update
-    /// `redirectScheme` + Info.plist's `CFBundleURLTypes` to its reversed form, and add it to
-    /// Supabase's Authorized Client IDs.
-    static let clientID = ""
+    /// Replaced 2026-07-30. The previous id (`392561766080-2uhj6v08…`) had been **deleted from
+    /// Google Cloud**, which Google reports mid-flow as "the OAuth client was deleted" — an error
+    /// a user reads as the app being broken. If that ever recurs, blank this rather than leaving
+    /// a dead id in place: `isConfigured` hides the Google button, which beats shipping one that
+    /// always fails.
+    static let clientID = "392561766080-cbmq70afurju5rj73qi2vaqi6htvmi6e.apps.googleusercontent.com"
 
     static var isConfigured: Bool { !clientID.isEmpty }
 
@@ -41,7 +37,7 @@ enum GoogleSignIn {
     /// out rather than derived from `clientID`: the matching entry also has to be declared
     /// verbatim in Info.plist's `CFBundleURLTypes`, and two independent derivations of the same
     /// string is how they drift apart. `GoogleSignInTests` asserts they still agree.
-    static let redirectScheme = "com.googleusercontent.apps.392561766080-2uhj6v08ejd3v53jruq1ofj2p707dcmj"
+    static let redirectScheme = "com.googleusercontent.apps.392561766080-cbmq70afurju5rj73qi2vaqi6htvmi6e"
     static var redirectURI: String { "\(redirectScheme):/oauth2redirect" }
 
     struct Credentials {
