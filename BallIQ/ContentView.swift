@@ -54,6 +54,14 @@ struct ContentView: View {
         .onChange(of: scenePhase) { _, phase in
             // Foreground refresh — the only "push" the Versus badge gets until APNs ships.
             if phase == .active { Task { await container.refreshVersusBadge() } }
+            // A catalog that failed at launch used to stay failed for the whole process
+            // lifetime unless the user found the paywall's "Try again". Coming back to the app
+            // is the cheapest moment to retry — connectivity has usually changed — and it means
+            // a reviewer who backgrounds the app once gets a fresh attempt without knowing to
+            // ask for one.
+            if phase == .active, container.productLoadState == .failed {
+                Task { await container.reloadProducts() }
+            }
         }
         .onAppear {
             if let url = DebugLaunch.openURL { Task { await handle(url) } }

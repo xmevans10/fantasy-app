@@ -76,6 +76,21 @@ struct PaywallView: View {
                 // 1.3 build 16 was rejected under Guideline 2.1(a). Opening the paywall is the
                 // exact moment the products are needed, so re-fetch here when we have none.
                 if container.products.isEmpty { await container.reloadProducts() }
+
+                // Keep trying while the paywall is actually on screen. `loadProducts()` gives up
+                // after ~2s so the UI can say something honest rather than spin forever, but
+                // "gave up" shouldn't mean "gave up until the user finds a button" — a reviewer
+                // on a slow network has no reason to tap Try again, and the empty paywall is
+                // what gets the build rejected. Backs off, stops as soon as anything arrives,
+                // and is bounded so it can't sit there hammering StoreKit.
+                //
+                // `.task` is cancelled when the sheet dismisses, which ends this loop with it.
+                for delay in [2, 4, 8] as [UInt64] {
+                    guard container.products.isEmpty else { break }
+                    try? await Task.sleep(nanoseconds: delay * 1_000_000_000)
+                    guard !Task.isCancelled, container.products.isEmpty else { break }
+                    await container.reloadProducts()
+                }
             }
         }
     }
