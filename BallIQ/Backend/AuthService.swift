@@ -100,6 +100,21 @@ final class AuthService: ObservableObject {
 
     /// Sign in via a Supabase-hosted OAuth provider using the system browser sheet.
     /// `redirect_to` points at the app's registered `balliq` URL scheme.
+    /// Google, natively — Google's own consent sheet with this app's iOS client, then the same
+    /// `grant_type=id_token` exchange Apple uses. See `GoogleSignIn` for why this replaced the
+    /// Supabase-hosted redirect (it showed users "continue to <project-ref>.supabase.co" and
+    /// dead-ended in Safari whenever the callback wasn't on the redirect allow-list).
+    func signInWithGoogle() async throws {
+        guard let client else { throw SupabaseError.notConfigured }
+        let credentials = try await GoogleSignIn.authenticate()
+        let data = try await client.authToken(grantType: "id_token", body: [
+            "provider": "google",
+            "id_token": credentials.idToken,
+            "nonce": credentials.nonce,
+        ])
+        apply(try Self.parseSession(from: data))
+    }
+
     func signInWithProvider(_ provider: String) async throws {
         guard let client else { throw SupabaseError.notConfigured }
         var comps = URLComponents(url: client.config.url.appendingPathComponent("auth/v1/authorize"),

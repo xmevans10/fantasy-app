@@ -12,6 +12,14 @@
 				<string>balliq</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.googleusercontent.apps</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.392561766080-2uhj6v08ejd3v53jruq1ofj2p707dcmj</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

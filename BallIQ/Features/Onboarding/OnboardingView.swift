@@ -425,7 +425,7 @@ struct OnboardingView: View {
 
     private func signInWithGoogle() async {
         do {
-            try await container.auth.signInWithProvider("google")
+            try await container.auth.signInWithGoogle()
             await container.syncIfSignedIn()
             container.track(.signInCompleted, ["provider": "google", "surface": "onboarding"])
             finishOrClaimUsername()

@@ -510,7 +510,7 @@ struct ProfileView: View {
 
                 Button {
                     Task {
-                        try? await container.auth.signInWithProvider("google")
+                        try? await container.auth.signInWithGoogle()
                         await container.syncIfSignedIn()
                         if container.isSignedIn {
                             container.track(.signInCompleted, ["provider": "google", "surface": "profile"])
