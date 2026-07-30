@@ -508,6 +508,11 @@ struct ProfileView: View {
                 .frame(height: 50)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
 
+                // Hidden rather than shown-and-broken while no iOS OAuth client exists: a
+                // sign-in button that always errors is worse than one absent option, and a
+                // reviewer tapping it would be looking at a Guideline 2.1 bug. Sign in with
+                // Apple covers account creation on its own.
+                if GoogleSignIn.isConfigured {
                 Button {
                     Task {
                         try? await container.auth.signInWithGoogle()
@@ -528,6 +533,7 @@ struct ProfileView: View {
                     .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
                 }
                 .buttonStyle(.plain)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

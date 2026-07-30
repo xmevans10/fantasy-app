@@ -23,7 +23,19 @@ enum GoogleSignIn {
     /// is visible in every authorization request the app makes. It must match the client listed
     /// in Supabase → Authentication → Providers → Google → **Authorized Client IDs**, or GoTrue
     /// will reject the `id_token` even though Google issued it happily.
-    static let clientID = "392561766080-2uhj6v08ejd3v53jruq1ofj2p707dcmj.apps.googleusercontent.com"
+    ///
+    /// ⚠️ EMPTY UNTIL A NEW iOS CLIENT EXISTS. The previous id
+    /// (`392561766080-2uhj6v08…`, still sitting in the stale
+    /// `client_*.apps.googleusercontent.com.plist` at the repo root) was **deleted from Google
+    /// Cloud**, which Google reports mid-flow as "the OAuth client was deleted" — an error the
+    /// user reads as the app being broken. Left blank rather than pointing at the dead client so
+    /// the failure is a clear, early message instead of a Google error page. Create a new **iOS**
+    /// client (bundle id `com.balliqfantasy.app`), paste the id here, update
+    /// `redirectScheme` + Info.plist's `CFBundleURLTypes` to its reversed form, and add it to
+    /// Supabase's Authorized Client IDs.
+    static let clientID = ""
+
+    static var isConfigured: Bool { !clientID.isEmpty }
 
     /// Google requires the redirect URI of an iOS client to be its reversed client id. Written
     /// out rather than derived from `clientID`: the matching entry also has to be declared
@@ -39,6 +51,9 @@ enum GoogleSignIn {
 
     /// Runs the consent sheet and returns a verified `id_token` plus the nonce it was bound to.
     static func authenticate() async throws -> Credentials {
+        guard isConfigured else {
+            throw SupabaseError.notConfigured
+        }
         let verifier = AuthService.makeNonce(length: 64)
         let challenge = base64URLEncodedSHA256(of: verifier)
         let nonce = AuthService.makeNonce(length: 32)

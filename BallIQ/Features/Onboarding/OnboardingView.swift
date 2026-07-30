@@ -392,7 +392,9 @@ struct OnboardingView: View {
             .frame(height: 52)
             .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
 
-            googleButton
+            // Hidden while no iOS OAuth client exists — see `GoogleSignIn.clientID`. A sign-in
+            // button that always errors is worse than one fewer option.
+            if GoogleSignIn.isConfigured { googleButton }
 
             Button { finish() } label: {
                 Text("Not now")
