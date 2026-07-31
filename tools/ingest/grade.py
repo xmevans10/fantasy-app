@@ -112,6 +112,24 @@ _FANTASY: dict[str, list[tuple[str, float]]] = {
         ("rushing_yards", 0.1),
         ("rushing_tds", 6.0),
     ],
+    # NFL defense — standard IDP (individual defensive player) points-league rates, the most
+    # common defaults across major platforms: solo+assisted tackle 0.75 (blended — there's no
+    # canonical single rate and `tackles_combined` already folds solo into itself, so scoring
+    # `tackles_solo` too would double-count), sack 2, TFL 0.5, forced fumble 2, fumble recovery
+    # 2, interception 3, pass defended 1, defensive/return TD 6, safety 2. Not wired to a
+    # shipped theme yet — added alongside `nfl_nflverse_defense.py` so a defensive Draft & Spin
+    # pool or card ranking has a ready formula rather than inventing one later under pressure.
+    "nfl_defense_fantasy": [
+        ("tackles_combined", 0.75),
+        ("tackles_for_loss", 0.5),
+        ("sacks", 2.0),
+        ("forced_fumbles", 2.0),
+        ("fumble_recoveries", 2.0),
+        ("def_interceptions", 3.0),
+        ("passes_defended", 1.0),
+        ("defensive_tds", 6.0),
+        ("safeties", 2.0),
+    ],
     # NBA — season totals at DraftKings-ish per-stat rates (no TOV in the data). The
     # totals are derived at ingest from the per-game averages ESPN serves
     # (main.derive_nba_totals: total = round(per_game × games)) so NBA ranks by
@@ -175,6 +193,7 @@ _FANTASY: dict[str, list[tuple[str, float]]] = {
 _FANTASY["nfl_fantasy_game"] = _FANTASY["nfl_fantasy"]
 _FANTASY["nfl_skill_ppr_game"] = _FANTASY["nfl_skill_ppr"]
 _FANTASY["nfl_qb_fantasy_game"] = _FANTASY["nfl_qb_fantasy"]
+_FANTASY["nfl_defense_fantasy_game"] = _FANTASY["nfl_defense_fantasy"]
 _FANTASY["nba_fantasy_game"] = _FANTASY["nba_fantasy"]
 _FANTASY["baseball_hitter_fantasy_game"] = _FANTASY["baseball_hitter_fantasy"]
 _FANTASY["baseball_pitcher_fantasy_game"] = _FANTASY["baseball_pitcher_fantasy"]

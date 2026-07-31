@@ -171,6 +171,15 @@ _STATS: dict[str, tuple[StatAxisSpec, ...]] = {
         StatAxisSpec("1,400+ Rec Yds", "receiving_yards", "gte", 1400),
         StatAxisSpec("80+ Receptions", "receptions", "gte", 80),
         StatAxisSpec("10+ Rec TD", "receiving_tds", "gte", 10),
+        # Defensive milestones — added alongside `nfl_nflverse_defense.py`, the provider that
+        # first put defenders (e.g. Khalil Mack, previously unsearchable anywhere in the app)
+        # into `player_seasons`. Stat keys match that provider's vocabulary exactly.
+        StatAxisSpec("10+ Sacks", "sacks", "gte", 10),
+        StatAxisSpec("15+ Sacks", "sacks", "gte", 15),
+        StatAxisSpec("100+ Tackles", "tackles_combined", "gte", 100),
+        StatAxisSpec("125+ Tackles", "tackles_combined", "gte", 125),
+        StatAxisSpec("5+ INT", "def_interceptions", "gte", 5),
+        StatAxisSpec("3+ Forced Fumbles", "forced_fumbles", "gte", 3),
     ),
     "nba": (
         StatAxisSpec("20+ PPG", "ppg", "gte", 20, (Filter("games", "gte", 40),)),
@@ -224,6 +233,20 @@ _POSITIONS: dict[str, dict[str, str]] = {
     "soccer": {"GK": "Keepers", "DF": "Defenders", "MF": "Midfielders", "FW": "Forwards"},
 }
 
+# Multi-code position groups, for the (currently NFL-only) case where the catalog's raw
+# `position` column is granular rather than a single coarse code `_POSITIONS` assumes.
+# `nfl_nflverse_defense.py` deliberately keeps individual codes (OLB, CB, DT, ...) rather than
+# collapsing them at ingest time — see that provider's docstring — so the grouping happens here
+# via `Filter("position", "in", codes)` instead. Each entry is (key, codes, label); `key` keeps
+# these axes distinct from `_POSITIONS` entries in `grid_history` dedup.
+_POSITION_GROUPS: dict[str, tuple[tuple[str, tuple[str, ...], str], ...]] = {
+    "nfl": (
+        ("dl", ("DE", "DT", "NT", "DL"), "D-Line"),
+        ("lb", ("OLB", "MLB", "ILB", "LB"), "Linebackers"),
+        ("db", ("CB", "FS", "SS", "S", "SAF", "DB"), "Defensive Backs"),
+    ),
+}
+
 # Sports where `team_abbr` is a franchise a player can actually move between. Tennis is excluded
 # on purpose: there `team_abbr` is the player's COUNTRY, which is fixed for a career, so a
 # team x team board ("played for both USA and CRO") would be unviable for every player alive.
@@ -235,4 +258,10 @@ def stat_axes(sport: str) -> list[GridAxis]:
 
 
 def position_axes(sport: str) -> list[GridAxis]:
-    return [position_axis(code, label) for code, label in _POSITIONS.get(sport, {}).items()]
+    axes = [position_axis(code, label) for code, label in _POSITIONS.get(sport, {}).items()]
+    axes += [
+        GridAxis(kind="position", label=label, filters=(Filter("position", "in", codes),),
+                 key=f"pos:{key}")
+        for key, codes, label in _POSITION_GROUPS.get(sport, ())
+    ]
+    return axes

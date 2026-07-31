@@ -36,6 +36,7 @@ from .providers import (
     nba_balldontlie,
     nfl_history,
     nfl_nflverse,
+    nfl_nflverse_defense,
     nfl_nflverse_games,
     nfl_players,
     seed,
@@ -180,6 +181,10 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
     print(f"[nfl] fetching nflverse seasons {nfl_years[0]}–{nfl_years[-1]} …")
     seasons += nfl_nflverse.fetch_years(nfl_years)
     print(f"[nfl] {len(seasons)} player-seasons")
+
+    print(f"[nfl] fetching nflverse defensive seasons {nfl_years[0]}–{nfl_years[-1]} …")
+    seasons += nfl_nflverse_defense.fetch_years(nfl_years)
+    print(f"[nfl] {len(seasons)} player-seasons (offense + defense)")
 
     game_years = DEFAULT_GAME_YEARS if game_years is None else game_years
     if game_years:
