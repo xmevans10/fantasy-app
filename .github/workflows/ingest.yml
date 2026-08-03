@@ -51,23 +51,15 @@ jobs:
       # by hand, so the daily active_date row often didn't exist and clients fell back to the
       # modulo pick over stale rows.
       #
-      # ⚠️ PAUSED 2026-07-27 — RE-ENABLE WHEN 1.2 BUILD 15 IS APPROVED. ⚠️
-      # `main` now carries the v2 Grid generator, which emits non-classic archetypes
-      # (teams-x-teams, mixed-x-teams, ...). Those have NO legacy rowTeams/colDecades fallback,
-      # so the shipped App Store client (1.2 build 14) decodes them as "No Grid today" — and a
-      # minted board is immutable for its day, so there is no undo. Build 15 is the client that
-      # can read them; it was submitted 2026-07-27 13:26 UTC and is still WAITING_FOR_REVIEW.
-      # This cron would otherwise have pushed v2 boards to live users at the next 09:00 UTC run.
-      # See docs/BALLIQ_SPEC.md §9.2 and docs/grid-axes-research.md §10 (Gate 0).
-      #
-      # To re-enable: delete this comment block and uncomment the line below. `baseball` is
-      # added deliberately — it was missing, which is the whole reason baseball has exactly one
-      # Grid board ever minted (2026-07-08) while the other four sports get dailies, despite
-      # baseball having the richest team-pair space of any sport (all 435 of its C(30,2) club
-      # pairs share 5+ players; verified against live data 2026-07-27).
-      # `--grid-days` is left at its default of 2 (today + tomorrow), which is exactly what the
-      # 2026-07-28 local-midnight rollover needs: the client keys the daily Grid to the
-      # device-LOCAL date, so tomorrow's board must exist before UTC+14 reaches its midnight
-      # (10:00 UTC today). Don't raise it — see daily-puzzle.yml's cron comment on why extra
-      # lookahead is unreleased content visible to any client without a future-row filter.
-      # - run: python -m tools.ingest.main --grid nfl nba baseball soccer tennis --upsert
+      # Re-enabled 2026-07-31: 1.3 build 21 (which carries the v2 Grid decoder that shipped in
+      # build 15) is READY_FOR_SALE, confirmed live via the ASC API — the v2-content gate in
+      # docs/BALLIQ_SPEC.md §9.2 is clear. `baseball` is included deliberately — it was missing
+      # before the pause, which is the whole reason baseball had only 1 Grid board ever minted
+      # (2026-07-08) while the other four sports get dailies, despite baseball having the
+      # richest team-pair space of any sport (all 435 of its C(30,2) club pairs share 5+
+      # players; verified against live data 2026-07-27).
+      # `--grid-days` is left at its default of 2 (today + tomorrow) — the client keys the daily
+      # Grid to the device-LOCAL date, so tomorrow's board must exist before UTC+14 reaches its
+      # midnight (10:00 UTC today). Don't raise it — see daily-puzzle.yml's cron comment on why
+      # extra lookahead is unreleased content visible to any client without a future-row filter.
+      - run: python -m tools.ingest.main --grid nfl nba baseball soccer tennis --upsert
