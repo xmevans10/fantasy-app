@@ -38,6 +38,8 @@ struct PrimeSearchField: View {
 /// expanding to a full search field + Cancel on tap so the row stays one line when not
 /// actively searching (mirrors Mail's row-embedded search pattern).
 struct PrimeExpandingSearch: View {
+    /// Already-localized — see the contract note on `PrimeChip.label`. A bare literal here
+    /// silently ships English.
     let placeholder: String
     @Binding var text: String
     @Binding var isExpanded: Bool

@@ -64,6 +64,12 @@ struct PrimeSegmentedControl<Value: Hashable>: View {
 /// bare `HStack` — so the row can't silently overflow/clip as option lists grow (e.g. a
 /// new sport).
 struct PrimeChip: View {
+    /// **Pass an already-localized string.** This is `String`, not `LocalizedStringKey`, because
+    /// most callers hand it a computed display name (`sport.abbreviation`, `theme.title`,
+    /// `grain.badgeLabel`) that is localized at its source. The cost is that a bare literal —
+    /// `PrimeChip(label: "My Team")` — compiles happily and silently ships English to every
+    /// locale, since `Text(someString)` does no lookup. Literals must therefore be written
+    /// `String(localized: "My Team")`, the same contract `PrimeDropdown.unsetLabel` already uses.
     let label: String
     let active: Bool
     var systemImage: String? = nil

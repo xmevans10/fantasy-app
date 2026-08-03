@@ -28,10 +28,13 @@ final class RemoteSync {
 
     // MARK: - Pull (reconcile remote → local)
 
-    func pull() async {
+    /// Returns a failure reason if the career-log backfill was attempted and failed, so the caller
+    /// (which has the analytics client) can log it — see `AnalyticsEvent.gameLogSyncFailed`.
+    @discardableResult
+    func pull() async -> String? {
         await pullProgress()
         await pullRatings()
-        await pullGameLog()
+        return await reconcileGameLog()
     }
 
     /// Server-verified entitlement state (M5 Phase B — written only by the
@@ -147,35 +150,75 @@ final class RemoteSync {
 
     /// Mirrors one finished session. `upsert` on the client-generated `id` rather than `insert`
     /// so a retry (offline queue, a re-push after sign-in) can't double-count the session.
-    func pushGameResult(_ result: GameResult) async {
-        try? await client.upsert("game_results",
-                                 values: GameResultRow(result, userID: userID),
-                                 onConflict: "id")
+    ///
+    /// Returns `nil` on success, or a short failure reason. It reports rather than throws because
+    /// every caller is a detached fire-and-forget `Task` that cannot meaningfully recover — what
+    /// it *can* do is log (see `AnalyticsEvent.gameLogSyncFailed`). Swallowing the error with
+    /// `try?`, as this did originally, makes a persistently broken mirror indistinguishable from
+    /// an idle one.
+    @discardableResult
+    func pushGameResult(_ result: GameResult) async -> String? {
+        do {
+            try await client.upsert("game_results",
+                                    values: GameResultRow(result, userID: userID),
+                                    onConflict: "id")
+            return nil
+        } catch {
+            return String(describing: error)
+        }
     }
 
     /// Batched variant for backfilling a guest's local history after they sign in.
-    func pushGameLog(_ results: [GameResult]) async {
-        guard !results.isEmpty else { return }
-        try? await client.upsert("game_results",
-                                 values: results.map { GameResultRow($0, userID: userID) },
-                                 onConflict: "id")
+    /// Same reporting contract as `pushGameResult`.
+    @discardableResult
+    func pushGameLog(_ results: [GameResult]) async -> String? {
+        guard !results.isEmpty else { return nil }
+        do {
+            try await client.upsert("game_results",
+                                    values: results.map { GameResultRow($0, userID: userID) },
+                                    onConflict: "id")
+            return nil
+        } catch {
+            return String(describing: error)
+        }
     }
 
-    /// Restores the server copy into the local log.
+    /// Reconciles the career log in BOTH directions, which is what `pullGameLog` alone did not do.
     ///
-    /// This is also what fixes a long-standing gap: `pullRatings` restores only the scalar rating,
-    /// so a signed-in user opening the app on a new device had the right number and an empty
-    /// history behind it. RLS scopes rows to the caller, so no explicit `user_id` filter is
-    /// needed — same pattern as `pullProgress`/`pullRatings`.
-    func pullGameLog(limit: Int = 2000) async {
-        let rows: [GameResultRow] = (try? await client.select("game_results", query: [
-            item("select", "*"),
-            item("order", "played_at.desc"),
-            item("limit", "\(limit)"),
-        ])) ?? []
+    /// Pull half: fixes a long-standing gap — `pullRatings` restores only the scalar rating, so a
+    /// signed-in user opening the app on a new device had the right number and an empty history
+    /// behind it. RLS scopes rows to the caller, so no explicit `user_id` filter is needed, same
+    /// pattern as `pullProgress`/`pullRatings`.
+    ///
+    /// Push half: a player's first sessions happen **signed out** (the app is fully playable that
+    /// way), so their opening history exists only on device. `mergeRating`'s `max` already carries
+    /// a guest's *rating* across signup — without this, the career behind that rating stayed
+    /// device-local forever and was lost on the next phone. Only rows the server doesn't already
+    /// have are sent, so this is one small request in the normal case and not a 2,000-row re-push.
+    ///
+    /// Returns a failure reason if the backfill was attempted and failed.
+    @discardableResult
+    func reconcileGameLog(limit: Int = 2000) async -> String? {
+        // Deliberately NOT `try?`: a failed fetch yields no rows, which is indistinguishable from
+        // an empty server — and treating that as "server has nothing" would push the entire local
+        // log on every transient network blip.
+        let rows: [GameResultRow]
+        do {
+            rows = try await client.select("game_results", query: [
+                item("select", "*"),
+                item("order", "played_at.desc"),
+                item("limit", "\(limit)"),
+            ])
+        } catch {
+            return nil   // nothing was attempted; the next launch retries
+        }
         let results = rows.compactMap { $0.toResult() }
-        guard !results.isEmpty else { return }
-        await gameLog.merge(results)
+        if !results.isEmpty { await gameLog.merge(results) }
+
+        let serverIDs = Set(rows.map(\.id))
+        let localOnly = await gameLog.all().filter { !serverIDs.contains($0.id) }
+        guard !localOnly.isEmpty else { return nil }
+        return await pushGameLog(localOnly)
     }
 
     func pushRating(sport: Sport, rating: Int, recordHistory: Bool) async {

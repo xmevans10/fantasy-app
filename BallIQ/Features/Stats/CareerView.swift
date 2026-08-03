@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// The personal career-analytics screen — pushed from Profile, no `NavigationStack` of its
-/// own (same convention as `StatsView`, which this supersedes as the destination). Loads the
+/// own (the convention it inherited from the rating-only `StatsView` it replaced; that file is
+/// gone, so this is the sole Profile stats destination). Loads the
 /// whole game log once via the actor-isolated `GameLogRepository`, then a scope picker
 /// re-slices everything below it except Splits, which is deliberately always the *unscoped*
 /// cross-sport/format comparison — scoping "by sport" down to a single sport would leave that

@@ -175,7 +175,10 @@ final class RepositoryContainer: ObservableObject {
                                 localProgress: localProgress, localRating: localRating,
                                 localSeasonRating: localSeasonRating, gameLog: gameLog)
         sync = mirror
-        await mirror.pull()
+        // `pull` now also backfills any device-local (guest-era) sessions the server is missing.
+        if let reason = await mirror.pull() {
+            track(.gameLogSyncFailed, ["reason": reason, "op": "backfill"])
+        }
         if currentSeason == nil { await refreshCurrentSeason() }
         if let season = currentSeason {
             await mirror.pullSeasonRatings(seasonID: season.id)
@@ -572,7 +575,15 @@ final class RepositoryContainer: ObservableObject {
                                 puzzleID: puzzleID, details: detail.details)
         await gameLog.append(result)
         if let sync {
-            Task { await sync.pushGameResult(result) }
+            // Local append above is the source of truth, so a failed mirror never costs the player
+            // their history on THIS device — but it does cost them on the next one, which is
+            // exactly the kind of silent loss that has to be observable from the outside.
+            Task { [weak self] in
+                if let reason = await sync.pushGameResult(result) {
+                    await MainActor.run { self?.track(.gameLogSyncFailed,
+                                                      ["reason": reason, "op": "single"]) }
+                }
+            }
         }
     }
 

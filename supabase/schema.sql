@@ -291,6 +291,18 @@ create index if not exists player_seasons_roster_lookup_idx
 -- the statement timeout (57014) once the table doubled past ~460k rows (2026-07-14).
 create index if not exists player_seasons_sport_id_idx
   on public.player_seasons (sport, id);
+-- The pipeline's "already stored but improvable" lookup (upsert.fetch_catalog_ids_missing)
+-- pages by (sport = X, id > last) over rows whose headshot/competition are NULL/''. With
+-- near-total coverage the filtered (sport, id) walk must traverse the whole partition to
+-- find nothing — baseball headshots blew the statement timeout (57014) in CI 2026-08-01/03.
+-- Partial indexes make the missing-set lookup an index-only scan of the tiny missing set,
+-- in id order as the keyset needs. Applied live 2026-08-03 (migration 0014).
+create index if not exists player_seasons_missing_headshot_idx
+  on public.player_seasons (sport, id)
+  where headshot is null or headshot = '';
+create index if not exists player_seasons_missing_competition_idx
+  on public.player_seasons (sport, id)
+  where competition is null or competition = '';
 
 -- User-authored puzzles, kept separate from `puzzles` so the daily rotation stays
 -- clean. `content` is the same camelCase Keep4Puzzle/WhoAmIPuzzle JSON the app decodes.

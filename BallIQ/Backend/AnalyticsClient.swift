@@ -8,6 +8,16 @@ enum AnalyticsEvent: String {
     case signInCompleted       = "sign_in_completed"
     case gameStarted           = "game_started"
     case gameCompleted         = "game_completed"
+    /// The career log failed to reach `game_results`. Carries `reason` (the throw's description)
+    /// and `op` (`single` for one finished game, `backfill` for the batched guest-history push).
+    ///
+    /// Logged for the same reason as `productLoadFailed`: the push is fire-and-forget from a
+    /// detached Task, so without this a persistent failure is *completely* silent — the local log
+    /// keeps working, CareerView keeps rendering, and the only symptom is a user's history
+    /// vanishing when they change device, long after the cause is diagnosable. `game_results`
+    /// held 0 rows for the whole of build 22's life with no way to tell "nobody played signed in"
+    /// apart from "every push is 400ing".
+    case gameLogSyncFailed     = "game_log_sync_failed"
     case puzzlePublished       = "puzzle_published"
     case communityPuzzlePlayed = "community_puzzle_played"
     case shareTapped           = "share_tapped"

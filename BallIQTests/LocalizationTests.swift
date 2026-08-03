@@ -45,4 +45,24 @@ final class LocalizationTests: XCTestCase {
     func testKnownKeyResolvesToEnglishByDefault() {
         XCTAssertEqual(String(localized: "Home", bundle: .main), "Home")
     }
+
+    /// Chip and search-field labels are the catalog's blind spot, and this test is the only
+    /// thing that closes it.
+    ///
+    /// `PrimeChip.label` and `PrimeExpandingSearch.placeholder` are `String`, not
+    /// `LocalizedStringKey`, because nearly every caller passes a computed display name that is
+    /// localized at its source. The consequence is that a bare literal — `PrimeChip(label:
+    /// "My Team")` — compiles, renders, reads perfectly in English, and silently ships English
+    /// to every other locale, because `Text(someString)` performs no lookup. Four such literals
+    /// had accumulated ("My Team", "Any", both search placeholders); none were in the catalog.
+    ///
+    /// A failure here means someone added a literal without `String(localized:)`, or added the
+    /// call but never added the key to `Localizable.xcstrings` — the second being the quieter
+    /// of the two, since the lookup then just falls back to the English literal.
+    func testFilterChipAndSearchLabelsAreLocalized() {
+        XCTAssertEqual(es("My Team"), "Mi Equipo")
+        XCTAssertEqual(es("Any"), "Cualquiera")
+        XCTAssertEqual(es("Search titles"), "Buscar títulos")
+        XCTAssertEqual(es("Search themes or players"), "Buscar temas o jugadores")
+    }
 }

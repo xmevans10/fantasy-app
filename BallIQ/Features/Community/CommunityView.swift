@@ -8,6 +8,7 @@ struct CommunityView: View {
     @State private var format: CommunityFormat = .keep4
     @State private var sort: CommunitySort = .recent
     @State private var sportFilter: SportFilter = .all
+    @State private var myTeamOnly = false
     @State private var searchText = ""
     @State private var searchExpanded = false
     @State private var items: [CommunitySummary] = []
@@ -52,6 +53,7 @@ struct CommunityView: View {
             }
             .task(id: refreshKey) { await load() }
             .refreshable { await load() }
+            .onChange(of: format) { _, _ in myTeamOnly = false }
             .sheet(isPresented: $showCreate, onDismiss: { Task { await load() } }) {
                 CreateView().environmentObject(container)
             }
@@ -128,7 +130,14 @@ struct CommunityView: View {
         }
     }
 
-    private var refreshKey: String { "\(format.rawValue)-\(sort)-\(sportFilter.rawValue)" }
+    private var refreshKey: String { "\(format.rawValue)-\(sort)-\(sportFilter.rawValue)-\(myTeamOnly)" }
+
+    /// The favorite team for the current sport filter — nil when ALL or no team is picked.
+    /// The MY TEAM filter needs one concrete franchise (the jsonb query matches one abbr),
+    /// so the chip is dead weight without a sport scoping it.
+    private var myTeamAbbr: String? {
+        sportFilter.sport.flatMap { container.favoriteTeams.team(for: $0) }
+    }
 
     private func sortTitle(_ s: CommunitySort) -> String {
         switch s {
@@ -147,7 +156,8 @@ struct CommunityView: View {
     private var controls: some View {
         HStack(spacing: 8) {
             if searchExpanded {
-                PrimeExpandingSearch(placeholder: "Search titles", text: $searchText, isExpanded: $searchExpanded)
+                PrimeExpandingSearch(placeholder: String(localized: "Search titles"),
+                                     text: $searchText, isExpanded: $searchExpanded)
             } else {
                 PrimeDropdown(options: CommunityFormat.allCases, selection: $format,
                              title: \.title, isDefault: { _ in false })
@@ -155,8 +165,19 @@ struct CommunityView: View {
                               unsetLabel: String(localized: "Sport"))
                 PrimeDropdown(options: [CommunitySort.recent, .popular, .week], selection: $sort,
                              title: sortTitle, isDefault: { $0 == .recent })
+                if format == .keep4 {
+                    PrimeChip(label: String(localized: "My Team"),
+                              active: myTeamOnly && myTeamAbbr != nil,
+                              systemImage: "star.fill") {
+                        guard myTeamAbbr != nil else { return }
+                        myTeamOnly.toggle()
+                    }
+                    .opacity(myTeamAbbr != nil ? 1 : 0.45)
+                    .disabled(myTeamAbbr == nil)
+                }
                 Spacer(minLength: 0)
-                PrimeExpandingSearch(placeholder: "Search titles", text: $searchText, isExpanded: $searchExpanded)
+                PrimeExpandingSearch(placeholder: String(localized: "Search titles"),
+                                     text: $searchText, isExpanded: $searchExpanded)
             }
         }
         .padding(16)
@@ -209,6 +230,7 @@ struct CommunityView: View {
                 scoring: isKeep4 ? item.scoringKind : nil,
                 grain: isKeep4 ? item.grainKind : nil,
                 completed: container.hasCompletedToday(puzzleID: item.id),
+                favoriteTeamMatch: myTeamOnly && myTeamAbbr != nil,
                 typeColor: isKeep4 ? .accentFill : .voltFill, onTypeColor: isKeep4 ? .onAccent : .onVolt,
                 bodyFill: .warningBg
             ) { Task { await open(item) } }
@@ -269,7 +291,8 @@ struct CommunityView: View {
         defer { loading = false }
         do {
             var fetched = try await community.feed(format: format.rawValue,
-                                                   sport: sportFilter.sport, sort: sort)
+                                                   sport: sportFilter.sport, sort: sort,
+                                                   team: myTeamOnly ? myTeamAbbr : nil)
             if sort == .week, let counts = try? await community.weeklyPlayCounts() {
                 // RPC not deployed / transient failure → keep the fetched recent order.
                 fetched = CommunityTrending.sorted(items: fetched, weeklyPlays: counts)

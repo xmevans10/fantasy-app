@@ -316,6 +316,7 @@ struct CreateKeep4View: View {
                 anySportToggle
                 positionChips
                 eraRow
+                myTeamChip
                 facetField("Team", text: teamBinding, placeholder: "e.g. KC")
                 PrimeSearchField(placeholder: "Search a player", text: $query.name)
                 if searching { ProgressView() }
@@ -347,7 +348,7 @@ struct CreateKeep4View: View {
     private var anySportToggle: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                PrimeChip(label: "Any", active: query.sport == nil) {
+                PrimeChip(label: String(localized: "Any"), active: query.sport == nil) {
                     query.sport = nil; query.positions = []
                 }
                 ForEach(Sport.allCases) { s in
@@ -457,6 +458,24 @@ struct CreateKeep4View: View {
     }
 
     // MARK: - Bindings
+
+    /// One-tap fill of the Team facet with the user's favorite team for the current sport —
+    /// the free-text field stays (a curated pool may want a different franchise); this is just
+    /// speed. Enabled once a sport is selected and a favorite exists for it; tapping again
+    /// clears the facet.
+    private var myTeamChip: some View {
+        let abbr = query.sport.flatMap { container.favoriteTeams.team(for: $0) }
+        let active = abbr != nil && query.team?.uppercased() == abbr?.uppercased()
+        // The abbreviation is appended AFTER the lookup, not interpolated into it: baking "KC"
+        // into the key would make every franchise its own untranslatable string.
+        let label = String(localized: "My Team") + (abbr.map { " · \($0)" } ?? "")
+        return PrimeChip(label: label, active: active, systemImage: "star.fill") {
+            guard let abbr else { return }
+            query.team = active ? nil : abbr
+        }
+        .opacity(abbr != nil ? 1 : 0.45)
+        .disabled(abbr == nil)
+    }
 
     private var teamBinding: Binding<String> {
         Binding(get: { query.team ?? "" }, set: { query.team = $0.isEmpty ? nil : $0 })

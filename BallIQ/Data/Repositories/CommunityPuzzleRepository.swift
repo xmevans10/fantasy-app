@@ -58,8 +58,11 @@ final class CommunityPuzzleRepository {
 
     /// Throws on fetch failure (rather than returning `[]`) so callers can keep their last good
     /// list instead of blanking the feed on a transient error. See `CommunityView.merge`.
+    /// `team` (a keep4-only filter, e.g. "KC") narrows to puzzles whose `content.players`
+    /// include a card for that franchise — jsonb containment, so no schema change. WhoAmI
+    /// content has no `players` key, so callers must only pass it for keep4 feeds.
     func feed(format: String, sport: Sport?, sort: CommunitySort,
-              authorId: String? = nil, limit: Int = 50) async throws -> [CommunitySummary] {
+              authorId: String? = nil, team: String? = nil, limit: Int = 50) async throws -> [CommunitySummary] {
         var items = [
             URLQueryItem(name: "select",
                          value: "id,author_id,sport,format,title,play_count,created_at,description:content->>description,scoring:content->>scoring,grain:content->>grain"),
@@ -70,6 +73,10 @@ final class CommunityPuzzleRepository {
             items.append(URLQueryItem(name: "author_id", value: "eq.\(authorId)"))
         } else {
             items.append(URLQueryItem(name: "visibility", value: "eq.public"))
+        }
+        if let team {
+            items.append(URLQueryItem(name: "content",
+                                      value: "cs.{\"players\":[{\"teamAbbr\":\"\(team)\"}]}"))
         }
         if let sport { items.append(URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)")) }
         // .week fetches in recent order; the caller reorders via CommunityTrending +

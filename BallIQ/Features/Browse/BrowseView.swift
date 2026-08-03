@@ -91,7 +91,7 @@ struct BrowseView: View {
     private var controls: some View {
         HStack(spacing: 8) {
             if searchExpanded {
-                PrimeExpandingSearch(placeholder: "Search themes or players",
+                PrimeExpandingSearch(placeholder: String(localized: "Search themes or players"),
                                     text: $searchText, isExpanded: $searchExpanded)
             } else {
                 // Chips scroll rather than compress: four dropdowns + search can't share
@@ -115,7 +115,7 @@ struct BrowseView: View {
                 }
                 Spacer(minLength: 0)
                 if format == .keep4 {
-                    PrimeExpandingSearch(placeholder: "Search themes or players",
+                    PrimeExpandingSearch(placeholder: String(localized: "Search themes or players"),
                                         text: $searchText, isExpanded: $searchExpanded)
                 }
             }
