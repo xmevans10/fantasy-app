@@ -11,13 +11,4 @@ struct NotificationSettings: Codable, Equatable {
     var dailyDrop = true
 
     static let allEnabled = NotificationSettings()
-
-    enum CodingKeys: String, CodingKey {
-        case streakAtRisk = "streak_at_risk"
-        case leaguePosition = "league_position"
-        case versusChallenge = "versus_challenge"
-        case seasonEnd = "season_end"
-        case friendRequest = "friend_request"
-        case dailyDrop = "daily_drop"
-    }
 }

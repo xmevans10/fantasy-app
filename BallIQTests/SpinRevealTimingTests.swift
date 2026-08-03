@@ -3,15 +3,20 @@ import XCTest
 
 /// Locks Draft & Spin's per-round time budget.
 ///
-/// The reveal reel is the format's signature casino moment, but it plays once per ROUND and a
-/// draft is 3–8 rounds. At its original length (21 ticks + a 1.0s landing beat = ~4.78s) it
-/// dominated the format — 38s of an 8-round soccer draft spent watching reels — which is what
-/// "there's a screen between each spin causing lag" was describing. Nothing was slow; there was
-/// just too much of it.
+/// **Every round now runs the full reel** (2026-08-01). This reverses an earlier pass that
+/// abbreviated rounds 2+: that was added when the repetition read as lag, and removed on the
+/// report that the shortened spins felt cut off rather than snappy. `SpinRevealView.tickCounts`
+/// still carries both branches, but `DraftSpinView` always asks for the full one.
 ///
-/// These are pure arithmetic over the tick constants, so a future tuning pass that inflates the
-/// budget fails here instead of shipping. If a change to the *feel* legitimately needs more time,
-/// move the numbers deliberately — don't loosen the assertions.
+/// The point of this file is unchanged, only its direction: the whole-draft cost must stay
+/// **asserted and visible** rather than drifting. Full length is not free — 8-round soccer spends
+/// ~34s in the reveal — so the budget tests below pin that number instead of capping it. If the
+/// pacing is revisited again, move these numbers deliberately; don't loosen them.
+///
+/// Note the prose elsewhere ("~4.8s a spin", "~38s") is **stale**: it assumes a 1.0s landing beat,
+/// but `landingSeconds(abbreviated: false)` returns 0.5, making a full spin 4.28s and soccer 34.24s.
+/// Compute from the constants, as `testOneFullSpinCostsWhatTheTickMathSaysItDoes` does — don't
+/// quote the comments.
 final class SpinRevealTimingTests: XCTestCase {
 
     /// Slot counts per sport, from `DraftSpinConstraint.formations` — one reveal per slot.
@@ -29,36 +34,54 @@ final class SpinRevealTimingTests: XCTestCase {
         XCTAssertLessThan(SpinReveal.totalSeconds(abbreviated: false), 4.5)
     }
 
-    func testLaterRoundsAreSubstantiallyShorter() {
-        let opening = SpinReveal.totalSeconds(abbreviated: false)
-        let later = SpinReveal.totalSeconds(abbreviated: true)
-        XCTAssertLessThan(later, opening / 2,
-                          "a repeat spin should cost well under half the opening one")
-        XCTAssertLessThan(later, 1.6)
-        // Still long enough to read as a spin rather than a cut.
-        XCTAssertGreaterThan(later, 0.9)
+    /// The abbreviated branch still exists as a tuning knob, so this asserts the *call site's*
+    /// intent rather than the constants: whatever `DraftSpinView` asks for, round 5 must cost
+    /// exactly what round 1 does. A regression here means someone reintroduced `roundIndex > 0`.
+    func testEveryRoundRunsTheFullReel() {
+        XCTAssertFalse(SpinReveal.abbreviatesLaterRounds,
+                       "later rounds are meant to run the full casino reel")
+        // What DraftSpinView actually asks for, at round 1 and at round 5.
+        let opening = SpinReveal.totalSeconds(abbreviated: SpinReveal.abbreviatesLaterRounds && false)
+        let later = SpinReveal.totalSeconds(abbreviated: SpinReveal.abbreviatesLaterRounds && true)
+        XCTAssertEqual(opening, later, accuracy: 0.0001, "every spin should cost the same")
+        XCTAssertEqual(later, SpinReveal.totalSeconds(abbreviated: false), accuracy: 0.0001,
+                       "and that cost should be the full-length run")
     }
 
-    /// The number that actually matters to the player: total time watching reels across one
-    /// complete draft. Soccer is the worst case at 8 rounds.
-    func testWholeDraftReelBudgetStaysUnderTwentySeconds() {
+    /// Pins — rather than caps — what full-length-everywhere actually costs across a whole draft.
+    /// This is the number that drove the original abbreviation, so it should be impossible to
+    /// change the pacing without this test noticing.
+    /// One spin, computed rather than quoted: 21 ticks of `0.05 + 0.013·elapsed` is
+    /// `21×0.05 + 0.013×210` = 3.78s of reel, plus a 0.5s landing beat = **4.28s**.
+    ///
+    /// Worth pinning separately because the source docstrings say "~4.8s a spin", which assumes a
+    /// 1.0s landing beat that `landingSeconds(abbreviated: false)` no longer returns. The comment
+    /// went stale when the beat was halved; this assertion is the thing that's actually true.
+    private let fullSpinSeconds = 4.28
+
+    func testOneFullSpinCostsWhatTheTickMathSaysItDoes() {
+        XCTAssertEqual(SpinReveal.reelSeconds(abbreviated: false), 3.78, accuracy: 0.01)
+        XCTAssertEqual(SpinReveal.landingSeconds(abbreviated: false), 0.5, accuracy: 0.001)
+        XCTAssertEqual(SpinReveal.totalSeconds(abbreviated: false), fullSpinSeconds, accuracy: 0.01)
+    }
+
+    func testWholeDraftReelBudgetIsPinnedAtFullLength() {
         for (sport, rounds) in roundsPerSport {
             guard rounds > 0 else { continue }
-            let total = SpinReveal.totalSeconds(abbreviated: false)
-                + Double(rounds - 1) * SpinReveal.totalSeconds(abbreviated: true)
-            XCTAssertLessThan(total, 20.0,
-                              "\(sport.rawValue): \(rounds) rounds = \(total)s of reel")
+            let total = Double(rounds) * SpinReveal.totalSeconds(abbreviated: false)
+            XCTAssertEqual(total, Double(rounds) * fullSpinSeconds, accuracy: 0.05,
+                           "\(sport.rawValue): \(rounds) rounds = \(total)s of reel")
         }
     }
 
-    /// Regression guard on the specific number that caused the complaint: an 8-round soccer draft
-    /// used to spend ~38s in the reveal. It must stay far below that.
-    func testSoccerDraftIsFarBelowItsOriginalBudget() {
+    /// Soccer is the worst case and the one that prompted both pacing changes — call its number
+    /// out explicitly so nobody has to multiply in their head to see the cost.
+    func testSoccerDraftSpendsAboutThirtyFourSecondsInTheReveal() {
         let rounds = DraftSpinConstraint.lineupSlots(for: .soccer).count
         XCTAssertEqual(rounds, 8, "soccer formation changed — re-check this budget")
-        let total = SpinReveal.totalSeconds(abbreviated: false)
-            + Double(rounds - 1) * SpinReveal.totalSeconds(abbreviated: true)
-        XCTAssertLessThan(total, 16.0, "was ~38s before the abbreviated later rounds")
+        let total = Double(rounds) * SpinReveal.totalSeconds(abbreviated: false)
+        XCTAssertEqual(total, 34.24, accuracy: 0.05,
+                       "full-length every round is a deliberate trade — see the file header")
     }
 
     func testTickDelayDeceleratesMonotonically() {

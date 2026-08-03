@@ -35,13 +35,6 @@ final class ArcadeLeaderboardRepository {
         let isMe: Bool
         var id: String { userId }
 
-        enum CodingKeys: String, CodingKey {
-            case rank, username, avatar
-            case userId = "user_id"
-            case bestScore = "best_score"
-            case isMe = "is_me"
-        }
-
         var displayName: String { username ?? "Player" }
     }
 

@@ -183,6 +183,31 @@ final class GridCrossCheckTests: XCTestCase {
                                  from: Data(GridCrossCheckFixture.expectedAxisJSON.utf8))
     }
 
+    /// Regression test for a real shipped bug (2026-07-31): `GridMembershipIndex.init(from:)`
+    /// decoded `axes`/`axisMemberships` but never `axisTeams`, so it silently stayed at its
+    /// default `[]` on every real payload. `hasAxes` requires `axisTeams.count == players.count`,
+    /// so it was permanently `false` in production — disabling `teamsXStats`/`teamsXMixed`/
+    /// `mixedXTeams` for every sport. `loadV2Index()` above never caught this because it builds
+    /// the index by decoding the base fixture, then assigning `.axisTeams` onto the property
+    /// directly — bypassing `init(from:)` entirely, the exact spot the real bug lived in. This
+    /// test instead merges both fixtures into one JSON object and decodes it in a single pass
+    /// through the real `Codable` conformance, the way the live RPC response actually arrives.
+    func testMergedV2PayloadDecodesThroughTheRealDecoderWithAxesIntact() throws {
+        var merged = try XCTUnwrap(JSONSerialization.jsonObject(
+            with: Data(GridCrossCheckFixture.indexJSON.utf8)) as? [String: Any])
+        let extra = try XCTUnwrap(JSONSerialization.jsonObject(
+            with: Data(GridCrossCheckFixture.axesJSON.utf8)) as? [String: Any])
+        for (key, value) in extra { merged[key] = value }
+        merged["version"] = 2
+        let data = try JSONSerialization.data(withJSONObject: merged)
+
+        let index = try JSONDecoder().decode(GridMembershipIndex.self, from: data)
+        XCTAssertFalse(index.axisTeams.isEmpty, "axisTeams decoded as empty from a real v2 payload")
+        XCTAssertEqual(index.axisTeams.count, index.players.count)
+        XCTAssertTrue(index.hasAxes, "hasAxes must be true once axes+axisMemberships+axisTeams "
+                       + "all decode correctly from one merged v2 payload")
+    }
+
     /// **The cell computation this whole file exists for, for the archetypes it could not reach
     /// until now.** A `teams-x-stats` cell is season-grain on both sides: one season must satisfy
     /// the team AND the milestone together ("1,000 yards *as a Bear*"). The tempting shortcut —

@@ -16,6 +16,15 @@ struct OverUnderGameView: View {
     @State private var score = 0
     @State private var correctCount = 0
     @State private var wrongCount = 0
+    @State private var bestCombo = 0
+    /// Split by which side the player picked, not just whether they were right — powers the
+    /// "you trust the over, but it only lands N% of the time" stat, which a single correct/wrong
+    /// tally can't express.
+    @State private var overPicks = 0
+    @State private var overCorrect = 0
+    @State private var underPicks = 0
+    @State private var underCorrect = 0
+    @State private var startedAt: Date?
     @State private var dragX: CGFloat = 0
     @State private var lastVerdict: Bool?
     @State private var showResult = false
@@ -70,6 +79,7 @@ struct OverUnderGameView: View {
         // warm from Home's prefetch or this setup screen's own, so start is instant.
         let fetched = await container.catalog.arcadePool(for: sport, limit: 200)
         pool = PlayerRelevance.filter(fetched, sport: sport, minimum: 20)
+        startedAt = Date()
         container.track(.gameStarted, ["format": "overunder", "sport": sport.rawValue])
         nextRound()
         loading = false
@@ -254,10 +264,13 @@ struct OverUnderGameView: View {
     private func decide(guessOver: Bool) {
         guard let round else { return }
         let correct = guessOver == round.isOver
+        if guessOver { overPicks += 1 } else { underPicks += 1 }
         if correct {
             score += OverUnderScoring.points(consecutiveCorrectBeforeThisRound: combo)
             combo += 1
+            bestCombo = max(bestCombo, combo)
             correctCount += 1
+            if guessOver { overCorrect += 1 } else { underCorrect += 1 }
             Haptics.success()
         } else {
             combo = 0
@@ -282,10 +295,16 @@ struct OverUnderGameView: View {
         let attempts = correctCount + wrongCount
         let performance = attempts > 0 ? Double(correctCount) / Double(attempts) : 0
         let ranked = !container.hasCompletedToday(puzzleID: dailyID)
+        let detail = RepositoryContainer.SessionDetail(
+            mode: .daily, score: score, maxScore: 0, correct: correctCount, attempted: attempts,
+            startedAt: startedAt,
+            details: OverUnderSessionDetail.build(bestCombo: bestCombo, livesLeft: lives.count,
+                                                  overPicks: overPicks, overCorrect: overCorrect,
+                                                  underPicks: underPicks, underCorrect: underCorrect))
         Task {
             rewards = await container.complete(format: .overUnder, sport: sport, performance: performance,
                                                perfect: wrongCount == 0 && correctCount > 0,
-                                               puzzleID: dailyID, ranked: ranked)
+                                               puzzleID: dailyID, ranked: ranked, detail: detail)
             withAnimation(Motion.snap) { showResult = true }
         }
         // Every finished run posts (not just local highs) — the weekly board ranks each
@@ -299,5 +318,22 @@ struct OverUnderGameView: View {
         score = 350; correctCount = 3; wrongCount = 3
         lives = LivesBank(count: 0, lastLostAt: Date())
         finish()
+    }
+}
+
+/// Assembles the Over/Under `GameResultDetails` payload — pulled out of `finish()` so the
+/// over/under split (the one genuinely new piece of state here) can be tested as a pure
+/// function against a simulated sequence of picks, without driving the view itself.
+enum OverUnderSessionDetail {
+    static func build(bestCombo: Int, livesLeft: Int, overPicks: Int, overCorrect: Int,
+                      underPicks: Int, underCorrect: Int) -> GameResultDetails {
+        var details = GameResultDetails()
+        details.bestCombo = bestCombo
+        details.livesLeft = livesLeft
+        details.overPicks = overPicks
+        details.overCorrect = overCorrect
+        details.underPicks = underPicks
+        details.underCorrect = underCorrect
+        return details
     }
 }

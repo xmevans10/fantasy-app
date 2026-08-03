@@ -683,4 +683,45 @@ final class DraftSpinTests: XCTestCase {
         XCTAssertEqual(result.totalPoints, 849)
         XCTAssertEqual(result.outcome, .champion)
     }
+
+    // MARK: - SessionDetail (career log)
+
+    /// Draft & Spin has no accuracy concept — `correct`/`attempted` must both be 0 (matching
+    /// `GameResult.accuracy`'s nil for this format), and `score` is the open-ended sim total
+    /// with `maxScore: 0` rather than a fabricated ceiling.
+    func testBuildSessionDetailCarriesScoreWithNoAccuracy() {
+        let started = Date(timeIntervalSince1970: 0)
+        let result = DraftSpinResult(wins: 9, losses: 8, totalPoints: 886, outcome: .madePlayoffs)
+        let detail = DraftSpinView.buildSessionDetail(simulated: result, picks: fixedLineup,
+                                                       mode: .daily, startedAt: started)
+        XCTAssertEqual(detail.correct, 0)
+        XCTAssertEqual(detail.attempted, 0)
+        XCTAssertEqual(detail.score, 886)
+        XCTAssertEqual(detail.maxScore, 0)
+        XCTAssertEqual(detail.mode, .daily)
+        XCTAssertEqual(detail.startedAt, started)
+    }
+
+    /// Powers the "nemesis category"-style ride-or-die stat: the outcome's raw string form, the
+    /// win/loss record, and the drafted lineup's names must all round-trip into `details`.
+    func testBuildSessionDetailCapturesOutcomeAndDraftedNames() {
+        let result = DraftSpinResult(wins: 33, losses: 5, totalPoints: 849, outcome: .champion)
+        let detail = DraftSpinView.buildSessionDetail(simulated: result, picks: fixedLineup,
+                                                       mode: .daily, startedAt: nil)
+        XCTAssertEqual(detail.details.outcome, "champion")
+        XCTAssertEqual(detail.details.wins, 33)
+        XCTAssertEqual(detail.details.losses, 5)
+        XCTAssertEqual(detail.details.totalPoints, 849)
+        XCTAssertEqual(detail.details.draftedPlayerNames, fixedLineup.map(\.name))
+    }
+
+    /// Daily Draft runs must log with `.dailyDraft` so career stats can tell a shared-spin run
+    /// apart from free play, mirroring the mode `finish()` actually passes.
+    func testBuildSessionDetailUsesDailyDraftMode() {
+        let result = DraftSpinResult(wins: 0, losses: 17, totalPoints: 300, outcome: .missedPlayoffs)
+        let detail = DraftSpinView.buildSessionDetail(simulated: result, picks: [],
+                                                       mode: .dailyDraft, startedAt: nil)
+        XCTAssertEqual(detail.mode, .dailyDraft)
+        XCTAssertEqual(detail.details.draftedPlayerNames, [])
+    }
 }

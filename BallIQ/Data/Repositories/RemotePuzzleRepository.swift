@@ -103,9 +103,17 @@ final class RemotePuzzleRepository: PuzzleRepository {
     /// (one array — bypasses PostgREST's 1000-row table cap). Names change rarely, so a cached
     /// copy is honored for a week before refetching; a failed fetch falls back to any stale
     /// copy, then to `[]` (the Grid simply offers no suggestions, still fully playable).
+    ///
+    /// The `-v2-` in the cache key is a manual invalidation lever, not decoration. `DiskCache` has
+    /// no version field, so the 7-day TTL below is the ONLY expiry — which means a catalog change
+    /// that adds players is invisible to every existing install for up to a week, and cannot be
+    /// pushed from the server. That shipped as a real bug: the 2026-07-31 defensive-player ingest
+    /// added 5,547 players (Khalil Mack among them), the RPC returned them immediately, and the
+    /// Grid typeahead still couldn't suggest a single one. **Bump this suffix whenever the catalog
+    /// gains players you expect users to be able to type.**
     private struct NameIndexArgs: Encodable { let p_sport: String }
     func playerNameIndex(for sport: Sport) async -> [String] {
-        let key = "grid-names-\(sport.rawValue)"
+        let key = "grid-names-v2-\(sport.rawValue)"
         if let entry = await DiskCache.read([String].self, key: key),
            Date().timeIntervalSince(entry.writtenAt) < 7 * 24 * 3600 {
             return entry.value
@@ -123,9 +131,9 @@ final class RemotePuzzleRepository: PuzzleRepository {
     /// `playerNameIndex` above — one sport-wide RPC, one array, a week of disk cache — because it
     /// is the same kind of payload: rarely-changing reference data whose whole value is not
     /// having to ask the server per board. Measured on the wire (gzipped), v1 → v2 after the axis
-    /// arrays landed: nfl 69→93 KB, nba 61→85, baseball 118→185, soccer 270→352, tennis 15→18.
-    /// Worth it against 64 KB for a *single* NFL board: the largest index still costs about what
-    /// five boards do, once a week, and then generates an unbounded number of them offline.
+    /// arrays landed: nfl 69→93 KB, nba 61→85, baseball 118→165, soccer 270→406, tennis 15→17.
+    /// Worth it against 64 KB for a *single* NFL board: even soccer, the worst case, costs about
+    /// what six boards do — once a week — and then generates an unbounded number of them offline.
     ///
     /// `contentDecoder`, not `JSONDecoder.supabase`: the payload is camelCase (`minYear`), and
     /// the shared decoder's snake_case key strategy would fail to decode it silently — the exact
@@ -141,7 +149,11 @@ final class RemotePuzzleRepository: PuzzleRepository {
         let p_version = GridMembershipIndex.currentVersion
     }
     func gridMembershipIndex(for sport: Sport) async -> GridMembershipIndex? {
-        let key = "grid-memberships-\(sport.rawValue)"
+        // `-v2-` for the same reason as `playerNameIndex`'s key, and it must be bumped in step with
+        // it: this payload decides which players on-device generation can put ON a board, so a
+        // stale copy means locally-generated practice boards keep drawing from the old catalog even
+        // once the typeahead has refreshed. See that method's note for the full history.
+        let key = "grid-memberships-v2-\(sport.rawValue)"
         // The version check is load-bearing, not belt-and-braces. `isUsable` deliberately accepts
         // v1 so a payload cached by an older build still plays — but honouring a *fresh-enough*
         // v1 here would pin an upgraded install to the axis-less shape for the rest of the

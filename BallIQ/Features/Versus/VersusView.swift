@@ -61,7 +61,8 @@ struct VersusView: View {
         }
         .sheet(isPresented: $showVersusInfo) { versusInfoSheet }
         .fullScreenCover(item: $playPuzzle) { puzzle in
-            Keep4GameView(puzzle: puzzle, ranked: false, versusChallengeID: playChallenge?.challenge.id)
+            Keep4GameView(puzzle: puzzle, ranked: false, versusChallengeID: playChallenge?.challenge.id,
+                          opponentUserID: opponentUserID(for: playChallenge))
                 .environmentObject(container)
         }
     }
@@ -231,6 +232,13 @@ struct VersusView: View {
     private func seriesColor(_ series: VersusSeries, me: String) -> Color {
         guard series.status == "completed" else { return Color.accentText }
         return series.myWins(me: me) > series.theirWins(me: me) ? Color.successText : Color.dangerText
+    }
+
+    /// The other side of the duel — the local user may be either the challenger or the
+    /// opponent on `row`, so this can't just read `challenge.opponentId`.
+    private func opponentUserID(for row: VersusChallengeRow?) -> String? {
+        guard let challenge = row?.challenge, let me = auth.userID else { return nil }
+        return challenge.opponentID(me: me)
     }
 
     private func play(_ row: VersusChallengeRow) async {

@@ -24,6 +24,10 @@ struct GridGameView: View {
     @State private var nameIndex: [String] = []
     @State private var result: (score: Int, correctCount: Int)?
     @State private var rewards: RepositoryContainer.SessionRewards?
+    /// Set at `load`'s `track(.gameStarted)` site — `nil` only if `finish` is somehow reached
+    /// without a load (shouldn't happen), in which case the session is logged untimed rather
+    /// than crashing.
+    @State private var startedAt: Date?
 
     @State private var showingSetup = true
     @State private var sport: Sport = .nfl
@@ -167,6 +171,7 @@ struct GridGameView: View {
             isCanonicalDaily = pick?.isCanonicalToday ?? false
         }
         guard !challengeBoardMissing else { loading = false; return }
+        startedAt = Date()
         container.track(.gameStarted, ["format": "grid", "sport": sport.rawValue,
                                        "mode": random ? "practice" : (challenge == nil ? "daily" : "challenge")])
         if challenge != nil {
@@ -380,16 +385,22 @@ struct GridGameView: View {
     }
 
     private func finish(_ puzzle: GridPuzzle) {
-        let totalStars = solved.keys.reduce(0) { sum, index in
-            sum + puzzle.cell(row: index / 3, col: index % 3).rarityStars
-        }
-        let score = solved.count * 100 + totalStars * 20
         let performance = Double(solved.count) / 9.0
-        // A practice board is re-rollable without limit, so it awards nothing at all — not even
-        // the unranked path, which still grants XP via `recordCompletion`. Score and the answer
-        // reveal are the whole reward.
+        let detail = Self.buildSessionDetail(puzzle: puzzle, solved: solved, wrong: wrong,
+                                             mode: isPractice ? .practice : .daily, startedAt: startedAt)
+        let score = detail.score
+        // A practice board is re-rollable without limit, so it earns no rating/XP/arcade score —
+        // that's still true. What changed is that the reps are no longer thrown away: `logSession`
+        // writes them to the career log (skipping XP/streak/rating, unlike `complete`), so accuracy
+        // and volume stats see practice play while `PlayMode.countsForRecords` (false for
+        // `.practice`) keeps it out of personal bests.
         guard !isPractice else {
-            withAnimation(Motion.snap) { result = (score, solved.count) }
+            Task {
+                await container.logSession(format: .grid, sport: sport, performance: performance,
+                                           perfect: solved.count == 9,
+                                           puzzleID: "grid-practice-\(sport.rawValue)", detail: detail)
+                withAnimation(Motion.snap) { result = (score, solved.count) }
+            }
             return
         }
         let day = OverUnderRoundGenerator.dayString(Date())
@@ -399,7 +410,8 @@ struct GridGameView: View {
             + wrongNames.map { (cell: $0.key, name: $0.value, correct: false) }
         Task {
             rewards = await container.complete(format: .grid, sport: sport, performance: performance,
-                                               perfect: solved.count == 9, puzzleID: dailyID, ranked: ranked)
+                                               perfect: solved.count == 9, puzzleID: dailyID, ranked: ranked,
+                                               detail: detail)
             // Grid's puzzle is daily — only the first (ranked) run of the day posts to the
             // weekly board, or an unranked replay could farm it by re-solving the same puzzle.
             if ranked { await container.submitArcadeScore(game: .grid, sport: sport, score: score) }
@@ -408,6 +420,30 @@ struct GridGameView: View {
             if ranked { await container.logGridGuesses(day: day, sport: sport, attempts: attempts) }
             withAnimation(Motion.snap) { result = (score, solved.count) }
         }
+    }
+
+    /// Builds the log entry for a finished grid — split out of `finish` so the score/star math and
+    /// the missed-cell-header logic can be unit tested without standing up the view. `wrong` is
+    /// exactly "attempted but unsolved" here because `finish` only ever runs once all 9 cells have
+    /// a final answer, never partway through.
+    static func buildSessionDetail(puzzle: GridPuzzle, solved: [Int: String], wrong: Set<Int>,
+                                   mode: PlayMode, startedAt: Date?) -> RepositoryContainer.SessionDetail {
+        let totalStars = solved.keys.reduce(0) { sum, index in
+            sum + puzzle.cell(row: index / 3, col: index % 3).rarityStars
+        }
+        var details = GameResultDetails()
+        details.cellsSolved = solved.count
+        details.rarityStars = totalStars
+        // Both axis labels per missed cell, e.g. ["LAL", "30+ PPG season"] — powers the "nemesis
+        // category" stat. Sorted by index for deterministic ordering (a `Set` iterates arbitrarily).
+        details.missedCellHeaders = wrong.sorted().flatMap { index -> [String] in
+            [puzzle.rows[index / 3].label, puzzle.cols[index % 3].label]
+        }
+        // 9 solves x 100, plus up to 5 rarity stars x 20 each — the true ceiling (a perfect board
+        // of nine 5-star cells) is 1800.
+        return RepositoryContainer.SessionDetail(mode: mode, score: solved.count * 100 + totalStars * 20,
+                                                 maxScore: 1800, correct: solved.count, attempted: 9,
+                                                 startedAt: startedAt, details: details)
     }
 
     /// `-screenshotGridResult`: simctl can't type into the guess field, so auto-answer every

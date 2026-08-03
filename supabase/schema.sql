@@ -1580,3 +1580,138 @@ $$;
 
 revoke all on function public.delete_own_account() from public, anon;
 grant execute on function public.delete_own_account() to authenticated;
+
+-- ---------------------------------------------------------------------------------------------
+-- Career game log (applied live 2026-08-01 as migrations `game_results_career_log` +
+-- `game_results_benchmark_rpcs`).
+--
+-- One row per finished session. This exists because the app used to throw away everything about
+-- a game the moment it ended: `RepositoryContainer.complete()` consumed `performance`/`perfect`
+-- for the Elo delta and discarded both, raw scores never reached it at all, and the only
+-- per-attempt record anywhere was `rating_history`'s `{sport, rating}` — no score, no accuracy,
+-- no format. Every "what's my best ever / am I better at NFL or NBA" question was unanswerable
+-- for want of writing it down.
+--
+-- Insert-only and immutable, like `arcade_scores`. `id` is client-generated (the device is the
+-- source of truth — the app is fully playable signed out) so re-pushing a backlog is an
+-- idempotent `on conflict do nothing`.
+create table if not exists public.game_results (
+  id            uuid primary key,
+  user_id       uuid not null references auth.users(id) on delete cascade,
+  -- Client-supplied and therefore untrustworthy: the check clamps the future, and every
+  -- cross-user aggregate below windows on server-set `created_at` instead.
+  played_at     timestamptz not null check (played_at <= now() + interval '1 day'),
+  format        text not null,
+  sport         text not null,
+  mode          text not null default 'daily'
+                  check (mode in ('daily','practice','community','versus','dailyDraft','archive')),
+  ranked        boolean not null default false,
+  perfect       boolean not null default false,
+  performance   double precision not null check (performance >= 0 and performance <= 1),
+  score         int not null default 0 check (score >= 0),
+  max_score     int not null default 0 check (max_score >= 0),
+  correct       int not null default 0 check (correct >= 0),
+  attempted     int not null default 0 check (attempted >= 0),
+  duration_ms   int check (duration_ms is null or duration_ms >= 0),
+  rating_before int,
+  rating_after  int,
+  xp_earned     int not null default 0,
+  streak_after  int not null default 0,
+  puzzle_id     text,
+  details       jsonb not null default '{}'::jsonb,
+  created_at    timestamptz not null default now()
+);
+
+create index if not exists game_results_user_idx  on public.game_results (user_id, played_at desc);
+create index if not exists game_results_bench_idx on public.game_results (format, sport, mode) where ranked;
+
+alter table public.game_results enable row level security;
+
+-- Own-read is what makes the analytics feature possible at all. Contrast `grid_guesses`, which
+-- has NO select policy and is consequently write-only — its per-cell history can never be shown
+-- back to the player who produced it. Don't repeat that here.
+drop policy if exists "game_results own read" on public.game_results;
+create policy "game_results own read" on public.game_results
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "game_results insert own" on public.game_results;
+create policy "game_results insert own" on public.game_results
+  for insert with check (auth.uid() = user_id);
+-- No update/delete policies: a recorded session is immutable.
+
+-- Population benchmarks, so the client can render "you 76% - everyone 61%" in one round trip
+-- rather than one per stat (same posture as `arcade_leaderboard`/`friend_profiles`).
+--
+-- The `having count(distinct user_id) >= 20` gate is load-bearing, not caution. Measured
+-- 2026-07-27 this app had 4 profiles and 2 users who had ever finished a game; without the gate
+-- these functions would tell the author he is in the 50th percentile of himself, and in a small
+-- cohort would leak a recognisable individual's performance. Below the gate they must return NO
+-- rows, so the UI omits the section entirely rather than rendering a fake comparison.
+create or replace function public.format_benchmarks()
+returns table (format text, sport text, players bigint, sessions bigint,
+               avg_performance double precision, p50_score int, p90_score int,
+               perfect_rate double precision)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select r.format, r.sport,
+         count(distinct r.user_id) as players,
+         count(*) as sessions,
+         avg(r.performance) as avg_performance,
+         percentile_disc(0.5) within group (order by r.score)::int as p50_score,
+         percentile_disc(0.9) within group (order by r.score)::int as p90_score,
+         avg(case when r.perfect then 1.0 else 0.0 end) as perfect_rate
+  from public.game_results r
+  where r.ranked
+    and r.mode in ('daily','versus')
+    and r.created_at > now() - interval '180 days'
+  group by r.format, r.sport
+  having count(distinct r.user_id) >= 20;
+$$;
+
+revoke all on function public.format_benchmarks() from public;
+grant execute on function public.format_benchmarks() to anon, authenticated, service_role;
+
+-- The caller's own standing per (format, sport), against the same gated population.
+-- Caller-scoped via `auth.uid()`; anon is revoked explicitly (Supabase's default privileges
+-- grant EXECUTE to anon on new public functions, and that survives `revoke ... from public`).
+create or replace function public.my_stat_percentiles()
+returns table (format text, sport text, my_accuracy double precision,
+               my_best_score int, percentile double precision, sample_size bigint)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  with eligible as (
+    select r.format, r.sport, r.user_id,
+           avg(r.performance) as user_performance,
+           max(r.score) as user_best
+    from public.game_results r
+    where r.ranked
+      and r.mode in ('daily','versus')
+      and r.created_at > now() - interval '180 days'
+    group by r.format, r.sport, r.user_id
+  ),
+  gated as (
+    select format, sport from eligible
+    group by format, sport
+    having count(distinct user_id) >= 20
+  ),
+  ranked_users as (
+    select e.*,
+           percent_rank() over (partition by e.format, e.sport order by e.user_performance) as pr,
+           count(*) over (partition by e.format, e.sport) as cohort
+    from eligible e
+    join gated g on g.format = e.format and g.sport = e.sport
+  )
+  select ru.format, ru.sport, ru.user_performance, ru.user_best, ru.pr, ru.cohort
+  from ranked_users ru
+  where ru.user_id = auth.uid();
+$$;
+
+revoke all on function public.my_stat_percentiles() from public;
+revoke execute on function public.my_stat_percentiles() from anon;
+grant execute on function public.my_stat_percentiles() to authenticated, service_role;

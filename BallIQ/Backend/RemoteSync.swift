@@ -10,15 +10,18 @@ final class RemoteSync {
     private let localProgress: LocalProgressRepository
     private let localRating: LocalRatingRepository
     private let localSeasonRating: LocalSeasonRatingRepository
+    private let gameLog: LocalGameLogRepository
 
     init(client: SupabaseClient, userID: String,
          localProgress: LocalProgressRepository, localRating: LocalRatingRepository,
-         localSeasonRating: LocalSeasonRatingRepository) {
+         localSeasonRating: LocalSeasonRatingRepository,
+         gameLog: LocalGameLogRepository) {
         self.client = client
         self.userID = userID
         self.localProgress = localProgress
         self.localRating = localRating
         self.localSeasonRating = localSeasonRating
+        self.gameLog = gameLog
     }
 
     static func mergeRating(local: Int, remote: Int?) -> Int { max(local, remote ?? local) }
@@ -28,6 +31,7 @@ final class RemoteSync {
     func pull() async {
         await pullProgress()
         await pullRatings()
+        await pullGameLog()
     }
 
     /// Server-verified entitlement state (M5 Phase B — written only by the
@@ -85,6 +89,93 @@ final class RemoteSync {
             values: Up(userId: userID, streak: snapshot.streak, xp: snapshot.xp,
                        lastPlayedDay: snapshot.lastPlayedDay),
             onConflict: "user_id")
+    }
+
+    // MARK: - Career game log
+
+    /// The wire shape of a `GameResult`. Written out rather than making `GameResult` itself carry
+    /// `user_id`: the local log is per-device and has no notion of an account, and the server's
+    /// column set is allowed to drift from the on-disk one without touching the model.
+    private struct GameResultRow: Codable {
+        let id: UUID
+        let userId: String
+        let playedAt: Date
+        let format: String
+        let sport: String
+        let mode: String
+        let ranked: Bool
+        let perfect: Bool
+        let performance: Double
+        let score: Int
+        let maxScore: Int
+        let correct: Int
+        let attempted: Int
+        let durationMs: Int?
+        let ratingBefore: Int
+        let ratingAfter: Int
+        let xpEarned: Int
+        let streakAfter: Int
+        let puzzleId: String
+        let details: GameResultDetails
+
+        init(_ r: GameResult, userID: String) {
+            id = r.id; userId = userID; playedAt = r.playedAt
+            format = r.format.rawValue; sport = r.sport.rawValue; mode = r.mode.rawValue
+            ranked = r.ranked; perfect = r.perfect; performance = r.performance
+            score = r.score; maxScore = r.maxScore
+            correct = r.correct; attempted = r.attempted; durationMs = r.durationMs
+            ratingBefore = r.ratingBefore; ratingAfter = r.ratingAfter
+            xpEarned = r.xpEarned; streakAfter = r.streakAfter
+            puzzleId = r.puzzleID; details = r.details
+        }
+
+        /// Server row → local model. Unknown enum values (a format this build predates) are
+        /// dropped rather than defaulted, so a stale client can't silently miscategorise history.
+        func toResult() -> GameResult? {
+            guard let format = GameFormatKind(rawValue: format),
+                  let sport = Sport(rawValue: sport),
+                  let mode = PlayMode(rawValue: mode) else { return nil }
+            return GameResult(id: id, playedAt: playedAt, format: format, sport: sport, mode: mode,
+                              ranked: ranked, perfect: perfect, performance: performance,
+                              score: score, maxScore: maxScore, correct: correct,
+                              attempted: attempted, durationMs: durationMs,
+                              ratingBefore: ratingBefore, ratingAfter: ratingAfter,
+                              xpEarned: xpEarned, streakAfter: streakAfter,
+                              puzzleID: puzzleId, details: details)
+        }
+    }
+
+    /// Mirrors one finished session. `upsert` on the client-generated `id` rather than `insert`
+    /// so a retry (offline queue, a re-push after sign-in) can't double-count the session.
+    func pushGameResult(_ result: GameResult) async {
+        try? await client.upsert("game_results",
+                                 values: GameResultRow(result, userID: userID),
+                                 onConflict: "id")
+    }
+
+    /// Batched variant for backfilling a guest's local history after they sign in.
+    func pushGameLog(_ results: [GameResult]) async {
+        guard !results.isEmpty else { return }
+        try? await client.upsert("game_results",
+                                 values: results.map { GameResultRow($0, userID: userID) },
+                                 onConflict: "id")
+    }
+
+    /// Restores the server copy into the local log.
+    ///
+    /// This is also what fixes a long-standing gap: `pullRatings` restores only the scalar rating,
+    /// so a signed-in user opening the app on a new device had the right number and an empty
+    /// history behind it. RLS scopes rows to the caller, so no explicit `user_id` filter is
+    /// needed — same pattern as `pullProgress`/`pullRatings`.
+    func pullGameLog(limit: Int = 2000) async {
+        let rows: [GameResultRow] = (try? await client.select("game_results", query: [
+            item("select", "*"),
+            item("order", "played_at.desc"),
+            item("limit", "\(limit)"),
+        ])) ?? []
+        let results = rows.compactMap { $0.toResult() }
+        guard !results.isEmpty else { return }
+        await gameLog.merge(results)
     }
 
     func pushRating(sport: Sport, rating: Int, recordHistory: Bool) async {

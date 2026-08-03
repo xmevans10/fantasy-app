@@ -46,7 +46,7 @@ struct ContentView: View {
 
             // Stats lives inside Profile — a 6th tab would push Profile into the system
             // "More" screen on iPhone (max 5 visible tabs).
-            ProfileView()
+            ProfileView(selectedTab: $selectedTab)
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                 .tag(4)
         }

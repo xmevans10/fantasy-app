@@ -26,6 +26,9 @@ tools/release/.env
 tools/release/private_keys/
 tools/release/asc.py
 
+# Marketing automation — X/Reddit API credentials
+tools/marketing/.env
+
 # Google OAuth client config (Sign in with Google setup artifact) — never commit
 client_*.apps.googleusercontent.com.plist
 

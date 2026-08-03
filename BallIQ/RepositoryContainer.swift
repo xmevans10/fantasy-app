@@ -33,6 +33,9 @@ final class RepositoryContainer: ObservableObject {
     private let localProgress = LocalProgressRepository()
     private let localRating = LocalRatingRepository()
     private let localSeasonRating = LocalSeasonRatingRepository()
+    /// The career game log — see `GameResult`. Local-first because the app is fully playable
+    /// signed out; the server copy is a mirror for cross-device restore, not the source of truth.
+    let gameLog = LocalGameLogRepository()
     private var sync: RemoteSync?
     private var pendingDeviceToken: String?
     private var storeCancellables = Set<AnyCancellable>()
@@ -170,7 +173,7 @@ final class RepositoryContainer: ObservableObject {
         adoptLocalData(for: uid)
         let mirror = RemoteSync(client: client, userID: uid,
                                 localProgress: localProgress, localRating: localRating,
-                                localSeasonRating: localSeasonRating)
+                                localSeasonRating: localSeasonRating, gameLog: gameLog)
         sync = mirror
         await mirror.pull()
         if currentSeason == nil { await refreshCurrentSeason() }
@@ -354,6 +357,11 @@ final class RepositoryContainer: ObservableObject {
         }
         sportFilter = .all
         if purgingCache { DiskCache.purge() }
+        // The career log lives in Application Support, which neither the UserDefaults sweep above
+        // nor `DiskCache.purge()` (Caches) reaches. Without this, a deleted account leaves its
+        // complete play history on disk — an App Store 5.1.1(v) problem, not just a bug.
+        LocalGameLogRepository.wipe()
+        Task { [gameLog] in await gameLog.invalidate() }
     }
 
     func handleSignedOut() {
@@ -409,13 +417,46 @@ final class RepositoryContainer: ObservableObject {
         let leveledUp: Bool
     }
 
+    /// Everything a finished session knows that the rating math doesn't need — score, accuracy,
+    /// timing and the per-format extras that power the career stats.
+    ///
+    /// Defaulted end-to-end so a call site that hasn't been migrated still compiles and still
+    /// records a (thinner) row, which is what let the six game views be updated independently
+    /// rather than in one atomic change across the whole app.
+    struct SessionDetail {
+        var mode: PlayMode = .daily
+        var score = 0
+        var maxScore = 0
+        var correct = 0
+        var attempted = 0
+        /// Set at the view's existing `track(.gameStarted)` site; `nil` simply means untimed.
+        var startedAt: Date?
+        var details = GameResultDetails()
+
+        init(mode: PlayMode = .daily, score: Int = 0, maxScore: Int = 0,
+             correct: Int = 0, attempted: Int = 0, startedAt: Date? = nil,
+             details: GameResultDetails = GameResultDetails()) {
+            self.mode = mode
+            self.score = score
+            self.maxScore = maxScore
+            self.correct = correct
+            self.attempted = attempted
+            self.startedAt = startedAt
+            self.details = details
+        }
+    }
+
     /// Record a finished session: award XP, advance streak, apply rating, then push to the server.
     ///
     /// `ranked` defaults to true (daily play). Community puzzles pass `ranked: false`:
     /// XP and streak still count, but competitive rating is untouched (and no rating
     /// history is pushed), so easy user-made puzzles can't farm the ladder.
+    ///
+    /// `detail` additionally writes the session to the career log (`GameResult`). It is defaulted
+    /// rather than required so this stayed an additive change — see `SessionDetail`.
     func complete(format: GameFormatKind, sport: Sport, performance: Double, perfect: Bool,
-                  puzzleID: String, ranked: Bool = true, date: Date = Date()) async -> SessionRewards {
+                  puzzleID: String, ranked: Bool = true, date: Date = Date(),
+                  detail: SessionDetail = SessionDetail()) async -> SessionRewards {
         let before = progressSnapshot
         let firstPlay = !before.hasPlayed(on: date)
         let beforeLevel = before.level
@@ -479,12 +520,60 @@ final class RepositoryContainer: ObservableObject {
             Task { await cohorts.bumpWeeklyXP(xp) }
         }
 
+        // Career log. Written here — after `progressSnapshot`/`refreshRatings()` and before the
+        // analytics event — so rating before/after, XP and streak are all the settled values for
+        // this session rather than a mix of pre- and post-state.
+        await recordGameResult(format: format, sport: sport, performance: performance,
+                               perfect: perfect, puzzleID: puzzleID, ranked: ranked, date: date,
+                               ratingBefore: change.old, ratingAfter: change.new,
+                               xpEarned: xp, streakAfter: snap.streak, detail: detail)
+
         track(.gameCompleted, ["format": format.rawValue, "sport": sport.rawValue,
                                "ranked": "\(ranked)", "perfect": "\(perfect)"])
 
         return SessionRewards(ratingChange: change, xpEarned: xp,
                               newStreak: snap.streak, newLevel: snap.level,
                               leveledUp: snap.level > beforeLevel)
+    }
+
+    /// Record a session in the career log **without** awarding XP, advancing the streak, or moving
+    /// rating.
+    ///
+    /// Exists for Grid practice, which is re-rollable on demand and so must stay reward-free — but
+    /// there's no reason those reps shouldn't count toward accuracy and volume. `PlayMode`'s
+    /// `countsForRecords` keeps them out of personal bests.
+    func logSession(format: GameFormatKind, sport: Sport, performance: Double, perfect: Bool,
+                    puzzleID: String, date: Date = Date(), detail: SessionDetail) async {
+        let current = await localRating.rating(for: sport)
+        await recordGameResult(format: format, sport: sport, performance: performance,
+                               perfect: perfect, puzzleID: puzzleID, ranked: false, date: date,
+                               ratingBefore: current, ratingAfter: current,
+                               xpEarned: 0, streakAfter: progressSnapshot.streak, detail: detail)
+    }
+
+    /// Builds the `GameResult`, appends it locally, and mirrors it to the server in the background.
+    /// The local write is awaited (a stat read immediately after a game must see it); the push is
+    /// not (it no-ops when signed out, and a career log that only works online would be empty for
+    /// most first sessions).
+    private func recordGameResult(format: GameFormatKind, sport: Sport, performance: Double,
+                                  perfect: Bool, puzzleID: String, ranked: Bool, date: Date,
+                                  ratingBefore: Int, ratingAfter: Int, xpEarned: Int,
+                                  streakAfter: Int, detail: SessionDetail) async {
+        let durationMs = detail.startedAt.map {
+            max(0, Int(date.timeIntervalSince($0) * 1000))
+        }
+        let result = GameResult(playedAt: date, format: format, sport: sport, mode: detail.mode,
+                                ranked: ranked, perfect: perfect, performance: performance,
+                                score: detail.score, maxScore: detail.maxScore,
+                                correct: detail.correct, attempted: detail.attempted,
+                                durationMs: durationMs,
+                                ratingBefore: ratingBefore, ratingAfter: ratingAfter,
+                                xpEarned: xpEarned, streakAfter: streakAfter,
+                                puzzleID: puzzleID, details: detail.details)
+        await gameLog.append(result)
+        if let sync {
+            Task { await sync.pushGameResult(result) }
+        }
     }
 
     // MARK: - Analytics (M15 — first-party, fire-and-forget)

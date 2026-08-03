@@ -5,14 +5,23 @@ struct ProfileView: View {
     @EnvironmentObject private var container: RepositoryContainer
     @EnvironmentObject private var auth: AuthService
 
+    /// Tab switch out of Profile — lets the empty-state CTA ("Play a puzzle on Home") be a
+    /// working button. Defaulted so `ProfileView()` (tests, previews) keeps compiling.
+    var selectedTab: Binding<Int> = .constant(0)
+
     @State private var currentNonce: String?
     @State private var notificationSettings = NotificationSettings.allEnabled
-    @State private var showStats = false
+    @State private var showCareer = false
     @State private var showModeration = false
     @State private var showIdentityEditor = false
     @State private var showFriends = false
+    @State private var showRatingLadder = false
     /// Which sport's club picker is open (`TeamPicker` sheet) — nil = closed.
     @State private var pickingTeamFor: Sport?
+
+    /// The full career log — loaded once per appearance into state since `gameLog` is an actor.
+    /// Everything career-hero/highlight-reel/stat-row renders is a pure function of this array.
+    @State private var careerRows: [GameResult] = []
 
     // Account deletion (App Store Guideline 5.1.1(v)).
     @State private var confirmingDelete = false
@@ -33,6 +42,7 @@ struct ProfileView: View {
     }
     private var rating: Int { container.rating(for: bestSport) }
     private var tier: Tier { Tier.forRating(rating) }
+    private var careerSummary: CareerSummary { CareerSummary(careerRows) }
 
     var body: some View {
         NavigationStack {
@@ -43,17 +53,18 @@ struct ProfileView: View {
                     }
                     heroCard.heroReveal(1)
                     statRow.heroReveal(2)
-                    if !container.seasonBadges.isEmpty { seasonBadgesCard.heroReveal(2) }
-                    statsRow.heroReveal(3)
-                    if auth.isSignedIn { friendsRow.heroReveal(4) }
-                    ratingsCard.heroReveal(5)
+                    highlightReel.heroReveal(3)
+                    if !container.seasonBadges.isEmpty { seasonBadgesCard.heroReveal(4) }
+                    careerRow.heroReveal(5)
+                    if auth.isSignedIn { friendsRow.heroReveal(6) }
+                    ratingsCard.heroReveal(7)
                     if auth.isSignedIn && container.identity.username != nil {
-                        shareCardRow.heroReveal(6)
+                        shareCardRow.heroReveal(8)
                     }
-                    if auth.isSignedIn { favoriteTeamsCard.heroReveal(7) }
-                    if auth.isSignedIn { notificationsCard.heroReveal(8) }
-                    if container.isAdmin { moderationRow.heroReveal(9) }
-                    accountCard.heroReveal(10)
+                    if auth.isSignedIn { favoriteTeamsCard.heroReveal(9) }
+                    if auth.isSignedIn { notificationsCard.heroReveal(10) }
+                    if container.isAdmin { moderationRow.heroReveal(11) }
+                    accountCard.heroReveal(12)
                 }
                 .padding(16)
             }
@@ -61,8 +72,8 @@ struct ProfileView: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Wordmark.toolbarItem() }
-            .navigationDestination(isPresented: $showStats) {
-                StatsView().environmentObject(container)
+            .navigationDestination(isPresented: $showCareer) {
+                CareerView().environmentObject(container)
             }
             .navigationDestination(isPresented: $showModeration) {
                 ModerationQueueView().environmentObject(container)
@@ -70,13 +81,17 @@ struct ProfileView: View {
             .navigationDestination(isPresented: $showFriends) {
                 FriendsView().environmentObject(container).environmentObject(auth)
             }
+            .navigationDestination(isPresented: $showRatingLadder) {
+                RatingLadderView().environmentObject(container)
+            }
         }
         .sheet(isPresented: $showIdentityEditor) {
             IdentityEditorSheet().environmentObject(container)
         }
         .task { if auth.isSignedIn { notificationSettings = await container.loadNotificationSettings() } }
+        .task { careerRows = await container.gameLog.all() }
         .onAppear {
-            if DebugLaunch.autoOpenStats { showStats = true }
+            if DebugLaunch.autoOpenStats { showCareer = true }
             if DebugLaunch.autoOpenModeration { showModeration = true }
         }
         // Attached to the whole screen rather than to the DELETE ACCOUNT button, because that
@@ -105,15 +120,16 @@ struct ProfileView: View {
         }
     }
 
-    /// Entry to the full Stats screen (rating history chart, per-sport summaries).
-    private var statsRow: some View {
-        Button { showStats = true } label: {
+    /// Entry to the full Career screen (accuracy, records, fun facts) — replaces the old
+    /// rating-only Stats screen.
+    private var careerRow: some View {
+        Button { showCareer = true } label: {
             HStack(spacing: 12) {
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.system(size: 20, weight: .bold)).foregroundStyle(Color.accentText)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Stats").font(.title).foregroundStyle(Color.textPrimary)
-                    Text("RATING HISTORY & TRENDS").font(.label11).foregroundStyle(Color.textMuted)
+                    Text("Career").font(.title).foregroundStyle(Color.textPrimary)
+                    Text("ACCURACY, RECORDS & FUN FACTS").font(.label11).foregroundStyle(Color.textMuted)
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
@@ -309,21 +325,90 @@ struct ProfileView: View {
         .tint(Color.accentFill)
     }
 
+    /// Leads with the player's own performance rather than their per-sport Elo — the user's own
+    /// framing of what this screen should headline. A brand-new account still carries a default
+    /// 1000/Silver rating, which used to render here indistinguishable from an earned one; this
+    /// hero shows nothing rating-shaped until there's at least one real game to back it.
     private var heroCard: some View {
+        Group {
+            if careerRows.isEmpty {
+                careerHeroEmpty
+            } else {
+                careerHeroFilled
+            }
+        }
+    }
+
+    private var careerHeroFilled: some View {
         VStack(spacing: 6) {
             avatarBadge
             if auth.isSignedIn, let username = container.identity.username {
                 identityLine(username: username)
             }
-            Text(tier.name.uppercased())
-                .font(.heading).foregroundStyle(Color.onAccent.opacity(0.85))
-            CountUpText(value: rating, font: .hero(64), color: .onAccent)
-            Text("\(bestSport.displayName) RATING").font(.label12)
-                .foregroundStyle(Color.onAccent.opacity(0.75))
+            if let accuracy = careerSummary.accuracy {
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    CountUpText(value: Int((accuracy * 100).rounded()), font: .hero(64), color: .onAccent)
+                    Text("%").font(.hero(64)).foregroundStyle(Color.onAccent)
+                }
+            } else {
+                Text("—").font(.hero(64)).foregroundStyle(Color.onAccent)
+            }
+            Text("\(careerSummary.cardsJudged) cards judged · \(careerSummary.games) games")
+                .font(.label12).foregroundStyle(Color.onAccent.opacity(0.75))
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
         .blockCard(fill: .accentFill)
+        .overlay(alignment: .topTrailing) { tierCapsule.padding(10) }
+    }
+
+    /// A 0-game account: the old default-1000/Silver hero read as an earned rank, which it
+    /// wasn't. This reads as an invitation instead, and deliberately drops the tier capsule too
+    /// — a tier badge on a card with no rating history is the exact same bug in miniature.
+    private var careerHeroEmpty: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "flag.checkered")
+                .font(.system(size: 30, weight: .bold))
+                .foregroundStyle(Color.onAccent)
+                .frame(width: 72, height: 72)
+                .background(Color.onAccent.opacity(0.14))
+                .clipShape(Circle())
+            Text("YOUR CAREER STARTS TODAY")
+                .font(.title).foregroundStyle(Color.onAccent)
+                .multilineTextAlignment(.center)
+            Text("Every puzzle you play builds your stats — accuracy, streaks, and the fun facts below.")
+                .font(.body14).foregroundStyle(Color.onAccent.opacity(0.85))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+            Button { selectedTab.wrappedValue = 0 } label: {
+                HStack(spacing: 6) {
+                    Text("PLAY A PUZZLE ON HOME").font(.label12).foregroundStyle(Color.onAccent)
+                    Image(systemName: "arrow.right").font(.system(size: 11, weight: .bold)).foregroundStyle(Color.onAccent)
+                }
+                .padding(.horizontal, 14).padding(.vertical, 8)
+                .background(Color.onAccent.opacity(0.16))
+                .clipShape(Capsule())
+                .overlay(Capsule().strokeBorder(Color.onAccent.opacity(0.4), lineWidth: 1.5))
+            }
+            .buttonStyle(PrimePressStyle())
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .blockCard(fill: .accentFill)
+    }
+
+    /// The demoted Elo: still visible at a glance (tapping the summary row below reaches the
+    /// full ladder), just no longer the first thing the screen says.
+    private var tierCapsule: some View {
+        HStack(spacing: 4) {
+            Image(systemName: tier.symbol).font(.system(size: 10, weight: .black))
+            Text(tier.name.uppercased()).font(.label11)
+        }
+        .foregroundStyle(tier.onColor)
+        .padding(.horizontal, 8).padding(.vertical, 4)
+        .background(tier.color)
+        .clipShape(Capsule())
+        .overlay(Capsule().strokeBorder(Color.borderInk, lineWidth: 1.5))
     }
 
     /// The hero's face: the player's chosen emoji avatar in a big tier-ringed circle
@@ -375,25 +460,81 @@ struct ProfileView: View {
             .foregroundStyle(Color.onAccent)
     }
 
+    /// The all-time-best daily streak, computed straight off the career log rather than a
+    /// separately-tracked field — `container.streak` already gives the current one.
+    private var bestStreak: Int { CareerStatsMath.longestDailyStreak(careerRows.map(\.playedAt)) }
+
     private var statRow: some View {
         HStack(spacing: 16) {
-            stat("LEVEL", "\(container.level)")
+            stat("PERFECTS", "\(careerSummary.perfects)")
             Divider().frame(height: 32)
-            stat("XP", "\(container.xp)")
+            stat("STREAK", "\(container.streak)", caption: bestStreak > container.streak ? "best \(bestStreak)" : nil)
             Divider().frame(height: 32)
-            stat("STREAK", "\(container.streak)")
+            stat("DAYS PLAYED", "\(careerSummary.days)")
         }
         .frame(maxWidth: .infinity)
         .padding(16)
         .cardSurface()
     }
 
-    private func stat(_ label: String, _ value: String) -> some View {
+    private func stat(_ label: String, _ value: String, caption: String? = nil) -> some View {
         VStack(spacing: 2) {
             Text(label).font(.label11).foregroundStyle(Color.textMuted)
             Text(value).font(.hero(26)).foregroundStyle(Color.textPrimary)
+            if let caption {
+                Text(caption).font(.label11).foregroundStyle(Color.textMuted)
+            }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Highlight reel (career fun facts)
+
+    /// A compact, horizontally-scrolling slice of `StatCatalog`'s ~30 cards — Profile can't show
+    /// all of them (that's the Career screen's job), but a taste of the delight surface belongs
+    /// right under the headline stats. `StatCatalog.highlights` already gates on `isUnlocked`, so
+    /// a 1-game account naturally sees nothing here rather than a wall of "—" placeholders.
+    @ViewBuilder
+    private var highlightReel: some View {
+        let cards = StatCatalog.highlights(careerRows, limit: 5)
+        if !cards.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("HIGHLIGHTS").font(.label12).foregroundStyle(Color.textMuted)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
+                            highlightTile(card, fill: highlightFill(index))
+                        }
+                    }
+                    .padding(.horizontal, 1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .cardSurface()
+        }
+    }
+
+    private func highlightFill(_ index: Int) -> Color {
+        switch index % 3 {
+        case 0: return .accentFill
+        case 1: return .voltFill
+        default: return .goldFill
+        }
+    }
+
+    private func highlightTile(_ card: StatCard, fill: Color) -> some View {
+        let onColor: Color = fill == .accentFill ? .onAccent : (fill == .voltFill ? .onVolt : .onGold)
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(card.title).font(.label11).foregroundStyle(onColor.opacity(0.75))
+            Text(card.value).font(.hero(22)).foregroundStyle(onColor)
+            if let context = card.context {
+                Text(context).font(.label11).foregroundStyle(onColor.opacity(0.75))
+            }
+        }
+        .frame(width: 150, alignment: .leading)
+        .padding(14)
+        .blockCard(fill: fill)
     }
 
     // MARK: - Season badges (M5 Phase F — end-of-season peak-tier reward)
@@ -431,54 +572,28 @@ struct ProfileView: View {
         .foil(active: tier == .legend, cornerRadius: Radius.card)
     }
 
-    // MARK: - Ratings (per sport)
+    // MARK: - Ratings (per sport) — demoted to a single summary row; full ladder lives in
+    // `RatingLadderView`. Leagues/Versus/season badges still key off `RatingEngine` underneath,
+    // this only changes what Profile leads with.
 
     private var ratingsCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("RATINGS").font(.label12).foregroundStyle(Color.textMuted)
-            ForEach(Sport.allCases) { ratingRow($0) }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .cardSurface()
-    }
-
-    private func ratingRow(_ sport: Sport) -> some View {
-        let rating = container.rating(for: sport)
-        let tier = Tier.forRating(rating)
-        return VStack(spacing: 8) {
-            HStack(spacing: 8) {
-                Image(systemName: sport.symbol).font(.system(size: 14)).foregroundStyle(tier.color)
-                Text(sport.displayName).font(.heading).foregroundStyle(Color.textPrimary)
-                Spacer()
-                Text(tier.name.uppercased()).font(.label11).foregroundStyle(tier.color)
-                Text("\(rating)").font(.hero(22)).foregroundStyle(Color.textPrimary)
-                    .frame(minWidth: 52, alignment: .trailing)
-            }
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.surfaceMuted)
-                    Capsule().fill(tier.color)
-                        .frame(width: geo.size.width * tierProgress(rating: rating, tier: tier))
+        Button { showRatingLadder = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: tier.symbol).font(.system(size: 20, weight: .bold)).foregroundStyle(tier.color)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Rating").font(.title).foregroundStyle(Color.textPrimary)
+                    Text("\(tier.name.uppercased()) \(rating) · VIEW ALL SPORTS")
+                        .font(.label11).foregroundStyle(Color.textMuted)
                 }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)
             }
-            .frame(height: 6)
-            if let floor = tier.nextTierFloor {
-                Text("\(floor - rating) to \(Tier.forRating(floor).name)")
-                    .font(.label11).foregroundStyle(Color.textMuted)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            } else {
-                Text("Max tier").font(.label11).foregroundStyle(Color.textMuted)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .cardSurface()
         }
-    }
-
-    /// Fraction (0–1) of the way through the current tier's rating band.
-    private func tierProgress(rating: Int, tier: Tier) -> CGFloat {
-        let lo = tier.range.lowerBound, hi = tier.range.upperBound
-        guard hi > lo else { return 1 }
-        return CGFloat(min(max(rating - lo, 0), hi - lo)) / CGFloat(hi - lo)
+        .buttonStyle(PrimePressStyle())
     }
 
     @ViewBuilder

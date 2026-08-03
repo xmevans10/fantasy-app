@@ -32,6 +32,13 @@ final class WhoAmIScoringTests: XCTestCase {
         XCTAssertFalse(r.solved)
     }
 
+    /// `perClue[0]` is the max any solve can score (first clue, no wrong guesses) — the value
+    /// `WhoAmIGameView.finish` reports as the session's `maxScore`.
+    func testFirstEntryIsTheMaxAttainableScore() {
+        XCTAssertEqual(WhoAmIScoring.perClue[0], WhoAmIScoring.perClue.max())
+        XCTAssertEqual(WhoAmIScoring.perClue[0], 1000)
+    }
+
     // MARK: - Answer matching
 
     private let answer = WhoAmIPuzzle.AcceptedAnswer(

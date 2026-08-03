@@ -27,6 +27,7 @@ struct CommunityView: View {
     @State private var reportTarget: CommunitySummary?
     @State private var showReportDialog = false
     @State private var showReportSent = false
+    @State private var showDeleteConfirm = false
 
     enum CommunityFormat: String, CaseIterable { case keep4, whoami
         var title: String { self == .keep4 ? "K4C4" : "Who Am I?" }
@@ -67,11 +68,24 @@ struct CommunityView: View {
                 Button("Share puzzle") {
                     if let item = menuTarget { shareTarget = SharablePuzzle(community: item) }
                 }
+                if let item = menuTarget, item.authorId == container.auth.userID {
+                    Button("Delete puzzle", role: .destructive) {
+                        showCardMenu = false
+                        showDeleteConfirm = true
+                    }
+                }
                 Button("Report puzzle", role: .destructive) {
                     reportTarget = menuTarget
                     showReportDialog = true
                 }
                 Button("Cancel", role: .cancel) {}
+            }
+            .confirmationDialog("Delete this puzzle?", isPresented: $showDeleteConfirm,
+                                titleVisibility: .visible) {
+                Button("Delete", role: .destructive) { Task { await deletePuzzle() } }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This permanently removes your puzzle from the community. It can't be undone.")
             }
             .sheet(item: $shareTarget) { target in
                 PuzzleShareSheet(puzzle: target, surface: "puzzle_community")
@@ -89,6 +103,21 @@ struct CommunityView: View {
     /// Fires the report, gives haptic + confirmation feedback, and resets the picker state.
     /// Best-effort (matches `reportCommunity`'s own `try?` fire-and-forget), so the confirmation
     /// fires optimistically rather than waiting on a success signal that doesn't exist.
+    /// Removes the caller's own puzzle from the community (RLS scopes the DELETE to
+    /// `auth.uid() = author_id`). The card leaves the list only on success — a failed delete
+    /// leaves it in place so the user can retry.
+    private func deletePuzzle() async {
+        guard let item = menuTarget, let community = container.community else { return }
+        do {
+            try await community.delete(id: item.id)
+            Haptics.success()
+            items.removeAll { $0.id == item.id }
+        } catch {
+            print("CommunityView.deletePuzzle failed: \(error)")
+        }
+        menuTarget = nil
+    }
+
     private func report(reason: String) {
         guard let item = reportTarget else { return }
         reportTarget = nil

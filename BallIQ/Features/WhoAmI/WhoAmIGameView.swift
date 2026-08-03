@@ -20,6 +20,7 @@ struct WhoAmIGameView: View {
     @State private var showReportDialog = false
     @State private var showReportSent = false
     @State private var didLogStart = false
+    @State private var startedAt: Date?
 
     private var allRevealed: Bool { revealedCount >= puzzle.clues.count }
     private var currentValue: Int {
@@ -42,6 +43,7 @@ struct WhoAmIGameView: View {
         .onAppear {
             if !didLogStart {
                 didLogStart = true
+                startedAt = Date()
                 container.track(.gameStarted, ["format": "whoami", "ranked": "\(ranked)",
                                                "community": "\(communityID != nil)"])
             }
@@ -236,10 +238,20 @@ struct WhoAmIGameView: View {
         let r = WhoAmIScoring.score(cluesUsed: revealedCount, wrongGuesses: wrongGuesses, solved: solved)
         if solved { Haptics.success() }
         let perfect = solved && revealedCount == 1 && wrongGuesses == 0
+        var details = GameResultDetails()
+        details.cluesUsed = revealedCount
+        details.wrongGuesses = wrongGuesses
+        details.solved = solved
+        details.answerName = puzzle.answer.canonical
+        let detail = RepositoryContainer.SessionDetail(
+            mode: communityID != nil ? .community : .daily,
+            score: r.total, maxScore: WhoAmIScoring.perClue[0],
+            correct: solved ? 1 : 0, attempted: 1,
+            startedAt: startedAt, details: details)
         Task { @MainActor in
             let rw = await container.complete(format: .whoAmI, sport: puzzle.sport,
                                               performance: r.performance, perfect: perfect,
-                                              puzzleID: puzzle.id, ranked: ranked)
+                                              puzzleID: puzzle.id, ranked: ranked, detail: detail)
             rewards = rw
             if let communityID { await container.recordCommunityPlay(id: communityID) }
             withAnimation(Motion.easeOut) { result = r }

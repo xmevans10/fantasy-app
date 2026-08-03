@@ -5,12 +5,6 @@ struct Season: Decodable, Equatable {
     let startsAt: Date
     let endsAt: Date
     let status: String
-
-    enum CodingKeys: String, CodingKey {
-        case id, status
-        case startsAt = "starts_at"
-        case endsAt = "ends_at"
-    }
 }
 
 /// The signed-in player's row in their current cohort.
@@ -19,24 +13,12 @@ struct CohortMembership: Decodable, Equatable {
     let seasonId: Int
     let weeklyXp: Int
     let priorZone: String?
-
-    enum CodingKeys: String, CodingKey {
-        case cohortId = "cohort_id"
-        case seasonId = "season_id"
-        case weeklyXp = "weekly_xp"
-        case priorZone = "prior_zone"
-    }
 }
 
 /// One row of `cohort_members`, before the profile (username/avatar) join.
 private struct CohortMemberRow: Decodable {
     let userId: String
     let weeklyXp: Int
-
-    enum CodingKeys: String, CodingKey {
-        case userId = "user_id"
-        case weeklyXp = "weekly_xp"
-    }
 }
 
 /// Promotion/relegation zone within a ~30-player cohort standings list (brief: top 5 promote,

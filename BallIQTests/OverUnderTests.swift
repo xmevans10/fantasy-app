@@ -163,4 +163,68 @@ final class OverUnderTests: XCTestCase {
         let full = LivesBank.initial
         XCTAssertEqual(full.regenerated(now: Date().addingTimeInterval(100_000)), full)
     }
+
+    // MARK: - Session detail (over/under pick split)
+
+    /// Simulates a sequence of picks the way `decide(guessOver:)` does — tracking each side's
+    /// pick/correct tally independently — then hands the totals to the same pure builder the
+    /// view calls from `finish()`.
+    private func detailsAfter(picks: [(guessOver: Bool, isOver: Bool)]) -> GameResultDetails {
+        var overPicks = 0, overCorrect = 0, underPicks = 0, underCorrect = 0
+        for pick in picks {
+            let correct = pick.guessOver == pick.isOver
+            if pick.guessOver {
+                overPicks += 1
+                if correct { overCorrect += 1 }
+            } else {
+                underPicks += 1
+                if correct { underCorrect += 1 }
+            }
+        }
+        return OverUnderSessionDetail.build(bestCombo: 0, livesLeft: 3, overPicks: overPicks,
+                                            overCorrect: overCorrect, underPicks: underPicks,
+                                            underCorrect: underCorrect)
+    }
+
+    func testOverUnderSplitTalliesEachSideIndependently() {
+        // over/correct, over/wrong, under/correct, under/correct, under/wrong
+        let details = detailsAfter(picks: [
+            (guessOver: true, isOver: true),
+            (guessOver: true, isOver: false),
+            (guessOver: false, isOver: false),
+            (guessOver: false, isOver: false),
+            (guessOver: false, isOver: true),
+        ])
+        XCTAssertEqual(details.overPicks, 2)
+        XCTAssertEqual(details.overCorrect, 1)
+        XCTAssertEqual(details.underPicks, 3)
+        XCTAssertEqual(details.underCorrect, 2)
+    }
+
+    func testOverUnderSplitAttemptedEqualsCorrectPlusWrong() {
+        let picks: [(guessOver: Bool, isOver: Bool)] = [
+            (true, true), (true, true), (false, true), (false, false), (true, false), (false, false),
+        ]
+        let details = detailsAfter(picks: picks)
+        let correct = picks.filter { $0.guessOver == $0.isOver }.count
+        let wrong = picks.count - correct
+        let attempted = (details.overPicks ?? 0) + (details.underPicks ?? 0)
+        XCTAssertEqual(attempted, correct + wrong)
+        XCTAssertEqual(attempted, picks.count)
+    }
+
+    func testOverUnderSplitAllOnOneSide() {
+        let details = detailsAfter(picks: [(true, true), (true, false), (true, true)])
+        XCTAssertEqual(details.overPicks, 3)
+        XCTAssertEqual(details.overCorrect, 2)
+        XCTAssertEqual(details.underPicks, 0)
+        XCTAssertEqual(details.underCorrect, 0)
+    }
+
+    func testOverUnderSessionDetailCarriesComboAndLives() {
+        let details = OverUnderSessionDetail.build(bestCombo: 7, livesLeft: 1, overPicks: 4,
+                                                    overCorrect: 3, underPicks: 2, underCorrect: 1)
+        XCTAssertEqual(details.bestCombo, 7)
+        XCTAssertEqual(details.livesLeft, 1)
+    }
 }

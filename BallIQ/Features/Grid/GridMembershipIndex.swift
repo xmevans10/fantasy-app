@@ -126,6 +126,7 @@ struct GridMembershipIndex: Codable, Equatable {
         memberships = try c.decode([String].self, forKey: .memberships)
         axes = try c.decodeIfPresent([Axis].self, forKey: .axes) ?? []
         axisMemberships = try c.decodeIfPresent([String].self, forKey: .axisMemberships) ?? []
+        axisTeams = try c.decodeIfPresent([String].self, forKey: .axisTeams) ?? []
     }
 
     /// Memberwise init, restored — declaring `init(from:)` suppresses the synthesized one, and

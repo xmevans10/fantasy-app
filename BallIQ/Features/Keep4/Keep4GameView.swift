@@ -15,6 +15,11 @@ struct Keep4GameView: View {
     /// can send anyone with no account on either end. Only ever non-nil when the resolved board
     /// is exactly the one challenged (see `ContentView.accept`).
     var challenge: ChallengeLink? = nil
+    /// Set alongside `versusChallengeID` — the other side of the duel, resolved by the caller
+    /// (the local user may be either the challenger or the opponent on the row). Denormalized
+    /// onto `GameResultDetails.opponentUserID` so a "record against this rival" stat doesn't
+    /// need a challenge lookup.
+    var opponentUserID: String? = nil
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
@@ -23,6 +28,9 @@ struct Keep4GameView: View {
     @State private var index = 0
     @State private var placement: [String: Pile] = [:]
     @State private var result: Keep4Scoring.Result?
+    /// Captured at the existing `track(.gameStarted)` site so the session log can carry a
+    /// real duration; nil is legitimate (untimed) if `finish()` somehow runs before `onAppear`.
+    @State private var startedAt: Date?
     @State private var rewards: RepositoryContainer.SessionRewards?
     @State private var mode: Keep4Mode = .normal
     @State private var showReportDialog = false
@@ -68,6 +76,7 @@ struct Keep4GameView: View {
         .onAppear {
             if order.isEmpty {
                 order = Self.blindOrder(for: puzzle)
+                startedAt = Date()
                 container.track(.gameStarted, ["format": "keep4", "ranked": "\(ranked)",
                                                "community": "\(communityID != nil)"])
             }
@@ -315,15 +324,57 @@ struct Keep4GameView: View {
         let r = Keep4Scoring.score(puzzle: puzzle, placement: placement)
         if r.isPerfect { Haptics.success() } else { Haptics.commit() }
         let performance = Double(r.correctCount) / Double(puzzle.players.count)
+        // Versus and community are both possible on the same session (a community-authored
+        // puzzle can't currently be a Versus board, but if that ever changes, Versus should
+        // win — it's the more specific mode).
+        let playMode: PlayMode = versusChallengeID != nil ? .versus : (communityID != nil ? .community : .daily)
+        let detail = RepositoryContainer.SessionDetail(
+            mode: playMode, score: r.total, maxScore: 3000,
+            correct: r.correctCount, attempted: puzzle.players.count, startedAt: startedAt,
+            details: Self.buildDetails(puzzle: puzzle, placement: placement, result: r,
+                                       opponentUserID: opponentUserID))
         Task { @MainActor in
             let rw = await container.complete(format: mode.formatKind, sport: puzzle.sport,
                                               performance: performance, perfect: r.isPerfect,
-                                              puzzleID: puzzle.id, ranked: ranked)
+                                              puzzleID: puzzle.id, ranked: ranked, detail: detail)
             rewards = rw
             if let communityID { await container.recordCommunityPlay(id: communityID) }
             if let versusChallengeID { await container.submitVersusResult(challengeID: versusChallengeID, performance: performance) }
             withAnimation(Motion.easeOut) { result = r }
         }
+    }
+
+    /// The Keep4-specific slice of `GameResultDetails` for a finished placement. Pure and
+    /// static so the miss-direction math (kept-should've-been-cut vs. cut-should've-been-kept)
+    /// is unit-testable without a live game session — see `Keep4ScoringTests`.
+    static func buildDetails(puzzle: Keep4Puzzle, placement: [String: Pile],
+                             result: Keep4Scoring.Result, opponentUserID: String? = nil) -> GameResultDetails {
+        let correctKeepIDs = puzzle.correctKeepIDs
+        var missedIDs: [String] = []
+        var missedNames: [String] = []
+        var missedKeepCount = 0   // kept someone who should have been cut
+        var missedCutCount = 0    // cut someone who should have been kept
+
+        for player in puzzle.players {
+            guard result.correctness[player.id] == false else { continue }
+            missedIDs.append(player.id)
+            missedNames.append(player.name)
+            let shouldKeep = correctKeepIDs.contains(player.id)
+            if placement[player.id] == .keep && !shouldKeep {
+                missedKeepCount += 1
+            } else if placement[player.id] == .cut && shouldKeep {
+                missedCutCount += 1
+            }
+        }
+
+        var details = GameResultDetails()
+        details.missedPlayerIDs = missedIDs.isEmpty ? nil : missedIDs
+        details.missedPlayerNames = missedNames.isEmpty ? nil : missedNames
+        details.missedKeepCount = missedKeepCount
+        details.missedCutCount = missedCutCount
+        details.theme = puzzle.theme
+        details.opponentUserID = opponentUserID
+        return details
     }
 
     /// Debug-only: fill a deliberately imperfect placement (6/8) and finish, to screenshot the result.

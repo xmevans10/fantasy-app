@@ -228,4 +228,59 @@ final class GridPuzzleTests: XCTestCase {
         XCTAssertFalse(classic.instructions.contains("played for both"))
         XCTAssertTrue(classic.instructions.contains("row and the column"))
     }
+
+    // MARK: - SessionDetail (career log)
+
+    /// Every cell always gets a final answer — `GridGameView.finish` only runs once
+    /// `attemptedCount` hits 9 — so `correct`/`attempted` are always `solved.count`/9, never a
+    /// partial count.
+    func testBuildSessionDetailCountsSolvedAgainstAllNineCells() {
+        let p = puzzle()
+        let solved: [Int: String] = [0: "Joe Montana", 4: "Barry Sanders"]
+        let wrong: Set<Int> = [1, 2, 3, 5, 6, 7, 8]
+        let started = Date(timeIntervalSince1970: 0)
+        let detail = GridGameView.buildSessionDetail(puzzle: p, solved: solved, wrong: wrong,
+                                                      mode: .daily, startedAt: started)
+        XCTAssertEqual(detail.correct, 2)
+        XCTAssertEqual(detail.attempted, 9)
+        XCTAssertEqual(detail.mode, .daily)
+        XCTAssertEqual(detail.startedAt, started)
+        XCTAssertEqual(detail.maxScore, 1800)
+        XCTAssertEqual(detail.details.cellsSolved, 2)
+    }
+
+    /// Score is 100/solve plus 20/rarity-star, summed only over solved cells — this fixture's
+    /// `rarityStars` are `(i % 5) + 1`, so cell 0 is 1 star and cell 4 is 5 stars.
+    func testBuildSessionDetailScoresSolvedCellsByRarity() {
+        let p = puzzle()
+        let solved: [Int: String] = [0: "Joe Montana", 4: "Barry Sanders"]
+        let detail = GridGameView.buildSessionDetail(puzzle: p, solved: solved, wrong: [],
+                                                      mode: .daily, startedAt: nil)
+        // cell 0 rarity = (0 % 5) + 1 = 1, cell 4 rarity = (4 % 5) + 1 = 5 -> totalStars = 6
+        XCTAssertEqual(detail.details.rarityStars, 6)
+        XCTAssertEqual(detail.score, 2 * 100 + 6 * 20)
+    }
+
+    /// Powers the "nemesis category" stat — both axis labels of every unsolved cell, in cell
+    /// order, without needing `grid_guesses` (write-only, no select policy).
+    func testBuildSessionDetailCapturesMissedCellHeaders() {
+        let p = puzzle()   // rows: CLE, SEA, LA · cols: 1990s, 2010s, 2020s
+        let solved: [Int: String] = [0: "Joe Montana"]
+        let wrong: Set<Int> = [4, 8]   // (row1,col1)=SEA/2010s, (row2,col2)=LA/2020s
+        let detail = GridGameView.buildSessionDetail(puzzle: p, solved: solved, wrong: wrong,
+                                                      mode: .daily, startedAt: nil)
+        XCTAssertEqual(detail.details.missedCellHeaders, ["SEA", "2010s", "LA", "2020s"])
+    }
+
+    /// A practice run must log with `.practice` so `PlayMode.countsForRecords` (already false
+    /// for practice) keeps it out of personal bests while still logging the reps.
+    func testBuildSessionDetailUsesPracticeMode() {
+        let p = puzzle()
+        let detail = GridGameView.buildSessionDetail(puzzle: p, solved: [:], wrong: Set(0..<9),
+                                                      mode: .practice, startedAt: nil)
+        XCTAssertEqual(detail.mode, .practice)
+        XCTAssertFalse(detail.mode.countsForRecords)
+        XCTAssertEqual(detail.correct, 0)
+        XCTAssertEqual(detail.attempted, 9)
+    }
 }

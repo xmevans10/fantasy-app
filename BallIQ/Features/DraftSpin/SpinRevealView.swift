@@ -56,18 +56,26 @@ struct SpinRevealView: View {
 
     /// Ticks before the FIRST reel locks; the second rolls `staggerTicks` beyond it.
     ///
-    /// The full run is deliberately long — it's the signature casino moment. But it plays once
-    /// per ROUND, and a draft is 3–8 rounds, so at full length it dominated the format: 21 ticks
-    /// at `0.05 + 0.013 x elapsed` is 3.78s of reel plus the landing beat, ~4.8s a spin, which is
-    /// 38s of a single soccer draft (8 rounds) spent watching reels. That repetition is what
-    /// reads as "lag" even though nothing is actually slow.
+    /// The full run is deliberately long — it's the signature casino moment. 21 ticks at
+    /// `0.05 + 0.013 x elapsed` is 3.78s of reel plus the landing beat, ~4.8s a spin.
     ///
-    /// So round 1 gets the full run and later rounds get an abbreviated one (~1.1s of reel). The
-    /// opening moment is untouched; what's cut is the fifth time you've seen it in two minutes.
+    /// **Both branches are live but only the full one is used** (`DraftSpinView`, 2026-08-01).
+    /// History worth keeping, because this has flipped once and may again: the abbreviated branch
+    /// was added when the repetition read as lag (a draft is 3–8 rounds, so 8-round soccer spent
+    /// ~38s watching reels), then disabled on user report that the shortened later spins felt cut
+    /// off rather than snappy. Shortening it is a one-word change at the call site; the whole-draft
+    /// cost of *not* shortening it is asserted in `SpinRevealTimingTests` so it stays visible.
+    ///
     /// Tuning knob: these four numbers are the whole dial.
     static func tickCounts(abbreviated: Bool) -> (total: Int, stagger: Int) {
         abbreviated ? (total: 7, stagger: 3) : (total: 16, stagger: 5)
     }
+
+    /// Whether rounds after the first use the abbreviated run. Lives here rather than as a literal
+    /// at the `DraftSpinView` call site so the pacing decision is single-sourced and *testable* —
+    /// `SpinRevealTimingTests` asserts against this, which a literal `false` in a view body
+    /// couldn't support.
+    static let abbreviatesLaterRounds = false
 
     /// The roll animation stretches with the tick interval, so late (slow) ticks glide instead of
     /// snapping at the opening blur's speed — the deceleration reads in the motion, not just the

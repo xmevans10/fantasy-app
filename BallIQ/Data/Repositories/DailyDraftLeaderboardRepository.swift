@@ -24,13 +24,6 @@ final class DailyDraftLeaderboardRepository {
         let isMe: Bool
         var id: String { userId }
 
-        enum CodingKeys: String, CodingKey {
-            case rank, username, avatar, sport, wins, losses, outcome
-            case userId = "user_id"
-            case totalPoints = "total_points"
-            case isMe = "is_me"
-        }
-
         var displayName: String { username ?? "Player" }
     }
 

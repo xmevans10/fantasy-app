@@ -376,12 +376,12 @@ One template definition, consumed by both sides:
   `ImageRenderer` inside a hosted XCTest instead — see `ScoringGalleryTests`.
 - Era analysis (findings in §4): `python3 -m tools.ingest.era_analysis`.
 
-## 8. Milestone status (updated 2026-07-16)
+## 8. Milestone status (updated 2026-07-31)
 
 | Milestone | Status |
 |-----------|--------|
 | M1–M4 core app, backend, social retention | ✅ shipped. M4's backend tables (`seasons`/`cohorts`/`versus_*`/`device_tokens`/`notification_settings`) were missing from production until 2026-07-05 despite the app-side feature being live the whole time — now applied, see below |
-| M5 breadth/scoring | ✅ **fully shipped.** Breadth + monetization (StoreKit 2 foundation + gating, server-validated entitlements 2026-07-07; Over/Under + Draft & Spin + The Grid 2026-07-08), and **Phase F 8-week rating seasons shipped 2026-07-20** (roadmap v1.4 — see §9.1): `rating_seasons`/`season_ratings`/`season_badges` + leaderboard RPCs + `rating-season-rollover` cron, a parallel season ladder reusing the same `RatingEngine`, SEASON scope on Leagues + Profile badges. Only the ASC-UI monetization submission steps (§9.1 1.3) remain, and those are user-gated |
+| M5 breadth/scoring | ✅ **fully shipped, monetization live.** Breadth + monetization (StoreKit 2 foundation + gating, server-validated entitlements 2026-07-07; Over/Under + Draft & Spin + The Grid 2026-07-08), **Phase F 8-week rating seasons shipped 2026-07-20** (roadmap v1.4 — see §9.1): `rating_seasons`/`season_ratings`/`season_badges` + leaderboard RPCs + `rating-season-rollover` cron, a parallel season ladder reusing the same `RatingEngine`, SEASON scope on Leagues + Profile badges. **The ASC-UI monetization submission steps are done — Pro/packs are selling** (v1.3, build 21, `READY_FOR_SALE` as of 2026-07-31; see the "1.3 approved" note below) |
 | M6 community fixes + hardening | ✅ shipped |
 | M7 content scale + CI | ✅ shipped |
 | M8 single-game grain | ✅ shipped |
@@ -510,6 +510,19 @@ start a purchase without a `Product` object, so there is nothing to display and 
 occasionally ~24h) → verify plans actually render on a TestFlight build → only then submit.**
 Testing from Xcode proves nothing here: the scheme attaches `Products.storekit`, so the paywall
 fills in regardless of what Apple would serve.
+
+**1.3 approved — build 21, READY_FOR_SALE (confirmed live via the ASC API 2026-07-31).**
+The Paid Applications Agreement went Active once banking + tax were completed (2026-07-30);
+plans rendered on a real device and the resubmission went through clean. **The version record is
+still `1.3`** (the version string wasn't bumped again after build 18's double rejection — only
+the build number moved), and its attached build is **21**, meaning it also carries everything
+built while 1.3 sat in review: a switch to **native Sign in with Google** (replacing the Supabase
+hosted-redirect flow — shipped behind a flag until a live iOS OAuth client existed, then enabled;
+the nonce sent to Google is now hashed, not raw) and a fix for **account-switch progress leaking**
+(a new account no longer inherits the previous signed-in user's local progress; the on-device disk
+cache is now purged only on account *deletion*, not on every account switch, which is what had
+been silently carrying stale data forward). This also **lifts the Grid v2 content gate** — see
+§9.2's cron re-enable.
 
 **Open items / hand-offs**
 1. ~~M5 monetization fully unstarted / M14 Spanish~~ — stale: M5 Phases A–E, M14 Spanish, and
@@ -1735,17 +1748,14 @@ largest closed 2026-07-27**:
   season-vs-career grain model that makes team × team correct, and the soccer club-code fix
   (51 of 954 soccer abbreviations merged two clubs — `MCI` was Manchester City *and* Melbourne
   City; axes are now league-scoped and labelled `MCI-ENG` / `MCI-AUS`).
-  ⚠️ **Do not `--grid --upsert` until the client build ships** — a non-classic board has no
-  legacy fallback, and minted boards are immutable for their day. As of 2026-07-27 that build
-  is **1.2 build 15**, uploaded and awaiting review (see §8). The gate lifts when it's approved.
-  - 🔴 **THE DAILY GRID MINT IS PAUSED AND MUST BE TURNED BACK ON.** `ingest.yml`'s cron runs
-    `--grid ... --upsert` from `main` at 09:00 UTC daily, and `main` now carries the v2
-    generator — so the gate above was one scheduled run away from being violated automatically.
-    The step is commented out (commit `138c4a2`). **Until someone uncomments it, no new Grid
-    boards are minted for any sport** and clients fall back to the modulo pick over existing
-    rows. That degradation is deliberate and safe (old v1 boards still decode) but it is not
-    a resting state — re-enable the moment build 15 is approved. The commented line already
-    includes `baseball`.
+  ✅ **Gate lifted 2026-07-31.** The client that can decode v2 content shipped and is live —
+  v1.3 build 21 is `READY_FOR_SALE` (confirmed via the ASC API; see §8's "1.3 approved" note).
+  **The daily Grid mint (`ingest.yml`'s `--grid ... --upsert` step) is re-enabled**, `baseball`
+  included in the sport list (it had been missing before the pause, the whole reason baseball
+  had only 1 board ever minted while the other four sports got dailies). A one-time depth
+  backfill (`--grid-days 14`) also ran 2026-07-31 to widen the "random/practice grid" pool
+  beyond its previous single-digit-per-sport depth — see the updated pool-depth note just below
+  for post-backfill counts.
   - **Baseball's Grid drought was a config omission, not a data problem** (found 2026-07-27):
     the cron's sport list was `nfl nba soccer tennis`. That is the whole reason baseball has
     one board ever minted (2026-07-08) while the others get dailies. Baseball in fact has the
@@ -1765,12 +1775,16 @@ largest closed 2026-07-27**:
     averages **64 KB** (max 109 KB — cells carry 149–425 answer names), so 13 boards is already
     ~830 KB per Grid open and grows linearly. The pool must get much deeper for "random" to feel
     random, so the random path can't be what punishes depth.
-  - ⚠️ **The pool is the limit, not the feature.** Boards ever minted, 2026-07-27: nfl 13,
-    nba 12, tennis 12, **soccer 3, baseball 1**. On baseball, excluding today's board leaves
-    nothing at all — which is why the exhausted-pool empty state exists and is reachable. The
-    fix is a server-side backfill (`run_grid` already mints per `(sport, date)`; run it over a
-    wide date range), which needs no new architecture and is blocked only on the upsert gate
-    above.
+  - ✅ **Depth backfill run 2026-07-31** (`--grid-days 14`, all five sports, once the upsert
+    gate above lifted): boards ever minted went from nfl 13/nba 12/tennis 12/soccer 3/baseball 1
+    to **nfl 27, nba 26, tennis 26, soccer 17, baseball 15** (70 new boards, verified live via
+    direct REST query against `puzzles`). All 70 came back non-classic — a real mix of
+    `teams-x-teams`, `teams-x-mixed`, `mixed-x-teams`, `teams-x-stats`, and `decades-x-stats`
+    archetypes, not just the legacy teams×decades shape. Today's (2026-07-31) row exists for
+    every sport, so the daily board itself is v2, not just the random/practice pool. Baseball's
+    "excluding today's board leaves nothing" empty state should no longer be reachable in normal
+    play; deepen further (raise `--grid-days`, per-sport cost is ~45s/board on NFL — see the
+    `grid-pool-depth` memory) if it still feels shallow.
   - Client-side generation from a cached membership index is the plausible endgame — a board
     needs only player → (team, year), which packs to roughly 420 KB for NFL's 105k memberships
     plus ~94 KB of names, cacheable exactly like `grid_player_names` already is, and it leaks
@@ -1807,3 +1821,53 @@ The original five:
   current/previous-year + live ESPN NBA cache entries, `http.evict_current_season`) then a
   full re-ingest + grid re-mint. The daily cron also now mints grids (`--grid` step in
   `ingest.yml`).
+
+### 9.3 Post-1.5 roadmap (next ~6 months, drafted 2026-07-31)
+
+§9.1's version roadmap (1.2 push → 1.3 monetization → 1.4 rating seasons → 1.5 content depth)
+is fully shipped and live (§8) — there is no more agent-buildable backlog sitting behind a
+user gate. This re-cuts what's next, sequenced per user directive 2026-07-31: **growth/
+marketing and new engagement features ahead of further Grid-depth or monetization-funnel
+work**, which move to an opportunistic bucket instead of their own version. Same
+[user]/[agent] convention as §9.1; full briefs to follow the `prompts/M*.md` format
+(goal/why-now/scope/exit) as each is picked up.
+
+**v1.6 "Grow" (Aug–Sep, timed to NFL kickoff — ~5 weeks out as of this writing).**
+- [agent+user] Execute `docs/MARKETING.md`'s existing solo-founder plan: X/Twitter daily-board
+  posting, TikTok/Reels play-alongs, Reddit team-sub seeding, ASO cadence tied to the sports
+  calendar. See that doc's refreshed sequencing table — training-camp window now, kickoff-week
+  push in September. [user] owns account creation and actual posting; [agent] can draft copy,
+  rotate live App Store promo text/keywords via the ASC API, and verify the share-loop product
+  surface (emoji share-grid, ratings prompt, App Store link in share text — confirmed already
+  shipped 2026-07-31, ahead of the doc's original assumption).
+- [agent] Confirm/close the one still-unverified `[product]` marketing candidate: surfacing
+  creator attribution + a "community puzzle of the week" (MARKETING.md §5). Flagged there but
+  not confirmed shipped — check `CommunityView`/Profile for existing attribution UI before
+  building anything new.
+- Exit: `>10` share-grid posts/week from accounts that aren't the official one (MARKETING.md's
+  own KPI), and at least one App Store promo-text rotation shipped for the kickoff window.
+
+**v1.7 "Engage" — the candidate pool that's sat unscheduled since 2026-07-17.**
+- [agent] Home-screen widget: streak + daily countdown. Pairs naturally with the push system
+  (live since 1.2) and the local-day daily rollover logic (`HomeDailyLoop.nextMidnight`) — the
+  countdown math already exists client-side, a widget mostly needs a WidgetKit target + a
+  shared-data channel (App Group) to read today's streak/completion state.
+- [agent] Game Center achievements mirroring the XP system — turns an existing progression
+  (`RatingEngine`/XP) into free, Apple-native retention surface with no new backend.
+- [agent] iPad layout pass — the app runs on iPad today but hasn't had a dedicated layout audit;
+  scope against real device sizes rather than just Xcode's iPad simulator.
+- Exit: each ships independently; no hard dependency between the three, so any can lead.
+
+**Opportunistic / ongoing — pull forward whenever the above stalls, no version of its own:**
+- **Grid pool depth**: the 2026-07-31 backfill (§9.2) deepened the random/practice pool; keep
+  raising `--grid-days` per sport as it stays cheap (~45s/board on NFL — see the
+  `grid-pool-depth` memory), and revisit the client-side membership-index random-generation
+  endgame (§9.2) once the served-pool approach's per-open payload growth becomes the bottleneck.
+- **Monetization-funnel instrumentation**: Pro/packs are now actually selling (§8) — there's no
+  conversion-funnel view yet (paywall impression → trial start → purchase → churn). Worth
+  building once there's enough volume for the numbers to mean anything.
+- **Content-depth crumbs**: backlog #8 defunct-franchise styling (last unshipped Tier-3 item,
+  §9.0); more NBA/MLB single-game themes now that grain and weekly refresh both auto-run.
+- **APNs stale-token pruning**: fast-follow noted in `_shared/apns.ts` — the pre-1.2.1 sandbox
+  token never gets pruned from `device_tokens`, harmless today (each send just errors in the
+  function log) but worth closing before the table grows much further.

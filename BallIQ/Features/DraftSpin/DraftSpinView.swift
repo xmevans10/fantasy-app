@@ -37,6 +37,8 @@ struct DraftSpinView: View {
     @State private var lockedTeam: String?
     @State private var usedLockedYears: Set<Int> = []
     @State private var isDailyDraft: Bool
+    /// Set at `startDraft`'s `track(.gameStarted)` site — mirrors `GridGameView`'s field.
+    @State private var startedAt: Date?
     /// Whether this Daily Draft run became the day's official score (see
     /// `DailyDraftStore`) — false means an earlier run already locked one in today,
     /// so this run is XP-only practice and must not overwrite it.
@@ -88,8 +90,13 @@ struct DraftSpinView: View {
                 SpinRevealView(target: $revealTarget,
                                roundLabel: String(localized: "Round \(min(roundIndex + 1, slots.count)) of \(slots.count)"),
                                realDecoyTeams: sampleTeamAbbrs, realDecoyYears: sampleYears,
-                               // Full casino run on the opening spin only — see `totalTicks`.
-                               abbreviated: roundIndex > 0) {
+                               // Every round gets the full casino run (user request, 2026-08-01):
+                               // the abbreviated later rounds read as *cut short* rather than
+                               // snappy. `SpinRevealView.tickCounts` keeps both branches so this is
+                               // a one-word change if the pacing needs revisiting — but note what
+                               // it costs, which `SpinRevealTimingTests` asserts rather than hides:
+                               // an 8-round soccer draft is back to ~38s of reel.
+                               abbreviated: SpinRevealView.abbreviatesLaterRounds && roundIndex > 0) {
                     withAnimation(Motion.snap) { showingReveal = false }
                 }
             } else {
@@ -157,6 +164,7 @@ struct DraftSpinView: View {
         let sampleStartedAt = Date()
         sample = await container.catalog.draftSpinSample(for: sport)
         let sampleLoadMilliseconds = Int(Date().timeIntervalSince(sampleStartedAt) * 1_000)
+        startedAt = Date()
         container.track(.gameStarted, [
             "format": "draftspin", "sport": sport.rawValue,
             "one_team": String(settings.lockToOneTeam),
@@ -610,6 +618,8 @@ struct DraftSpinView: View {
                 Task { await container.submitDailyDraftScore(day: day, stored: stored) }
             }
         }
+        let detail = Self.buildSessionDetail(simulated: simulated, picks: picks,
+                                             mode: isDailyDraft ? .dailyDraft : .daily, startedAt: startedAt)
         Task {
             // XP-only/unranked by design (see type doc comment) — `ranked: false` always, since
             // the luck-dominant sim result must never move the competitive ladder. This holds
@@ -617,8 +627,26 @@ struct DraftSpinView: View {
             // `DailyDraftStore` score, never the rating ladder.
             rewards = await container.complete(format: .draftSpin, sport: sport, performance: performance,
                                                perfect: simulated.outcome == .champion,
-                                               puzzleID: dailyID, ranked: false)
+                                               puzzleID: dailyID, ranked: false, detail: detail)
             withAnimation(Motion.snap) { result = simulated }
         }
+    }
+
+    /// Builds the log entry for a finished draft — split out of `finish` so it's testable without
+    /// standing up the view. No accuracy concept here (`correct`/`attempted` both 0, matching
+    /// `GameResult.accuracy`'s nil for this format) — fabricating one would misrepresent a format
+    /// that has no right answers.
+    static func buildSessionDetail(simulated: DraftSpinResult, picks: [CatalogSeason],
+                                   mode: PlayMode, startedAt: Date?) -> RepositoryContainer.SessionDetail {
+        var details = GameResultDetails()
+        details.outcome = simulated.outcome.rawValue
+        details.wins = simulated.wins
+        details.losses = simulated.losses
+        details.totalPoints = simulated.totalPoints
+        // Powers the "ride-or-die" stat (e.g. "you've drafted Saquon in 9 of your last 14 spins").
+        details.draftedPlayerNames = picks.map(\.name)
+        return RepositoryContainer.SessionDetail(mode: mode, score: simulated.totalPoints, maxScore: 0,
+                                                 correct: 0, attempted: 0, startedAt: startedAt,
+                                                 details: details)
     }
 }
