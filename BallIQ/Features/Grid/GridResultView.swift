@@ -207,13 +207,22 @@ struct GridResultView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
+    /// The card previewed in the share sheet next to `shareText`. Same spoiler-free shape as
+    /// `emojiBoard` — never renders `solved`'s player names, since a screenshot of the real
+    /// board is exactly the artifact this format exists to avoid producing.
+    private var shareCard: GridShareCardView {
+        GridShareCardView(sport: sport, score: score, correctCount: correctCount, solved: solved)
+    }
+
     private var doneBar: some View {
         VStack(spacing: 0) {
             Rectangle().fill(Color.hairline).frame(height: Hairline.width)
             HStack(spacing: 12) {
                 ShareLink(item: Self.shareText(sport: sport, score: score, solved: solved,
                                                isDaily: isDaily,
-                                               challenger: container.identity.username)) {
+                                               challenger: container.identity.username),
+                          preview: SharePreview(isDaily ? "Grid challenge" : "Grid result",
+                                                image: shareCard.rendered())) {
                     Label(isDaily ? "CHALLENGE A FRIEND" : "SHARE", systemImage: "square.and.arrow.up")
                         .font(.heading).foregroundStyle(Color.accentText)
                         .lineLimit(1).minimumScaleFactor(0.7)
@@ -241,4 +250,69 @@ struct GridResultView: View {
             .background(Color.surface)
         }
     }
+}
+
+/// The shareable result image for a Grid run — the emoji-only recap `emojiBoard`/`shareText`
+/// already send as plain text, now as a rendered card. Deliberately shows the same spoiler-free
+/// 🟩/⬛ shape and NOT `solved`'s player names: a screenshot of the real board is the one
+/// artifact this format is designed to avoid producing.
+struct GridShareCardView: View {
+    let sport: Sport
+    let score: Int
+    let correctCount: Int
+    var solved: [Int: String] = [:]
+
+    private var isPerfect: Bool { correctCount == 9 }
+
+    private let columns = [GridItem(.flexible(), spacing: 6),
+                            GridItem(.flexible(), spacing: 6),
+                            GridItem(.flexible(), spacing: 6)]
+
+    var body: some View {
+        ShareCardFrame {
+            ShareCardHeaderBand(rare: isPerfect) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Wordmark(size: 20)
+                        Spacer()
+                        Text("GRID")
+                            .font(.custom(FontName.condBlack, size: 14))
+                            .foregroundStyle((isPerfect ? Color.onVolt : Color.onAccent).opacity(0.85))
+                    }
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("\(score)")
+                            .font(.hero(40))
+                            .foregroundStyle(isPerfect ? Color.onVolt : Color.onAccent)
+                        Text("\(correctCount) OF 9 CORRECT")
+                            .font(.custom(FontName.condBlack, size: 15))
+                            .foregroundStyle((isPerfect ? Color.onVolt : Color.onAccent).opacity(0.85))
+                    }
+                }
+            }
+
+            // The spoiler-free board: same solved[i] != nil boolean logic as `emojiBoard`,
+            // rendered as colored squares instead of the text glyphs (a rendered image needs
+            // its own layout, but never a different source of truth for which cells hit).
+            LazyVGrid(columns: columns, spacing: 6) {
+                ForEach(0..<9, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(solved[i] != nil ? Color.successFill : Color.surfaceMuted)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .strokeBorder(Color.borderInk, lineWidth: 1.5)
+                        )
+                        .aspectRatio(1, contentMode: .fit)
+                }
+            }
+            .padding(16)
+            .background(Color.surface1)
+
+            ShareCardFooter()
+        }
+    }
+}
+
+extension GridShareCardView {
+    @MainActor
+    func rendered(scale: CGFloat = 3) -> Image { renderedForShare(scale: scale) }
 }

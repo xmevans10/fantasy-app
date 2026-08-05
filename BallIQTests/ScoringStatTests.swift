@@ -55,13 +55,48 @@ final class ScoringStatTests: XCTestCase {
     }
 
     func testUnknownPositionFallsBackToSportGeneric() {
-        let unknown = ScoringStat.displayColumns(sport: .nfl, position: "LB")
+        // "K" is a real NFL position the catalog doesn't carry (kickoff/punt specialists are
+        // not ingested) — the pure unknown-position case. Defensive positions (LB etc.) are
+        // no longer unknown: they got their own families with the defensive ingest.
+        let unknown = ScoringStat.displayColumns(sport: .nfl, position: "K")
         XCTAssertEqual(unknown.map(\.key), ScoringStat.catalog(for: .nfl).prefix(3).map(\.key))
         // A recognized-but-different-family position (QB) must still diverge from the
         // unknown-position fallback — the interesting case unknown-vs-WR doesn't cover,
         // since the NFL catalog's generic top 3 happen to already be receiving stats.
         let qb = ScoringStat.displayColumns(sport: .nfl, position: "QB")
         XCTAssertNotEqual(unknown.map(\.key), qb.map(\.key))
+    }
+
+    // MARK: - Defensive positions (Draft & Spin Both-sides, added with the defensive ingest)
+
+    /// Defenders must never read a WR-flavored fallback — the original symptom: a DE row
+    /// rendered "Rec Yds / Rec TD / Rec" columns whose values are all nil on a defensive
+    /// season, so the card showed no stats at all. Each defensive group gets its own real
+    /// IDP stat line instead.
+    func testDefensivePositionsGetIDPStatLinesNotOffenseFallback() {
+        let cases: [(String, [String])] = [
+            ("DE", ["sacks", "tackles_combined", "tackles_for_loss", "qb_hits"]),
+            ("DT", ["sacks", "tackles_combined", "tackles_for_loss", "qb_hits"]),
+            ("NT", ["sacks", "tackles_combined", "tackles_for_loss", "qb_hits"]),
+            ("OLB", ["tackles_combined", "sacks", "tackles_for_loss", "def_interceptions"]),
+            ("MLB", ["tackles_combined", "sacks", "tackles_for_loss", "def_interceptions"]),
+            ("ILB", ["tackles_combined", "sacks", "tackles_for_loss", "def_interceptions"]),
+            ("LB", ["tackles_combined", "sacks", "tackles_for_loss", "def_interceptions"]),
+            ("CB", ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"]),
+            ("FS", ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"]),
+            ("SS", ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"]),
+            ("S", ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"]),
+            ("SAF", ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"]),
+            ("DB", ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"]),
+        ]
+        for (position, expected) in cases {
+            let cols = ScoringStat.displayColumns(sport: .nfl, position: position)
+            XCTAssertEqual(cols.map(\.key), expected, "position \(position)")
+            for col in cols {
+                XCTAssertFalse(["receiving_", "rushing_", "passing_"].contains(where: col.key.hasPrefix),
+                               "\(position) card should never show offense stat \(col.key)")
+            }
+        }
     }
 
     func testNBAHasNoFamiliesSoAllPositionsGetTheSameGeneric() {

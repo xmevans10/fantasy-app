@@ -48,8 +48,11 @@ struct DraftSpinView: View {
 
     /// `startInDailyDraft` lets Home's daily-loop nudge open straight into Daily Draft mode;
     /// the setup screen's MODE control still lets the player switch back to free play.
+    /// `-draftSpinPosition` preselects the roster tab (simctl can't tap; defensive sections
+    /// sit below the fold of the All tab).
     init(startInDailyDraft: Bool = false) {
         _isDailyDraft = State(initialValue: startInDailyDraft)
+        _selectedTab = State(initialValue: DebugLaunch.draftSpinPosition ?? "All")
     }
 
     private var picks: [CatalogSeason] { slots.compactMap(\.pick) }
@@ -140,6 +143,11 @@ struct DraftSpinView: View {
             settings.clubFilter = ClubFilter(nation: DebugLaunch.draftSpinNation,
                                              competition: competition, club: nil)
         }
+        // Both-sides screenshot flow without tapping the ROSTER toggle — see
+        // `DebugLaunch.draftSpinBothSides`.
+        if DebugLaunch.draftSpinBothSides {
+            settings.includeDefense = true
+        }
         loading = false
         if showingSetup { container.catalog.prefetchDraftSpinSample(for: sport) }
         // Screenshot flows target the board/result, not the setup screen — skip straight in
@@ -158,7 +166,7 @@ struct DraftSpinView: View {
         isOfficialDailyDraftRun = isDailyDraft && !dailyDraftStore.hasCompletedDailyDraft(for: dailyDraftDay)
         showingSetup = false
         loading = true
-        slots = DraftSpinConstraint.lineupSlots(for: sport)
+        slots = DraftSpinConstraint.lineupSlots(for: sport, includeDefense: settings.includeDefense)
         // A broad sample — only used to *discover* a good (team, year) each round; the round's
         // complete roster is re-fetched separately once a combo is chosen (see spinNextRound).
         let sampleStartedAt = Date()
@@ -233,11 +241,13 @@ struct DraftSpinView: View {
                 from: sample, sport: sport, openRoles: roles,
                 lockedTeam: pinnedClub, usedLockedYears: usedLockedYears,
                 excludeNames: excludedNames, filter: settings.clubFilter,
-                minCandidates: 1, excludeCombos: rejected, using: &rng
+                minCandidates: 1, excludeCombos: rejected,
+                includeDefense: settings.includeDefense, using: &rng
             ) else { return false }
             let roster = await fetchRoundRoster(team: team, year: year, league: league)
             if DraftSpinConstraint.canFillLineup(roster: roster, sport: sport, openRoles: roles,
-                                                 excludeNames: excludedNames) {
+                                                 excludeNames: excludedNames,
+                                                 includeDefense: settings.includeDefense) {
                 await presentRound(team: team, year: year, league: league, roster: roster)
                 return true
             }
@@ -281,6 +291,12 @@ struct DraftSpinView: View {
         showingReveal = true
         revealTarget = SpinRevealTarget(team: team, year: String(year))
         if DebugLaunch.autoSubmitDraftSpin { autoPickForScreenshot(roster) }
+        if DebugLaunch.autoExpandDraftSpin {
+            // `-draftSpinPosition DE -draftSpinExpand`: expand the first player of the
+            // preselected position so the full PositionStatGrid line is capturable.
+            let position = DebugLaunch.draftSpinPosition ?? roster.first?.position
+            expandedPlayerID = roster.first { $0.position == position }?.id
+        }
     }
 
     private var loadingScreen: some View {
@@ -309,7 +325,8 @@ struct DraftSpinView: View {
     /// into the next round automatically until the lineup is full.
     private func autoPickForScreenshot(_ roster: [CatalogSeason]) {
         for player in roster {
-            let eligible = DraftSpinConstraint.eligibleSlots(for: player.position, in: openSlots, sport: sport)
+            let eligible = DraftSpinConstraint.eligibleSlots(for: player.position, in: openSlots, sport: sport,
+                                                             includeDefense: settings.includeDefense)
             if let slot = eligible.first {
                 assign(player, to: slot)
                 return
@@ -418,7 +435,7 @@ struct DraftSpinView: View {
     /// formation-role order (matching the reference's QB/RB/WR/TE tab order) then alphabetical
     /// for anything else.
     private func positionTabs(_ round: DraftSpinRound) -> [String] {
-        let formationOrder = (DraftSpinConstraint.formations[sport] ?? []).map(\.role)
+        let formationOrder = DraftSpinConstraint.formations(sport: sport, includeDefense: settings.includeDefense).map(\.role)
         let present = Set(round.roster.map(\.position))
         let ordered = formationOrder.filter { present.contains($0) }
         let extra = present.subtracting(ordered).sorted()
@@ -432,7 +449,7 @@ struct DraftSpinView: View {
         let filtered = selectedTab == "All" ? round.roster : round.roster.filter { $0.position == selectedTab }
         let grouped = Dictionary(grouping: filtered, by: \.position)
         let sections = grouped.keys.sorted { a, b in
-            let order = (DraftSpinConstraint.formations[sport] ?? []).map(\.role)
+            let order = DraftSpinConstraint.formations(sport: sport, includeDefense: settings.includeDefense).map(\.role)
             let ai = order.firstIndex(of: a) ?? Int.max
             let bi = order.firstIndex(of: b) ?? Int.max
             return ai == bi ? a < b : ai < bi
@@ -485,7 +502,8 @@ struct DraftSpinView: View {
         let expanded = expandedPlayerID == player.id
         let columns = ScoringStat.displayColumns(sport: sport, position: player.position)
         let eligible = expanded
-            ? DraftSpinConstraint.eligibleSlots(for: player.position, in: openSlots, sport: sport) : []
+            ? DraftSpinConstraint.eligibleSlots(for: player.position, in: openSlots, sport: sport,
+                                                includeDefense: settings.includeDefense) : []
 
         return Button {
             withAnimation(Motion.snap) { expandedPlayerID = expanded ? nil : player.id }
@@ -531,7 +549,8 @@ struct DraftSpinView: View {
     private var lineupBar: some View {
         let expandedPlayer = currentRound?.roster.first { $0.id == expandedPlayerID }
         let eligible = expandedPlayer.map {
-            Set(DraftSpinConstraint.eligibleSlots(for: $0.position, in: openSlots, sport: sport).map(\.id))
+            Set(DraftSpinConstraint.eligibleSlots(for: $0.position, in: openSlots, sport: sport,
+                                                  includeDefense: settings.includeDefense).map(\.id))
         } ?? []
 
         return VStack(spacing: 0) {
@@ -597,7 +616,8 @@ struct DraftSpinView: View {
 
     private func finish() {
         var rng = SystemRandomNumberGenerator()
-        let simulated = DraftSpinSimulator.simulate(lineup: picks, sport: sport, using: &rng)
+        let simulated = DraftSpinSimulator.simulate(lineup: picks, sport: sport,
+                                                    includeDefense: settings.includeDefense, using: &rng)
         let dailyID = "draftspin-\(sport.rawValue)-\(OverUnderRoundGenerator.dayString(Date()))"
         let performance: Double
         switch simulated.outcome {

@@ -2,9 +2,11 @@ import SwiftUI
 
 /// Draft & Spin's pre-game options, on the shared `GameSetupScreen` scaffold — sport pick
 /// plus the reference app's config rows (Roster / Teams / Season variations), mapped onto
-/// what the catalog can honestly support (see `DraftSpinSettings`). The Roster row only
-/// appears for NFL and is locked to "Offense only": the catalog carries no defensive
-/// players, and a control advertising data we don't have would be a lie.
+/// what the catalog can honestly support (see `DraftSpinSettings`). The Roster row appears
+/// for NFL in Free Play and defaults to "Offense only" — Both sides (the six offense slots
+/// plus DL/LB/DB) is opt-in now that the catalog carries real defensive players with IDP
+/// stats; Daily Draft hides the row entirely so every player faces the same shared spins
+/// (and thus always the offense-only default).
 ///
 /// Backlog #4: a MODE row (Free Play / Daily Draft) sits above the rest. `GameSetupScreen`
 /// always renders its own SPORT grid regardless of mode, so "sport forced, not pickable" in
@@ -82,7 +84,7 @@ struct DraftSpinSetupView: View {
                 caption: "Every spin lands on a real team-season roster. Draft the best player for each open spot.")
             {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3), spacing: 6) {
-                    ForEach(DraftSpinConstraint.lineupSlots(for: sport)) { slot in
+                    ForEach(DraftSpinConstraint.lineupSlots(for: sport, includeDefense: settings.includeDefense)) { slot in
                         Text(slot.role.uppercased())
                             .font(.custom(FontName.condBlack, size: 13))
                             .foregroundStyle(Color.accentText)
@@ -94,18 +96,20 @@ struct DraftSpinSetupView: View {
                 }
             }
 
-            if sport == .nfl {
+            // Hidden in Daily Draft, same as LEAGUE: a roster choice would let players diverge
+            // from the shared daily spins, so the daily path always uses the offense-only
+            // default (`DraftSpinSettings.includeDefense` starts false and nothing in Daily
+            // Draft mode writes to it).
+            if sport == .nfl && !isDailyDraft {
                 SetupOptionCard(
                     title: "ROSTER",
-                    caption: "Defensive player data isn't in the catalog yet — offense it is.")
+                    caption: settings.includeDefense
+                        ? "Both sides: the six offense slots plus DL, LB and DB — real IDP stats (tackles, sacks, interceptions…)."
+                        : "Offense only — the default. Switch to Both sides to draft real defenders too.")
                 {
-                    Text("OFFENSE ONLY")
-                        .font(.custom(FontName.condBlack, size: 13))
-                        .foregroundStyle(Color.onAccent)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color.accentFill)
-                        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    SetupSegmentedControl(options: ["OFFENSE ONLY", "BOTH SIDES"],
+                                          selectedIndex: settings.includeDefense ? 1 : 0)
+                    { settings.includeDefense = $0 == 1 }
                 }
             }
 

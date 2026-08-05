@@ -14,62 +14,67 @@ struct ProfileShareCardView: View {
     let level: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        ShareCardFrame {
+            // The tier's own color, not a flat accent — a legend card should look like a
+            // different, louder object than a bronze one, the same way the tier badge does
+            // everywhere else in the app.
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Wordmark(size: 20)
                     Spacer()
-                    Text("MY PROFILE").font(.custom(FontName.condBlack, size: 14)).foregroundStyle(Color.onAccent.opacity(0.85))
+                    Text("MY PROFILE").font(.custom(FontName.condBlack, size: 14)).foregroundStyle(tier.onColor.opacity(0.85))
                 }
                 HStack(spacing: 10) {
-                    AvatarView(avatar: avatar, size: 52, background: Color.onAccent.opacity(0.14))
+                    AvatarView(avatar: avatar, size: 52, background: tier.onColor.opacity(0.14))
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("@\(username)").font(.custom(FontName.condBlack, size: 22)).foregroundStyle(Color.onAccent)
-                        Text("\(tier.name.uppercased()) · \(sport.displayName.uppercased())")
-                            .font(.custom(FontName.condBold, size: 13)).foregroundStyle(Color.onAccent.opacity(0.85))
+                        Text("@\(username)").font(.custom(FontName.condBlack, size: 22)).foregroundStyle(tier.onColor)
+                        HStack(spacing: 4) {
+                            Image(systemName: tier.symbol).font(.system(size: 11, weight: .bold))
+                            Text("\(tier.name.uppercased()) · \(sport.displayName.uppercased())")
+                                .font(.custom(FontName.condBold, size: 13))
+                        }
+                        .foregroundStyle(tier.onColor.opacity(0.9))
                     }
                 }
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.accentFill)
+            .background(tier.color)
+            .overlay(alignment: .topTrailing) {
+                // Baked-in sheen so a screenshot still reads as "special," same treatment as
+                // Keep4/Draft & Spin's rare-outcome header.
+                LinearGradient(colors: [tier.onColor.opacity(0.3), tier.onColor.opacity(0)],
+                               startPoint: .topTrailing, endPoint: .center)
+                    .blendMode(.plusLighter)
+                    .allowsHitTesting(false)
+            }
 
             HStack(spacing: 0) {
                 shareStat("RATING", "\(rating)")
-                shareStat("STREAK", "\(streak)")
+                shareStat("STREAK", "\(streak)", icon: streak > 0 ? "flame.fill" : nil)
                 shareStat("LEVEL", "\(level)")
             }
             .padding(16)
             .frame(maxWidth: .infinity)
             .background(Color.surface1)
 
-            Text("PLAY AT PLAYBOOK")
-                .font(.custom(FontName.condBold, size: 11))
-                .foregroundStyle(Color.textMuted)
-                .padding(.horizontal, 16).padding(.vertical, 9)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.surfaceMuted)
+            ShareCardFooter()
         }
-        .frame(width: 320)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Radius.card, style: .continuous).strokeBorder(Color.borderInk, lineWidth: 2.5))
-        .padding(6)
-        .background(RoundedRectangle(cornerRadius: Radius.card, style: .continuous).fill(Color.borderInk).offset(x: 4, y: 4).padding(6))
     }
 
-    private func shareStat(_ label: String, _ value: String) -> some View {
+    private func shareStat(_ label: String, _ value: String, icon: String? = nil) -> some View {
         VStack(spacing: 2) {
-            Text(value).font(.custom(FontName.condBlack, size: 20)).foregroundStyle(Color.textPrimary)
+            HStack(spacing: 3) {
+                if let icon {
+                    Image(systemName: icon).font(.system(size: 12, weight: .bold)).foregroundStyle(Color.dangerText)
+                }
+                Text(value).font(.custom(FontName.condBlack, size: 20)).foregroundStyle(Color.textPrimary)
+            }
             Text(label).font(.label11).foregroundStyle(Color.textMuted)
         }
         .frame(maxWidth: .infinity)
     }
 
     @MainActor
-    func rendered(scale: CGFloat = 3) -> Image {
-        let renderer = ImageRenderer(content: self)
-        renderer.scale = scale
-        if let ui = renderer.uiImage { return Image(uiImage: ui) }
-        return Image(systemName: "square.dashed")
-    }
+    func rendered(scale: CGFloat = 3) -> Image { renderedForShare(scale: scale) }
 }

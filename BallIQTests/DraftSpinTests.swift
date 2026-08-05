@@ -65,6 +65,80 @@ final class DraftSpinTests: XCTestCase {
         XCTAssertTrue(DraftSpinConstraint.lineupSlots(for: .nfl).allSatisfy { $0.pick == nil })
     }
 
+    // MARK: - Both-sides roster (NFL defensive players)
+
+    func testBothSidesAddsDLAndLBAndDBToOffenseCore() {
+        XCTAssertEqual(DraftSpinConstraint.lineupSlots(for: .nfl, includeDefense: true).map(\.role),
+                       ["QB", "RB", "WR", "TE", "FLEX", "FLEX", "DL", "LB", "DB"])
+        // The default (and Daily Draft, which never shows the ROSTER toggle) stays offense-only.
+        XCTAssertEqual(DraftSpinConstraint.lineupSlots(for: .nfl).map(\.role), ["QB", "RB", "WR", "TE", "FLEX", "FLEX"])
+        XCTAssertFalse(DraftSpinSettings().includeDefense, "offense-only must be the default")
+    }
+
+    func testDefensiveEligibilityDependsOnRosterMode() {
+        let bothSides = DraftSpinConstraint.lineupSlots(for: .nfl, includeDefense: true)
+        XCTAssertEqual(DraftSpinConstraint.eligibleSlots(for: "DE", in: bothSides, sport: .nfl, includeDefense: true).map(\.role), ["DL"])
+        XCTAssertEqual(DraftSpinConstraint.eligibleSlots(for: "NT", in: bothSides, sport: .nfl, includeDefense: true).map(\.role), ["DL"])
+        XCTAssertEqual(DraftSpinConstraint.eligibleSlots(for: "OLB", in: bothSides, sport: .nfl, includeDefense: true).map(\.role), ["LB"])
+        XCTAssertEqual(DraftSpinConstraint.eligibleSlots(for: "FS", in: bothSides, sport: .nfl, includeDefense: true).map(\.role), ["DB"])
+        // Offense-only: no slot fits a defender at all — the reason defenders can't be drafted
+        // in the default mode.
+        XCTAssertTrue(DraftSpinConstraint.eligibleSlots(for: "DE", in: DraftSpinConstraint.lineupSlots(for: .nfl),
+                                                        sport: .nfl).isEmpty)
+        // And a QB can never land in a defensive slot, in either mode.
+        XCTAssertTrue(DraftSpinConstraint.eligibleSlots(for: "QB", in: bothSides, sport: .nfl,
+                                                        includeDefense: true).map(\.role).allSatisfy { $0 != "DL" && $0 != "LB" && $0 != "DB" })
+    }
+
+    func testBothSidesFillabilityCountsDefenders() {
+        // 8 distinct offense players (2 per QB/RB/WR/TE) alone can't clear the 9-role bar —
+        // `canFillLineup` is the documented distinct-name count proxy, not exact slot matching.
+        var roster: [CatalogSeason] = []
+        for i in 0..<2 { roster.append(season("qb\(i)", position: "QB", stats: ["passing_yards": 3800])) }
+        for i in 0..<2 { roster.append(season("rb\(i)", position: "RB", stats: ["rushing_yards": 1000])) }
+        for i in 0..<2 { roster.append(season("wr\(i)", position: "WR", stats: ["receiving_yards": 1000])) }
+        for i in 0..<2 { roster.append(season("te\(i)", position: "TE", stats: ["receiving_yards": 600])) }
+        let roles = DraftSpinConstraint.lineupSlots(for: .nfl, includeDefense: true).map(\.role)
+        XCTAssertFalse(DraftSpinConstraint.canFillLineup(roster: roster, sport: .nfl, openRoles: roles,
+                                                         includeDefense: true))
+        // Adding one real defender per defensive group must cross the bar — this is what
+        // keeps a both-sides draft from dead-ending on an offense-heavy roster.
+        roster.append(season("de1", position: "DE", stats: ["sacks": 10, "tackles_combined": 60]))
+        roster.append(season("lb1", position: "OLB", stats: ["tackles_combined": 90, "sacks": 6]))
+        roster.append(season("db1", position: "CB", stats: ["tackles_combined": 60, "def_interceptions": 4]))
+        XCTAssertTrue(DraftSpinConstraint.canFillLineup(roster: roster, sport: .nfl, openRoles: roles,
+                                                        includeDefense: true))
+    }
+
+    func testDefensiveSeasonsGradeOnTheIDPPreset() {
+        // nfl_defense_fantasy (mirrors grade.py): tackles_combined 0.75, sacks 2.0, TFL 0.5 —
+        // qb_hits is NOT scored (not in the grade.py scale).
+        let de = season("de1", position: "DE", stats: ["tackles_combined": 80, "sacks": 11,
+                                                       "tackles_for_loss": 14, "qb_hits": 25])
+        XCTAssertEqual(DraftSpinSimulator.fantasyPoints(de), 80 * 0.75 + 11 * 2.0 + 14 * 0.5, accuracy: 0.01)
+        // An offensive NFL season still grades on the unified nfl_fantasy formula — routing
+        // must be by position, not by sport.
+        let qb = season("qb1", position: "QB", stats: ["passing_yards": 4200, "passing_tds": 32, "interceptions": 10])
+        XCTAssertEqual(DraftSpinSimulator.fantasyPoints(qb), 4200 * 0.04 + 32 * 4.0 - 10 * 2.0, accuracy: 0.01)
+    }
+
+    func testBothSidesHasItsOwnCalibratedAnchors() {
+        let off = DraftSpinSimulator.fantasyAnchors(for: .nfl)
+        let both = DraftSpinSimulator.fantasyAnchors(for: .nfl, includeDefense: true)
+        // More slots = higher total points; the both-sides distribution must sit above the
+        // offense-only one or every both-sides lineup would read as all-time-great.
+        XCTAssertGreaterThan(both.p50, off.p50)
+        XCTAssertGreaterThan(both.p90, off.p90)
+        XCTAssertGreaterThan(both.p99, off.p99)
+        // And it must calibrate the same win-probability curve on its own scale.
+        XCTAssertEqual(DraftSpinSimulator.winProbability(lineupTotal: both.p50, sport: .nfl, includeDefense: true),
+                       0.55, accuracy: 0.0001)
+        XCTAssertEqual(DraftSpinSimulator.winProbability(lineupTotal: both.p90, sport: .nfl, includeDefense: true),
+                       0.75, accuracy: 0.0001)
+        XCTAssertEqual(DraftSpinSimulator.winProbability(lineupTotal: both.p99, sport: .nfl, includeDefense: true),
+                       0.93, accuracy: 0.0001)
+    }
+
     // MARK: - spinRound
 
     private func spinRNG(_ seed: String) -> SeededGenerator {

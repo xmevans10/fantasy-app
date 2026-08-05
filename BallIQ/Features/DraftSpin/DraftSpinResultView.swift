@@ -195,26 +195,30 @@ struct DraftSpinShareCardView: View {
     let result: DraftSpinResult
     var isDailyDraft: Bool = false
 
+    /// A championship season is the top of Draft & Spin's three-tier outcome — the same "rare"
+    /// bar Keep4's perfect sort and Who Am I?'s first-clue solve get the gold treatment for.
+    private var rare: Bool { result.outcome == .champion }
+    private var ink: Color { rare ? .onVolt : .onAccent }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Wordmark(size: 20)
-                    Spacer()
-                    Text(isDailyDraft ? "DAILY DRAFT" : "DRAFT & SPIN")
-                        .font(.custom(FontName.condBlack, size: 14)).foregroundStyle(Color.onAccent.opacity(0.85))
-                }
-                Text(result.outcome.title(for: sport)).font(.custom(FontName.condBlack, size: 26)).foregroundStyle(Color.onAccent)
-                Text("\(result.wins)-\(result.losses) · \(result.totalPoints) PTS")
-                    .font(.custom(FontName.condBold, size: 15)).foregroundStyle(Color.onAccent.opacity(0.85))
-                if isDailyDraft {
-                    Text("Today's Daily Draft · \(sport.displayName)")
-                        .font(.custom(FontName.condBold, size: 12)).foregroundStyle(Color.onAccent.opacity(0.7))
+        ShareCardFrame {
+            ShareCardHeaderBand(rare: rare) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Wordmark(size: 20)
+                        Spacer()
+                        Text(isDailyDraft ? "DAILY DRAFT" : "DRAFT & SPIN")
+                            .font(.custom(FontName.condBlack, size: 14)).foregroundStyle(ink.opacity(0.85))
+                    }
+                    Text(result.outcome.title(for: sport)).font(.custom(FontName.condBlack, size: 26)).foregroundStyle(ink)
+                    Text("\(result.wins)-\(result.losses) · \(result.totalPoints) PTS")
+                        .font(.custom(FontName.condBold, size: 15)).foregroundStyle(ink.opacity(0.85))
+                    if isDailyDraft {
+                        Text("Today's Daily Draft · \(sport.displayName)")
+                            .font(.custom(FontName.condBold, size: 12)).foregroundStyle(ink.opacity(0.7))
+                    }
                 }
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.accentFill)
 
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(picks) { player in
@@ -227,25 +231,10 @@ struct DraftSpinShareCardView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.surface1)
 
-            Text("PLAY AT PLAYBOOK")
-                .font(.custom(FontName.condBold, size: 11))
-                .foregroundStyle(Color.textMuted)
-                .padding(.horizontal, 16).padding(.vertical, 9)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.surfaceMuted)
+            ShareCardFooter()
         }
-        .frame(width: 320)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Radius.card, style: .continuous).strokeBorder(Color.borderInk, lineWidth: 2.5))
-        .padding(6)
-        .background(RoundedRectangle(cornerRadius: Radius.card, style: .continuous).fill(Color.borderInk).offset(x: 4, y: 4).padding(6))
     }
 
     @MainActor
-    func rendered(scale: CGFloat = 3) -> Image {
-        let renderer = ImageRenderer(content: self)
-        renderer.scale = scale
-        if let ui = renderer.uiImage { return Image(uiImage: ui) }
-        return Image(systemName: "square.dashed")
-    }
+    func rendered(scale: CGFloat = 3) -> Image { renderedForShare(scale: scale) }
 }

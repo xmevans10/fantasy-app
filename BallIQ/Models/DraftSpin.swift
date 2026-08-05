@@ -48,9 +48,15 @@ private struct TeamYear: Hashable {
 }
 
 /// Pre-game options chosen on the setup screen (reference app's config, mapped onto what
-/// this catalog can honestly support — its "Roster: Both sides" toggle is display-only
-/// here because the catalog carries no defensive players for any sport).
+/// this catalog can honestly support). The reference's "Roster: Both sides" toggle is real
+/// now that defensive players are in the catalog — but it defaults to Offense only (see
+/// `includeDefense`), and it only appears in Free Play: Daily Draft must stay a shared,
+/// identical experience for every player (same reasoning as `soccerLeague`).
 struct DraftSpinSettings: Equatable {
+    /// false = the NFL formation is the six offense slots only; true = "Both sides", the
+    /// six offense slots plus DL/LB/DB (see `DraftSpinConstraint.formations(sport:includeDefense:)`).
+    /// Defaults to Offense only — the honest starting point and what Daily Draft always uses.
+    var includeDefense = false
     /// false = every round spins any viable franchise; true = after the first round's spin,
     /// every later round spins a different YEAR of that same franchise (falling back to any
     /// team for a round where the locked team has no viable year left — never a dead spin).
@@ -100,8 +106,38 @@ enum DraftSpinConstraint {
         .tennis: [("Player", .exact("Player")), ("Player", .exact("Player")), ("Player", .exact("Player"))],
     ]
 
-    static func lineupSlots(for sport: Sport) -> [DraftSpinLineupSlot] {
-        (formations[sport] ?? []).enumerated().map { index, def in
+    /// The NFL "Both sides" variant (ROSTER toggle): the six offense slots unchanged, plus
+    /// one DL, one LB and one DB — classic IDP-lite, keeping the offensive core intact.
+    /// Role filters use the catalog's granular defensive position codes (see
+    /// `nflDefensivePositions`), so every defender a round's roster carries is placeable.
+    static let formationsBothSidesNFL: [(role: String, filter: RoleFilter)] = [
+        ("QB", .exact("QB")), ("RB", .exact("RB")), ("WR", .exact("WR")), ("TE", .exact("TE")),
+        ("FLEX", .anyOf(["RB", "WR", "TE"])), ("FLEX", .anyOf(["RB", "WR", "TE"])),
+        ("DL", .anyOf(nflDLPositions)), ("LB", .anyOf(nflLBPositions)),
+        ("DB", .anyOf(nflDBPositions)),
+    ]
+
+    /// The formation for `sport` under the ROSTER setting. Defaults to the sport's offense-only
+    /// shape (`formations`); `includeDefense` only changes NFL (the only sport with defensive
+    /// rows — see `nfl_nflverse_defense.py`).
+    static func formations(sport: Sport, includeDefense: Bool = false) -> [(role: String, filter: RoleFilter)] {
+        if sport == .nfl, includeDefense { return formationsBothSidesNFL }
+        return formations[sport] ?? []
+    }
+
+    /// Raw NFL defensive position codes — the granular values `nfl_nflverse_defense.py`
+    /// stores (OLB/MLB/ILB/CB/FS/SS/…, collapsing into the three groups grid_axes.py's
+    /// `_POSITION_GROUPS` defines). One definition shared by the Both-sides formation's
+    /// DL/LB/DB slots and `DraftSpinSimulator.fantasyPresetKey`'s defensive scoring
+    /// routing, so the two can never drift apart.
+    static let nflDLPositions = ["DE", "DT", "NT", "DL"]
+    static let nflLBPositions = ["OLB", "MLB", "ILB", "LB"]
+    static let nflDBPositions = ["CB", "FS", "SS", "S", "SAF", "DB"]
+    static let nflDefensivePositions: Set<String> =
+        Set(nflDLPositions + nflLBPositions + nflDBPositions)
+
+    static func lineupSlots(for sport: Sport, includeDefense: Bool = false) -> [DraftSpinLineupSlot] {
+        (formations(sport: sport, includeDefense: includeDefense)).enumerated().map { index, def in
             DraftSpinLineupSlot(id: "\(sport.rawValue)-slot-\(index)", role: def.role, pick: nil)
         }
     }
@@ -171,8 +207,10 @@ enum DraftSpinConstraint {
                         lockedTeam: String? = nil, usedLockedYears: Set<Int> = [],
                         excludeNames: Set<String> = [], filter: ClubFilter = .all,
                         minCandidates: Int? = nil, excludeCombos: Set<String> = [],
+                        includeDefense: Bool = false,
                         using gen: inout some RandomNumberGenerator) -> (team: String, year: Int, league: String?)? {
-        let openFilters = (formations[sport] ?? []).filter { openRoles.contains($0.role) }.map(\.filter)
+        let openFilters = formations(sport: sport, includeDefense: includeDefense)
+            .filter { openRoles.contains($0.role) }.map(\.filter)
         guard !openFilters.isEmpty else { return nil }
 
         // How many DISTINCT placeable candidates a combo needs to be worth spinning. Callers
@@ -256,8 +294,9 @@ enum DraftSpinConstraint {
     /// every soccer combo. Same conservative distinct-name proxy as `spinRound`, just applied to
     /// data that can actually support it.
     static func canFillLineup(roster: [CatalogSeason], sport: Sport, openRoles: [String],
-                              excludeNames: Set<String> = []) -> Bool {
-        let openFilters = (formations[sport] ?? []).filter { openRoles.contains($0.role) }.map(\.filter)
+                              excludeNames: Set<String> = [], includeDefense: Bool = false) -> Bool {
+        let openFilters = formations(sport: sport, includeDefense: includeDefense)
+            .filter { openRoles.contains($0.role) }.map(\.filter)
         guard !openFilters.isEmpty else { return false }
         var placeable: Set<String> = []
         for season in roster where !excludeNames.contains(season.name)
@@ -287,8 +326,10 @@ enum DraftSpinConstraint {
     }
 
     /// Which of `openSlots` a real `position` can be assigned to.
-    static func eligibleSlots(for position: String, in openSlots: [DraftSpinLineupSlot], sport: Sport) -> [DraftSpinLineupSlot] {
-        let filtersByRole = Dictionary((formations[sport] ?? []).map { ($0.role, $0.filter) }, uniquingKeysWith: { a, _ in a })
+    static func eligibleSlots(for position: String, in openSlots: [DraftSpinLineupSlot], sport: Sport,
+                              includeDefense: Bool = false) -> [DraftSpinLineupSlot] {
+        let filtersByRole = Dictionary(formations(sport: sport, includeDefense: includeDefense).map { ($0.role, $0.filter) },
+                                       uniquingKeysWith: { a, _ in a })
         return openSlots.filter { slot in
             guard let filter = filtersByRole[slot.role] else { return false }
             return filter.matches(position)
@@ -382,11 +423,21 @@ enum DraftSpinSimulator {
     /// all-time-great, "undefeated-caliber" lineup — nothing in the catalog beats it except a
     /// handful of freak outlier seasons. Re-run the same query shape if the catalog population
     /// changes materially (new sport, big backfill).
+    ///
+    /// Both-sides NFL (ROSTER toggle, `includeDefense`): the lineup adds DL/LB/DB to the six
+    /// offense slots, so it must calibrate against its own lineup-total distribution or every
+    /// both-sides run would read as an all-time-great one (more players = more total points
+    /// against the offense-only anchors). The defense contribution was pulled 2026-08-03 with
+    /// the same per-game percentile shape the offense anchors carry (per-slot per-game fantasy
+    /// percentile × 16, DL/LB/DB summed over games≥8 seasons): +123/+217/+291, i.e. 657/1482/2171.
+    /// The offense-only anchors are deliberately untouched — they are the shipped default-mode
+    /// calibration, and `testLockedSimulationValueForFixedLineupAndSeed` pins their output.
     struct FantasyAnchors { let p50: Double, p90: Double, p99: Double }
 
-    static func fantasyAnchors(for sport: Sport) -> FantasyAnchors {
+    static func fantasyAnchors(for sport: Sport, includeDefense: Bool = false) -> FantasyAnchors {
         switch sport {
-        case .nfl:      return FantasyAnchors(p50: 534,   p90: 1265,  p99: 1880)
+        case .nfl:      return includeDefense ? FantasyAnchors(p50: 657, p90: 1482, p99: 2171)
+            : FantasyAnchors(p50: 534, p90: 1265, p99: 1880)
         case .nba:      return FantasyAnchors(p50: 6112,  p90: 13846, p99: 20192)
         case .baseball: return FantasyAnchors(p50: 1973,  p90: 3005,  p99: 3942)
         case .soccer:   return FantasyAnchors(p50: 368.5, p90: 677,   p99: 1024.25)
@@ -397,12 +448,17 @@ enum DraftSpinSimulator {
     /// Which K4C4 fantasy-point preset (`ScoringRule.presets`) grades this player-season — the
     /// same formula a Keep4/Cut4 puzzle grades it with (`docs/scoring-and-grading.md`). NFL uses
     /// the unified any-position formula (passing+rushing+receiving all in one) since a lineup
-    /// mixes QB with skill positions; baseball and soccer split by role the same way the K4C4
-    /// themes do (hitter/pitcher, attacker/defender — `MF`/`FW` share the attacker formula,
-    /// `DF`/`GK` the defender one, matching `themes.py`'s `soccer-attackers`/`soccer-defenders`).
+    /// mixes QB with skill positions — except defensive players (both-sides rosters), who grade
+    /// on the separate IDP formula grade.py ships as `nfl_defense_fantasy` (the same split
+    /// baseball/soccer make between two role formulas). Baseball and soccer split by role the
+    /// same way the K4C4 themes do (hitter/pitcher, attacker/defender — `MF`/`FW` share the
+    /// attacker formula, `DF`/`GK` the defender one, matching `themes.py`'s
+    /// `soccer-attackers`/`soccer-defenders`).
     private static func fantasyPresetKey(_ season: CatalogSeason) -> String {
         switch season.sport {
-        case .nfl: return "nfl_fantasy"
+        case .nfl:
+            return DraftSpinConstraint.nflDefensivePositions.contains(season.position)
+                ? "nfl_defense_fantasy" : "nfl_fantasy"
         case .nba: return "nba_fantasy"
         case .baseball: return season.position == "P" ? "baseball_pitcher_fantasy" : "baseball_hitter_fantasy"
         case .soccer: return (season.position == "DF" || season.position == "GK")
@@ -420,9 +476,10 @@ enum DraftSpinSimulator {
     /// this sport's own p50/p90/p99 anchors (see `fantasyAnchors`): a merely-average lineup
     /// (p50) still wins more than it loses, a well-drafted one (p90) clearly contends, and an
     /// all-time-great one (p99+) is a near-lock — but never a guaranteed sweep or wipeout
-    /// (clamped 0.30...0.93).
-    static func winProbability(lineupTotal: Double, sport: Sport) -> Double {
-        let a = fantasyAnchors(for: sport)
+    /// (clamped 0.30...0.93). `includeDefense` selects the both-sides anchor set (see
+    /// `fantasyAnchors`'s doc comment for why the mode has its own).
+    static func winProbability(lineupTotal: Double, sport: Sport, includeDefense: Bool = false) -> Double {
+        let a = fantasyAnchors(for: sport, includeDefense: includeDefense)
         if lineupTotal < a.p50 {
             let t = min(max(lineupTotal / max(a.p50, 1), 0), 1)
             return 0.30 + 0.25 * t
@@ -435,11 +492,11 @@ enum DraftSpinSimulator {
         }
     }
 
-    static func simulate(lineup: [CatalogSeason], sport: Sport,
+    static func simulate(lineup: [CatalogSeason], sport: Sport, includeDefense: Bool = false,
                          using gen: inout some RandomNumberGenerator) -> DraftSpinResult {
         let shape = seasonShape(for: sport)
         let lineupTotal = lineup.reduce(0.0) { $0 + fantasyPoints($1) }
-        let winChance = winProbability(lineupTotal: lineupTotal, sport: sport)
+        let winChance = winProbability(lineupTotal: lineupTotal, sport: sport, includeDefense: includeDefense)
         // `gameCount` already matches this sport's real season length, so this is literally
         // "this roster's real season fantasy total, spread across a real season's games" — the
         // simulated PTS total a player sees lands close to a number their own picks actually

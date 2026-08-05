@@ -115,7 +115,9 @@ struct WhoAmIResultView: View {
     }
 
     private var shareRow: some View {
-        ShareLink(item: Self.shareText(puzzle: puzzle, result: result)) {
+        let card = WhoAmIShareCardView(sport: puzzle.sport, clueCount: puzzle.clues.count, result: result)
+        return ShareLink(item: Self.shareText(puzzle: puzzle, result: result),
+                          preview: SharePreview("My Who Am I? result", image: card.rendered())) {
             Label("SHARE (NO SPOILERS)", systemImage: "square.and.arrow.up").ctaLabel()
         }
         .buttonStyle(PrimePressStyle())
@@ -175,4 +177,50 @@ struct RewardsRow: View {
         }
         .frame(maxWidth: .infinity)
     }
+}
+
+/// Shareable result image for Who Am I? — deliberately takes only `sport`/`clueCount`/`result`,
+/// never the puzzle's answer or resolved headshot, so it's structurally impossible for this card
+/// to leak who the player was (same rule `shareText`/`emojiClues` already follow).
+struct WhoAmIShareCardView: View {
+    let sport: Sport
+    let clueCount: Int
+    let result: WhoAmIScoring.Result
+
+    private var rare: Bool { result.solved && result.cluesUsed == 1 }
+    private var ink: Color { rare ? .onVolt : .onAccent }
+
+    var body: some View {
+        ShareCardFrame {
+            ShareCardHeaderBand(rare: rare) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Wordmark(size: 20)
+                        Spacer()
+                        Text("\(sport.displayName) · WHO AM I?")
+                            .font(.custom(FontName.condBlack, size: 12)).foregroundStyle(ink.opacity(0.85))
+                    }
+                    Text(result.solved ? (result.cluesUsed == 1 ? "FIRST-CLUE GENIUS" : "SOLVED") : "OUT OF GUESSES")
+                        .font(.custom(FontName.condBlack, size: 22)).foregroundStyle(ink)
+                    Text("\(result.total)").font(.hero(36)).foregroundStyle(ink)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text(WhoAmIResultView.emojiClues(result: result, clueCount: clueCount))
+                    .font(.system(size: 30))
+                Text(result.solved ? "SOLVED ON CLUE \(result.cluesUsed)" : "BETTER LUCK TOMORROW")
+                    .font(.custom(FontName.condBold, size: 13))
+                    .foregroundStyle(Color.textMuted)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.surface1)
+
+            ShareCardFooter()
+        }
+    }
+
+    @MainActor
+    func rendered(scale: CGFloat = 3) -> Image { renderedForShare(scale: scale) }
 }

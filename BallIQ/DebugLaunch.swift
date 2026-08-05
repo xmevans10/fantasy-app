@@ -118,6 +118,19 @@ enum DebugLaunch {
         guard let i = args.firstIndex(of: "-draftSpinSport"), i + 1 < args.count else { return nil }
         return Sport(rawValue: args[i + 1])
     }
+    /// Preselect the board's position tab (simctl can't tap a tab, and defensive position
+    /// sections sit below the fold on the All tab): `-draftSpinPosition CB`.
+    static var draftSpinPosition: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-draftSpinPosition"), i + 1 < args.count else { return nil }
+        return args[i + 1].uppercased()
+    }
+    /// Auto-expand the first player of the preselected position (simctl can't tap a row) so
+    /// the full `PositionStatGrid` line can be captured: `-draftSpinPosition DE -draftSpinExpand`.
+    static var autoExpandDraftSpin: Bool { has("-draftSpinExpand") }
+    /// Force the NFL ROSTER setting to Both sides (simctl can't tap the segmented control):
+    /// `-draftSpinBothSides`. Defaults the draft to the 9-slot offense+DL/LB/DB formation.
+    static var draftSpinBothSides: Bool { has("-draftSpinBothSides") }
     /// Seed Draft & Spin's Nation → League → Club filter so a division-scoped draft can be
     /// driven without tapping through the picker: `-draftSpinCompetition ger.2 -draftSpinNation Germany`.
     /// This is how "does a 2. Bundesliga draft actually return 2. Bundesliga players?" gets
@@ -161,6 +174,11 @@ enum DebugLaunch {
         guard let i = args.firstIndex(of: "-openURL"), i + 1 < args.count else { return nil }
         return URL(string: args[i + 1])
     }
+    /// Skip StoreKit's launch-time catalog fetch + entitlement refresh (see
+    /// `StoreService.init`). On a simulator with no Apple ID, `Product.products(for:)` raises
+    /// the system "Sign in to Apple Account" sheet, which overlays every simctl screenshot
+    /// run: `-skipStoreKit`.
+    static var skipStoreKit: Bool { has("-skipStoreKit") }
     #else
     static let autoOpenGame = false
     static let autoOpenWhoAmI = false
@@ -204,5 +222,9 @@ enum DebugLaunch {
     static let forcePushPrimer = false
     static let openURL: URL? = nil
     static let draftSpinSport: Sport? = nil
+    static let draftSpinPosition: String? = nil
+    static let autoExpandDraftSpin = false
+    static let draftSpinBothSides = false
+    static let skipStoreKit = false
     #endif
 }

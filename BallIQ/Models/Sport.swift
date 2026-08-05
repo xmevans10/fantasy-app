@@ -121,8 +121,14 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     /// pool (a daily cross-position theme, a Vibes community puzzle mixing positions, a
     /// custom scoring rule applied to a mixed pool) so a card never shows a stat family its
     /// position doesn't record — a QB's "Rec Yds", a pitcher's "AVG", a keeper's "Goals".
-    /// NBA and tennis are omitted: their stats (PPG/RPG/APG/…, Wins/Titles/…) apply broadly
-    /// regardless of position, so there's nothing to slice.
+    /// The defensive groups (DL/LB/DB) are app-first: no shipped theme mixes defenders yet
+    /// (the daily pipeline's themes are offense-only), so there is nothing in themes.py to
+    /// mirror — the groups exist so Draft & Spin's Both-sides rosters and any future
+    /// cross-position pool can never show a cornerback a sack line. Position codes match
+    /// `nfl_nflverse_defense.py`'s granular values (see that provider's docstring — the
+    /// three groups collapse ~13 raw codes). NBA and tennis are omitted: their stats
+    /// (PPG/RPG/APG/…, Wins/Titles/…) apply broadly regardless of position, so there's
+    /// nothing to slice.
     static let positionStatFamilies: [Sport: [String: [String]]] = [
         .nfl: [
             "QB": ["passing_", "rushing_", "interceptions", "completions", "attempts", "completion_pct"],
@@ -130,6 +136,42 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
             "FB": ["rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr"],
             "WR": ["receiving_", "receptions", "targets", "ypr"],
             "TE": ["receiving_", "receptions", "targets", "ypr"],
+            "DE": ["tackles_", "tackles_for_loss", "sacks", "qb_hits", "forced_fumbles",
+                   "fumble_recoveries", "def_interceptions", "passes_defended",
+                   "defensive_tds", "safeties", "games"],
+            "DT": ["tackles_", "tackles_for_loss", "sacks", "qb_hits", "forced_fumbles",
+                   "fumble_recoveries", "def_interceptions", "passes_defended",
+                   "defensive_tds", "safeties", "games"],
+            "NT": ["tackles_", "tackles_for_loss", "sacks", "qb_hits", "forced_fumbles",
+                   "fumble_recoveries", "def_interceptions", "passes_defended",
+                   "defensive_tds", "safeties", "games"],
+            "DL": ["tackles_", "tackles_for_loss", "sacks", "qb_hits", "forced_fumbles",
+                   "fumble_recoveries", "def_interceptions", "passes_defended",
+                   "defensive_tds", "safeties", "games"],
+            "OLB": ["tackles_", "tackles_for_loss", "sacks", "qb_hits", "forced_fumbles",
+                    "fumble_recoveries", "def_interceptions", "passes_defended",
+                    "defensive_tds", "safeties", "games"],
+            "MLB": ["tackles_", "tackles_for_loss", "sacks", "qb_hits", "forced_fumbles",
+                    "fumble_recoveries", "def_interceptions", "passes_defended",
+                    "defensive_tds", "safeties", "games"],
+            "ILB": ["tackles_", "tackles_for_loss", "sacks", "qb_hits", "forced_fumbles",
+                    "fumble_recoveries", "def_interceptions", "passes_defended",
+                    "defensive_tds", "safeties", "games"],
+            "LB": ["tackles_", "tackles_for_loss", "sacks", "qb_hits", "forced_fumbles",
+                   "fumble_recoveries", "def_interceptions", "passes_defended",
+                   "defensive_tds", "safeties", "games"],
+            "CB": ["tackles_", "def_interceptions", "passes_defended", "forced_fumbles",
+                   "fumble_recoveries", "defensive_tds", "safeties", "games"],
+            "FS": ["tackles_", "def_interceptions", "passes_defended", "forced_fumbles",
+                   "fumble_recoveries", "defensive_tds", "safeties", "games"],
+            "SS": ["tackles_", "def_interceptions", "passes_defended", "forced_fumbles",
+                   "fumble_recoveries", "defensive_tds", "safeties", "games"],
+            "S": ["tackles_", "def_interceptions", "passes_defended", "forced_fumbles",
+                  "fumble_recoveries", "defensive_tds", "safeties", "games"],
+            "SAF": ["tackles_", "def_interceptions", "passes_defended", "forced_fumbles",
+                    "fumble_recoveries", "defensive_tds", "safeties", "games"],
+            "DB": ["tackles_", "def_interceptions", "passes_defended", "forced_fumbles",
+                   "fumble_recoveries", "defensive_tds", "safeties", "games"],
         ],
         .baseball: [
             "H": ["hits", "doubles", "triples", "home_runs", "runs", "rbi", "base_on_balls",
@@ -157,7 +199,9 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     /// (clean sheets + appearances only) since goals/assists aren't an obvious keeper stat
     /// even though the daily pipeline's `soccer-defenders` theme shows all 4 to both.
     /// NBA/tennis omitted for the same reason as `positionStatFamilies` — their stats apply
-    /// broadly regardless of position.
+    /// broadly regardless of position. Defensive groups follow the same app-first note as
+    /// `positionStatFamilies`: each reads like a real IDP stat line — the sack line for a
+    /// rusher (DL), the tackle line for a run-stopper (LB), the coverage line for a DB.
     static let positionStatTemplates: [Sport: [String: [String]]] = [
         .nfl: [
             "QB": ["passing_yards", "passing_tds", "interceptions", "rushing_yards", "rushing_tds",
@@ -166,6 +210,20 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
             "FB": ["rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds", "receptions", "ypc"],
             "WR": ["receiving_yards", "receptions", "receiving_tds"],
             "TE": ["receiving_yards", "receptions", "receiving_tds"],
+            "DE": ["sacks", "tackles_combined", "tackles_for_loss", "qb_hits"],
+            "DT": ["sacks", "tackles_combined", "tackles_for_loss", "qb_hits"],
+            "NT": ["sacks", "tackles_combined", "tackles_for_loss", "qb_hits"],
+            "DL": ["sacks", "tackles_combined", "tackles_for_loss", "qb_hits"],
+            "OLB": ["tackles_combined", "sacks", "tackles_for_loss", "def_interceptions"],
+            "MLB": ["tackles_combined", "sacks", "tackles_for_loss", "def_interceptions"],
+            "ILB": ["tackles_combined", "sacks", "tackles_for_loss", "def_interceptions"],
+            "LB": ["tackles_combined", "sacks", "tackles_for_loss", "def_interceptions"],
+            "CB": ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"],
+            "FS": ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"],
+            "SS": ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"],
+            "S": ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"],
+            "SAF": ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"],
+            "DB": ["tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles"],
         ],
         .baseball: [
             "H": ["home_runs", "rbi", "avg"],

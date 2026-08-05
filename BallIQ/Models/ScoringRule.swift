@@ -220,6 +220,17 @@ extension ScoringRule {
         "nfl_qb_fantasy": pointsRule(("passing_yards", 0.04), ("passing_tds", 4.0),
                                      ("interceptions", -2.0), ("rushing_yards", 0.1),
                                      ("rushing_tds", 6.0)),
+        // Standard IDP (individual defensive player) rates, mirroring grade.py byte-for-byte:
+        // solo+assisted tackle 0.75 (blended — `tackles_combined` already folds solo into
+        // itself), sack 2, TFL 0.5, forced fumble 2, fumble recovery 2, interception 3, pass
+        // defended 1, defensive/return TD 6, safety 2. Not offered as a Keep4/Create choice —
+        // it exists so Draft & Spin's Both-sides lineup can grade defenders on the same real
+        // fantasy currency as the offense.
+        "nfl_defense_fantasy": pointsRule(("tackles_combined", 0.75),
+                                          ("tackles_for_loss", 0.5), ("sacks", 2.0),
+                                          ("forced_fumbles", 2.0), ("fumble_recoveries", 2.0),
+                                          ("def_interceptions", 3.0), ("passes_defended", 1.0),
+                                          ("defensive_tds", 6.0), ("safeties", 2.0)),
         // NBA grades season TOTALS (derived at ingest: per-game × games) at DK-ish rates.
         "nba_fantasy": pointsRule(("points", 1.0), ("rebounds", 1.2), ("assists", 1.5),
                                   ("steals", 3.0), ("blocks", 3.0)),

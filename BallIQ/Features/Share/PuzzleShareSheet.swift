@@ -83,33 +83,32 @@ struct PuzzlePreviewCardView: View {
     let puzzle: SharablePuzzle
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Wordmark(size: 20)
-                    Spacer()
-                    Text(puzzle.formatName.uppercased())
-                        .font(.custom(FontName.condBlack, size: 14))
-                        .foregroundStyle(Color.onAccent.opacity(0.85))
-                }
-                Text(puzzle.title.uppercased())
-                    .font(.custom(FontName.condBlack, size: 24))
-                    .foregroundStyle(Color.onAccent)
-                    .lineLimit(3)
-                HStack(spacing: 6) {
-                    if let scoring = puzzle.scoring {
-                        capsuleBadge(symbol: scoring.symbol,
-                                     text: scoring.badgeLabel(for: puzzle.sport))
+        ShareCardFrame {
+            ShareCardHeaderBand {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Wordmark(size: 20)
+                        Spacer()
+                        Text(puzzle.formatName.uppercased())
+                            .font(.custom(FontName.condBlack, size: 14))
+                            .foregroundStyle(Color.onAccent.opacity(0.85))
                     }
-                    if let grain = puzzle.grain {
-                        capsuleBadge(symbol: grain.symbol, text: grain.badgeLabel)
+                    Text(puzzle.title.uppercased())
+                        .font(.custom(FontName.condBlack, size: 24))
+                        .foregroundStyle(Color.onAccent)
+                        .lineLimit(3)
+                    HStack(spacing: 6) {
+                        if let scoring = puzzle.scoring {
+                            capsuleBadge(symbol: scoring.symbol,
+                                         text: scoring.badgeLabel(for: puzzle.sport))
+                        }
+                        if let grain = puzzle.grain {
+                            capsuleBadge(symbol: grain.symbol, text: grain.badgeLabel)
+                        }
+                        capsuleBadge(symbol: puzzle.sport.symbol, text: puzzle.sport.displayName)
                     }
-                    capsuleBadge(symbol: puzzle.sport.symbol, text: puzzle.sport.displayName)
                 }
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.accentFill)
 
             Text(puzzle.subtitle.uppercased())
                 .font(.custom(FontName.condBold, size: 13))
@@ -118,26 +117,8 @@ struct PuzzlePreviewCardView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.surface1)
 
-            Text("PLAY AT PLAYBOOK")
-                .font(.custom(FontName.condBold, size: 11))
-                .foregroundStyle(Color.textMuted)
-                .padding(.horizontal, 16).padding(.vertical, 9)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.surfaceMuted)
+            ShareCardFooter()
         }
-        .frame(width: 320)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
-                .strokeBorder(Color.borderInk, lineWidth: 2.5)
-        )
-        .padding(6)   // room for the ledge in the rendered image
-        .background(
-            RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
-                .fill(Color.borderInk)
-                .offset(x: 4, y: 4)
-                .padding(6)
-        )
     }
 
     private func capsuleBadge(symbol: String, text: String) -> some View {
@@ -154,14 +135,7 @@ struct PuzzlePreviewCardView: View {
 
     /// Render to an Image for `SharePreview` (same approach as `ShareCardView.rendered`).
     @MainActor
-    func rendered(scale: CGFloat = 3) -> Image {
-        let renderer = ImageRenderer(content: self)
-        renderer.scale = scale
-        if let ui = renderer.uiImage {
-            return Image(uiImage: ui)
-        }
-        return Image(systemName: "square.dashed")
-    }
+    func rendered(scale: CGFloat = 3) -> Image { renderedForShare(scale: scale) }
 }
 
 /// Share-a-puzzle sheet (pattern: `PublishedSheet`) — preview card + the deep link.

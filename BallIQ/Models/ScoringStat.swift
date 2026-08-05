@@ -56,6 +56,24 @@ extension ScoringStat {
             ScoringStat(key: "completion_pct",  label: "Cmp%",    sport: .nfl, lo: 55,  hi: 72,   higherWins: true, fmt: .dec1),
             ScoringStat(key: "completions",     label: "Cmp",     sport: .nfl, lo: 200, hi: 450,  higherWins: true, fmt: .int),
             ScoringStat(key: "attempts",        label: "Att",     sport: .nfl, lo: 300, hi: 700,  higherWins: true, fmt: .int),
+            // Defensive IDP stats — keys match nfl_nflverse_defense.py's vocabulary exactly
+            // (e.g. `def_interceptions`, NOT `interceptions`, which means "thrown by a QB" on
+            // offensive rows — reusing it would corrupt grading for two-way roster spots).
+            // Bounds are sane seasonal ranges for a full-time starter per stat, same shape as
+            // the offensive stats above; `defensive_tds`/`safeties` are rare enough that their
+            // lo of 0 makes a card read honestly for a season without one.
+            ScoringStat(key: "tackles_combined",   label: "Tackles",  sport: .nfl, lo: 60,  hi: 160, higherWins: true,  fmt: .int),
+            ScoringStat(key: "tackles_solo",       label: "Solo",     sport: .nfl, lo: 40,  hi: 120, higherWins: true,  fmt: .int),
+            ScoringStat(key: "tackles_for_loss",   label: "TFL",      sport: .nfl, lo: 5,   hi: 25,  higherWins: true,  fmt: .int),
+            ScoringStat(key: "sacks",              label: "Sacks",    sport: .nfl, lo: 4,   hi: 22,  higherWins: true,  fmt: .int),
+            ScoringStat(key: "qb_hits",            label: "QB Hits",  sport: .nfl, lo: 10,  hi: 45,  higherWins: true,  fmt: .int),
+            ScoringStat(key: "def_interceptions",  label: "Def INT",  sport: .nfl, lo: 1,   hi: 8,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "passes_defended",    label: "PD",       sport: .nfl, lo: 5,   hi: 20,  higherWins: true,  fmt: .int),
+            ScoringStat(key: "forced_fumbles",     label: "FF",       sport: .nfl, lo: 1,   hi: 7,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "fumble_recoveries",  label: "FR",       sport: .nfl, lo: 0,   hi: 5,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "defensive_tds",      label: "Def TD",   sport: .nfl, lo: 0,   hi: 3,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "safeties",           label: "Safety",   sport: .nfl, lo: 0,   hi: 2,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "games",              label: "Games",    sport: .nfl, lo: 10,  hi: 17,  higherWins: true,  fmt: .int),
         ],
         .nba: [
             ScoringStat(key: "ppg",    label: "PPG", sport: .nba, lo: 12.0,  hi: 37.0,  higherWins: true, fmt: .dec1),

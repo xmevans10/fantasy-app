@@ -50,7 +50,21 @@ struct CreateKeep4View: View {
         return isVibes || rule != nil
     }
 
-    private func grade(_ s: CatalogSeason) -> Double? { rule?.grade(s, baselines: container.baselines) }
+    /// Which formula actually grades a season. Usually the puzzle-wide `rule` — except an NFL
+    /// defensive player under the PPR/Half-PPR/Standard choices, whose terms are all
+    /// passing/rushing/receiving keys a defender's `stats` dict doesn't carry: `stats[key] ?? 0`
+    /// in `ScoringRule.grade` would silently total 0 for every one of them, so a CB or LB in a
+    /// mixed-position puzzle would always grade as the worst pick regardless of how good their
+    /// season actually was — undermining the whole keep-the-best-4 premise. Mirrors DraftSpin's
+    /// identical per-position split (`DraftSpin.fantasyPresetKey`). Vibes has no rule to swap.
+    private func effectiveRule(for s: CatalogSeason) -> ScoringRule? {
+        guard !isVibes, s.sport == .nfl, DraftSpinConstraint.nflDefensivePositions.contains(s.position) else {
+            return rule
+        }
+        return ScoringRule.preset("nfl_defense_fantasy")?.eraAdjusted(eraAdjusted)
+    }
+
+    private func grade(_ s: CatalogSeason) -> Double? { effectiveRule(for: s)?.grade(s, baselines: container.baselines) }
 
     var body: some View {
         ScrollView {
@@ -364,9 +378,27 @@ struct CreateKeep4View: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(positions(for: query.sport), id: \.self) { pos in
-                    PrimeChip(label: pos, active: query.positions.contains(pos)) { togglePosition(pos) }
+                    let codes = catalogCodes(for: pos)
+                    PrimeChip(label: pos, active: codes.contains(where: query.positions.contains)) {
+                        togglePosition(codes)
+                    }
                 }
             }
+        }
+    }
+
+    /// NFL's defensive chips ("DL"/"LB"/"DB") are grouped labels, same as Draft & Spin's
+    /// roster slots — the catalog itself keeps the granular code (DE/DT/NT/OLB/MLB/ILB/CB/
+    /// FS/SS/S/SAF/DB, see `nfl_nflverse_defense.py`), and `CatalogQuery.positions` matches
+    /// `season.position` exactly, so a chip has to expand to every raw code in its group or
+    /// it silently filters to zero rows. Every other chip (offense positions, other sports)
+    /// already IS the catalog's raw code, so it maps to itself.
+    private func catalogCodes(for chip: String) -> [String] {
+        switch chip {
+        case "DL": return DraftSpinConstraint.nflDLPositions
+        case "LB": return DraftSpinConstraint.nflLBPositions
+        case "DB": return DraftSpinConstraint.nflDBPositions
+        default: return [chip]
         }
     }
 
@@ -499,9 +531,12 @@ struct CreateKeep4View: View {
         Haptics.tap()
     }
 
-    private func togglePosition(_ pos: String) {
-        if let idx = query.positions.firstIndex(of: pos) { query.positions.remove(at: idx) }
-        else { query.positions.append(pos) }
+    private func togglePosition(_ codes: [String]) {
+        if codes.contains(where: query.positions.contains) {
+            query.positions.removeAll(where: codes.contains)
+        } else {
+            query.positions.append(contentsOf: codes)
+        }
     }
 
     private func toggle(_ s: CatalogSeason) {
@@ -512,13 +547,13 @@ struct CreateKeep4View: View {
 
     private func positions(for sport: Sport?) -> [String] {
         switch sport {
-        case .nfl: return ["QB", "RB", "WR", "TE"]
+        case .nfl: return ["QB", "RB", "WR", "TE", "DL", "LB", "DB"]
         case .nba: return ["G", "F", "C"]
         case .baseball: return ["H", "P"]
         case .soccer: return ["FW", "MF", "DF", "GK"]
         case .tennis: return ["Player"]
         case nil:
-            return ["QB", "RB", "WR", "TE", "G", "F", "C", "H", "P", "FW", "MF", "DF", "GK", "Player"]
+            return ["QB", "RB", "WR", "TE", "DL", "LB", "DB", "G", "F", "C", "H", "P", "FW", "MF", "DF", "GK", "Player"]
         }
     }
 
@@ -566,8 +601,8 @@ struct CreateKeep4View: View {
                             firstYear: s.firstYear, lastYear: s.lastYear)
             }
         }
-        let r = rule
         return selected.map { s in
+            let r = effectiveRule(for: s)
             let lines: [PlayerSeason.StatLine]
             if let theme = activeTheme {
                 lines = theme.cardStats(for: s.stats, position: s.position)

@@ -218,39 +218,31 @@ struct SetupOptionCard<Control: View>: View {
     }
 }
 
-/// Two-to-three-way segmented choice used inside `SetupOptionCard`s. `enabled` lets a
-/// setup screen show an honest disabled option (e.g. NFL "Both sides" with no defensive
-/// data) without hiding that the reference feature exists.
+/// Two-to-three-way segmented choice used inside `SetupOptionCard`s.
 struct SetupSegmentedControl: View {
     // LocalizedStringKey so the 4 call sites' literal option arrays extract into
     // Localizable.xcstrings without themselves changing — see EmptyStateView for the
     // same pattern.
     let options: [LocalizedStringKey]
     let selectedIndex: Int
-    var enabled: [Bool]? = nil
     let onSelect: (Int) -> Void
 
     var body: some View {
         HStack(spacing: 8) {
             ForEach(options.indices, id: \.self) { i in
                 let active = i == selectedIndex
-                let isEnabled = enabled?[i] ?? true
                 Button {
-                    guard isEnabled else { return }
                     onSelect(i)
                 } label: {
                     Text(options[i])
                         .font(.custom(active ? FontName.condBlack : FontName.condBold, size: 13))
-                        .foregroundStyle(active ? Color.onAccent
-                                         : (isEnabled ? Color.textPrimary : Color.textMuted))
+                        .foregroundStyle(active ? Color.onAccent : Color.textPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .background(active ? Color.accentFill : Color.surfaceMuted)
                         .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        .opacity(isEnabled ? 1 : 0.55)
                 }
                 .buttonStyle(.plain)
-                .disabled(!isEnabled)
             }
         }
     }

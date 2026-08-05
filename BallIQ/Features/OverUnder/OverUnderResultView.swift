@@ -105,8 +105,12 @@ struct OverUnderResultView: View {
     }
 
     private var shareRow: some View {
-        ShareLink(item: Self.shareText(sport: sport, score: score, correctCount: correctCount,
-                                       beatHighScore: beatHighScore)) {
+        let card = OverUnderShareCardView(sport: sport, score: score, correctCount: correctCount,
+                                          wrongCount: wrongCount, highScore: highScore,
+                                          beatHighScore: beatHighScore)
+        return ShareLink(item: Self.shareText(sport: sport, score: score, correctCount: correctCount,
+                                              beatHighScore: beatHighScore),
+                         preview: SharePreview("My Over/Under run", image: card.rendered())) {
             Label("SHARE RUN", systemImage: "square.and.arrow.up").ctaLabel()
         }
         .buttonStyle(PrimePressStyle())
@@ -133,4 +137,57 @@ struct OverUnderResultView: View {
             .background(Color.surface)
         }
     }
+}
+
+/// Shareable result card (M13 share-card pattern) — Over/Under's score/streak is the whole
+/// content, so unlike Grid/Who Am I? there's no spoiler to withhold here.
+struct OverUnderShareCardView: View {
+    let sport: Sport
+    let score: Int
+    let correctCount: Int
+    let wrongCount: Int
+    let highScore: Int
+    let beatHighScore: Bool
+
+    private var ink: Color { beatHighScore ? .onVolt : .onAccent }
+
+    var body: some View {
+        ShareCardFrame {
+            ShareCardHeaderBand(rare: beatHighScore) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Wordmark(size: 20)
+                        Spacer()
+                        Text("\(sport.displayName.uppercased()) · OVER/UNDER")
+                            .font(.custom(FontName.condBlack, size: 14)).foregroundStyle(ink.opacity(0.85))
+                    }
+                    Text("\(score)").font(.custom(FontName.condBlack, size: 40)).foregroundStyle(ink)
+                    Text("\(correctCount) RIGHT · \(wrongCount) WRONG")
+                        .font(.custom(FontName.condBold, size: 15)).foregroundStyle(ink.opacity(0.85))
+                }
+            }
+
+            HStack(spacing: 0) {
+                shareStat("STREAK", "\(correctCount)")
+                shareStat("BEST", "\(highScore)")
+                shareStat("SPORT", sport.displayName.uppercased())
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .background(Color.surface1)
+
+            ShareCardFooter()
+        }
+    }
+
+    private func shareStat(_ label: String, _ value: String) -> some View {
+        VStack(spacing: 2) {
+            Text(value).font(.custom(FontName.condBlack, size: 20)).foregroundStyle(Color.textPrimary)
+            Text(label).font(.label11).foregroundStyle(Color.textMuted)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    @MainActor
+    func rendered(scale: CGFloat = 3) -> Image { renderedForShare(scale: scale) }
 }

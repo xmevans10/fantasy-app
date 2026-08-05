@@ -42,6 +42,12 @@ final class StoreService: ObservableObject {
 
     init() {
         updateListenerTask = listenForTransactionUpdates()
+        // Debug-launch runs (`-skipStoreKit`, the simctl screenshot flows) skip the launch
+        // fetch: on a simulator with no Apple ID, `Product.products(for:)` raises the system
+        // "Sign in to Apple Account" sheet, which overlays every screenshot. Real devices are
+        // unaffected — the paywall's own `.task` still loads the catalog when a player opens
+        // it (`loadProducts`), and purchase/restore never go through this init.
+        guard !DebugLaunch.skipStoreKit else { return }
         Task { [weak self] in
             await self?.loadProducts()
             await self?.refreshEntitlements()

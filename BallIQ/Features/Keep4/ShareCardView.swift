@@ -9,36 +9,34 @@ struct ShareCardView: View {
     let placement: [String: Pile]
     let result: Keep4Scoring.Result
 
-    private var heroFill: Color { result.isPerfect ? .voltFill : .accentFill }
     private var heroInk: Color { result.isPerfect ? .onVolt : .onAccent }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Colored header band: score + theme
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Wordmark(size: 20)
-                    Spacer()
-                    Text("K4C4")
-                        .font(.custom(FontName.condBlack, size: 14))
-                        .foregroundStyle(heroInk.opacity(0.85))
+        ShareCardFrame {
+            // Colored header band: score + theme — gold + a baked-in sheen on a perfect sort.
+            ShareCardHeaderBand(rare: result.isPerfect) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Wordmark(size: 20)
+                        Spacer()
+                        Text("K4C4")
+                            .font(.custom(FontName.condBlack, size: 14))
+                            .foregroundStyle(heroInk.opacity(0.85))
+                    }
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("\(result.correctCount)/\(puzzle.players.count)")
+                            .font(.hero(40))
+                            .foregroundStyle(heroInk)
+                        Text(result.isPerfect ? "PERFECT SORT" : "CORRECT")
+                            .font(.custom(FontName.condBlack, size: 15))
+                            .foregroundStyle(heroInk.opacity(0.85))
+                    }
+                    Text(puzzle.theme.uppercased())
+                        .font(.custom(FontName.condBold, size: 14))
+                        .foregroundStyle(heroInk.opacity(0.8))
+                        .lineLimit(2)
                 }
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("\(result.correctCount)/\(puzzle.players.count)")
-                        .font(.hero(40))
-                        .foregroundStyle(heroInk)
-                    Text(result.isPerfect ? "PERFECT SORT" : "CORRECT")
-                        .font(.custom(FontName.condBlack, size: 15))
-                        .foregroundStyle(heroInk.opacity(0.85))
-                }
-                Text(puzzle.theme.uppercased())
-                    .font(.custom(FontName.condBold, size: 14))
-                    .foregroundStyle(heroInk.opacity(0.8))
-                    .lineLimit(2)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(heroFill)
 
             // The 8 picks
             VStack(spacing: 0) {
@@ -72,38 +70,13 @@ struct ShareCardView: View {
             .padding(.vertical, 6)
             .background(Color.surface1)
 
-            Text("PLAY AT PLAYBOOK")
-                .font(.custom(FontName.condBold, size: 11))
-                .foregroundStyle(Color.textMuted)
-                .padding(.horizontal, 16).padding(.vertical, 9)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.surfaceMuted)
+            ShareCardFooter()
         }
-        .frame(width: 320)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
-                .strokeBorder(Color.borderInk, lineWidth: 2.5)
-        )
-        .padding(6)   // room for the ledge in the rendered image
-        .background(
-            RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
-                .fill(Color.borderInk)
-                .offset(x: 4, y: 4)
-                .padding(6)
-        )
     }
 }
 
 extension ShareCardView {
     /// Render the card to a SwiftUI Image for ShareLink.
     @MainActor
-    func rendered(scale: CGFloat = 3) -> Image {
-        let renderer = ImageRenderer(content: self)
-        renderer.scale = scale
-        if let ui = renderer.uiImage {
-            return Image(uiImage: ui)
-        }
-        return Image(systemName: "square.dashed")
-    }
+    func rendered(scale: CGFloat = 3) -> Image { renderedForShare(scale: scale) }
 }
