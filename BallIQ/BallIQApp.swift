@@ -4,6 +4,10 @@ import SwiftUI
 struct BallIQApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var container = RepositoryContainer.make()
+    /// Post-onboarding prompts (see `Moment`). Owned here rather than by `RepositoryContainer`
+    /// so a prompt opening or closing doesn't publish a change through the object every screen
+    /// in the app observes.
+    @StateObject private var moments = MomentPresenter()
 
     init() {
         FontRegistration.registerAll()
@@ -17,6 +21,7 @@ struct BallIQApp: App {
             RootView()
                 .environmentObject(container)
                 .environmentObject(container.auth)
+                .environmentObject(moments)
                 .tint(.accentFill)
                 .task { await container.bootstrap() }
                 .onReceive(NotificationCenter.default.publisher(for: .didRegisterDeviceToken)) { note in

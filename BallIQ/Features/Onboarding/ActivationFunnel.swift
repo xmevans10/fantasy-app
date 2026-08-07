@@ -71,6 +71,16 @@ struct ActivationState {
         return AppOpen(firstOpen: false, dayIndex: dayIndex(from: first, to: now))
     }
 
+    /// How far into this install's life we are, **without** stamping anything. `recordOpen` is
+    /// the launch-time writer and must stay the only one; a reader that went through it would
+    /// silently claim the install's birthday for whatever moment happened to ask first on a
+    /// fresh install, making every later `day_index` wrong. Returns 0 before the first
+    /// `recordOpen`, which is also the honest answer (today is day 0).
+    func currentDayIndex(now: Date = Date()) -> Int {
+        guard let first = defaults.object(forKey: Key.firstOpen) as? Date else { return 0 }
+        return dayIndex(from: first, to: now)
+    }
+
     /// Whole local days between the install's first open and `now`, floored at 0 — a user who
     /// rolls their device clock backwards should read as day 0, not day -3, which would land in
     /// the warehouse as a bucket nobody has a query for.
@@ -96,6 +106,24 @@ struct ActivationState {
         guard !has(milestone) else { return false }
         defaults.set(true, forKey: milestone.rawValue)
         return true
+    }
+}
+
+/// Whether the streak-reminder card is live right now.
+///
+/// Two callers need this answer and they must not disagree: `HomeView` renders the card, and
+/// `MomentPresenter` suppresses every post-onboarding moment while it's up (one ask at a time —
+/// see `MomentContext.pushPrimerPending`). A second copy of the condition would let them drift
+/// into a state where Home shows the card *and* a moment sheet opens over it, which is the one
+/// outcome both rules exist to prevent. AGENTS.md §4.
+///
+/// The `DebugLaunch.forcePushPrimer` override deliberately stays at the view: it's a screenshot
+/// hook for the card, not a claim that the player is really owed one.
+@MainActor
+enum PushPrimer {
+    static func shouldOffer(streak: Int, state: ActivationState = ActivationState()) async -> Bool {
+        guard state.shouldOfferPushPrimer, streak > 0 else { return false }
+        return await PushNotificationManager.currentAuthorizationStatus() == .notDetermined
     }
 }
 

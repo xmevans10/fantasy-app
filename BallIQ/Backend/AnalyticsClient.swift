@@ -72,6 +72,20 @@ enum AnalyticsEvent: String {
     /// the whole first session is judged against.
     case firstGameStarted      = "first_game_started"
     case firstGameCompleted    = "first_game_completed"
+    // Post-onboarding prompts (see `Moment`). Three events, not four: a dismissal is
+    // `moment_shown` minus `moment_accepted`, and an explicit `moment_dismissed` would be the
+    // same fact stored twice — which is how two counts start disagreeing about the same funnel.
+    /// A moment was put on screen. Carries `moment`, `trigger` (see `MomentTrigger`),
+    /// `games_played` and `day_index` — the last two so a query can ask whether the thresholds
+    /// in `MomentEngine` are landing where they were aimed, without re-deriving them in SQL.
+    case momentShown           = "moment_shown"
+    /// The CTA was tapped — the prompt's own conversion, before whatever the destination does.
+    case momentAccepted        = "moment_accepted"
+    /// The goal was actually reached (username saved, favorite team picked, friend request
+    /// sent). Split from `accepted` because the gap between them is exactly the destination
+    /// screen's drop-off: taps that open `IdentityEditorSheet` and never save are a fixable
+    /// problem in a different place than taps that never happen at all.
+    case momentCompleted       = "moment_completed"
 }
 
 /// Which artifact left the app on a share tap. Separate from the game format because they answer

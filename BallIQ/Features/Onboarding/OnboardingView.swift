@@ -1,5 +1,4 @@
 import SwiftUI
-import AuthenticationServices
 
 /// First run, reordered around a first win instead of a first account.
 ///
@@ -21,7 +20,6 @@ struct OnboardingView: View {
     /// step they left is also what keeps the funnel's step events honest about where people stop.
     @AppStorage("onboardingStep") private var stepRaw = OnboardingStep.sport.rawValue
 
-    @State private var currentNonce: String?
     @State private var error: String?
     /// Gates the post-sign-in username claim prompt (M20): a brand-new account has no
     /// `profiles.username` yet, so we interrupt onboarding once with `IdentityEditorSheet`
@@ -378,23 +376,15 @@ struct OnboardingView: View {
         .blockCard(fill: .warningFill)
     }
 
+    /// The provider buttons themselves live in `SignInButtons` — the same block was written here
+    /// and again in `ProfileView`, and the two had drifted (see that file's note). This screen
+    /// keeps what's genuinely its own: the inline error line, the "Not now" escape, and what
+    /// happens after a successful sign-in.
     private var authButtons: some View {
         VStack(spacing: 14) {
-            SignInWithAppleButton(.signIn) { request in
-                let raw = AuthService.makeNonce()
-                currentNonce = raw
-                request.requestedScopes = [.fullName, .email]
-                request.nonce = AuthService.sha256(raw)
-            } onCompletion: { result in
-                handle(result)
-            }
-            .signInWithAppleButtonStyle(.black)
-            .frame(height: 52)
-            .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-
-            // Hidden while no iOS OAuth client exists — see `GoogleSignIn.clientID`. A sign-in
-            // button that always errors is worse than one fewer option.
-            if GoogleSignIn.isConfigured { googleButton }
+            SignInButtons(surface: "onboarding",
+                          onError: { error = $0 },
+                          onSignedIn: finishOrClaimUsername)
 
             Button { finish() } label: {
                 Text("Not now")
@@ -405,63 +395,6 @@ struct OnboardingView: View {
             if let error {
                 Text(error).font(.label12).foregroundStyle(Color.dangerText)
             }
-        }
-    }
-
-    private var googleButton: some View {
-        Button {
-            Task { await signInWithGoogle() }
-        } label: {
-            HStack(spacing: 8) {
-                GoogleGMark(size: 18)
-                Text("Continue with Google").font(.bodyStrong)
-            }
-            .foregroundStyle(Color.textPrimary)
-            .frame(maxWidth: .infinity)
-            .frame(height: 52)
-            .background(Color.surfaceMuted)
-            .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func signInWithGoogle() async {
-        do {
-            try await container.auth.signInWithGoogle()
-            await container.syncIfSignedIn()
-            container.track(.signInCompleted, ["provider": "google", "surface": "onboarding"])
-            finishOrClaimUsername()
-        } catch {
-            self.error = String(localized: "Couldn't complete sign-in. Try again.")
-        }
-    }
-
-    private func handle(_ result: Result<ASAuthorization, Error>) {
-        switch result {
-        case .success(let authorization):
-            guard let cred = authorization.credential as? ASAuthorizationAppleIDCredential,
-                  let tokenData = cred.identityToken,
-                  let token = String(data: tokenData, encoding: .utf8),
-                  let raw = currentNonce else {
-                error = String(localized: "Sign-in didn't return an identity token. Try again.")
-                return
-            }
-            Task {
-                do {
-                    try await container.auth.signInWithApple(
-                        identityToken: token, rawNonce: raw,
-                        authorizationCode: cred.authorizationCode
-                            .flatMap { String(data: $0, encoding: .utf8) })
-                    await container.syncIfSignedIn()
-                    container.track(.signInCompleted, ["provider": "apple", "surface": "onboarding"])
-                    finishOrClaimUsername()
-                } catch {
-                    self.error = String(localized: "Couldn't complete sign-in. Try again.")
-                }
-            }
-        case .failure:
-            // User canceled or it failed — stay on the screen, no error noise for cancel.
-            break
         }
     }
 

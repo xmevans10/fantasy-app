@@ -59,6 +59,11 @@ final class RepositoryContainer: ObservableObject {
     /// Incoming pending friend-request count (M19) — badge fuel for Profile/Friends entry
     /// points; refreshed on sign-in sync and after any friends mutation via `refreshFriendBadge()`.
     @Published private(set) var pendingFriendRequests = 0
+    /// How many friendships are actually established (M21) — the signal behind the `addFriend`
+    /// moment, which is an empty-graph prompt and must not fire at someone who already has
+    /// people. Comes free: `refreshFriendBadge()` already fetches *every* edge to count the
+    /// pending ones, so this is one more `filter` over a list we're holding, not a new request.
+    @Published private(set) var acceptedFriends = 0
     /// Open Versus challenges I haven't played yet — the tab badge, and the explicit stopgap
     /// while APNs pushes for `versus_challenge` are stubbed. Refreshed on sign-in sync, on
     /// foreground (`ContentView`'s scenePhase watcher), and after any Versus mutation below —
@@ -166,6 +171,16 @@ final class RepositoryContainer: ObservableObject {
         currentSeason = await seasons?.current()
     }
 
+    /// Whether `identity`, `favoriteTeams` and `acceptedFriends` reflect the server yet.
+    ///
+    /// Anything that *asks the user for something they might already have* has to wait for this.
+    /// The moment layer is the first such reader: `identity.username` is nil both for a player who
+    /// has never claimed a name and for one whose profile simply hasn't been pulled yet, and
+    /// prompting the second to claim the name they already own is the worst version of this
+    /// feature. Signed-out sessions are loaded by definition — there is nothing to fetch.
+    var isProfileLoaded: Bool { !isSignedIn || didSyncProfile }
+    @Published private(set) var didSyncProfile = false
+
     /// Build the sync mirror for the current user and reconcile remote → local.
     func syncIfSignedIn() async {
         guard let client, let uid = auth.userID else { sync = nil; isAdmin = false; return }
@@ -194,6 +209,8 @@ final class RepositoryContainer: ObservableObject {
         await resubmitTodaysDailyDraftIfNeeded()
         serverEntitlements = await mirror.pullEntitlements()
         recomputeEntitlements()
+        // Set last, and only on the path that actually populated the profile fields above.
+        didSyncProfile = true
     }
 
     /// Fire-and-forget push of a Daily Draft official score to `daily_draft_scores`.
@@ -369,7 +386,8 @@ final class RepositoryContainer: ObservableObject {
 
     func handleSignedOut() {
         sync = nil; isAdmin = false; favoriteTeams = .empty
-        identity = .empty; pendingFriendRequests = 0; openVersusChallenges = 0
+        identity = .empty; pendingFriendRequests = 0; acceptedFriends = 0; openVersusChallenges = 0
+        didSyncProfile = false
         serverEntitlements = .free
         recomputeEntitlements()
     }
@@ -804,8 +822,13 @@ final class RepositoryContainer: ObservableObject {
     /// Recounts incoming pending friend requests (cheap: one filtered select). Call after
     /// any friends mutation so badges stay honest without a realtime channel.
     func refreshFriendBadge() async {
-        guard let social, let uid = auth.userID else { pendingFriendRequests = 0; return }
+        guard let social, let uid = auth.userID else {
+            pendingFriendRequests = 0
+            acceptedFriends = 0
+            return
+        }
         let edges = await social.edges(me: uid)
         pendingFriendRequests = edges.filter { $0.isIncomingPending(me: uid) }.count
+        acceptedFriends = edges.filter(\.isAccepted).count
     }
 }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var container: RepositoryContainer
+    @EnvironmentObject private var moments: MomentPresenter
     @Environment(\.scenePhase) private var scenePhase
 
     // Deep-link / share-link play (balliq://play/<id>). Requires the URL scheme to be
@@ -62,6 +63,12 @@ struct ContentView: View {
             if phase == .active, container.productLoadState == .failed {
                 Task { await container.reloadProducts() }
             }
+            // The "came back" half of the moment layer (see `Moment`). Safe here and only here:
+            // a `.sheet` cannot present over a live `fullScreenCover`, so arming one while a
+            // game is on screen would silently burn it. Foregrounding means nothing is.
+            if phase == .active {
+                Task { await moments.evaluate(container: container, trigger: .foreground) }
+            }
         }
         .onAppear {
             if let url = DebugLaunch.openURL { Task { await handle(url) } }
@@ -73,6 +80,18 @@ struct ContentView: View {
             if DebugLaunch.autoOpenVersus { selectedTab = 2 }
             if DebugLaunch.autoOpenCommunity { selectedTab = 3 }
             if DebugLaunch.autoOpenPaywall { debugPaywall = true }
+        }
+        // `onChange(of: scenePhase)` doesn't fire for the launch that arrives already-active, so
+        // the first session needs its own trigger. `evaluate` is idempotent (it returns early
+        // once something is pending or already shown this session), so the two can't double-arm.
+        .task { await moments.evaluate(container: container, trigger: .foreground) }
+        // The single presentation site for every moment, at the root rather than per screen, so
+        // two can never race onto the screen together.
+        .sheet(item: Binding(get: { moments.style == .sheet ? moments.pending : nil },
+                             set: { if $0 == nil { moments.dismiss() } })) { moment in
+            MomentSheet(moment: moment, context: moments.context)
+                .environmentObject(container)
+                .environmentObject(moments)
         }
         .sheet(isPresented: $debugCreate) {
             NavigationStack { CreateKeep4View().environmentObject(container) }

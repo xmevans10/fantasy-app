@@ -1,5 +1,4 @@
 import SwiftUI
-import AuthenticationServices
 
 struct ProfileView: View {
     @EnvironmentObject private var container: RepositoryContainer
@@ -9,7 +8,6 @@ struct ProfileView: View {
     /// working button. Defaulted so `ProfileView()` (tests, previews) keeps compiling.
     var selectedTab: Binding<Int> = .constant(0)
 
-    @State private var currentNonce: String?
     @State private var notificationSettings = NotificationSettings.allEnabled
     @State private var showCareer = false
     @State private var showModeration = false
@@ -622,52 +620,12 @@ struct ProfileView: View {
             } else {
                 Text("Sign in to save your progress and climb the leaderboards.")
                     .font(.body14).foregroundStyle(Color.textSecondary)
-                SignInWithAppleButton(.signIn) { request in
-                    let raw = AuthService.makeNonce()
-                    currentNonce = raw
-                    request.requestedScopes = [.fullName, .email]
-                    request.nonce = AuthService.sha256(raw)
-                } onCompletion: { result in handle(result) }
-                .signInWithAppleButtonStyle(.black)
-                .frame(height: 50)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-
-                // Hidden rather than shown-and-broken while no iOS OAuth client exists: a
-                // sign-in button that always errors is worse than one absent option, and a
-                // reviewer tapping it would be looking at a Guideline 2.1 bug. Sign in with
-                // Apple covers account creation on its own.
-                if GoogleSignIn.isConfigured {
-                Button {
-                    Task {
-                        do {
-                            try await container.auth.signInWithGoogle()
-                        } catch {
-                            // Was `try?`, which is why a rejected token looked like the button
-                            // did nothing at all: the flow completed, GoTrue 400'd, and the
-                            // error went straight in the bin. A sign-in that fails has to say so.
-                            if !(error is CancellationError) {
-                                signInError = String(localized: "Couldn't complete sign-in. Try again.")
-                            }
-                            return
-                        }
-                        await container.syncIfSignedIn()
-                        if container.isSignedIn {
-                            container.track(.signInCompleted, ["provider": "google", "surface": "profile"])
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        GoogleGMark(size: 17)
-                        Text("Continue with Google").font(.bodyStrong)
-                    }
-                    .foregroundStyle(Color.textPrimary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Color.surfaceMuted)
-                    .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                }
+                // Was a hand-rolled copy of `OnboardingView`'s block, and the two had drifted:
+                // this one's *Apple* path swallowed every failure with `try?` — the exact bug its
+                // own Google path six lines below carried a comment about having fixed. Both now
+                // route through `SignInButtons`, which reports either provider's failure.
+                SignInButtons(surface: "profile", height: 50, spacing: 12,
+                              onError: { signInError = $0 })
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -719,21 +677,4 @@ struct ProfileView: View {
         }
     }
 
-    private func handle(_ result: Result<ASAuthorization, Error>) {
-        guard case .success(let authorization) = result,
-              let cred = authorization.credential as? ASAuthorizationAppleIDCredential,
-              let tokenData = cred.identityToken,
-              let token = String(data: tokenData, encoding: .utf8),
-              let raw = currentNonce else { return }
-        Task {
-            try? await container.auth.signInWithApple(
-                identityToken: token, rawNonce: raw,
-                authorizationCode: cred.authorizationCode
-                    .flatMap { String(data: $0, encoding: .utf8) })
-            await container.syncIfSignedIn()
-            if container.isSignedIn {
-                container.track(.signInCompleted, ["provider": "apple", "surface": "profile"])
-            }
-        }
-    }
 }

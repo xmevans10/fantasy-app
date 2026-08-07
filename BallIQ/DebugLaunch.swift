@@ -167,6 +167,32 @@ enum DebugLaunch {
     /// status: `-screenshotPushPrimer`. Real state needs a completed game *and* an untouched
     /// system prompt, which can't both be arranged from a launch argument.
     static var forcePushPrimer: Bool { has("-screenshotPushPrimer") }
+    /// Force one post-onboarding moment on screen, past every gate:
+    /// `-screenshotMoment claim_username` / `favorite_team` / `add_friend` (see
+    /// `Moment.analyticsID`). Real state needs a specific games-played count, streak, sign-in
+    /// state and an unexpired 48h cooldown all at once — none of which a launch argument can
+    /// arrange, and all of which AGENTS.md §5 still expects screenshots of.
+    ///
+    /// `favorite_team` resolves against `-screenshotMomentSport` (default NBA) so the outlier
+    /// case — soccer, whose `TeamPicker` carries 201 clubs — is reachable.
+    static var forcedMoment: Moment? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-screenshotMoment"), i + 1 < args.count else { return nil }
+        switch args[i + 1] {
+        case "claim_username": return .claimUsername
+        case "favorite_team":  return .favoriteTeam(forcedMomentSport)
+        case "add_friend":     return .addFriend
+        default:               return nil
+        }
+    }
+
+    private static var forcedMomentSport: Sport {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-screenshotMomentSport"), i + 1 < args.count,
+              let sport = Sport(rawValue: args[i + 1]) else { return .nba }
+        return sport
+    }
+
     /// Feed a deep link straight to `ContentView.handle` (bypasses SpringBoard's
     /// "Open in …?" confirm, which automated runs can't tap): `-openURL balliq://play/<id>`.
     static var openURL: URL? {
@@ -220,6 +246,7 @@ enum DebugLaunch {
     static let createTemplateKey: String? = nil
     static let onboardingStep: String? = nil
     static let forcePushPrimer = false
+    static let forcedMoment: Moment? = nil
     static let openURL: URL? = nil
     static let draftSpinSport: Sport? = nil
     static let draftSpinPosition: String? = nil

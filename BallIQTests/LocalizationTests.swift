@@ -65,4 +65,33 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(es("Search titles"), "Buscar títulos")
         XCTAssertEqual(es("Search themes or players"), "Buscar temas o jugadores")
     }
+
+    /// Every user-facing string the Moments feature adds (`MomentCopy` in MomentSheet.swift,
+    /// the `SharePreview` title, and the moment CTAs) must resolve to Spanish.
+    ///
+    /// This is the same quiet failure mode `testFilterChipAndSearchLabelsAreLocalized`
+    /// documents: these keys were written with `String(localized:)` / `LocalizedStringKey`
+    /// from day one, but were never added to `Localizable.xcstrings` — so a Spanish user was
+    /// silently shown the English literal. Each assertion below checks the *Spanish* value,
+    /// never key fallback, so a missing entry fails loudly.
+    ///
+    /// Interpolated details carry their `String(format:)` specifiers (`%lld` for Int,
+    /// `%@` for String), matching the catalog's positional form — the lookup key is the
+    /// template, and `es(_:)` returns it as stored in es.lproj.
+    func testMomentStringsAreLocalized() {
+        XCTAssertEqual(es("LOCK IN YOUR NAME"), "ASEGURA TU NOMBRE")
+        XCTAssertEqual(es("WHO DO YOU RIDE WITH?"), "¿CON QUIÉN VAS?")
+        XCTAssertEqual(es("BETTER WITH A RIVAL"), "MEJOR CON UN RIVAL")
+        XCTAssertEqual(es("CLAIM MY USERNAME"), "RECLAMAR MI NOMBRE DE USUARIO")
+        XCTAssertEqual(es("PICK MY TEAM"), "ELEGIR MI EQUIPO")
+        XCTAssertEqual(es("ADD A FRIEND"), "AGREGAR UN AMIGO")
+        XCTAssertEqual(es("CREATE MY ACCOUNT"), "CREAR MI CUENTA")
+        XCTAssertEqual(es("My Playbook profile"), "Mi perfil de Playbook")
+        XCTAssertEqual(es("You've played %lld. Time everyone knew who did it — your name shows up on leaderboards, Versus and friend requests."), "Has jugado %lld. Es hora de que todos sepan quién lo hizo — tu nombre aparece en las tablas de posiciones, Versus y solicitudes de amistad.")
+        XCTAssertEqual(es("Your name shows up on leaderboards, Versus and friend requests."), "Tu nombre aparece en las tablas de posiciones, Versus y solicitudes de amistad.")
+        XCTAssertEqual(es("Your streak, rating and league spot live on your account — and a username is how anyone finds you."), "Tu racha, puntaje y puesto en la liga viven en tu cuenta — y un nombre de usuario es como cualquiera te encuentra.")
+        XCTAssertEqual(es("%lld %@ rounds in. Pick your team and we'll flag every puzzle that features them."), "Llevas %lld rondas de %@. Elige tu equipo y marcaremos cada acertijo que lo presente.")
+        XCTAssertEqual(es("A %lld-day streak and nobody to beat. Add a friend and every daily becomes a head-to-head."), "Una racha de %lld días y nadie a quien vencer. Agrega un amigo y cada diario se convierte en un duelo.")
+        XCTAssertEqual(es("You've played %lld and nobody's chasing you. Add a friend and every daily becomes a head-to-head."), "Has jugado %lld y nadie te pisa los talones. Agrega un amigo y cada diario se convierte en un duelo.")
+    }
 }

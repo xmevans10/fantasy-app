@@ -35,6 +35,9 @@ Raw values of `AnalyticsEvent` (treat as a stable schema — the queries below g
 | `onboarding_step_viewed` | OnboardingView, once per step reached | `step` (`OnboardingStep`), `index` |
 | `first_game_started` | Onboarding's guided game + Home's daily cards, **once per install** | `format`, `sport`, `surface` |
 | `first_game_completed` | Same two surfaces, **once per install** | `format`, `sport`, `surface`, `signed_in` |
+| `moment_shown` | `MomentPresenter.present()` — at most once per session, ≥48h apart | `moment` (`Moment.analyticsID`), `trigger` (`foreground`/`post_game`), `games_played`, `day_index`, `sport` (favorite-team only) |
+| `moment_accepted` | `MomentSheet.accept()` — the CTA tap | `moment` |
+| `moment_completed` | The goal actually reached (username saved, team picked, friend added) | `moment` |
 
 ### The purchase funnel's `trigger` dimension
 
@@ -110,6 +113,41 @@ where created_at > now() - interval '30 days';
 `picked_a_sport` counts arrivals at step 2, which can only happen by tapping a sport on step 1 —
 so `installs → picked_a_sport` is the drop-off on the first screen, and
 `started_first_game → first_wins` is the drop-off inside the first puzzle.
+
+### Post-onboarding moments (shown → accepted → completed)
+
+The three prompts that fire *after* first run — claim a username, set a favorite team, add a
+friend (see `Moment`). There is deliberately **no** `moment_dismissed`: a dismissal is
+`shown - accepted`, and storing a derivable fact twice is how two counts start disagreeing.
+
+```sql
+select properties->>'moment'                                        as moment,
+       properties->>'trigger'                                       as trigger,
+       count(*) filter (where event_name = 'moment_shown')          as shown,
+       count(*) filter (where event_name = 'moment_accepted')       as accepted,
+       count(*) filter (where event_name = 'moment_completed')      as completed
+from events
+where event_name in ('moment_shown', 'moment_accepted', 'moment_completed')
+  and created_at > now() - interval '30 days'
+group by 1, 2 order by 3 desc;
+```
+
+Two different failures live in the two gaps, and they get fixed in different places:
+`shown → accepted` is the **prompt's** copy and timing, `accepted → completed` is the
+**destination screen's** drop-off (someone opened `IdentityEditorSheet` and never saved).
+
+The thresholds in `MomentEngine` are the thing this data exists to second-guess —
+`games_played` and `day_index` ride along on `moment_shown` so a query can ask whether five
+games is where the username ask actually lands, without re-deriving the count in SQL:
+
+```sql
+select properties->>'moment'                as moment,
+       (properties->>'games_played')::int   as games_played,
+       count(*)                             as shown
+from events
+where event_name = 'moment_shown' and created_at > now() - interval '30 days'
+group by 1, 2 order by 1, 2;
+```
 
 ### Where the first run stops
 
