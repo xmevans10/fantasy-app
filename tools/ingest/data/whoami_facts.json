@@ -17,7 +17,11 @@
     ],
     "stat_line": "Over 71,000 passing yards and 508 touchdown passes",
     "jersey": "4",
-    "fact": "Started 297 consecutive games — the quarterback iron-man record"
+    "fact": "Started 297 consecutive games — the quarterback iron-man record",
+    "nickname": "The Gunslinger",
+    "accolades": [
+      "Three straight MVP awards from 1995 to 1997"
+    ]
   },
   {
     "sport": "nfl",
@@ -35,7 +39,11 @@
     ],
     "stat_line": "71,940 passing yards and 539 touchdown passes",
     "jersey": "18",
-    "fact": "Five-time MVP who won Super Bowls with two different franchises"
+    "fact": "Five-time MVP who won Super Bowls with two different franchises",
+    "nickname": "The Sheriff",
+    "accolades": [
+      "Fourteen Pro Bowl selections"
+    ]
   },
   {
     "sport": "nfl",
@@ -53,7 +61,11 @@
     ],
     "stat_line": "Over 89,000 passing yards and 649 touchdown passes",
     "jersey": "12",
-    "fact": "Drafted 199th overall, then won seven Super Bowl titles"
+    "fact": "Drafted 199th overall, then won seven Super Bowl titles",
+    "nickname": "Tom Terrific",
+    "accolades": [
+      "Three MVP awards and five Super Bowl MVPs"
+    ]
   },
   {
     "sport": "nfl",
@@ -72,7 +84,10 @@
     ],
     "stat_line": "22,895 receiving yards and 197 receiving touchdowns",
     "jersey": "80",
-    "fact": "The NFL's all-time leader in receptions, receiving yards, and touchdowns"
+    "fact": "The NFL's all-time leader in receptions, receiving yards, and touchdowns",
+    "accolades": [
+      "Three Super Bowl rings and a Super Bowl MVP"
+    ]
   },
   {
     "sport": "nfl",
@@ -89,7 +104,10 @@
     ],
     "stat_line": "15,269 rushing yards in just ten seasons",
     "jersey": "20",
-    "fact": "Retired at 30 while still within reach of the all-time rushing record"
+    "fact": "Retired at 30 while still within reach of the all-time rushing record",
+    "accolades": [
+      "A Pro Bowl in all ten seasons, plus the 1997 MVP"
+    ]
   },
   {
     "sport": "nfl",
@@ -109,7 +127,10 @@
     ],
     "stat_line": "156 receiving touchdowns, including a record 23 in 2007",
     "jersey": "84",
-    "fact": "Set the single-season receiving touchdown record in 2007"
+    "fact": "Set the single-season receiving touchdown record in 2007",
+    "accolades": [
+      "Offensive Rookie of the Year in 1998 and six Pro Bowls"
+    ]
   },
   {
     "sport": "nba",
@@ -128,7 +149,11 @@
     ],
     "stat_line": "32,292 career points at 30.1 per game",
     "jersey": "23",
-    "fact": "Won six titles and six Finals MVPs; highest career scoring average in NBA history"
+    "fact": "Won six titles and six Finals MVPs; highest career scoring average in NBA history",
+    "nickname": "His Airness",
+    "accolades": [
+      "Five MVP awards and ten scoring titles"
+    ]
   },
   {
     "sport": "nba",
@@ -146,7 +171,11 @@
     ],
     "stat_line": "33,643 career points and five championships",
     "jersey": "8 and 24",
-    "fact": "Scored 81 points in a single game and spent his entire career with one team"
+    "fact": "Scored 81 points in a single game and spent his entire career with one team",
+    "nickname": "The Black Mamba",
+    "accolades": [
+      "Five championships and an MVP award"
+    ]
   },
   {
     "sport": "nba",
@@ -163,7 +192,11 @@
     ],
     "stat_line": "Five championships and 15 All-Star selections",
     "jersey": "21",
-    "fact": "'The Big Fundamental' — one franchise for his entire 19-year career"
+    "fact": "One franchise for his entire 19-year career",
+    "nickname": "The Big Fundamental",
+    "accolades": [
+      "Five championships and two MVP awards"
+    ]
   },
   {
     "sport": "nba",
@@ -185,7 +218,11 @@
     ],
     "stat_line": "28,596 career points and four championships",
     "jersey": "34",
-    "fact": "A dominant center who won three straight Finals MVPs from 2000 to 2002"
+    "fact": "A dominant center who won three straight Finals MVPs from 2000 to 2002",
+    "nickname": "The Diesel",
+    "accolades": [
+      "Four championships and the 2000 MVP"
+    ]
   },
   {
     "sport": "nba",
@@ -206,7 +243,11 @@
     ],
     "stat_line": "2001 MVP at 26.7 points per game for his career",
     "jersey": "3",
-    "fact": "'The Answer' — won MVP standing just six feet tall"
+    "fact": "Won MVP standing just six feet tall",
+    "nickname": "The Answer",
+    "accolades": [
+      "Four scoring titles and eleven All-Star selections"
+    ]
   },
   {
     "sport": "nba",
@@ -224,7 +265,10 @@
     ],
     "stat_line": "31,560 career points, the 2007 MVP, and a 2011 title",
     "jersey": "41",
-    "fact": "Spent all 21 seasons with one franchise and popularized the one-legged fadeaway"
+    "fact": "Spent all 21 seasons with one franchise and popularized the one-legged fadeaway",
+    "accolades": [
+      "The 2007 MVP and the 2011 Finals MVP"
+    ]
   },
   {
     "sport": "nfl",
@@ -243,7 +287,10 @@
     ],
     "stat_line": "The NFL's all-time leading rusher with 18,355 yards",
     "jersey": "22",
-    "fact": "Won the rushing title, league MVP, and Super Bowl MVP in the same 1993 season"
+    "fact": "Won the rushing title, league MVP, and Super Bowl MVP in the same 1993 season",
+    "accolades": [
+      "The NFL's all-time leading rusher"
+    ]
   },
   {
     "sport": "nfl",
@@ -262,7 +309,11 @@
     ],
     "stat_line": "Over 40,000 passing yards and four Super Bowl titles",
     "jersey": "16",
-    "fact": "Never threw an interception in four Super Bowl appearances"
+    "fact": "Never threw an interception in four Super Bowl appearances",
+    "nickname": "Joe Cool",
+    "accolades": [
+      "Four Super Bowl titles and three Super Bowl MVPs"
+    ]
   },
   {
     "sport": "nfl",
@@ -280,7 +331,10 @@
     ],
     "stat_line": "132.5 career sacks and three Defensive Player of the Year awards",
     "jersey": "56",
-    "fact": "The last defensive player to be named league MVP (1986)"
+    "fact": "The last defensive player to be named league MVP (1986)",
+    "accolades": [
+      "Ten Pro Bowls and three Defensive Player of the Year awards"
+    ]
   },
   {
     "sport": "nfl",
@@ -298,7 +352,11 @@
     ],
     "stat_line": "Over 11,600 receiving yards and 83 touchdowns in just nine seasons",
     "jersey": "81",
-    "fact": "Nicknamed Megatron — set the single-season receiving record with 1,964 yards in 2012"
+    "fact": "Set the single-season receiving record with 1,964 yards in 2012",
+    "nickname": "Megatron",
+    "accolades": [
+      "Six Pro Bowls in nine seasons"
+    ]
   },
   {
     "sport": "nba",
@@ -316,7 +374,10 @@
     ],
     "stat_line": "Three straight MVP awards and three championships",
     "jersey": "33",
-    "fact": "Won the NBA's first three 3-Point Contests"
+    "fact": "Won the NBA's first three 3-Point Contests",
+    "accolades": [
+      "Three straight MVP awards from 1984 to 1986"
+    ]
   },
   {
     "sport": "nba",
@@ -333,7 +394,10 @@
     ],
     "stat_line": "Over 10,000 career assists and five championships",
     "jersey": "32",
-    "fact": "Started at center as a rookie in the 1980 Finals clincher and scored 42 points"
+    "fact": "Started at center as a rookie in the 1980 Finals clincher and scored 42 points",
+    "accolades": [
+      "Three MVP awards and five championships"
+    ]
   },
   {
     "sport": "nba",
@@ -353,7 +417,11 @@
     ],
     "stat_line": "The NBA's all-time blocks leader with 3,830",
     "jersey": "34",
-    "fact": "Won MVP, Defensive Player of the Year, and Finals MVP in the same 1994 season"
+    "fact": "Won MVP, Defensive Player of the Year, and Finals MVP in the same 1994 season",
+    "nickname": "The Dream",
+    "accolades": [
+      "Two championships and the NBA's all-time blocks record"
+    ]
   },
   {
     "sport": "nba",
@@ -372,7 +440,10 @@
     ],
     "stat_line": "Back-to-back MVP awards running the seven-seconds-or-less offense",
     "jersey": "13",
-    "fact": "Led the league in assists per game five times"
+    "fact": "Led the league in assists per game five times",
+    "accolades": [
+      "Back-to-back MVP awards in 2005 and 2006"
+    ]
   },
   {
     "sport": "baseball",
@@ -393,7 +464,11 @@
     ],
     "stat_line": "630 career home runs with the sweetest swing in baseball",
     "jersey": "24",
-    "fact": "Drafted first overall and played in the same outfield as his father in Seattle"
+    "fact": "Drafted first overall and played in the same outfield as his father in Seattle",
+    "nickname": "The Kid",
+    "accolades": [
+      "Thirteen All-Star selections and the 1997 MVP"
+    ]
   },
   {
     "sport": "baseball",
@@ -410,7 +485,11 @@
     ],
     "stat_line": "3,465 career hits, all in pinstripes",
     "jersey": "2",
-    "fact": "Nicknamed Mr. November — five World Series titles with one franchise"
+    "fact": "Five World Series titles with one franchise",
+    "nickname": "Mr. November",
+    "accolades": [
+      "Fourteen All-Star selections and the 2000 World Series MVP"
+    ]
   },
   {
     "sport": "soccer",
@@ -431,7 +510,11 @@
     ],
     "stat_line": "Arsenal's all-time leading scorer with 228 goals",
     "jersey": "14",
-    "fact": "Won the Premier League Golden Boot four times"
+    "fact": "Won the Premier League Golden Boot four times",
+    "nickname": "Titi",
+    "accolades": [
+      "A 1998 World Cup winner and a 2009 Champions League winner"
+    ]
   },
   {
     "sport": "soccer",
@@ -451,6 +534,9 @@
     ],
     "stat_line": "Two FIFA World Player of the Year awards",
     "jersey": "10",
-    "fact": "Won the 2002 World Cup with Brazil and the 2005 Ballon d'Or"
+    "fact": "Won the 2002 World Cup with Brazil and the 2005 Ballon d'Or",
+    "accolades": [
+      "FIFA World Player of the Year in 2004 and 2005"
+    ]
   }
 ]

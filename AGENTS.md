@@ -99,6 +99,38 @@ no excuse to batch five changes and test once at the end; run both suites after 
 logically-complete edit so a regression is attributable to the change that caused it, not
 buried in a pile.
 
+## 7.1 A red test is a claim about *something* — find out what, before you touch product code
+
+`PurchaseFlowTests` (all five purchase cases) fails on the **iOS 26.5 simulator runtime** with
+`SKTestSession` logging `Error Domain=SKInternalErrorDomain Code=3` on every operation —
+`saving configuration file`, `clearing overrides`, `deleting all transactions`. The visible
+symptom is a real "Sign in to Apple Account" dialog appearing mid-test, because
+`session.disableDialogs = true` silently doesn't apply either. The purchases then never
+auto-approve, so entitlements are never granted and the assertions fail.
+
+None of that is a product bug. Measured 2026-08-07:
+
+| runtime | result |
+|---|---|
+| iOS 26.5 (Xcode 26.5) | 5 failures, 35 `SKInternalErrorDomain Code=3` |
+| iOS 26.5, **brand-new simulator** | identical — so it isn't corrupted device state |
+| iOS 18.3 | **7/7 pass, 0 SK errors** |
+
+Adding the scheme's StoreKit configuration to the Test action (it's only on the Launch
+action) changes nothing. `SKTestSession` simply cannot take control on that runtime.
+
+**Rule:** when a test in an area you did not touch goes red, establish *where* it's red before
+concluding anything — a second runtime, a pristine simulator, and the commit that added the
+test are all cheap. Two wrong moves are available here and both look productive: "fix" working
+purchase code to satisfy a broken harness, or weaken the assertions until they pass. Run the
+purchase suite on **iOS 18.3** until the tooling is fixed, and say which runtime a green result
+came from when you report it.
+
+Related trap from the same session: the first full run also failed
+`GridBoardGalleryTests.testRenderEveryArchetype` and four purchase cases — because the agent
+was terminating and relaunching the app **on the same simulator while the suite was running**.
+That test needs the hosted app's window. Don't drive a simulator that a test run is using.
+
 ## 8. Respect blast radius — extend established automation patterns, don't invent new authority
 
 This repo already has a precedent: a daily CI job pushes real data to production Supabase

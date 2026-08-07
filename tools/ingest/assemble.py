@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 
+from . import whoami_clues
 from .grade import BaselineTable, grade, grade_era
 from .models import RawSeason, WhoAmIEntry, slug
 from .themes import Theme, format_columns
@@ -151,35 +152,28 @@ def build_keep4_rows(theme: Theme, seasons: list[RawSeason],
 
 # ── Who Am I? ─────────────────────────────────────────────────────────────────
 
-def _clue(order: int, kind: str, text: str) -> dict:
-    return {"order": order, "kind": kind, "text": text}
+def build_whoami_row(entry: WhoAmIEntry, seed: str = "") -> PuzzleRow:
+    """One Who Am I? row for `entry`, with its six clues drawn fresh from every dimension
+    the subject supports (see whoami_clues) rather than the fixed era/position/teams/
+    statLine/fact/jersey list this used to emit for every player in the game.
 
+    `seed` varies the draw: daily_whoami passes the serve date, so the same subject coming
+    back around months later is a genuinely different puzzle, not a rerun. Default "" is
+    the stable archival draw for main.py's undated pool copy.
 
-def _jersey_text(jersey: str) -> str:
-    plural = any(sep in jersey for sep in (",", "and", "&", "/"))
-    return f"Wore number{'s' if plural else ''} {jersey}"
-
-
-def build_whoami_row(entry: WhoAmIEntry) -> PuzzleRow:
-    era = (
-        f"Played from {entry.first_year} to {entry.last_year}"
-        if entry.last_year != entry.first_year
-        else f"Played in {entry.first_year}"
-    )
-    clues = [
-        _clue(1, "era", era),
-        _clue(2, "position", entry.position),
-        _clue(3, "teams", ", ".join(entry.teams)),
-        _clue(4, "statLine", entry.stat_line),
-        _clue(5, "fact", entry.fact),
-        _clue(6, "jersey", _jersey_text(entry.jersey)),
-    ]
+    `difficulty` rides along in `content` as an additive field. Clients that predate it
+    ignore it and score off the flat table, which is why the tier multiplier lives on the
+    client (see whoami_clues.POINT_MULTIPLIER) rather than being applied to a score here.
+    """
+    difficulty = whoami_clues.difficulty_of(entry)
+    clues = whoami_clues.select_clues(entry, seed=seed, difficulty=difficulty)
     row_id = f"{entry.sport}-whoami-{slug(entry.canonical)}"
     content = {
         "id": row_id,
         "sport": entry.sport,
-        "clues": clues,
+        "clues": [c.to_content(i + 1) for i, c in enumerate(clues)],
         "answer": {"canonical": entry.canonical, "aliases": entry.aliases},
+        "difficulty": difficulty,
     }
     return PuzzleRow(id=row_id, sport=entry.sport, format="whoami", content=content)
 

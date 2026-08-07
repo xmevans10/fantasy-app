@@ -14,9 +14,10 @@ import argparse
 import datetime as dt
 import json
 import os
+from collections import Counter
 from pathlib import Path
 
-from . import assemble, generate, health
+from . import assemble, generate, health, whoami_pool
 from .assemble import PuzzleRow
 from .baselines import compute_baselines
 from .career import build_career_rows
@@ -365,9 +366,11 @@ def build_rows(seasons: list[RawSeason]) -> tuple[list[PuzzleRow], list[PuzzleRo
         theme_stats.append(health.theme_health(theme, seasons, baselines))
     print(f"  [generator] {len(generated)} niche themes minted")
 
-    entries = assemble.load_whoami_entries(DATA_DIR / "whoami_facts.json")
+    entries = whoami_pool.all_entries(DATA_DIR)
     whoami = [assemble.build_whoami_row(e) for e in entries]
-    print(f"  whoami: {len(whoami)} puzzle(s)")
+    tiers = Counter(w.content["difficulty"] for w in whoami)
+    print(f"  whoami: {len(whoami)} puzzle(s) "
+          f"({', '.join(f'{t}: {tiers[t]}' for t in ('easy', 'medium', 'hard'))})")
     catalog_depth = health.catalog_depth_report(seasons)
     for c in catalog_depth:
         if not c["draft_slot_viable"]:
@@ -749,11 +752,15 @@ def write_fallback(keep4: list[PuzzleRow], whoami: list[PuzzleRow]) -> None:
     FALLBACK_KEEP4.write_text(
         json.dumps(keep4_subset, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+    # Subset for the same reason keep4 is: the pool is 762 puzzles (~630 KB) since the
+    # catalog-generated subjects landed, and the bundle only has to cover an offline session.
+    whoami_subset = whoami_pool.bundle_subset(whoami)
     FALLBACK_WHOAMI.write_text(
-        json.dumps([r.content for r in whoami], indent=2, ensure_ascii=False) + "\n",
+        json.dumps([r.content for r in whoami_subset], indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    print(f"[fallback] wrote {len(keep4_subset)} keep4 + {len(whoami)} whoami → BallIQ/Data/")
+    print(f"[fallback] wrote {len(keep4_subset)} keep4 + {len(whoami_subset)} whoami "
+          f"(of {len(whoami)}) → BallIQ/Data/")
 
 
 def print_summary(keep4: list[PuzzleRow], whoami: list[PuzzleRow]) -> None:

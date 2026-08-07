@@ -253,6 +253,22 @@ _POSITION_GROUPS: dict[str, tuple[tuple[str, tuple[str, ...], str], ...]] = {
 TEAM_MOBILE_SPORTS = frozenset({"nfl", "nba", "baseball", "soccer"})
 
 
+def position_family(sport: str, code: str) -> str:
+    """The coarse family a raw catalog position code belongs to — `'lb'` for OLB/MLB/ILB/LB,
+    `'db'` for the secondary, `'dl'` for the front, and the code itself for everything the
+    groups don't cover (QB, WR, G, H, FW, …).
+
+    Exposed for callers outside The Grid (whoami_pool.py, which needs a scoring cohort per
+    position) so that "which codes are linebackers" stays one fact in one place. Kept here
+    rather than moved somewhere neutral because `_POSITION_GROUPS` is still primarily Grid
+    axis config; this is a read of it, not a second copy.
+    """
+    for key, codes, _label in _POSITION_GROUPS.get(sport, ()):
+        if code in codes:
+            return key
+    return code
+
+
 def stat_axes(sport: str) -> list[GridAxis]:
     return [spec.axis() for spec in _STATS.get(sport, ())]
 

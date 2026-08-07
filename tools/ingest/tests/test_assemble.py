@@ -1,7 +1,7 @@
 """Assembly + validation tests using the curated NBA seed (no network)."""
 from pathlib import Path
 
-from tools.ingest import assemble
+from tools.ingest import assemble, whoami_clues
 from tools.ingest.models import RawSeason
 from tools.ingest.providers import seed
 from tools.ingest.themes import KEEP4_THEMES, Theme
@@ -104,8 +104,36 @@ def test_whoami_rows_valid():
     for entry in entries:
         row = assemble.build_whoami_row(entry)
         validate(row)
-        assert row.content["clues"][0]["kind"] == "era"
         assert row.content["answer"]["canonical"]
+        assert row.content["difficulty"] in {"easy", "medium", "hard"}
+
+
+def test_whoami_clue_sets_vary_by_subject_and_by_seed():
+    """The clue set used to be the same six kinds in the same order for every puzzle in the
+    game (era → position → teams → statLine → fact → jersey). It's now drawn per subject and
+    per serve date, which is the whole point of the change — so pin that it actually varies.
+    """
+    entries = assemble.load_whoami_entries(DATA / "whoami_facts.json")
+
+    def dimensions(entry, seed=""):
+        row = assemble.build_whoami_row(entry, seed=seed)
+        return tuple(c["dimension"] for c in row.content["clues"])
+
+    across_subjects = {dimensions(e) for e in entries}
+    assert len(across_subjects) > len(entries) // 2, "most subjects share one clue shape"
+
+    one = entries[0]
+    across_seeds = {dimensions(one, seed=f"2026-09-{d:02d}") for d in range(1, 15)}
+    assert len(across_seeds) > 1, "the same subject draws identically on every date"
+
+
+def test_whoami_clues_open_broad_and_close_specific():
+    """Randomizing the *set* must not randomize the difficulty curve: whichever dimensions get
+    drawn, clue 1 has to give away less than clue 6, or the puzzle is solvable on sight."""
+    for entry in assemble.load_whoami_entries(DATA / "whoami_facts.json"):
+        for seed in ("", "2026-08-06", "2027-01-01"):
+            clues = whoami_clues.select_clues(entry, seed=seed)
+            assert clues[0].reveal < clues[-1].reveal, f"{entry.canonical} @ {seed}"
 
 
 def test_photo_less_lower_division_soccer_row_never_becomes_a_puzzle_card():

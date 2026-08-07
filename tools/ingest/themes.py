@@ -113,7 +113,10 @@ class Theme:
     era_adjusted: bool = False
 
 
-def _fmt_value(value: float, fmt: str) -> str:
+def fmt_value(value: float, fmt: str) -> str:
+    """Render a raw stat under one of the card `fmt` codes. Public because clue text needs
+    the same rendering as a card column (see whoami_pool.stat_line) — one formatter, so a
+    stat reads identically wherever it appears."""
     if fmt == "comma_int":
         return f"{int(round(value)):,}"
     if fmt == "int":
@@ -162,7 +165,7 @@ def format_columns(theme: Theme, stats: dict[str, float],
     """Build the camelCase `stats` array for a PlayerSeason card (position-aware for
     cross-position themes — see `columns_for`)."""
     return [
-        {"label": col.label, "value": _fmt_value(stats.get(col.stat, 0.0), col.fmt)}
+        {"label": col.label, "value": fmt_value(stats.get(col.stat, 0.0), col.fmt)}
         for col in columns_for(theme, position)
     ]
 

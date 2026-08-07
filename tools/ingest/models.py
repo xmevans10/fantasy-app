@@ -80,10 +80,25 @@ def slug(text: str) -> str:
 
 @dataclass(frozen=True)
 class WhoAmIEntry:
-    """A curated, factual basis for a Who Am I? puzzle (see whoami_facts.json).
+    """A factual basis for a Who Am I? puzzle — the *subject*, not the puzzle.
 
-    Clue *text* is generated from these structured fields in assemble.py, so the
-    output is data-derived rather than hand-written prose.
+    Clue text is generated from these structured fields (see whoami_clues.py), so the
+    output is data-derived rather than hand-written prose. An entry is a bag of
+    **optional dimensions**: whichever ones carry data are the ones the clue picker has
+    to choose from, and a subject with more populated fields simply gets a wider, more
+    varied draw. Nothing here is a placeholder — a missing college is an absent college
+    clue, never an "Unknown college" one.
+
+    Two sources populate these (`source`):
+    - `curated`  — hand-authored editorial entries in `data/whoami_facts.json` (the
+                   legends, whose `fact`/`nickname`/`accolades` are the good stuff no
+                   provider carries), enriched in place from the catalog + bio join.
+    - `catalog`  — generated from the live `player_seasons` catalog by whoami_pool.py.
+                   This is where the non-legends come from; see that module for how the
+                   fame percentile that tiers them is computed.
+
+    The first ten fields are the original required set and stay required so existing
+    `whoami_facts.json` rows keep loading unchanged; everything added since is optional.
     """
 
     sport: str
@@ -97,3 +112,56 @@ class WhoAmIEntry:
     jersey: str               # primary jersey number(s), e.g. '4'
     fact: str                 # curated "known-for" fact
     extra_aliases: list[str] = field(default_factory=list)
+
+    # ── Bio dimensions (NFL today: nflverse players.csv via providers/nfl_players.py;
+    # every other sport has no bio provider yet, so these stay empty and those sports
+    # simply draw from the career/production/team dimensions instead) ──────────────
+    college: str = ""
+    college_conference: str = ""
+    height_in: int | None = None     # inches, e.g. 74
+    weight_lb: int | None = None
+    birth_year: int | None = None
+
+    # ── Draft dimensions. `undrafted` is deliberately explicit rather than inferred
+    # from a missing round: "we have no draft data for this player" and "this player
+    # went undrafted" are different facts, and only the second is a fair clue. ─────
+    draft_year: int | None = None
+    draft_round: int | None = None
+    draft_pick: int | None = None    # overall pick
+    draft_team: str = ""
+    undrafted: bool = False
+
+    # ── Career-shape dimensions ───────────────────────────────────────────────────
+    seasons: int | None = None       # real seasons played (not last_year - first_year)
+    league: str = ""                 # soccer only, e.g. 'England'
+    # Tennis's catalog `team_abbr` is a country code, not a club — it becomes a nationality
+    # clue instead of a (meaningless) team list. See whoami_pool.TEAM_SPORTS.
+    nationality: str = ""
+    # Still playing as of the last ingest. Gates the clues that would otherwise assert a
+    # retirement that hasn't happened ("Played a final season in 2026").
+    active: bool = False
+    # True when this subject's franchises can all be named. False withholds the
+    # team-*naming* dimensions while leaving the count ones usable — see
+    # whoami_pool.FRANCHISES for why some abbreviations can't be named safely.
+    teams_named: bool = True
+    # The real number of franchises, which is NOT `len(teams)` when some couldn't be named.
+    # Kept separate so "suited up for 5 different franchises" stays true for a player whose
+    # clue can only name four of them. None = fall back to `len(teams)`.
+    franchise_count: int | None = None
+
+    # ── Production dimensions. `best_season` is {'year': int, 'team': str,
+    # 'line': str} — a dict rather than a nested dataclass so `WhoAmIEntry(**row)`
+    # still round-trips straight out of JSON. ─────────────────────────────────────
+    best_season: dict = field(default_factory=dict)
+
+    # ── Story dimensions (curated only — no provider carries these) ───────────────
+    nickname: str = ""
+    accolades: list[str] = field(default_factory=list)
+
+    # ── Difficulty. `fame` is the 0-1 percentile of career production within the
+    # subject's own (sport, position) cohort, computed by whoami_pool.py; `difficulty`
+    # is the tier derived from it, stored rather than recomputed so a pool file is
+    # auditable and a hand-tuned override survives a regeneration. ────────────────
+    fame: float | None = None
+    difficulty: str = ""             # 'easy' | 'medium' | 'hard'; "" = derive from fame
+    source: str = "curated"          # 'curated' | 'catalog'

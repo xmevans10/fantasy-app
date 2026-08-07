@@ -317,41 +317,64 @@ def fetch_existing_puzzle_ids(ids: list[str]) -> set[str]:
     return {r["id"] for r in rows}
 
 
-def fetch_player_seasons(sport: str, *, career: bool = False, page_size: int = 1000) -> list[dict]:
-    """Real season rows for `sport` from the live `player_seasons` catalog (populated by
-    `--catalog`) -- used by The Grid (grid.py), which generates content directly from this
-    already-ingested table instead of re-pulling raw provider data.
+# The Grid's column set -- the default for `fetch_player_seasons`. `league` is load-bearing
+# for it, not decorative: soccer team codes are derived and collide hard across countries --
+# 51 of 954 abbreviations carry rows from two different clubs, including MCI (Man City +
+# Melbourne City), TOR (Torino + Toronto FC) and GAL (Galatasaray + LA Galaxy). Without it a
+# single "MCI" axis accepts either club's players.
+GRID_CATALOG_COLUMNS = "name,team_abbr,season_year,sport,position,stats,career,league"
 
-    Paginates via the `Range` header rather than trusting a `limit` query param alone --
-    PostgREST caps a single response at its own configured max (Supabase's default is 1000
-    rows) regardless of a larger `limit`, so a naive single request silently truncates any
-    sport with >1000 rows (NFL has ~14k). Also orders by `id` for a stable row set across
-    calls -- without an explicit order, which rows land in an early page is not guaranteed
-    stable, which would make grid.py's "deterministic per (sport, date)" promise fragile in
-    practice even though the pure generator itself is deterministic given its input."""
+# whoami_pool.py's set -- the Grid columns plus the career-span and photo fields it tiers and
+# qualifies subjects on. A separate constant rather than widening the default, so The Grid's
+# 79k-row soccer pull doesn't start carrying three columns it has no use for.
+WHOAMI_CATALOG_COLUMNS = GRID_CATALOG_COLUMNS + ",first_year,last_year,headshot"
+
+
+def fetch_player_seasons(sport: str, *, career: bool = False, page_size: int = 1000,
+                         columns: str = GRID_CATALOG_COLUMNS) -> list[dict]:
+    """Real season rows for `sport` from the live `player_seasons` catalog (populated by
+    `--catalog`) -- used by The Grid (grid.py) and the Who Am I? pool builder
+    (whoami_pool.py), which generate content directly from this already-ingested table
+    instead of re-pulling raw provider data.
+
+    Pages by **keyset** (`id > last seen`) rather than `Range`/OFFSET. Both read the same
+    rows, but OFFSET makes the server walk and discard everything before the window, so cost
+    climbs with depth: measured against live NFL career rows, page 1 came back in 0.6s and
+    the page at offset 8000 took 4.3s, and a fetch of a bigger sport under load has hit the
+    statement timeout (57014) outright. Keyset paging stays flat, and the `(sport, id)` index
+    (`player_seasons_sport_id_idx`) serves it directly.
+
+    Ordering by `id` also keeps the row set stable across calls -- without an explicit order,
+    which rows land in an early page is not guaranteed stable, which would make grid.py's
+    "deterministic per (sport, date)" promise fragile in practice even though the pure
+    generator itself is deterministic given its input."""
     base, key = _require_env()
-    endpoint = (f"{base}/rest/v1/player_seasons"
-                # `league` is load-bearing for The Grid, not decorative: soccer team codes are
-                # derived and collide hard across countries — 51 of 954 abbreviations carry rows
-                # from two different clubs, including MCI (Man City + Melbourne City),
-                # TOR (Torino + Toronto FC) and GAL (Galatasaray + LA Galaxy). Without it a
-                # single "MCI" axis accepts either club's players.
-                f"?select=name,team_abbr,season_year,sport,position,stats,career,league"
-                f"&sport=eq.{sport}&career=eq.{str(career).lower()}&order=id")
     headers = {"apikey": key, "Authorization": f"Bearer {key}"}
     rows: list[dict] = []
-    start = 0
+    last_id = ""
     while True:
-        page_headers = {**headers, "Range-Unit": "items", "Range": f"{start}-{start + page_size - 1}"}
-        req = urllib.request.Request(endpoint, headers=page_headers, method="GET")
-        try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                page = json.loads(resp.read().decode("utf-8"))
-        except urllib.error.HTTPError as err:
-            body = err.read().decode("utf-8", "ignore")
-            raise RuntimeError(f"player_seasons fetch failed ({err.code}): {body}") from err
+        endpoint = (f"{base}/rest/v1/player_seasons"
+                    f"?select=id,{columns}"
+                    f"&sport=eq.{sport}&career=eq.{str(career).lower()}"
+                    f"&order=id&limit={page_size}")
+        if last_id:
+            endpoint += f"&id=gt.{urllib.parse.quote(last_id, safe='')}"
+        # Via `_get_json` for its transient-failure retry: a catalog-wide pull is hundreds of
+        # requests, and one socket blip shouldn't cost the whole run (see that docstring).
+        page = _get_json(endpoint, headers, what="player_seasons fetch")
+        if not page:
+            break
         rows.extend(page)
+        last_id = page[-1]["id"]
         if len(page) < page_size:
             break
-        start += page_size
     return rows
+
+
+def fetch_teams() -> list[dict]:
+    """Every `teams` row (sport, team_abbr, full_name, league). Small table -- 323 rows live
+    across four sports -- so this is a single request with no paging."""
+    base, key = _require_env()
+    endpoint = (f"{base}/rest/v1/teams?select=sport,team_abbr,full_name,league&order=sport,team_abbr")
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    return _get_json(endpoint, headers, what="teams")

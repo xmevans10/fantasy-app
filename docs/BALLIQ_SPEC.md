@@ -17,8 +17,13 @@ what changed most recently (DB hand-offs, TestFlight, App Store submission), see
 - **Keep4/Cut4 ("K4C4")** — 8 real player-season cards served one at a time in a
   deterministic blind order; the player keeps 4 and cuts 4; the hidden per-card `grade`
   (raw fantasy points) defines the true top-4. Normal and Hard (stats hidden) modes.
-- **Who Am I?** — progressive-clue mystery player (6 ordered clues: era, position, teams,
-  stat line, fact, jersey); earlier solves score more, wrong guesses cost 100.
+- **Who Am I?** — progressive-clue mystery player: 6 clues **drawn per puzzle from ~30
+  dimensions** (era, position, teams, draft round/slot/class, college + conference, height,
+  weight, frame, jersey, born, franchise count, one-club loyalty, first/last team, peak year,
+  best season, career line, nationality, initials, nickname, accolades …), ordered vague →
+  specific. Each subject carries an obscurity tier (EASY / MEDIUM / HARD, shown as a chip)
+  that scales the payout ×1.0 / ×1.25 / ×1.6 and biases the clue draw. Earlier solves score
+  more, wrong guesses cost a flat 100 at every tier.
 
 **Surfaces (6 tabs, all live — none are stubs):** Home (daily games, streak, sport filter,
 rank), Leagues (weekly XP cohorts via `CohortRepository`/`Cohort.swift` — standings,
@@ -340,12 +345,42 @@ One template definition, consumed by both sides:
 
 ## 6. Content lifecycle
 
+### 6.0 Who Am I? subject pool (2026-08-06)
+
+The pool was 24 hand-authored legends, so every Who Am I? ever served was a household name
+and the rotation ran dry in under a month per sport (tennis had no entries at all, hence no
+tennis daily). It is now **762 subjects**: the 24 curated legends — enriched from the
+nflverse bio join, so they draw from the wide dimension set too — plus ~150 per sport
+generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
+
+- **Obscurity has a floor.** A generated subject must clear `qualify()` before difficulty is
+  considered: ≥4-5 seasons, a headshot, a name unique within its sport, real production
+  (top ~45% of its position cohort), and for soccer a league the audience follows. `hard`
+  means deep cut, never unknowable.
+- **`fame`** is a blend of career-volume and peak-season percentile *within a (sport,
+  position) cohort* (`PEAK_FAME_WEIGHT`); career volume alone measures longevity, not fame,
+  and put Ashleigh Barty in `hard`.
+- **Merged careers are rejected.** `career.py` aggregates by name, so two same-name players
+  collapse into one row — the first draft offered a "Frank Thomas (1951-2008), 4,139 hits".
+  `MAX_CAREER_SPAN` + `MIN_SEASON_DENSITY` catch these; adjacent same-name careers remain a
+  known residual whose real fix is upstream in `career.py`'s grouping key.
+- **Wire compatibility:** clue `kind` stays inside the six values the shipped build decodes;
+  the ~30 real dimensions ride in additive `dimension`/`label` fields that older clients
+  ignore. `difficulty` is likewise additive, and **absent means unrated (×1.0)**, not medium —
+  so pre-existing dailies and community puzzles score exactly as before. See
+  `tools/ingest/whoami_clues.py`'s module docstring for the full contract.
+- Regenerate with `python -m tools.ingest.whoami_pool --write --write-bundle` (the second
+  flag refreshes `BallIQ/Data/whoami_puzzles.json`, the offline fallback, which is a balanced
+  120-puzzle slice — it held 12 across two sports before).
+
 - **Daily rows (canonical, per sport per day — 2026-07-20):** every sport gets its own
   genuinely-novel minted daily. Keep4: `daily_puzzle.py` picks per (date, sport) from a
   per-sport candidate space, deduped forever against `puzzle_history` (unique
-  `served_date, sport, format`). WhoAmI: `daily_whoami.py` picks least-recently-served per
-  sport (`whoami_history`; the small hand-authored pool cycles honestly instead of the old
-  day-of-year modulo). Grid: minted per (sport, date) as before, now with a `grid_history`
+  `served_date, sport, format`). WhoAmI: `daily_whoami.py` draws a difficulty tier for the day
+  (`TIER_WEIGHTS` — hard roughly every fifth day per sport) then picks least-recently-served
+  *within that tier* (`whoami_history`), and passes the serve date as the clue seed so a
+  subject coming back around is a fresh clue draw rather than a rerun. Grid: minted per
+  (sport, date) as before, now with a `grid_history`
   trailing-window rejection (no verbatim team×decade repeats) and skip-if-present idempotency
   (a live board never shifts content mid-day). The client treats a puzzle as "today's" only
   on an exact `active_date` match (`DailyPick.isCanonicalToday`); the modulo index survives
@@ -1621,6 +1656,47 @@ caught and fixed by reading those rows rather than trusting the call site.
 2. Nothing ever *asked* a new player for permission. Home now shows a streak-reminder primer
    after the first completed game (iOS grants one prompt per install; spending it cold, before a
    streak exists, spends it for nothing).
+
+**Moments — the post-onboarding prompt layer (agent, 2026-08-05).** The generalisation of that
+primer. Onboarding stays three screens; the three things that make the app *social* had nowhere
+to live except Profile, where most people never go — `claimUsernameCard` at the top of it,
+`favoriteTeamsCard` **ninth card down**, Friends a push from there. All three had working UI
+(`IdentityEditorSheet`, `TeamPicker`, `FriendsView`); none of them were ever *offered*.
+
+A moment is one earned ask, then silence:
+
+| Moment | Fires | Eligible when | Destination |
+|---|---|---|---|
+| `claim_username` | 5th completed game, **or** first return on a later day (`day_index >= 1`) | no `profiles.username` (signed out qualifies — the CTA is sign-in) | `IdentityEditorSheet` |
+| `favorite_team` | 3rd game in one sport | signed in, sport `hasTeams`, no favorite for it | `TeamPicker` |
+| `add_friend` | 7-day streak **or** 10th game | signed in, has a username, **zero** accepted friends | `FriendsView` + share-my-card |
+
+Priority is fixed (username → team → friend) because each unlocks the next: `sendRequest(to
+Username:)` is the only way into the friends graph, so a nameless account is unaddable.
+
+Governance, all in `MomentState` (`moments.*` UserDefaults, injectable for hosted tests):
+**one per session**, **≥48h apart**, **≤2 shows ever** per moment, retired immediately once
+satisfied. Show #1 is a sheet (`MomentSheet`); show #2 de-escalates to Home's inline prompt slot
+(`MomentInlineCard`) — same words, no interruption. Home's push primer still wins outright:
+`MomentEngine` refuses to arm anything while `PushPrimer.shouldOffer` is true, so the two asks
+can never stack.
+
+Two constraints worth not rediscovering: evaluation runs **only** from a cover's `onDismiss` and
+from `scenePhase` (a `.sheet` cannot present over a live `fullScreenCover` — it fails silently,
+and the moment would be burned for a sheet nobody saw), and it waits on
+`RepositoryContainer.isProfileLoaded`, because a signed-in player whose profile hasn't synced yet
+reads as having no username, no team and no friends — i.e. eligible for all three, wrongly.
+
+Instrumented as `moment_shown` → `moment_accepted` → `moment_completed` (docs/ANALYTICS.md).
+Rules are unit-tested in `MomentEngineTests`; the sheet is reachable for capture via
+`-screenshotMoment claim_username|favorite_team|add_friend` (+ `-screenshotMomentSport soccer`
+for the 201-club picker).
+
+Fell out of this and worth noting separately: the provider sign-in block existed twice
+(`OnboardingView`, `ProfileView`) and had **drifted** — Profile's Apple path swallowed every
+failure with `try?`, the exact bug its own Google path six lines below carries a fix comment
+about. Both now route through one `SignInButtons` (AGENTS.md §4), which reports either
+provider's failure.
 
 **1.3 — "Open the register": monetization switched on (M5 Phase B completion).**
 Every rail exists (StoreKit 2 store, gating, paywall, server-validated entitlements). As of

@@ -6,32 +6,44 @@
       {
         "order": 1,
         "kind": "era",
-        "text": "Played from 1991 to 2010"
+        "text": "Put together a 20-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
       },
       {
         "order": 2,
-        "kind": "position",
-        "text": "Quarterback"
+        "kind": "era",
+        "text": "Played a first professional season in 1991",
+        "dimension": "debut",
+        "label": "Debut"
       },
       {
         "order": 3,
-        "kind": "teams",
-        "text": "Falcons, Packers, Jets, Vikings"
+        "kind": "position",
+        "text": "Quarterback",
+        "dimension": "position",
+        "label": "Position"
       },
       {
         "order": 4,
-        "kind": "statLine",
-        "text": "Over 71,000 passing yards and 508 touchdown passes"
+        "kind": "fact",
+        "text": "Part of the 1991 draft class",
+        "dimension": "draftClass",
+        "label": "Draft class"
       },
       {
         "order": 5,
-        "kind": "fact",
-        "text": "Started 297 consecutive games — the quarterback iron-man record"
+        "kind": "teams",
+        "text": "Finished up with the Vikings",
+        "dimension": "lastTeam",
+        "label": "Last team"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore number 4"
+        "kind": "fact",
+        "text": "Started 297 consecutive games — the quarterback iron-man record",
+        "dimension": "fact",
+        "label": "Known for"
       }
     ],
     "answer": {
@@ -40,7 +52,8 @@
         "favre",
         "brett favre"
       ]
-    }
+    },
+    "difficulty": "easy"
   },
   {
     "id": "nfl-whoami-peyton-manning",
@@ -48,33 +61,45 @@
     "clues": [
       {
         "order": 1,
-        "kind": "era",
-        "text": "Played from 1998 to 2015"
+        "kind": "jersey",
+        "text": "Wore number 18",
+        "dimension": "jersey",
+        "label": "Jersey"
       },
       {
         "order": 2,
-        "kind": "position",
-        "text": "Quarterback"
+        "kind": "teams",
+        "text": "Colts and Broncos",
+        "dimension": "teams",
+        "label": "Teams"
       },
       {
         "order": 3,
-        "kind": "teams",
-        "text": "Colts, Broncos"
+        "kind": "fact",
+        "text": "Selected 1st overall",
+        "dimension": "draftPick",
+        "label": "Draft slot"
       },
       {
         "order": 4,
         "kind": "statLine",
-        "text": "71,940 passing yards and 539 touchdown passes"
+        "text": "71,940 passing yards and 539 touchdown passes",
+        "dimension": "statLine",
+        "label": "Career line"
       },
       {
         "order": 5,
         "kind": "fact",
-        "text": "Five-time MVP who won Super Bowls with two different franchises"
+        "text": "Initials: P.M.",
+        "dimension": "initials",
+        "label": "Initials"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore number 18"
+        "kind": "fact",
+        "text": "Known around the league as \"The Sheriff\"",
+        "dimension": "nickname",
+        "label": "Nickname"
       }
     ],
     "answer": {
@@ -83,7 +108,8 @@
         "peyton manning",
         "manning"
       ]
-    }
+    },
+    "difficulty": "easy"
   },
   {
     "id": "nfl-whoami-tom-brady",
@@ -92,32 +118,44 @@
       {
         "order": 1,
         "kind": "era",
-        "text": "Played from 2000 to 2022"
+        "text": "Played from 2000 to 2022",
+        "dimension": "era",
+        "label": "Era"
       },
       {
         "order": 2,
         "kind": "position",
-        "text": "Quarterback"
+        "text": "Quarterback",
+        "dimension": "position",
+        "label": "Position"
       },
       {
         "order": 3,
         "kind": "teams",
-        "text": "Patriots, Buccaneers"
+        "text": "Finished up with the Buccaneers",
+        "dimension": "lastTeam",
+        "label": "Last team"
       },
       {
         "order": 4,
-        "kind": "statLine",
-        "text": "Over 89,000 passing yards and 649 touchdown passes"
+        "kind": "fact",
+        "text": "Initials: T.B.",
+        "dimension": "initials",
+        "label": "Initials"
       },
       {
         "order": 5,
-        "kind": "fact",
-        "text": "Drafted 199th overall, then won seven Super Bowl titles"
+        "kind": "statLine",
+        "text": "Over 89,000 passing yards and 649 touchdown passes",
+        "dimension": "statLine",
+        "label": "Career line"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore number 12"
+        "kind": "fact",
+        "text": "Known around the league as \"Tom Terrific\"",
+        "dimension": "nickname",
+        "label": "Nickname"
       }
     ],
     "answer": {
@@ -126,7 +164,8 @@
         "tom brady",
         "brady"
       ]
-    }
+    },
+    "difficulty": "easy"
   },
   {
     "id": "nfl-whoami-jerry-rice",
@@ -135,32 +174,44 @@
       {
         "order": 1,
         "kind": "era",
-        "text": "Played from 1985 to 2004"
+        "text": "Played a final season in 2004",
+        "dimension": "finale",
+        "label": "Final season"
       },
       {
         "order": 2,
-        "kind": "position",
-        "text": "Wide Receiver"
+        "kind": "jersey",
+        "text": "Wore number 80",
+        "dimension": "jersey",
+        "label": "Jersey"
       },
       {
         "order": 3,
         "kind": "teams",
-        "text": "49ers, Raiders, Seahawks"
+        "text": "49ers, Raiders and Seahawks",
+        "dimension": "teams",
+        "label": "Teams"
       },
       {
         "order": 4,
-        "kind": "statLine",
-        "text": "22,895 receiving yards and 197 receiving touchdowns"
+        "kind": "fact",
+        "text": "Three Super Bowl rings and a Super Bowl MVP",
+        "dimension": "accolades",
+        "label": "Résumé"
       },
       {
         "order": 5,
-        "kind": "fact",
-        "text": "The NFL's all-time leader in receptions, receiving yards, and touchdowns"
+        "kind": "statLine",
+        "text": "22,895 receiving yards and 197 receiving touchdowns",
+        "dimension": "statLine",
+        "label": "Career line"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore number 80"
+        "kind": "fact",
+        "text": "The NFL's all-time leader in receptions, receiving yards, and touchdowns",
+        "dimension": "fact",
+        "label": "Known for"
       }
     ],
     "answer": {
@@ -169,7 +220,8 @@
         "jerry rice",
         "rice"
       ]
-    }
+    },
+    "difficulty": "easy"
   },
   {
     "id": "nfl-whoami-barry-sanders",
@@ -178,32 +230,44 @@
       {
         "order": 1,
         "kind": "era",
-        "text": "Played from 1989 to 1998"
+        "text": "Career ran 1989-1998",
+        "dimension": "era",
+        "label": "Era"
       },
       {
         "order": 2,
-        "kind": "position",
-        "text": "Running Back"
+        "kind": "fact",
+        "text": "Listed at 200 pounds",
+        "dimension": "weight",
+        "label": "Weight"
       },
       {
         "order": 3,
-        "kind": "teams",
-        "text": "Lions"
+        "kind": "fact",
+        "text": "Part of the 1989 draft class",
+        "dimension": "draftClass",
+        "label": "Draft class"
       },
       {
         "order": 4,
-        "kind": "statLine",
-        "text": "15,269 rushing yards in just ten seasons"
+        "kind": "fact",
+        "text": "Was roughly 21 years old as a rookie",
+        "dimension": "ageAtDebut",
+        "label": "Rookie year"
       },
       {
         "order": 5,
         "kind": "fact",
-        "text": "Retired at 30 while still within reach of the all-time rushing record"
+        "text": "Selected 3rd overall",
+        "dimension": "draftPick",
+        "label": "Draft slot"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore number 20"
+        "kind": "fact",
+        "text": "A Pro Bowl in all ten seasons, plus the 1997 MVP",
+        "dimension": "accolades",
+        "label": "Résumé"
       }
     ],
     "answer": {
@@ -212,7 +276,8 @@
         "barry sanders",
         "sanders"
       ]
-    }
+    },
+    "difficulty": "easy"
   },
   {
     "id": "nfl-whoami-randy-moss",
@@ -221,32 +286,44 @@
       {
         "order": 1,
         "kind": "era",
-        "text": "Played from 1998 to 2012"
+        "text": "Broke in during the 1990s and last played in 2012",
+        "dimension": "era",
+        "label": "Era"
       },
       {
         "order": 2,
-        "kind": "position",
-        "text": "Wide Receiver"
+        "kind": "era",
+        "text": "Put together a 15-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
       },
       {
         "order": 3,
-        "kind": "teams",
-        "text": "Vikings, Raiders, Patriots, 49ers"
+        "kind": "fact",
+        "text": "Listed at 210 pounds",
+        "dimension": "weight",
+        "label": "Weight"
       },
       {
         "order": 4,
-        "kind": "statLine",
-        "text": "156 receiving touchdowns, including a record 23 in 2007"
+        "kind": "teams",
+        "text": "Drafted by the MIN",
+        "dimension": "draftTeam",
+        "label": "Drafted by"
       },
       {
         "order": 5,
         "kind": "fact",
-        "text": "Set the single-season receiving touchdown record in 2007"
+        "text": "Went to Marshall; Florida State",
+        "dimension": "college",
+        "label": "College"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore number 84"
+        "kind": "fact",
+        "text": "Initials: R.M.",
+        "dimension": "initials",
+        "label": "Initials"
       }
     ],
     "answer": {
@@ -255,7 +332,8 @@
         "randy moss",
         "moss"
       ]
-    }
+    },
+    "difficulty": "easy"
   },
   {
     "id": "nba-whoami-michael-jordan",
@@ -263,33 +341,45 @@
     "clues": [
       {
         "order": 1,
-        "kind": "era",
-        "text": "Played from 1984 to 2003"
+        "kind": "position",
+        "text": "Shooting Guard",
+        "dimension": "position",
+        "label": "Position"
       },
       {
         "order": 2,
-        "kind": "position",
-        "text": "Shooting Guard"
+        "kind": "era",
+        "text": "Played a first professional season in 1984",
+        "dimension": "debut",
+        "label": "Debut"
       },
       {
         "order": 3,
         "kind": "teams",
-        "text": "Bulls, Wizards"
+        "text": "Started out with the Bulls",
+        "dimension": "firstTeam",
+        "label": "First team"
       },
       {
         "order": 4,
         "kind": "statLine",
-        "text": "32,292 career points at 30.1 per game"
+        "text": "32,292 career points at 30.1 per game",
+        "dimension": "statLine",
+        "label": "Career line"
       },
       {
         "order": 5,
         "kind": "fact",
-        "text": "Won six titles and six Finals MVPs; highest career scoring average in NBA history"
+        "text": "Won six titles and six Finals MVPs; highest career scoring average in NBA history",
+        "dimension": "fact",
+        "label": "Known for"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore number 23"
+        "kind": "fact",
+        "text": "Initials: M.J.",
+        "dimension": "initials",
+        "label": "Initials"
       }
     ],
     "answer": {
@@ -299,7 +389,8 @@
         "jordan",
         "mj"
       ]
-    }
+    },
+    "difficulty": "easy"
   },
   {
     "id": "nba-whoami-kobe-bryant",
@@ -307,33 +398,45 @@
     "clues": [
       {
         "order": 1,
-        "kind": "era",
-        "text": "Played from 1996 to 2016"
+        "kind": "position",
+        "text": "Shooting Guard",
+        "dimension": "position",
+        "label": "Position"
       },
       {
         "order": 2,
-        "kind": "position",
-        "text": "Shooting Guard"
+        "kind": "era",
+        "text": "Played a first professional season in 1996",
+        "dimension": "debut",
+        "label": "Debut"
       },
       {
         "order": 3,
-        "kind": "teams",
-        "text": "Lakers"
+        "kind": "jersey",
+        "text": "Wore numbers 8 and 24",
+        "dimension": "jersey",
+        "label": "Jersey"
       },
       {
         "order": 4,
-        "kind": "statLine",
-        "text": "33,643 career points and five championships"
+        "kind": "teams",
+        "text": "Lakers",
+        "dimension": "teams",
+        "label": "Teams"
       },
       {
         "order": 5,
         "kind": "fact",
-        "text": "Scored 81 points in a single game and spent his entire career with one team"
+        "text": "Initials: K.B.",
+        "dimension": "initials",
+        "label": "Initials"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore numbers 8 and 24"
+        "kind": "fact",
+        "text": "Scored 81 points in a single game and spent his entire career with one team",
+        "dimension": "fact",
+        "label": "Known for"
       }
     ],
     "answer": {
@@ -343,7 +446,8 @@
         "kobe",
         "bryant"
       ]
-    }
+    },
+    "difficulty": "easy"
   },
   {
     "id": "nba-whoami-tim-duncan",
@@ -352,32 +456,44 @@
       {
         "order": 1,
         "kind": "era",
-        "text": "Played from 1997 to 2016"
+        "text": "Broke in during the 1990s and last played in 2016",
+        "dimension": "era",
+        "label": "Era"
       },
       {
         "order": 2,
-        "kind": "position",
-        "text": "Power Forward"
+        "kind": "fact",
+        "text": "Listed at 6'2\"",
+        "dimension": "height",
+        "label": "Height"
       },
       {
         "order": 3,
-        "kind": "teams",
-        "text": "Spurs"
+        "kind": "jersey",
+        "text": "Number 21",
+        "dimension": "jersey",
+        "label": "Jersey"
       },
       {
         "order": 4,
-        "kind": "statLine",
-        "text": "Five championships and 15 All-Star selections"
+        "kind": "teams",
+        "text": "Spurs",
+        "dimension": "teams",
+        "label": "Teams"
       },
       {
         "order": 5,
         "kind": "fact",
-        "text": "'The Big Fundamental' — one franchise for his entire 19-year career"
+        "text": "One franchise for his entire 19-year career",
+        "dimension": "fact",
+        "label": "Known for"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore number 21"
+        "kind": "fact",
+        "text": "Known around the league as \"The Big Fundamental\"",
+        "dimension": "nickname",
+        "label": "Nickname"
       }
     ],
     "answer": {
@@ -386,7 +502,8 @@
         "tim duncan",
         "duncan"
       ]
-    }
+    },
+    "difficulty": "easy"
   },
   {
     "id": "nba-whoami-shaquille-o-neal",
@@ -395,32 +512,44 @@
       {
         "order": 1,
         "kind": "era",
-        "text": "Played from 1992 to 2011"
+        "text": "Last suited up in 2011",
+        "dimension": "finale",
+        "label": "Final season"
       },
       {
         "order": 2,
-        "kind": "position",
-        "text": "Center"
+        "kind": "jersey",
+        "text": "Wore number 34",
+        "dimension": "jersey",
+        "label": "Jersey"
       },
       {
         "order": 3,
         "kind": "teams",
-        "text": "Magic, Lakers, Heat, Suns, Cavaliers"
+        "text": "Magic, Lakers, Heat, Suns and Cavaliers",
+        "dimension": "teams",
+        "label": "Teams"
       },
       {
         "order": 4,
-        "kind": "statLine",
-        "text": "28,596 career points and four championships"
+        "kind": "fact",
+        "text": "Four championships and the 2000 MVP",
+        "dimension": "accolades",
+        "label": "Résumé"
       },
       {
         "order": 5,
-        "kind": "fact",
-        "text": "A dominant center who won three straight Finals MVPs from 2000 to 2002"
+        "kind": "statLine",
+        "text": "28,596 career points and four championships",
+        "dimension": "statLine",
+        "label": "Career line"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore number 34"
+        "kind": "fact",
+        "text": "Known around the league as \"The Diesel\"",
+        "dimension": "nickname",
+        "label": "Nickname"
       }
     ],
     "answer": {
@@ -430,7 +559,8 @@
         "shaq",
         "oneal"
       ]
-    }
+    },
+    "difficulty": "easy"
   },
   {
     "id": "nba-whoami-allen-iverson",
@@ -438,33 +568,45 @@
     "clues": [
       {
         "order": 1,
-        "kind": "era",
-        "text": "Played from 1996 to 2010"
+        "kind": "position",
+        "text": "Point Guard",
+        "dimension": "position",
+        "label": "Position"
       },
       {
         "order": 2,
-        "kind": "position",
-        "text": "Point Guard"
+        "kind": "era",
+        "text": "Played a final season in 2010",
+        "dimension": "finale",
+        "label": "Final season"
       },
       {
         "order": 3,
-        "kind": "teams",
-        "text": "76ers, Nuggets, Pistons, Grizzlies"
+        "kind": "jersey",
+        "text": "Wore number 3",
+        "dimension": "jersey",
+        "label": "Jersey"
       },
       {
         "order": 4,
-        "kind": "statLine",
-        "text": "2001 MVP at 26.7 points per game for his career"
+        "kind": "teams",
+        "text": "76ers, Nuggets, Pistons and Grizzlies",
+        "dimension": "teams",
+        "label": "Teams"
       },
       {
         "order": 5,
         "kind": "fact",
-        "text": "'The Answer' — won MVP standing just six feet tall"
+        "text": "Four scoring titles and eleven All-Star selections",
+        "dimension": "accolades",
+        "label": "Résumé"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore number 3"
+        "kind": "fact",
+        "text": "Won MVP standing just six feet tall",
+        "dimension": "fact",
+        "label": "Known for"
       }
     ],
     "answer": {
@@ -474,7 +616,8 @@
         "iverson",
         "ai"
       ]
-    }
+    },
+    "difficulty": "easy"
   },
   {
     "id": "nba-whoami-dirk-nowitzki",
@@ -483,32 +626,44 @@
       {
         "order": 1,
         "kind": "era",
-        "text": "Played from 1998 to 2019"
+        "text": "Played from 1998 to 2019",
+        "dimension": "era",
+        "label": "Era"
       },
       {
         "order": 2,
         "kind": "position",
-        "text": "Power Forward"
+        "text": "Power Forward",
+        "dimension": "position",
+        "label": "Position"
       },
       {
         "order": 3,
-        "kind": "teams",
-        "text": "Mavericks"
+        "kind": "statLine",
+        "text": "31,560 career points, the 2007 MVP, and a 2011 title",
+        "dimension": "statLine",
+        "label": "Career line"
       },
       {
         "order": 4,
-        "kind": "statLine",
-        "text": "31,560 career points, the 2007 MVP, and a 2011 title"
+        "kind": "fact",
+        "text": "The 2007 MVP and the 2011 Finals MVP",
+        "dimension": "accolades",
+        "label": "Résumé"
       },
       {
         "order": 5,
-        "kind": "fact",
-        "text": "Spent all 21 seasons with one franchise and popularized the one-legged fadeaway"
+        "kind": "teams",
+        "text": "Mavericks",
+        "dimension": "teams",
+        "label": "Teams"
       },
       {
         "order": 6,
-        "kind": "jersey",
-        "text": "Wore number 41"
+        "kind": "fact",
+        "text": "Spent all 21 seasons with one franchise and popularized the one-legged fadeaway",
+        "dimension": "fact",
+        "label": "Known for"
       }
     ],
     "answer": {
@@ -518,6 +673,6059 @@
         "dirk",
         "nowitzki"
       ]
-    }
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "nfl-whoami-emmitt-smith",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Running Back",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Last suited up in 2004",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Played for 2 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 4,
+        "kind": "jersey",
+        "text": "Wore number 22",
+        "dimension": "jersey",
+        "label": "Jersey"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The NFL's all-time leading rusher with 18,355 yards",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Won the rushing title, league MVP, and Super Bowl MVP in the same 1993 season",
+        "dimension": "fact",
+        "label": "Known for"
+      }
+    ],
+    "answer": {
+      "canonical": "Emmitt Smith",
+      "aliases": [
+        "emmitt",
+        "emmitt smith",
+        "smith"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "nfl-whoami-joe-montana",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played a final season in 1994",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 2,
+        "kind": "jersey",
+        "text": "Number 16",
+        "dimension": "jersey",
+        "label": "Jersey"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Started out with the 49ers",
+        "dimension": "firstTeam",
+        "label": "First team"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Over 40,000 passing yards and four Super Bowl titles",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: J.M.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Four Super Bowl titles and three Super Bowl MVPs",
+        "dimension": "accolades",
+        "label": "Résumé"
+      }
+    ],
+    "answer": {
+      "canonical": "Joe Montana",
+      "aliases": [
+        "montana",
+        "joe montana",
+        "joe cool"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "nba-whoami-larry-bird",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 1970s and last played in 1992",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "jersey",
+        "text": "Number 33",
+        "dimension": "jersey",
+        "label": "Jersey"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Three straight MVP awards and three championships",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Won the NBA's first three 3-Point Contests",
+        "dimension": "fact",
+        "label": "Known for"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: L.B.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Larry Bird",
+      "aliases": [
+        "bird",
+        "larry bird",
+        "larry legend"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "nba-whoami-magic-johnson",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Point Guard",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Debuted in 1979",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Lakers",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Over 10,000 career assists and five championships",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Started at center as a rookie in the 1980 Finals clincher and scored 42 points",
+        "dimension": "fact",
+        "label": "Known for"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: M.J.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Magic Johnson",
+      "aliases": [
+        "magic",
+        "magic johnson"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "baseball-whoami-ken-griffey-jr",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Outfielder",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Last suited up in 2010",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Started out with the Mariners",
+        "dimension": "firstTeam",
+        "label": "First team"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "630 career home runs with the sweetest swing in baseball",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: K.G.J.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Known around the league as \"The Kid\"",
+        "dimension": "nickname",
+        "label": "Nickname"
+      }
+    ],
+    "answer": {
+      "canonical": "Ken Griffey Jr.",
+      "aliases": [
+        "griffey",
+        "ken griffey",
+        "ken griffey jr",
+        "junior"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "baseball-whoami-derek-jeter",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Shortstop",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a final season in 2014",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "jersey",
+        "text": "Number 2",
+        "dimension": "jersey",
+        "label": "Jersey"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Yankees",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: D.J.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Known around the league as \"Mr. November\"",
+        "dimension": "nickname",
+        "label": "Nickname"
+      }
+    ],
+    "answer": {
+      "canonical": "Derek Jeter",
+      "aliases": [
+        "jeter",
+        "derek jeter"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "soccer-whoami-thierry-henry",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "teams",
+        "text": "Suited up for 5 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a final season in 2014",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 4,
+        "kind": "jersey",
+        "text": "Number 14",
+        "dimension": "jersey",
+        "label": "Jersey"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Arsenal's all-time leading scorer with 228 goals",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Known around the league as \"Titi\"",
+        "dimension": "nickname",
+        "label": "Nickname"
+      }
+    ],
+    "answer": {
+      "canonical": "Thierry Henry",
+      "aliases": [
+        "henry",
+        "thierry henry"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "soccer-whoami-ronaldinho",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Debuted in 1998",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "jersey",
+        "text": "Wore number 10",
+        "dimension": "jersey",
+        "label": "Jersey"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Grêmio, PSG, Barcelona and Milan",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "FIFA World Player of the Year in 2004 and 2005",
+        "dimension": "accolades",
+        "label": "Résumé"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Won the 2002 World Cup with Brazil and the 2005 Ballon d'Or",
+        "dimension": "fact",
+        "label": "Known for"
+      }
+    ],
+    "answer": {
+      "canonical": "Ronaldinho",
+      "aliases": [
+        "ronaldinho",
+        "dinho"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "baseball-whoami-barry-bonds",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 1980s and last played in 2007",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together a 22-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Finished up with the Giants",
+        "dimension": "lastTeam",
+        "label": "Last team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 2001 with the Giants — 156 hits, 73 home runs and 137 RBI",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "2,935 hits, 762 home runs and 1,996 RBI",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Barry Bonds",
+      "aliases": [
+        "barry bonds",
+        "bonds"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "baseball-whoami-walter-johnson",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1907 to 1927",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Lasted 21 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Pitcher",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Peaked in 1912 with the Twins — 33 wins, 303 strikeouts and 2 saves",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "417 wins, 3,508 strikeouts and 34 saves",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: W.J.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Walter Johnson",
+      "aliases": [
+        "walter johnson",
+        "johnson"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "baseball-whoami-lou-gehrig",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together a 17-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Debuted in 1923",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1931",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "teams",
+        "text": "Yankees",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: L.G.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Lou Gehrig",
+      "aliases": [
+        "lou gehrig",
+        "gehrig"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "baseball-whoami-alex-rodriguez",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Career ran 1994-2016",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together a 22-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2007",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "teams",
+        "text": "Started out with the Mariners",
+        "dimension": "firstTeam",
+        "label": "First team"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "3,115 hits, 696 home runs and 2,086 RBI",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Alex Rodriguez",
+      "aliases": [
+        "alex rodriguez",
+        "rodriguez"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "baseball-whoami-christy-mathewson",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Career ran 1900-1916",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Pitcher",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "statLine",
+        "text": "Best season came in 1908 with the Giants: 37 wins, 259 strikeouts and 5 saves",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Giants and Reds",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "373 wins, 2,502 strikeouts and 29 saves",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: C.M.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Christy Mathewson",
+      "aliases": [
+        "christy mathewson",
+        "mathewson"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "baseball-whoami-steve-carlton",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Pitcher",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together a 24-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a first professional season in 1965",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Cardinals, Phillies, White Sox and Twins",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "329 wins, 4,136 strikeouts and 2 saves",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: S.C.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Steve Carlton",
+      "aliases": [
+        "steve carlton",
+        "carlton"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "baseball-whoami-chase-headley",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 2007 to 2018",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Put together a 12-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Started out with the Padres",
+        "dimension": "firstTeam",
+        "label": "First team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 2012 with the Padres — 173 hits, 31 home runs and 115 RBI",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: C.H.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Chase Headley",
+      "aliases": [
+        "chase headley",
+        "headley"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "baseball-whoami-ginger-beaumont",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together a 12-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Last suited up in 1910",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Started out with the Pirates",
+        "dimension": "firstTeam",
+        "label": "First team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "1,759 hits, 39 home runs and 617 RBI",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: G.B.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Ginger Beaumont",
+      "aliases": [
+        "ginger beaumont",
+        "beaumont"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "baseball-whoami-tony-clark",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Career ran 1995-2009",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together a 15-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1997",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Finished up with the Diamondbacks",
+        "dimension": "lastTeam",
+        "label": "Last team"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: T.C.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "1,188 hits, 251 home runs and 824 RBI",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Tony Clark",
+      "aliases": [
+        "tony clark",
+        "clark"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "baseball-whoami-asdrubal-cabrera",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 15 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a first professional season in 2007",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 6 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2011",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: A.C.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Asdrúbal Cabrera",
+      "aliases": [
+        "asdrúbal cabrera",
+        "cabrera"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "baseball-whoami-heath-bell",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 11 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Pitcher",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a first professional season in 2004",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 5 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "38 wins, 637 strikeouts and 168 saves",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: H.B.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Heath Bell",
+      "aliases": [
+        "heath bell",
+        "bell"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "baseball-whoami-ellis-kinder",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 12 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Last suited up in 1957",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1949",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Finished up with the White Sox",
+        "dimension": "lastTeam",
+        "label": "Last team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "102 wins, 749 strikeouts and 102 saves",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: E.K.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Ellis Kinder",
+      "aliases": [
+        "ellis kinder",
+        "kinder"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "baseball-whoami-john-smiley",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "teams",
+        "text": "Played for 4 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Pitcher",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a final season in 1997",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "126 wins, 1,284 strikeouts and 4 saves",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 1992 with the Twins — 16 wins and 163 strikeouts",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: J.S.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "John Smiley",
+      "aliases": [
+        "john smiley",
+        "smiley"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "baseball-whoami-rick-monday",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 1960s and last played in 1984",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Lasted 19 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Finished up with the Dodgers",
+        "dimension": "lastTeam",
+        "label": "Last team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 1976 with the Cubs — 145 hits, 32 home runs and 77 RBI",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: R.M.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Rick Monday",
+      "aliases": [
+        "rick monday",
+        "monday"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "baseball-whoami-edgar-martinez",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1987 to 2004",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together an 18-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "A one-team player, start to finish",
+        "dimension": "oneTeam",
+        "label": "Loyalty"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1995",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "2,247 hits, 309 home runs and 1,261 RBI",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Edgar Martinez",
+      "aliases": [
+        "edgar martinez",
+        "martinez"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "baseball-whoami-jerry-koosman",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 19 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Debuted in 1967",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Pitcher",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1976",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "teams",
+        "text": "Mets, Twins, White Sox and Phillies",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "222 wins, 2,556 strikeouts and 17 saves",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Jerry Koosman",
+      "aliases": [
+        "jerry koosman",
+        "koosman"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "baseball-whoami-bryce-harper",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "15 seasons in and still going",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Debuted in 2012",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Played for 2 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Best season came in 2015: 172 hits, 42 home runs and 99 RBI",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: B.H.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Bryce Harper",
+      "aliases": [
+        "bryce harper",
+        "harper"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "baseball-whoami-craig-kimbrel",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has 17 seasons on the résumé so far",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "teams",
+        "text": "Suited up for 10 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a first professional season in 2010",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2011",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: C.K.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "56 wins, 1,314 strikeouts and 440 saves",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Craig Kimbrel",
+      "aliases": [
+        "craig kimbrel",
+        "kimbrel"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "baseball-whoami-andre-dawson",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together a 21-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a first professional season in 1976",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 4 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1983",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "2,774 hits, 438 home runs and 1,591 RBI",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Andre Dawson",
+      "aliases": [
+        "andre dawson",
+        "dawson"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "baseball-whoami-eddie-murray",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together a 21-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Debuted in 1977",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 4 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1983",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "3,255 hits, 504 home runs and 1,917 RBI",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Eddie Murray",
+      "aliases": [
+        "eddie murray",
+        "murray"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "baseball-whoami-wilbur-wood",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 1960s and last played in 1978",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Lasted 17 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Pitcher",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1971",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "teams",
+        "text": "Red Sox, Pirates and White Sox",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: W.W.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Wilbur Wood",
+      "aliases": [
+        "wilbur wood",
+        "wood"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "baseball-whoami-joe-medwick",
+    "sport": "baseball",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Position player",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Last suited up in 1948",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Suited up for 4 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Peaked in 1937 with the Cardinals — 237 hits, 31 home runs and 154 RBI",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "2,471 hits, 205 home runs and 1,383 RBI",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: J.M.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Joe Medwick",
+      "aliases": [
+        "joe medwick",
+        "medwick"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nba-whoami-victor-oladipo",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Career ran 2014-2023",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together a 10-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Guard",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2018",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "teams",
+        "text": "Magic, Thunder, Pacers, Rockets and Heat",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "16.9 points per game, 3.9 assists per game and 4.4 rebounds per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Victor Oladipo",
+      "aliases": [
+        "victor oladipo",
+        "oladipo"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nba-whoami-boris-diaw",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Center",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "teams",
+        "text": "Suited up for 5 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a final season in 2017",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2006",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "8.6 points per game, 4.4 rebounds per game and 0.5 blocks per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: B.D.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Boris Diaw",
+      "aliases": [
+        "boris diaw",
+        "diaw"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nba-whoami-rudy-larusso",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 10 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a first professional season in 1960",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Started out with the Lakers",
+        "dimension": "firstTeam",
+        "label": "First team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "15.6 points per game, 9.4 rebounds per game and 2.1 assists per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: R.L.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Rudy LaRusso",
+      "aliases": [
+        "rudy larusso",
+        "larusso"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nba-whoami-brad-miller",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 1990s and last played in 2012",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Lasted 14 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Center",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 6 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Best season came in 2006 with the Kings: 15.0 points per game, 7.8 rebounds per game and 0.8 blocks per game",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "11.2 points per game, 7.2 rebounds per game and 0.7 blocks per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Brad Miller",
+      "aliases": [
+        "brad miller",
+        "miller"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nba-whoami-ray-scott",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 9 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Debuted in 1962",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Finished up with the Bullets",
+        "dimension": "lastTeam",
+        "label": "Last team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 1964 with the Pistons — 17.6 points per game, 13.5 rebounds per game and 3.0 assists per game",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "14.9 points per game, 10.6 rebounds per game and 2.4 assists per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Ray Scott",
+      "aliases": [
+        "ray scott",
+        "scott"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nba-whoami-happy-hairston",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together an 11-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a first professional season in 1965",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "statLine",
+        "text": "Best season came in 1974 with the Lakers: 14.5 points per game, 13.5 rebounds per game and 2.7 assists per game",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "14.8 points per game, 10.6 rebounds per game and 1.7 assists per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 5,
+        "kind": "teams",
+        "text": "Royals, Pistons and Lakers",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: H.H.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Happy Hairston",
+      "aliases": [
+        "happy hairston",
+        "hairston"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nba-whoami-kurt-thomas",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 18 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Debuted in 1996",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2003",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Finished up with the Trail Blazers",
+        "dimension": "lastTeam",
+        "label": "Last team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "8.1 points per game, 6.6 rebounds per game and 1.1 assists per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: K.T.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Kurt Thomas",
+      "aliases": [
+        "kurt thomas",
+        "thomas"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nba-whoami-joakim-noah",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 13 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Center",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2014",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Finished up with the Clippers",
+        "dimension": "lastTeam",
+        "label": "Last team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "8.7 points per game, 9.0 rebounds per game and 1.3 blocks per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: J.N.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Joakim Noah",
+      "aliases": [
+        "joakim noah",
+        "noah"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nba-whoami-kevin-love",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has been playing since 2009",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "18 seasons in and still going",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Timberwolves, Cavaliers, Heat and Jazz",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "15.8 points per game, 9.8 rebounds per game and 2.3 assists per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: K.L.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Kevin Love",
+      "aliases": [
+        "kevin love",
+        "love"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nba-whoami-kevin-mchale",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1981 to 1993",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Put together a 13-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Spent an entire career with one club",
+        "dimension": "oneTeam",
+        "label": "Loyalty"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Best season came in 1987 with the Celtics: 26.1 points per game, 9.9 rebounds per game and 2.6 assists per game",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: K.M.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Kevin McHale",
+      "aliases": [
+        "kevin mchale",
+        "mchale"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nba-whoami-tim-hardaway",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1990 to 2003",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Guard",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Put together a 13-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Peaked in 1991 with the Warriors — 22.9 points per game, 9.7 assists per game and 4.0 rebounds per game",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "teams",
+        "text": "Warriors, Heat and Pacers",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: T.H.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Tim Hardaway",
+      "aliases": [
+        "tim hardaway",
+        "hardaway"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nba-whoami-tom-chambers",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 15 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Last suited up in 1997",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Started out with the Clippers",
+        "dimension": "firstTeam",
+        "label": "First team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Best season came in 1989 with the Suns: 25.7 points per game, 8.4 rebounds per game and 2.9 assists per game",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: T.C.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Tom Chambers",
+      "aliases": [
+        "tom chambers",
+        "chambers"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nba-whoami-demar-derozan",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 2010s and is still at it",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "17 seasons in and still going",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Guard",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 4 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 2022 with the Bulls — 27.9 points per game, 4.9 assists per game and 5.2 rebounds per game",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: D.D.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "DeMar DeRozan",
+      "aliases": [
+        "demar derozan",
+        "derozan"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nba-whoami-antoine-walker",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1997 to 2008",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2001",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Celtics, Mavericks, Heat and Timberwolves",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "17.5 points per game, 7.7 rebounds per game and 3.5 assists per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: A.W.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Antoine Walker",
+      "aliases": [
+        "antoine walker",
+        "walker"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nba-whoami-bob-lanier",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 14 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Center",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Suited up for 2 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Best season came in 1974 with the Pistons: 22.5 points per game, 13.3 rebounds per game and 3.0 blocks per game",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "20.0 points per game, 10.1 rebounds per game and 1.1 blocks per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: B.L.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Bob Lanier",
+      "aliases": [
+        "bob lanier",
+        "lanier"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nba-whoami-jack-sikma",
+    "sport": "nba",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 14 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Center",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Debuted in 1978",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Started out with the SuperSonics",
+        "dimension": "firstTeam",
+        "label": "First team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 1982 with the SuperSonics — 19.6 points per game, 12.7 rebounds per game and 1.3 blocks per game",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "15.6 points per game, 9.8 rebounds per game and 0.9 blocks per game",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Jack Sikma",
+      "aliases": [
+        "jack sikma",
+        "sikma"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nfl-whoami-mark-fields",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 6 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Broke in during the 1990s and last played in 2004",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Linebacker",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Played for 4 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2002",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: M.F.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Mark Fields",
+      "aliases": [
+        "mark fields",
+        "fields"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nfl-whoami-dee-ford",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Defensive lineman",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Lasted 8 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a final season in 2021",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 2 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 2018 with the Chiefs — 13.0 sacks, 40 tackles and 7 forced fumbles",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: D.F.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Dee Ford",
+      "aliases": [
+        "dee ford",
+        "ford"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nfl-whoami-lorenzo-alexander",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 13 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Last suited up in 2019",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Played for 4 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 4,
+        "kind": "fact",
+        "text": "Was roughly 24 years old as a rookie",
+        "dimension": "ageAtDebut",
+        "label": "Rookie year"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Went undrafted and had to earn a roster spot",
+        "dimension": "undrafted",
+        "label": "Draft"
+      },
+      {
+        "order": 6,
+        "kind": "jersey",
+        "text": "Wore number 57",
+        "dimension": "jersey",
+        "label": "Jersey"
+      }
+    ],
+    "answer": {
+      "canonical": "Lorenzo Alexander",
+      "aliases": [
+        "lorenzo alexander",
+        "alexander"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nfl-whoami-shaun-williams",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 8 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Defensive back",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "fact",
+        "text": "Stood 6'2\"",
+        "dimension": "height",
+        "label": "Height"
+      },
+      {
+        "order": 4,
+        "kind": "era",
+        "text": "Debuted in 1999",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Part of the 1998 draft class",
+        "dimension": "draftClass",
+        "label": "Draft class"
+      },
+      {
+        "order": 6,
+        "kind": "teams",
+        "text": "Started out with the Giants",
+        "dimension": "firstTeam",
+        "label": "First team"
+      }
+    ],
+    "answer": {
+      "canonical": "Shaun Williams",
+      "aliases": [
+        "shaun williams",
+        "williams"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nfl-whoami-dat-nguyen",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Debuted in 1999",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 2,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2003, at about 28",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 3,
+        "kind": "jersey",
+        "text": "Wore number 59",
+        "dimension": "jersey",
+        "label": "Jersey"
+      },
+      {
+        "order": 4,
+        "kind": "fact",
+        "text": "Went 85th overall",
+        "dimension": "draftPick",
+        "label": "Draft slot"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "403 tackles, 6.0 sacks and 7 interceptions",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: D.N.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Dat Nguyen",
+      "aliases": [
+        "dat nguyen",
+        "nguyen"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nfl-whoami-germaine-pratt",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Linebacker",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "fact",
+        "text": "Part of the 2019 draft class",
+        "dimension": "draftClass",
+        "label": "Draft class"
+      },
+      {
+        "order": 3,
+        "kind": "fact",
+        "text": "Came off the board in round 3",
+        "dimension": "draftRound",
+        "label": "Draft round"
+      },
+      {
+        "order": 4,
+        "kind": "fact",
+        "text": "Went to N.C. State",
+        "dimension": "college",
+        "label": "College"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Best season came in 2024 with the Bengals: 80 tackles and 2 interceptions",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "421 tackles, 3.5 sacks and 8 interceptions",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Germaine Pratt",
+      "aliases": [
+        "germaine pratt",
+        "pratt"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nfl-whoami-jason-ferguson",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Debuted in 1999",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 2,
+        "kind": "fact",
+        "text": "A 1974 baby",
+        "dimension": "born",
+        "label": "Born"
+      },
+      {
+        "order": 3,
+        "kind": "fact",
+        "text": "Listed at 310 pounds",
+        "dimension": "weight",
+        "label": "Weight"
+      },
+      {
+        "order": 4,
+        "kind": "fact",
+        "text": "Came off the board in round 7",
+        "dimension": "draftRound",
+        "label": "Draft round"
+      },
+      {
+        "order": 5,
+        "kind": "teams",
+        "text": "Started out with the Jets",
+        "dimension": "firstTeam",
+        "label": "First team"
+      },
+      {
+        "order": 6,
+        "kind": "teams",
+        "text": "Drafted by the NYJ",
+        "dimension": "draftTeam",
+        "label": "Drafted by"
+      }
+    ],
+    "answer": {
+      "canonical": "Jason Ferguson",
+      "aliases": [
+        "jason ferguson",
+        "ferguson"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nfl-whoami-a-shawn-robinson",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played a first professional season in 2016",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 2,
+        "kind": "fact",
+        "text": "Was roughly 21 years old as a rookie",
+        "dimension": "ageAtDebut",
+        "label": "Rookie year"
+      },
+      {
+        "order": 3,
+        "kind": "fact",
+        "text": "Came out of the Southeastern Conference",
+        "dimension": "conference",
+        "label": "College conference"
+      },
+      {
+        "order": 4,
+        "kind": "fact",
+        "text": "Part of the 2016 draft class",
+        "dimension": "draftClass",
+        "label": "Draft class"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Came off the board in round 2",
+        "dimension": "draftRound",
+        "label": "Draft round"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "15.0 sacks, 279 tackles and 6 forced fumbles",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "A'Shawn Robinson",
+      "aliases": [
+        "a'shawn robinson",
+        "robinson"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "nfl-whoami-richie-anderson",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Fullback",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Debuted in 1999",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Finished up with the Cowboys",
+        "dimension": "lastTeam",
+        "label": "Last team"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Peaked in 2000 with the Jets — 63 rushing yards and 87 catches",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "828 rushing yards, 2 rushing touchdowns and 296 catches",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: R.A.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Richie Anderson",
+      "aliases": [
+        "richie anderson",
+        "anderson"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nfl-whoami-charles-grant",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Career ran 2002-2009",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together an 8-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Defensive lineman",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Saints",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 2004 with the Saints — 11.0 sacks, 67 tackles and 3 forced fumbles",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: C.G.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Charles Grant",
+      "aliases": [
+        "charles grant",
+        "grant"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nfl-whoami-steve-young",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Quarterback",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "teams",
+        "text": "Played for 2 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a final season in 1999",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1998",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "33,124 passing yards, 232 touchdown passes and 107 interceptions",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: S.Y.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Steve Young",
+      "aliases": [
+        "steve young",
+        "young"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nfl-whoami-eddie-george",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together a 9-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Running back",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Debuted in 1996",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Played for 3 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Best season came in 2000 with the Titans: 1,455 rushing yards, 14 rushing touchdowns and 48 catches",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: E.G.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Eddie George",
+      "aliases": [
+        "eddie george",
+        "george"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nfl-whoami-michael-griffin",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "fact",
+        "text": "Part of the 2007 draft class",
+        "dimension": "draftClass",
+        "label": "Draft class"
+      },
+      {
+        "order": 2,
+        "kind": "fact",
+        "text": "Listed at 6'0\", 215 pounds",
+        "dimension": "frame",
+        "label": "Frame"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Started out with the Titans",
+        "dimension": "firstTeam",
+        "label": "First team"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Best season came in 2010 with the Titans: 4 interceptions, 86 tackles and 12 passes defended",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: M.G.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "25 interceptions, 597 tackles and 60 passes defended",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Michael Griffin",
+      "aliases": [
+        "michael griffin",
+        "griffin"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nfl-whoami-kevin-byard",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "fact",
+        "text": "Listed at 212 pounds",
+        "dimension": "weight",
+        "label": "Weight"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Defensive back",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "fact",
+        "text": "Came off the board in round 3",
+        "dimension": "draftRound",
+        "label": "Draft round"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2017, at about 24",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Part of the 2016 draft class",
+        "dimension": "draftClass",
+        "label": "Draft class"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "36 interceptions, 655 tackles and 81 passes defended",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Kevin Byard",
+      "aliases": [
+        "kevin byard",
+        "byard"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nfl-whoami-keenan-allen",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "13 seasons in and still going",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "fact",
+        "text": "Listed at 6'2\"",
+        "dimension": "height",
+        "label": "Height"
+      },
+      {
+        "order": 3,
+        "kind": "fact",
+        "text": "Was roughly 21 years old as a rookie",
+        "dimension": "ageAtDebut",
+        "label": "Rookie year"
+      },
+      {
+        "order": 4,
+        "kind": "fact",
+        "text": "Selected 76th overall",
+        "dimension": "draftPick",
+        "label": "Draft slot"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "12,051 receiving yards, 1,055 catches and 70 touchdown catches",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: K.A.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Keenan Allen",
+      "aliases": [
+        "keenan allen",
+        "allen"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "nfl-whoami-bobby-wagner",
+    "sport": "nfl",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Debuted in 2012",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 2,
+        "kind": "fact",
+        "text": "Part of the 2012 draft class",
+        "dimension": "draftClass",
+        "label": "Draft class"
+      },
+      {
+        "order": 3,
+        "kind": "fact",
+        "text": "A 1990 baby",
+        "dimension": "born",
+        "label": "Born"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2017, at about 27",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "jersey",
+        "text": "Number 54",
+        "dimension": "jersey",
+        "label": "Jersey"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "1,149 tackles, 39.5 sacks and 15 interceptions",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Bobby Wagner",
+      "aliases": [
+        "bobby wagner",
+        "wagner"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "soccer-whoami-lionel-messi",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Debuted in 2006",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Made a name in France",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "568 goals, 279 assists and 652 appearances",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Best season came in 2012 with Barcelona: 50 goals, 16 assists and 37 appearances",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: L.M.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Lionel Messi",
+      "aliases": [
+        "lionel messi",
+        "messi"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "soccer-whoami-graham-zusi",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "teams",
+        "text": "Made a name in USA (MLS)",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Defender",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a final season in 2024",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "A one-team player, start to finish",
+        "dimension": "oneTeam",
+        "label": "Loyalty"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Best season came in 2012 with Sporting Kansas City: 36 appearances, 36 clean sheets and 5 goals",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "381 appearances, 183 clean sheets and 33 goals",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Graham Zusi",
+      "aliases": [
+        "graham zusi",
+        "zusi"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "soccer-whoami-neymar",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 2010s and last played in 2023",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together a 10-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Made a name in France",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Finished up with Paris Saint-Germain",
+        "dimension": "lastTeam",
+        "label": "Last team"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Best season came in 2016 with Barcelona: 16 assists, 24 goals and 34 appearances",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "99 assists, 150 goals and 235 appearances",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Neymar",
+      "aliases": [
+        "neymar",
+        "neymar"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "soccer-whoami-alejandro-grimaldo",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 2010s and is still at it",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "teams",
+        "text": "Made a name in Germany",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Defender",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 2 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2024",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: A.G.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Alejandro Grimaldo",
+      "aliases": [
+        "alejandro grimaldo",
+        "grimaldo"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "soccer-whoami-bruno-fernandes",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "13 seasons in and still going",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Debuted in 2014",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Midfielder",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Made a name in England",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2019",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: B.F.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Bruno Fernandes",
+      "aliases": [
+        "bruno fernandes",
+        "fernandes"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "soccer-whoami-robert-lewandowski",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "16 seasons in and still going",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Made a name in Germany",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 5 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2021",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: R.L.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Robert Lewandowski",
+      "aliases": [
+        "robert lewandowski",
+        "lewandowski"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "soccer-whoami-philipp-lahm",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "teams",
+        "text": "Made a name in Germany",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Defender",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Played a final season in 2017",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "A one-team player, start to finish",
+        "dimension": "oneTeam",
+        "label": "Loyalty"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2013",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: P.L.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Philipp Lahm",
+      "aliases": [
+        "philipp lahm",
+        "lahm"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "soccer-whoami-robin-le-normand",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has been playing since 2020",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Defender",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Made a name in Spain",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 2 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 2022 with Real Sociedad — 37 appearances, 19 clean sheets and 1 goal",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "218 appearances, 87 clean sheets and 6 goals",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Robin Le Normand",
+      "aliases": [
+        "robin le normand",
+        "normand"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "soccer-whoami-ferdi-kadoglu",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has been playing since 2017",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "8 seasons in and still going",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Made a name in England",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Played for 3 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "position",
+        "text": "Defender",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "Best season came in 2024: 37 appearances, 16 clean sheets and 1 goal",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      }
+    ],
+    "answer": {
+      "canonical": "Ferdi Kadıoğlu",
+      "aliases": [
+        "ferdi kadıoğlu",
+        "kadıoğlu"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "soccer-whoami-jeremy-morel",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Career ran 2013-2022",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Defender",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Made a name in France",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2013",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: J.M.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "250 appearances, 84 clean sheets and 3 goals",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Jérémy Morel",
+      "aliases": [
+        "jérémy morel",
+        "morel"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "soccer-whoami-calvin-stengs",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Midfielder",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together a 7-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Played for 3 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 4,
+        "kind": "era",
+        "text": "Played a final season in 2025",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 2024 with Feyenoord Rotterdam — 14 assists, 6 goals and 29 appearances",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "47 assists, 29 goals and 170 appearances",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Calvin Stengs",
+      "aliases": [
+        "calvin stengs",
+        "stengs"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "soccer-whoami-fabian-schar",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has been playing since 2016",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "teams",
+        "text": "Made a name in England",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Defender",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 3 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2023",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "266 appearances, 74 clean sheets and 21 goals",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Fabian Schär",
+      "aliases": [
+        "fabian schär",
+        "schär"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "soccer-whoami-lamar-neagle",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together an 8-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "teams",
+        "text": "Made a name in USA (MLS)",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Midfielder",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "era",
+        "text": "Debuted in 2012",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 5,
+        "kind": "teams",
+        "text": "Played for 3 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2015",
+        "dimension": "peakYear",
+        "label": "Peak"
+      }
+    ],
+    "answer": {
+      "canonical": "Lamar Neagle",
+      "aliases": [
+        "lamar neagle",
+        "neagle"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "soccer-whoami-luke-shaw",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has been playing since 2013",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "14 seasons in and still going",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Played for 2 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2021",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "296 appearances, 95 clean sheets and 4 goals",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: L.S.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Luke Shaw",
+      "aliases": [
+        "luke shaw",
+        "shaw"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "soccer-whoami-guus-til",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "10 seasons in and still going",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "teams",
+        "text": "Made a name in Germany",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Midfielder",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "era",
+        "text": "Played a first professional season in 2017",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2025",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "41 assists, 83 goals and 254 appearances",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Guus Til",
+      "aliases": [
+        "guus til"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "soccer-whoami-florian-thauvin",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "12 seasons in and still going",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a first professional season in 2013",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Made a name in England",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2018",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: F.T.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Florian Thauvin",
+      "aliases": [
+        "florian thauvin",
+        "thauvin"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "soccer-whoami-jonathan-schmid",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "position",
+        "text": "Defender",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 2,
+        "kind": "teams",
+        "text": "Made a name in Germany",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Debuted in 2013",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Played for 3 teams",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 2013 — 33 appearances, 13 clean sheets and 11 goals",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "273 appearances, 63 clean sheets and 34 goals",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Jonathan Schmid",
+      "aliases": [
+        "jonathan schmid",
+        "schmid"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "soccer-whoami-jose-fonte",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has been playing since 2013",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Has 14 seasons on the résumé so far",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Defender",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2021",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "389 appearances, 130 clean sheets and 16 goals",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: J.F.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "José Fonte",
+      "aliases": [
+        "josé fonte",
+        "fonte"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "soccer-whoami-duvan-zapata",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "teams",
+        "text": "Made a name in Italy",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "13 seasons in and still going",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "era",
+        "text": "Debuted in 2014",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 4,
+        "kind": "position",
+        "text": "Forward",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 2019 with Atalanta — 23 goals, 7 assists and 37 appearances",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "126 goals, 52 assists and 349 appearances",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Duván Zapata",
+      "aliases": [
+        "duván zapata",
+        "zapata"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "soccer-whoami-bernardo-silva",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has 12 seasons on the résumé so far",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a first professional season in 2015",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "position",
+        "text": "Midfielder",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Suited up for 2 different franchises",
+        "dimension": "franchiseCount",
+        "label": "Franchises"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: B.S.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "68 assists, 69 goals and 405 appearances",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Bernardo Silva",
+      "aliases": [
+        "bernardo silva",
+        "silva"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "soccer-whoami-rodrigo-de-paul",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has 15 seasons on the résumé so far",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "position",
+        "text": "Midfielder",
+        "dimension": "position",
+        "label": "Position"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Made a name in Italy",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 4,
+        "kind": "era",
+        "text": "Debuted in 2013",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 2021 with Udinese — 10 assists, 9 goals and 36 appearances",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "68 assists, 57 goals and 431 appearances",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Rodrigo De Paul",
+      "aliases": [
+        "rodrigo de paul",
+        "paul"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "soccer-whoami-rod-fanni",
+    "sport": "soccer",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 12 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Last suited up in 2021",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Made a name in France",
+        "dimension": "league",
+        "label": "League"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Nice, Stade de Reims, Marseille and AS Monaco",
+        "dimension": "teams",
+        "label": "Teams"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "Peaked in 2008 with Stade de Reims — 28 appearances and 26 clean sheets",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "327 appearances, 139 clean sheets and 9 goals",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Rod Fanni",
+      "aliases": [
+        "rod fanni",
+        "fanni"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "tennis-whoami-martina-navratilova",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 1970s and last played in 1994",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together a 22-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1983",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Competed for USA",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "176 tour titles, 18 major titles and 1,486 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: M.N.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Martina Navratilova",
+      "aliases": [
+        "martina navratilova",
+        "navratilova"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "tennis-whoami-chris-evert",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together a 20-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Last suited up in 1989",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for USA",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Best season came in 1975: 17 tour titles, 2 major titles and 99 match wins",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "162 tour titles, 18 major titles and 1,335 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: C.E.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Chris Evert",
+      "aliases": [
+        "chris evert",
+        "evert"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "tennis-whoami-roger-federer",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 21 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a first professional season in 1999",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for SUI",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Best season came in 2006: 12 tour titles, 3 major titles and 92 match wins",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "101 tour titles, 20 major titles and 1,212 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: R.F.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Roger Federer",
+      "aliases": [
+        "roger federer",
+        "federer"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "tennis-whoami-steffi-graf",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 16 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a final season in 1999",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for GER",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Best season came in 1989: 14 tour titles, 3 major titles and 88 match wins",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "108 tour titles, 22 major titles and 892 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: S.G.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Steffi Graf",
+      "aliases": [
+        "steffi graf",
+        "graf"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "tennis-whoami-jimmy-connors",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Career ran 1971-1992",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together a 21-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for USA",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Peaked in 1974 — 15 tour titles, 3 major titles and 99 match wins",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: J.C.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "108 tour titles, 8 major titles and 1,226 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Jimmy Connors",
+      "aliases": [
+        "jimmy connors",
+        "connors"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "tennis-whoami-margaret-court",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played a first professional season in 1968",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together an 8-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for AUS",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Peaked in 1970 — 22 tour titles, 4 major titles and 116 match wins",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "95 tour titles, 11 major titles and 614 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: M.C.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Margaret Court",
+      "aliases": [
+        "margaret court",
+        "court"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "tennis-whoami-novak-djokovic",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 2000s and is still at it",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Has 21 seasons on the résumé so far",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for SRB",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Peaked in 2015 — 11 tour titles, 3 major titles and 82 match wins",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "98 tour titles, 22 major titles and 1,127 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: N.D.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Novak Djokovic",
+      "aliases": [
+        "novak djokovic",
+        "djokovic"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "tennis-whoami-rafael-nadal",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has been playing since 2003",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Has 21 seasons on the résumé so far",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for ESP",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2010",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "90 tour titles, 21 major titles and 1,065 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: R.N.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Rafael Nadal",
+      "aliases": [
+        "rafael nadal",
+        "nadal"
+      ]
+    },
+    "difficulty": "easy"
+  },
+  {
+    "id": "tennis-whoami-flavia-pennetta",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together a 13-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a first professional season in 2003",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for ITA",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2009",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "11 tour titles, 1 major title and 440 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: F.P.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Flavia Pennetta",
+      "aliases": [
+        "flavia pennetta",
+        "pennetta"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "tennis-whoami-balazs-taroczy",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played a first professional season in 1974",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Lasted 12 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for HUN",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1980",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "13 tour titles and 412 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: B.T.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Balazs Taroczy",
+      "aliases": [
+        "balazs taroczy",
+        "taroczy"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "tennis-whoami-tim-mayotte",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 11 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Last suited up in 1991",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for USA",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Peaked in 1987 — 5 tour titles and 43 match wins",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "12 tour titles and 336 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: T.M.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Tim Mayotte",
+      "aliases": [
+        "tim mayotte",
+        "mayotte"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "tennis-whoami-gilles-simon",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 17 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Last suited up in 2022",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for FRA",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2008",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "13 tour titles and 485 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: G.S.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Gilles Simon",
+      "aliases": [
+        "gilles simon",
+        "simon"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "tennis-whoami-elena-rybakina",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has 7 seasons on the résumé so far",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Has been playing since 2019",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for KAZ",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2025",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "11 tour titles, 1 major title and 276 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: E.R.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Elena Rybakina",
+      "aliases": [
+        "elena rybakina",
+        "rybakina"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "tennis-whoami-albert-costa",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together a 12-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a final season in 2005",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for ESP",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2002",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "13 tour titles, 1 major title and 383 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: A.C.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Albert Costa",
+      "aliases": [
+        "albert costa",
+        "costa"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "tennis-whoami-claudia-kohde-kilsch",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Lasted 13 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a first professional season in 1980",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for GER",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1981",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "12 tour titles and 418 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: C.K.K.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Claudia Kohde Kilsch",
+      "aliases": [
+        "claudia kohde kilsch",
+        "kilsch"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "tennis-whoami-greg-rusedski",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Played from 1993 to 2006",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Lasted 14 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for GBR",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1997",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "15 tour titles and 436 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: G.R.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Greg Rusedski",
+      "aliases": [
+        "greg rusedski",
+        "rusedski"
+      ]
+    },
+    "difficulty": "hard"
+  },
+  {
+    "id": "tennis-whoami-hana-mandlikova",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Career ran 1978-1990",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Lasted 13 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for AUS",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1980",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "27 tour titles, 4 major titles and 561 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: H.M.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Hana Mandlikova",
+      "aliases": [
+        "hana mandlikova",
+        "mandlikova"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "tennis-whoami-lleyton-hewitt",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Career ran 1998-2014",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together a 17-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for AUS",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Peaked in 2001 — 6 tour titles, 1 major title and 79 match wins",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: L.H.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "30 tour titles, 2 major titles and 613 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Lleyton Hewitt",
+      "aliases": [
+        "lleyton hewitt",
+        "hewitt"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "tennis-whoami-maria-sharapova",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 2000s and last played in 2019",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Put together a 16-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for RUS",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2006",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: M.S.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "36 tour titles, 5 major titles and 603 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      }
+    ],
+    "answer": {
+      "canonical": "Maria Sharapova",
+      "aliases": [
+        "maria sharapova",
+        "sharapova"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "tennis-whoami-john-newcombe",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 1960s and last played in 1978",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Lasted 10 seasons",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for AUS",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "The best statistical season came in 1974",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "32 tour titles, 5 major titles and 439 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: J.N.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "John Newcombe",
+      "aliases": [
+        "john newcombe",
+        "newcombe"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "tennis-whoami-andy-roddick",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together a 12-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a final season in 2012",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for USA",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Best season came in 2003: 6 tour titles, 1 major title and 72 match wins",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "32 tour titles, 1 major title and 610 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: A.R.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Andy Roddick",
+      "aliases": [
+        "andy roddick",
+        "roddick"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "tennis-whoami-iga-swiatek",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Has 7 seasons on the résumé so far",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a first professional season in 2019",
+        "dimension": "debut",
+        "label": "Debut"
+      },
+      {
+        "order": 3,
+        "kind": "statLine",
+        "text": "The best statistical season came in 2022",
+        "dimension": "peakYear",
+        "label": "Peak"
+      },
+      {
+        "order": 4,
+        "kind": "teams",
+        "text": "Competed for POL",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "26 tour titles, 6 major titles and 332 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: I.S.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Iga Swiatek",
+      "aliases": [
+        "iga swiatek",
+        "swiatek"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "tennis-whoami-jim-courier",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Put together a 12-season career",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Played a final season in 1999",
+        "dimension": "finale",
+        "label": "Final season"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for USA",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "23 tour titles, 4 major titles and 501 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 5,
+        "kind": "fact",
+        "text": "Initials: J.C.",
+        "dimension": "initials",
+        "label": "Initials"
+      },
+      {
+        "order": 6,
+        "kind": "statLine",
+        "text": "Best season came in 1992: 5 tour titles, 2 major titles and 70 match wins",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      }
+    ],
+    "answer": {
+      "canonical": "Jim Courier",
+      "aliases": [
+        "jim courier",
+        "courier"
+      ]
+    },
+    "difficulty": "medium"
+  },
+  {
+    "id": "tennis-whoami-carlos-alcaraz",
+    "sport": "tennis",
+    "clues": [
+      {
+        "order": 1,
+        "kind": "era",
+        "text": "Broke in during the 2020s and is still at it",
+        "dimension": "era",
+        "label": "Era"
+      },
+      {
+        "order": 2,
+        "kind": "era",
+        "text": "Has 5 seasons on the résumé so far",
+        "dimension": "longevity",
+        "label": "Longevity"
+      },
+      {
+        "order": 3,
+        "kind": "teams",
+        "text": "Competed for ESP",
+        "dimension": "nationality",
+        "label": "Country"
+      },
+      {
+        "order": 4,
+        "kind": "statLine",
+        "text": "Peaked in 2025 — 8 tour titles, 2 major titles and 71 match wins",
+        "dimension": "bestSeason",
+        "label": "Best season"
+      },
+      {
+        "order": 5,
+        "kind": "statLine",
+        "text": "25 tour titles, 6 major titles and 279 match wins",
+        "dimension": "statLine",
+        "label": "Career line"
+      },
+      {
+        "order": 6,
+        "kind": "fact",
+        "text": "Initials: C.A.",
+        "dimension": "initials",
+        "label": "Initials"
+      }
+    ],
+    "answer": {
+      "canonical": "Carlos Alcaraz",
+      "aliases": [
+        "carlos alcaraz",
+        "alcaraz"
+      ]
+    },
+    "difficulty": "medium"
   }
 ]

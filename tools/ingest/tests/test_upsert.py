@@ -1,9 +1,15 @@
-"""Pagination regression guard: PostgREST caps a single response at its own configured max
+"""Pagination regression guards: PostgREST caps a single response at its own configured max
 (Supabase defaults to 1000 rows) regardless of a requested `limit`, and NFL alone has ~14k
 `player_seasons` rows. A naive single-request fetch silently truncates to that cap -- this
 bit `tools.ingest.grid`'s live verification (a viable-looking NFL grid came back "no viable
 grid from 1000 seasons" on a re-run, purely from which arbitrary 1000-row slice PostgREST
-happened to return). fetch_player_seasons must page through everything via Range headers."""
+happened to return), so every catalog read has to page.
+
+Both catalog readers page by **keyset** (`id=gt.<last>` + `order=id`), never Range/OFFSET.
+That started as `fetch_existing_catalog_ids`'s fix for the 2026-07-14 statement-timeout kill
+and now covers `fetch_player_seasons` too: measured against the live table, its page 1 came
+back in 0.6s while the page at offset 8000 took 4.3s, and one career fetch under load hit the
+statement timeout (57014) outright. The tests below pin the keyset shape for both."""
 import io
 import json
 import urllib.error
@@ -29,33 +35,59 @@ class _Resp:
         return False
 
 
+def _season_row(index: int) -> dict:
+    return {"id": f"nfl-player{index:02d}-2020", "name": f"Player{index}", "team_abbr": "SF",
+            "season_year": 2000 + index, "sport": "nfl", "position": "WR", "stats": {},
+            "career": False}
+
+
+def _keyset_server(rows: list[dict], server_cap: int, seen: list[str]):
+    """A PostgREST stand-in that caps every response at `server_cap` rows and honours
+    `id=gt.<last>`, so the fetch under test has to page correctly to see everything."""
+    def fake_urlopen(req, timeout=60):
+        seen.append(req.full_url)
+        assert "Range" not in req.headers, "offset paging is exactly the regression"
+        params = dict(part.split("=", 1) for part in req.full_url.split("?", 1)[1].split("&"))
+        last = urllib_parse_unquote(params["id"][3:]) if "id" in params else None  # strip "gt."
+        remaining = [r for r in sorted(rows, key=lambda r: r["id"])
+                     if last is None or r["id"] > last]
+        return _Resp(json.dumps(remaining[:server_cap]).encode("utf-8"))
+    return fake_urlopen
+
+
 def test_fetch_player_seasons_pages_past_the_first_response_cap(monkeypatch):
     monkeypatch.setenv("SUPABASE_URL", "https://x.supabase.co")
     monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "key")
 
-    # Simulate a server that caps each response at 2 rows regardless of what's asked for —
-    # same shape as PostgREST's real default row cap.
-    total_rows = 5
-    calls: list[str] = []
-
-    def fake_urlopen(req, timeout=60):
-        calls.append(req.headers.get("Range", ""))
-        range_header = req.headers.get("Range", "0-1")
-        start = int(range_header.split("-")[0])
-        server_cap = 2
-        page = [
-            {"name": f"Player{i}", "team_abbr": "SF", "season_year": 2000 + i,
-             "sport": "nfl", "position": "WR", "stats": {}, "career": False}
-            for i in range(start, min(start + server_cap, total_rows))
-        ]
-        return _Resp(json.dumps(page).encode("utf-8"))
-
-    monkeypatch.setattr(upsert.urllib.request, "urlopen", fake_urlopen)
+    all_rows = [_season_row(i) for i in range(5)]
+    seen: list[str] = []
+    monkeypatch.setattr(upsert.urllib.request, "urlopen",
+                        _keyset_server(all_rows, server_cap=2, seen=seen))
 
     rows = upsert.fetch_player_seasons("nfl", page_size=2)
-    assert len(rows) == total_rows
-    assert [r["name"] for r in rows] == [f"Player{i}" for i in range(total_rows)]
-    assert len(calls) == 3  # 0-1, 2-3, 4-5 (last one short — stops the loop)
+    assert [r["name"] for r in rows] == [f"Player{i}" for i in range(5)]
+    assert len(seen) == 3       # 2 + 2 + 1 (the short page stops the loop)
+    assert all("order=id" in url for url in seen)
+    # `id` is selected even though no caller reads it — it IS the paging cursor.
+    assert all("select=id," in url for url in seen)
+
+
+def test_fetch_player_seasons_columns_are_opt_in(monkeypatch):
+    """The Grid's column set stays the default; whoami_pool asks for the wider one. Widening
+    the default instead would put three unused columns on The Grid's 79k-row soccer pull."""
+    monkeypatch.setenv("SUPABASE_URL", "https://x.supabase.co")
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "key")
+
+    seen: list[str] = []
+    monkeypatch.setattr(upsert.urllib.request, "urlopen",
+                        _keyset_server([], server_cap=2, seen=seen))
+
+    upsert.fetch_player_seasons("nfl")
+    assert "headshot" not in seen[0] and "first_year" not in seen[0]
+
+    seen.clear()
+    upsert.fetch_player_seasons("nfl", columns=upsert.WHOAMI_CATALOG_COLUMNS)
+    assert "headshot" in seen[0] and "first_year" in seen[0] and "last_year" in seen[0]
 
 
 def test_fetch_existing_catalog_ids_pages_by_keyset_not_offset(monkeypatch):
@@ -87,23 +119,21 @@ def test_fetch_existing_catalog_ids_pages_by_keyset_not_offset(monkeypatch):
     assert all("order=id.asc" in u for u in requested_urls)
 
 
-def test_fetch_player_seasons_stops_on_empty_final_page(monkeypatch):
+def test_fetch_player_seasons_stops_on_an_empty_final_page(monkeypatch):
+    """A run of full pages followed by an empty one must terminate. Keyset paging can't infer
+    "done" from a short page when the row count is an exact multiple of the page size, so the
+    empty response is the real stop condition — an unhandled one loops forever."""
     monkeypatch.setenv("SUPABASE_URL", "https://x.supabase.co")
     monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "key")
 
-    def fake_urlopen(req, timeout=60):
-        range_header = req.headers.get("Range", "0-1")
-        start = int(range_header.split("-")[0])
-        if start >= 2:
-            return _Resp(b"[]")
-        return _Resp(json.dumps([{"name": "Only", "team_abbr": "SF", "season_year": 2000,
-                                  "sport": "nfl", "position": "WR", "stats": {},
-                                  "career": False}] * 2).encode("utf-8"))
-
-    monkeypatch.setattr(upsert.urllib.request, "urlopen", fake_urlopen)
+    all_rows = [_season_row(i) for i in range(4)]     # exactly 2 full pages, then empty
+    seen: list[str] = []
+    monkeypatch.setattr(upsert.urllib.request, "urlopen",
+                        _keyset_server(all_rows, server_cap=2, seen=seen))
 
     rows = upsert.fetch_player_seasons("nfl", page_size=2)
-    assert len(rows) == 2
+    assert len(rows) == 4
+    assert len(seen) == 3        # 2 + 2 + the empty page that ends it
 
 
 def test_get_json_retries_a_transient_timeout():

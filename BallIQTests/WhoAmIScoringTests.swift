@@ -39,6 +39,119 @@ final class WhoAmIScoringTests: XCTestCase {
         XCTAssertEqual(WhoAmIScoring.perClue[0], 1000)
     }
 
+
+    // MARK: - Difficulty
+
+    /// The whole point of the tier: an obscurer player pays more for the same solve.
+    func testDifficultyScalesThePayout() {
+        XCTAssertEqual(WhoAmIScoring.score(cluesUsed: 1, wrongGuesses: 0, solved: true,
+                                           difficulty: .easy).total, 1000)
+        XCTAssertEqual(WhoAmIScoring.score(cluesUsed: 1, wrongGuesses: 0, solved: true,
+                                           difficulty: .medium).total, 1250)
+        XCTAssertEqual(WhoAmIScoring.score(cluesUsed: 1, wrongGuesses: 0, solved: true,
+                                           difficulty: .hard).total, 1600)
+    }
+
+    /// An unrated puzzle (community-authored, or minted before tiers existed) must score
+    /// exactly as it did before tiers shipped — no silent 1.25x on existing content.
+    func testUnratedPuzzlesScoreUnchanged() {
+        for clues in 1...6 {
+            XCTAssertEqual(WhoAmIScoring.score(cluesUsed: clues, wrongGuesses: 0, solved: true,
+                                               difficulty: nil).total,
+                           WhoAmIScoring.perClue[clues - 1],
+                           "unrated clue \(clues) drifted from the flat table")
+        }
+        XCTAssertEqual(WhoAmIScoring.multiplier(nil), 1.0)
+    }
+
+    /// The wrong-guess penalty stays flat across tiers, so guessing wildly is never *cheaper*
+    /// on a hard puzzle than an easy one in relative terms.
+    func testWrongGuessPenaltyIsNotScaledByDifficulty() {
+        let easy = WhoAmIScoring.score(cluesUsed: 1, wrongGuesses: 2, solved: true, difficulty: .easy)
+        let hard = WhoAmIScoring.score(cluesUsed: 1, wrongGuesses: 2, solved: true, difficulty: .hard)
+        XCTAssertEqual(easy.total, 1000 - 200)
+        XCTAssertEqual(hard.total, 1600 - 200)
+    }
+
+    /// `performance` feeds the competitive rating engine and means "how efficiently was this
+    /// solved", so the tier must not move it — otherwise the difficulty the pipeline happened
+    /// to serve would shift a player's rating.
+    func testDifficultyDoesNotAffectRatingPerformance() {
+        let values = WhoAmIPuzzle.Difficulty.allCases.map {
+            WhoAmIScoring.score(cluesUsed: 3, wrongGuesses: 0, solved: true, difficulty: $0).performance
+        }
+        XCTAssertEqual(Set(values).count, 1)
+        XCTAssertEqual(values[0], 0.6, accuracy: 0.0001)
+    }
+
+    func testMaxScoreTracksTheTier() {
+        XCTAssertEqual(WhoAmIScoring.maxScore(difficulty: nil), 1000)
+        XCTAssertEqual(WhoAmIScoring.maxScore(difficulty: .hard), 1600)
+        // A solve can never exceed the reported max — the ratio the session detail records.
+        for difficulty in WhoAmIPuzzle.Difficulty.allCases {
+            let best = WhoAmIScoring.score(cluesUsed: 1, wrongGuesses: 0, solved: true,
+                                           difficulty: difficulty)
+            XCTAssertEqual(best.total, WhoAmIScoring.maxScore(difficulty: difficulty))
+        }
+    }
+
+    // MARK: - Decoding
+
+    private func decode(_ json: String) throws -> WhoAmIPuzzle {
+        try JSONDecoder().decode(WhoAmIPuzzle.self, from: Data(json.utf8))
+    }
+
+    /// The exact shape of pre-2026-08 content: three-key clues, no difficulty. This is what
+    /// the bundled pool and every already-published community puzzle look like.
+    func testLegacyContentDecodesAsUnrated() throws {
+        let puzzle = try decode("""
+        {"id": "x", "sport": "nfl",
+         "clues": [{"order": 1, "kind": "era", "text": "Played from 1991 to 2010"}],
+         "answer": {"canonical": "Brett Favre", "aliases": []}}
+        """)
+        XCTAssertNil(puzzle.difficulty)
+        XCTAssertNil(puzzle.clues[0].label)
+        XCTAssertEqual(puzzle.clues[0].displayLabel, ClueKind.era.label)
+    }
+
+    func testCurrentContentDecodesDimensionLabelAndTier() throws {
+        let puzzle = try decode("""
+        {"id": "x", "sport": "nfl", "difficulty": "hard",
+         "clues": [{"order": 1, "kind": "fact", "text": "Selected 199th overall",
+                    "dimension": "draftPick", "label": "Draft slot"}],
+         "answer": {"canonical": "Tom Brady", "aliases": []}}
+        """)
+        XCTAssertEqual(puzzle.difficulty, .hard)
+        XCTAssertEqual(puzzle.clues[0].dimension, "draftPick")
+        XCTAssertEqual(puzzle.clues[0].displayLabel, "Draft slot")
+    }
+
+    /// Forward compatibility, and the reason the pipeline is allowed to keep adding dimensions:
+    /// an unrecognized `kind` or `difficulty` must degrade to a usable value rather than throw.
+    /// A throw here fails the decode for the WHOLE fetched array, dropping the user to the
+    /// bundled pool over one unknown word.
+    func testUnknownKindAndTierDegradeInsteadOfFailingTheDecode() throws {
+        let puzzle = try decode("""
+        {"id": "x", "sport": "nfl", "difficulty": "nightmare",
+         "clues": [{"order": 1, "kind": "birthplace", "text": "Born in Kiln, Mississippi"}],
+         "answer": {"canonical": "Brett Favre", "aliases": []}}
+        """)
+        XCTAssertEqual(puzzle.clues[0].kind, .fact)
+        XCTAssertEqual(puzzle.difficulty, .medium)
+    }
+
+    /// Every tier the pipeline can emit must round-trip, so a new tier can't be shipped in
+    /// content without the client understanding it.
+    func testEveryPipelineTierIsRepresentable() throws {
+        for raw in ["easy", "medium", "hard"] {
+            let puzzle = try decode("""
+            {"id": "x", "sport": "nba", "difficulty": "\(raw)", "clues": [],
+             "answer": {"canonical": "A B", "aliases": []}}
+            """)
+            XCTAssertEqual(puzzle.difficulty?.rawValue, raw)
+        }
+    }
+
     // MARK: - Answer matching
 
     private let answer = WhoAmIPuzzle.AcceptedAnswer(

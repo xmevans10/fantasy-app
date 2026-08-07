@@ -22,8 +22,9 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import random
+from collections import Counter
 
-from . import assemble
+from . import assemble, whoami_clues, whoami_pool
 from . import main as ingest_main
 from .assemble import PuzzleRow
 from .daily_puzzle import SPORTS
@@ -36,16 +37,41 @@ def player_key(entry: WhoAmIEntry) -> str:
     return slug(entry.canonical)
 
 
+# How often each difficulty tier gets the daily slot, per sport. A hard puzzle roughly every
+# fifth day: enough that the tier is a real part of the game (and its point multiplier is
+# worth chasing) without making the daily feel like a wall most mornings. The draw is
+# deterministic per (date, sport), so every player in a sport sees the same tier on a day.
+TIER_WEIGHTS: dict[str, float] = {"easy": 0.4, "medium": 0.4, "hard": 0.2}
+
+
+def pick_tier(today: dt.date, sport: str) -> str:
+    """The difficulty tier to serve `sport` on `today`, drawn from `TIER_WEIGHTS`."""
+    rng = random.Random(f"whoami-tier-{sport}-{today.isoformat()}")
+    tiers = list(TIER_WEIGHTS)
+    return rng.choices(tiers, weights=[TIER_WEIGHTS[t] for t in tiers], k=1)[0]
+
+
 def pick_lrs_entry(
     entries: list[WhoAmIEntry], last_served: dict[tuple[str, str], str],
-    today: dt.date, sport: str,
+    today: dt.date, sport: str, tier: str | None = None,
 ) -> WhoAmIEntry | None:
     """The least-recently-served entry for `sport` (never-served first), tie-broken by a
     per-(day, sport)-seeded shuffle so same-recency entries rotate in a varied but
     reproducible order. `last_served` maps (sport, player_key) -> most recent served_date
     (ISO string, so lexicographic order IS chronological; "" sorts before every real date).
+
+    `tier` restricts the draw to one difficulty (see `pick_tier`). A tier with no entries for
+    this sport falls back to the sport's full pool rather than returning nothing — that's a
+    real state for a thin sport, and a served puzzle of the wrong difficulty beats no daily.
     """
     pool = [e for e in entries if e.sport == sport]
+    if tier:
+        in_tier = [e for e in pool if whoami_clues.difficulty_of(e) == tier]
+        if in_tier:
+            pool = in_tier
+        else:
+            print(f"[whoami] {today.isoformat()} {sport}: no {tier} entries — "
+                  "drawing from the full pool for this sport")
     if not pool:
         return None
     rng = random.Random(f"whoami-{sport}-{today.isoformat()}")
@@ -60,8 +86,15 @@ def pick_lrs_entry(
 def _finalize_row(date: dt.date, entry: WhoAmIEntry) -> PuzzleRow:
     """The dated daily row for `entry` — a separate row from main.py's undated archival copy
     of the same player (same id-stem + `-daily-` suffix pattern as daily_puzzle.py), so the
-    client's exact `active_date == today` match finds it without ambiguity."""
-    row = assemble.build_whoami_row(entry)
+    client's exact `active_date == today` match finds it without ambiguity.
+
+    The serve date is the clue seed, which is what stops a repeat from being a rerun: the
+    pool is finite (see the module docstring), so the same subject *will* come back around,
+    and when it does it should be six differently-drawn clues in a different order rather
+    than the identical card. Also means the dated daily and the undated archival copy of one
+    subject are genuinely different puzzles.
+    """
+    row = assemble.build_whoami_row(entry, seed=date.isoformat())
     row.id = f"{row.id}-daily-{date:%Y%m%d}"
     row.content["id"] = row.id
     row.active_date = date.isoformat()
@@ -76,7 +109,7 @@ def mint_batch(
     multi-day batch keeps rotating instead of re-picking the same stalest entry every day."""
     minted: list[tuple[dt.date, WhoAmIEntry, PuzzleRow]] = []
     for date, sport in targets:
-        entry = pick_lrs_entry(entries, last_served, date, sport)
+        entry = pick_lrs_entry(entries, last_served, date, sport, tier=pick_tier(date, sport))
         if entry is None:
             print(f"[whoami] {date.isoformat()} {sport}: no entries in the pool — skipped")
             continue
@@ -102,8 +135,10 @@ def main() -> int:
     target_dates = [start + dt.timedelta(days=i) for i in range(args.count)]
     targets = [(d, sport) for d in target_dates for sport in SPORTS]
 
-    entries = assemble.load_whoami_entries(ingest_main.DATA_DIR / "whoami_facts.json")
-    print(f"[whoami] {len(entries)} pool entries loaded")
+    entries = whoami_pool.all_entries(ingest_main.DATA_DIR)
+    tiers = Counter(whoami_clues.difficulty_of(e) for e in entries)
+    print(f"[whoami] {len(entries)} pool entries loaded "
+          f"({', '.join(f'{t}: {tiers[t]}' for t in whoami_clues.DIFFICULTIES)})")
 
     last_served: dict[tuple[str, str], str] = {}
     if args.upsert:
@@ -128,7 +163,10 @@ def main() -> int:
     minted = mint_batch(entries, last_served, targets)
     for date, entry, row in minted:
         validate(row)
-        print(f"── {date.isoformat()} · {entry.sport} ── {entry.canonical}  ({row.id})")
+        print(f"── {date.isoformat()} · {entry.sport} · {row.content['difficulty'].upper()} ── "
+              f"{entry.canonical}  ({row.id})")
+        for cl in row.content["clues"]:
+            print(f"     {cl['order']}. [{cl['label']}] {cl['text']}")
 
     if not minted:
         return 1

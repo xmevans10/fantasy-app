@@ -23,12 +23,16 @@ struct WhoAmIGameView: View {
     @State private var startedAt: Date?
 
     private var allRevealed: Bool { revealedCount >= puzzle.clues.count }
+    /// Points on the table right now — the tier-scaled clue value less the wrong-guess
+    /// penalties already taken, so the header always matches what a solve would actually pay.
     private var currentValue: Int {
-        max(0, WhoAmIScoring.perClue[revealedCount - 1] + wrongGuesses * 100 * -1)
+        max(0, WhoAmIScoring.value(cluesUsed: revealedCount, difficulty: puzzle.difficulty)
+            + wrongGuesses * WhoAmIScoring.wrongPenalty)
     }
     private var nextCueCost: Int {
         guard !allRevealed else { return 0 }
-        return WhoAmIScoring.perClue[revealedCount - 1] - WhoAmIScoring.perClue[revealedCount]
+        return WhoAmIScoring.value(cluesUsed: revealedCount, difficulty: puzzle.difficulty)
+            - WhoAmIScoring.value(cluesUsed: revealedCount + 1, difficulty: puzzle.difficulty)
     }
 
     var body: some View {
@@ -45,6 +49,7 @@ struct WhoAmIGameView: View {
                 didLogStart = true
                 startedAt = Date()
                 container.track(.gameStarted, ["format": "whoami", "ranked": "\(ranked)",
+                                               "difficulty": puzzle.difficulty?.rawValue ?? "unrated",
                                                "community": "\(communityID != nil)"])
             }
             if DebugLaunch.autoSubmitResult { autoSolveForScreenshot() }
@@ -94,6 +99,7 @@ struct WhoAmIGameView: View {
                 }
                 .accessibilityLabel("Close")
                 Spacer()
+                difficultyChip
                 Text(puzzle.sport.displayName)
                     .font(.label12)
                     .foregroundStyle(Color.textMuted)
@@ -126,6 +132,32 @@ struct WhoAmIGameView: View {
         }
     }
 
+    /// Tier chip in the play header. Carries the multiplier as well as the tier name — "HARD"
+    /// alone tells a player the puzzle is worse for them, which is only half the trade.
+    /// Absent for unrated puzzles (community-authored, or content minted before tiers existed),
+    /// which is why this is a `@ViewBuilder` returning nothing rather than a neutral chip.
+    @ViewBuilder
+    private var difficultyChip: some View {
+        if let difficulty = puzzle.difficulty {
+            HStack(spacing: 4) {
+                Image(systemName: difficulty.symbol).font(.system(size: 9, weight: .bold))
+                Text(difficulty.badgeLabel).font(.label11)
+                if difficulty != .easy {
+                    Text("· \(difficulty.multiplierLabel)").font(.label11).opacity(0.8)
+                }
+            }
+            .fixedSize()
+            .padding(.horizontal, 8).padding(.vertical, 3)
+            .foregroundStyle(difficulty.tintText)
+            .background(difficulty.tintBg)
+            .clipShape(Capsule())
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(difficulty == .easy
+                ? String(localized: "Difficulty: easy")
+                : String(localized: "Difficulty: \(difficulty.badgeLabel.lowercased()), \(difficulty.multiplierLabel)"))
+        }
+    }
+
     private func clueRow(_ clue: WhoAmIPuzzle.Clue) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Text("\(clue.order)")
@@ -135,7 +167,7 @@ struct WhoAmIGameView: View {
                 .background(Color.accentBg)
                 .clipShape(Circle())
             VStack(alignment: .leading, spacing: 2) {
-                Text(clue.kind.label)
+                Text(clue.displayLabel)
                     .font(.label11)
                     .foregroundStyle(Color.textMuted)
                 Text(clue.text)
@@ -235,7 +267,8 @@ struct WhoAmIGameView: View {
 
     private func finish(solved: Bool) {
         fieldFocused = false
-        let r = WhoAmIScoring.score(cluesUsed: revealedCount, wrongGuesses: wrongGuesses, solved: solved)
+        let r = WhoAmIScoring.score(cluesUsed: revealedCount, wrongGuesses: wrongGuesses,
+                                    solved: solved, difficulty: puzzle.difficulty)
         if solved { Haptics.success() }
         let perfect = solved && revealedCount == 1 && wrongGuesses == 0
         var details = GameResultDetails()
@@ -245,7 +278,7 @@ struct WhoAmIGameView: View {
         details.answerName = puzzle.answer.canonical
         let detail = RepositoryContainer.SessionDetail(
             mode: communityID != nil ? .community : .daily,
-            score: r.total, maxScore: WhoAmIScoring.perClue[0],
+            score: r.total, maxScore: WhoAmIScoring.maxScore(difficulty: puzzle.difficulty),
             correct: solved ? 1 : 0, attempted: 1,
             startedAt: startedAt, details: details)
         Task { @MainActor in

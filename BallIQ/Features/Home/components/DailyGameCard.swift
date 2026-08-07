@@ -14,6 +14,11 @@ struct DailyGameCard: View {
     /// Optional grain badge (Season / Single Game / Career) in the header band. nil for
     /// Who Am I? cards, which have no grain concept.
     var grain: PuzzleGrain? = nil
+    /// Optional obscurity badge (EASY / MEDIUM / HARD) in the header band. Who Am I? only —
+    /// Keep4/Grid have no difficulty concept, so they leave it nil. Solid-filled in its tier
+    /// color rather than using the default translucent tint, since the whole point of the chip
+    /// is being readable at a glance in a scanned list.
+    var difficulty: WhoAmIPuzzle.Difficulty? = nil
     let completed: Bool
     /// True when one of this puzzle's cards belongs to the signed-in user's favorite team for
     /// `sport` — surfaces as a "YOUR TEAM" badge. Only Keep4 puzzles carry structured
@@ -93,6 +98,17 @@ struct DailyGameCard: View {
                         }
                         if let grain {
                             badge(symbol: grain.symbol, text: grain.badgeLabel)
+                        }
+                        if let difficulty {
+                            // Outlined, unlike the other solid-fill chips: the tier ramp ends in
+                            // red, and MLB's header band is also red — measured on device, the
+                            // HARD chip's fill is rgb(230,58,46) against a rgb(214,40,57) band,
+                            // which is a ~1.1:1 edge and reads as no chip at all, just floating
+                            // text. The outline is drawn in the band's own contrast color, so it
+                            // separates the capsule on every sport rather than only on MLB.
+                            badge(symbol: difficulty.symbol, text: difficulty.badgeLabel,
+                                  fill: difficulty.tint, foreground: difficulty.onTint,
+                                  outlined: true)
                         }
                         if favoriteTeamMatch {
                             badge(symbol: "star.fill", text: String(localized: "YOUR TEAM"))
@@ -185,7 +201,8 @@ struct DailyGameCard: View {
     /// one-line call, not a fourth near-identical block. `fill`/`foreground` default to a
     /// translucent tint of the header ink; the type badge overrides both with a solid color
     /// since it's the puzzle-type signifier and needs to read at a glance, not blend in.
-    private func badge(symbol: String?, text: String, fill: Color? = nil, foreground: Color? = nil) -> some View {
+    private func badge(symbol: String?, text: String, fill: Color? = nil, foreground: Color? = nil,
+                       outlined: Bool = false) -> some View {
         HStack(spacing: 4) {
             if let symbol {
                 Image(systemName: symbol).font(.system(size: 9, weight: .bold))
@@ -197,6 +214,13 @@ struct DailyGameCard: View {
         .foregroundStyle(foreground ?? sport.onCardFill)
         .background(fill ?? sport.onCardFill.opacity(0.18))
         .clipShape(Capsule())
+        // Only the difficulty chip asks for this — a chip whose fill can land near the band's
+        // own color needs an edge that doesn't depend on the fill. See the call site.
+        .overlay {
+            if outlined {
+                Capsule().strokeBorder(sport.onCardFill.opacity(0.85), lineWidth: 1.5)
+            }
+        }
     }
 }
 

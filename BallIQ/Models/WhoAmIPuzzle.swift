@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 /// A daily "Who Am I?" puzzle: identify a mystery player from progressively revealed clues.
 struct WhoAmIPuzzle: Identifiable, Codable, Equatable {
@@ -6,24 +6,173 @@ struct WhoAmIPuzzle: Identifiable, Codable, Equatable {
     let sport: Sport
     let clues: [Clue]            // ordered, 6 per the brief
     let answer: AcceptedAnswer
+    /// How obscure the mystery player is, which scales the points on offer.
+    ///
+    /// **Optional, and nil means unrated rather than medium.** Content minted before this
+    /// shipped has no tier, and a community puzzle never will — its subject was chosen by a
+    /// person, so there's no fame percentile to derive one from. Defaulting those to `.medium`
+    /// would have quietly multiplied every existing puzzle's score by 1.25 and stamped a
+    /// difficulty on user-authored content the pipeline never assessed. Unrated puzzles score
+    /// exactly as they did before (see `WhoAmIScoring.multiplier`) and show no chip.
+    let difficulty: Difficulty?
 
     struct Clue: Codable, Equatable, Identifiable {
         let order: Int
         let kind: ClueKind
         let text: String
+        /// The clue's real dimension name (`"draftPick"`, `"college"`, …) and its display
+        /// label, written by the pipeline's clue library. Both nil on older content, which
+        /// only ever carried the six `ClueKind`s.
+        ///
+        /// These exist because `kind` is a **wire-compatibility contract**, not a taxonomy:
+        /// the shipped App Store build decodes `ClueKind` from a fixed six-value set, so the
+        /// pipeline's ~30 dimensions all map onto those six and carry their real identity
+        /// here, where an older client simply ignores them. See
+        /// `tools/ingest/whoami_clues.py`'s module docstring for the full contract.
+        let dimension: String?
+        let label: String?
+
         var id: Int { order }
+
+        /// What to show above the clue text — the pipeline's specific label when present,
+        /// falling back to the legacy `kind`'s broad one.
+        var displayLabel: String { label ?? kind.label }
+
+        /// `dimension`/`label` default to nil so community authoring stays a three-argument
+        /// call: `CreateWhoAmIView` offers exactly the six legacy `ClueKind`s, for which
+        /// `kind.label` already *is* the right label — there's no extra dimension to name.
+        init(order: Int, kind: ClueKind, text: String,
+             dimension: String? = nil, label: String? = nil) {
+            self.order = order
+            self.kind = kind
+            self.text = text
+            self.dimension = dimension
+            self.label = label
+        }
     }
 
     struct AcceptedAnswer: Codable, Equatable {
         let canonical: String
         let aliases: [String]
     }
+
+    /// Obscurity tier. Mirrors `tools/ingest/whoami_clues.py`'s `DIFFICULTIES`, and the tier
+    /// drives both how hard the subject is *and* how revealing its clues are (the pipeline
+    /// biases the clue draw per tier).
+    enum Difficulty: String, Codable, CaseIterable {
+        case easy, medium, hard
+
+        /// Score multiplier — the payoff for a deeper cut.
+        ///
+        /// Owned here rather than read from `content` on purpose: community puzzles decode
+        /// through this same model, and a score multiplier is not something puzzle content
+        /// gets to set for itself. `tools/ingest/whoami_clues.py`'s `POINT_MULTIPLIER` holds
+        /// the same three numbers and `test_point_multipliers_match_the_swift_table` reads
+        /// them back out of *this file*, so the two can't drift silently.
+        var multiplier: Double {
+            switch self {
+            case .easy: return 1.0
+            case .medium: return 1.25
+            case .hard: return 1.6
+            }
+        }
+
+        var badgeLabel: String {
+            switch self {
+            case .easy: return String(localized: "EASY")
+            case .medium: return String(localized: "MEDIUM")
+            case .hard: return String(localized: "HARD")
+            }
+        }
+
+        var symbol: String {
+            switch self {
+            case .easy: return "circle"
+            case .medium: return "circle.lefthalf.filled"
+            case .hard: return "flame.fill"
+            }
+        }
+
+        // MARK: - Palette. A green → orange → red ramp, so the tier reads before the word does.
+        // Deliberately NOT volt (PuzzleGrain owns that hue) and not accent (the puzzle-TYPE
+        // chip owns it, and the Who Am I card's type chip is volt on a sport-colored band) —
+        // a difficulty chip sitting in the same header row has to be its own signal.
+        // Solid-filled rather than the header's default translucent tint for the same reason:
+        // three chips that differ only in wording aren't a difficulty indicator.
+
+        var tint: Color {
+            switch self {
+            case .easy: return .successFill
+            case .medium: return .warningFill
+            case .hard: return .dangerFill
+            }
+        }
+
+        var onTint: Color {
+            switch self {
+            case .easy: return .onSuccess
+            case .medium: return .onWarning
+            case .hard: return .onDanger
+            }
+        }
+
+        var tintBg: Color {
+            switch self {
+            case .easy: return .successBg
+            case .medium: return .warningBg
+            case .hard: return .dangerBg
+            }
+        }
+
+        var tintText: Color {
+            switch self {
+            case .easy: return .successText
+            case .medium: return .warningText
+            case .hard: return .dangerText
+            }
+        }
+
+        /// Spelled-out payoff for the tier, for the pre-game header ("1.6x points").
+        ///
+        /// `.formatted()` rather than `String(format:)`: `%.2g` renders 1.25 as "1.2" — the chip
+        /// under-reported the medium multiplier on screen (caught in the simulator) — and a
+        /// C-format specifier also can't localize the decimal separator, so a Spanish user would
+        /// have seen "1.25x" where the rest of the app says "1,25". This drops trailing zeros
+        /// (1.0 → "1") and keeps the locale's separator.
+        var multiplierLabel: String {
+            String(localized: "\(multiplier.formatted())x points")
+        }
+
+        /// Unknown tier strings decode as `.medium` rather than throwing. A thrown error here
+        /// would fail the decode for the *whole* whoami fetch (rows are decoded as one array),
+        /// dropping every user to the bundled pool over one unrecognized word — the same trap
+        /// `ClueKind` documents. A future fourth tier must not be able to do that.
+        init(from decoder: Decoder) throws {
+            let raw = try decoder.singleValueContainer().decode(String.self)
+            self = Difficulty(rawValue: raw) ?? .medium
+        }
+    }
+
+    /// `difficulty` defaults to nil (unrated) so `CreateWhoAmIView` and every test fixture
+    /// stay four-argument calls. Decoding needs no custom `init(from:)`: an optional property
+    /// is synthesized with `decodeIfPresent`, so a missing key is nil rather than a thrown
+    /// error — which is exactly the behaviour the bundled pool and community rows need.
+    init(id: String, sport: Sport, clues: [Clue], answer: AcceptedAnswer,
+         difficulty: Difficulty? = nil) {
+        self.id = id
+        self.sport = sport
+        self.clues = clues
+        self.answer = answer
+        self.difficulty = difficulty
+    }
 }
 
 enum ClueKind: String, Codable {
     case era, position, teams, statLine, fact, jersey
 
-    /// Sentence-case label (CDS).
+    /// Sentence-case label (CDS). Broad by design — a clue's specific label now rides along
+    /// in `Clue.label` (see `Clue.displayLabel`), and this is the fallback for content that
+    /// predates it.
     var label: String {
         switch self {
         case .era: return String(localized: "Era")
@@ -33,6 +182,19 @@ enum ClueKind: String, Codable {
         case .fact: return String(localized: "Known for")
         case .jersey: return String(localized: "Jersey")
         }
+    }
+
+    /// Unknown kinds decode as `.fact` instead of throwing.
+    ///
+    /// This is the forward-compatibility hole that constrains the whole clue pipeline today:
+    /// the *shipped* build has no such fallback, so one unrecognized `kind` from Supabase
+    /// fails the array decode and silently drops those users to the bundled 24-entry pool.
+    /// That's why `tools/ingest/whoami_clues.py` maps ~30 dimensions onto these six values
+    /// rather than adding cases here. With this in place, a future build can start emitting
+    /// new kinds — but only once the versions without it have aged out.
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = ClueKind(rawValue: raw) ?? .fact
     }
 }
 
@@ -73,7 +235,8 @@ enum WhoAmIAnswerPhoto {
     }
 }
 
-/// Pure scoring for Who Am I? — earlier solve = more points; wrong guesses cost points.
+/// Pure scoring for Who Am I? — earlier solve = more points, obscurer player = more points,
+/// wrong guesses cost points.
 enum WhoAmIScoring {
     static let perClue = [1000, 800, 600, 400, 200, 100]
     static let wrongPenalty = -100
@@ -87,10 +250,38 @@ enum WhoAmIScoring {
         let performance: Double
     }
 
-    static func score(cluesUsed: Int, wrongGuesses: Int, solved: Bool) -> Result {
+    /// Score multiplier for a tier, with **nil (unrated) scoring exactly 1.0** — see
+    /// `WhoAmIPuzzle.difficulty` for why unrated is its own thing rather than medium.
+    static func multiplier(_ difficulty: WhoAmIPuzzle.Difficulty?) -> Double {
+        difficulty?.multiplier ?? 1.0
+    }
+
+    /// Points on offer for solving on `cluesUsed` at `difficulty`, before penalties.
+    ///
+    /// The multiplier applies to the clue value, so the tier scales the whole curve rather
+    /// than adding a flat bonus — solving a hard puzzle on clue 1 is worth the most, which is
+    /// the behaviour the scoreboard should reward. The wrong-guess penalty is deliberately
+    /// *not* scaled: a flat −100 keeps "guess wildly" equally unattractive at every tier.
+    static func value(cluesUsed: Int, difficulty: WhoAmIPuzzle.Difficulty?) -> Int {
         let idx = min(max(cluesUsed - 1, 0), perClue.count - 1)
-        let base = solved ? perClue[idx] : 0
+        return Int((Double(perClue[idx]) * multiplier(difficulty)).rounded())
+    }
+
+    /// The most a puzzle at `difficulty` can pay — a first-clue solve with no wrong guesses.
+    static func maxScore(difficulty: WhoAmIPuzzle.Difficulty?) -> Int {
+        value(cluesUsed: 1, difficulty: difficulty)
+    }
+
+    static func score(cluesUsed: Int, wrongGuesses: Int, solved: Bool,
+                      difficulty: WhoAmIPuzzle.Difficulty? = nil) -> Result {
+        let idx = min(max(cluesUsed - 1, 0), perClue.count - 1)
+        let base = solved ? value(cluesUsed: cluesUsed, difficulty: difficulty) : 0
         let total = max(0, base + wrongGuesses * wrongPenalty)
+        // Deliberately difficulty-INDEPENDENT: `performance` feeds the competitive rating
+        // engine, and it means "how efficiently was this puzzle solved" (clues used), not
+        // "how impressive was it". Folding the multiplier in here would let the tier the
+        // pipeline happened to serve move a player's rating, which is a scoring change
+        // masquerading as a content change. Difficulty pays out in points and XP only.
         let performance = solved ? Double(perClue[idx]) / Double(perClue[0]) : 0
         return Result(cluesUsed: cluesUsed, wrongGuesses: wrongGuesses,
                       solved: solved, total: total, performance: performance)

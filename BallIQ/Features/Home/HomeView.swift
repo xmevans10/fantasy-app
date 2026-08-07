@@ -3,6 +3,7 @@ import UserNotifications
 
 struct HomeView: View {
     @EnvironmentObject private var container: RepositoryContainer
+    @EnvironmentObject private var moments: MomentPresenter
     @Environment(\.scenePhase) private var scenePhase
     /// Root tab selection (0 Home…4 Profile) — the formats grid uses this to jump to the
     /// Versus tab, since Versus is a full tab/repository, not a sheet Home can present itself.
@@ -98,6 +99,7 @@ struct HomeView: View {
                     }
 
                     if showPushPrimer { pushPrimerCard.heroReveal(1) }
+                    else if let moment = inlineMoment { momentCard(moment).heroReveal(1) }
 
                     section("Today's daily games") {
                         VStack(spacing: 14) {
@@ -163,16 +165,20 @@ struct HomeView: View {
             .fullScreenCover(item: $activeWhoAmI, onDismiss: finishDailyGame) { puzzle in
                 WhoAmIGameView(puzzle: puzzle).environmentObject(container)
             }
-            .fullScreenCover(isPresented: $showOverUnder) {
+            // The arcade covers carry `onDismiss: evaluateMoment` where they previously carried
+            // nothing: a Grid or Over/Under session is just as much a finished game as a daily,
+            // and the moment layer's post-game trigger has to fire for all of them or the
+            // thresholds in `MomentEngine` silently only count dailies.
+            .fullScreenCover(isPresented: $showOverUnder, onDismiss: evaluateMoment) {
                 OverUnderGameView().environmentObject(container)
             }
-            .fullScreenCover(isPresented: $showDraftSpin) {
+            .fullScreenCover(isPresented: $showDraftSpin, onDismiss: evaluateMoment) {
                 DraftSpinView().environmentObject(container)
             }
-            .fullScreenCover(isPresented: $showDailyDraft) {
+            .fullScreenCover(isPresented: $showDailyDraft, onDismiss: evaluateMoment) {
                 DraftSpinView(startInDailyDraft: true).environmentObject(container)
             }
-            .fullScreenCover(isPresented: $showGrid) {
+            .fullScreenCover(isPresented: $showGrid, onDismiss: evaluateMoment) {
                 GridGameView().environmentObject(container)
             }
             .navigationDestination(isPresented: $showKeep4Hub) {
@@ -286,15 +292,29 @@ struct HomeView: View {
         .blockCard()
     }
 
+    // MARK: - Moments (post-onboarding prompts)
+
+    /// The armed moment, but only in its quieter second-ask form — the first ask is a sheet
+    /// presented from `ContentView`, and rendering both would be the same prompt twice on one
+    /// screen. Never shown alongside `pushPrimerCard`; `MomentEngine` already refuses to arm
+    /// anything while that card is live (see `MomentContext.pushPrimerPending`), and the `else if`
+    /// at the call site is the belt to that's braces.
+    private var inlineMoment: Moment? {
+        moments.style == .inline ? moments.pending : nil
+    }
+
+    private func momentCard(_ moment: Moment) -> some View {
+        MomentInlineCard(moment: moment, context: moments.context,
+                         onTap: { Haptics.tap(); moments.escalate() },
+                         onDismiss: { withAnimation(Motion.easeOut) { moments.dismiss() } })
+            .onAppear { moments.markShown(container: container) }
+    }
+
     /// Offered only once a streak actually exists (i.e. a game was completed) and only while the
     /// system prompt is still unspent — a `denied` install must never see it again.
     private func refreshPushPrimer() async {
         if DebugLaunch.forcePushPrimer { showPushPrimer = true; return }
-        guard ActivationState().shouldOfferPushPrimer, container.streak > 0 else {
-            showPushPrimer = false
-            return
-        }
-        showPushPrimer = await PushNotificationManager.currentAuthorizationStatus() == .notDetermined
+        showPushPrimer = await PushPrimer.shouldOffer(streak: container.streak)
     }
 
     private func enableReminders() async {
@@ -354,8 +374,19 @@ struct HomeView: View {
         }
         launchedDaily = nil
         // A first completion is exactly when the streak becomes worth protecting, so re-evaluate
-        // the reminder primer here rather than waiting for the next launch.
-        Task { await refreshPushPrimer() }
+        // the reminder primer here rather than waiting for the next launch. The moment layer runs
+        // *after* it, and only if it declined — `MomentEngine` reads the same `PushPrimer` answer.
+        Task {
+            await refreshPushPrimer()
+            await moments.evaluate(container: container, trigger: .postGame)
+        }
+    }
+
+    /// Post-game moment trigger for the covers that record nothing else. Runs from `onDismiss`,
+    /// never from inside the game: a `.sheet` cannot present over a live `fullScreenCover`, and a
+    /// moment armed under one would be marked shown for a sheet the player never saw.
+    private func evaluateMoment() {
+        Task { await moments.evaluate(container: container, trigger: .postGame) }
     }
 
     private func launch(_ format: GameFormat) {
@@ -468,6 +499,7 @@ struct HomeView: View {
                               sport: puzzle.sport,
                               title: String(localized: "Guess today's mystery player"),
                               subtitle: String(localized: "\(puzzle.clues.count) clues"),
+                              difficulty: puzzle.difficulty,
                               completed: container.hasCompletedToday(puzzleID: puzzle.id),
                               typeColor: .voltFill, onTypeColor: .onVolt,
                               ranked: true,

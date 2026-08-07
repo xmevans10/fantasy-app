@@ -177,6 +177,7 @@ struct BrowseView: View {
             DailyGameCard(formatName: "Who am I?", symbol: "questionmark.circle.fill", sport: p.sport,
                           title: String(localized: "Guess today's mystery player"),
                           subtitle: String(localized: "\(p.clues.count) clues"),
+                          difficulty: p.difficulty,
                           completed: container.hasCompletedToday(puzzleID: p.id),
                           typeColor: .voltFill, onTypeColor: .onVolt,
                           ranked: true,
@@ -228,6 +229,7 @@ struct BrowseView: View {
     private func card(whoAmI p: WhoAmIPuzzle, number: Int) -> some View {
         DailyGameCard(formatName: "Who am I?", symbol: "questionmark.circle.fill", sport: p.sport,
                       title: "Mystery player #\(number)", subtitle: "\(p.clues.count) clues · archive",
+                      difficulty: p.difficulty,
                       completed: container.hasCompletedToday(puzzleID: p.id), typeColor: .voltFill, onTypeColor: .onVolt) {
             playArchive { activeWhoAmI = p }
         }
