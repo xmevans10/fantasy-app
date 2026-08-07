@@ -61,9 +61,15 @@ struct GridLocalGenerator {
         case mixedXTeams = "mixed-x-teams"
 
         var weight: Int {
+            // Mirrors grid.py's ARCHETYPES weights (2026-08-07 diversity rebalance): the two
+            // heterogeneous shapes dominate, stat/decade shapes are the strong middle, and
+            // all-teams is a rare change of pace. Keep in lockstep with the server rotation —
+            // the whole point is that daily and practice offer the same mix.
             switch self {
-            case .teamsXStats, .teamsXMixed: return 4
-            case .teamsXDecades, .teamsXTeams, .mixedXTeams: return 3
+            case .teamsXMixed, .mixedXTeams: return 5
+            case .teamsXStats: return 3
+            case .teamsXDecades: return 2
+            case .teamsXTeams: return 1
             }
         }
 

@@ -220,25 +220,38 @@ class Archetype:
 
 ARCHETYPES: tuple[Archetype, ...] = (
     # The original shape, kept in rotation — it's a good board, it was just the *only* board.
-    Archetype("teams-x-decades", "team", "decade", weight=3),
-    Archetype("teams-x-stats", "team", "stat", weight=4),
-    Archetype("teams-x-teams", "team_career", "team_career", weight=3),
-    Archetype("teams-x-mixed", "team", "mixed", weight=4),
+    Archetype("teams-x-decades", "team", "decade", weight=2),
+    Archetype("teams-x-stats", "team", "stat", weight=3),
+    # "Who played for both X and Y" — Immaculate Grid's signature cell, but the least *diverse*
+    # shape the format has (every axis is a team, so a board carries no stats, years or
+    # positions to change the flavour of). Kept at weight 1 as a rare change of pace rather
+    # than a regular occurrence; the rotation's weight is the diversity dial.
+    Archetype("teams-x-teams", "team_career", "team_career", weight=1),
+    Archetype("teams-x-mixed", "team", "mixed", weight=5),
     # The one shape where a single dimension is heterogeneous *including* teams: a left edge
     # reading "MIA / 30+ Pass TD / 1980s" against three team columns. Every other archetype
     # fixes one kind per dimension, so until this one the rows were always teams and only the
     # columns ever varied. `mixed_any` is legal ONLY opposite an all-team dimension — that's
     # what keeps every cell team-anchored (see below) even though the row kinds vary.
-    Archetype("mixed-x-teams", "mixed_any", "team_career", weight=3),
+    Archetype("mixed-x-teams", "mixed_any", "team_career", weight=5),
     # The one shape with no team on either side. Pulled in the first pass and readmitted once
     # `MAX_CELL_ANSWERS` existed to judge it on the thing that actually went wrong (cell size)
     # rather than on shape: "1990s x 30+ Pass TD" is 44 players, tighter than the "DAL x 2000s"
     # that ships today, while the soccer cells that got it pulled ("2010s x 10+ Assists", 765)
-    # now fail the ceiling on their own. Weight 2, the lowest in the rotation — it is the least
-    # proven shape and the only one whose viability varies this sharply by sport, so it earns a
-    # smaller share until real boards back it up.
-    Archetype("decades-x-stats", "decade", "stat", weight=2),
+    # now fail the ceiling on their own.
+    Archetype("decades-x-stats", "decade", "stat", weight=4),
 )
+
+# Diversity weighting (rebalanced 2026-08-07, from a player-reported "all teams again"): the
+# weights above tilt the rotation toward the shapes that *mix kinds on one board* and away from
+# the ones that don't. `mixed-x-teams` and `teams-x-mixed` are the two heterogeneous shapes —
+# between them half of all boards mix stats/positions/decades against teams — and
+# `decades-x-stats` (20%) plus `teams-x-stats` (15%) keep the stat-and-year variety high, so a
+# board rarely reads as one note. The all-team shape (teams-x-teams) dropped 3 -> 1 (~5%), the
+# classic teams x decades to weight 2 (~10%). Total weight 20. These must stay in lockstep with
+# the client-side practice generator (`GridLocalGenerator.Archetype.weight`) — the two rotate
+# independently, and a board is only "diverse" if both surfaces offer the same mix.
+
 
 # EVERY CELL must be SPECIFIC — few enough valid answers that it asks "name the player who
 # connects these two facts" rather than "name any midfielder". That is the product rule, and
