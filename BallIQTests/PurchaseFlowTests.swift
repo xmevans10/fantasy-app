@@ -29,6 +29,28 @@ final class PurchaseFlowTests: XCTestCase {
         session.resetToDefaultState()
         session.clearTransactions()
         session.disableDialogs = true
+
+        // `SKTestSession(contentsOf:)` is broken on the iOS 26.5 simulator runtime (Xcode
+        // 26.5): the initializer succeeds, but every operation on the session fails with
+        // `SKInternalErrorDomain Code=3` and the session never takes control of StoreKit.
+        // Products still resolve, so the tests below get far enough to *look* like real
+        // failures — they aren't. Without auto-approval the purchases sit unconfirmed, no
+        // entitlement is derived, and five assertions fail for a reason that has nothing to
+        // do with the code under test. The visible tell is a real "Sign in to Apple Account"
+        // dialog appearing mid-run, because `disableDialogs` didn't apply either.
+        //
+        // Probed, not version-gated: the write above is silently dropped on an afflicted
+        // runtime, so reading it back is a direct test of "is this session actually in
+        // control" and will start passing by itself the day Apple fixes it. Measured
+        // 2026-08-07 — iOS 18.3: 7/7 pass, 0 errors. iOS 26.5: 5 fail, 35 errors, including
+        // on a brand-new simulator. See AGENTS.md §7.1.
+        try XCTSkipUnless(session.disableDialogs, """
+            SKTestSession cannot take control on this runtime (writes to the session are \
+            being dropped), so the purchase chain cannot be exercised here. Run the purchase \
+            suite on an iOS 18.x simulator: \
+            xcodebuild -scheme BallIQ -destination 'OS=18.3,name=iPhone 15' \\
+              test -only-testing:BallIQTests/PurchaseFlowTests
+            """)
     }
 
     override func tearDown() {

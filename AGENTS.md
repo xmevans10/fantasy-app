@@ -116,15 +116,36 @@ None of that is a product bug. Measured 2026-08-07:
 | iOS 26.5, **brand-new simulator** | identical — so it isn't corrupted device state |
 | iOS 18.3 | **7/7 pass, 0 SK errors** |
 
-Adding the scheme's StoreKit configuration to the Test action (it's only on the Launch
-action) changes nothing. `SKTestSession` simply cannot take control on that runtime.
+The mechanism, from a throwaway diagnostic test (worth rewriting if you ever need it again):
+the initializer *succeeds*, then every operation on the session no-ops. `session.storefront`
+comes back empty, and `disableDialogs = true` **reads back `false`** — the write is silently
+dropped. Products still resolve at the config file's prices, which is what makes the failures
+look real rather than environmental.
+
+Two hypotheses were tested and **both were wrong**, so don't spend the time again:
+
+- *"The Test action is missing the scheme's StoreKit configuration"* (it's only on the Launch
+  action). Adding it changed nothing.
+- *"The scheme config and the test's own `SKTestSession` are competing for the process"* — the
+  Test action does inherit it via `shouldUseLaunchSchemeArgsEnv = "YES"`. Setting that to
+  `"NO"` dropped the error count 35 → 4 and looked promising for about a minute, then the run
+  **hung for an hour on `nw_read_request_report … Operation timed out`**: with no configuration
+  at all, StoreKit falls through to the real App Store over the network. The scheme config was
+  the only thing serving the catalog; the test's own session never worked on this runtime.
+
+**The fix in place:** `PurchaseFlowTests.setUpWithError` writes `disableDialogs` and reads it
+back, and `XCTSkipUnless`es the class when the value didn't stick. That's a probe of the actual
+symptom rather than a version check, so the suite is honestly green on 26.5 (7 skipped in
+0.06s instead of 5 failures after ~40s each) and **starts running again on its own** when Apple
+fixes the runtime. Skipped tests are not coverage: run the purchase suite on 18.3 before
+shipping anything that touches purchases.
 
 **Rule:** when a test in an area you did not touch goes red, establish *where* it's red before
 concluding anything — a second runtime, a pristine simulator, and the commit that added the
 test are all cheap. Two wrong moves are available here and both look productive: "fix" working
-purchase code to satisfy a broken harness, or weaken the assertions until they pass. Run the
-purchase suite on **iOS 18.3** until the tooling is fixed, and say which runtime a green result
-came from when you report it.
+purchase code to satisfy a broken harness, or weaken the assertions until they pass. And when
+you do form a theory, kill it with an experiment rather than shipping it — the "competing
+configurations" story above was coherent, partially supported by the error count, and false.
 
 Related trap from the same session: the first full run also failed
 `GridBoardGalleryTests.testRenderEveryArchetype` and four purchase cases — because the agent
