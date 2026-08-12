@@ -40,3 +40,7 @@ client_*.apps.googleusercontent.com.plist
 
 # Ad-hoc iPad build output (xcodebuild -derivedDataPath build-ipad)
 build-ipad/
+
+# Simulator build used to capture App Store screenshots
+# (xcodebuild -derivedDataPath build-shots)
+build-shots/
