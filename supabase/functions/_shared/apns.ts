@@ -14,7 +14,8 @@ export type NotificationCategory =
   | "versus_challenge"
   | "season_end"
   | "friend_request"
-  | "daily_drop";
+  | "daily_drop"
+  | "engagement";
 
 export interface PushPayload {
   category: NotificationCategory;
@@ -140,6 +141,57 @@ export function buildFriendRequestPayload(requesterUsername: string): PushPayloa
     body: `${requesterUsername} wants to be friends on BallIQ.`,
     data: { tab: "friends" },
   };
+}
+
+/** "Your move" — an open duel where the ball is in this player's court. Names the clock,
+ * because the recipient is deciding whether to open the app right now and that is the answer
+ * to the question they are actually asking. */
+export function buildYourTurnPayload(opponent: string, hoursLeft: number): PushPayload {
+  return {
+    category: "engagement",
+    title: "Your move",
+    body: hoursLeft <= 3
+      ? `${opponent} is waiting and your duel expires in ${hoursLeft}h. Play it before you forfeit.`
+      : `${opponent} is waiting on you. Same board, same clock — go take it.`,
+    data: { tab: "versus" },
+  };
+}
+
+/** The next ladder rung, by name. A named opponent is a concrete invitation in a way that
+ * "come back and play" is not — which is the whole reason the bots have names. */
+export function buildLadderNudgePayload(botName: string, rung: number): PushPayload {
+  return {
+    category: "engagement",
+    title: `${botName} is next`,
+    body: `Rung ${rung} of 30 is waiting. Same board, same clock, and you watch their score climb while you play.`,
+    data: { tab: "versus" },
+  };
+}
+
+/** Where they stand in their weekly cohort. Only sent with a real, current position. */
+export function buildLeagueNudgePayload(rank: number, xpToNext: number): PushPayload {
+  return {
+    category: "engagement",
+    title: `You're ${ordinal(rank)} in your league`,
+    body: xpToNext > 0
+      ? `${xpToNext} XP would move you up a place. One puzzle usually covers it.`
+      : "Hold your spot — the week closes Monday.",
+    data: { tab: "leagues" },
+  };
+}
+
+/** The evening recap, for a player who already played and so has no streak to save. Reports
+ * something that actually happened today rather than inventing a reason to buzz. */
+export function buildEveningRecapPayload(streak: number, rungsCleared: number): PushPayload {
+  const body = rungsCleared > 0
+    ? `${rungsCleared} ${rungsCleared === 1 ? "rung" : "rungs"} cleared and your ${streak}-day streak is safe. Tomorrow's boards land at 9am.`
+    : `Your ${streak}-day streak is safe. Tomorrow's boards land at 9am.`;
+  return { category: "engagement", title: "Day locked in", body, data: { tab: "home" } };
+}
+
+function ordinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"], v = n % 100;
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
 }
 
 // MARK: - ES256 JWT signing (Web Crypto, no external library)

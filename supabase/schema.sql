@@ -669,6 +669,31 @@ create table if not exists public.notification_settings (
 alter table public.notification_settings
   add column if not exists daily_drop boolean not null default true;
 
+-- The midday "your move" nudge and the evening recap — the two slots added 2026-08-13 to reach
+-- a three-a-day cadence (migration 0018). See supabase/functions/_shared/cadence.ts for the
+-- hard daily ceiling that governs all of them.
+alter table public.notification_settings
+  add column if not exists engagement boolean not null default true;
+
+-- Every push actually sent, keyed by the RECIPIENT's local day. Two jobs in one table: it is the
+-- audit trail (nothing recorded what had been sent to whom before this), and its unique index is
+-- the idempotency guard that stops an hourly cron double-firing the same category.
+create table if not exists public.notification_log (
+  id         bigint generated always as identity primary key,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  category   text not null,
+  local_day  date not null,
+  sent_at    timestamptz not null default now()
+);
+create index if not exists notification_log_user_day_idx
+  on public.notification_log (user_id, local_day);
+create unique index if not exists notification_log_once_per_day
+  on public.notification_log (user_id, category, local_day);
+alter table public.notification_log enable row level security;
+drop policy if exists "notification_log own read" on public.notification_log;
+create policy "notification_log own read" on public.notification_log
+  for select using (auth.uid() = user_id);
+
 alter table public.seasons              enable row level security;
 alter table public.cohorts              enable row level security;
 alter table public.cohort_members       enable row level security;

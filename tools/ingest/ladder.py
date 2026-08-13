@@ -338,9 +338,15 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> list[dict]:
             skill = min(0.98, skill + 0.04)
             achieved = win_rate(fmt, pick.diffs, skill, true_keeps=pick.true_keeps)
 
-        # The bot whose natural level is nearest this rung's solved skill, so a character's
-        # appearances cluster into a stretch of the ladder rather than scattering across it.
-        bot = min(bots, key=lambda b: abs(b["base_skill"] - skill))
+        # The bot is a **character**, assigned by position on the ladder — not by the solved
+        # `bot_skill`, which is a mechanical quantity that says nothing about who you are
+        # fighting. Mapping character to solved skill (the first attempt) collapsed the ramp:
+        # solved skills cluster high because a hard board needs a strong bot to stay a contest,
+        # so The Oracle turned up at rung 12, The Archivist at rung 8, and **The Rookie was
+        # never assigned a single rung**. Straight bands keep the narrative rookie -> oracle
+        # intact and leave `bot_skill` free to be whatever the curve needs.
+        band = min(len(bots) - 1, (rung - 1) * len(bots) // RUNG_COUNT)
+        bot = sorted(bots, key=lambda b: b["base_skill"])[band]
         base_seconds = {"keep4": 120, "whoami": 90, "grid": 180}[fmt]
         rows.append({
             "rung": rung,
