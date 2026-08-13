@@ -16,7 +16,8 @@ struct PublicProfileView: View {
     @State private var loaded = false
     @State private var friendEdge: FriendEdge?
     @State private var working = false
-    @State private var challengeSent: Sport?
+    @State private var showDuelPicker = false
+    @State private var challengeSentSummary: String?
     @State private var errorMessage: String?
 
     private var isMe: Bool { auth.userID == userID }
@@ -89,14 +90,21 @@ struct PublicProfileView: View {
         VStack(spacing: 10) {
             HStack(spacing: 10) {
                 friendButton
-                challengeMenu(profile)
+                challengeButton
             }
             if let errorMessage {
                 Text(errorMessage).font(.label12).foregroundStyle(Color.dangerText)
             }
-            if let challengeSent {
-                Text("Challenge sent — today's \(challengeSent.displayName) puzzle.")
+            if let challengeSentSummary {
+                Text("Challenge sent — \(challengeSentSummary).")
                     .font(.label12).foregroundStyle(Color.successText)
+            }
+        }
+        .sheet(isPresented: $showDuelPicker) {
+            DuelPickerSheet(opponentID: userID, opponentUsernameHint: profile.username,
+                            defaultSport: profile.bestSport) { sport, format in
+                challengeSentSummary = "\(sport.displayName) · \(format.displayName)"
+                Haptics.success()
             }
         }
     }
@@ -153,17 +161,18 @@ struct PublicProfileView: View {
         }
     }
 
-    private func challengeMenu(_ profile: PublicProfile) -> some View {
-        Menu {
-            ForEach(Sport.allCases) { sport in
-                Button(sport.displayName) {
-                    Task { await challenge(profile, sport: sport) }
-                }
-            }
+    // Challenging resolves `userID` directly (this view was constructed with one) rather than
+    // round-tripping through `profile.username` — a profile with no chosen username used to
+    // disable this button outright, which was a second cold-start bottleneck independent of
+    // the friends graph (see prompts/HANDOFF-multiplayer.md).
+    private var challengeButton: some View {
+        Button {
+            Haptics.tap()
+            showDuelPicker = true
         } label: {
-            actionLabel("CHALLENGE", symbol: "bolt.fill", fill: Color.voltFill, ink: Color.onVolt)
+            actionLabel("CHALLENGE", symbol: "bolt.fill", fill: Color.ink, ink: Color.surface0)
         }
-        .disabled(profile.username == nil || working)
+        .buttonStyle(PrimePressStyle())
     }
 
     private func actionLabel(_ text: String, symbol: String, fill: Color, ink: Color) -> some View {
@@ -183,19 +192,6 @@ struct PublicProfileView: View {
         await operation()
         await refreshEdge()
         await container.refreshFriendBadge()
-        working = false
-    }
-
-    private func challenge(_ profile: PublicProfile, sport: Sport) async {
-        guard let username = profile.username else { return }
-        working = true; errorMessage = nil; challengeSent = nil
-        do {
-            _ = try await container.createVersusChallenge(username: username, sport: sport)
-            challengeSent = sport
-            Haptics.success()
-        } catch {
-            errorMessage = String(localized: "Couldn't send the challenge. Try again.")
-        }
         working = false
     }
 
@@ -239,5 +235,99 @@ struct PublicProfileView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .cardSurface()
+    }
+}
+
+/// Sport + format picker for sending a Versus challenge to a known `user_id`. One sheet reused
+/// by every surface that already has an opponent's id in hand (this view, `FriendsView`,
+/// `LeaguesView`'s standings rows) rather than three near-identical copies of the same two
+/// `PrimeSegmentedControl`s — mirrors `VersusView`'s username-entry `ChallengeSheet`, minus the
+/// username field this one doesn't need. Duels are no longer Keep4-only, so — unlike the old
+/// sport-only menu this replaced — a format must be chosen too.
+struct DuelPickerSheet: View {
+    let opponentID: String
+    var opponentUsernameHint: String? = nil
+    var defaultSport: Sport = .nfl
+    /// Fires once the challenge is confirmed sent; the sheet dismisses itself.
+    let onSent: (Sport, PuzzleFormat) -> Void
+
+    @EnvironmentObject private var container: RepositoryContainer
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var sport: Sport
+    @State private var format: PuzzleFormat = .keep4
+    @State private var sending = false
+    @State private var errorMessage: String?
+
+    init(opponentID: String, opponentUsernameHint: String? = nil, defaultSport: Sport = .nfl,
+        onSent: @escaping (Sport, PuzzleFormat) -> Void) {
+        self.opponentID = opponentID
+        self.opponentUsernameHint = opponentUsernameHint
+        self.defaultSport = defaultSport
+        self.onSent = onSent
+        _sport = State(initialValue: defaultSport)
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 18) {
+                if let opponentUsernameHint {
+                    Text("Challenge @\(opponentUsernameHint)")
+                        .font(.heading)
+                        .foregroundStyle(Color.textPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("SPORT").font(.label12).foregroundStyle(Color.textMuted)
+                    PrimeSegmentedControl(options: Sport.allCases.map { ($0.displayName, $0) },
+                                          selection: $sport)
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("FORMAT").font(.label12).foregroundStyle(Color.textMuted)
+                    PrimeSegmentedControl(options: PuzzleFormat.allCases.map { ($0.displayName, $0) },
+                                          selection: $format)
+                }
+
+                if let errorMessage {
+                    Text(errorMessage).font(.label12).foregroundStyle(Color.dangerText)
+                }
+
+                Button {
+                    Task { await send() }
+                } label: {
+                    Text(sending ? "SENDING…" : "SEND CHALLENGE").ctaLabel(fill: .ink, on: .surface0)
+                }
+                .buttonStyle(PrimePressStyle())
+                .disabled(sending)
+
+                Spacer()
+            }
+            .padding(16)
+            .background(Color.appBackground)
+            .navigationTitle("New Challenge")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func send() async {
+        sending = true; errorMessage = nil
+        do {
+            _ = try await container.createVersusChallenge(userID: opponentID, sport: sport, format: format)
+            onSent(sport, format)
+            dismiss()
+        } catch VersusError.cannotChallengeSelf {
+            errorMessage = String(localized: "You can't challenge yourself.")
+        } catch VersusError.noUnplayedPuzzle {
+            errorMessage = String(localized: "No fresh \(format.displayName) board left for \(sport.displayName) right now — try another format or sport.")
+        } catch {
+            errorMessage = String(localized: "Couldn't send the challenge. Try again.")
+        }
+        sending = false
     }
 }

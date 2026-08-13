@@ -111,7 +111,8 @@ struct ContentView: View {
             PaywallView(trigger: .grid).environmentObject(container)
         }
         .fullScreenCover(item: $linkWhoAmI) { link in
-            WhoAmIGameView(puzzle: link.puzzle, ranked: false, communityID: link.communityID)
+            WhoAmIGameView(puzzle: link.puzzle, ranked: false, communityID: link.communityID,
+                          challenge: link.challenge)
                 .environmentObject(container)
         }
     }
@@ -151,10 +152,10 @@ struct ContentView: View {
     /// Open the challenged board.
     ///
     /// The Grid resolves its own board inside `GridGameView` (it already owns a load path and an
-    /// honest "that board's gone" state). Keep 4 can't — `Keep4GameView` takes a concrete puzzle
-    /// — so it is resolved here, and the challenge is attached **only** on an exact match:
-    /// `isCanonicalToday` false means the pool had no row for that day and `pick` fell back to a
-    /// modulo choice, which would be a different puzzle wearing the right date.
+    /// honest "that board's gone" state). Keep 4 and Who Am I? can't — both take a concrete
+    /// puzzle — so they're resolved here, and the challenge is attached **only** on an exact
+    /// match: `isCanonicalToday` false means the pool had no row for that day and `pick` fell
+    /// back to a modulo choice, which would be a different puzzle wearing the right date.
     private func accept(_ challenge: ChallengeLink) async {
         container.track(.shareLinkOpened, [
             "kind": "challenge",
@@ -186,6 +187,16 @@ struct ContentView: View {
                                                 "sport": challenge.sport.rawValue,
                                                 "board": exact ? "exact" : "fallback"])
             linkKeep4 = LinkedPlay(puzzle: resolved.content, challenge: exact ? challenge : nil)
+        case .whoami:
+            guard let day = challenge.date else { return }
+            let filter = SportFilter(rawValue: challenge.sport.rawValue) ?? .all
+            guard let resolved = await container.puzzles.whoAmIPuzzle(for: filter, date: day)
+            else { return }
+            let exact = resolved.isCanonicalToday
+            container.track(.challengeStarted, ["format": challenge.format.rawValue,
+                                                "sport": challenge.sport.rawValue,
+                                                "board": exact ? "exact" : "fallback"])
+            linkWhoAmI = LinkedPlay(puzzle: resolved.content, challenge: exact ? challenge : nil)
         }
     }
 }

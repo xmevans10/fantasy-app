@@ -22,7 +22,11 @@ enum DebugLaunch {
     /// chrome (hero + season-end countdown + board) can be captured without a real account:
     /// `-screenshotSeason`. The board itself is whatever the live season currently holds.
     static var autoOpenSeason: Bool { has("-screenshotSeason") }
-    static var autoOpenVersus: Bool { has("-screenshotVersus") }
+    static var autoOpenVersus: Bool { has("-screenshotVersus") || has("-screenshotLadder") }
+    /// Pushes the bot ladder from the Versus tab. Separate from `-screenshotVersus` because the
+    /// ladder is a pushed screen, not the tab root, and it renders signed-out (content is
+    /// world-readable; only playing a rung needs an account).
+    static var autoOpenLadder: Bool { has("-screenshotLadder") }
     static var autoOpenCommunity: Bool { has("-screenshotCommunity") }
     static var autoOpenBrowse: Bool { has("-screenshotBrowse") }
     static var autoOpenModeration: Bool { has("-screenshotModeration") }

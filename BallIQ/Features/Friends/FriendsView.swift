@@ -14,10 +14,12 @@ struct FriendsView: View {
     @State private var addError: String?
     @State private var sending = false
 
-    /// Which friend's challenge menu most recently fired, for the transient "sent" line —
-    /// keyed by userID since multiple friend rows share this screen.
+    /// Which friend's challenge sheet is open — `.sheet(item:)` needs the row itself, not just
+    /// a bool, since several rows share this screen.
+    @State private var challengingRow: FriendRow?
+    /// Which friend's duel most recently sent successfully, for the transient "sent" line —
+    /// keyed by userID.
     @State private var challengeSentFor: String?
-    @State private var challengeFailedFor: String?
 
     var body: some View {
         NavigationStack {
@@ -37,6 +39,11 @@ struct FriendsView: View {
             .toolbar { Wordmark.toolbarItem() }
         }
         .task { await load() }
+        .sheet(item: $challengingRow) { row in
+            DuelPickerSheet(opponentID: row.userID, opponentUsernameHint: row.username) { _, _ in
+                challengeSentFor = row.userID
+            }
+        }
     }
 
     private var signInPrompt: some View {
@@ -196,29 +203,27 @@ struct FriendsView: View {
                         Text(row.username ?? "Player").font(.bodyStrong).foregroundStyle(Color.textPrimary)
                         if challengeSentFor == row.userID {
                             Text("Challenge sent").font(.label11).foregroundStyle(Color.successText)
-                        } else if challengeFailedFor == row.userID {
-                            Text("Couldn't send — try again").font(.label11).foregroundStyle(Color.dangerText)
                         }
                     }
                 }
             }
             .buttonStyle(.plain)
             Spacer()
-            Menu {
-                ForEach(Sport.allCases) { sport in
-                    Button(sport.displayName) {
-                        Task { await challenge(row, sport: sport) }
-                    }
-                }
+            // Resolves `row.userID` directly (already on hand) rather than round-tripping
+            // through `row.username` — see `PublicProfileView.challengeButton`'s comment for
+            // why that round trip was itself a cold-start bottleneck.
+            Button {
+                challengeSentFor = nil
+                challengingRow = row
             } label: {
                 Image(systemName: "bolt.fill")
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Color.onVolt)
+                    .foregroundStyle(Color.surface0)
                     .frame(width: 34, height: 34)
-                    .background(Color.voltFill)
+                    .background(Color.ink)
                     .clipShape(Circle())
             }
-            .disabled(row.username == nil)
+            .buttonStyle(PrimePressStyle())
         }
         .padding(12)
         .cardSurface()
@@ -226,22 +231,6 @@ struct FriendsView: View {
             Button("Remove friend", role: .destructive) {
                 Task { await removeFriend(row) }
             }
-        }
-    }
-
-    private func challenge(_ row: FriendRow, sport: Sport) async {
-        guard let username = row.username else { return }
-        do {
-            _ = try await container.createVersusChallenge(username: username, sport: sport)
-            challengeSentFor = row.userID
-            challengeFailedFor = nil
-            Haptics.success()
-        } catch {
-            // Inline failure state mirrors the "Challenge sent" success treatment — the old
-            // silent catch left the tap looking like it worked when it hadn't.
-            challengeFailedFor = row.userID
-            if challengeSentFor == row.userID { challengeSentFor = nil }
-            Haptics.reject()
         }
     }
 

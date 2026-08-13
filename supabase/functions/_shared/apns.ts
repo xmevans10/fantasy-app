@@ -66,6 +66,53 @@ export function buildVersusChallengePayload(challengerUsername: string): PushPay
   };
 }
 
+/** Your opponent played and you haven't — the "you're up, and there's a clock" nudge.
+ *
+ * Names the clock explicitly. A duel where the other side has already banked a score is the one
+ * moment the timed mechanic is worth spelling out in a notification: the recipient is deciding
+ * whether to open the app *right now*, and "2 minutes" is the answer to the question they're
+ * actually asking. */
+export function buildVersusFinishedPayload(
+  opponentUsername: string,
+  timeLimitSeconds: number,
+): PushPayload {
+  const minutes = Math.round(timeLimitSeconds / 60);
+  const clock = timeLimitSeconds < 90
+    ? `${timeLimitSeconds} seconds`
+    : `${minutes} minute${minutes === 1 ? "" : "s"}`;
+  return {
+    category: "versus_challenge",
+    title: `${opponentUsername} just played`,
+    body: `Their score is in. You've got ${clock} on the clock once you open the board.`,
+    data: { tab: "versus" },
+  };
+}
+
+/** The duel is settled. `won`/`drawn` come from the row, not from a score comparison — the
+ * tiebreak is elapsed time and lives server-side, so this must never try to re-derive it. */
+export function buildVersusSettledPayload(
+  opponentUsername: string,
+  won: boolean,
+  drawn: boolean,
+): PushPayload {
+  if (drawn) {
+    return {
+      category: "versus_challenge",
+      title: "Dead heat",
+      body: `You and ${opponentUsername} finished level, right down to the second.`,
+      data: { tab: "versus" },
+    };
+  }
+  return {
+    category: "versus_challenge",
+    title: won ? "You won the duel" : "Duel settled",
+    body: won
+      ? `${opponentUsername} came up short. The series moves your way.`
+      : `${opponentUsername} took that one. Rematch?`,
+    data: { tab: "versus" },
+  };
+}
+
 export function buildSeasonEndPayload(hoursRemaining: number): PushPayload {
   return {
     category: "season_end",

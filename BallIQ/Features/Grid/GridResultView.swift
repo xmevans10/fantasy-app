@@ -14,6 +14,10 @@ struct GridResultView: View {
     /// Set when this run was itself opened from someone's challenge link — drives the
     /// head-to-head banner and the `challenge_completed` event.
     var challenge: ChallengeLink? = nil
+    /// Set when this run was a **bot ladder** duel — the finished head-to-head against the rung's
+    /// bot. Distinct from `challenge`, which is a link someone sent; both render through
+    /// `ChallengeResultBanner`, and exactly one of them is ever set.
+    var duelVerdict: DuelVerdict? = nil
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
@@ -68,6 +72,9 @@ struct GridResultView: View {
                     scoreHeader.heroReveal(0)
                     // Above the leaderboard on purpose: when you came here from a friend's dare,
                     // the one number you want is theirs, not this week's top 10.
+                    if let duelVerdict, challenge == nil {
+                        ChallengeResultBanner(verdict: duelVerdict).heroReveal(1)
+                    }
                     if let challenge {
                         ChallengeResultBanner(challenge: challenge, hits: correctCount, score: score)
                             .heroReveal(1)

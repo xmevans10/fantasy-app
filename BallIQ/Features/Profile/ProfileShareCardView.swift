@@ -77,4 +77,16 @@ struct ProfileShareCardView: View {
 
     @MainActor
     func rendered(scale: CGFloat = 3) -> Image { renderedForShare(scale: scale) }
+
+    /// The share text that belongs alongside `rendered()` — this card used to go out as a bare
+    /// image with nothing to tap, so the recipient had to already know (and type) the
+    /// sharer's username. `ShareMessage` owns the App Store URL/campaign convention; the
+    /// `profile_<username>` token keeps "someone shared their card" installs distinguishable
+    /// in App Analytics from `chal_<format>_<sport>` Versus-challenge installs.
+    var shareText: String {
+        ShareMessage.compose(
+            headline: "I'm @\(username) on BallIQ — \(tier.name) tier in \(sport.displayName).",
+            detail: "See if you can beat my rating.",
+            campaign: "profile_\(username)")
+    }
 }

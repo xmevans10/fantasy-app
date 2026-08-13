@@ -62,8 +62,8 @@ Zone math/legend/copy share one source (`LeagueRules` in `Cohort.swift` — cuto
 zone-per-rank, legend strings, `nextRollover`), so a 9-player cohort honestly reads
 "Top 4". Coherence fixes landed with it: Versus rows show the live best-of-7 series
 (batched `versus_series` fetch), forfeit lines say who didn't play + open rows show
-hours-left, the Versus tab badges unplayed incoming challenges (foreground-refresh
-stopgap until APNs), Friends-tab challenge failures surface inline, the Leagues recap
+hours-left, the Versus tab badges unplayed incoming challenges (a foreground-refresh
+belt to APNs's braces; APNs itself is configured — see §8), Friends-tab challenge failures surface inline, the Leagues recap
 banner finally uses `prior_zone`, and the unplaced empty state counts down to the real
 Monday 05:00 UTC rollover instead of claiming mid-week play gets you in. Screenshot
 flags: `-screenshotLeaguesInfo`/`-screenshotVersusInfo`/`-screenshotDailyDraftInfo`
@@ -112,13 +112,23 @@ M5/M18 sessions — treat as standing direction, apply proactively to new work):
 - **Edge functions** ([supabase/functions/](../supabase/functions/), Deno): server-side jobs
   the client can't do itself — `weekly-cohort-rollover` (closes/opens Leagues seasons),
   `versus-timeout` (forfeits expired 24h challenges via `resolve_versus_challenge` RPC),
-  `notify-streak-risk`, `notify-season-end`, `notify-versus-challenge` (push copy, call
-  `_shared/apns.ts`). **Deployed and scheduled as of 2026-07-05**: all five are live on
-  Supabase; the four cron-driven ones (`weekly-cohort-rollover` Mondays 05:00 UTC,
-  `versus-timeout` every 15 min, `notify-streak-risk` hourly, `notify-season-end` 3x/day) show
-  `active: true` in `cron.job`. `notify-versus-challenge` is deployed but its DB webhook trigger
-  (Database → Webhooks on `versus_challenges` INSERT) still needs manual setup in the Supabase
-  dashboard — no API path found for that. `apns.ts`'s `sendApnsPush` is still stubbed pending a
+  `notify-streak-risk`, `notify-season-end`, `notify-versus-challenge`,
+  `notify-versus-result` (push copy, call `_shared/apns.ts`). **Deployed and scheduled as of
+  2026-07-05**: all are live on Supabase; the four cron-driven ones (`weekly-cohort-rollover`
+  Mondays 05:00 UTC, `versus-timeout` every 15 min, `notify-streak-risk` hourly,
+  `notify-season-end` 3x/day) show `active: true` in `cron.job`. The three trigger-driven ones
+  fire from pg_net DB triggers (`versus_challenges_notify` on INSERT,
+  `versus_challenges_result_notify` on a score going null → non-null,
+  `friends_notify` on a pending request) — **no dashboard webhook setup is needed**, and the
+  earlier note that it was is stale.
+
+  **Trigger-driven pushes were 401ing until 2026-08-13** and nobody could see it: every
+  `notify-*` function runs `verify_jwt = true`, the pg_cron jobs pass a bearer token but the
+  triggers posted only a Content-Type header, and `net.http_post` is fire-and-forget so the
+  insert always succeeded. Measured both ways on the same request — no Authorization → `401
+  UNAUTHORIZED_NO_AUTH_HEADER`; through the new `public.edge_function_headers()` → `200`. Fixed
+  in `supabase/migrations/0017_edge_function_trigger_auth.sql`, which reads the bearer token
+  from Vault (same pattern as `get_apns_config()`) so no key lands in the public repo. `apns.ts`'s `sendApnsPush` is still stubbed pending a
   real APNs key (`APNS_KEY_ID`/`APNS_TEAM_ID`/`APNS_PRIVATE_KEY`/`APNS_BUNDLE_ID` as Edge
   Function secrets) — until then it logs instead of sending. No Leagues season/cohort exists
   yet either — `weekly-cohort-rollover` bootstraps one on first run, which hasn't happened; it
@@ -1922,6 +1932,58 @@ work**, which move to an opportunistic bucket instead of their own version. Same
   building anything new.
 - Exit: `>10` share-grid posts/week from accounts that aren't the official one (MARKETING.md's
   own KPI), and at least one App Store promo-text rotation shipped for the kickoff window.
+
+**v1.5.0 "Duel" — the multiplayer overhaul (shipped 2026-08-13, `prompts/HANDOFF-multiplayer.md`).**
+
+*Net-new scope against this roadmap as drafted, taken deliberately.* §9.3 sequenced growth and
+new engagement features ahead of everything else and listed no multiplayer item. The defensible
+framing, and the one acted on: **Versus is the single largest engagement feature already built
+and unfinished, so finishing it executes the §9.3 directive rather than competing with it.** The
+evidence for "unfinished" is not a judgement call — live production, 2026-08-12: 9 profiles, 1
+friend edge, 1 challenge ever created, 0 completed duels. Two of the causes turned out to be
+outright bugs (below), not design.
+
+- **Two silent production bugs, both invisible from the client and both fixed.**
+  (a) `VersusChallenge`/`VersusSeries` declare explicit snake_case `CodingKeys` but were fetched
+  through `client.select`'s default `.supabase` decoder, which sets `.convertFromSnakeCase` —
+  so `series_id` was rewritten to `seriesId` before lookup, every row threw `keyNotFound`, and
+  every Versus fetch's `try?` turned that into `[]`. **The Versus tab could never display a
+  challenge, even when the row existed.** Fixed with `JSONDecoder.supabaseExplicitKeys` and
+  pinned by `SupabaseDecoderTests`.
+  (b) Every `notify-*` Edge Function runs `verify_jwt = true`, and the pg_net triggers posted no
+  Authorization header — so every trigger-driven push 401'd from the day it shipped. Measured
+  both ways on the same request: `401 UNAUTHORIZED_NO_AUTH_HEADER` vs `200`. Fixed in migration
+  0017 via `public.edge_function_headers()` (bearer token from Vault).
+- **Phase 0 — correctness** (migration 0015, each verified against live Postgres): the duel
+  board is picked server-side from the released archive excluding anything either player has a
+  `game_results` row for (kills the play-your-daily-then-challenge exploit); a score tie is
+  broken on **elapsed time**, not on who sent the challenge, with a true dead heat resolving as
+  a draw; one open duel per series (was an unbounded spam vector); the never-written `'active'`
+  status is gone behind a check constraint; `recentResults` is bounded; a series is **first to
+  4** rather than all seven; and `format` exists on both tables and in the pair-uniqueness index
+  (without it a Grid duel silently collided with an existing Keep4 series in the same sport).
+- **Phase 1 — timed duels.** Per-side `time_limit_seconds` with `*_started_at` written
+  server-side when that player opens the board; `submit_versus_result` validates against the
+  server's own clock (a late submission scores 0) and is first-write-wins. Grid and Who Am I?
+  join Keep4 as duelable through one shared `DuelSession`/`DuelBoard` seam; `ChallengeLink`'s
+  nested format enum became the shared `PuzzleFormat`. "Your opponent finished" push added
+  (`notify-versus-result`).
+- **Phase 2 — the bot ladder** (migration 0016). 30 rungs, 6 named bots, four independent
+  difficulty levers (skill 0.35→0.98, clock tightening to 55%, puzzle difficulty band by tier,
+  mode mixing from rung 7). Bots are **skill-limited solvers**, not score generators: `BotSolver`
+  runs the rung's real puzzle on-device and the run replays beside the player in real time, which
+  delivers a live-feeling opponent with **zero realtime infrastructure**. `ladder_attempts`
+  doubles as the per-board score corpus human ghost duels will need later.
+- **Phase 3 — live duels: still deferred**, per the handoff's own argument (the app has zero
+  third-party dependencies; adding `supabase-swift` for Realtime, or hand-rolling Phoenix
+  channels into a `MockURLProtocol` blind spot, both lose to AGENTS.md §11's ladder). When it is
+  time, poll one row every 1–2s.
+- **Cold-start fixes**: challenging resolves a `user_id` directly instead of round-tripping a
+  username (the CHALLENGE button was disabled for anyone without one), `ProfileShareCardView`
+  finally carries a URL, and cohort standings rows gained a duel entry point (~30 rating-matched
+  players who never opted into anything).
+- Exit: a completed human duel. Nothing here can manufacture one — it needs two real accounts —
+  so the ladder is what carries engagement at N=1 in the meantime.
 
 **v1.7 "Engage" — the candidate pool that's sat unscheduled since 2026-07-17.**
 - [agent] Home-screen widget: streak + daily countdown. Pairs naturally with the push system

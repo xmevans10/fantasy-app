@@ -4,6 +4,18 @@ struct WhoAmIResultView: View {
     let puzzle: WhoAmIPuzzle
     let result: WhoAmIScoring.Result
     var rewards: RepositoryContainer.SessionRewards? = nil
+    /// Whether this was today's daily board, and therefore something a friend can be dared onto
+    /// — same distinction `Keep4ResultView.isDaily` documents (`ranked || challenge != nil` at
+    /// `WhoAmIGameView`'s call site). Defaults to **false**, the safe answer: this view also
+    /// serves the archive, community puzzles and deep links, none of which can honestly claim
+    /// "today's".
+    var isDaily: Bool = false
+    /// Set when this run came from someone's challenge link — see `ChallengeResultBanner`.
+    var challenge: ChallengeLink? = nil
+    /// Set when this run was a **bot ladder** duel — the finished head-to-head against the rung's
+    /// bot. Distinct from `challenge`, which is a link someone sent; both render through
+    /// `ChallengeResultBanner`, and exactly one of them is ever set.
+    var duelVerdict: DuelVerdict? = nil
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
@@ -21,9 +33,17 @@ struct WhoAmIResultView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     scoreHeader.heroReveal(0)
-                    if let rewards { RewardsRow(rewards: rewards).heroReveal(1) }
-                    answerCard.heroReveal(2)
-                    shareRow.heroReveal(3)
+                    if let duelVerdict, challenge == nil {
+                        ChallengeResultBanner(verdict: duelVerdict).heroReveal(1)
+                    }
+                    if let challenge {
+                        ChallengeResultBanner(challenge: challenge,
+                                              hits: ChallengeLink.whoAmIHits(result), score: result.total)
+                            .heroReveal(1)
+                    }
+                    if let rewards { RewardsRow(rewards: rewards).heroReveal(challenge == nil ? 1 : 2) }
+                    answerCard.heroReveal(challenge == nil ? 2 : 3)
+                    shareRow.heroReveal(challenge == nil ? 3 : 4)
                 }
                 .padding(16)
             }
@@ -31,7 +51,17 @@ struct WhoAmIResultView: View {
         }
         .background(Color.appBackground)
         .celebrate(on: $confetti, intensity: result.cluesUsed == 1 ? 90 : 50)
-        .onAppear { if result.solved { confetti += 1 } }
+        .onAppear {
+            if let challenge {
+                container.track(.challengeCompleted, [
+                    "format": ChallengeLink.Format.whoami.rawValue,
+                    "sport": puzzle.sport.rawValue,
+                    "outcome": String(describing: challenge.outcome(hits: ChallengeLink.whoAmIHits(result),
+                                                                    score: result.total)),
+                ])
+            }
+            if result.solved { confetti += 1 }
+        }
         .task {
             let rows = await container.catalog.search(
                 CatalogQuery(sport: puzzle.sport, name: puzzle.answer.canonical), limit: 30)
@@ -103,29 +133,55 @@ struct WhoAmIResultView: View {
         }.joined()
     }
 
-    static func shareText(puzzle: WhoAmIPuzzle, result: WhoAmIScoring.Result) -> String {
-        let headline = result.solved
-            ? "I got today's \(puzzle.sport.displayName) Who Am I? in \(result.cluesUsed) clue\(result.cluesUsed == 1 ? "" : "s")."
-            : "Today's \(puzzle.sport.displayName) Who Am I? beat me."
-        return ShareMessage.compose(
-            headline: headline,
-            board: emojiClues(result: result, clueCount: puzzle.clues.count),
-            detail: "\(ShareMessage.points(result.total)) pts — no spoilers, go find out who.",
-            campaign: "res_whoami_\(puzzle.sport.rawValue)")
+    /// The challenge this run represents — what a recipient would be playing against.
+    /// `hits`/`outOf` use `ChallengeLink.whoAmIHits(_:)`'s clue-efficiency unit rather than
+    /// `result.total`, which carries a difficulty multiplier that has no business deciding who
+    /// wins a duel (see that function's doc comment).
+    static func challengeLink(puzzle: WhoAmIPuzzle, result: WhoAmIScoring.Result, date: Date = Date(),
+                              challenger: String? = nil) -> ChallengeLink {
+        ChallengeLink(format: .whoami, sport: puzzle.sport, day: PuzzleStore.localDayString(date),
+                     hits: ChallengeLink.whoAmIHits(result), outOf: ChallengeLink.whoAmIOutOf,
+                     score: result.total, challenger: challenger)
+    }
+
+    /// What actually lands in the share sheet. Pure so the exact text is locked by tests — same
+    /// contract as `GridResultView.shareText`/`Keep4ResultView.shareText`.
+    ///
+    /// `isDaily: false` drops the dare — an archive, community or deep-linked run has no board a
+    /// recipient could actually be sent to, same rule those two formats already follow. Both
+    /// branches stay exactly as spoiler-free as `emojiClues` — neither ever touches
+    /// `puzzle.answer`.
+    static func shareText(puzzle: WhoAmIPuzzle, result: WhoAmIScoring.Result, date: Date = Date(),
+                          isDaily: Bool = true, challenger: String? = nil, now: Date = Date()) -> String {
+        let board = emojiClues(result: result, clueCount: puzzle.clues.count)
+        let link = challengeLink(puzzle: puzzle, result: result, date: date, challenger: challenger)
+        guard isDaily else {
+            let headline = result.solved
+                ? "I got a \(puzzle.sport.displayName) Who Am I? in \(result.cluesUsed) clue\(result.cluesUsed == 1 ? "" : "s")."
+                : "A \(puzzle.sport.displayName) Who Am I? beat me."
+            return ShareMessage.compose(headline: headline, board: board,
+                                        detail: "\(link.scoreLine) — no spoilers, go find out who.",
+                                        campaign: link.campaignToken)
+        }
+        return link.shareText(board: board, now: now)
     }
 
     private var shareRow: some View {
         let card = WhoAmIShareCardView(sport: puzzle.sport, clueCount: puzzle.clues.count, result: result)
-        return ShareLink(item: Self.shareText(puzzle: puzzle, result: result),
-                          preview: SharePreview("My Who Am I? result", image: card.rendered())) {
-            Label("SHARE (NO SPOILERS)", systemImage: "square.and.arrow.up").ctaLabel()
+        return ShareLink(item: Self.shareText(puzzle: puzzle, result: result, isDaily: isDaily,
+                                              challenger: container.identity.username),
+                          preview: SharePreview(isDaily ? "Who Am I? challenge" : "My Who Am I? result",
+                                                image: card.rendered())) {
+            Label(isDaily ? "CHALLENGE A FRIEND" : "SHARE (NO SPOILERS)",
+                  systemImage: "square.and.arrow.up").ctaLabel()
         }
         .buttonStyle(PrimePressStyle())
         // ShareLink has no tap callback — a simultaneous gesture is the standard hook.
         .simultaneousGesture(TapGesture().onEnded {
             container.track(.shareTapped, AnalyticsEvent.shareProperties(
                 surface: "whoami_result", format: "whoami", artifact: .challengeText,
-                extra: ["sport": puzzle.sport.rawValue, "solved": String(result.solved)]))
+                extra: ["sport": puzzle.sport.rawValue, "solved": String(result.solved),
+                        "is_daily": String(isDaily)]))
         })
     }
 

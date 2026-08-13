@@ -25,23 +25,14 @@ struct ChallengeLink: Equatable, Identifiable {
     var id: String { url.absoluteString }
 
 
-    /// Only the formats whose board is pinned by `(sport, day)`.
-    ///
-    /// Over/Under and Draft & Spin are deliberately absent: their rounds are drawn with a seeded
-    /// RNG *over a sampled player pool* (`PlayerSeasonCatalog.draftSpinSample`, a 2,000-row
-    /// sample), so two devices on the same day can legitimately be dealt different cards. There
-    /// is no "same board" to challenge anyone to, and a challenge that silently compared two
-    /// different boards would be worse than no challenge.
-    enum Format: String {
-        case grid, keep4
-
-        var displayName: String {
-            switch self {
-            case .grid:  return "Grid"
-            case .keep4: return "Keep 4"
-            }
-        }
-    }
+    /// The link addresses the same set of stable-board formats every other duel surface does —
+    /// `PuzzleFormat`'s own doc comment is the canonical explanation of why Over/Under and
+    /// Draft & Spin are excluded (a seeded RNG drawn *over a sampled player pool*, so two
+    /// devices on the same day can legitimately be dealt different cards — there is no "same
+    /// board" to challenge anyone to). Was its own `{grid, keep4}` enum before `PuzzleFormat`
+    /// existed; kept as a typealias so every existing `ChallengeLink.Format.*` call site here
+    /// and in the result views still reads naturally.
+    typealias Format = PuzzleFormat
 
     let format: Format
     let sport: Sport
@@ -50,8 +41,10 @@ struct ChallengeLink: Equatable, Identifiable {
     /// recipient in another timezone still resolves this exact date, not their own "today").
     let day: String
     /// The score to beat in the format's own natural unit: cells solved out of 9 for the Grid,
-    /// correct picks out of 8 for Keep 4. Carried as a pair rather than a fraction so the
-    /// head-to-head line can render "7/9" without knowing the format's board size.
+    /// correct picks out of 8 for Keep 4, clue efficiency out of 6 for Who Am I? (see
+    /// `ChallengeLink.whoAmIHits(_:)` — the one place that conversion is made). Carried as a
+    /// pair rather than a fraction so the head-to-head line can render "7/9" without knowing
+    /// the format's board size.
     let hits: Int
     let outOf: Int
     /// Points, used only to break a tie on `hits`.
@@ -180,9 +173,12 @@ struct ChallengeLink: Equatable, Identifiable {
 
     /// "I went 7/9 on today's NFL Grid — beat that." The line a stranger reads first, so it has
     /// to say the sport, the format, and the number, and it has to end in a dare.
+    ///
+    /// `format.shareName`, not `displayName`: the tile name "The Grid" carries its own article,
+    /// and this sentence supplies one of its own ("today's"). See `PuzzleFormat.shareName`.
     func headline(now: Date = Date()) -> String {
         let when = day == PuzzleStore.localDayString(now) ? "today's" : "the \(displayDay)"
-        return "I went \(hits)/\(outOf) on \(when) \(sport.displayName) \(format.displayName) — beat that."
+        return "I went \(hits)/\(outOf) on \(when) \(sport.displayName) \(format.shareName) — beat that."
     }
 
     /// The full share payload: headline, the spoiler-free board picture, the score, the link.
@@ -229,4 +225,22 @@ struct ChallengeLink: Equatable, Identifiable {
     var challengerLine: String {
         "\(challenger ?? "They") went \(hits)/\(outOf)"
     }
+
+    // MARK: - Who Am I?'s hits/outOf conversion
+
+    /// Who Am I? has no natural "N correct out of M" — one guess is either right or wrong. Its
+    /// challengeable unit is **clue efficiency**: a first-clue solve is worth the most (matching
+    /// `WhoAmIScoring`'s own points curve) so it reads as `outOf`/`outOf`, and a give-up reads as
+    /// `0`/`outOf` — `outcome(hits:score:)`'s existing "hits decide it, points break the tie"
+    /// logic then works completely unchanged.
+    ///
+    /// The one place this mapping is made, called from both the share path
+    /// (`WhoAmIResultView.shareText`) and the accepted side (`ChallengeResultBanner` via
+    /// `WhoAmIResultView`), so the two can't independently drift on what "hits" means here.
+    static func whoAmIHits(_ result: WhoAmIScoring.Result) -> Int {
+        result.solved ? WhoAmIScoring.perClue.count + 1 - result.cluesUsed : 0
+    }
+
+    /// The denominator matching `whoAmIHits(_:)` — the number of clues a Who Am I? puzzle carries.
+    static let whoAmIOutOf = WhoAmIScoring.perClue.count
 }

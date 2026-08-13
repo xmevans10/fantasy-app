@@ -15,6 +15,8 @@ final class RepositoryContainer: ObservableObject {
     /// Rating seasons — the 8-week competitive ladder (M5 Phase F). Nil when local-only.
     let seasons: SeasonRepository?
     let versus: VersusRepository?
+    /// The bot ladder (M22) — opponents that exist without a social graph. Nil when local-only.
+    let ladder: LadderRepository?
     let dailyDraftBoard: DailyDraftLeaderboardRepository?
     /// Weekly arcade boards for Over/Under + Grid (backlog #5). Nil when local-only.
     let arcadeBoard: ArcadeLeaderboardRepository?
@@ -111,6 +113,7 @@ final class RepositoryContainer: ObservableObject {
         self.cohorts = client.map { CohortRepository(client: $0) }
         self.seasons = client.map { SeasonRepository(client: $0) }
         self.versus = client.map { VersusRepository(client: $0) }
+        self.ladder = client.map { LadderRepository(client: $0) }
         self.dailyDraftBoard = client.map { DailyDraftLeaderboardRepository(client: $0) }
         self.arcadeBoard = client.map { ArcadeLeaderboardRepository(client: $0) }
         self.social = client.map { SocialRepository(client: $0) }
@@ -647,35 +650,171 @@ final class RepositoryContainer: ObservableObject {
 
     // MARK: - Versus (1v1 head-to-head)
 
-    /// Starts a challenge against `username` on today's Keep4 puzzle for `sport`.
-    func createVersusChallenge(username: String, sport: Sport) async throws -> Int {
+    /// Starts a duel against a **user id**, in `format`.
+    ///
+    /// The id overload is the primary one. Every entry point used to round-trip through a
+    /// username string, which disabled the CHALLENGE button for anyone who hadn't claimed a
+    /// name — a bottleneck entirely independent of the friends graph, and one of the reasons
+    /// this feature had produced zero completed duels. Surfaces that already hold an id
+    /// (a public profile, a cohort standings row, a friends list) must call this one.
+    ///
+    /// The board is chosen server-side; nothing about it is passed from here.
+    @discardableResult
+    func createVersusChallenge(userID opponentID: String, sport: Sport,
+                               format: PuzzleFormat) async throws -> Int {
         guard let versus else { throw CommunityError.unavailable }
         guard let uid = auth.userID else { throw CommunityError.notSignedIn }
-        guard let opponentID = await versus.findOpponent(username: username) else {
-            throw VersusError.opponentNotFound
-        }
         guard opponentID != uid else { throw VersusError.cannotChallengeSelf }
-        let filter = SportFilter(rawValue: sport.rawValue) ?? .all
-        guard let pick = await puzzles.keep4Puzzle(for: filter, date: Date()) else {
-            throw VersusError.opponentNotFound
-        }
-        let challengeID = try await versus.createChallenge(opponentID: opponentID, sport: sport, puzzleID: pick.content.id)
-        await refreshVersusBadge()   // the new challenge is itself unplayed by me
+        let challengeID = try await versus.createChallenge(opponentID: opponentID, sport: sport,
+                                                           format: format)
+        track(.challengeStarted, ["format": format.rawValue, "sport": sport.rawValue,
+                                  "source": "versus"])
+        await refreshVersusBadge()   // the new duel is itself unplayed by me
         return challengeID
     }
 
-    /// Records the caller's score on a Versus challenge (called from `Keep4GameView.finish()`).
+    /// Username overload, for the one surface that genuinely only has a typed name (the manual
+    /// entry field in the New Duel sheet). Resolves to an id and defers to the method above.
+    @discardableResult
+    func createVersusChallenge(username: String, sport: Sport,
+                               format: PuzzleFormat) async throws -> Int {
+        guard let versus else { throw CommunityError.unavailable }
+        guard auth.userID != nil else { throw CommunityError.notSignedIn }
+        guard let opponentID = await versus.findOpponent(username: username) else {
+            throw VersusError.opponentNotFound
+        }
+        return try await createVersusChallenge(userID: opponentID, sport: sport, format: format)
+    }
+
+    /// Starts this player's clock on a duel and returns the session a game view runs on.
+    ///
+    /// Returns nil when the duel can't be opened (closed, expired, or offline) — the caller
+    /// should refresh its list rather than retry.
+    func startVersusDuel(_ row: VersusChallengeRow) async -> DuelSession? {
+        guard let versus, let me = auth.userID else { return nil }
+        guard let seconds = try? await versus.startChallenge(id: row.challenge.id) else { return nil }
+        return DuelSession(challengeID: row.challenge.id,
+                           format: row.challenge.format,
+                           boardID: row.challenge.puzzleId,
+                           opponentUserID: row.challenge.opponentID(me: me),
+                           opponentName: row.opponentUsername,
+                           secondsRemaining: seconds)
+    }
+
+    /// Records the caller's score on a duel (called from each game view's `finish()`).
+    ///
+    /// One entry point for both kinds of opponent, so the three game views stay identical: a
+    /// human duel posts to `versus_challenges`, a ladder rung posts to `ladder_attempts`, and
+    /// neither game view has to know which it is playing.
+    func submitDuelResult(_ session: DuelSession, performance: Double,
+                          elapsed: TimeInterval) async {
+        if let ladder = session.ladder {
+            await submitLadderAttempt(ladder, performance: performance, elapsed: elapsed)
+        } else {
+            await submitVersusResult(challengeID: session.challengeID, performance: performance)
+        }
+    }
+
+    /// Records the caller's score on a **human** duel.
     func submitVersusResult(challengeID: Int, performance: Double) async {
         await versus?.submitResult(challengeID: challengeID, score: performance)
         await refreshVersusBadge()
     }
 
-    /// Recounts open (pending/active) challenges I haven't played yet. Call after sign-in sync,
-    /// on foreground, and after any Versus mutation so the tab badge stays honest without a
-    /// realtime channel (mirrors `refreshFriendBadge()`).
+    // MARK: - Bot ladder (M22)
+
+    /// How far up the ladder this player has climbed. Refreshed after every attempt so the
+    /// ladder list is honest without a re-fetch on every appearance.
+    @Published private(set) var ladderProgress: LadderProgress = .none
+
+    /// Solves the rung's board with `BotSolver` and hands back a ready-to-play session.
+    ///
+    /// The bot's entire run is computed here, before the board is ever on screen — which is
+    /// exactly why the ladder needs no transport: "playing alongside" the bot is replaying
+    /// `run.beats` against the clock. Nil when the rung's board can't be fetched.
+    func startLadderRung(_ row: LadderRungRow) async -> DuelBoard? {
+        guard let ladder else { return nil }
+        let rung = row.rung
+        let limit = TimeInterval(rung.timeLimitSeconds)
+        let seed = rung.generatorSeed
+
+        func session(_ run: BotRun) -> DuelSession {
+            DuelSession(challengeID: rung.rung, format: rung.mode, boardID: rung.puzzleId,
+                        opponentUserID: nil, opponentName: row.bot.name,
+                        secondsRemaining: rung.timeLimitSeconds,
+                        ladder: LadderRunSession(rung: rung, bot: row.bot, run: run))
+        }
+
+        switch rung.mode {
+        case .keep4:
+            guard let p = await ladder.puzzle(Keep4Puzzle.self, id: rung.puzzleId) else { return nil }
+            return .keep4(session(BotSolver.playKeep4(p, skill: rung.botSkill, seed: seed, timeLimit: limit)), p)
+        case .grid:
+            guard let p = await ladder.puzzle(GridPuzzle.self, id: rung.puzzleId) else { return nil }
+            return .grid(session(BotSolver.playGrid(p, skill: rung.botSkill, seed: seed, timeLimit: limit)), p)
+        case .whoami:
+            guard let p = await ladder.puzzle(WhoAmIPuzzle.self, id: rung.puzzleId) else { return nil }
+            return .whoami(session(BotSolver.playWhoAmI(p, skill: rung.botSkill, seed: seed, timeLimit: limit)), p)
+        }
+    }
+
+    /// Starts a **human** duel: starts this player's clock server-side, then fetches the exact
+    /// board it names. Order matters — a server that refuses (duel resolved, expired, not ours)
+    /// must cost nothing, and the reverse order would leave the clock running on a failed fetch.
+    func startVersusBoard(_ row: VersusChallengeRow) async -> DuelBoard? {
+        guard let versus, let session = await startVersusDuel(row) else { return nil }
+        let id = row.challenge.puzzleId
+        switch row.challenge.format {
+        case .keep4:
+            guard let p = await versus.puzzle(Keep4Puzzle.self, id: id) else { return nil }
+            return .keep4(session, p)
+        case .grid:
+            guard let p = await versus.puzzle(GridPuzzle.self, id: id) else { return nil }
+            return .grid(session, p)
+        case .whoami:
+            guard let p = await versus.puzzle(WhoAmIPuzzle.self, id: id) else { return nil }
+            return .whoami(session, p)
+        }
+    }
+
+    /// Posts a finished rung. The ladder pays **XP and rank only, never the solo rating** —
+    /// the same rule the Versus info sheet states ("Versus games never affect your rating"),
+    /// which is why this goes through `logSession` rather than `complete(...)`.
+    private func submitLadderAttempt(_ run: LadderRunSession, performance: Double,
+                                     elapsed: TimeInterval) async {
+        guard let ladder else { return }
+        let won = LadderOutcome.playerWon(playerScore: performance, botScore: run.run.performance)
+        if let newHigh = await ladder.submitAttempt(
+            rung: run.rung.rung, score: performance, botScore: run.run.performance,
+            won: won, elapsedMs: max(0, Int(elapsed * 1000))) {
+            ladderProgress = LadderProgress(highestRung: newHigh)
+        }
+        track(.challengeStarted, ["format": run.rung.mode.rawValue,
+                                  "sport": run.rung.sport.rawValue,
+                                  "source": "ladder",
+                                  "rung": String(run.rung.rung),
+                                  "won": String(won)])
+    }
+
+    /// The ladder list: every rung, joined to its bot, with each one's lock state.
+    func ladderRows() async -> [LadderRungRow] {
+        guard let ladder else { return [] }
+        async let rungsFetch = ladder.rungs()
+        async let botsFetch = ladder.bots()
+        let (rungs, bots) = await (rungsFetch, botsFetch)
+        if let uid = auth.userID { ladderProgress = await ladder.progress(userID: uid) }
+        return rungs.compactMap { rung in
+            guard let bot = bots[rung.botId] else { return nil }
+            return LadderRungRow(rung: rung, bot: bot, state: ladderProgress.state(of: rung.rung))
+        }
+    }
+
+    /// Recounts open duels I haven't played yet. Call after sign-in sync, on foreground, and
+    /// after any Versus mutation so the tab badge stays honest without a realtime channel
+    /// (mirrors `refreshFriendBadge()`).
     func refreshVersusBadge() async {
         guard let versus, let uid = auth.userID else { openVersusChallenges = 0; return }
-        let rows = await versus.pendingAndActive(userID: uid)
+        let rows = await versus.openChallenges(userID: uid)
         openVersusChallenges = VersusChallengeRow.unplayedCount(rows, me: uid)
     }
 

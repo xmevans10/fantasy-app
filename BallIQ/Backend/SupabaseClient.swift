@@ -230,6 +230,32 @@ extension JSONDecoder {
         }
         return d
     }()
+
+    /// The same Postgres-tolerant date handling as `.supabase`, with **no key-conversion
+    /// strategy** — for models that spell their column names out in explicit snake_case
+    /// `CodingKeys`.
+    ///
+    /// The two are not interchangeable, and picking the wrong one fails *silently*. Under
+    /// `.convertFromSnakeCase` the incoming key `series_id` is rewritten to `seriesId` before the
+    /// container looks it up, so a `CodingKeys` case declared as `= "series_id"` never matches
+    /// and the whole row throws `keyNotFound`. Every Versus fetch wraps its `select` in `try?`,
+    /// so the throw became an empty array: from the day `VersusChallenge` shipped until
+    /// 2026-08-13, the Versus tab could not display a challenge even when the row existed
+    /// server-side. `CommunityPuzzleRepository` avoided this by passing a bare `JSONDecoder()`
+    /// (see its `summaryDecoder`), which works only because none of its columns is a timestamp.
+    ///
+    /// Rule of thumb: explicit snake_case `CodingKeys` → this decoder; camelCase-only model →
+    /// `.supabase`. Covered by `SupabaseDecoderTests`.
+    static let supabaseExplicitKeys: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .custom { decoder in
+            let raw = try decoder.singleValueContainer().decode(String.self)
+            if let date = SupabaseDate.parse(raw) { return date }
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: decoder.codingPath, debugDescription: "Unparseable ISO8601 date: \(raw)"))
+        }
+        return d
+    }()
 }
 
 /// ISO8601 parsing that tolerates Postgres's fractional seconds. Two cached formatters (with and

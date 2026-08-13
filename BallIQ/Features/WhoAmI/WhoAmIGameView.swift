@@ -6,6 +6,15 @@ struct WhoAmIGameView: View {
     var ranked: Bool = true
     /// Set for community puzzles so a play is logged (powers the Popular sort).
     var communityID: String? = nil
+    /// Set when opened from a `balliq://challenge` link. Only ever non-nil when the resolved
+    /// board is exactly the one challenged (see `ContentView.accept`) — same discipline as
+    /// `Keep4GameView.challenge`.
+    var challenge: ChallengeLink? = nil
+    /// Set when this board is being played as a timed Versus duel — see `DuelSession`.
+    /// Mutually exclusive with `challenge` in practice; if both are somehow set, `duel` wins,
+    /// because it's the server-mediated seam (a duel names its own board, which may not even be
+    /// today's daily), and both flow into `finish` needing different submission paths.
+    var duel: DuelSession? = nil
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
@@ -35,10 +44,22 @@ struct WhoAmIGameView: View {
             - WhoAmIScoring.value(cluesUsed: revealedCount + 1, difficulty: puzzle.difficulty)
     }
 
+    /// `duel` wins over `challenge` (see `duel`'s doc comment) — a duel's board is picked
+    /// server-side from the archive and is never "today's", so it must never carry the dare
+    /// language or head-to-head banner a real `ChallengeLink` does.
+    private var effectiveChallenge: ChallengeLink? { duel == nil ? challenge : nil }
+    /// Whether this run can dare a friend onto the same board — mirrors
+    /// `Keep4ResultView.isDaily`'s `ranked || challenge != nil`, with a duel forced to `false`
+    /// for the same reason as `effectiveChallenge`.
+    private var isDaily: Bool { duel == nil && (ranked || challenge != nil) }
+
     var body: some View {
         Group {
             if let result {
-                WhoAmIResultView(puzzle: puzzle, result: result, rewards: rewards) { dismiss() }
+                WhoAmIResultView(puzzle: puzzle, result: result, rewards: rewards,
+                                 isDaily: isDaily, challenge: effectiveChallenge,
+                                 duelVerdict: duel?.ladder?
+                                     .verdict(myHits: ChallengeLink.whoAmIHits(result))) { dismiss() }
             } else {
                 playBoard
             }
@@ -50,7 +71,8 @@ struct WhoAmIGameView: View {
                 startedAt = Date()
                 container.track(.gameStarted, ["format": "whoami", "ranked": "\(ranked)",
                                                "difficulty": puzzle.difficulty?.rawValue ?? "unrated",
-                                               "community": "\(communityID != nil)"])
+                                               "community": "\(communityID != nil)",
+                                               "duel": "\(duel != nil)"])
             }
             if DebugLaunch.autoSubmitResult { autoSolveForScreenshot() }
         }
@@ -74,6 +96,11 @@ struct WhoAmIGameView: View {
 
     private var playBoard: some View {
         VStack(spacing: 0) {
+            if let duel {
+                // A blown clock still resolves the duel — same "finish with whatever they have"
+                // rule as giving up, so it reuses `finish(solved: false)` directly.
+                DuelTimerBar(session: duel) { if result == nil { finish(solved: false) } }
+            }
             header
             ScrollView {
                 VStack(spacing: 10) {
@@ -266,6 +293,9 @@ struct WhoAmIGameView: View {
     private func giveUp() { finish(solved: false) }
 
     private func finish(solved: Bool) {
+        // The duel timer and a guess landing at the same instant can both try to finish the same
+        // run — idempotent rather than relying on either caller to coordinate.
+        guard result == nil else { return }
         fieldFocused = false
         let r = WhoAmIScoring.score(cluesUsed: revealedCount, wrongGuesses: wrongGuesses,
                                     solved: solved, difficulty: puzzle.difficulty)
@@ -276,17 +306,29 @@ struct WhoAmIGameView: View {
         details.wrongGuesses = wrongGuesses
         details.solved = solved
         details.answerName = puzzle.answer.canonical
+        details.opponentUserID = duel?.opponentUserID
+        // A duel is never ranked and never a daily (see `duel`'s doc comment) — same distinction
+        // Keep4's duel branch makes via `PlayMode`.
+        let mode: PlayMode = duel != nil ? .versus : (communityID != nil ? .community : .daily)
         let detail = RepositoryContainer.SessionDetail(
-            mode: communityID != nil ? .community : .daily,
+            mode: mode,
             score: r.total, maxScore: WhoAmIScoring.maxScore(difficulty: puzzle.difficulty),
             correct: solved ? 1 : 0, attempted: 1,
             startedAt: startedAt, details: details)
         Task { @MainActor in
-            let rw = await container.complete(format: .whoAmI, sport: puzzle.sport,
-                                              performance: r.performance, perfect: perfect,
-                                              puzzleID: puzzle.id, ranked: ranked, detail: detail)
-            rewards = rw
-            if let communityID { await container.recordCommunityPlay(id: communityID) }
+            if let duel {
+                await container.logSession(format: .whoAmI, sport: puzzle.sport,
+                                           performance: r.performance, perfect: perfect,
+                                           puzzleID: puzzle.id, detail: detail)
+                await container.submitDuelResult(duel, performance: r.performance,
+                                                 elapsed: Date().timeIntervalSince(startedAt ?? Date()))
+            } else {
+                let rw = await container.complete(format: .whoAmI, sport: puzzle.sport,
+                                                  performance: r.performance, perfect: perfect,
+                                                  puzzleID: puzzle.id, ranked: ranked, detail: detail)
+                rewards = rw
+                if let communityID { await container.recordCommunityPlay(id: communityID) }
+            }
             withAnimation(Motion.easeOut) { result = r }
         }
     }
