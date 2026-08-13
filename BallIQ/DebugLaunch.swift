@@ -219,6 +219,7 @@ enum DebugLaunch {
     static let autoOpenLeagues = false
     static let autoOpenSeason = false
     static let autoOpenVersus = false
+    static let autoOpenLadder = false
     static let autoOpenCommunity = false
     static let autoOpenBrowse = false
     static let autoOpenModeration = false
