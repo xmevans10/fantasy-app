@@ -101,11 +101,15 @@ final class LadderCurveTests: XCTestCase {
     private func measuredWinRate(_ row: Row) throws -> Double {
         let plain = JSONDecoder()
         let mode = row.rung.mode
+        // Both sides run on the same clock, and only the FRACTION each uses feeds the speed term
+        // — so this needs to match tools/ingest/ladder.py's model, not any particular rung's real
+        // `time_limit_seconds`.
+        let limit: TimeInterval = 60
         var wins = 0
         for t in 0..<trials {
             let playerSeed = UInt64(t &* 2 &+ 1)
             let botSeed = UInt64(t &* 2 &+ 2)
-            let player: Double, bot: Double
+            let player: BotRun, bot: BotRun
             // The reference player is deliberately `.consistent`: the player model is a
             // yardstick, not a character, and giving it a style would make the curve a claim
             // about one imagined personality rather than about the rung.
@@ -113,20 +117,25 @@ final class LadderCurveTests: XCTestCase {
             switch mode {
             case "keep4":
                 let p = try plain.decode(Keep4Puzzle.self, from: row.puzzle.content.data)
-                player = BotSolver.playKeep4(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: 60).performance
-                bot = BotSolver.playKeep4(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: 60, style: style).performance
+                player = BotSolver.playKeep4(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: limit)
+                bot = BotSolver.playKeep4(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: limit, style: style)
             case "grid":
                 let p = try plain.decode(GridPuzzle.self, from: row.puzzle.content.data)
-                player = BotSolver.playGrid(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: 60).performance
-                bot = BotSolver.playGrid(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: 60, style: style).performance
+                player = BotSolver.playGrid(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: limit)
+                bot = BotSolver.playGrid(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: limit, style: style)
             case "whoami":
                 let p = try plain.decode(WhoAmIPuzzle.self, from: row.puzzle.content.data)
-                player = BotSolver.playWhoAmI(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: 60).performance
-                bot = BotSolver.playWhoAmI(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: 60, style: style).performance
+                player = BotSolver.playWhoAmI(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: limit)
+                bot = BotSolver.playWhoAmI(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: limit, style: style)
             default:
                 continue
             }
-            if LadderOutcome.playerWon(playerScore: player, botScore: bot) { wins += 1 }
+            // Speed is part of the comparable now, so the pin has to measure the same thing the
+            // seeder solves for — the reference player is paced by the same model as the bot,
+            // which is the symmetry the accuracy model already assumes.
+            if LadderOutcome.playerWon(playerScore: player.performance, botScore: bot.performance,
+                                       playerElapsed: player.elapsed, botElapsed: bot.elapsed,
+                                       limit: limit) { wins += 1 }
         }
         return Double(wins) / Double(trials)
     }

@@ -146,7 +146,22 @@ enum BotSolver {
     /// puzzle's *scoring metric* is the ground truth and how it is scaled.
     private static func keep4Decisions(_ puzzle: Keep4Puzzle, skill: Double, style: BotStyle,
                                        gen: inout SeededGenerator) -> [BotSolverKeep4Card] {
-        let order = Keep4GameView.blindOrder(for: puzzle)
+        // The puzzle's own card order, NOT `Keep4GameView.blindOrder`.
+        //
+        // Two reasons, and the second is the one that bit. First, layering: a solver has no
+        // business reaching into a *view* for a helper. Second, correctness — `progress` (card
+        // index / n-1) feeds `BotStyle.slowBurn`'s skill ramp, so pairing each card's difficulty
+        // with a *shuffled* position made the bot's strength depend on an order that only Swift
+        // could reproduce. `tools/ingest/ladder.py` calibrates in the puzzle's natural order, so
+        // every slowBurn rung was mis-calibrated by an amount that varied per board: the pin
+        // failed on rungs 21-23 and nowhere else, which are exactly the rungs The Archivist (the
+        // only slowBurn character) guards. Tightening tolerances could not fix it, because the
+        // rung's target carried the same bias as the screen and the two cancelled only for the
+        // primary board.
+        //
+        // Nothing visible depends on the old order: `beats` are a timeline of correct/incorrect
+        // events driving a live score count, and no surface maps a beat index back to a card.
+        let order = puzzle.players
         let correctKeepIDs = puzzle.correctKeepIDs
 
         var cards: [BotSolverKeep4Card] = order.enumerated().map { index, player in
@@ -255,11 +270,24 @@ enum BotSolver {
         guard !outcomes.isEmpty else { return [] }
         let weights = outcomes.indices.map { _ in Double.random(in: 0.6...1.4, using: &gen) }
         let weightSum = weights.reduce(0, +)
+        // How much a bot's finishing time varies run to run.
+        //
+        // Without this a bot's total time is a pure function of skill and style, so once the duel
+        // comparable started counting speed (`LadderOutcome`), every tie on a rung resolved the
+        // same way *before the duel began* — beating the bot's clock meant beating a constant.
+        // Measured: the win rate cliffed from 0.800 to 0.155 between bot_skill 0.75 and 0.80 with
+        // nothing usable in between. With per-run spread the same sweep reads 0.801 / 0.608 /
+        // 0.262 / 0.064 / 0.001, which a bisection can actually solve against.
+        //
+        // Drawn here, AFTER every decision has already been made, so it cannot perturb what the
+        // bot got right — Keep4 and Grid `performance` are bit-identical to before this existed,
+        // and only their beat timings move.
+        let spread = Double.random(in: (1 - paceVariance)...(1 + paceVariance), using: &gen)
         // Style scales the pace before the clamp, so a rushing rookie and a deliberating
         // archivist read as different opponents even at the same skill. Clamped after, so no
         // style can run past the buzzer.
         let totalDuration = timeLimit
-            * min(0.97, pacingFraction(skill: skill) * style.paceMultiplier)
+            * min(0.97, pacingFraction(skill: skill) * style.paceMultiplier * spread)
         var elapsed: TimeInterval = 0
         return outcomes.enumerated().map { index, correct in
             elapsed += totalDuration * (weights[index] / weightSum)
@@ -275,6 +303,10 @@ enum BotSolver {
     private static func pacingFraction(skill: Double) -> Double {
         max(0.35, min(0.97, 1.05 - skill * 0.65))
     }
+
+    /// Run-to-run spread on a bot's finishing time — see `paceBeats` for why it has to exist at
+    /// all. Mirrored by `PACE_VARIANCE` in tools/ingest/ladder.py.
+    static let paceVariance = 0.18
 }
 
 /// Kept file-private to `BotSolver.swift` (the Keep4 flip helper needs a named type to mutate

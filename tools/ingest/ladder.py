@@ -118,33 +118,23 @@ POOL_DIFFICULTY_TOLERANCE = 0.04
 #
 # Each rung's PRIMARY board never had this problem: it is *solved* to hit its target rather than
 # screened against it. Only pool boards are screened.
-POOL_WIN_RATE_TOLERANCE = 0.04
-# `slowBurn` gets a tighter screen, and the reason is a known, measured MODEL bias rather than
-# noise — so it is bought off with margin instead of pretended away.
+POOL_WIN_RATE_TOLERANCE = 0.03
+# `slowBurn` no longer needs a tighter screen, and the history is worth keeping.
 #
-# Keep4 serves its cards in a seeded shuffle (`Keep4GameView.blindOrder`), and `BotSolver` walks
-# the bot through that order, so `progress` — card index / n-1 — is positional. Every style
-# ignores progress except `slowBurn`, whose skill ramps 0.82 -> 1.08 across the run. This file
-# simulates in the puzzle's natural `players` order, which pairs each card's difficulty with the
-# WRONG progress for slowBurn bots only.
-#
-# It is visible in exactly the place the theory predicts: the pin failed on rungs 21 and 22 and
-# nowhere else, and those are the only two rungs guarded by The Archivist, the only slowBurn
-# character. Mirroring the shuffle in Python was tried and REJECTED — reproducing Swift stdlib's
-# `Array.shuffle(using:)` means depending on an implementation detail Apple can change, and the
-# attempt measurably made agreement worse (worst delta 0.105 -> 0.130).
-#
-# The real fix belongs on the Swift side: `BotSolver` should derive `progress` from a stable,
-# content-derived order rather than reaching into a *view* helper for a shuffle — which is also a
-# layering smell, since the solver has no business importing `Keep4GameView`. That is a behaviour
-# change to a shipped bot and wants its own change with its own reseed, so until then this keeps
-# unverifiable boards out of the pools rather than shipping a rung whose difficulty we cannot
-# stand behind.
-POOL_WIN_RATE_TOLERANCE_SLOW_BURN = 0.02
+# Keep4 used to be simulated by `BotSolver` in the SERVE order (a seeded shuffle), while this file
+# calibrates in the puzzle's natural order. `progress` feeds slowBurn's skill ramp, so every
+# slowBurn rung was mis-calibrated by a board-dependent amount — the pin failed on rungs 21-23 and
+# nowhere else, the only rungs The Archivist guards. Tolerances could not fix it: the rung's target
+# and the pool screen shared the bias, so it cancelled for the primary board and not the rest.
+# Mirroring Swift's shuffle here was tried and rejected (stdlib internals, and it made agreement
+# worse). The cure was on the Swift side — `BotSolver` now walks the puzzle's own order, so the two
+# agree by construction. Kept equal to the general tolerance rather than deleted, so the knob is
+# still here if a future style reintroduces order-dependence.
+POOL_WIN_RATE_TOLERANCE_SLOW_BURN = 0.03
 # Pool screening runs at more trials than the curve solve, because a bisection converges on the
 # target from both sides (noise averages out across 18 iterations) while a screen is a single
 # pass/fail read where noise translates directly into a wrong admission.
-POOL_TRIALS = 2_400
+POOL_TRIALS = 4_000
 # How many candidates to re-simulate per rung before giving up on filling its pool. Each check is
 # a full `TRIALS`-run duel, so this bounds the tool's runtime; candidates are tried nearest-
 # difficulty first, so the cap only ever discards the least suitable ones.
@@ -275,6 +265,44 @@ def hit_probability(skill: float, difficulty: float,
 
 WHOAMI_PER_CLUE = [1000, 800, 600, 400, 200, 100]
 
+# ── Speed, and why it is in the comparable now ───────────────────────────────
+# Mirrors `LadderOutcome.speedBonus` / `BotSolver.paceVariance` / `BotSolver.pacingFraction`.
+#
+# Both sides' scores are scaled by the fraction of the clock they left unused. It exists to fix
+# Who Am I?, whose `performance` is a 7-value clue ladder saturating at a clue-1 solve: with ties
+# going to the player, a PERFECT bot still lost ~75% of duels, so the format's win rate floored at
+# 0.75 regardless of `bot_skill` and it had to be capped below rung 15.
+#
+# Two findings from calibrating it, both worth not rediscovering:
+#
+# 1. The bonus has to be SYMMETRIC. A one-sided "boost the player when they're faster" can only
+#    raise the player's win rate, so it cannot lower a floor — it makes the problem worse.
+# 2. `SPEED_BONUS`'s magnitude is NOT the difficulty dial. Measured over 0.10 / 0.20 / 0.30 / 0.50
+#    the resulting win rates are identical, because the pace spread never widens enough for a fast
+#    clue-2 solve to outrun a slow clue-1 one — so the term only ever decides ties. What made the
+#    curve usable was `PACE_VARIANCE`: with a deterministic bot clock every tie on a rung resolved
+#    the same way before play started (0.800 -> 0.155 across one step of skill, nothing in
+#    between); with per-run spread the same sweep reads 0.801 / 0.608 / 0.262 / 0.064 / 0.001.
+#    `bot_skill` is still the lever. This just gives it back its range.
+SPEED_BONUS = 0.20
+PACE_VARIANCE = 0.18
+
+
+def pacing_fraction(skill: float) -> float:
+    """Mirrors `BotSolver.pacingFraction`."""
+    return max(0.35, min(0.97, 1.05 - skill * 0.65))
+
+
+def elapsed_fraction(skill: float, style: str, rng: random.Random) -> float:
+    """What fraction of the clock a side uses on one run, spread included."""
+    spread = rng.uniform(1 - PACE_VARIANCE, 1 + PACE_VARIANCE)
+    return min(0.97, pacing_fraction(skill) * PACE_MULTIPLIER.get(style, 1.0) * spread)
+
+
+def speed_adjusted(score: float, elapsed_frac: float) -> float:
+    """Mirrors `LadderOutcome.adjusted` — scaled BY score, so fast never rescues wrong."""
+    return score * (1 + SPEED_BONUS * min(1.0, max(0.0, 1 - elapsed_frac)))
+
 
 def simulate_performance(fmt: str, diffs: list[float], skill: float, rng: random.Random,
                          true_keeps: list[bool] | None = None,
@@ -324,6 +352,11 @@ def win_rate(fmt: str, diffs: list[float], bot_skill: float,
     for _ in range(trials):
         p = simulate_performance(fmt, diffs, player_skill, rng, true_keeps)
         b = simulate_performance(fmt, diffs, bot_skill, rng, true_keeps, bot_style)
+        # Speed is part of the comparable (see `SPEED_BONUS`). The reference player is paced by
+        # the same model as the bot — the same symmetry the accuracy model already assumes, since
+        # there is still no play data to derive a human pace distribution from.
+        p = speed_adjusted(p, elapsed_fraction(player_skill, "consistent", rng))
+        b = speed_adjusted(b, elapsed_fraction(bot_skill, bot_style, rng))
         if p >= b:
             wins += 1
     return wins / trials
@@ -371,19 +404,17 @@ def lerp(a: float, b: float, t: float) -> float:
     return a + (b - a) * t
 
 
-# The highest rung Who Am I? may guard. See `mode_for` — this is a measured ceiling, not taste.
+# The highest rung Who Am I? may guard.
 #
-# 12, down from 14. The format's win rate floors around 0.75 no matter what `bot_skill` is (see
-# `mode_for`), and once the curve's targets were re-measured at `POOL_TRIALS` precision, rung 14's
-# floored 0.76 stopped being below rung 9's 0.741 — i.e. the ladder briefly got EASIER as you
-# climbed, which `testTheCurveDescendsAcrossTheLadder` correctly refused.
+# 18, up from a low of 12 — the format's floor was the constraint and the floor is gone. Its win
+# rate used to bottom out near 0.75 no matter what `bot_skill` said, because `performance` is a
+# 7-value clue ladder that saturates at a clue-1 solve and ties go to the player. Now that speed
+# is part of the comparable (see `SPEED_BONUS`), a perfect bot's sweep reads 0.801 / 0.608 /
+# 0.262 / 0.064 / 0.001 across skill instead of 0.848 / 0.811 / 0.788 / 0.764 / 0.754.
 #
-# This costs mode variety, which is a real loss and not one to be happy about. It is the same
-# measured ceiling the module docstring describes, just biting one rung earlier now that the
-# targets are measured precisely enough to see it. Raise this back the moment the format gains a
-# finer comparable — the speed multiplier (a bonus scaled by how much faster than the bot you
-# solved) is the intended lever, and unlike a tie-break it separates two clue-1 solves smoothly.
-WHOAMI_MAX_RUNG = 12
+# Held at 18 rather than 30 because bosses still should not be Who Am I?: a single binary guess
+# is a thin thing to lose a boss rung to, however well calibrated it now is.
+WHOAMI_MAX_RUNG = 18
 
 
 def mode_for(rung: int) -> str:

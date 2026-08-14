@@ -150,15 +150,33 @@ struct LadderRunSession: Equatable {
         }
     }
 
-    /// The finished head-to-head, ready for `ChallengeResultBanner`. A tie goes to the player:
-    /// a bot is not a person whose feelings the tiebreak has to be fair to, and matching the
-    /// machine is a win worth having. Matches `LadderOutcome.playerWon`, which decides what is
-    /// actually recorded.
-    func verdict(myHits: Int) -> DuelVerdict {
+    /// The finished head-to-head, ready for `ChallengeResultBanner`.
+    ///
+    /// **This must agree with `LadderOutcome.playerWon`**, which decides what is actually
+    /// recorded — a banner that congratulates you on a rung the server logged as a loss is worse
+    /// than no banner at all. That agreement stopped being free when speed joined the comparable:
+    /// hits alone can now say one thing and the recorded result another, so the elapsed clocks
+    /// have to come in here too.
+    ///
+    /// `playerElapsed` is optional because a caller that genuinely doesn't have a clock (a
+    /// preview, a render test) should still get a sensible banner — it then falls back to the
+    /// pure hits comparison, which is what this did before.
+    func verdict(myHits: Int, playerElapsed: TimeInterval? = nil) -> DuelVerdict {
         let theirs = verdictHits
         // A tie goes to the player, so the bot "won" only by outscoring outright — the closing
         // line has to agree with the banner's own verdict or the character reads as broken.
-        let botWon = theirs.hits > myHits
+        let botWon: Bool
+        if let playerElapsed, theirs.outOf > 0 {
+            // Compared on the same 0...1 scale `LadderOutcome` uses, not on raw hits, so the two
+            // cannot drift apart.
+            botWon = !LadderOutcome.playerWon(
+                playerScore: Double(myHits) / Double(theirs.outOf),
+                botScore: Double(theirs.hits) / Double(theirs.outOf),
+                playerElapsed: playerElapsed, botElapsed: run.elapsed,
+                limit: TimeInterval(rung.timeLimitSeconds))
+        } else {
+            botWon = theirs.hits > myHits
+        }
         return DuelVerdict(opponentName: bot.name, myHits: myHits, theirHits: theirs.hits,
                            outOf: theirs.outOf, myScore: nil, theirScore: nil,
                            closingLine: bot.voice.closing(botWon: botWon,

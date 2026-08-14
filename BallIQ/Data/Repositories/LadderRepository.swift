@@ -147,12 +147,48 @@ private struct LadderContentEnvelope<C: Decodable>: Decodable { let content: C }
 
 /// Who won a rung.
 ///
-/// Ties go to the **player**, which is the opposite of the Versus rule and deliberately so: a
-/// bot is not a person whose feelings the tiebreak has to be fair to, and a dead heat against
-/// the machine that just matched you is a win worth having. Speed is not the tiebreak here
-/// either — the bot's pacing is synthetic, so racing it would be racing a formula.
+/// Ties go to the **player**: a bot is not a person whose feelings the tiebreak has to be fair
+/// to, and a dead heat against the machine that just matched you is a win worth having.
+///
+/// **Speed is now part of the comparable**, which reverses what this file used to say. The old
+/// objection — "the bot's pacing is synthetic, so racing it would be racing a formula" — was
+/// exactly right while a bot's finishing time was a pure function of skill and style. It isn't
+/// any more: `BotSolver.paceVariance` gives each run its own spread, so the bot's clock is a
+/// draw rather than a constant and beating it is a contest.
+///
+/// The term is applied to BOTH sides, and that symmetry is load-bearing rather than tidy. A
+/// one-sided "bonus if the player was faster" can only ever raise the player's win rate, so it
+/// could not have done the job it was added for: Who Am I? scores on a 7-value clue ladder that
+/// saturates at a clue-1 solve, and with ties going to the player a *perfect* bot still lost
+/// ~75% of duels. The format's win rate floored at 0.75 no matter what `bot_skill` said, which
+/// is why it was capped below rung 15. Scoring both sides by the clock they left on the table
+/// drops that floor to ~0.00 and hands the rung its difficulty lever back.
+///
+/// `speedBonus`'s exact value is deliberately modest and is **not** the difficulty dial —
+/// measured, K makes no difference between 0.10 and 0.50, because the pace spread never gets
+/// wide enough for a fast clue-2 solve to outrun a slow clue-1 one. What it does is let the
+/// faster side take a tie. `bot_skill` remains the lever; this just restores its range.
 enum LadderOutcome {
-    static func playerWon(playerScore: Double, botScore: Double) -> Bool {
-        playerScore >= botScore
+    /// Mirrored by `SPEED_BONUS` in tools/ingest/ladder.py.
+    static let speedBonus = 0.20
+
+    /// A run's score once the clock it left on the table is counted.
+    ///
+    /// Scaled BY `score` rather than added to it, so being fast never rescues a run that was
+    /// wrong — a 0.4 performance finishing instantly is still 0.4-ish, not a win.
+    static func adjusted(score: Double, elapsed: TimeInterval, limit: TimeInterval) -> Double {
+        guard limit > 0 else { return score }
+        let remaining = min(1, max(0, (limit - elapsed) / limit))
+        return score * (1 + speedBonus * remaining)
+    }
+
+    /// The recorded outcome. `limit` of 0 (or unknown times) degrades to the pre-speed rule
+    /// exactly, so a caller that has no clock to offer still gets a sane answer.
+    static func playerWon(playerScore: Double, botScore: Double,
+                          playerElapsed: TimeInterval = 0, botElapsed: TimeInterval = 0,
+                          limit: TimeInterval = 0) -> Bool {
+        guard limit > 0, playerElapsed > 0, botElapsed > 0 else { return playerScore >= botScore }
+        return adjusted(score: playerScore, elapsed: playerElapsed, limit: limit)
+            >= adjusted(score: botScore, elapsed: botElapsed, limit: limit)
     }
 }

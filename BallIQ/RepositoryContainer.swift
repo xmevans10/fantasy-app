@@ -799,7 +799,13 @@ final class RepositoryContainer: ObservableObject {
     private func submitLadderAttempt(_ run: LadderRunSession, puzzleID: String,
                                      performance: Double, elapsed: TimeInterval) async {
         guard let ladder else { return }
-        let won = LadderOutcome.playerWon(playerScore: performance, botScore: run.run.performance)
+        // Speed counts now (see `LadderOutcome`), so the recorded result needs both clocks. The
+        // stored `score` stays the raw `performance`: `ladder_attempts.score` is checked 0...1 and
+        // is the corpus human ghost duels will be built from, so it has to keep meaning "how well
+        // was this board played" rather than "how well, adjusted for a bot's pace on one rung".
+        let won = LadderOutcome.playerWon(playerScore: performance, botScore: run.run.performance,
+                                          playerElapsed: elapsed, botElapsed: run.run.elapsed,
+                                          limit: TimeInterval(run.rung.timeLimitSeconds))
         if let newHigh = await ladder.submitAttempt(
             rung: run.rung.rung, puzzleID: puzzleID, score: performance,
             botScore: run.run.performance,
