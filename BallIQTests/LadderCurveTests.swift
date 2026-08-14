@@ -15,12 +15,24 @@ import XCTest
 /// miss (`hitProbability = skill^difficulty` is 1.0 at difficulty 0 for *any* skill, so an easy
 /// board makes a flawless bot — the reason rung 18 was once harder than rung 30).
 ///
-/// Skips without the fixture, which is the normal state on a fresh checkout; regenerate it with
-/// the dump in `tools/ingest/ladder.py`'s module docstring.
+/// **One fixture entry per BOARD, not per rung.** A rung owns a pool of boards now
+/// (`ladder_rung_boards`), and the pool is only difficulty-homogeneous if *every* board in it was
+/// verified — a pool where board 0 lands the curve and board 4 is half as hard is a rung that
+/// means something different depending on which one you drew, which is exactly the failure the
+/// pool's ±0.04 difficulty and ±0.08 win-rate tolerances exist to prevent. So this replays all of
+/// them.
+///
+/// Skips without the fixture, which is the normal state on a fresh checkout. Regenerate with:
+///
+///     set -a && . tools/ingest/.env && set +a && python -m tools.ingest.ladder --fixture
+///
+/// (The path below was once a per-session scratchpad directory. That session ended, the file went
+/// with it, and the pin silently skipped on every run afterwards while still reporting green —
+/// so it now lives one level up, where it outlives any single session.)
 final class LadderCurveTests: XCTestCase {
 
     private static let fixturePath =
-        "/private/tmp/claude-501/-Users-xanderevans-Documents-fantasy-app/098657bc-7222-4e9c-be21-f2ea6963ff83/scratchpad/ladder_fixture.json"
+        "/private/tmp/claude-501/-Users-xanderevans-Documents-fantasy-app/ladder_fixture.json"
 
     private struct Row: Decodable {
         let rung: Rung
@@ -29,6 +41,8 @@ final class LadderCurveTests: XCTestCase {
             let rung: Int, mode: String, sport: String
             let bot_skill: Double, is_boss: Bool
             let board_difficulty: Double?, target_win_rate: Double?
+            /// Which board of this rung's pool. 0 is the rung's own `puzzle_id`.
+            let ordinal: Int?
             /// The guarding character's playing style. Load-bearing for this pin: style changes
             /// the solver's policy, so measuring a rung with the wrong one measures nothing.
             let style: String?
@@ -117,9 +131,14 @@ final class LadderCurveTests: XCTestCase {
         return Double(wins) / Double(trials)
     }
 
-    /// The pin. A policy change in either language moves this and the test says which rung.
+    /// The pin. A policy change in either language moves this and the test says which board.
+    ///
+    /// Every board of every pool is replayed, not just each rung's ordinal 0: a pool board is
+    /// selected on a *simulated* win rate, so an unverified one is a rung quietly promising a
+    /// difficulty it doesn't deliver.
     func testSwiftSolverAgreesWithTheSeededTargets() throws {
-        var worst = (rung: 0, delta: 0.0)
+        var worst = (rung: 0, ordinal: 0, delta: 0.0)
+        var boards = 0
         for row in try rows() {
             guard let target = row.rung.target_win_rate else {
                 XCTFail("rung \(row.rung.rung) has no target_win_rate — reseed with tools/ingest/ladder.py")
@@ -127,27 +146,59 @@ final class LadderCurveTests: XCTestCase {
             }
             let measured = try measuredWinRate(row)
             let delta = abs(measured - target)
-            if delta > worst.delta { worst = (row.rung.rung, delta) }
+            boards += 1
+            if delta > worst.delta { worst = (row.rung.rung, row.rung.ordinal ?? 0, delta) }
             // 0.10 absorbs Monte Carlo noise at this trial count without absorbing a real
             // policy divergence, which moves a rung by far more than that.
             XCTAssertEqual(measured, target, accuracy: 0.10,
-                           "rung \(row.rung.rung) (\(row.rung.mode)): Swift measured \(measured), "
+                           "rung \(row.rung.rung) board \(row.rung.ordinal ?? 0) "
+                           + "(\(row.rung.mode), \(row.puzzle.id)): Swift measured \(measured), "
                            + "tools/ingest/ladder.py seeded \(target). The two difficulty models "
-                           + "have diverged.")
+                           + "have diverged, or this board does not belong in the pool.")
         }
-        print("LADDER_PIN: worst rung \(worst.rung), delta \(String(format: "%.3f", worst.delta))")
+        print("LADDER_PIN: \(boards) boards, worst rung \(worst.rung) ordinal \(worst.ordinal), "
+              + "delta \(String(format: "%.3f", worst.delta))")
     }
 
-    /// No rung may sit on a board so obvious the bot cannot miss it.
+    /// No board of any pool may be so obvious the bot cannot miss it.
     func testNoRungIsBelowTheDifficultyFloor() throws {
         for row in try rows() {
-            guard let d = row.rung.board_difficulty else { continue }
+            guard let d = row.rung.board_difficulty, d > 0 else { continue }
             XCTAssertGreaterThanOrEqual(
                 d, 0.18,
-                "rung \(row.rung.rung) sits on a board of difficulty \(d). Below the floor both "
-                + "sides score at ceiling and `bot_skill` stops meaning anything — this is how "
-                + "rung 18 ended up harder than rung 30.")
+                "rung \(row.rung.rung) board \(row.rung.ordinal ?? 0) (\(row.puzzle.id)) has "
+                + "difficulty \(d). Below the floor both sides score at ceiling and `bot_skill` "
+                + "stops meaning anything — this is how rung 18 ended up harder than rung 30.")
         }
+    }
+
+    /// A pool has to be difficulty-HOMOGENEOUS or the rung is a different rung depending on which
+    /// board you drew — the promise `ladder_rungs.board_difficulty` makes to the player.
+    func testEachPoolIsDifficultyHomogeneous() throws {
+        let byRung = Dictionary(grouping: try rows(), by: \.rung.rung)
+        for (rung, boards) in byRung.sorted(by: { $0.key < $1.key }) {
+            let ds = boards.compactMap(\.rung.board_difficulty).filter { $0 > 0 }
+            guard let lo = ds.min(), let hi = ds.max() else { continue }
+            // Twice `POOL_DIFFICULTY_TOLERANCE` in tools/ingest/ladder.py: every board sits within
+            // ±0.04 of the rung's own difficulty, so the widest legal spread is 0.08.
+            XCTAssertLessThanOrEqual(
+                hi - lo, 0.08 + 1e-9,
+                "rung \(rung)'s pool spans difficulty \(lo)...\(hi) over \(ds.count) boards. "
+                + "A rung's difficulty is a promise; this one keeps it or breaks it depending on "
+                + "which board the player drew.")
+        }
+    }
+
+    /// A rung the player can replay on the board they just solved is the bug this whole feature
+    /// exists to fix, so "the pool is deep enough to be a pool" is worth asserting outright.
+    func testEveryRungHasMoreThanOneBoard() throws {
+        let byRung = Dictionary(grouping: try rows(), by: \.rung.rung)
+        let thin = byRung.filter { $0.value.count < 2 }.keys.sorted()
+        XCTAssertTrue(thin.isEmpty,
+                      "rung(s) \(thin) have a single board — losing and retrying serves the "
+                      + "identical board with the answers already known. Deepen the released pool "
+                      + "(tools.ingest.main --grid <sport> --grid-days N) and re-run "
+                      + "tools.ingest.ladder --upsert.")
     }
 
     /// The ladder must get harder as you climb. Compared over a window rather than adjacently:
@@ -155,7 +206,11 @@ final class LadderCurveTests: XCTestCase {
     /// in the mid band is legitimately a small step sideways — but five rungs later must be a
     /// real step down.
     func testTheCurveDescendsAcrossTheLadder() throws {
-        let byRung = try rows().sorted { $0.rung.rung < $1.rung.rung }
+        // One entry per RUNG. The fixture now holds one row per board, so comparing raw rows five
+        // apart would compare a rung against itself and pass no matter what the curve did.
+        let byRung = try rows()
+            .filter { ($0.rung.ordinal ?? 0) == 0 }
+            .sorted { $0.rung.rung < $1.rung.rung }
         let targets = byRung.compactMap(\.rung.target_win_rate)
         guard targets.count >= 10 else { throw XCTSkip("too few rungs seeded") }
         for i in 0..<(targets.count - 5) {

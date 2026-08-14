@@ -85,24 +85,49 @@ final class LadderRepository {
         return rows.first ?? .none
     }
 
+    /// Which board of this rung's pool to serve next.
+    ///
+    /// The choice is made **server-side** (`next_ladder_board`) rather than here, because it
+    /// depends on `ladder_attempts` — own-read RLS, so the client can see its own history but a
+    /// client-side "pick an unseen one" would be a claim rather than a fact, and every retry off a
+    /// cold cache would re-serve ordinal 0.
+    ///
+    /// Falls back to the rung's own board whenever the RPC can't answer — offline, or a rung
+    /// seeded before pools existed. That fallback is not a degraded mode: `ladder_rungs.puzzle_id`
+    /// *is* the pool's ordinal-0 board, so the rung stays completely playable on a plane.
+    func nextBoard(for rung: LadderRung) async -> LadderBoard {
+        struct Args: Encodable {
+            let pRung: Int
+            enum CodingKeys: String, CodingKey { case pRung = "p_rung" }
+        }
+        guard let data = try? await client.rpc("next_ladder_board", args: Args(pRung: rung.rung)),
+              // `returns table (...)` comes back as an array of rows, empty when the rung has no
+              // pool at all.
+              let rows = try? rowDecoder.decode([LadderBoard].self, from: data),
+              let board = rows.first else {
+            return LadderBoard(fallback: rung)
+        }
+        return board
+    }
+
     /// Records an attempt and returns the player's new high-water rung.
     ///
     /// Returns nil on failure, which the caller must treat as "the attempt didn't count" rather
     /// than "the player lost" — the local result screen has already told them what happened.
     @discardableResult
-    func submitAttempt(rung: Int, score: Double, botScore: Double,
+    func submitAttempt(rung: Int, puzzleID: String, score: Double, botScore: Double,
                        won: Bool, elapsedMs: Int) async -> Int? {
         struct Args: Encodable {
             let pRung: Int; let pScore: Double; let pBotScore: Double
-            let pWon: Bool; let pElapsedMs: Int
+            let pWon: Bool; let pElapsedMs: Int; let pPuzzleId: String
             enum CodingKeys: String, CodingKey {
                 case pRung = "p_rung", pScore = "p_score", pBotScore = "p_bot_score"
-                case pWon = "p_won", pElapsedMs = "p_elapsed_ms"
+                case pWon = "p_won", pElapsedMs = "p_elapsed_ms", pPuzzleId = "p_puzzle_id"
             }
         }
         guard let data = try? await client.rpc("submit_ladder_attempt",
             args: Args(pRung: rung, pScore: score, pBotScore: botScore,
-                       pWon: won, pElapsedMs: elapsedMs)) else { return nil }
+                       pWon: won, pElapsedMs: elapsedMs, pPuzzleId: puzzleID)) else { return nil }
         return try? JSONDecoder().decode(Int.self, from: data)
     }
 

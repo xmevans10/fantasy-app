@@ -709,7 +709,12 @@ final class RepositoryContainer: ObservableObject {
     func submitDuelResult(_ session: DuelSession, performance: Double,
                           elapsed: TimeInterval) async {
         if let ladder = session.ladder {
-            await submitLadderAttempt(ladder, performance: performance, elapsed: elapsed)
+            // `session.boardID`, not `rung.puzzleId`: the rung names its pool's ordinal-0 board,
+            // and recording that for every attempt would make "which boards has this player seen"
+            // permanently answer "only the first one" — which is the question pools exist to
+            // answer, so this is the whole feature and not a detail.
+            await submitLadderAttempt(ladder, puzzleID: session.boardID,
+                                      performance: performance, elapsed: elapsed)
         } else {
             await submitVersusResult(challengeID: session.challengeID, performance: performance)
         }
@@ -732,14 +737,22 @@ final class RepositoryContainer: ObservableObject {
     /// The bot's entire run is computed here, before the board is ever on screen — which is
     /// exactly why the ladder needs no transport: "playing alongside" the bot is replaying
     /// `run.beats` against the clock. Nil when the rung's board can't be fetched.
-    func startLadderRung(_ row: LadderRungRow) async -> DuelBoard? {
+    /// - Parameter board: which board of the rung's pool to play. Nil asks the server for the next
+    ///   one the player hasn't seen, which is what every caller wants except a rematch, where the
+    ///   result screen has already resolved the board it is offering.
+    func startLadderRung(_ row: LadderRungRow, board: LadderBoard? = nil) async -> DuelBoard? {
         guard let ladder else { return nil }
         let rung = row.rung
         let limit = TimeInterval(rung.timeLimitSeconds)
-        let seed = rung.generatorSeed
+        // A rung is a difficulty, not a board: retrying must not hand back the board whose answers
+        // the player already knows. The seed travels WITH the board, so the bot doesn't replay an
+        // identical decision pattern on the new one either.
+        let served: LadderBoard
+        if let board { served = board } else { served = await ladder.nextBoard(for: rung) }
+        let seed = served.generatorSeed
 
         func session(_ run: BotRun) -> DuelSession {
-            DuelSession(challengeID: rung.rung, format: rung.mode, boardID: rung.puzzleId,
+            DuelSession(challengeID: rung.rung, format: rung.mode, boardID: served.puzzleId,
                         opponentUserID: nil, opponentName: row.bot.name,
                         secondsRemaining: rung.timeLimitSeconds,
                         ladder: LadderRunSession(rung: rung, bot: row.bot, run: run))
@@ -747,15 +760,15 @@ final class RepositoryContainer: ObservableObject {
 
         switch rung.mode {
         case .keep4:
-            guard let p = await ladder.puzzle(Keep4Puzzle.self, id: rung.puzzleId) else { return nil }
+            guard let p = await ladder.puzzle(Keep4Puzzle.self, id: served.puzzleId) else { return nil }
             return .keep4(session(BotSolver.playKeep4(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
                                                  style: row.bot.style)), p)
         case .grid:
-            guard let p = await ladder.puzzle(GridPuzzle.self, id: rung.puzzleId) else { return nil }
+            guard let p = await ladder.puzzle(GridPuzzle.self, id: served.puzzleId) else { return nil }
             return .grid(session(BotSolver.playGrid(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
                                                  style: row.bot.style)), p)
         case .whoami:
-            guard let p = await ladder.puzzle(WhoAmIPuzzle.self, id: rung.puzzleId) else { return nil }
+            guard let p = await ladder.puzzle(WhoAmIPuzzle.self, id: served.puzzleId) else { return nil }
             return .whoami(session(BotSolver.playWhoAmI(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
                                                  style: row.bot.style)), p)
         }
@@ -783,12 +796,13 @@ final class RepositoryContainer: ObservableObject {
     /// Posts a finished rung. The ladder pays **XP and rank only, never the solo rating** —
     /// the same rule the Versus info sheet states ("Versus games never affect your rating"),
     /// which is why this goes through `logSession` rather than `complete(...)`.
-    private func submitLadderAttempt(_ run: LadderRunSession, performance: Double,
-                                     elapsed: TimeInterval) async {
+    private func submitLadderAttempt(_ run: LadderRunSession, puzzleID: String,
+                                     performance: Double, elapsed: TimeInterval) async {
         guard let ladder else { return }
         let won = LadderOutcome.playerWon(playerScore: performance, botScore: run.run.performance)
         if let newHigh = await ladder.submitAttempt(
-            rung: run.rung.rung, score: performance, botScore: run.run.performance,
+            rung: run.rung.rung, puzzleID: puzzleID, score: performance,
+            botScore: run.run.performance,
             won: won, elapsedMs: max(0, Int(elapsed * 1000))) {
             ladderProgress = LadderProgress(highestRung: newHigh)
         }

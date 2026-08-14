@@ -77,6 +77,46 @@ struct LadderRung: Codable, Equatable, Identifiable {
     }
 }
 
+/// One board out of a rung's pool — what `next_ladder_board` hands back.
+///
+/// A rung is a *difficulty*, not a board. With a single `puzzle_id` per rung, losing and retrying
+/// served the identical board with the answers already known, so the score meant nothing and
+/// `ladder_attempts` filled with rows that look like skill and are actually recall.
+///
+/// The `seed` is per BOARD, not per rung: reusing the rung's seed across its pool would have the
+/// bot replay the same decision pattern on every board it guards — the same blinks at the same
+/// indices — which is the exact tell the pool exists to remove.
+struct LadderBoard: Codable, Equatable {
+    let puzzleId: String
+    let seed: Int64
+    let boardDifficulty: Double
+
+    enum CodingKeys: String, CodingKey {
+        case puzzleId = "puzzle_id"
+        case seed
+        case boardDifficulty = "board_difficulty"
+    }
+
+    /// Same signed-`bigint` bit-pattern reinterpretation as `LadderRung.generatorSeed`.
+    var generatorSeed: UInt64 { UInt64(bitPattern: seed) }
+
+    /// The rung's own columns, used when the RPC can't answer — offline, signed out with an empty
+    /// pool, or a rung seeded before pools existed. `ladder_rungs.puzzle_id` **is** the pool's
+    /// ordinal-0 board and `tools/ingest/ladder.py` derives the rung's seed from `board_seed(rung,
+    /// 0)`, so this reproduces the byte-identical bot run the pooled path would have given.
+    init(fallback rung: LadderRung) {
+        puzzleId = rung.puzzleId
+        seed = rung.seed
+        boardDifficulty = 0
+    }
+
+    init(puzzleId: String, seed: Int64, boardDifficulty: Double) {
+        self.puzzleId = puzzleId
+        self.seed = seed
+        self.boardDifficulty = boardDifficulty
+    }
+}
+
 /// The player's position on the ladder. Mirrors `ladder_progress`.
 struct LadderProgress: Codable, Equatable {
     let highestRung: Int

@@ -685,10 +685,31 @@ create table if not exists public.notification_log (
   local_day  date not null,
   sent_at    timestamptz not null default now()
 );
+
+-- Names the event a trigger-driven push is answering (migration 0022), so the guard below can
+-- tell "the second duel someone challenged you to today" from "the cron fired twice".
+alter table public.notification_log
+  add column if not exists dedupe_key text;
+
+comment on column public.notification_log.dedupe_key is
+  'Names the event a trigger-driven push is answering ("challenge:42", "result:42", "friend:<requester uuid>"), so two legitimate same-day events of one category each get their own row and their own send. NULL for the scheduled slots, which are once-per-category-per-day by definition — see notification_log_once_per_event (nulls not distinct).';
+
 create index if not exists notification_log_user_day_idx
   on public.notification_log (user_id, local_day);
-create unique index if not exists notification_log_once_per_day
-  on public.notification_log (user_id, category, local_day);
+
+-- 0018's guard was (user_id, category, local_day), which was right while only the three SCHEDULED
+-- slots were logged and wrong the moment the trigger-driven pushes joined them: the second
+-- challenge you received in a day lost the insert race with the first and was reported
+-- `already_sent` — a real duel never announced. Proven against production before the change, with
+-- an aborted DO block that re-inserted an existing triple and got 23505.
+--
+-- `nulls not distinct` is load-bearing, not incidental: under the default `nulls distinct` every
+-- scheduled row (dedupe_key NULL) would be unique against every other one and 0018's
+-- double-fire guard would silently evaporate. Requires PG15+; the project is on 17.6.
+drop index if exists public.notification_log_once_per_day;
+create unique index if not exists notification_log_once_per_event
+  on public.notification_log (user_id, category, local_day, dedupe_key)
+  nulls not distinct;
 alter table public.notification_log enable row level security;
 drop policy if exists "notification_log own read" on public.notification_log;
 create policy "notification_log own read" on public.notification_log
@@ -2032,6 +2053,34 @@ create table if not exists public.ladder_rungs (
   is_boss            boolean not null default false
 );
 
+-- A rung is a difficulty, not a board — so it needs a pool of them (migration 0020).
+--
+-- With a single `puzzle_id`, losing rung 7 and retrying handed back the identical board with the
+-- answers already known: the score meant nothing, and `ladder_attempts` — the corpus human ghost
+-- duels will later be built from — filled with rows that look like skill and are actually recall.
+--
+-- Why a child table rather than an array column on `ladder_rungs`: each board needs its own
+-- `seed` (the same bot must not replay an identical decision pattern on a new board) and its own
+-- verified `board_difficulty`, because a rung's difficulty is a promise. If board A is 0.25 and
+-- board B is 0.60 then the rung is a different rung depending on which one you drew, and the
+-- calibration in `tools/ingest/ladder.py` stops describing anything. Pools are therefore selected
+-- difficulty-homogeneous and re-verified per board; see that tool for the tolerances.
+--
+-- `ladder_rungs.puzzle_id` stays as the pool's ordinal-0 board, so an already-shipped client that
+-- never calls `next_ladder_board` keeps working unchanged.
+create table if not exists public.ladder_rung_boards (
+  rung             int  not null references public.ladder_rungs(rung) on delete cascade,
+  ordinal          int  not null,               -- stable serve order
+  puzzle_id        text not null references public.puzzles(id),
+  board_difficulty double precision not null,
+  seed             bigint not null,             -- per BOARD, not per rung
+  primary key (rung, ordinal)
+);
+-- One board may not appear twice in the same pool — without this a short pool could be padded
+-- with duplicates and still report a healthy count.
+create unique index if not exists ladder_rung_boards_unique_board
+  on public.ladder_rung_boards (rung, puzzle_id);
+
 create table if not exists public.ladder_progress (
   user_id      uuid primary key references auth.users(id) on delete cascade,
   highest_rung int not null default 0,
@@ -2051,24 +2100,38 @@ create table if not exists public.ladder_attempts (
   elapsed_ms int not null check (elapsed_ms >= 0),
   created_at timestamptz not null default now()
 );
+-- Which board of the rung's pool this attempt was played on (migration 0020). Nullable because
+-- every attempt recorded before pools existed was played on the rung's single board, and
+-- back-filling a guess would be inventing history.
+alter table public.ladder_attempts
+  add column if not exists puzzle_id text references public.puzzles(id);
+
 create index if not exists ladder_attempts_user_idx on public.ladder_attempts (user_id, rung);
 -- The corpus lookup: "what did people score on this board".
 create index if not exists ladder_attempts_rung_idx on public.ladder_attempts (rung, score desc);
+-- `next_ladder_board`'s unseen-board probe: (user_id, rung) alone leaves the puzzle comparison
+-- as a heap fetch per candidate row.
+create index if not exists ladder_attempts_seen_idx
+  on public.ladder_attempts (user_id, rung, puzzle_id);
 
-alter table public.bots            enable row level security;
-alter table public.ladder_rungs    enable row level security;
-alter table public.ladder_progress enable row level security;
-alter table public.ladder_attempts enable row level security;
+alter table public.bots              enable row level security;
+alter table public.ladder_rungs      enable row level security;
+alter table public.ladder_rung_boards enable row level security;
+alter table public.ladder_progress   enable row level security;
+alter table public.ladder_attempts   enable row level security;
 
-drop policy if exists "bots readable"            on public.bots;
-drop policy if exists "ladder_rungs readable"    on public.ladder_rungs;
-drop policy if exists "ladder_progress own"      on public.ladder_progress;
-drop policy if exists "ladder_attempts own read" on public.ladder_attempts;
+drop policy if exists "bots readable"              on public.bots;
+drop policy if exists "ladder_rungs readable"      on public.ladder_rungs;
+drop policy if exists "ladder_rung_boards readable" on public.ladder_rung_boards;
+drop policy if exists "ladder_progress own"        on public.ladder_progress;
+drop policy if exists "ladder_attempts own read"   on public.ladder_attempts;
 
 -- Ladder content is world-readable scaffolding, like `seasons`/`cohorts`. It has to be: a
 -- signed-out player can still see what the ladder is before deciding to sign in for it.
 create policy "bots readable"         on public.bots         for select using (true);
 create policy "ladder_rungs readable" on public.ladder_rungs for select using (true);
+create policy "ladder_rung_boards readable"
+  on public.ladder_rung_boards for select using (true);
 
 create policy "ladder_progress own" on public.ladder_progress
   for select using (auth.uid() = user_id);
@@ -2081,9 +2144,18 @@ create policy "ladder_attempts own read" on public.ladder_attempts
 --
 -- The rung gate is the whole point: `highest_rung` can only ever move to `p_rung` when
 -- `p_rung = highest_rung + 1` and the attempt was won, so progress is a chain, not a claim.
+-- Dropped and recreated rather than `create or replace`d when `p_puzzle_id` was added (migration
+-- 0020): the new argument changes the signature, and leaving the old five-argument function in
+-- place would make every existing five-argument call ambiguous between the two overloads and fail
+-- outright. With the sixth argument defaulted, a shipped client that posts only the original five
+-- still resolves here and behaves as before — it records a null board, which is honest, since a
+-- client that doesn't know about pools genuinely played the rung's ordinal-0 board.
+drop function if exists public.submit_ladder_attempt(int, double precision, double precision,
+                                                     boolean, int);
+
 create or replace function public.submit_ladder_attempt(
   p_rung int, p_score double precision, p_bot_score double precision,
-  p_won boolean, p_elapsed_ms int)
+  p_won boolean, p_elapsed_ms int, p_puzzle_id text default null)
 returns int language plpgsql security definer as $$
 declare
   me uuid := auth.uid();
@@ -2091,14 +2163,25 @@ declare
   s  double precision := least(greatest(coalesce(p_score, 0), 0), 1);
   bs double precision := least(greatest(coalesce(p_bot_score, 0), 0), 1);
   ms int := least(greatest(coalesce(p_elapsed_ms, 0), 0), 3_600_000);
+  board text;
 begin
   if me is null then raise exception 'not signed in'; end if;
   if not exists (select 1 from public.ladder_rungs where rung = p_rung) then
     raise exception 'no such rung';
   end if;
 
-  insert into public.ladder_attempts (user_id, rung, score, bot_score, won, elapsed_ms)
-    values (me, p_rung, s, bs, coalesce(p_won, false), ms);
+  -- Trust the rung's own pool over the client's claim: a board that isn't in this rung's pool
+  -- (or is not the rung's own board) is recorded as null rather than poisoning the "which boards
+  -- has this player seen" answer with an id they could have posted by hand.
+  select p_puzzle_id into board
+   where p_puzzle_id is not null
+     and (exists (select 1 from public.ladder_rung_boards b
+                   where b.rung = p_rung and b.puzzle_id = p_puzzle_id)
+          or exists (select 1 from public.ladder_rungs r
+                      where r.rung = p_rung and r.puzzle_id = p_puzzle_id));
+
+  insert into public.ladder_attempts (user_id, rung, score, bot_score, won, elapsed_ms, puzzle_id)
+    values (me, p_rung, s, bs, coalesce(p_won, false), ms, board);
 
   insert into public.ladder_progress (user_id, highest_rung) values (me, 0)
     on conflict (user_id) do nothing;
@@ -2114,6 +2197,92 @@ begin
   return current_high;
 end;
 $$;
+
+revoke all on function public.submit_ladder_attempt(int, double precision, double precision,
+                                                    boolean, int, text) from public;
+grant execute on function public.submit_ladder_attempt(int, double precision, double precision,
+                                                       boolean, int, text)
+  to authenticated, service_role;
+
+-- Which board this player gets next on this rung (migration 0020).
+--
+-- Lowest-ordinal board they have no `ladder_attempts` row for; if they have seen the whole pool,
+-- the least recently attempted one. `SECURITY DEFINER` because the decision reads the caller's
+-- own attempt history, which is own-read RLS — scoped hard to `auth.uid()`, and it returns
+-- nothing about anyone else.
+--
+-- A signed-out caller gets ordinal 0: the ladder is browsable signed out, so this has to answer
+-- rather than fail; it just can't personalise. Returns zero rows when the rung has no pool at
+-- all, which the client treats as "fall back to `ladder_rungs.puzzle_id`" — the same path it
+-- needs for playing offline anyway.
+create or replace function public.next_ladder_board(p_rung int)
+returns table (puzzle_id text, seed bigint, board_difficulty double precision)
+language plpgsql security definer stable as $$
+declare
+  me uuid := auth.uid();
+begin
+  if me is null then
+    return query
+      select b.puzzle_id, b.seed, b.board_difficulty
+        from public.ladder_rung_boards b
+       where b.rung = p_rung
+       order by b.ordinal
+       limit 1;
+    return;
+  end if;
+
+  return query
+    select b.puzzle_id, b.seed, b.board_difficulty
+      from public.ladder_rung_boards b
+     where b.rung = p_rung
+       and not exists (select 1 from public.ladder_attempts a
+                        where a.user_id = me and a.rung = p_rung
+                          and a.puzzle_id = b.puzzle_id)
+     order by b.ordinal
+     limit 1;
+  -- RETURN QUERY sets FOUND, so this distinguishes "pool has an unseen board" from "seen it all"
+  -- without counting the pool twice.
+  if found then return; end if;
+
+  return query
+    select b.puzzle_id, b.seed, b.board_difficulty
+      from public.ladder_rung_boards b
+      left join lateral (
+        select max(a.created_at) as last_at
+          from public.ladder_attempts a
+         where a.user_id = me and a.rung = p_rung and a.puzzle_id = b.puzzle_id
+      ) la on true
+     where b.rung = p_rung
+     order by la.last_at nulls first, b.ordinal
+     limit 1;
+end $$;
+
+revoke all on function public.next_ladder_board(int) from public;
+grant execute on function public.next_ladder_board(int) to anon, authenticated, service_role;
+
+-- "Your record vs each character" for the roster screen (migration 0021).
+--
+-- `ladder_attempts` is own-read RLS and the bot is only reachable through `ladder_rungs`, so the
+-- record block needs one SECURITY DEFINER aggregate rather than a client-side join over a table
+-- the client can only see its own rows of. A signed-out caller gets zero rows, which is exactly
+-- the roster's "sign in to see your record" state.
+create or replace function public.my_bot_records()
+returns table (bot_id text, played int, won int,
+               best_score double precision, best_bot_score double precision)
+language sql security definer stable as $$
+  select r.bot_id,
+         count(*)::int,
+         count(*) filter (where a.won)::int,
+         max(a.score),
+         max(a.bot_score)
+  from public.ladder_attempts a
+  join public.ladder_rungs r on r.rung = a.rung
+  where a.user_id = auth.uid()
+  group by r.bot_id;
+$$;
+
+revoke all on function public.my_bot_records() from public;
+grant execute on function public.my_bot_records() to anon, authenticated, service_role;
 
 -- ── Content ──────────────────────────────────────────────────────────────────
 -- Six characters, each recognisable and each honestly a bot. Beating "The Analyst" is a better
