@@ -94,4 +94,22 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(es("A %lld-day streak and nobody to beat. Add a friend and every daily becomes a head-to-head."), "Una racha de %lld días y nadie a quien vencer. Agrega un amigo y cada diario se convierte en un duelo.")
         XCTAssertEqual(es("You've played %lld and nobody's chasing you. Add a friend and every daily becomes a head-to-head."), "Has jugado %lld y nadie te pisa los talones. Agrega un amigo y cada diario se convierte en un duelo.")
     }
+
+    /// Two days of bot-character work (the ladder's reaction bubbles, the rematch action, the
+    /// Roster screen, `BotCharacterCard`) added dozens of `String(localized:)` calls that never
+    /// made it into the catalog — the same quiet failure the two tests above guard against, just
+    /// for a newer feature area. The Task 5.1 catalog sync (`xcodebuild -exportLocalizations` /
+    /// `-importLocalizations`) added them with no Spanish translation yet, which is the
+    /// documented, acceptable state (English fallback) — but they must land as their own
+    /// standalone key, not silently merge into or get shadowed by an existing translated entry.
+    /// `es(_:)` returning the bare key (rather than someone else's Spanish string) is exactly
+    /// `testBrandedFormatNamesStayEnglish`'s check, aimed at the two keys most likely to catch a
+    /// regression if the next sync mis-imports: `REMATCH` (the shared result-screen action added
+    /// in the same push) and the Roster silhouette's `Rung %lld unlocks` (format-specifier key —
+    /// a bad re-sync reordering or dropping `%lld` would still pass a same-key check like this
+    /// one only if the specifier survives verbatim).
+    func testBotCharacterAndRosterKeysAreInCatalog() {
+        XCTAssertEqual(es("REMATCH"), "REMATCH")
+        XCTAssertEqual(es("Rung %lld unlocks"), "Rung %lld unlocks")
+    }
 }
