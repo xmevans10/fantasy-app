@@ -2,12 +2,17 @@ import SwiftUI
 
 /// A bot's face.
 ///
-/// **Drawn, not shipped.** Six illustrated portraits would be six assets to commission, localise
-/// and keep in sync with a roster that is a database table — and the app has no image pipeline
-/// for character art. This composes each portrait from the design system instead: the bot's own
-/// colourway, a per-character backdrop pattern, and its emoji as the subject. That gives every
-/// bot something recognisably theirs at any size, costs no bytes, adapts to both themes for free,
-/// and means adding a seventh character is an INSERT rather than an art request.
+/// **Illustrated where we have one, composed where we don't.** The six shipped characters have
+/// authored portraits in `Assets.xcassets` (`bot-<id>`), generated from their own row in `bots` by
+/// `tools/avatars/generate_bot_avatars.sh` — see that script for the style and licence, and for
+/// why every trait is pinned rather than seeded.
+///
+/// Anything without an asset falls back to the original composed portrait: the bot's colourway, a
+/// backdrop pattern keyed to its playing style, and its emoji as the subject. That fallback is the
+/// load-bearing half of this view, not dead code — `bots` is a world-readable table a seventh
+/// character can be INSERTed into, and a roster row must never render blank on a shipped build
+/// just because the art hasn't caught up. Same defensive shape as `LadderRung.Tier` decoding an
+/// unknown tier as bronze rather than throwing.
 ///
 /// The pattern is keyed off `style`, not off the id — so what you see is a readout of how the
 /// opponent plays, and two bots sharing a style would visibly rhyme.
@@ -17,16 +22,32 @@ struct BotPortrait: View {
     /// Dimmed and desaturated for a rung the player hasn't unlocked.
     var locked: Bool = false
 
+    /// Nil when this character has no shipped portrait — see the fallback note above.
+    private var portrait: Image? {
+        #if canImport(UIKit)
+        guard UIImage(named: "bot-\(bot.id)") != nil else { return nil }
+        #endif
+        return Image("bot-\(bot.id)")
+    }
+
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
                 .fill(bot.palette.fill.opacity(locked ? 0.16 : 1))
-            BotPattern(style: bot.style)
-                .stroke(bot.palette.ink.opacity(locked ? 0.10 : 0.28), lineWidth: size * 0.035)
-                .clipShape(RoundedRectangle(cornerRadius: size * 0.24, style: .continuous))
-            Text(locked ? "🔒" : bot.avatar)
-                .font(.system(size: size * 0.46))
-                .shadow(color: .black.opacity(0.18), radius: size * 0.02, y: size * 0.012)
+            if let portrait, !locked {
+                portrait
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: size, height: size)
+                    .clipShape(RoundedRectangle(cornerRadius: size * 0.24, style: .continuous))
+            } else {
+                BotPattern(style: bot.style)
+                    .stroke(bot.palette.ink.opacity(locked ? 0.10 : 0.28), lineWidth: size * 0.035)
+                    .clipShape(RoundedRectangle(cornerRadius: size * 0.24, style: .continuous))
+                Text(locked ? "🔒" : bot.avatar)
+                    .font(.system(size: size * 0.46))
+                    .shadow(color: .black.opacity(0.18), radius: size * 0.02, y: size * 0.012)
+            }
         }
         .frame(width: size, height: size)
         .overlay(
