@@ -22,8 +22,10 @@ struct GridResultView: View {
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.ladderRematch) private var ladderRematch
     @State private var confetti = 0
     @State private var showLeaderboard = false
+    @State private var rematching = false
     /// cell index → (name → pct of that cell's correct picks). Empty until the crowd stats
     /// land (or forever, offline) — the recap simply shows no % line then.
     @State private var pickPct: [Int: [String: Int]] = [:]
@@ -252,6 +254,9 @@ struct GridResultView: View {
                         .frame(maxWidth: .infinity).padding(.vertical, 15)
                 }
                 .buttonStyle(.plain)
+                if let ladderRematch {
+                    RematchButton(rematching: $rematching, action: ladderRematch)
+                }
             }
             .padding(16)
             .background(Color.surface)

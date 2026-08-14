@@ -167,6 +167,41 @@ struct LadderRunSession: Equatable {
     }
 }
 
+/// Decides when a ladder bot's live score change is worth a speech-bubble reaction, and enforces
+/// the budget — pulled out of `DuelTimerBar` so the crossing/cap/gap policy is unit-testable
+/// without a hosted view (see `DuelReactionTests`).
+///
+/// "Crossing" is tracked through a tie rather than reset by one: if the bot pulls ahead, dips
+/// back level, then pulls ahead again, that is still the *same* lead, not a second reaction. Only
+/// `lastNonzeroSign` flipping counts.
+struct DuelReactionEngine: Equatable {
+    private var lastNonzeroSign = 0
+    private(set) var firedCount = 0
+    private var lastFiredAt: Date?
+
+    /// "How much character expression before it's distracting" — the brief's own answer, on a
+    /// 60-second timed board, is: very little.
+    static let maxReactions = 2
+    static let minGap: TimeInterval = 8
+
+    /// Call on every score tick with the bot's authored lines for each direction. Returns the
+    /// line to show, or nil if nothing should fire this tick — either because the score hasn't
+    /// crossed, the bot has no authored line for that direction (silence beats a filler line,
+    /// and costs nothing against the budget), the budget is spent, or the last reaction was too
+    /// recent.
+    mutating func reactionLine(diff: Int, ahead: String?, behind: String?, now: Date) -> String? {
+        let sign = diff == 0 ? 0 : (diff > 0 ? 1 : -1)
+        guard sign != 0, sign != lastNonzeroSign else { return nil }
+        lastNonzeroSign = sign
+        guard let line = sign > 0 ? ahead : behind, !line.isEmpty else { return nil }
+        guard firedCount < Self.maxReactions else { return nil }
+        if let lastFiredAt, now.timeIntervalSince(lastFiredAt) < Self.minGap { return nil }
+        firedCount += 1
+        lastFiredAt = now
+        return line
+    }
+}
+
 /// The duel clock, pinned to the top of whichever board is being played.
 ///
 /// Drives itself off a `TimelineView(.periodic)` rather than a `Timer` + `@State`: a `Timer`
@@ -175,66 +210,175 @@ struct LadderRunSession: Equatable {
 /// `deadline - now` no matter what happened in between.
 struct DuelTimerBar: View {
     let session: DuelSession
+    /// The player's own live tally, in whatever unit this format's game view already tracks —
+    /// `Keep4GameView.placement.count`, `GridGameView.solved.count`,
+    /// `WhoAmIGameView.revealedCount`. Only meaningful (and only read) when `session.ladder` is
+    /// set: a human duel has no live opposing number to compare against, so this is nil there.
+    ///
+    /// Not a true apples-to-apples score in every format — Keep4 is a blind sort, so
+    /// `placement.count` is cards *decided*, not cards known-correct, unlike Grid's `solved`
+    /// (which only holds confirmed-correct guesses). One shared optional beats three bespoke
+    /// comparison paths (AGENTS.md §4); the reaction is a vibe ("who's pulling ahead right now"),
+    /// not a claim about final accuracy, and the result screen's real verdict is unaffected by it.
+    var playerScore: Int? = nil
     /// Fired once, when the clock reaches zero. The game view is expected to finish the run
     /// with whatever the player has so far — an expired duel still has to resolve.
     let onExpire: () -> Void
 
     @State private var didExpire = false
+    @State private var reactionEngine = DuelReactionEngine()
+    @State private var reactionText: String?
+    @State private var reactionToken: UUID?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Under this many seconds the bar goes red and starts pulsing.
     private let urgentThreshold = 10
+    /// How long a reaction bubble stays up before it auto-dismisses.
+    private let reactionDuration: TimeInterval = 2.5
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 0.5)) { context in
-            let left = session.secondsLeft(at: context.date)
-            let urgent = left <= urgentThreshold
-            HStack(spacing: 10) {
-                if let ladder = session.ladder {
-                    // The bot's score, climbing in real time off its pre-computed beats. This
-                    // is the entire "live opponent" mechanic — see `LadderRunSession`.
-                    let elapsed = TimeInterval(session.secondsRemaining - left)
-                    Text(ladder.bot.avatar).font(.system(size: 15))
-                    Text(ladder.bot.name).font(.label11).lineLimit(1)
-                    Text("\(ladder.botScore(after: elapsed))/\(ladder.outOf)")
-                        .font(.custom(FontName.condBlack, size: 15))
+        VStack(spacing: 0) {
+            TimelineView(.periodic(from: .now, by: 0.5)) { context in
+                let left = session.secondsLeft(at: context.date)
+                let urgent = left <= urgentThreshold
+                let elapsed = TimeInterval(session.secondsRemaining - left)
+                let botScore = session.ladder?.botScore(after: elapsed)
+                HStack(spacing: 10) {
+                    if let ladder = session.ladder, let botScore {
+                        // The bot's score, climbing in real time off its pre-computed beats. This
+                        // is the entire "live opponent" mechanic — see `LadderRunSession`.
+                        Text(ladder.bot.avatar).font(.system(size: 15))
+                        Text(ladder.bot.name).font(.label11).lineLimit(1)
+                        Text("\(botScore)/\(ladder.outOf)")
+                            .font(.custom(FontName.condBlack, size: 15))
+                            .monospacedDigit()
+                            .contentTransition(.numericText())
+                            .opacity(ladder.isDone(after: elapsed) ? 1 : 0.85)
+                    } else {
+                        Image(systemName: "bolt.fill")
+                            .font(.system(size: 12, weight: .bold))
+                        Text(session.opponentName.map { String(localized: "DUEL vs \($0)") }
+                             ?? String(localized: "DUEL"))
+                            .font(.label11)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 8)
+                    Text(DuelSession.clockText(left))
+                        .font(.custom(FontName.condBlack, size: 20))
                         .monospacedDigit()
                         .contentTransition(.numericText())
-                        .opacity(ladder.isDone(after: elapsed) ? 1 : 0.85)
-                } else {
-                    Image(systemName: "bolt.fill")
-                        .font(.system(size: 12, weight: .bold))
-                    Text(session.opponentName.map { String(localized: "DUEL vs \($0)") }
-                         ?? String(localized: "DUEL"))
-                        .font(.label11)
-                        .lineLimit(1)
                 }
-                Spacer(minLength: 8)
-                Text(DuelSession.clockText(left))
-                    .font(.custom(FontName.condBlack, size: 20))
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
+                .foregroundStyle(urgent ? Color.onDanger : Color.onAccent)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+                .background(urgent ? Color.dangerFill : Color.accentFill)
+                .opacity(urgent && left % 2 == 1 ? 0.82 : 1)
+                .animation(Motion.snap, value: urgent)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(session.ladder.map { ladder in
+                    Text("\(ladder.bot.name) is on \(ladder.botScore(after: TimeInterval(session.secondsRemaining - left))) of \(ladder.outOf). \(left) seconds left")
+                } ?? Text("Duel clock, \(left) seconds left"))
+                .onChange(of: left) { _, newValue in
+                    // `onChange` rather than a check in `body`: mutating state during a view
+                    // update is what SwiftUI warns about, and the callback almost always
+                    // dismisses or rebuilds this view.
+                    guard newValue <= 0, !didExpire else { return }
+                    didExpire = true
+                    Haptics.reject()
+                    onExpire()
+                }
+                .onChange(of: botScore.map { $0 - (playerScore ?? 0) }) { _, diff in
+                    guard let diff, let bot = session.ladder?.bot else { return }
+                    if let line = reactionEngine.reactionLine(diff: diff, ahead: bot.voice.ahead,
+                                                              behind: bot.voice.behind, now: Date()) {
+                        showReaction(line)
+                    }
+                }
             }
-            .foregroundStyle(urgent ? Color.onDanger : Color.onAccent)
-            .padding(.horizontal, 16)
+            reactionBubble
+        }
+    }
+
+    /// Fades or slides+fades in, sits for `reactionDuration`, then fades back out — never blocks
+    /// a tap (it's inline content, not an overlay, so it never sits on top of the board or the
+    /// current card) and never steals VoiceOver focus (an `.accessibilityAnnouncement` speaks it
+    /// without moving focus to it).
+    @ViewBuilder
+    private var reactionBubble: some View {
+        if let reactionText, let bot = session.ladder?.bot {
+            HStack(alignment: .top, spacing: 8) {
+                Text(bot.avatar).font(.system(size: 13))
+                Text(reactionText)
+                    .font(.label12)
+                    .foregroundStyle(Color.textPrimary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .frame(maxWidth: .infinity)
-            .background(urgent ? Color.dangerFill : Color.accentFill)
-            .opacity(urgent && left % 2 == 1 ? 0.82 : 1)
-            .animation(Motion.snap, value: urgent)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.surface1)
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(Color.hairline).frame(height: Hairline.width)
+            }
+            .transition(reduceMotion ? .opacity
+                        : .asymmetric(insertion: .opacity.combined(with: .move(edge: .top)),
+                                      removal: .opacity))
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(session.ladder.map { ladder in
-                Text("\(ladder.bot.name) is on \(ladder.botScore(after: TimeInterval(session.secondsRemaining - left))) of \(ladder.outOf). \(left) seconds left")
-            } ?? Text("Duel clock, \(left) seconds left"))
-            .onChange(of: left) { _, newValue in
-                // `onChange` rather than a check in `body`: mutating state during a view update
-                // is what SwiftUI warns about, and the callback almost always dismisses or
-                // rebuilds this view.
-                guard newValue <= 0, !didExpire else { return }
-                didExpire = true
-                Haptics.reject()
-                onExpire()
+            .accessibilityLabel("\(bot.name): \(reactionText)")
+        }
+    }
+
+    private func showReaction(_ text: String) {
+        let token = UUID()
+        reactionToken = token
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Motion.easeOut) {
+            reactionText = text
+        }
+        // Announced rather than focus-shifted: a duel has a clock running, and moving VoiceOver
+        // focus to a bubble that auto-dismisses in 2.5s would strand the player mid-navigation.
+        AccessibilityNotification.Announcement(text).post()
+        DispatchQueue.main.asyncAfter(deadline: .now() + reactionDuration) {
+            guard reactionToken == token else { return }
+            withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Motion.easeOut) {
+                reactionText = nil
             }
         }
+    }
+}
+
+/// "REMATCH" beside "DONE" on every ladder result screen — one shared button rather than three
+/// copies (AGENTS.md §4), since all three result views need the identical loading/disabled
+/// dance around `EnvironmentValues.ladderRematch`.
+///
+/// Stays on `accentFill` (via `ctaLabel()`'s default) whether the run was won or lost —
+/// `dangerFill` would dress a rematch as a punishment, when the whole point is that losing to a
+/// bot is an invitation, not a verdict.
+struct RematchButton: View {
+    @Binding var rematching: Bool
+    let action: () async -> Bool
+
+    var body: some View {
+        Button {
+            guard !rematching else { return }
+            rematching = true
+            Task {
+                let started = await action()
+                // On success the game view this button lives in is about to be torn down for a
+                // fresh one (`LadderView` re-identifies the presented content by the new board's
+                // id), so there's nothing left here to reset. On failure, give the button back.
+                if !started { rematching = false }
+            }
+        } label: {
+            Text(rematching ? "STARTING…" : "REMATCH")
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .ctaLabel()
+        }
+        .buttonStyle(PrimePressStyle())
+        .disabled(rematching)
     }
 }
 

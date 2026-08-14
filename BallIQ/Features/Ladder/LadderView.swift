@@ -1,5 +1,21 @@
 import SwiftUI
 
+/// Lets a ladder result screen (three formats away, inside a `fullScreenCover`) offer a
+/// same-rung rematch without either `DuelBoard` or the three result views needing to know who's
+/// presenting them — `LadderView` is the only producer, set alongside the board it's hosting.
+/// `Bool` returned = whether a fresh board actually started, so the result screen's own
+/// "REMATCHING…" state knows when to give up and let the player try again (on success the game
+/// view is about to be torn down for a fresh one anyway, so there's nothing left to reset).
+private struct LadderRematchKey: EnvironmentKey {
+    static let defaultValue: (() async -> Bool)? = nil
+}
+extension EnvironmentValues {
+    var ladderRematch: (() async -> Bool)? {
+        get { self[LadderRematchKey.self] }
+        set { self[LadderRematchKey.self] = newValue }
+    }
+}
+
 /// The bot ladder — 30 rungs of skill-limited solvers, climbed one at a time.
 ///
 /// This is not a consolation prize for having no players. It is the mode that works at N=1: the
@@ -37,11 +53,26 @@ struct LadderView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    RosterView().environmentObject(container).environmentObject(auth)
+                } label: { Image(systemName: "person.3.fill") }
+                    .accessibilityLabel("Roster")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { showInfo = true } label: { Image(systemName: "info.circle") }
                     .accessibilityLabel("How the ladder works")
             }
         }
-        .task { await load() }
+        .task {
+            await load()
+            // No tap can reach a live rung board (the briefing sheet's START button is a real
+            // tap), and the live-reaction bubble only fires once real time has passed on a
+            // hosted view — a static render can't produce it. `-screenshotLadderDuel` exists
+            // solely so that state is screenshottable at all.
+            if DebugLaunch.autoStartLadderDuel, let row = rows.first(where: { $0.state != .locked }) {
+                await start(row)
+            }
+        }
         .sheet(isPresented: $showInfo) { infoSheet }
         .sheet(item: $briefing) { row in
             LadderBriefingSheet(row: row, starting: startingRung == row.rung.rung,
@@ -53,9 +84,38 @@ struct LadderView: View {
                isPresented: Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: { Text(startError ?? "") }
-        .fullScreenCover(item: $board, onDismiss: { Task { await load() } }) { board in
-            board.view.environmentObject(container)
+        .fullScreenCover(item: $board, onDismiss: { Task { await load() } }) { activeBoard in
+            activeBoard.view
+                .environmentObject(container)
+                // Set only for a ladder duel — a human Versus board never sees this key, so
+                // `duelVerdict == nil` there is belt-and-suspenders, not the only guard.
+                .environment(\.ladderRematch, activeBoard.session.ladder != nil
+                             ? { await rematch(activeBoard.session) } : nil)
+                // The rung number alone doesn't change on a rematch (same rung, new board), so
+                // `DuelBoard.id` — which `fullScreenCover(item:)` presents by — stays identical
+                // and the cover updates in place rather than dismissing and re-presenting. This
+                // forces the *content* to a fresh identity on every distinct board, which is
+                // what resets the game view's `@State` (including its own `result`) instead of
+                // silently reusing the just-finished run's.
+                .id(activeBoard.session.boardID)
         }
+    }
+
+    /// Starts the same rung again on the next unseen board — Task 1's `next_ladder_board` RPC
+    /// already guarantees a different board, so this is just calling `startLadderRung` again.
+    /// Losing should feel like an invitation, so the caller (`Keep4ResultView` &c.) keeps this
+    /// action on `accentFill`, never `dangerFill`.
+    private func rematch(_ session: DuelSession) async -> Bool {
+        guard let ladder = session.ladder else { return false }
+        // `state` is unused by `startLadderRung` (only `rung`/`bot` are), so any value works —
+        // this row exists purely to satisfy the same signature the briefing sheet uses.
+        let row = LadderRungRow(rung: ladder.rung, bot: ladder.bot, state: .open)
+        guard let started = await container.startLadderRung(row) else {
+            startError = String(localized: "That rung's board couldn't be loaded. Check your connection and try again.")
+            return false
+        }
+        board = started
+        return true
     }
 
     private var list: some View {
@@ -237,7 +297,9 @@ struct LadderView: View {
 ///
 /// Worth its own sheet rather than starting on tap. A rung is a one-shot run against a clock,
 /// and the bot's persona is most of what makes the ladder a progression rather than a list —
-/// meeting the opponent before the buzzer is the difference between the two.
+/// meeting the opponent before the buzzer is the difference between the two. The card itself is
+/// `BotCharacterCard` — shared with `RosterView`'s discovery card so the two can't fork — with
+/// the rung's own badge/stats and a pinned "start the run" footer.
 private struct LadderBriefingSheet: View {
     let row: LadderRungRow
     let starting: Bool
@@ -247,118 +309,19 @@ private struct LadderBriefingSheet: View {
     /// that says so up front.
     let signedIn: Bool
     let onStart: () async -> Void
-    @Environment(\.dismiss) private var dismiss
 
-    /// A scrolling body under a pinned CTA, rather than one `VStack` with a `Spacer`.
-    ///
-    /// The `VStack` version was laid out taller than the `.medium` detent (the persona and the
-    /// signed-out caption both wrap to two lines on the widest bots), and a sheet clips rather
-    /// than grows: the rung badge was pushed off the top edge entirely. Only visible in the
-    /// simulator — every layer of this compiles and unit-tests identically. Scrolling the body
-    /// makes the sheet correct at both detents *and* at large accessibility text sizes, which
-    /// no amount of tuning a fixed layout would have.
-    /// A full-height character card, not a peek sheet.
-    ///
-    /// It opens at `.large` only. The medium detent it used to offer was the wrong shape for
-    /// what this screen is: meeting the opponent is the moment the ladder's whole premise pays
-    /// off, and a half-height sheet turned a character card into a settings row with a portrait
-    /// on it. Full height also lets the portrait, the allegiances and the backstory sit together
-    /// without any of them being the thing that gets cut.
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(spacing: 18) {
-                    // Rung badge and the character's own colourway, edge to edge — the card
-                    // should read as *theirs* before a word of it is legible.
-                    ZStack {
-                        row.bot.palette.fill
-                        VStack(spacing: 14) {
-                            Text(row.rung.isBoss
-                                 ? String(localized: "BOSS · RUNG \(row.rung.rung)")
-                                 : String(localized: "RUNG \(row.rung.rung)"))
-                                .font(.custom(FontName.condBlack, size: 12))
-                                .foregroundStyle(row.bot.palette.ink.opacity(0.85))
-                                .padding(.horizontal, 10).padding(.vertical, 4)
-                                .background(row.bot.palette.ink.opacity(0.16))
-                                .clipShape(Capsule())
-                            BotPortrait(bot: row.bot, size: 116)
-                            Text(row.bot.name)
-                                .font(.hero(40))
-                                .foregroundStyle(row.bot.palette.ink)
-                            Text(row.bot.tagline)
-                                .font(.body14)
-                                .foregroundStyle(row.bot.palette.ink.opacity(0.85))
-                                .multilineTextAlignment(.center)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .padding(.top, 26).padding(.bottom, 22).padding(.horizontal, 20)
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    VStack(spacing: 16) {
-                        // Who they support. Three crests characterise a sports fan faster than
-                        // any paragraph, and they cost nothing — `TeamAbbrChip` already resolves
-                        // real logos and colours for any (sport, abbr).
-                        if !row.bot.favoriteTeams.isEmpty {
-                            cardBlock(label: String(localized: "FAVOURITE TEAMS")) {
-                                HStack(spacing: 8) {
-                                    ForEach(row.bot.favoriteTeams) { team in
-                                        TeamAbbrChip(sport: team.sport, abbr: team.abbr,
-                                                     fontSize: 13, minHeight: 34, showLogo: true)
-                                    }
-                                    Spacer(minLength: 0)
-                                }
-                            }
-                        } else {
-                            cardBlock(label: String(localized: "FAVOURITE TEAMS")) {
-                                Text("No allegiances. Never has had any.")
-                                    .font(.label12).foregroundStyle(Color.textMuted)
-                            }
-                        }
-
-                        if let intro = row.bot.voice.intro {
-                            Text("“\(intro)”")
-                                .font(.body14).italic()
-                                .foregroundStyle(Color.textPrimary)
-                                .multilineTextAlignment(.center)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .frame(maxWidth: .infinity)
-                                .padding(14)
-                                .background(row.bot.palette.soft)
-                                .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
-                        }
-
-                        HStack(spacing: 10) {
-                            stat(row.boardLine, label: String(localized: "BOARD"))
-                            stat(DuelSession.clockText(row.rung.timeLimitSeconds),
-                                 label: String(localized: "CLOCK"))
-                            stat("\(Int((row.rung.botSkill * 100).rounded()))%",
-                                 label: String(localized: "SKILL"))
-                        }
-
-                        // How they play, stated before the run. A style the player cannot
-                        // anticipate is noise rather than personality.
-                        if !row.bot.styleLine.isEmpty {
-                            cardBlock(label: String(localized: "HOW THEY PLAY")) {
-                                Text(row.bot.styleLine)
-                                    .font(.body14).foregroundStyle(Color.textPrimary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                        }
-
-                        if !row.bot.backstory.isEmpty {
-                            cardBlock(label: String(localized: "WHO THEY ARE")) {
-                                Text(row.bot.backstory)
-                                    .font(.label12).foregroundStyle(Color.textMuted)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 12)
-                }
-            }
-
+        BotCharacterCard(
+            bot: row.bot,
+            rungBadge: row.rung.isBoss
+                ? String(localized: "BOSS · RUNG \(row.rung.rung)")
+                : String(localized: "RUNG \(row.rung.rung)"),
+            stats: [
+                (row.boardLine, String(localized: "BOARD")),
+                (DuelSession.clockText(row.rung.timeLimitSeconds), String(localized: "CLOCK")),
+                ("\(Int((row.rung.botSkill * 100).rounded()))%", String(localized: "SKILL")),
+            ]
+        ) {
             // Pinned: starting the run is the one thing this card exists for.
             VStack(spacing: 10) {
                 Button {
@@ -382,37 +345,6 @@ private struct LadderBriefingSheet: View {
             .padding(.bottom, 20)
             .background(Color.appBackground)
         }
-        .frame(maxWidth: .infinity)
-        .background(Color.appBackground)
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
-    }
-
-    /// A labelled block. One shape for every section of the card so the eye can skip between
-    /// them, rather than four differently-styled paragraphs.
-    private func cardBlock<Content: View>(label: String,
-                                          @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label).font(.label11).foregroundStyle(Color.textMuted)
-            content()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .cardSurface()
-    }
-
-    private func stat(_ value: String, label: String) -> some View {
-        VStack(spacing: 2) {
-            Text(value)
-                .font(.custom(FontName.condBlack, size: 15))
-                .foregroundStyle(Color.textPrimary)
-                .lineLimit(1).minimumScaleFactor(0.6)
-            Text(label).font(.label11).foregroundStyle(Color.textMuted)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .background(Color.surfaceMuted)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
     }
 }
 

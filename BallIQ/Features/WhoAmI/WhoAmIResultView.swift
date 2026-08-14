@@ -19,11 +19,13 @@ struct WhoAmIResultView: View {
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
+    @Environment(\.ladderRematch) private var ladderRematch
     @State private var confetti = 0
     /// Resolved from the live catalog at reveal time (WhoAmI content has no photo URL) —
     /// see `WhoAmIAnswerPhoto` for the conservative matching rules. Stays nil (silhouette)
     /// when no confident match exists.
     @State private var answerHeadshot: String?
+    @State private var rematching = false
 
     private var heroFill: Color { result.solved ? (result.cluesUsed == 1 ? .voltFill : .accentFill) : .surface1 }
     private var heroInk: Color { result.solved ? (result.cluesUsed == 1 ? .onVolt : .onAccent) : .textPrimary }
@@ -188,14 +190,19 @@ struct WhoAmIResultView: View {
     private var doneBar: some View {
         VStack(spacing: 0) {
             Rectangle().fill(Color.hairline).frame(height: Hairline.width)
-            Button(action: onDone) {
-                Text("DONE")
-                    .font(.heading)
-                    .foregroundStyle(Color.accentText)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 15)
+            HStack(spacing: 12) {
+                Button(action: onDone) {
+                    Text("DONE")
+                        .font(.heading)
+                        .foregroundStyle(Color.accentText)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                }
+                .buttonStyle(.plain)
+                if let ladderRematch {
+                    RematchButton(rematching: $rematching, action: ladderRematch)
+                }
             }
-            .buttonStyle(.plain)
             .padding(16)
             .background(Color.surface)
         }

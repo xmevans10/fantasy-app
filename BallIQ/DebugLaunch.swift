@@ -27,6 +27,11 @@ enum DebugLaunch {
     /// ladder is a pushed screen, not the tab root, and it renders signed-out (content is
     /// world-readable; only playing a rung needs an account).
     static var autoOpenLadder: Bool { has("-screenshotLadder") }
+    /// Starts the first unlocked rung's board with no taps (the briefing sheet's START button is
+    /// a real tap simctl can't drive): `-screenshotLadderDuel`. Needed because the live-reaction
+    /// speech bubble (`DuelTimerBar`) only fires once real time has passed on a hosted view — a
+    /// static render can't produce it, so this is the only way to screenshot it at all.
+    static var autoStartLadderDuel: Bool { has("-screenshotLadderDuel") }
     static var autoOpenCommunity: Bool { has("-screenshotCommunity") }
     static var autoOpenBrowse: Bool { has("-screenshotBrowse") }
     static var autoOpenModeration: Bool { has("-screenshotModeration") }
@@ -220,6 +225,7 @@ enum DebugLaunch {
     static let autoOpenSeason = false
     static let autoOpenVersus = false
     static let autoOpenLadder = false
+    static let autoStartLadderDuel = false
     static let autoOpenCommunity = false
     static let autoOpenBrowse = false
     static let autoOpenModeration = false

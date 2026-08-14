@@ -24,7 +24,9 @@ struct Keep4ResultView: View {
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.ladderRematch) private var ladderRematch
     @State private var confetti = 0
+    @State private var rematching = false
 
     private var heroFill: Color { result.isPerfect ? .voltFill : .accentFill }
     private var heroInk: Color { result.isPerfect ? .onVolt : .onAccent }
@@ -256,14 +258,19 @@ struct Keep4ResultView: View {
     private var doneBar: some View {
         VStack(spacing: 0) {
             Rectangle().fill(Color.hairline).frame(height: Hairline.width)
-            Button(action: onDone) {
-                Text("DONE")
-                    .font(.heading)
-                    .foregroundStyle(Color.accentText)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 15)
+            HStack(spacing: 12) {
+                Button(action: onDone) {
+                    Text("DONE")
+                        .font(.heading)
+                        .foregroundStyle(Color.accentText)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                }
+                .buttonStyle(.plain)
+                if let ladderRematch {
+                    RematchButton(rematching: $rematching, action: ladderRematch)
+                }
             }
-            .buttonStyle(.plain)
             .padding(16)
             .background(Color.surface)
         }

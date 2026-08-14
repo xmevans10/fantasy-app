@@ -252,8 +252,9 @@ struct GridGameView: View {
             if let duel {
                 // A blown clock still resolves the duel — `finish` scores whatever's solved so
                 // far (unattempted cells simply don't add to the numerator) rather than
-                // abandoning the run.
-                DuelTimerBar(session: duel) { finish(puzzle) }
+                // abandoning the run. `solved` only ever holds confirmed-correct guesses (wrong
+                // ones go to `wrong`), so this is a genuine live score, not just a progress count.
+                DuelTimerBar(session: duel, playerScore: solved.count) { finish(puzzle) }
             }
             header
             Spacer(minLength: 0)
