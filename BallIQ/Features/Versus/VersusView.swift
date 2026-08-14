@@ -16,6 +16,9 @@ struct VersusView: View {
     /// Driven by `-screenshotLadder` (see `DebugLaunch`) so the pushed ladder can be captured
     /// non-interactively, the same way `-screenshotBrowse` reaches the Browse archive.
     @State private var showLadder = false
+    /// Driven by `-screenshotRoster` (see `RosterDebugLaunch` — `DebugLaunch.swift` is owned by
+    /// a concurrent task this session, so this flag lives beside the view it opens instead).
+    @State private var showRoster = false
     /// The duel currently being opened or played. `board` is set only once the clock has
     /// actually started server-side, so a failed `start_versus_challenge` can never present a
     /// board with no clock on it.
@@ -39,6 +42,9 @@ struct VersusView: View {
             .background(Color.appBackground)
             .navigationDestination(isPresented: $showLadder) {
                 LadderView().environmentObject(container).environmentObject(auth)
+            }
+            .navigationDestination(isPresented: $showRoster) {
+                RosterView().environmentObject(container).environmentObject(auth)
             }
             .navigationTitle("Versus")
             .navigationBarTitleDisplayMode(.inline)
@@ -66,6 +72,7 @@ struct VersusView: View {
                 showVersusInfo = true
             }
             if DebugLaunch.autoOpenLadder { showLadder = true }
+            if RosterDebugLaunch.autoOpen { showRoster = true }
         }
         .sheet(isPresented: $showChallengeSheet) {
             ChallengeSheet { await load() }
@@ -117,57 +124,75 @@ struct VersusView: View {
     /// The ladder as the screen's hero when there is nothing else to do: full-width block card,
     /// the next opponent named, and real progress. A bot with a name and a face is a more
     /// concrete invitation than "30 bot opponents" ever was.
+    ///
+    /// Two separate `NavigationLink` pills at the bottom, not one link around the whole card —
+    /// the roster needs its own way in from here (Task 3's "reachable from the Versus tab's
+    /// ladder card"), and nesting a second tappable link inside the outer card's own link is the
+    /// kind of thing that silently steals the inner tap in a `List`/`ScrollView` context.
     private var ladderHero: some View {
-        NavigationLink {
-            LadderView().environmentObject(container).environmentObject(auth)
-        } label: {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 8) {
-                    Image(systemName: "figure.stair.stepper")
-                        .font(.system(size: 13, weight: .bold))
-                    Text("THE LADDER").font(.label12)
-                    Spacer()
-                    Text("\(container.ladderProgress.highestRung)/30")
-                        .font(.custom(FontName.condBlack, size: 13))
-                        .monospacedDigit()
-                }
-                .foregroundStyle(Color.onAccent.opacity(0.85))
-
-                Text(ladderHeadline)
-                    .font(.title)
-                    .foregroundStyle(Color.onAccent)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text("Every rung is a bot that plays the same board you do, on the same clock — and you watch its score climb while you play.")
-                    .font(.label12)
-                    .foregroundStyle(Color.onAccent.opacity(0.8))
-                    .fixedSize(horizontal: false, vertical: true)
-
-                // A progress bar rather than a number alone: 30 rungs is a journey, and the bar
-                // is the only element here that says how long.
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(Color.onAccent.opacity(0.25))
-                        Capsule().fill(Color.onAccent)
-                            .frame(width: max(4, geo.size.width
-                                              * min(1, Double(container.ladderProgress.highestRung) / 30)))
-                    }
-                }
-                .frame(height: 6)
-
-                Text(container.ladderProgress.highestRung == 0 ? "START THE CLIMB" : "CONTINUE")
-                    .font(.heading)
-                    .foregroundStyle(Color.accentText)
-                    .padding(.horizontal, 18).padding(.vertical, 9)
-                    .background(Color.onAccent)
-                    .clipShape(Capsule())
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 8) {
+                Image(systemName: "figure.stair.stepper")
+                    .font(.system(size: 13, weight: .bold))
+                Text("THE LADDER").font(.label12)
+                Spacer()
+                Text("\(container.ladderProgress.highestRung)/30")
+                    .font(.custom(FontName.condBlack, size: 13))
+                    .monospacedDigit()
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(18)
-            .blockCard(fill: Color.accentFill)
+            .foregroundStyle(Color.onAccent.opacity(0.85))
+
+            Text(ladderHeadline)
+                .font(.title)
+                .foregroundStyle(Color.onAccent)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Every rung is a bot that plays the same board you do, on the same clock — and you watch its score climb while you play.")
+                .font(.label12)
+                .foregroundStyle(Color.onAccent.opacity(0.8))
+                .fixedSize(horizontal: false, vertical: true)
+
+            // A progress bar rather than a number alone: 30 rungs is a journey, and the bar
+            // is the only element here that says how long.
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.onAccent.opacity(0.25))
+                    Capsule().fill(Color.onAccent)
+                        .frame(width: max(4, geo.size.width
+                                          * min(1, Double(container.ladderProgress.highestRung) / 30)))
+                }
+            }
+            .frame(height: 6)
+
+            HStack(spacing: 10) {
+                NavigationLink {
+                    LadderView().environmentObject(container).environmentObject(auth)
+                } label: {
+                    Text(container.ladderProgress.highestRung == 0 ? "START THE CLIMB" : "CONTINUE")
+                        .font(.heading)
+                        .foregroundStyle(Color.accentText)
+                        .padding(.horizontal, 18).padding(.vertical, 9)
+                        .background(Color.onAccent)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+
+                NavigationLink {
+                    RosterView().environmentObject(container).environmentObject(auth)
+                } label: {
+                    Label("ROSTER", systemImage: "person.3.fill")
+                        .font(.heading)
+                        .foregroundStyle(Color.onAccent)
+                        .padding(.horizontal, 16).padding(.vertical, 9)
+                        .overlay(Capsule().stroke(Color.onAccent, lineWidth: 1.5))
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(18)
+        .blockCard(fill: Color.accentFill)
     }
 
     /// The compact ladder entry, for when the list already has real duels above it. Same
