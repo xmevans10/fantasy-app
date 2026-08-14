@@ -1,0 +1,101 @@
+name: grid-backfill
+
+# Deepen the Grid board pool on CI instead of on a laptop.
+#
+# Minting is CPU-bound and slow — ~45 s/board on NFL, where `nfl_rosters` widening makes
+# `_build_cell` scan ~30k extra players per cell per attempt — so a 157-day, five-sport backfill
+# is a multi-hour job. That is a bad fit for an edge function (wall-clock limits, and the
+# generator is Python reading the whole `player_seasons` catalog) and a worse one for a dev
+# machine. It is a good fit for the precedent `ingest.yml` already sets: an additive,
+# `on_conflict=id` merge-duplicates data push to production Supabase, re-runnable at no cost.
+#
+# Manual only. Unlike the daily ingest this mints boards with **past** `active_date`s, which are
+# released the moment they land — that deepens the pool the Grid's "new random board" and the bot
+# ladder's rung pools draw from, without pre-committing any future daily.
+on:
+  workflow_dispatch:
+    inputs:
+      sports:
+        description: "Space-separated sports to mint"
+        default: "nfl nba baseball soccer tennis"
+      start:
+        description: "First day of the window (YYYY-MM-DD)"
+        required: true
+      days:
+        description: "How many consecutive days to mint per sport"
+        default: "60"
+      chunks:
+        description: >-
+          Split each sport's window into this many parallel jobs. Leave at 1 unless you need the
+          wall clock: `grid_history`'s trailing-window rejection (which stops a fresh board
+          repeating a recent row/column combination) is read once at job start, so parallel chunks
+          of the SAME sport cannot see each other's boards and may mint duplicate shapes. Sports
+          are always parallel with each other — that rejection set is per sport, so cross-sport
+          concurrency is free.
+        default: "1"
+
+jobs:
+  # The matrix is computed rather than written out, so `sports`/`days`/`chunks` stay free-form
+  # inputs instead of a hardcoded list that goes stale the first time a sport is added.
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build.outputs.matrix }}
+    steps:
+      - id: build
+        env:
+          SPORTS: ${{ inputs.sports }}
+          START: ${{ inputs.start }}
+          DAYS: ${{ inputs.days }}
+          CHUNKS: ${{ inputs.chunks }}
+        run: |
+          python3 - >> "$GITHUB_OUTPUT" <<'PY'
+          import datetime as dt, json, os
+          sports = os.environ["SPORTS"].split()
+          start = dt.date.fromisoformat(os.environ["START"])
+          days, chunks = int(os.environ["DAYS"]), max(1, int(os.environ["CHUNKS"]))
+          size = -(-days // chunks)          # ceil, so the last chunk is the short one
+          include = []
+          for sport in sports:
+              offset = 0
+              while offset < days:
+                  n = min(size, days - offset)
+                  include.append({"sport": sport,
+                                  "start": (start + dt.timedelta(days=offset)).isoformat(),
+                                  "days": n})
+                  offset += n
+          print("matrix=" + json.dumps({"include": include}))
+          PY
+
+  backfill:
+    needs: plan
+    runs-on: ubuntu-latest
+    # A slow sport must not cancel the others, and each job is independently re-runnable because
+    # every write is an `on_conflict=id` merge-duplicates upsert.
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    timeout-minutes: 350
+    env:
+      BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt
+      # Same shared provider cache the daily ingest uses; the catalog fetch is the fixed cost
+      # every one of these jobs pays before it mints anything.
+      - uses: actions/cache@v4
+        with:
+          path: tools/ingest/.cache
+          key: ingest-cache-${{ github.run_id }}-${{ matrix.sport }}
+          restore-keys: |
+            ingest-cache-
+      - name: Mint ${{ matrix.days }} day(s) of ${{ matrix.sport }} boards from ${{ matrix.start }}
+        run: |
+          python -m tools.ingest.main --grid ${{ matrix.sport }} \
+            --grid-start ${{ matrix.start }} --grid-days ${{ matrix.days }} --upsert

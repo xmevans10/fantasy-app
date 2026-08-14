@@ -11,9 +11,15 @@
 //     push privileges for abuse, so the callers send only when they have something true to say
 //     and this stops them going past three even when several things are true at once.
 //   * `notification_log` is written before the send, under a unique index on
-//     (user_id, category, local_day). That makes the write the idempotency guard as well as the
-//     audit trail: an hourly cron that double-fires — a retry, an overlapping run, clock skew at
-//     an offset boundary — loses the race on the insert and simply doesn't send.
+//     (user_id, category, local_day, dedupe_key). That makes the write the idempotency guard as
+//     well as the audit trail: an hourly cron that double-fires — a retry, an overlapping run,
+//     clock skew at an offset boundary — loses the race on the insert and simply doesn't send.
+//
+// `dedupe_key` (migration 0022) is what let the trigger-driven half join. The scheduled slots
+// pass none: one 9am, one 1pm, one 8pm, so "once per category per local day" IS the slot. The
+// trigger-driven categories are the opposite — two people can challenge you on the same
+// Tuesday and both are real — so they pass a key naming the event, and the guard narrows from
+// "once a day" to "once per event". See `sendOnce`'s `dedupeKey` for the rule it must satisfy.
 import { sendApnsPush, type PushPayload } from "./apns.ts";
 import { localDayString } from "./localtime.ts";
 
@@ -23,7 +29,18 @@ export const DAILY_PUSH_CAP = 3;
 /** Categories that are a direct reply to something the recipient's opponent just did. They are
  * exempt from the cap because suppressing them breaks a mechanic rather than reducing noise:
  * a duel has a 24h clock, and "we didn't tell you it was your turn because you'd had three
- * pushes" is how someone loses a duel by forfeit for a reason they can't see. */
+ * pushes" is how someone loses a duel by forfeit for a reason they can't see.
+ *
+ * `versus_challenge` is the category on all three Versus payloads — challenge received,
+ * opponent finished, duel settled (see apns.ts) — so notify-versus-result is exempt by the
+ * same rule and for the same reason: "your opponent played, the clock is running" is the
+ * single most forfeit-critical push the app sends, and it is exactly the sentence the comment
+ * above is about. Exempt is not unlogged: every one of them still writes its audit row, still
+ * respects the per-event guard, and still counts toward the budget the CAPPED categories see.
+ *
+ * `friend_request` is deliberately NOT here. Nothing is lost by a friend request arriving via
+ * the badge instead of a buzz — it has no clock and no forfeit — so it is capped like the
+ * scheduled slots. */
 const CAP_EXEMPT: ReadonlySet<string> = new Set(["versus_challenge"]);
 
 // deno-lint-ignore no-explicit-any
@@ -71,9 +88,18 @@ export async function sendOnce(
     utcOffsetMinutes: number;
     nowMs: number;
     payload: PushPayload;
+    /** Names the *event* this push answers, for the categories that can legitimately fire more
+     * than once in a day ("challenge:42", "result:42", "friend:<uuid>"). Omitted by the
+     * scheduled slots, where once-per-category-per-day is the intended guard.
+     *
+     * **It must be derived only from the triggering row**, never from state that can change
+     * between the trigger firing and this function running. A key computed from, say, whether
+     * the duel had settled yet would come out different on a pg_net retry, and the retry would
+     * send a second push — the precise failure the guard exists to stop. */
+    dedupeKey?: string;
   },
 ): Promise<SendResult> {
-  const { userId, tokens, utcOffsetMinutes, nowMs, payload } = opts;
+  const { userId, tokens, utcOffsetMinutes, nowMs, payload, dedupeKey } = opts;
   const day = localDayString(utcOffsetMinutes, nowMs);
 
   if (!CAP_EXEMPT.has(payload.category)) {
@@ -84,9 +110,15 @@ export async function sendOnce(
 
   const { error } = await sb
     .from("notification_log")
-    .insert({ user_id: userId, category: payload.category, local_day: day });
+    .insert({
+      user_id: userId,
+      category: payload.category,
+      local_day: day,
+      dedupe_key: dedupeKey ?? null,
+    });
   if (error) {
-    // 23505 = unique violation: this category already went out today. Any other error is worth
+    // 23505 = unique violation: this exact push already went out today — the whole category for
+    // a scheduled slot, or this one event for a trigger-driven one. Any other error is worth
     // seeing in the function log, but neither case should send.
     if (error.code !== "23505") console.error("[cadence] log insert failed", error);
     return { sent: false, reason: "already_sent" };
@@ -102,6 +134,32 @@ export async function sendOnce(
     }
   }
   return delivered > 0 ? { sent: true } : { sent: false, reason: "failed" };
+}
+
+/** Every device token for one recipient, plus the offset to resolve their local day with.
+ *
+ * The three trigger-driven notifiers each know exactly one recipient (unlike the cron ones,
+ * which sweep every token row), and each needs the same two things `sendOnce` takes. Before
+ * the cadence routing they only fetched `token`, because a fire-and-forget send has no notion
+ * of a day.
+ *
+ * One offset has to win, because the cap and the log are per *person* while tokens are per
+ * *device* — and mixed offsets are not hypothetical: live right now, one of the two
+ * push-reachable users has a UTC-240 device and two UTC+120 devices. The first row wins, which
+ * is the same choice `notify-engagement` makes when it groups tokens by user. The cost of
+ * picking wrong is a local-day boundary resolved a few hours early or late for that one
+ * person; no push is lost or duplicated by it. */
+export async function recipientTokens(
+  sb: Client,
+  userId: string,
+): Promise<{ tokens: string[]; utcOffsetMinutes: number }> {
+  const { data } = await sb
+    .from("device_tokens").select("token, utc_offset_minutes").eq("user_id", userId);
+  const rows = (data ?? []) as Array<{ token: string; utc_offset_minutes: number | null }>;
+  return {
+    tokens: rows.map((r) => r.token),
+    utcOffsetMinutes: rows[0]?.utc_offset_minutes ?? 0,
+  };
 }
 
 /** Whether a category is switched on for this user. A missing settings row means all-on, which

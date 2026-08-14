@@ -10,8 +10,27 @@
 //   * the other side had already played -> the duel is settled, tell them how it went
 //
 // The finisher is never pushed: they are looking at their own result screen.
+//
+// Routed through `_shared/cadence.ts`'s `sendOnce` so it is logged in `notification_log`. It
+// stays CAP-EXEMPT, and not by accident: both payloads below carry the category
+// `versus_challenge`, which is the one entry in cadence.ts's CAP_EXEMPT set, and the reason
+// given there — "we didn't tell you it was your turn because you'd had three pushes" is how
+// someone forfeits a timed duel for an invisible reason — describes the "your opponent
+// finished, you're up" push more exactly than it describes anything else the app sends. Making
+// it capped would have meant exempting the challenge but not the far more time-critical reply
+// to it. Exempt still means logged, and still means it consumes budget the capped categories
+// are measured against.
+//
+// The dedupe key is `result:<duel id>` — derived from the triggering row ONLY. It deliberately
+// does not include `settled`, even though the copy does: `resolve_versus_challenge` can settle
+// the duel between the trigger firing and this function running, so a key that read live status
+// would come out different on a pg_net retry and let the retry through as a second push. Keying
+// on the duel id alone means one result push per duel per recipient, retries included, while
+// still leaving room for the *other* Versus push on that duel (`challenge:<id>`, same category,
+// same day) because the keys differ. See migration 0022.
 import { serviceClient } from "../_shared/supabase.ts";
-import { buildVersusFinishedPayload, buildVersusSettledPayload, sendApnsPush } from "../_shared/apns.ts";
+import { buildVersusFinishedPayload, buildVersusSettledPayload } from "../_shared/apns.ts";
+import { categoryEnabled, recipientTokens, sendOnce } from "../_shared/cadence.ts";
 
 interface WebhookBody {
   record: { id: number; finisher_id: string; waiting_id: string };
@@ -23,12 +42,7 @@ Deno.serve(async (req) => {
 
   // Same opt-out category as the challenge-received push: a player who muted Versus muted all
   // of it. A missing row means all categories on (see notification_settings' doc comment).
-  const { data: settings } = await sb
-    .from("notification_settings")
-    .select("versus_challenge")
-    .eq("user_id", record.waiting_id)
-    .maybeSingle();
-  if (settings && settings.versus_challenge === false) {
+  if (!await categoryEnabled(sb, record.waiting_id, "versus_challenge")) {
     return new Response(JSON.stringify({ skipped: "opted_out" }), { status: 200 });
   }
 
@@ -43,8 +57,7 @@ Deno.serve(async (req) => {
 
   const { data: finisher } = await sb
     .from("profiles").select("username").eq("id", record.finisher_id).maybeSingle();
-  const { data: tokens } = await sb
-    .from("device_tokens").select("token").eq("user_id", record.waiting_id);
+  const { tokens, utcOffsetMinutes } = await recipientTokens(sb, record.waiting_id);
 
   const name = finisher?.username ?? "Your opponent";
   // `status` is the discriminator, not the presence of a winner: a draw settles as `completed`
@@ -54,11 +67,16 @@ Deno.serve(async (req) => {
     ? buildVersusSettledPayload(name, duel.winner_id === record.waiting_id, duel.winner_id === null)
     : buildVersusFinishedPayload(name, duel.time_limit_seconds ?? 120);
 
-  for (const { token } of tokens ?? []) {
-    await sendApnsPush(token, payload).catch((e) => console.error("push failed", e));
-  }
+  const result = await sendOnce(sb, {
+    userId: record.waiting_id,
+    tokens,
+    utcOffsetMinutes,
+    nowMs: Date.now(),
+    payload,
+    dedupeKey: `result:${record.id}`,
+  });
 
-  return new Response(JSON.stringify({ sent: tokens?.length ?? 0, settled }), {
+  return new Response(JSON.stringify({ ...result, settled, devices: tokens.length }), {
     headers: { "Content-Type": "application/json" },
   });
 });
