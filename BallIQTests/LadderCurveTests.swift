@@ -29,6 +29,9 @@ final class LadderCurveTests: XCTestCase {
             let rung: Int, mode: String, sport: String
             let bot_skill: Double, is_boss: Bool
             let board_difficulty: Double?, target_win_rate: Double?
+            /// The guarding character's playing style. Load-bearing for this pin: style changes
+            /// the solver's policy, so measuring a rung with the wrong one measures nothing.
+            let style: String?
         }
         struct Puzzle: Decodable { let id: String; let content: RawJSON }
     }
@@ -89,19 +92,23 @@ final class LadderCurveTests: XCTestCase {
             let playerSeed = UInt64(t &* 2 &+ 1)
             let botSeed = UInt64(t &* 2 &+ 2)
             let player: Double, bot: Double
+            // The reference player is deliberately `.consistent`: the player model is a
+            // yardstick, not a character, and giving it a style would make the curve a claim
+            // about one imagined personality rather than about the rung.
+            let style = BotStyle(rawValue: row.rung.style ?? "consistent") ?? .consistent
             switch mode {
             case "keep4":
                 let p = try plain.decode(Keep4Puzzle.self, from: row.puzzle.content.data)
                 player = BotSolver.playKeep4(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: 60).performance
-                bot = BotSolver.playKeep4(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: 60).performance
+                bot = BotSolver.playKeep4(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: 60, style: style).performance
             case "grid":
                 let p = try plain.decode(GridPuzzle.self, from: row.puzzle.content.data)
                 player = BotSolver.playGrid(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: 60).performance
-                bot = BotSolver.playGrid(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: 60).performance
+                bot = BotSolver.playGrid(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: 60, style: style).performance
             case "whoami":
                 let p = try plain.decode(WhoAmIPuzzle.self, from: row.puzzle.content.data)
                 player = BotSolver.playWhoAmI(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: 60).performance
-                bot = BotSolver.playWhoAmI(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: 60).performance
+                bot = BotSolver.playWhoAmI(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: 60, style: style).performance
             default:
                 continue
             }

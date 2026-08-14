@@ -748,13 +748,16 @@ final class RepositoryContainer: ObservableObject {
         switch rung.mode {
         case .keep4:
             guard let p = await ladder.puzzle(Keep4Puzzle.self, id: rung.puzzleId) else { return nil }
-            return .keep4(session(BotSolver.playKeep4(p, skill: rung.botSkill, seed: seed, timeLimit: limit)), p)
+            return .keep4(session(BotSolver.playKeep4(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
+                                                 style: row.bot.style)), p)
         case .grid:
             guard let p = await ladder.puzzle(GridPuzzle.self, id: rung.puzzleId) else { return nil }
-            return .grid(session(BotSolver.playGrid(p, skill: rung.botSkill, seed: seed, timeLimit: limit)), p)
+            return .grid(session(BotSolver.playGrid(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
+                                                 style: row.bot.style)), p)
         case .whoami:
             guard let p = await ladder.puzzle(WhoAmIPuzzle.self, id: rung.puzzleId) else { return nil }
-            return .whoami(session(BotSolver.playWhoAmI(p, skill: rung.botSkill, seed: seed, timeLimit: limit)), p)
+            return .whoami(session(BotSolver.playWhoAmI(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
+                                                 style: row.bot.style)), p)
         }
     }
 

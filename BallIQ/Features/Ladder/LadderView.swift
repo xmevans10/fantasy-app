@@ -65,7 +65,10 @@ struct LadderView: View {
                     let tierRows = rows.filter { $0.rung.tier == tier }
                     if !tierRows.isEmpty {
                         Section {
-                            ForEach(tierRows) { row in rungRow(row) }
+                            ForEach(Array(tierRows.enumerated()), id: \.element.id) { index, row in
+                                rungRow(row, introducesBot: index == 0
+                                        || tierRows[index - 1].bot.id != row.bot.id)
+                            }
                         } header: {
                             tierHeader(tier, rows: tierRows)
                         }
@@ -94,7 +97,11 @@ struct LadderView: View {
     }
 
     @ViewBuilder
-    private func rungRow(_ row: LadderRungRow) -> some View {
+    /// `introducesBot` is true on the first rung a character guards in this tier. The style
+    /// line is a character introduction, not a rung property — repeating it on all five of The
+    /// Rookie's rungs turned the roster into five identical paragraphs, which is the
+    /// "how much expression before it distracts" line being crossed.
+    private func rungRow(_ row: LadderRungRow, introducesBot: Bool) -> some View {
         let locked = row.state == .locked
         Button {
             guard !locked else { Haptics.reject(); return }
@@ -111,7 +118,7 @@ struct LadderView: View {
                     .background(row.state == .cleared ? row.rung.tier.tint : Color.surfaceMuted)
                     .clipShape(Circle())
 
-                Text(locked ? "🔒" : row.bot.avatar).font(.system(size: 20))
+                BotPortrait(bot: row.bot, size: 42, locked: locked)
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
@@ -129,6 +136,13 @@ struct LadderView: View {
                         }
                     }
                     Text(row.boardLine).font(.label11).foregroundStyle(Color.textMuted)
+                    // The style line, not the tagline: on a roster the useful question is
+                    // "what is this one like to play", and the tagline answers "who are they".
+                    if introducesBot, !row.bot.styleLine.isEmpty {
+                        Text(row.bot.styleLine)
+                            .font(.label11).foregroundStyle(Color.textMuted.opacity(0.85))
+                            .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    }
                 }
 
                 Spacer(minLength: 4)
@@ -243,52 +257,109 @@ private struct LadderBriefingSheet: View {
     /// simulator — every layer of this compiles and unit-tests identically. Scrolling the body
     /// makes the sheet correct at both detents *and* at large accessibility text sizes, which
     /// no amount of tuning a fixed layout would have.
+    /// A full-height character card, not a peek sheet.
+    ///
+    /// It opens at `.large` only. The medium detent it used to offer was the wrong shape for
+    /// what this screen is: meeting the opponent is the moment the ladder's whole premise pays
+    /// off, and a half-height sheet turned a character card into a settings row with a portrait
+    /// on it. Full height also lets the portrait, the allegiances and the backstory sit together
+    /// without any of them being the thing that gets cut.
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
-                VStack(spacing: 16) {
-                    Text(row.rung.isBoss
-                         ? String(localized: "BOSS · RUNG \(row.rung.rung)")
-                         : String(localized: "RUNG \(row.rung.rung)"))
-                        .font(.custom(FontName.condBlack, size: 13))
-                        .foregroundStyle(row.rung.tier.onTint)
-                        .padding(.horizontal, 10).padding(.vertical, 4)
-                        .background(row.rung.tier.tint)
-                        .clipShape(Capsule())
-
-                    Text(row.bot.avatar).font(.system(size: 56))
-                    Text(row.bot.name).font(.title).foregroundStyle(Color.textPrimary)
-                    Text(row.bot.tagline)
-                        .font(.body14).foregroundStyle(Color.textMuted)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    HStack(spacing: 10) {
-                        stat(row.boardLine, label: String(localized: "BOARD"))
-                        stat(DuelSession.clockText(row.rung.timeLimitSeconds),
-                             label: String(localized: "CLOCK"))
-                        // Skill as a percentage is the honest version of a difficulty star
-                        // rating: it is literally the number `BotSolver` uses.
-                        stat("\(Int((row.rung.botSkill * 100).rounded()))%",
-                             label: String(localized: "SKILL"))
+                VStack(spacing: 18) {
+                    // Rung badge and the character's own colourway, edge to edge — the card
+                    // should read as *theirs* before a word of it is legible.
+                    ZStack {
+                        row.bot.palette.fill
+                        VStack(spacing: 14) {
+                            Text(row.rung.isBoss
+                                 ? String(localized: "BOSS · RUNG \(row.rung.rung)")
+                                 : String(localized: "RUNG \(row.rung.rung)"))
+                                .font(.custom(FontName.condBlack, size: 12))
+                                .foregroundStyle(row.bot.palette.ink.opacity(0.85))
+                                .padding(.horizontal, 10).padding(.vertical, 4)
+                                .background(row.bot.palette.ink.opacity(0.16))
+                                .clipShape(Capsule())
+                            BotPortrait(bot: row.bot, size: 116)
+                            Text(row.bot.name)
+                                .font(.hero(40))
+                                .foregroundStyle(row.bot.palette.ink)
+                            Text(row.bot.tagline)
+                                .font(.body14)
+                                .foregroundStyle(row.bot.palette.ink.opacity(0.85))
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.top, 26).padding(.bottom, 22).padding(.horizontal, 20)
                     }
+                    .frame(maxWidth: .infinity)
 
-                    if !row.bot.persona.isEmpty {
-                        Text(row.bot.persona)
-                            .font(.label12).foregroundStyle(Color.textMuted)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.horizontal, 8)
+                    VStack(spacing: 16) {
+                        // Who they support. Three crests characterise a sports fan faster than
+                        // any paragraph, and they cost nothing — `TeamAbbrChip` already resolves
+                        // real logos and colours for any (sport, abbr).
+                        if !row.bot.favoriteTeams.isEmpty {
+                            cardBlock(label: String(localized: "FAVOURITE TEAMS")) {
+                                HStack(spacing: 8) {
+                                    ForEach(row.bot.favoriteTeams) { team in
+                                        TeamAbbrChip(sport: team.sport, abbr: team.abbr,
+                                                     fontSize: 13, minHeight: 34, showLogo: true)
+                                    }
+                                    Spacer(minLength: 0)
+                                }
+                            }
+                        } else {
+                            cardBlock(label: String(localized: "FAVOURITE TEAMS")) {
+                                Text("No allegiances. Never has had any.")
+                                    .font(.label12).foregroundStyle(Color.textMuted)
+                            }
+                        }
+
+                        if let intro = row.bot.voice.intro {
+                            Text("“\(intro)”")
+                                .font(.body14).italic()
+                                .foregroundStyle(Color.textPrimary)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity)
+                                .padding(14)
+                                .background(row.bot.palette.soft)
+                                .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+                        }
+
+                        HStack(spacing: 10) {
+                            stat(row.boardLine, label: String(localized: "BOARD"))
+                            stat(DuelSession.clockText(row.rung.timeLimitSeconds),
+                                 label: String(localized: "CLOCK"))
+                            stat("\(Int((row.rung.botSkill * 100).rounded()))%",
+                                 label: String(localized: "SKILL"))
+                        }
+
+                        // How they play, stated before the run. A style the player cannot
+                        // anticipate is noise rather than personality.
+                        if !row.bot.styleLine.isEmpty {
+                            cardBlock(label: String(localized: "HOW THEY PLAY")) {
+                                Text(row.bot.styleLine)
+                                    .font(.body14).foregroundStyle(Color.textPrimary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+
+                        if !row.bot.backstory.isEmpty {
+                            cardBlock(label: String(localized: "WHO THEY ARE")) {
+                                Text(row.bot.backstory)
+                                    .font(.label12).foregroundStyle(Color.textMuted)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 12)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 20)
-                .padding(.top, 24)   // clears the drag indicator
-                .padding(.bottom, 16)
             }
 
-            // Pinned: starting a run is the one thing this sheet exists for, so it must never
-            // be the thing that scrolled off.
+            // Pinned: starting the run is the one thing this card exists for.
             VStack(spacing: 10) {
                 Button {
                     Task { await onStart() }
@@ -307,12 +378,27 @@ private struct LadderBriefingSheet: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.horizontal, 20)
+            .padding(.top, 12)
             .padding(.bottom, 20)
+            .background(Color.appBackground)
         }
         .frame(maxWidth: .infinity)
         .background(Color.appBackground)
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+    }
+
+    /// A labelled block. One shape for every section of the card so the eye can skip between
+    /// them, rather than four differently-styled paragraphs.
+    private func cardBlock<Content: View>(label: String,
+                                          @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label).font(.label11).foregroundStyle(Color.textMuted)
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .cardSurface()
     }
 
     private func stat(_ value: String, label: String) -> some View {

@@ -1994,6 +1994,27 @@ create table if not exists public.bots (
   persona    text not null default ''
 );
 
+-- Bots are characters, not difficulty labels (migration 0019). `style` changes `BotSolver`'s
+-- policy — two bots at identical `bot_skill` play visibly differently — so it feeds the ladder's
+-- difficulty calibration, not just its copy.
+alter table public.bots
+  add column if not exists style          text not null default 'consistent',
+  add column if not exists style_line     text not null default '',
+  add column if not exists backstory      text not null default '',
+  add column if not exists palette        text not null default 'electric',
+  add column if not exists voice          jsonb not null default '{}'::jsonb,
+  add column if not exists favorite_teams jsonb not null default '[]'::jsonb;
+alter table public.bots drop constraint if exists bots_style_domain;
+alter table public.bots add constraint bots_style_domain check (style in
+  ('overeager', 'methodical', 'consistent', 'deepCuts', 'slowBurn', 'prescient'));
+
+-- The two numbers that make a rung's difficulty inspectable (migration 0015 of the ladder work):
+-- `board_difficulty` from each format's own scoring metric, and `target_win_rate`, the simulated
+-- P(reference player wins) that `bot_skill` is now solved backwards from.
+alter table public.ladder_rungs
+  add column if not exists board_difficulty double precision,
+  add column if not exists target_win_rate  double precision;
+
 -- One row per rung. Four independent difficulty levers so the curve doesn't go flat:
 -- bot skill, the clock, the puzzle's own difficulty, and which game it is.
 create table if not exists public.ladder_rungs (

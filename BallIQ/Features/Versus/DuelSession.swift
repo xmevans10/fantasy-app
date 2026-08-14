@@ -156,8 +156,13 @@ struct LadderRunSession: Equatable {
     /// actually recorded.
     func verdict(myHits: Int) -> DuelVerdict {
         let theirs = verdictHits
+        // A tie goes to the player, so the bot "won" only by outscoring outright — the closing
+        // line has to agree with the banner's own verdict or the character reads as broken.
+        let botWon = theirs.hits > myHits
         return DuelVerdict(opponentName: bot.name, myHits: myHits, theirHits: theirs.hits,
                            outOf: theirs.outOf, myScore: nil, theirScore: nil,
+                           closingLine: bot.voice.closing(botWon: botWon,
+                                                          playerPerfect: myHits == theirs.outOf),
                            tieGoesToPlayer: true)
     }
 }

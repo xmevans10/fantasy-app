@@ -174,21 +174,53 @@ def board_difficulty(fmt: str, content: dict) -> float:
 # Simulation — the same policies BotSolver runs, used for BOTH sides
 # ─────────────────────────────────────────────────────────────────────────────
 
-def hit_probability(skill: float, difficulty: float) -> float:
-    return min(max(skill, 1e-4), 1.0) ** min(max(difficulty, 0.0), 1.0)
+# Mirrors `BotStyle` in BallIQ/Models/BotStyle.swift. Style changes the bot's POLICY, so it
+# changes the win rate a given `bot_skill` produces — which means the solver below has to model
+# it or every rung guarded by a non-baseline character is miscalibrated. `LadderCurveTests`
+# re-measures with the real Swift solver and fails if these formulas drift apart.
+BLINK_CHANCE = {"prescient": 0.03}
+PACE_MULTIPLIER = {"overeager": 0.72, "methodical": 1.18, "consistent": 1.0,
+                   "deepCuts": 1.06, "slowBurn": 1.15, "prescient": 0.85}
+
+
+def style_difficulty(style: str, d: float, progress: float) -> float:
+    d = min(max(d, 0.0), 1.0)
+    if style == "overeager":
+        return min(1.0, d * 1.35)
+    if style == "methodical":
+        return d ** 1.4
+    if style == "deepCuts":
+        return d * 0.38 + (1 - d) * 0.62
+    return d                                    # consistent / slowBurn / prescient
+
+
+def style_skill(style: str, s: float, progress: float) -> float:
+    if style != "slowBurn":
+        return s
+    return min(1.0, s * (0.82 + 0.26 * min(max(progress, 0.0), 1.0)))
+
+
+def hit_probability(skill: float, difficulty: float,
+                    style: str = "consistent", progress: float = 0.0) -> float:
+    s = min(max(style_skill(style, skill, progress), 1e-4), 1.0)
+    d = style_difficulty(style, difficulty, progress)
+    return (s ** d) * (1 - BLINK_CHANCE.get(style, 0.0))
 
 
 WHOAMI_PER_CLUE = [1000, 800, 600, 400, 200, 100]
 
 
 def simulate_performance(fmt: str, diffs: list[float], skill: float, rng: random.Random,
-                         true_keeps: list[bool] | None = None) -> float:
+                         true_keeps: list[bool] | None = None,
+                         style: str = "consistent") -> float:
     """One run's `performance`, 0..1 — the comparable both sides are scored on."""
     if fmt == "keep4":
         # Per-card roll, then the 4/4 cap flips the least-confident calls until the piles land
         # right. Mirrors `BotSolver.keep4Decisions`, and the cap matters: it systematically
         # costs whoever hits it their *closest* calls.
-        probs = [hit_probability(skill, d) for d in diffs]
+        n = len(diffs)
+        probs = [hit_probability(skill, d, style, i / (n - 1) if n > 1 else 0.0)
+                 for i, d in enumerate(diffs)]
         # decision[i] is the pile this card was put in; true_keeps[i] is where it belongs.
         decisions = [(tk if rng.random() < p else not tk) for tk, p in zip(true_keeps, probs)]
         keep_limit = len(diffs) // 2
@@ -202,10 +234,14 @@ def simulate_performance(fmt: str, diffs: list[float], skill: float, rng: random
                 decisions[i] = not decisions[i]
         return sum(1 for d, tk in zip(decisions, true_keeps) if d == tk) / len(diffs)
     if fmt == "grid":
-        return sum(1 for d in diffs if rng.random() < hit_probability(skill, d)) / len(diffs)
+        n = len(diffs)
+        return sum(1 for i, d in enumerate(diffs)
+                   if rng.random() < hit_probability(skill, d, style,
+                                                     i / (n - 1) if n > 1 else 0.0)) / n
     if fmt == "whoami":
+        n = len(diffs)
         for i, d in enumerate(diffs):
-            if rng.random() < hit_probability(skill, d):
+            if rng.random() < hit_probability(skill, d, style, i / (n - 1) if n > 1 else 0.0):
                 return WHOAMI_PER_CLUE[min(i, len(WHOAMI_PER_CLUE) - 1)] / WHOAMI_PER_CLUE[0]
         return 0.0
     return 0.0
@@ -213,21 +249,23 @@ def simulate_performance(fmt: str, diffs: list[float], skill: float, rng: random
 
 def win_rate(fmt: str, diffs: list[float], bot_skill: float,
              player_skill: float = REFERENCE_PLAYER_SKILL, trials: int = TRIALS,
-             seed: int = 12345, true_keeps: list[bool] | None = None) -> float:
+             seed: int = 12345, true_keeps: list[bool] | None = None,
+             bot_style: str = "consistent") -> float:
     """P(reference player beats this bot on this board). Ties count as player wins, matching
     `LadderOutcome.playerWon`."""
     rng = random.Random(seed)
     wins = 0
     for _ in range(trials):
         p = simulate_performance(fmt, diffs, player_skill, rng, true_keeps)
-        b = simulate_performance(fmt, diffs, bot_skill, rng, true_keeps)
+        b = simulate_performance(fmt, diffs, bot_skill, rng, true_keeps, bot_style)
         if p >= b:
             wins += 1
     return wins / trials
 
 
 def solve_bot_skill(fmt: str, diffs: list[float], target: float,
-                    true_keeps: list[bool] | None = None) -> tuple[float, float]:
+                    true_keeps: list[bool] | None = None,
+                    bot_style: str = "consistent") -> tuple[float, float]:
     """Binary-search the `bot_skill` whose win rate is `target`.
 
     Win rate is monotonically decreasing in bot skill (a better bot is harder to beat), so a
@@ -236,10 +274,10 @@ def solve_bot_skill(fmt: str, diffs: list[float], target: float,
     worth surfacing rather than hiding.
     """
     lo, hi = 0.05, 1.0
-    best = (0.5, win_rate(fmt, diffs, 0.5, true_keeps=true_keeps))
+    best = (0.5, win_rate(fmt, diffs, 0.5, true_keeps=true_keeps, bot_style=bot_style))
     for _ in range(18):
         mid = (lo + hi) / 2
-        w = win_rate(fmt, diffs, mid, true_keeps=true_keeps)
+        w = win_rate(fmt, diffs, mid, true_keeps=true_keeps, bot_style=bot_style)
         if abs(w - target) < abs(best[1] - target):
             best = (mid, w)
         if w > target:      # player wins too often -> bot must get better
@@ -321,32 +359,39 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> list[dict]:
             raise SystemExit(f"no {fmt} board at or above the difficulty floor "
                              f"{BOARD_DIFFICULTY_FLOOR} — deepen the pool before reseeding")
 
-        # Closest to the target difficulty, tie-broken toward a sport not used recently so the
-        # ladder still travels across sports without letting a round-robin override difficulty.
+        # Difficulty decides the BAND, sport variety decides within it. Strict
+        # nearest-difficulty (the first version) collapsed the early ladder onto NFL, because
+        # NFL is 90 of the 185 released Keep4 boards and so almost always held the nearest
+        # match — five consecutive rungs of the same sport, which reads as a content bug.
+        # A tolerance window keeps the curve intact while leaving room to travel.
+        TOLERANCE = 0.06
+        best = min(abs(c.difficulty - want_difficulty) for c in candidates)
+        band = [c for c in candidates
+                if abs(c.difficulty - want_difficulty) <= best + TOLERANCE]
+
         def rank(c: Candidate) -> tuple:
-            return (abs(c.difficulty - want_difficulty),
-                    recent_sports.index(c.sport) if c.sport in recent_sports else -1)
+            # Unused-recently first, then nearest within the band.
+            recency = recent_sports.index(c.sport) if c.sport in recent_sports else -1
+            return (recency, abs(c.difficulty - want_difficulty))
 
-        pick = min(candidates, key=rank)
+        pick = min(band, key=rank)
         used.add(pick.puzzle_id)
-        recent_sports = ([pick.sport] + recent_sports)[:3]
+        recent_sports = ([pick.sport] + recent_sports)[:4]
 
-        skill, achieved = solve_bot_skill(fmt, pick.diffs, want_win, pick.true_keeps)
+        # The character is chosen by ladder position, then the skill is solved **against that
+        # character's style** — order matters, because style moves the win rate a given skill
+        # produces. Solving first and assigning after would miscalibrate every non-baseline bot.
+        band = min(len(bots) - 1, (rung - 1) * len(bots) // RUNG_COUNT)
+        bot = sorted(bots, key=lambda b: b["base_skill"])[band]
+        skill, achieved = solve_bot_skill(fmt, pick.diffs, want_win, pick.true_keeps,
+                                          bot.get("style", "consistent"))
         is_boss = rung % BOSS_EVERY == 0
         if is_boss:
             # A boss is a step up on the same board, not a different kind of thing.
             skill = min(0.98, skill + 0.04)
-            achieved = win_rate(fmt, pick.diffs, skill, true_keeps=pick.true_keeps)
+            achieved = win_rate(fmt, pick.diffs, skill, true_keeps=pick.true_keeps,
+                                bot_style=bot.get("style", "consistent"))
 
-        # The bot is a **character**, assigned by position on the ladder — not by the solved
-        # `bot_skill`, which is a mechanical quantity that says nothing about who you are
-        # fighting. Mapping character to solved skill (the first attempt) collapsed the ramp:
-        # solved skills cluster high because a hard board needs a strong bot to stay a contest,
-        # so The Oracle turned up at rung 12, The Archivist at rung 8, and **The Rookie was
-        # never assigned a single rung**. Straight bands keep the narrative rookie -> oracle
-        # intact and leave `bot_skill` free to be whatever the curve needs.
-        band = min(len(bots) - 1, (rung - 1) * len(bots) // RUNG_COUNT)
-        bot = sorted(bots, key=lambda b: b["base_skill"])[band]
         base_seconds = {"keep4": 120, "whoami": 90, "grid": 180}[fmt]
         rows.append({
             "rung": rung,
@@ -408,7 +453,7 @@ def main() -> int:
         raise SystemExit("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY required (tools/ingest/.env)")
 
     def get_bots():
-        req = urllib.request.Request(f"{url}/rest/v1/bots?select=id,base_skill",
+        req = urllib.request.Request(f"{url}/rest/v1/bots?select=id,base_skill,style",
                                      headers={"apikey": key, "Authorization": f"Bearer {key}"})
         return json.load(urllib.request.urlopen(req))
 

@@ -20,6 +20,10 @@ struct DuelVerdict: Equatable {
     /// ladder rung doesn't, because a tie against a bot goes to the player by design.
     let myScore: Int?
     let theirScore: Int?
+    /// What the opponent says about the result, in their own voice. Nil when the opponent has
+    /// no authored voice — a `ChallengeLink` challenger is a real person whose words we
+    /// don't have, and silence is better than putting words in their mouth.
+    var closingLine: String? = nil
     /// Whether a dead-even result is a win for the player. True on the ladder (you matched the
     /// machine; take it), false for a link challenge (a tie is a tie).
     let tieGoesToPlayer: Bool
@@ -65,7 +69,7 @@ struct ChallengeResultBanner: View {
                                    myHits: hits, theirHits: challenge.hits,
                                    outOf: challenge.outOf,
                                    myScore: score, theirScore: challenge.score,
-                                   tieGoesToPlayer: false)
+                                   closingLine: nil, tieGoesToPlayer: false)
     }
 
     init(verdict: DuelVerdict) { self.verdict = verdict }
@@ -110,6 +114,17 @@ struct ChallengeResultBanner: View {
                 .foregroundStyle(ink.opacity(0.75))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
+
+            // The opponent gets the last word. A named character reacting in their own voice is
+            // most of what separates "you scored 6/8" from "you beat The Rookie".
+            if let line = verdict.closingLine {
+                Text("“\(line)”")
+                    .font(.body14).italic()
+                    .foregroundStyle(ink.opacity(0.9))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 2)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)

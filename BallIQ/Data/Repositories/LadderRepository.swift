@@ -14,12 +14,29 @@ final class LadderRepository {
     /// comment for the silent outage this exact mismatch caused in Versus.
     private let rowDecoder: JSONDecoder = .supabaseExplicitKeys
 
-    /// Ladder content changes only when someone edits the seed migration, so a week of disk
-    /// cache is generous rather than risky — and it's what makes the ladder work on a plane.
-    /// Same shape as `RemotePuzzleRepository.playerNameIndex`'s cache.
-    private static let contentTTL: TimeInterval = 7 * 24 * 3_600
-    private static let rungsKey = "ladder-rungs-v1"
-    private static let botsKey = "ladder-bots-v1"
+    /// Short on purpose, and shorter than it first was.
+    ///
+    /// This started at a week, copying `RemotePuzzleRepository.playerNameIndex` — but that cache
+    /// holds a 90 KB name index, and this one holds **36 rows**. The saving was negligible and
+    /// the cost was a whole class of bug: any content change (a reseed, a new column) stayed
+    /// invisible on device for up to a week and read as a decode failure. It bit twice in one
+    /// afternoon — first when the character columns landed, then again when the names did, both
+    /// times looking like the model was broken when the cache was simply old.
+    ///
+    /// An hour keeps the ladder instant on a warm launch and fully playable on a plane (the
+    /// stale fallback below has no TTL at all), while making a content change land the same day
+    /// rather than the same week. Version the keys below only for a shape change that a stale
+    /// payload could not survive decoding at all.
+    private static let contentTTL: TimeInterval = 3_600
+    /// **Bump these whenever the shape of a rung or a bot changes.** `DiskCache` has no version
+    /// field and the TTL above is the only expiry, so a client that already cached the old shape
+    /// keeps serving it for a week and the new columns silently read as their defaults — which
+    /// looks exactly like a decode bug. Caught live: after the character columns landed, every
+    /// bot rendered in the default electric/`consistent` colourway because the cached roster
+    /// predated `style` and `palette`. Same lever, same reason, as
+    /// `RemotePuzzleRepository.playerNameIndex`'s `-v2-` key.
+    private static let rungsKey = "ladder-rungs-v3"
+    private static let botsKey = "ladder-bots-v3"
 
     init(client: SupabaseClient) { self.client = client }
 

@@ -41,10 +41,17 @@ enum BotSolver {
     /// and stays monotonic in both directions — increasing in skill (since `skill < 1` implies
     /// `d/d(skill) skill^difficulty > 0`), decreasing in difficulty (since `ln(skill) < 0`).
     /// `skill` is floored above 0 so `pow` never has to evaluate `0^0`.
-    static func hitProbability(skill: Double, difficulty: Double) -> Double {
-        let s = min(max(skill, 0.0001), 1.0)
-        let d = min(max(difficulty, 0.0), 1.0)
-        return pow(s, d)
+    static func hitProbability(skill: Double, difficulty: Double,
+                               style: BotStyle = .consistent, progress: Double = 0) -> Double {
+        // Style reshapes both inputs before the base curve, so a style is a *policy* change
+        // rather than a cosmetic label — see `BotStyle`. `.consistent` is the identity
+        // transform, which keeps it the baseline every other style reads against.
+        let s = min(max(style.skill(skill, progress: progress), 0.0001), 1.0)
+        let d = style.difficulty(difficulty, progress: progress)
+        let base = pow(s, d)
+        // The blink is applied last and multiplicatively, so it caps an otherwise flawless
+        // opponent without distorting the shape of the curve underneath it.
+        return base * (1 - style.blinkChance)
     }
 
     // MARK: - Keep4
@@ -63,12 +70,13 @@ enum BotSolver {
     /// place to spend the "give up a decision" budget: a bot forced to change its mind should
     /// give up the calls it was least sure of, not an arbitrary one.
     static func playKeep4(_ puzzle: Keep4Puzzle, skill: Double, seed: UInt64,
-                         timeLimit: TimeInterval) -> BotRun {
+                         timeLimit: TimeInterval, style: BotStyle = .consistent) -> BotRun {
         guard !puzzle.players.isEmpty else { return BotRun(performance: 0, correct: 0, outOf: 0, beats: []) }
         var gen = SeededGenerator(seed: seed)
-        let cards = keep4Decisions(puzzle, skill: skill, gen: &gen)
+        let cards = keep4Decisions(puzzle, skill: skill, style: style, gen: &gen)
         let outcomes = cards.map { $0.decision == $0.correctVerdict }
-        let beats = paceBeats(outcomes: outcomes, skill: skill, timeLimit: timeLimit, gen: &gen)
+        let beats = paceBeats(outcomes: outcomes, skill: skill, style: style,
+                              timeLimit: timeLimit, gen: &gen)
         let correct = outcomes.filter { $0 }.count
         return BotRun(performance: Double(correct) / Double(puzzle.players.count),
                      correct: correct, outOf: puzzle.players.count, beats: beats)
@@ -119,10 +127,11 @@ enum BotSolver {
     /// Exposed (not private) purely so `BotSolverTests` can assert the 4/4 split holds at every
     /// skill and seed — `BotRun` itself only ever reports correctness, never which pile a
     /// decision landed in, because no real caller needs that.
-    static func keep4PileCounts(_ puzzle: Keep4Puzzle, skill: Double, seed: UInt64) -> (keep: Int, cut: Int) {
+    static func keep4PileCounts(_ puzzle: Keep4Puzzle, skill: Double, seed: UInt64,
+                                style: BotStyle = .consistent) -> (keep: Int, cut: Int) {
         guard !puzzle.players.isEmpty else { return (0, 0) }
         var gen = SeededGenerator(seed: seed)
-        let cards = keep4Decisions(puzzle, skill: skill, gen: &gen)
+        let cards = keep4Decisions(puzzle, skill: skill, style: style, gen: &gen)
         return (cards.filter { $0.decision == .keep }.count, cards.filter { $0.decision == .cut }.count)
     }
 
@@ -135,14 +144,16 @@ enum BotSolver {
     ///
     /// Difficulty per card comes from `keep4Difficulty(of:in:)` — see that method for why the
     /// puzzle's *scoring metric* is the ground truth and how it is scaled.
-    private static func keep4Decisions(_ puzzle: Keep4Puzzle, skill: Double,
+    private static func keep4Decisions(_ puzzle: Keep4Puzzle, skill: Double, style: BotStyle,
                                        gen: inout SeededGenerator) -> [BotSolverKeep4Card] {
         let order = Keep4GameView.blindOrder(for: puzzle)
         let correctKeepIDs = puzzle.correctKeepIDs
 
-        var cards: [BotSolverKeep4Card] = order.map { player in
+        var cards: [BotSolverKeep4Card] = order.enumerated().map { index, player in
             let difficulty = Self.keep4Difficulty(of: player, in: puzzle)
-            let p = hitProbability(skill: skill, difficulty: difficulty)
+            let progress = order.count > 1 ? Double(index) / Double(order.count - 1) : 0
+            let p = hitProbability(skill: skill, difficulty: difficulty,
+                                   style: style, progress: progress)
             let correctVerdict: Pile = correctKeepIDs.contains(player.id) ? .keep : .cut
             let hit = Double.random(in: 0..<1, using: &gen) < p
             return BotSolverKeep4Card(p: p, decision: hit ? correctVerdict : correctVerdict.flipped,
@@ -174,15 +185,19 @@ enum BotSolver {
     /// One independent decision per cell (no pile cap, unlike Keep4) — difficulty comes straight
     /// from the board's own `rarityStars`, already the difficulty signal the generator baked in.
     static func playGrid(_ puzzle: GridPuzzle, skill: Double, seed: UInt64,
-                        timeLimit: TimeInterval) -> BotRun {
+                        timeLimit: TimeInterval, style: BotStyle = .consistent) -> BotRun {
         guard !puzzle.cells.isEmpty else { return BotRun(performance: 0, correct: 0, outOf: 0, beats: []) }
         var gen = SeededGenerator(seed: seed)
-        let outcomes: [Bool] = puzzle.cells.map { cell in
+        let outcomes: [Bool] = puzzle.cells.enumerated().map { index, cell in
             let difficulty = min(max(Double(cell.rarityStars - 1) / 4.0, 0), 1)
-            let p = hitProbability(skill: skill, difficulty: difficulty)
+            let progress = puzzle.cells.count > 1
+                ? Double(index) / Double(puzzle.cells.count - 1) : 0
+            let p = hitProbability(skill: skill, difficulty: difficulty,
+                                   style: style, progress: progress)
             return Double.random(in: 0..<1, using: &gen) < p
         }
-        let beats = paceBeats(outcomes: outcomes, skill: skill, timeLimit: timeLimit, gen: &gen)
+        let beats = paceBeats(outcomes: outcomes, skill: skill, style: style,
+                              timeLimit: timeLimit, gen: &gen)
         let correct = outcomes.filter { $0 }.count
         return BotRun(performance: Double(correct) / Double(puzzle.cells.count),
                      correct: correct, outOf: puzzle.cells.count, beats: beats)
@@ -200,7 +215,7 @@ enum BotSolver {
     /// which clue you solved on, not how many free-text guesses you burned getting there, and
     /// `WhoAmIScoring.score` already handles a `wrongGuesses: 0` result correctly.
     static func playWhoAmI(_ puzzle: WhoAmIPuzzle, skill: Double, seed: UInt64,
-                          timeLimit: TimeInterval) -> BotRun {
+                          timeLimit: TimeInterval, style: BotStyle = .consistent) -> BotRun {
         let clueCount = puzzle.clues.count
         guard clueCount > 0 else { return BotRun(performance: 0, correct: 0, outOf: 1, beats: []) }
         var gen = SeededGenerator(seed: seed)
@@ -209,7 +224,9 @@ enum BotSolver {
         var cluesUsed = clueCount
         for i in 0..<clueCount {
             let difficulty = clueCount > 1 ? 1 - Double(i) / Double(clueCount - 1) : 0
-            let p = hitProbability(skill: skill, difficulty: difficulty)
+            let progress = clueCount > 1 ? Double(i) / Double(clueCount - 1) : 0
+            let p = hitProbability(skill: skill, difficulty: difficulty,
+                                   style: style, progress: progress)
             if Double.random(in: 0..<1, using: &gen) < p {
                 solved = true
                 cluesUsed = i + 1
@@ -219,7 +236,8 @@ enum BotSolver {
 
         let revealed = solved ? cluesUsed : clueCount
         let outcomes = (0..<revealed).map { $0 == cluesUsed - 1 && solved }
-        let beats = paceBeats(outcomes: outcomes, skill: skill, timeLimit: timeLimit, gen: &gen)
+        let beats = paceBeats(outcomes: outcomes, skill: skill, style: style,
+                              timeLimit: timeLimit, gen: &gen)
         let result = WhoAmIScoring.score(cluesUsed: cluesUsed, wrongGuesses: 0, solved: solved,
                                          difficulty: puzzle.difficulty)
         return BotRun(performance: result.performance, correct: solved ? 1 : 0, outOf: 1, beats: beats)
@@ -231,12 +249,17 @@ enum BotSolver {
     /// from the same seeded stream, so the whole run stays reproducible) avoid a metronomic
     /// beat cadence, then get scaled so their sum lands on `timeLimit * pacingFraction(skill)` —
     /// always strictly under `timeLimit`, so `elapsed` never needs a separate clamp.
-    private static func paceBeats(outcomes: [Bool], skill: Double, timeLimit: TimeInterval,
+    private static func paceBeats(outcomes: [Bool], skill: Double, style: BotStyle,
+                                  timeLimit: TimeInterval,
                                   gen: inout SeededGenerator) -> [BotBeat] {
         guard !outcomes.isEmpty else { return [] }
         let weights = outcomes.indices.map { _ in Double.random(in: 0.6...1.4, using: &gen) }
         let weightSum = weights.reduce(0, +)
-        let totalDuration = timeLimit * pacingFraction(skill: skill)
+        // Style scales the pace before the clamp, so a rushing rookie and a deliberating
+        // archivist read as different opponents even at the same skill. Clamped after, so no
+        // style can run past the buzzer.
+        let totalDuration = timeLimit
+            * min(0.97, pacingFraction(skill: skill) * style.paceMultiplier)
         var elapsed: TimeInterval = 0
         return outcomes.enumerated().map { index, correct in
             elapsed += totalDuration * (weights[index] / weightSum)
