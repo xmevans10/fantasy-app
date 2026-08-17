@@ -16,6 +16,18 @@ struct LeaguesView: View {
     /// Whether the promotion/relegation recap banner has been dismissed for the *current*
     /// season — reloaded from `UserDefaults` once `membership` resolves in `load()`.
     @State private var recapDismissed = false
+    /// Who the trailing duel button on a standings row was last tapped for — `.sheet(item:)`
+    /// so every scope's row shares one sheet instead of three near-identical `@State` bools.
+    @State private var duelTarget: DuelTarget?
+
+    /// A standings-row opponent, reduced to just what `DuelPickerSheet` needs. Cohort/season/
+    /// friends rows are three different row types with no common protocol, so this is the
+    /// shared shape the duel button normalizes them into.
+    private struct DuelTarget: Identifiable {
+        let id: String
+        let username: String?
+        let sport: Sport
+    }
 
     // MARK: - FRIENDS scope (M20)
 
@@ -89,6 +101,31 @@ struct LeaguesView: View {
         }
         .sheet(isPresented: $showLeaguesInfo) { leaguesInfoSheet }
         .sheet(isPresented: $showSeasonInfo) { seasonInfoSheet }
+        .sheet(item: $duelTarget) { target in
+            DuelPickerSheet(opponentID: target.id, opponentUsernameHint: target.username,
+                            defaultSport: target.sport) { _, _ in }
+        }
+    }
+
+    /// Trailing duel affordance shared by every standings row (~30 rating-matched players who
+    /// never opted into anything — the largest duelable pool the app has). A separate button
+    /// beside the row's `NavigationLink`, never a wrapper around it: a `Button` nested inside a
+    /// `NavigationLink`'s label doesn't get its own tap target, it just adds a second action to
+    /// the link's (see `PublicProfileView`'s friend/challenge row for the same constraint).
+    private func duelButton(userID: String, username: String?, sport: Sport) -> some View {
+        Button {
+            Haptics.tap()
+            duelTarget = DuelTarget(id: userID, username: username, sport: sport)
+        } label: {
+            Image(systemName: "bolt.fill")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(Color.surface0)
+                .frame(width: 28, height: 28)
+                .background(Color.ink)
+                .clipShape(Circle())
+        }
+        .buttonStyle(PrimePressStyle())
+        .accessibilityLabel(username.map { "Challenge \($0)" } ?? "Challenge this player")
     }
 
     private var signInPrompt: some View {
@@ -291,36 +328,29 @@ struct LeaguesView: View {
         "leagueRecapDismissed_season_\(membership?.seasonId ?? 0)"
     }
 
-    @ViewBuilder
     private func standingRow(_ row: CohortStandingRow) -> some View {
-        // Everyone but "me" pushes to the public profile (M19) — my own row already has a
-        // dedicated Profile tab, so tapping it would just be a confusing self-link.
-        if row.isMe {
-            standingRowContent(row)
-        } else {
-            NavigationLink {
-                PublicProfileView(userID: row.userId, usernameHint: row.username)
-            } label: {
-                standingRowContent(row)
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    private func standingRowContent(_ row: CohortStandingRow) -> some View {
         HStack(spacing: 12) {
-            Text("\(row.rank)")
-                .font(.hero(18))
-                .foregroundStyle(zoneColor(row.zone))
-                .frame(width: 28, alignment: .leading)
-            AvatarView(avatar: row.avatar, size: 28, emojiFallback: nil)
-            Text(row.displayName)
-                .font(row.isMe ? .bodyStrong : .body14)
-                .foregroundStyle(Color.textPrimary)
+            // Everyone but "me" pushes to the public profile (M19) — my own row already has a
+            // dedicated Profile tab, so tapping it would just be a confusing self-link. Only
+            // the rank/avatar/name group is the link's label — the duel button below needs its
+            // own tap target, which a `NavigationLink` wrapping the whole row would swallow.
+            if row.isMe {
+                standingRowLabel(row)
+            } else {
+                NavigationLink {
+                    PublicProfileView(userID: row.userId, usernameHint: row.username)
+                } label: {
+                    standingRowLabel(row)
+                }
+                .buttonStyle(.plain)
+            }
             Spacer()
             Text("\(row.weeklyXp) XP")
                 .font(.statValue)
                 .foregroundStyle(Color.textPrimary)
+            if !row.isMe {
+                duelButton(userID: row.userId, username: row.username, sport: selectedSport)
+            }
         }
         .padding(12)
         .background(row.isMe ? Color.accentBg : Color.clear)
@@ -330,6 +360,19 @@ struct LeaguesView: View {
                 Rectangle().fill(zoneColor(row.zone)).frame(width: 4)
                     .clipShape(RoundedRectangle(cornerRadius: 2))
             }
+        }
+    }
+
+    private func standingRowLabel(_ row: CohortStandingRow) -> some View {
+        HStack(spacing: 12) {
+            Text("\(row.rank)")
+                .font(.hero(18))
+                .foregroundStyle(zoneColor(row.zone))
+                .frame(width: 28, alignment: .leading)
+            AvatarView(avatar: row.avatar, size: 28, emojiFallback: nil)
+            Text(row.displayName)
+                .font(row.isMe ? .bodyStrong : .body14)
+                .foregroundStyle(Color.textPrimary)
         }
     }
 
@@ -424,21 +467,35 @@ struct LeaguesView: View {
         .blockCard(fill: .accentFill)
     }
 
-    @ViewBuilder
     private func seasonStandingRow(_ row: SeasonStandingRow) -> some View {
-        if row.isMe {
-            seasonStandingRowContent(row)
-        } else {
-            NavigationLink {
-                PublicProfileView(userID: row.userId, usernameHint: row.username)
-            } label: {
-                seasonStandingRowContent(row)
+        HStack(spacing: 12) {
+            if row.isMe {
+                seasonStandingRowLabel(row)
+            } else {
+                NavigationLink {
+                    PublicProfileView(userID: row.userId, usernameHint: row.username)
+                } label: {
+                    seasonStandingRowLabel(row)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+            Spacer()
+            Image(systemName: row.tier.symbol)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(row.tier.color)
+            Text("\(row.rating)")
+                .font(.statValue)
+                .foregroundStyle(Color.textPrimary)
+            if !row.isMe {
+                duelButton(userID: row.userId, username: row.username, sport: selectedSport)
+            }
         }
+        .padding(12)
+        .background(row.isMe ? Color.accentBg : Color.clear)
+        .cardSurface()
     }
 
-    private func seasonStandingRowContent(_ row: SeasonStandingRow) -> some View {
+    private func seasonStandingRowLabel(_ row: SeasonStandingRow) -> some View {
         HStack(spacing: 12) {
             Text("\(row.rank)")
                 .font(.hero(18))
@@ -448,17 +505,7 @@ struct LeaguesView: View {
             Text(row.displayName)
                 .font(row.isMe ? .bodyStrong : .body14)
                 .foregroundStyle(Color.textPrimary)
-            Spacer()
-            Image(systemName: row.tier.symbol)
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(row.tier.color)
-            Text("\(row.rating)")
-                .font(.statValue)
-                .foregroundStyle(Color.textPrimary)
         }
-        .padding(12)
-        .background(row.isMe ? Color.accentBg : Color.clear)
-        .cardSurface()
     }
 
     private var seasonInfoSheet: some View {
@@ -554,23 +601,34 @@ struct LeaguesView: View {
         Self.friendsLeaderboard(me: meLeaderboardRow, friends: friendProfiles, sport: selectedSport)
     }
 
-    @ViewBuilder
     private func friendLeaderboardRow(_ row: FriendsLeaderboardRow, rank: Int) -> some View {
-        // Same convention as `standingRow`: only other players' rows push to their public
-        // profile — my own row already lives on the Profile tab.
-        if row.isMe {
-            friendLeaderboardRowContent(row, rank: rank)
-        } else {
-            NavigationLink {
-                PublicProfileView(userID: row.userID, usernameHint: row.username)
-            } label: {
-                friendLeaderboardRowContent(row, rank: rank)
+        HStack(spacing: 12) {
+            // Same convention as `standingRow`: only other players' rows push to their public
+            // profile — my own row already lives on the Profile tab.
+            if row.isMe {
+                friendLeaderboardRowLabel(row, rank: rank)
+            } else {
+                NavigationLink {
+                    PublicProfileView(userID: row.userID, usernameHint: row.username)
+                } label: {
+                    friendLeaderboardRowLabel(row, rank: rank)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+            Spacer()
+            Text("\(row.rating)")
+                .font(.statValue)
+                .foregroundStyle(Color.textPrimary)
+            if !row.isMe {
+                duelButton(userID: row.userID, username: row.username, sport: selectedSport)
+            }
         }
+        .padding(12)
+        .background(row.isMe ? Color.accentBg : Color.clear)
+        .cardSurface()
     }
 
-    private func friendLeaderboardRowContent(_ row: FriendsLeaderboardRow, rank: Int) -> some View {
+    private func friendLeaderboardRowLabel(_ row: FriendsLeaderboardRow, rank: Int) -> some View {
         HStack(spacing: 12) {
             Text("\(rank)")
                 .font(.hero(18))
@@ -580,14 +638,7 @@ struct LeaguesView: View {
             Text(row.username ?? "Player")
                 .font(row.isMe ? .bodyStrong : .body14)
                 .foregroundStyle(Color.textPrimary)
-            Spacer()
-            Text("\(row.rating)")
-                .font(.statValue)
-                .foregroundStyle(Color.textPrimary)
         }
-        .padding(12)
-        .background(row.isMe ? Color.accentBg : Color.clear)
-        .cardSurface()
     }
 
     /// One row of the FRIENDS leaderboard: either the caller or a friend, projected down to

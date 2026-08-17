@@ -8,6 +8,17 @@ struct GridGameView: View {
     /// Set when this view was opened from a `balliq://challenge` link: it pins the sport and the
     /// board's day, skips the setup screen, and carries the challenger's score into the result.
     var challenge: ChallengeLink? = nil
+    /// Set when this board is being played as a timed Versus duel. Server-authoritative clock;
+    /// see `DuelSession`. Mutually exclusive with `challenge` in practice; if both are somehow
+    /// set, `duel` wins — it's the server-mediated seam, and a duel's board may not even be
+    /// today's daily, so it must never carry the dare language a real `ChallengeLink` does.
+    var duel: DuelSession? = nil
+    /// The exact board the duel names, fetched by id by the caller (`VersusView`). Bypasses the
+    /// daily/practice resolution in `load(...)` entirely — a duel compares two runs on one
+    /// board, so it must be the one the challenge points at, never one this device happened to
+    /// resolve. `nil` only if the caller failed to fetch it, which degrades to the "No Grid
+    /// today" empty state rather than crashing.
+    var duelPuzzle: GridPuzzle? = nil
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
@@ -72,7 +83,9 @@ struct GridGameView: View {
             if let result {
                 GridResultView(sport: sport, score: result.score, correctCount: result.correctCount,
                                puzzle: puzzle, solved: solved,
-                               rewards: rewards, isDaily: isCanonicalDaily, challenge: activeChallenge,
+                               rewards: rewards, isDaily: duel == nil && isCanonicalDaily,
+                               challenge: duel == nil ? activeChallenge : nil,
+                               duelVerdict: duel?.ladder?.verdict(myHits: result.correctCount),
                                onDone: { dismiss() })
             } else if challengeBoardMissing, let challenge {
                 EmptyStateView(symbol: "calendar.badge.exclamationmark",
@@ -110,6 +123,19 @@ struct GridGameView: View {
         }
         .background(Color.appBackground)
         .task {
+            // Duel wins over challenge (see `duel`'s doc comment). Bypasses `load(...)`
+            // entirely: a duel's board arrives already resolved, so there is no daily/practice
+            // pick to make and no setup screen to show.
+            if let duel {
+                puzzle = duelPuzzle
+                sport = duelPuzzle?.sport ?? sport
+                showingSetup = false
+                loading = false
+                startedAt = Date()
+                container.track(.gameStarted, ["format": "grid", "sport": sport.rawValue, "mode": "duel"])
+                Task { nameIndex = await container.puzzles.playerNameIndex(for: sport) }
+                return
+            }
             // A challenge names its own sport; honouring the local filter here would open the
             // wrong sport's board and then fail to find the challenged day on it.
             if let challenge {
@@ -223,6 +249,13 @@ struct GridGameView: View {
 
     private func board(_ puzzle: GridPuzzle) -> some View {
         VStack(spacing: 0) {
+            if let duel {
+                // A blown clock still resolves the duel — `finish` scores whatever's solved so
+                // far (unattempted cells simply don't add to the numerator) rather than
+                // abandoning the run. `solved` only ever holds confirmed-correct guesses (wrong
+                // ones go to `wrong`), so this is a genuine live score, not just a progress count.
+                DuelTimerBar(session: duel, playerScore: solved.count) { finish(puzzle) }
+            }
             header
             Spacer(minLength: 0)
             gridLayout(puzzle).padding(16)
@@ -385,10 +418,32 @@ struct GridGameView: View {
     }
 
     private func finish(_ puzzle: GridPuzzle) {
+        // The duel timer and the ninth guess can both try to finish the same run (a guess
+        // landing right as the clock hits zero) — idempotent rather than relying on either
+        // caller to coordinate.
+        guard result == nil else { return }
         let performance = Double(solved.count) / 9.0
+        // A duel is never ranked and never a daily (see `duel`'s doc comment) — same distinction
+        // Keep4's duel branch makes via `PlayMode`.
+        let mode: PlayMode = duel != nil ? .versus : (isPractice ? .practice : .daily)
         let detail = Self.buildSessionDetail(puzzle: puzzle, solved: solved, wrong: wrong,
-                                             mode: isPractice ? .practice : .daily, startedAt: startedAt)
+                                             mode: mode, startedAt: startedAt,
+                                             opponentUserID: duel?.opponentUserID)
         let score = detail.score
+        if let duel {
+            // `duel.boardID` is the real `puzzles.id` the board was fetched by
+            // (`"grid-<sport>-<yyyy-mm-dd>"`) — `GridPuzzle` content doesn't embed its own row
+            // id, so the session carries it rather than each game view inventing a placeholder.
+            Task {
+                await container.logSession(format: .grid, sport: sport, performance: performance,
+                                           perfect: solved.count == 9, puzzleID: duel.boardID,
+                                           detail: detail)
+                await container.submitDuelResult(duel, performance: performance,
+                                                 elapsed: Date().timeIntervalSince(startedAt ?? Date()))
+                withAnimation(Motion.snap) { result = (score, solved.count) }
+            }
+            return
+        }
         // A practice board is re-rollable without limit, so it earns no rating/XP/arcade score —
         // that's still true. What changed is that the reps are no longer thrown away: `logSession`
         // writes them to the career log (skipping XP/streak/rating, unlike `complete`), so accuracy
@@ -427,7 +482,8 @@ struct GridGameView: View {
     /// exactly "attempted but unsolved" here because `finish` only ever runs once all 9 cells have
     /// a final answer, never partway through.
     static func buildSessionDetail(puzzle: GridPuzzle, solved: [Int: String], wrong: Set<Int>,
-                                   mode: PlayMode, startedAt: Date?) -> RepositoryContainer.SessionDetail {
+                                   mode: PlayMode, startedAt: Date?,
+                                   opponentUserID: String? = nil) -> RepositoryContainer.SessionDetail {
         let totalStars = solved.keys.reduce(0) { sum, index in
             sum + puzzle.cell(row: index / 3, col: index % 3).rarityStars
         }
@@ -439,6 +495,7 @@ struct GridGameView: View {
         details.missedCellHeaders = wrong.sorted().flatMap { index -> [String] in
             [puzzle.rows[index / 3].label, puzzle.cols[index % 3].label]
         }
+        details.opponentUserID = opponentUserID
         // 9 solves x 100, plus up to 5 rarity stars x 20 each — the true ceiling (a perfect board
         // of nine 5-star cells) is 1800.
         return RepositoryContainer.SessionDetail(mode: mode, score: solved.count * 100 + totalStars * 20,

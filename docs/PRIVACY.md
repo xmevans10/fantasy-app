@@ -50,7 +50,7 @@ These are used only to understand feature usage and are never sold or shared wit
 ## How we use this information
 
 Solely to operate the app: authenticate you, track your rating/progress, power Leagues and
-Versus matchmaking, show and moderate Community content, deliver the push notifications you've
+Versus duels, show and moderate Community content, deliver the push notifications you've
 opted into, and understand which features are used so we can improve the app.
 
 ## Who we share it with

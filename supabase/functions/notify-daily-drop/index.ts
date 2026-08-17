@@ -6,7 +6,8 @@
 // Same local-time caveat as notify-streak-risk: `device_tokens.utc_offset_minutes` is the
 // offset at registration, which drifts if the user travels. Good enough for a 9am-ish nudge.
 import { serviceClient } from "../_shared/supabase.ts";
-import { buildDailyDropPayload, sendApnsPush } from "../_shared/apns.ts";
+import { buildDailyDropPayload } from "../_shared/apns.ts";
+import { sendOnce } from "../_shared/cadence.ts";
 import { candidateLocalDays, localDayString, localHour } from "../_shared/localtime.ts";
 
 const TARGET_LOCAL_HOUR = 9; // 9am
@@ -38,8 +39,18 @@ Deno.serve(async (_req) => {
     themesByDay.get(day)!.set(row.sport as string, theme);
   }
 
-  const { data: tokens } = await sb
+  const { data: rows } = await sb
     .from("device_tokens").select("user_id, token, utc_offset_minutes");
+  // One decision per PERSON, delivered to all of their devices. Iterating raw token rows
+  // (the first version) evaluated a multi-device user once per device.
+  const byUser = new Map<string, { user_id: string; utc_offset_minutes: number; tokens: string[] }>();
+  for (const r of rows ?? []) {
+    const e = byUser.get(r.user_id)
+      ?? { user_id: r.user_id, utc_offset_minutes: r.utc_offset_minutes, tokens: [] };
+    e.tokens.push(r.token);
+    byUser.set(r.user_id, e);
+  }
+  const tokens = [...byUser.values()];
 
   let sent = 0;
 
@@ -69,9 +80,13 @@ Deno.serve(async (_req) => {
     const theme = (profile?.primary_sport && themesBySport?.get(profile.primary_sport)) ||
       themesBySport?.values().next().value || null;
 
-    await sendApnsPush(t.token, buildDailyDropPayload(theme))
-      .catch((e) => console.error("push failed", e));
-    sent++;
+    // Through `sendOnce` so this counts against the same daily ceiling as the other slots and
+    // leaves an audit row — see _shared/cadence.ts.
+    const result = await sendOnce(sb, {
+      userId: t.user_id, tokens: t.tokens, utcOffsetMinutes: t.utc_offset_minutes,
+      nowMs, payload: buildDailyDropPayload(theme),
+    });
+    if (result.sent) sent++;
   }
 
   const themeCount = [...themesByDay.values()].reduce((n, m) => n + m.size, 0);

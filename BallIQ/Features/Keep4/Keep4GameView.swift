@@ -8,18 +8,15 @@ struct Keep4GameView: View {
     var communityID: String? = nil
     /// Community author's username — personalizes the custom-scoring explainer when known.
     var authorName: String? = nil
-    /// Set when played from the Versus tab, so the score is submitted to the challenge.
-    var versusChallengeID: Int? = nil
-    /// Set when opened from a `balliq://challenge` link. Distinct from `versusChallengeID`:
-    /// that is a server-mediated series between two signed-in accounts, this is a link anyone
-    /// can send anyone with no account on either end. Only ever non-nil when the resolved board
-    /// is exactly the one challenged (see `ContentView.accept`).
+    /// Set when played from the Versus tab or the bot ladder: the score is submitted to the
+    /// duel, and a server-authoritative clock runs over the board. See `DuelSession`.
+    var duel: DuelSession? = nil
+    /// Set when opened from a `balliq://challenge` link. Distinct from `duel`: that is a
+    /// server-mediated series between two signed-in accounts (or a ladder rung), this is a link
+    /// anyone can send anyone with no account on either end. Only ever non-nil when the
+    /// resolved board is exactly the one challenged (see `ContentView.accept`). If both are
+    /// somehow set, `duel` wins — it is the one with a server row behind it.
     var challenge: ChallengeLink? = nil
-    /// Set alongside `versusChallengeID` — the other side of the duel, resolved by the caller
-    /// (the local user may be either the challenger or the opponent on the row). Denormalized
-    /// onto `GameResultDetails.opponentUserID` so a "record against this rival" stat doesn't
-    /// need a challenge lookup.
-    var opponentUserID: String? = nil
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
@@ -65,8 +62,14 @@ struct Keep4GameView: View {
                                 // site — see `Keep4ResultView.isDaily`. An accepted challenge
                                 // is the one unranked path that IS on the canonical board:
                                 // `ContentView.accept` only attaches one on an exact match.
-                                isDaily: ranked || challenge != nil,
-                                challenge: challenge,
+                                // A duel board is neither today's daily nor the board a link
+                                // named, so it must not offer the dare either of those do.
+                                isDaily: duel == nil && (ranked || challenge != nil),
+                                challenge: duel == nil ? challenge : nil,
+                                // A ladder rung's payoff is knowing whether you beat the bot.
+                                // Without this the result screen never mentions the opponent
+                                // you just spent two minutes racing.
+                                duelVerdict: duel?.ladder?.verdict(myHits: result.correctCount),
                                 onDone: { dismiss() })
             } else {
                 playBoard
@@ -108,6 +111,14 @@ struct Keep4GameView: View {
 
     private var playBoard: some View {
         VStack(spacing: 0) {
+            if let duel {
+                // Above the header, not inside it: the clock has to be the first thing on
+                // screen at every scroll position and in every one of the header's states.
+                // `placement.count` is cards decided, not cards known-correct (blind sort) —
+                // see `DuelTimerBar.playerScore`'s doc comment for why that's still the right
+                // number to race the bot's live score against.
+                DuelTimerBar(session: duel, playerScore: placement.count) { expire() }
+            }
             header
             Spacer(minLength: 0)
             if let player = currentPlayer {
@@ -320,26 +331,50 @@ struct Keep4GameView: View {
         }
     }
 
+    /// The clock ran out. Score whatever has been decided so far — every undecided card is
+    /// already counted wrong by `Keep4Scoring` (an unplaced player matches neither pile), so
+    /// this is just the normal finish arriving early. A blown clock still has to resolve the
+    /// duel; abandoning the run would leave the opponent waiting on a forfeit sweep.
+    private func expire() {
+        guard result == nil else { return }
+        finish()
+    }
+
     private func finish() {
+        // The clock and the eighth card can both try to finish the same run.
+        guard result == nil else { return }
         let r = Keep4Scoring.score(puzzle: puzzle, placement: placement)
         if r.isPerfect { Haptics.success() } else { Haptics.commit() }
         let performance = Double(r.correctCount) / Double(puzzle.players.count)
         // Versus and community are both possible on the same session (a community-authored
         // puzzle can't currently be a Versus board, but if that ever changes, Versus should
         // win — it's the more specific mode).
-        let playMode: PlayMode = versusChallengeID != nil ? .versus : (communityID != nil ? .community : .daily)
+        let playMode: PlayMode = duel != nil ? .versus : (communityID != nil ? .community : .daily)
         let detail = RepositoryContainer.SessionDetail(
             mode: playMode, score: r.total, maxScore: 3000,
             correct: r.correctCount, attempted: puzzle.players.count, startedAt: startedAt,
             details: Self.buildDetails(puzzle: puzzle, placement: placement, result: r,
-                                       opponentUserID: opponentUserID))
+                                       opponentUserID: duel?.opponentUserID))
         Task { @MainActor in
-            let rw = await container.complete(format: mode.formatKind, sport: puzzle.sport,
-                                              performance: performance, perfect: r.isPerfect,
-                                              puzzleID: puzzle.id, ranked: ranked, detail: detail)
-            rewards = rw
+            // A duel board is one the opponent's challenge (or a rung) chose off the archive —
+            // neither today's daily nor a re-rollable practice board — so it earns the
+            // career-log row but no rating, XP or streak movement. That is the Versus info
+            // sheet's standing promise: "Versus games never affect your rating", and the
+            // ladder inherits it.
+            if duel != nil {
+                await container.logSession(format: mode.formatKind, sport: puzzle.sport,
+                                           performance: performance, perfect: r.isPerfect,
+                                           puzzleID: puzzle.id, detail: detail)
+            } else {
+                rewards = await container.complete(format: mode.formatKind, sport: puzzle.sport,
+                                                   performance: performance, perfect: r.isPerfect,
+                                                   puzzleID: puzzle.id, ranked: ranked, detail: detail)
+            }
             if let communityID { await container.recordCommunityPlay(id: communityID) }
-            if let versusChallengeID { await container.submitVersusResult(challengeID: versusChallengeID, performance: performance) }
+            if let duel {
+                await container.submitDuelResult(duel, performance: performance,
+                                                 elapsed: Date().timeIntervalSince(startedAt ?? Date()))
+            }
             withAnimation(Motion.easeOut) { result = r }
         }
     }

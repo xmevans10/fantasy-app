@@ -14,12 +14,18 @@ struct GridResultView: View {
     /// Set when this run was itself opened from someone's challenge link — drives the
     /// head-to-head banner and the `challenge_completed` event.
     var challenge: ChallengeLink? = nil
+    /// Set when this run was a **bot ladder** duel — the finished head-to-head against the rung's
+    /// bot. Distinct from `challenge`, which is a link someone sent; both render through
+    /// `ChallengeResultBanner`, and exactly one of them is ever set.
+    var duelVerdict: DuelVerdict? = nil
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.ladderRematch) private var ladderRematch
     @State private var confetti = 0
     @State private var showLeaderboard = false
+    @State private var rematching = false
     /// cell index → (name → pct of that cell's correct picks). Empty until the crowd stats
     /// land (or forever, offline) — the recap simply shows no % line then.
     @State private var pickPct: [Int: [String: Int]] = [:]
@@ -68,6 +74,9 @@ struct GridResultView: View {
                     scoreHeader.heroReveal(0)
                     // Above the leaderboard on purpose: when you came here from a friend's dare,
                     // the one number you want is theirs, not this week's top 10.
+                    if let duelVerdict, challenge == nil {
+                        ChallengeResultBanner(verdict: duelVerdict).heroReveal(1)
+                    }
                     if let challenge {
                         ChallengeResultBanner(challenge: challenge, hits: correctCount, score: score)
                             .heroReveal(1)
@@ -245,6 +254,9 @@ struct GridResultView: View {
                         .frame(maxWidth: .infinity).padding(.vertical, 15)
                 }
                 .buttonStyle(.plain)
+                if let ladderRematch {
+                    RematchButton(rematching: $rematching, action: ladderRematch)
+                }
             }
             .padding(16)
             .background(Color.surface)

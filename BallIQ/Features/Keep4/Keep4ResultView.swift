@@ -16,11 +16,17 @@ struct Keep4ResultView: View {
     var isDaily: Bool = false
     /// Set when this run came from someone's challenge link — see `ChallengeResultBanner`.
     var challenge: ChallengeLink? = nil
+    /// Set when this run was a **bot ladder** duel — the finished head-to-head against the rung's
+    /// bot. Distinct from `challenge`, which is a link someone sent; both render through
+    /// `ChallengeResultBanner`, and exactly one of them is ever set.
+    var duelVerdict: DuelVerdict? = nil
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.ladderRematch) private var ladderRematch
     @State private var confetti = 0
+    @State private var rematching = false
 
     private var heroFill: Color { result.isPerfect ? .voltFill : .accentFill }
     private var heroInk: Color { result.isPerfect ? .onVolt : .onAccent }
@@ -35,6 +41,8 @@ struct Keep4ResultView: View {
                                               hits: result.correctCount,
                                               score: result.total)
                             .heroReveal(1)
+                    } else if let duelVerdict {
+                        ChallengeResultBanner(verdict: duelVerdict).heroReveal(1)
                     }
                     if let top = topSeason { foilCard(top).heroReveal(2) }
                     if let rewards { RewardsRow(rewards: rewards).heroReveal(3) }
@@ -250,14 +258,19 @@ struct Keep4ResultView: View {
     private var doneBar: some View {
         VStack(spacing: 0) {
             Rectangle().fill(Color.hairline).frame(height: Hairline.width)
-            Button(action: onDone) {
-                Text("DONE")
-                    .font(.heading)
-                    .foregroundStyle(Color.accentText)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 15)
+            HStack(spacing: 12) {
+                Button(action: onDone) {
+                    Text("DONE")
+                        .font(.heading)
+                        .foregroundStyle(Color.accentText)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                }
+                .buttonStyle(.plain)
+                if let ladderRematch {
+                    RematchButton(rematching: $rematching, action: ladderRematch)
+                }
             }
-            .buttonStyle(.plain)
             .padding(16)
             .background(Color.surface)
         }

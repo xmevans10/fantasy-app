@@ -291,6 +291,7 @@ struct ProfileView: View {
             Text("NOTIFICATIONS").font(.label12).foregroundStyle(Color.textMuted)
             notificationToggle("Daily puzzle drop", \.dailyDrop)
             notificationToggle("Streak at risk", \.streakAtRisk)
+            notificationToggle("Nudges & recaps", \.engagement)
             notificationToggle("League position", \.leaguePosition)
             notificationToggle("Versus challenges", \.versusChallenge)
             notificationToggle("Friend requests", \.friendRequest)

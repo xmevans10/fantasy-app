@@ -14,7 +14,8 @@ export type NotificationCategory =
   | "versus_challenge"
   | "season_end"
   | "friend_request"
-  | "daily_drop";
+  | "daily_drop"
+  | "engagement";
 
 export interface PushPayload {
   category: NotificationCategory;
@@ -66,6 +67,53 @@ export function buildVersusChallengePayload(challengerUsername: string): PushPay
   };
 }
 
+/** Your opponent played and you haven't — the "you're up, and there's a clock" nudge.
+ *
+ * Names the clock explicitly. A duel where the other side has already banked a score is the one
+ * moment the timed mechanic is worth spelling out in a notification: the recipient is deciding
+ * whether to open the app *right now*, and "2 minutes" is the answer to the question they're
+ * actually asking. */
+export function buildVersusFinishedPayload(
+  opponentUsername: string,
+  timeLimitSeconds: number,
+): PushPayload {
+  const minutes = Math.round(timeLimitSeconds / 60);
+  const clock = timeLimitSeconds < 90
+    ? `${timeLimitSeconds} seconds`
+    : `${minutes} minute${minutes === 1 ? "" : "s"}`;
+  return {
+    category: "versus_challenge",
+    title: `${opponentUsername} just played`,
+    body: `Their score is in. You've got ${clock} on the clock once you open the board.`,
+    data: { tab: "versus" },
+  };
+}
+
+/** The duel is settled. `won`/`drawn` come from the row, not from a score comparison — the
+ * tiebreak is elapsed time and lives server-side, so this must never try to re-derive it. */
+export function buildVersusSettledPayload(
+  opponentUsername: string,
+  won: boolean,
+  drawn: boolean,
+): PushPayload {
+  if (drawn) {
+    return {
+      category: "versus_challenge",
+      title: "Dead heat",
+      body: `You and ${opponentUsername} finished level, right down to the second.`,
+      data: { tab: "versus" },
+    };
+  }
+  return {
+    category: "versus_challenge",
+    title: won ? "You won the duel" : "Duel settled",
+    body: won
+      ? `${opponentUsername} came up short. The series moves your way.`
+      : `${opponentUsername} took that one. Rematch?`,
+    data: { tab: "versus" },
+  };
+}
+
 export function buildSeasonEndPayload(hoursRemaining: number): PushPayload {
   return {
     category: "season_end",
@@ -93,6 +141,57 @@ export function buildFriendRequestPayload(requesterUsername: string): PushPayloa
     body: `${requesterUsername} wants to be friends on BallIQ.`,
     data: { tab: "friends" },
   };
+}
+
+/** "Your move" — an open duel where the ball is in this player's court. Names the clock,
+ * because the recipient is deciding whether to open the app right now and that is the answer
+ * to the question they are actually asking. */
+export function buildYourTurnPayload(opponent: string, hoursLeft: number): PushPayload {
+  return {
+    category: "engagement",
+    title: "Your move",
+    body: hoursLeft <= 3
+      ? `${opponent} is waiting and your duel expires in ${hoursLeft}h. Play it before you forfeit.`
+      : `${opponent} is waiting on you. Same board, same clock — go take it.`,
+    data: { tab: "versus" },
+  };
+}
+
+/** The next ladder rung, by name. A named opponent is a concrete invitation in a way that
+ * "come back and play" is not — which is the whole reason the bots have names. */
+export function buildLadderNudgePayload(botName: string, rung: number): PushPayload {
+  return {
+    category: "engagement",
+    title: `${botName} is next`,
+    body: `Rung ${rung} of 30 is waiting. Same board, same clock, and you watch their score climb while you play.`,
+    data: { tab: "versus" },
+  };
+}
+
+/** Where they stand in their weekly cohort. Only sent with a real, current position. */
+export function buildLeagueNudgePayload(rank: number, xpToNext: number): PushPayload {
+  return {
+    category: "engagement",
+    title: `You're ${ordinal(rank)} in your league`,
+    body: xpToNext > 0
+      ? `${xpToNext} XP would move you up a place. One puzzle usually covers it.`
+      : "Hold your spot — the week closes Monday.",
+    data: { tab: "leagues" },
+  };
+}
+
+/** The evening recap, for a player who already played and so has no streak to save. Reports
+ * something that actually happened today rather than inventing a reason to buzz. */
+export function buildEveningRecapPayload(streak: number, rungsCleared: number): PushPayload {
+  const body = rungsCleared > 0
+    ? `${rungsCleared} ${rungsCleared === 1 ? "rung" : "rungs"} cleared and your ${streak}-day streak is safe. Tomorrow's boards land at 9am.`
+    : `Your ${streak}-day streak is safe. Tomorrow's boards land at 9am.`;
+  return { category: "engagement", title: "Day locked in", body, data: { tab: "home" } };
+}
+
+function ordinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"], v = n % 100;
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
 }
 
 // MARK: - ES256 JWT signing (Web Crypto, no external library)
@@ -221,13 +320,42 @@ export function resetApnsTokenCacheForTesting(): void {
  * Sends one push via APNs. `deps` is an injection seam so tests can assert the exact request
  * shape (URL, headers, body) without a network call or a real APNs key.
  */
+/** APNs has two entirely separate hosts, and a token minted for one is invalid on the other. */
+export const APNS_HOSTS = {
+  production: "https://api.push.apple.com",
+  development: "https://api.sandbox.push.apple.com",
+} as const;
+export type ApnsEnvironment = keyof typeof APNS_HOSTS;
+
+/** Thrown when APNs says the token is dead (410 Unregistered, or 400 BadDeviceToken). */
+export class ApnsTokenInvalid extends Error {
+  constructor(readonly deviceToken: string, readonly status: number, readonly reason: string) {
+    super(`sendApnsPush: APNs rejected push (${status}): ${reason}`);
+    this.name = "ApnsTokenInvalid";
+  }
+}
+
+/**
+ * Sends one push.
+ *
+ * **`environment` is not optional in practice, and getting it wrong is silent.** This function
+ * hardcoded the production host, which meant every token minted by a debug or simulator build —
+ * i.e. every token this app has ever registered during development — was posted to a host that
+ * has never heard of it. Result: 100% of pushes in the log's lifetime failed `BadDeviceToken`,
+ * with the cadence layer above it working perfectly and nobody receiving anything.
+ *
+ * The environment is a property of the TOKEN, not of the server, so it is stored per row in
+ * `device_tokens.apns_environment` and passed in here. Defaulting to production keeps shipped
+ * behaviour for App Store builds.
+ */
 export async function sendApnsPush(
   deviceToken: string,
   payload: PushPayload,
-  deps: { fetch?: typeof fetch; now?: () => number } = {},
+  deps: { fetch?: typeof fetch; now?: () => number; environment?: ApnsEnvironment } = {},
 ): Promise<void> {
   const doFetch = deps.fetch ?? fetch;
   const now = deps.now ?? Date.now;
+  const host = APNS_HOSTS[deps.environment ?? "production"] ?? APNS_HOSTS.production;
 
   const { keyId, teamId, privateKey, bundleId } = await loadApnsConfig(doFetch);
 
@@ -237,7 +365,7 @@ export async function sendApnsPush(
   }
 
   const jwt = await apnsToken(keyId, teamId, privateKey, now);
-  const res = await doFetch(`https://api.push.apple.com/3/device/${deviceToken}`, {
+  const res = await doFetch(`${host}/3/device/${deviceToken}`, {
     method: "POST",
     headers: {
       authorization: `bearer ${jwt}`,
@@ -253,8 +381,33 @@ export async function sendApnsPush(
 
   if (!res.ok) {
     const reason = await res.text().catch(() => "");
-    // 410/Unregistered means the device token is stale — the caller (notify-* functions) should
-    // prune it from device_tokens; wiring that cleanup is a fast-follow, not done here.
+    // A dead token is a different thing from a failed send, and the caller needs to tell them
+    // apart to prune `device_tokens` (see `pruneDeadToken`). 410 is Apple's "this token is
+    // Unregistered"; 400 BadDeviceToken means it was never valid for this host/topic at all.
+    if (res.status === 410 || (res.status === 400 && reason.includes("BadDeviceToken"))) {
+      throw new ApnsTokenInvalid(deviceToken, res.status, reason);
+    }
     throw new Error(`sendApnsPush: APNs rejected push (${res.status}): ${reason}`);
+  }
+}
+
+/**
+ * Deletes a token APNs has told us is dead.
+ *
+ * Without this a token that is uninstalled, reinstalled or moved between environments stays in
+ * `device_tokens` forever, so every future send retries it and every send fails — which is how a
+ * fleet of four tokens produced a 0% delivery rate that looked like a configuration problem.
+ * Safe to call optimistically: deleting a row that is already gone is a no-op.
+ */
+export async function pruneDeadToken(
+  sb: { from: (t: string) => any },
+  deviceToken: string,
+): Promise<void> {
+  try {
+    await sb.from("device_tokens").delete().eq("token", deviceToken);
+    console.log(`[apns] pruned dead token ${deviceToken.slice(0, 8)}…`);
+  } catch (e) {
+    // Pruning is housekeeping — never let it mask or replace the original send failure.
+    console.log(`[apns] prune failed for ${deviceToken.slice(0, 8)}…:`, String(e));
   }
 }

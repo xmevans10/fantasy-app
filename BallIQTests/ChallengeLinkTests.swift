@@ -162,7 +162,9 @@ final class ChallengeLinkTests: XCTestCase {
         XCTAssertTrue(text.contains("apps.apple.com"))
     }
 
-    /// A challenge opened the next day still has to read correctly.
+    /// A challenge opened the next day still has to read correctly — and, since `format.displayName`
+    /// can carry its own article ("The Grid"), it must not stack a second one in front of it
+    /// (`shareName`, not the tile's "The Grid" — see `PuzzleFormat.shareName`).
     func testDatedBoardDropsTheWordToday() {
         let tomorrow = now.addingTimeInterval(24 * 3600)
         XCTAssertTrue(grid().headline(now: tomorrow).contains("the Jul 27 NFL Grid"))
@@ -195,7 +197,7 @@ final class ChallengeLinkTests: XCTestCase {
         let text = Keep4ResultView.shareText(puzzle: puzzle, result: result,
                                              date: now, challenger: "Alex", now: now)
         XCTAssertEqual(text, """
-        I went 6/8 on today's NFL Keep 4 — beat that.
+        I went 6/8 on today's NFL K4C4 — beat that.
         ⬛🟩🟩🟩
         ⬛🟩🟩🟩
         6/8 · 1,500 pts
@@ -230,7 +232,7 @@ final class ChallengeLinkTests: XCTestCase {
         }
     }
 
-    // MARK: - Who Am I? (no shared board — a brag, not a challenge)
+    // MARK: - Who Am I? (M17 — now a shared board like Grid/Keep 4)
 
     private func whoAmIPuzzle() -> WhoAmIPuzzle {
         WhoAmIPuzzle(id: "w", sport: .nba,
@@ -247,14 +249,50 @@ final class ChallengeLinkTests: XCTestCase {
         XCTAssertEqual(WhoAmIResultView.emojiClues(result: failed, clueCount: 6), "⬛⬛⬛⬛⬛⬛")
     }
 
+    /// A first-clue solve is worth the most on `WhoAmIScoring`'s own points curve, so it has to
+    /// read as the best possible challenge score (`outOf`/`outOf`) — and a give-up has to read as
+    /// the worst (`0`/`outOf`) — or `outcome(hits:score:)`'s "more hits always wins" rule would
+    /// silently reward the wrong side of a duel.
+    func testWhoAmIHitsRewardsEarlierSolves() {
+        XCTAssertEqual(ChallengeLink.whoAmIHits(WhoAmIScoring.score(cluesUsed: 1, wrongGuesses: 0, solved: true)), 6)
+        XCTAssertEqual(ChallengeLink.whoAmIHits(WhoAmIScoring.score(cluesUsed: 6, wrongGuesses: 0, solved: true)), 1)
+        XCTAssertEqual(ChallengeLink.whoAmIHits(WhoAmIScoring.score(cluesUsed: 6, wrongGuesses: 0, solved: false)), 0)
+        XCTAssertEqual(ChallengeLink.whoAmIOutOf, 6)
+    }
+
+    func testWhoAmIShareTextIsExactlyThis() {
+        let puzzle = whoAmIPuzzle()
+        let result = WhoAmIScoring.score(cluesUsed: 2, wrongGuesses: 0, solved: true)
+        let text = WhoAmIResultView.shareText(puzzle: puzzle, result: result, date: now,
+                                              challenger: "Alex", now: now)
+        XCTAssertEqual(text, """
+        I went 5/6 on today's NBA Who Am I? — beat that.
+        ⬛🟩⬜⬜⬜⬜
+        5/6 · 800 pts
+        https://apps.apple.com/app/id6785275045?ct=chal_whoami_nba
+        """)
+    }
+
+    /// The one thing that must survive every rewording: the answer itself never appears.
     func testWhoAmIShareNeverNamesTheAnswer() {
         let puzzle = whoAmIPuzzle()
         let result = WhoAmIScoring.score(cluesUsed: 2, wrongGuesses: 0, solved: true)
-        let text = WhoAmIResultView.shareText(puzzle: puzzle, result: result)
+        let text = WhoAmIResultView.shareText(puzzle: puzzle, result: result, date: now, now: now)
         XCTAssertFalse(text.contains("Allen Iverson"))
         XCTAssertFalse(text.lowercased().contains("iverson"))
-        XCTAssertTrue(text.hasPrefix("I got today's NBA Who Am I? in 2 clues."))
-        XCTAssertTrue(text.hasSuffix("?ct=res_whoami_nba"))
+    }
+
+    /// Same rule Grid/Keep 4 follow: an archive, community or deep-linked run has no board a
+    /// recipient could actually be sent to, so it gets the plain brag, not the dare.
+    func testWhoAmIArchiveShareMakesNoChallenge() {
+        let puzzle = whoAmIPuzzle()
+        let result = WhoAmIScoring.score(cluesUsed: 6, wrongGuesses: 0, solved: false)
+        let text = WhoAmIResultView.shareText(puzzle: puzzle, result: result, date: now,
+                                              isDaily: false, now: now)
+        XCTAssertTrue(text.hasPrefix("A NBA Who Am I? beat me."))
+        XCTAssertFalse(text.contains("beat that"))
+        XCTAssertTrue(text.contains("no spoilers, go find out who"))
+        XCTAssertTrue(text.contains("apps.apple.com"))
     }
 
     func testOverUnderShareReadsAsAStreakBrag() {

@@ -568,9 +568,9 @@ create unique index if not exists cohort_members_one_per_season
 create index if not exists cohort_members_standings_idx
   on public.cohort_members (cohort_id, weekly_xp desc);
 
--- A 1-v1 head-to-head relationship between two players, tracked over up to 7 challenges.
+-- A 1-v1 head-to-head relationship between two players, raced to 4 wins.
 -- `user_a`/`user_b` are stored with user_a < user_b (enforced by `create_versus_challenge`)
--- so a series is addressable regardless of who issued the latest challenge.
+-- so a series is addressable regardless of who issued the latest duel.
 create table if not exists public.versus_series (
   id         bigint generated always as identity primary key,
   user_a     uuid not null references auth.users(id) on delete cascade,
@@ -578,16 +578,24 @@ create table if not exists public.versus_series (
   sport      text not null,
   wins_a     int  not null default 0,
   wins_b     int  not null default 0,
-  status     text not null default 'active',     -- 'active' | 'completed' (7 played)
+  status     text not null default 'active',     -- 'active' | 'completed' (first to 4)
   created_at timestamptz not null default now(),
   constraint versus_series_ordered check (user_a < user_b)
 );
-create unique index if not exists versus_series_pair_sport
-  on public.versus_series (user_a, user_b, sport) where status = 'active';
+-- 'keep4' | 'whoami' | 'grid' — the same domain as `puzzles.format` (Swift: `PuzzleFormat`).
+-- Added 2026-08-13 (migration 0015). Without it the uniqueness index below was
+-- `(user_a, user_b, sport)`, so a Grid duel between two players who already had a Keep4 series
+-- in the same sport silently collided with it.
+alter table public.versus_series
+  add column if not exists format text not null default 'keep4';
+drop index if exists public.versus_series_pair_sport;
+create unique index if not exists versus_series_pair_sport_format
+  on public.versus_series (user_a, user_b, sport, format) where status = 'active';
 
--- One challenge = one shared daily puzzle played independently by both sides.
--- `expires_at` is set 24h out at creation; `versus-timeout` (pg_cron scheduling:
--- supabase/migrations/0001_schedule_edge_functions.sql) forfeits anyone who hasn't completed by then.
+-- One duel = one shared board played independently by both sides, each against their own clock.
+-- `expires_at` is set 24h out at creation and bounds when the board must be *opened*;
+-- `versus-timeout` (pg_cron scheduling: supabase/migrations/0001_schedule_edge_functions.sql)
+-- forfeits anyone who hasn't completed by then.
 create table if not exists public.versus_challenges (
   id                    bigint generated always as identity primary key,
   series_id             bigint not null references public.versus_series(id) on delete cascade,
@@ -595,12 +603,12 @@ create table if not exists public.versus_challenges (
   puzzle_id             text not null references public.puzzles(id),
   challenger_id         uuid not null references auth.users(id) on delete cascade,
   opponent_id           uuid not null references auth.users(id) on delete cascade,
-  status                text not null default 'pending',  -- 'pending'|'active'|'completed'|'forfeited'
+  status                text not null default 'pending',
   challenger_score      double precision,
   opponent_score        double precision,
   challenger_completed_at timestamptz,
   opponent_completed_at   timestamptz,
-  -- `on delete set null` matters: without it, deleting a user who has ever won a challenge
+  -- `on delete set null` matters: without it, deleting a user who has ever won a duel
   -- fails on this constraint and account deletion (Guideline 5.1.1(v)) breaks for exactly the
   -- most engaged users. See `delete_own_account()` at the end of this file.
   winner_id             uuid references auth.users(id) on delete set null,
@@ -609,6 +617,30 @@ create table if not exists public.versus_challenges (
 );
 create index if not exists versus_challenges_participant_idx
   on public.versus_challenges (challenger_id, opponent_id, status);
+
+-- Timed duels (migration 0015). Each side's clock starts when *they* open the board, so an
+-- asynchronously scheduled duel still carries synchronous pressure. `*_started_at` is written
+-- server-side by `start_versus_challenge` and never reset — backgrounding the app, or force-
+-- quitting it, buys no extra time.
+alter table public.versus_challenges
+  add column if not exists format text not null default 'keep4',
+  add column if not exists time_limit_seconds int not null default 120,
+  add column if not exists challenger_started_at timestamptz,
+  add column if not exists opponent_started_at   timestamptz;
+
+-- One open duel per series. `create_versus_challenge` returns the live one rather than
+-- inserting a second; this is the hard guard behind that, and it closes a spam vector (the RPC
+-- used to insert unconditionally, so N pending duels against the same person was one loop away).
+create unique index if not exists versus_challenges_one_open_per_series
+  on public.versus_challenges (series_id) where status = 'pending';
+
+-- `'active'` was declared in the Swift model and branched on in two places but written by no
+-- RPC, ever — and it was a latent trap, because `versus-timeout` sweeps `status='pending'` only,
+-- so a row that ever landed in `'active'` would never have expired. Constrained so it can't
+-- come back.
+alter table public.versus_challenges drop constraint if exists versus_challenges_status_domain;
+alter table public.versus_challenges add constraint versus_challenges_status_domain
+  check (status in ('pending', 'completed', 'forfeited'));
 
 -- Per-user push registration (a user may have several devices). `utc_offset_minutes` is the
 -- device's local offset at registration time (no per-user timezone table yet) — used to
@@ -621,6 +653,23 @@ create table if not exists public.device_tokens (
   created_at         timestamptz not null default now(),
   primary key (user_id, token)
 );
+
+-- Which APNs host a token is valid on (migration 0023).
+--
+-- APNs runs two entirely separate environments and a token minted for one is meaningless on the
+-- other. `_shared/apns.ts` hardcoded the production host, so every token registered by a debug or
+-- simulator build was posted somewhere that had never heard of it: 100% of the pushes this app
+-- ever attempted failed with BadDeviceToken, while the cadence layer above worked perfectly and
+-- the failure looked like corrupt tokens.
+--
+-- The environment belongs to the TOKEN, not the server, so it is stored per row. Defaulting to
+-- 'production' is right for App Store builds; a debug build corrects its own row on the next
+-- registration upsert, so no back-fill guess is needed.
+alter table public.device_tokens
+  add column if not exists apns_environment text not null default 'production';
+alter table public.device_tokens drop constraint if exists device_tokens_apns_env;
+alter table public.device_tokens add constraint device_tokens_apns_env
+  check (apns_environment in ('production', 'development'));
 
 -- Per-category opt-out. Rows are created lazily (missing row = all categories on);
 -- `notify-*` Edge Functions treat an absent row as all-true.
@@ -636,6 +685,52 @@ create table if not exists public.notification_settings (
 -- supabase/migrations/0002_notify_daily_drop.sql).
 alter table public.notification_settings
   add column if not exists daily_drop boolean not null default true;
+
+-- The midday "your move" nudge and the evening recap — the two slots added 2026-08-13 to reach
+-- a three-a-day cadence (migration 0018). See supabase/functions/_shared/cadence.ts for the
+-- hard daily ceiling that governs all of them.
+alter table public.notification_settings
+  add column if not exists engagement boolean not null default true;
+
+-- Every push actually sent, keyed by the RECIPIENT's local day. Two jobs in one table: it is the
+-- audit trail (nothing recorded what had been sent to whom before this), and its unique index is
+-- the idempotency guard that stops an hourly cron double-firing the same category.
+create table if not exists public.notification_log (
+  id         bigint generated always as identity primary key,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  category   text not null,
+  local_day  date not null,
+  sent_at    timestamptz not null default now()
+);
+
+-- Names the event a trigger-driven push is answering (migration 0022), so the guard below can
+-- tell "the second duel someone challenged you to today" from "the cron fired twice".
+alter table public.notification_log
+  add column if not exists dedupe_key text;
+
+comment on column public.notification_log.dedupe_key is
+  'Names the event a trigger-driven push is answering ("challenge:42", "result:42", "friend:<requester uuid>"), so two legitimate same-day events of one category each get their own row and their own send. NULL for the scheduled slots, which are once-per-category-per-day by definition — see notification_log_once_per_event (nulls not distinct).';
+
+create index if not exists notification_log_user_day_idx
+  on public.notification_log (user_id, local_day);
+
+-- 0018's guard was (user_id, category, local_day), which was right while only the three SCHEDULED
+-- slots were logged and wrong the moment the trigger-driven pushes joined them: the second
+-- challenge you received in a day lost the insert race with the first and was reported
+-- `already_sent` — a real duel never announced. Proven against production before the change, with
+-- an aborted DO block that re-inserted an existing triple and got 23505.
+--
+-- `nulls not distinct` is load-bearing, not incidental: under the default `nulls distinct` every
+-- scheduled row (dedupe_key NULL) would be unique against every other one and 0018's
+-- double-fire guard would silently evaporate. Requires PG15+; the project is on 17.6.
+drop index if exists public.notification_log_once_per_day;
+create unique index if not exists notification_log_once_per_event
+  on public.notification_log (user_id, category, local_day, dedupe_key)
+  nulls not distinct;
+alter table public.notification_log enable row level security;
+drop policy if exists "notification_log own read" on public.notification_log;
+create policy "notification_log own read" on public.notification_log
+  for select using (auth.uid() = user_id);
 
 alter table public.seasons              enable row level security;
 alter table public.cohorts              enable row level security;
@@ -726,14 +821,108 @@ begin
 end;
 $$;
 
--- Records the caller's score on a challenge they're part of; resolves the challenge + advances
--- the series once both sides have a score. Keeps the read-modify-write atomic (vs. a client
--- upsert racing the opponent's submission).
+-- Versus RPCs. See supabase/migrations/0015_versus_timed_duels.sql for the change log.
+--
+-- The duel board is picked SERVER-side from the released archive, excluding anything either
+-- side already has a `game_results` row for.
+-- Old signature took `p_puzzle_id` from the client; drop it so no caller can pin a board.
+drop function if exists public.create_versus_challenge(uuid, text, text);
+
+create or replace function public.create_versus_challenge(
+  p_opponent uuid,
+  p_sport text,
+  p_format text default 'keep4',
+  p_time_limit int default 120)
+returns bigint language plpgsql security definer as $$
+declare
+  me uuid := auth.uid();
+  a uuid; b uuid;
+  s_id bigint; ch_id bigint; pz text;
+  limit_s int := least(greatest(coalesce(p_time_limit, 120), 30), 900);
+begin
+  if me is null or me = p_opponent then raise exception 'invalid opponent'; end if;
+  if p_format not in ('keep4', 'grid', 'whoami') then raise exception 'unsupported format'; end if;
+  a := least(me, p_opponent); b := greatest(me, p_opponent);
+
+  select id into s_id from public.versus_series
+    where user_a = a and user_b = b and sport = p_sport and format = p_format and status = 'active';
+  if s_id is null then
+    insert into public.versus_series (user_a, user_b, sport, format) values (a, b, p_sport, p_format)
+      returning id into s_id;
+  end if;
+
+  -- Idempotent while a duel is open: re-challenging returns the live one rather than stacking
+  -- a second. (The partial unique index above is the guard; this is the friendly path.)
+  select id into ch_id from public.versus_challenges
+    where series_id = s_id and status = 'pending' limit 1;
+  if ch_id is not null then return ch_id; end if;
+
+  -- The board comes from the *released archive* (strictly before today), never today's daily:
+  -- pinning today's row is what let a player finish their daily, learn the answers, then
+  -- challenge and replay with perfect knowledge. Excluding every puzzle either side has a
+  -- `game_results` row for closes that for both players at once.
+  select p.id into pz
+  from public.puzzles p
+  where p.format = p_format
+    and p.sport = p_sport
+    and p.active_date is not null
+    and p.active_date < (now() at time zone 'utc')::date
+    and not exists (
+      select 1 from public.game_results g
+      where g.puzzle_id = p.id and g.user_id in (me, p_opponent))
+  order by random()
+  limit 1;
+  if pz is null then raise exception 'no unplayed puzzle available'; end if;
+
+  insert into public.versus_challenges
+      (series_id, sport, format, puzzle_id, challenger_id, opponent_id, time_limit_seconds)
+    values (s_id, p_sport, p_format, pz, me, p_opponent, limit_s)
+    returning id into ch_id;
+  return ch_id;
+end;
+$$;
+
+-- The clock starts when *this* player opens the board.
+-- Returns seconds remaining, not a timestamp: the client never has to trust (or correct for)
+-- its own clock, and a second call after a crash resumes the same countdown instead of
+-- restarting it.
+create or replace function public.start_versus_challenge(p_challenge_id bigint)
+returns int language plpgsql security definer as $$
+declare
+  c public.versus_challenges%rowtype;
+  started timestamptz;
+begin
+  select * into c from public.versus_challenges where id = p_challenge_id for update;
+  if c.id is null then raise exception 'challenge not found'; end if;
+  if auth.uid() not in (c.challenger_id, c.opponent_id) then raise exception 'not a participant'; end if;
+  if c.status <> 'pending' then raise exception 'duel is closed'; end if;
+
+  if auth.uid() = c.challenger_id then
+    started := c.challenger_started_at;
+    if started is null then
+      update public.versus_challenges set challenger_started_at = now() where id = p_challenge_id
+        returning challenger_started_at into started;
+    end if;
+  else
+    started := c.opponent_started_at;
+    if started is null then
+      update public.versus_challenges set opponent_started_at = now() where id = p_challenge_id
+        returning opponent_started_at into started;
+    end if;
+  end if;
+
+  return greatest(0, ceil(c.time_limit_seconds - extract(epoch from (now() - started))))::int;
+end;
+$$;
+
+-- Submit: first-write-wins, clamped to 0...1, validated against the server's own clock.
 create or replace function public.submit_versus_result(p_challenge_id bigint, p_score double precision)
 returns void language plpgsql security definer as $$
 declare
   c public.versus_challenges%rowtype;
   is_challenger boolean;
+  started timestamptz;
+  final_score double precision;
 begin
   select * into c from public.versus_challenges where id = p_challenge_id for update;
   if c.id is null then raise exception 'challenge not found'; end if;
@@ -742,85 +931,104 @@ begin
   end if;
 
   is_challenger := auth.uid() = c.challenger_id;
+  started := case when is_challenger then c.challenger_started_at else c.opponent_started_at end;
+
+  -- `p_score` is a client claim. Every mode's `performance` is 0...1, so anything outside that
+  -- is either a bug or an attempt (cf. `bump_weekly_xp`'s clamp).
+  final_score := least(greatest(coalesce(p_score, 0), 0), 1);
+  -- The clock is server-authoritative. A run submitted past the limit (+10s of network grace)
+  -- scores 0 rather than being rejected — a blown clock still has to resolve the duel, or the
+  -- cheater's reward for stalling is that nobody ever wins.
+  if started is not null
+     and extract(epoch from (now() - started)) > c.time_limit_seconds + 10 then
+    final_score := 0;
+  end if;
+
+  -- First write wins (mirrors `submit_daily_draft_score`): a replay, even a better one, can
+  -- never overwrite the score already locked in.
   if is_challenger then
     update public.versus_challenges
-      set challenger_score = p_score, challenger_completed_at = now()
+      set challenger_score = coalesce(c.challenger_score, final_score),
+          challenger_completed_at = coalesce(c.challenger_completed_at, now())
       where id = p_challenge_id;
   else
     update public.versus_challenges
-      set opponent_score = p_score, opponent_completed_at = now()
+      set opponent_score = coalesce(c.opponent_score, final_score),
+          opponent_completed_at = coalesce(c.opponent_completed_at, now())
       where id = p_challenge_id;
   end if;
 
   select * into c from public.versus_challenges where id = p_challenge_id;
-  if c.challenger_score is not null and c.opponent_score is not null and c.status <> 'completed' then
+  if c.challenger_score is not null and c.opponent_score is not null and c.status = 'pending' then
     perform public.resolve_versus_challenge(p_challenge_id);
   end if;
 end;
 $$;
 
--- Shared resolution path for both normal completion (`submit_versus_result`) and the
--- `versus-timeout` Edge Function (forfeits). Marks the challenge decided and advances the series.
+-- Resolution: a score tie is broken on elapsed time (not on who sent the duel), and the
+-- series completes at first-to-4.
 create or replace function public.resolve_versus_challenge(p_challenge_id bigint)
 returns void language plpgsql security definer as $$
 declare
   c public.versus_challenges%rowtype;
   winner uuid;
+  new_status text;
+  ch_secs double precision;
+  op_secs double precision;
+  inc_a int; inc_b int;
 begin
   select * into c from public.versus_challenges where id = p_challenge_id for update;
-  if c.id is null or c.status = 'completed' then return; end if;
+  if c.id is null or c.status <> 'pending' then return; end if;
 
   if c.challenger_score is not null and c.opponent_score is not null then
-    winner := case when c.challenger_score >= c.opponent_score then c.challenger_id else c.opponent_id end;
+    new_status := 'completed';
+    if c.challenger_score > c.opponent_score then
+      winner := c.challenger_id;
+    elsif c.opponent_score > c.challenger_score then
+      winner := c.opponent_id;
+    else
+      -- Equal scores go to the faster run. `*_completed_at` was already being written and never
+      -- read; awarding the tie to the challenger stacked a second structural edge on the first.
+      ch_secs := extract(epoch from
+        (c.challenger_completed_at - coalesce(c.challenger_started_at, c.created_at)));
+      op_secs := extract(epoch from
+        (c.opponent_completed_at - coalesce(c.opponent_started_at, c.created_at)));
+      if ch_secs is not null and op_secs is not null and ch_secs <> op_secs then
+        winner := case when ch_secs < op_secs then c.challenger_id else c.opponent_id end;
+      else
+        -- A genuine dead heat is a draw: `completed` with no winner. Distinct from `forfeited`,
+        -- which stays reserved for the double no-show.
+        winner := null;
+      end if;
+    end if;
   elsif c.challenger_score is not null then
-    winner := c.challenger_id;       -- opponent forfeited
+    winner := c.challenger_id; new_status := 'completed';   -- opponent forfeited
   elsif c.opponent_score is not null then
-    winner := c.opponent_id;         -- challenger forfeited
+    winner := c.opponent_id;   new_status := 'completed';   -- challenger forfeited
   else
-    winner := null;                  -- double no-show: no-contest, series unaffected
+    winner := null; new_status := 'forfeited';              -- double no-show, series unaffected
   end if;
 
   update public.versus_challenges
-    set status = case when winner is null then 'forfeited' else 'completed' end, winner_id = winner
+    set status = new_status, winner_id = winner
     where id = p_challenge_id;
 
   if winner is not null then
     update public.versus_series s
-      set wins_a = wins_a + case when winner = s.user_a then 1 else 0 end,
-          wins_b = wins_b + case when winner = s.user_b then 1 else 0 end,
-          status = case when wins_a + wins_b + 1 >= 7 then 'completed' else status end
-      where id = c.series_id;
+      set wins_a = s.wins_a + (case when winner = s.user_a then 1 else 0 end),
+          wins_b = s.wins_b + (case when winner = s.user_b then 1 else 0 end),
+          -- First to 4 takes it; a 4-0 lead no longer grinds three dead rubbers. The 7-played
+          -- cap survives as a backstop, because draws advance neither counter.
+          status = case
+            when greatest(s.wins_a + (case when winner = s.user_a then 1 else 0 end),
+                          s.wins_b + (case when winner = s.user_b then 1 else 0 end)) >= 4
+              or s.wins_a + s.wins_b + 1 >= 7
+            then 'completed' else s.status end
+      where s.id = c.series_id;
   end if;
 end;
 $$;
 
--- Looks up (or starts) the active series for a pair + sport, creates the next challenge on
--- today's puzzle, and returns its id. Keeps `user_a < user_b` ordering + the find-or-create
--- race out of client code.
-create or replace function public.create_versus_challenge(p_opponent uuid, p_sport text, p_puzzle_id text)
-returns bigint language plpgsql security definer as $$
-declare
-  me uuid := auth.uid();
-  a uuid; b uuid;
-  s_id bigint;
-  ch_id bigint;
-begin
-  if me is null or me = p_opponent then raise exception 'invalid opponent'; end if;
-  a := least(me, p_opponent); b := greatest(me, p_opponent);
-
-  select id into s_id from public.versus_series
-    where user_a = a and user_b = b and sport = p_sport and status = 'active';
-  if s_id is null then
-    insert into public.versus_series (user_a, user_b, sport) values (a, b, p_sport)
-      returning id into s_id;
-  end if;
-
-  insert into public.versus_challenges (series_id, sport, puzzle_id, challenger_id, opponent_id)
-    values (s_id, p_sport, p_puzzle_id, me, p_opponent)
-    returning id into ch_id;
-  return ch_id;
-end;
-$$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Daily Draft (Draft & Spin's daily seeded mode) — one official score per user per UTC day
@@ -1233,6 +1441,38 @@ as $$
   ) f;
 $$;
 
+-- Auth for the DB -> Edge Function webhooks below.
+--
+-- Every `notify-*` function runs with `verify_jwt = true`. The pg_cron jobs account for that
+-- (see supabase/migrations/0001) but the pg_net *triggers* did not: they posted only a
+-- Content-Type header, so every trigger-driven push was rejected at the edge from the day it
+-- shipped until 2026-08-13. Measured, same request both ways:
+--     no Authorization  -> 401 UNAUTHORIZED_NO_AUTH_HEADER
+--     via this function -> 200
+-- Nothing surfaced it: `net.http_post` is fire-and-forget, so the insert always succeeded.
+--
+-- The bearer token lives in Vault, not inline — this file is in a public repo, and a key
+-- rotation is then one UPDATE rather than a migration. See supabase/migrations/0017.
+create or replace function public.edge_function_headers()
+returns jsonb language plpgsql security definer
+set search_path = ''
+as $$
+declare
+  bearer text;
+begin
+  select decrypted_secret into bearer
+    from vault.decrypted_secrets where name = 'EDGE_FUNCTION_BEARER' limit 1;
+  -- Degrade to the old header set rather than failing the trigger: a missing secret should
+  -- cost a push, never an insert.
+  if bearer is null then
+    return '{"Content-Type": "application/json"}'::jsonb;
+  end if;
+  return jsonb_build_object('Content-Type', 'application/json',
+                            'Authorization', 'Bearer ' || bearer);
+end;
+$$;
+revoke all on function public.edge_function_headers() from public, anon, authenticated;
+
 -- DB -> edge-function webhooks via pg_net (async fire-and-forget; an unreachable function
 -- never fails the insert). Replaces the dashboard-webhook hand-off for notify-versus-challenge.
 create or replace function public.notify_versus_challenge_webhook()
@@ -1246,7 +1486,7 @@ begin
     url := 'https://nhccgufqwndtoasdbkhc.supabase.co/functions/v1/notify-versus-challenge',
     body := jsonb_build_object('record', jsonb_build_object(
       'id', new.id, 'challenger_id', new.challenger_id, 'opponent_id', new.opponent_id)),
-    headers := '{"Content-Type": "application/json"}'::jsonb);
+    headers := public.edge_function_headers());
   return new;
 end;
 $$;
@@ -1254,6 +1494,40 @@ drop trigger if exists versus_challenges_notify on public.versus_challenges;
 create trigger versus_challenges_notify
   after insert on public.versus_challenges
   for each row execute function public.notify_versus_challenge_webhook();
+
+-- "Your opponent finished" push.
+-- Same pg_net pattern as `versus_challenges_notify`, on UPDATE instead of INSERT. Fires only on
+-- the null -> non-null score transition, so the repeated writes `resolve_versus_challenge` makes
+-- to the same row can't re-push. The Edge Function re-reads the row and decides the copy.
+create or replace function public.notify_versus_result_webhook()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  finisher uuid; waiting uuid;
+begin
+  if new.challenger_score is not null and old.challenger_score is null then
+    finisher := new.challenger_id; waiting := new.opponent_id;
+  elsif new.opponent_score is not null and old.opponent_score is null then
+    finisher := new.opponent_id; waiting := new.challenger_id;
+  else
+    return new;
+  end if;
+
+  perform net.http_post(
+    url := 'https://nhccgufqwndtoasdbkhc.supabase.co/functions/v1/notify-versus-result',
+    body := jsonb_build_object('record', jsonb_build_object(
+      'id', new.id, 'finisher_id', finisher, 'waiting_id', waiting)),
+    headers := public.edge_function_headers());
+  return new;
+end;
+$$;
+drop trigger if exists versus_challenges_result_notify on public.versus_challenges;
+create trigger versus_challenges_result_notify
+  after update of challenger_score, opponent_score on public.versus_challenges
+  for each row execute function public.notify_versus_result_webhook();
 
 create or replace function public.notify_friend_request_webhook()
 returns trigger
@@ -1267,7 +1541,7 @@ begin
       url := 'https://nhccgufqwndtoasdbkhc.supabase.co/functions/v1/notify-friend-request',
       body := jsonb_build_object('record', jsonb_build_object(
         'requester_id', new.requester_id, 'addressee_id', new.addressee_id)),
-      headers := '{"Content-Type": "application/json"}'::jsonb);
+      headers := public.edge_function_headers());
   end if;
   return new;
 end;
@@ -1727,3 +2001,393 @@ $$;
 revoke all on function public.my_stat_percentiles() from public;
 revoke execute on function public.my_stat_percentiles() from anon;
 grant execute on function public.my_stat_percentiles() to authenticated, service_role;
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- The bot ladder (M22) — see supabase/migrations/0016_bot_ladder.sql
+--
+-- The bots are skill-limited SOLVERS, not score generators: the client runs the rung's real
+-- puzzle through `BotSolver` with the rung's `bot_skill` and `seed`, so the bot makes real
+-- decisions on real players and its run can be replayed alongside the player in real time.
+-- That delivers the feeling of a live opponent with zero realtime infrastructure. Consequently
+-- nothing about a bot's play lives on the server: `ladder_rungs` carries only the inputs (which
+-- board, which bot, how good, how long, what seed) and the run reproduces identically on every
+-- device from those five columns.
+--
+-- Two product rules, encoded here as far as a schema can encode them:
+--   * bots are labelled as bots, always — hence `bots` is its own world-readable table with a
+--     name/avatar/tagline, never a row in `profiles` wearing a human's clothes;
+--   * the ladder pays XP and ladder rank only, never the solo rating — so there is no rating
+--     column here, and `submit_ladder_attempt` touches nothing but ladder state.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists public.bots (
+  id         text primary key,
+  name       text not null,
+  avatar     text not null default '🤖',
+  tagline    text not null default '',
+  -- The bot's natural level. A rung may override it (`ladder_rungs.bot_skill`) so the same
+  -- character can appear early as a warm-up and late as a boss.
+  base_skill double precision not null check (base_skill >= 0 and base_skill <= 1),
+  persona    text not null default ''
+);
+
+-- Bots are characters, not difficulty labels (migration 0019). `style` changes `BotSolver`'s
+-- policy — two bots at identical `bot_skill` play visibly differently — so it feeds the ladder's
+-- difficulty calibration, not just its copy.
+alter table public.bots
+  add column if not exists style          text not null default 'consistent',
+  add column if not exists style_line     text not null default '',
+  add column if not exists backstory      text not null default '',
+  add column if not exists palette        text not null default 'electric',
+  add column if not exists voice          jsonb not null default '{}'::jsonb,
+  add column if not exists favorite_teams jsonb not null default '[]'::jsonb;
+alter table public.bots drop constraint if exists bots_style_domain;
+alter table public.bots add constraint bots_style_domain check (style in
+  ('overeager', 'methodical', 'consistent', 'deepCuts', 'slowBurn', 'prescient'));
+
+-- The two numbers that make a rung's difficulty inspectable (migration 0015 of the ladder work):
+-- `board_difficulty` from each format's own scoring metric, and `target_win_rate`, the simulated
+-- P(reference player wins) that `bot_skill` is now solved backwards from.
+alter table public.ladder_rungs
+  add column if not exists board_difficulty double precision,
+  add column if not exists target_win_rate  double precision;
+
+-- One row per rung. Four independent difficulty levers so the curve doesn't go flat:
+-- bot skill, the clock, the puzzle's own difficulty, and which game it is.
+create table if not exists public.ladder_rungs (
+  rung               int primary key,
+  tier               text not null,        -- 'bronze' | 'silver' | 'gold', matching Home's tiers
+  mode               text not null check (mode in ('keep4', 'whoami', 'grid')),
+  sport              text not null,
+  puzzle_id          text not null references public.puzzles(id),
+  bot_id             text not null references public.bots(id),
+  bot_skill          double precision not null check (bot_skill >= 0 and bot_skill <= 1),
+  time_limit_seconds int not null check (time_limit_seconds > 0),
+  -- Seeds the bot's decisions AND its pacing, so a rung plays out identically for every player:
+  -- comparable, leaderboard-able, speedrun-able.
+  seed               bigint not null,
+  is_boss            boolean not null default false
+);
+
+-- A rung is a difficulty, not a board — so it needs a pool of them (migration 0020).
+--
+-- With a single `puzzle_id`, losing rung 7 and retrying handed back the identical board with the
+-- answers already known: the score meant nothing, and `ladder_attempts` — the corpus human ghost
+-- duels will later be built from — filled with rows that look like skill and are actually recall.
+--
+-- Why a child table rather than an array column on `ladder_rungs`: each board needs its own
+-- `seed` (the same bot must not replay an identical decision pattern on a new board) and its own
+-- verified `board_difficulty`, because a rung's difficulty is a promise. If board A is 0.25 and
+-- board B is 0.60 then the rung is a different rung depending on which one you drew, and the
+-- calibration in `tools/ingest/ladder.py` stops describing anything. Pools are therefore selected
+-- difficulty-homogeneous and re-verified per board; see that tool for the tolerances.
+--
+-- `ladder_rungs.puzzle_id` stays as the pool's ordinal-0 board, so an already-shipped client that
+-- never calls `next_ladder_board` keeps working unchanged.
+create table if not exists public.ladder_rung_boards (
+  rung             int  not null references public.ladder_rungs(rung) on delete cascade,
+  ordinal          int  not null,               -- stable serve order
+  puzzle_id        text not null references public.puzzles(id),
+  board_difficulty double precision not null,
+  seed             bigint not null,             -- per BOARD, not per rung
+  primary key (rung, ordinal)
+);
+-- One board may not appear twice in the same pool — without this a short pool could be padded
+-- with duplicates and still report a healthy count.
+create unique index if not exists ladder_rung_boards_unique_board
+  on public.ladder_rung_boards (rung, puzzle_id);
+
+create table if not exists public.ladder_progress (
+  user_id      uuid primary key references auth.users(id) on delete cascade,
+  highest_rung int not null default 0,
+  updated_at   timestamptz not null default now()
+);
+
+-- Every attempt, won or lost. Doubles as the per-puzzle score corpus that human ghost duels
+-- will need later — that is why `score`/`bot_score` are the normalized 0...1 `performance` every
+-- mode already produces, not each format's own point scale. No second migration later.
+create table if not exists public.ladder_attempts (
+  id         bigint generated always as identity primary key,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  rung       int  not null,
+  score      double precision not null check (score >= 0 and score <= 1),
+  bot_score  double precision not null check (bot_score >= 0 and bot_score <= 1),
+  won        boolean not null,
+  elapsed_ms int not null check (elapsed_ms >= 0),
+  created_at timestamptz not null default now()
+);
+-- Which board of the rung's pool this attempt was played on (migration 0020). Nullable because
+-- every attempt recorded before pools existed was played on the rung's single board, and
+-- back-filling a guess would be inventing history.
+alter table public.ladder_attempts
+  add column if not exists puzzle_id text references public.puzzles(id);
+
+create index if not exists ladder_attempts_user_idx on public.ladder_attempts (user_id, rung);
+-- The corpus lookup: "what did people score on this board".
+create index if not exists ladder_attempts_rung_idx on public.ladder_attempts (rung, score desc);
+-- `next_ladder_board`'s unseen-board probe: (user_id, rung) alone leaves the puzzle comparison
+-- as a heap fetch per candidate row.
+create index if not exists ladder_attempts_seen_idx
+  on public.ladder_attempts (user_id, rung, puzzle_id);
+
+alter table public.bots              enable row level security;
+alter table public.ladder_rungs      enable row level security;
+alter table public.ladder_rung_boards enable row level security;
+alter table public.ladder_progress   enable row level security;
+alter table public.ladder_attempts   enable row level security;
+
+drop policy if exists "bots readable"              on public.bots;
+drop policy if exists "ladder_rungs readable"      on public.ladder_rungs;
+drop policy if exists "ladder_rung_boards readable" on public.ladder_rung_boards;
+drop policy if exists "ladder_progress own"        on public.ladder_progress;
+drop policy if exists "ladder_attempts own read"   on public.ladder_attempts;
+
+-- Ladder content is world-readable scaffolding, like `seasons`/`cohorts`. It has to be: a
+-- signed-out player can still see what the ladder is before deciding to sign in for it.
+create policy "bots readable"         on public.bots         for select using (true);
+create policy "ladder_rungs readable" on public.ladder_rungs for select using (true);
+create policy "ladder_rung_boards readable"
+  on public.ladder_rung_boards for select using (true);
+
+create policy "ladder_progress own" on public.ladder_progress
+  for select using (auth.uid() = user_id);
+create policy "ladder_attempts own read" on public.ladder_attempts
+  for select using (auth.uid() = user_id);
+-- Writes to both go through `submit_ladder_attempt` (SECURITY DEFINER) — no insert/update
+-- policy, so a client can't post itself to rung 30 without playing 1 through 29.
+
+-- Records one attempt and advances the player's high-water mark. Returns the new `highest_rung`.
+--
+-- The rung gate is the whole point: `highest_rung` can only ever move to `p_rung` when
+-- `p_rung = highest_rung + 1` and the attempt was won, so progress is a chain, not a claim.
+-- Dropped and recreated rather than `create or replace`d when `p_puzzle_id` was added (migration
+-- 0020): the new argument changes the signature, and leaving the old five-argument function in
+-- place would make every existing five-argument call ambiguous between the two overloads and fail
+-- outright. With the sixth argument defaulted, a shipped client that posts only the original five
+-- still resolves here and behaves as before — it records a null board, which is honest, since a
+-- client that doesn't know about pools genuinely played the rung's ordinal-0 board.
+drop function if exists public.submit_ladder_attempt(int, double precision, double precision,
+                                                     boolean, int);
+
+create or replace function public.submit_ladder_attempt(
+  p_rung int, p_score double precision, p_bot_score double precision,
+  p_won boolean, p_elapsed_ms int, p_puzzle_id text default null)
+returns int language plpgsql security definer as $$
+declare
+  me uuid := auth.uid();
+  current_high int;
+  s  double precision := least(greatest(coalesce(p_score, 0), 0), 1);
+  bs double precision := least(greatest(coalesce(p_bot_score, 0), 0), 1);
+  ms int := least(greatest(coalesce(p_elapsed_ms, 0), 0), 3_600_000);
+  board text;
+begin
+  if me is null then raise exception 'not signed in'; end if;
+  if not exists (select 1 from public.ladder_rungs where rung = p_rung) then
+    raise exception 'no such rung';
+  end if;
+
+  -- Trust the rung's own pool over the client's claim: a board that isn't in this rung's pool
+  -- (or is not the rung's own board) is recorded as null rather than poisoning the "which boards
+  -- has this player seen" answer with an id they could have posted by hand.
+  select p_puzzle_id into board
+   where p_puzzle_id is not null
+     and (exists (select 1 from public.ladder_rung_boards b
+                   where b.rung = p_rung and b.puzzle_id = p_puzzle_id)
+          or exists (select 1 from public.ladder_rungs r
+                      where r.rung = p_rung and r.puzzle_id = p_puzzle_id));
+
+  insert into public.ladder_attempts (user_id, rung, score, bot_score, won, elapsed_ms, puzzle_id)
+    values (me, p_rung, s, bs, coalesce(p_won, false), ms, board);
+
+  insert into public.ladder_progress (user_id, highest_rung) values (me, 0)
+    on conflict (user_id) do nothing;
+  select highest_rung into current_high from public.ladder_progress where user_id = me;
+
+  if coalesce(p_won, false) and p_rung = current_high + 1 then
+    update public.ladder_progress
+      set highest_rung = p_rung, updated_at = now()
+      where user_id = me
+      returning highest_rung into current_high;
+  end if;
+
+  return current_high;
+end;
+$$;
+
+revoke all on function public.submit_ladder_attempt(int, double precision, double precision,
+                                                    boolean, int, text) from public;
+grant execute on function public.submit_ladder_attempt(int, double precision, double precision,
+                                                       boolean, int, text)
+  to authenticated, service_role;
+
+-- Which board this player gets next on this rung (migration 0020).
+--
+-- Lowest-ordinal board they have no `ladder_attempts` row for; if they have seen the whole pool,
+-- the least recently attempted one. `SECURITY DEFINER` because the decision reads the caller's
+-- own attempt history, which is own-read RLS — scoped hard to `auth.uid()`, and it returns
+-- nothing about anyone else.
+--
+-- A signed-out caller gets ordinal 0: the ladder is browsable signed out, so this has to answer
+-- rather than fail; it just can't personalise. Returns zero rows when the rung has no pool at
+-- all, which the client treats as "fall back to `ladder_rungs.puzzle_id`" — the same path it
+-- needs for playing offline anyway.
+create or replace function public.next_ladder_board(p_rung int)
+returns table (puzzle_id text, seed bigint, board_difficulty double precision)
+language plpgsql security definer stable as $$
+declare
+  me uuid := auth.uid();
+begin
+  if me is null then
+    return query
+      select b.puzzle_id, b.seed, b.board_difficulty
+        from public.ladder_rung_boards b
+       where b.rung = p_rung
+       order by b.ordinal
+       limit 1;
+    return;
+  end if;
+
+  return query
+    select b.puzzle_id, b.seed, b.board_difficulty
+      from public.ladder_rung_boards b
+     where b.rung = p_rung
+       and not exists (select 1 from public.ladder_attempts a
+                        where a.user_id = me and a.rung = p_rung
+                          and a.puzzle_id = b.puzzle_id)
+     order by b.ordinal
+     limit 1;
+  -- RETURN QUERY sets FOUND, so this distinguishes "pool has an unseen board" from "seen it all"
+  -- without counting the pool twice.
+  if found then return; end if;
+
+  return query
+    select b.puzzle_id, b.seed, b.board_difficulty
+      from public.ladder_rung_boards b
+      left join lateral (
+        select max(a.created_at) as last_at
+          from public.ladder_attempts a
+         where a.user_id = me and a.rung = p_rung and a.puzzle_id = b.puzzle_id
+      ) la on true
+     where b.rung = p_rung
+     order by la.last_at nulls first, b.ordinal
+     limit 1;
+end $$;
+
+revoke all on function public.next_ladder_board(int) from public;
+grant execute on function public.next_ladder_board(int) to anon, authenticated, service_role;
+
+-- "Your record vs each character" for the roster screen (migration 0021).
+--
+-- `ladder_attempts` is own-read RLS and the bot is only reachable through `ladder_rungs`, so the
+-- record block needs one SECURITY DEFINER aggregate rather than a client-side join over a table
+-- the client can only see its own rows of. A signed-out caller gets zero rows, which is exactly
+-- the roster's "sign in to see your record" state.
+create or replace function public.my_bot_records()
+returns table (bot_id text, played int, won int,
+               best_score double precision, best_bot_score double precision)
+language sql security definer stable as $$
+  select r.bot_id,
+         count(*)::int,
+         count(*) filter (where a.won)::int,
+         max(a.score),
+         max(a.bot_score)
+  from public.ladder_attempts a
+  join public.ladder_rungs r on r.rung = a.rung
+  where a.user_id = auth.uid()
+  group by r.bot_id;
+$$;
+
+revoke all on function public.my_bot_records() from public;
+grant execute on function public.my_bot_records() to anon, authenticated, service_role;
+
+-- ── Content ──────────────────────────────────────────────────────────────────
+-- Six characters, each recognisable and each honestly a bot. Beating "The Analyst" is a better
+-- story than beating `bot_47`, and it costs nothing to say which is which.
+insert into public.bots (id, name, avatar, tagline, base_skill, persona) values
+  ('rookie',    'The Rookie',    '🐣', 'Watches every game. Remembers none of them.', 0.35,
+   'Guesses fast and confidently. Gets the obvious ones and nothing else.'),
+  ('stathead',  'Stat Head',     '📊', 'Reads the box score. Twice.',                 0.55,
+   'Solid on the numbers, lost the moment a call needs judgement.'),
+  ('analyst',   'The Analyst',   '🎙️', 'Has an opinion, and a graph to back it.',     0.70,
+   'Talks through every pick. Usually right, occasionally spectacularly wrong.'),
+  ('scout',     'The Scout',     '🔭', 'Saw them play in college.',                   0.82,
+   'Deep on the players nobody else remembers. Quick, too.'),
+  ('archivist', 'The Archivist', '📼', 'Owns the tape. All of it.',                   0.91,
+   'Has seen the answer before. Slow to start, impossible to shake.'),
+  ('oracle',    'The Oracle',    '🔮', 'Knew the answer before the question.',        0.98,
+   'The last rung. Beat it and there is nothing left to beat.')
+on conflict (id) do update set
+  name = excluded.name, avatar = excluded.avatar, tagline = excluded.tagline,
+  base_skill = excluded.base_skill, persona = excluded.persona;
+
+-- 30 rungs, generated rather than hand-listed so the four levers stay legible as formulas.
+--
+--   skill  0.35 -> 0.98 linearly, +0.04 on a boss
+--   clock  the format's own duel default, tightening to 55% of it by rung 30
+--   puzzle Who Am I? draws from the tier's own obscurity band (easy/medium/hard)
+--   mode   all Keep4 early, Who Am I? joins at 7, The Grid at 15
+--
+-- The board for each rung is picked deterministically (`order by id offset ...`), not randomly:
+-- a rung has to be the same board for every player, forever, or none of the comparisons mean
+-- anything. Re-running this statement re-picks the same rows.
+with plan as (
+  select
+    r as rung,
+    case when r <= 10 then 'bronze' when r <= 20 then 'silver' else 'gold' end as tier,
+    (r % 10 = 0) as is_boss,
+    case
+      when r <= 6  then 'keep4'
+      when r <= 14 then (case when r % 2 = 0 then 'whoami' else 'keep4' end)
+      else (case r % 3 when 0 then 'grid' when 1 then 'keep4' else 'whoami' end)
+    end as mode,
+    (array['nfl', 'nba', 'baseball', 'soccer', 'tennis'])[1 + ((r - 1) % 5)] as sport,
+    -- Capped at 0.98, not 1.0: a flawless bot can only be beaten by a flawless *and* faster
+    -- run, which turns the final boss into a coin flip on latency rather than a test of play.
+    least(0.98, 0.35 + (r - 1) * (0.98 - 0.35) / 29.0 + case when r % 10 = 0 then 0.04 else 0 end)
+      as bot_skill
+  from generate_series(1, 30) as r
+),
+sized as (
+  select p.*,
+    case p.mode when 'keep4' then 120 when 'whoami' then 90 else 180 end as base_seconds,
+    case p.tier when 'bronze' then 'easy' when 'silver' then 'medium' else 'hard' end as band
+  from plan p
+),
+picked as (
+  select s.*, (
+    select q.id from public.puzzles q
+    where q.format = s.mode
+      and q.sport = s.sport
+      and q.active_date is not null
+      and q.active_date < (now() at time zone 'utc')::date
+      and (s.mode <> 'whoami' or q.content->>'difficulty' = s.band)
+    order by q.id
+    offset (s.rung * 7) % greatest(1, (
+      select count(*) from public.puzzles q2
+      where q2.format = s.mode and q2.sport = s.sport
+        and q2.active_date is not null
+        and q2.active_date < (now() at time zone 'utc')::date
+        and (s.mode <> 'whoami' or q2.content->>'difficulty' = s.band)))
+    limit 1) as puzzle_id
+  from sized s
+)
+insert into public.ladder_rungs
+  (rung, tier, mode, sport, puzzle_id, bot_id, bot_skill, time_limit_seconds, seed, is_boss)
+select
+  p.rung, p.tier, p.mode, p.sport, p.puzzle_id,
+  -- The bot whose natural level is closest to this rung's, so a character's appearances cluster
+  -- rather than scattering across the whole ladder.
+  (select b.id from public.bots b order by abs(b.base_skill - p.bot_skill) limit 1),
+  round(p.bot_skill::numeric, 3),
+  round(p.base_seconds * (1.0 - 0.45 * (p.rung - 1) / 29.0)),
+  -- Stable, distinct, and derived from the rung so a re-seed reproduces it exactly.
+  (p.rung::bigint * 2654435761) % 9223372036854775807,
+  p.is_boss
+from picked p
+where p.puzzle_id is not null
+on conflict (rung) do update set
+  tier = excluded.tier, mode = excluded.mode, sport = excluded.sport,
+  puzzle_id = excluded.puzzle_id, bot_id = excluded.bot_id, bot_skill = excluded.bot_skill,
+  time_limit_seconds = excluded.time_limit_seconds, seed = excluded.seed,
+  is_boss = excluded.is_boss;

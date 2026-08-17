@@ -6,7 +6,8 @@
 // user travels. Good enough for "simplest correct version first"; revisit if DST/travel complaints
 // show up.
 import { serviceClient } from "../_shared/supabase.ts";
-import { buildStreakAtRiskPayload, sendApnsPush } from "../_shared/apns.ts";
+import { buildStreakAtRiskPayload } from "../_shared/apns.ts";
+import { sendOnce } from "../_shared/cadence.ts";
 import { localDayString, localHour } from "../_shared/localtime.ts";
 
 const TARGET_LOCAL_HOUR = 20; // 8pm
@@ -15,8 +16,18 @@ Deno.serve(async (_req) => {
   const sb = serviceClient();
   const nowMs = Date.now();
 
-  const { data: tokens } = await sb
+  const { data: rows } = await sb
     .from("device_tokens").select("user_id, token, utc_offset_minutes");
+  // One decision per PERSON, delivered to all of their devices. Iterating raw token rows
+  // (the first version) evaluated a multi-device user once per device.
+  const byUser = new Map<string, { user_id: string; utc_offset_minutes: number; tokens: string[] }>();
+  for (const r of rows ?? []) {
+    const e = byUser.get(r.user_id)
+      ?? { user_id: r.user_id, utc_offset_minutes: r.utc_offset_minutes, tokens: [] };
+    e.tokens.push(r.token);
+    byUser.set(r.user_id, e);
+  }
+  const tokens = [...byUser.values()];
 
   let sent = 0;
 
@@ -34,9 +45,13 @@ Deno.serve(async (_req) => {
       .from("progress").select("streak, last_played_day").eq("user_id", t.user_id).maybeSingle();
     if (!progress || progress.streak <= 0 || progress.last_played_day === localToday) continue;
 
-    await sendApnsPush(t.token, buildStreakAtRiskPayload(progress.streak))
-      .catch((e) => console.error("push failed", e));
-    sent++;
+    // Through `sendOnce` so this counts against the same daily ceiling as the other slots and
+    // leaves an audit row — see _shared/cadence.ts.
+    const result = await sendOnce(sb, {
+      userId: t.user_id, tokens: t.tokens, utcOffsetMinutes: t.utc_offset_minutes,
+      nowMs, payload: buildStreakAtRiskPayload(progress.streak),
+    });
+    if (result.sent) sent++;
   }
 
   console.log(`[streak-risk] checked=${tokens?.length ?? 0} sent=${sent}`);
