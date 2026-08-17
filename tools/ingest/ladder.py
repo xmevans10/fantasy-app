@@ -135,6 +135,10 @@ POOL_WIN_RATE_TOLERANCE_SLOW_BURN = 0.03
 # target from both sides (noise averages out across 18 iterations) while a screen is a single
 # pass/fail read where noise translates directly into a wrong admission.
 POOL_TRIALS = 4_000
+# The most drift a board may carry when it is rescuing a rung from having a single board. Half the
+# pin's 0.10 budget: enough headroom that a rescued board still verifies, tight enough that
+# "better than replayable" never becomes "unverified".
+POOL_RESCUE_TOLERANCE = 0.05
 # How many candidates to re-simulate per rung before giving up on filling its pool. Each check is
 # a full `TRIALS`-run duel, so this bounds the tool's runtime; candidates are tried nearest-
 # difficulty first, so the cap only ever discards the least suitable ones.
@@ -466,24 +470,52 @@ def build_pool(fmt: str, primary: Candidate, candidates: list[Candidate],
                "board_difficulty": round(primary.difficulty, 3), "seed": board_seed(rung, 0)}]
     consumed = [primary.puzzle_id]
 
+    tolerance = (POOL_WIN_RATE_TOLERANCE_SLOW_BURN if bot_style == "slowBurn"
+                 else POOL_WIN_RATE_TOLERANCE)
+    checked: set[str] = set()
+
+    # The window does NOT widen when a rung is short, and that was tried and reverted. Letting it
+    # stretch to 3x filled rung 5's pool with a board 0.107 away, which
+    # `testEachPoolIsDifficultyHomogeneous` correctly rejected: a rung whose two boards differ
+    # that much is two different rungs wearing one number. A short pool is reported instead — and
+    # the real fix is upstream, in `build_rungs`, which now prefers primaries that HAVE neighbours
+    # (see `poolable`). Fixing the choice of board beats loosening what the choice promises.
     near = sorted((c for c in candidates
                    if c.puzzle_id != primary.puzzle_id
                    and abs(c.difficulty - primary.difficulty) <= POOL_DIFFICULTY_TOLERANCE),
                   key=lambda c: abs(c.difficulty - primary.difficulty))
-
+    measured: list[tuple[float, Candidate]] = []
     for c in near[:POOL_MAX_CHECKS]:
         if len(boards) >= POOL_SIZE:
             break
         w = win_rate(fmt, c.diffs, bot_skill, true_keeps=c.true_keeps, bot_style=bot_style,
                      trials=POOL_TRIALS)
-        tolerance = (POOL_WIN_RATE_TOLERANCE_SLOW_BURN if bot_style == "slowBurn"
-                     else POOL_WIN_RATE_TOLERANCE)
+        measured.append((abs(w - target_win), c))
         if abs(w - target_win) > tolerance:
             continue
         boards.append({"rung": rung, "ordinal": len(boards), "puzzle_id": c.puzzle_id,
                        "board_difficulty": round(c.difficulty, 3),
                        "seed": board_seed(rung, len(boards))})
         consumed.append(c.puzzle_id)
+
+    # A rung with ONE board is the replay bug itself — the player retries and gets the board they
+    # just solved. If the strict screen leaves a rung there, spend some of the pin's headroom
+    # rather than ship it: `LadderCurveTests` fails past 0.10 drift and this screen is set at
+    # 0.03, so the closest near-miss can be admitted and still sit comfortably inside the pin.
+    #
+    # This relaxes the SCREEN (a conservative proxy with margin to spare), never the difficulty
+    # window — those boards are still within ±POOL_DIFFICULTY_TOLERANCE, so the rung's difficulty
+    # promise is untouched. Widening the difficulty window instead was tried first and produced a
+    # pool spanning 0.107, which is two different rungs wearing one number.
+    if len(boards) < 2 and measured:
+        drift, c = min(measured, key=lambda m: m[0])
+        if drift <= POOL_RESCUE_TOLERANCE:
+            boards.append({"rung": rung, "ordinal": len(boards), "puzzle_id": c.puzzle_id,
+                           "board_difficulty": round(c.difficulty, 3),
+                           "seed": board_seed(rung, len(boards))})
+            consumed.append(c.puzzle_id)
+            print(f"  rung {rung}: admitted a second board at drift {drift:.3f} "
+                  f"(screen {tolerance}) — the alternative was a replayable rung")
     return boards, consumed
 
 
@@ -491,6 +523,15 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
     by_mode: dict[str, list[Candidate]] = {}
     for c in pool:
         by_mode.setdefault(c.fmt, []).append(c)
+
+    # One character per rung, weakest first — see the assignment below. A roster that can't cover
+    # the ladder is a content problem with an exact answer, so it says the number rather than
+    # silently doubling somebody up.
+    ordered_bots = sorted(bots, key=lambda b: b["base_skill"])
+    if len(ordered_bots) < RUNG_COUNT:
+        raise SystemExit(
+            f"{len(ordered_bots)} characters for {RUNG_COUNT} rungs — the ladder is 1:1, so it "
+            f"needs {RUNG_COUNT - len(ordered_bots)} more in tools/roster/roster.json")
 
     used: set[str] = set()
     recent_sports: list[str] = []
@@ -526,20 +567,44 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
         band = [c for c in candidates
                 if abs(c.difficulty - want_difficulty) <= best + TOLERANCE]
 
+        # How many unused boards sit close enough to this one to join its pool.
+        #
+        # A rung's primary board is also the CENTRE of its pool, so choosing one that sits in a
+        # sparse part of the difficulty range condemns the rung to a pool of one — which is the
+        # replay bug the whole feature exists to remove. Rung 5 landed exactly there: a board at
+        # 0.325 with a single neighbour inside ±0.04 out of 190 released Keep4 boards.
+        #
+        # Preferring a poolable primary fixes it at the source. The alternative tried first —
+        # widening the pool's window when a rung starved — filled the pool by breaking the
+        # difficulty promise instead, and the homogeneity test rightly refused it.
+        pool_by_id = by_mode.get(fmt, [])
+
+        def poolable(c: Candidate) -> int:
+            return sum(1 for o in pool_by_id
+                       if o.puzzle_id != c.puzzle_id and o.puzzle_id not in used
+                       and abs(o.difficulty - c.difficulty) <= POOL_DIFFICULTY_TOLERANCE)
+
         def rank(c: Candidate) -> tuple:
-            # Unused-recently first, then nearest within the band.
+            # Enough-for-a-pool first, then unused-recently, then nearest within the band.
+            # Capped at POOL_SIZE so a board with thirty neighbours doesn't outrank a better-fitting
+            # one with a comfortable six — past the target, extra depth is worth nothing.
+            depth = min(poolable(c), POOL_SIZE - 1)
             recency = recent_sports.index(c.sport) if c.sport in recent_sports else -1
-            return (recency, abs(c.difficulty - want_difficulty))
+            return (-depth, recency, abs(c.difficulty - want_difficulty))
 
         pick = min(band, key=rank)
         used.add(pick.puzzle_id)
         recent_sports = ([pick.sport] + recent_sports)[:4]
 
-        # The character is chosen by ladder position, then the skill is solved **against that
-        # character's style** — order matters, because style moves the win rate a given skill
-        # produces. Solving first and assigning after would miscalibrate every non-baseline bot.
-        band = min(len(bots) - 1, (rung - 1) * len(bots) // RUNG_COUNT)
-        bot = sorted(bots, key=lambda b: b["base_skill"])[band]
+        # ONE CHARACTER PER RUNG. The roster is ordered by `base_skill` and assigned 1:1, so rung
+        # N is the Nth character and nobody is ever faced twice. Before this, six characters were
+        # banded across thirty rungs and you met Kyle five times — which undoes the entire point
+        # of giving them names, voices and faces.
+        #
+        # The character is chosen FIRST and the skill solved **against that character's style**,
+        # because style moves the win rate a given skill produces. Solving first and assigning
+        # after would miscalibrate every non-baseline bot.
+        bot = ordered_bots[rung - 1]
         skill, achieved = solve_bot_skill(fmt, pick.diffs, want_win, pick.true_keeps,
                                           bot.get("style", "consistent"))
         is_boss = rung % BOSS_EVERY == 0
@@ -591,12 +656,26 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
     # met, so lending it to rung 18 hands back exactly the recall advantage pools exist to remove.
     # When that starves a rung the fix is to deepen the released pool, not to double-book a board
     # — so a short pool is reported with a count, never padded.
-    for rung, fmt, pick, style, skill, achieved in plan:
+    # SCARCEST RUNG FIRST, not rung order.
+    #
+    # Pools are exclusive, so filling in rung order lets whoever goes first strip the shared
+    # neighbourhood. Rungs 4 and 5 both target ~0.32 difficulty; rung 4 filled to four boards and
+    # left rung 5 with one — a rung you can replay on the board you just solved, which is the
+    # exact bug this feature exists to remove. Serving the rung with the fewest options first
+    # costs the roomy rungs a board they had spares of.
+    def available(fmt: str, pick: Candidate) -> int:
+        return sum(1 for c in by_mode.get(fmt, [])
+                   if c.puzzle_id not in used and c.puzzle_id != pick.puzzle_id
+                   and abs(c.difficulty - pick.difficulty) <= POOL_DIFFICULTY_TOLERANCE)
+
+    for rung, fmt, pick, style, skill, achieved in sorted(
+            plan, key=lambda p: available(p[1], p[2])):
         rung_boards, consumed = build_pool(
             fmt, pick, [c for c in by_mode.get(fmt, []) if c.puzzle_id not in used],
             skill, style, achieved, rung)
         used.update(consumed)
         boards.extend(rung_boards)
+    boards.sort(key=lambda b: (b["rung"], b["ordinal"]))
     return rows, boards
 
 

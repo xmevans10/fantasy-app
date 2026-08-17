@@ -217,8 +217,14 @@ final class LadderCurveTests: XCTestCase {
     func testTheCurveDescendsAcrossTheLadder() throws {
         // One entry per RUNG. The fixture now holds one row per board, so comparing raw rows five
         // apart would compare a rung against itself and pass no matter what the curve did.
+        //
+        // Bosses are excluded. Every tenth rung takes a deliberate skill bump — it is *supposed*
+        // to be harder than the trend line — so comparing a boss against a normal rung five later
+        // measures the bump, not the curve, and fails on a ladder that is behaving correctly
+        // (rung 20 at 0.403 against rung 25 at 0.414). The property worth guarding is that the
+        // baseline descends; the spikes are a separate promise.
         let byRung = try rows()
-            .filter { ($0.rung.ordinal ?? 0) == 0 }
+            .filter { ($0.rung.ordinal ?? 0) == 0 && !$0.rung.is_boss }
             .sorted { $0.rung.rung < $1.rung.rung }
         let targets = byRung.compactMap(\.rung.target_win_rate)
         guard targets.count >= 10 else { throw XCTSkip("too few rungs seeded") }

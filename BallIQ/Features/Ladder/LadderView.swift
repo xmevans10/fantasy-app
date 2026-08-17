@@ -125,9 +125,8 @@ struct LadderView: View {
                     let tierRows = rows.filter { $0.rung.tier == tier }
                     if !tierRows.isEmpty {
                         Section {
-                            ForEach(Array(tierRows.enumerated()), id: \.element.id) { index, row in
-                                rungRow(row, introducesBot: index == 0
-                                        || tierRows[index - 1].bot.id != row.bot.id)
+                            ForEach(tierRows) { row in
+                                rungRow(row)
                             }
                         } header: {
                             tierHeader(tier, rows: tierRows)
@@ -156,12 +155,11 @@ struct LadderView: View {
         .background(Color.appBackground)
     }
 
+    /// One opponent, as the ladder lists them: portrait, name, tagline. Deliberately nothing
+    /// else — no format, no sport, no clock. Choosing a rung should read as picking who to face,
+    /// not as comparing spec sheets, and the briefing sheet is where what-you're-playing belongs.
     @ViewBuilder
-    /// `introducesBot` is true on the first rung a character guards in this tier. The style
-    /// line is a character introduction, not a rung property — repeating it on all five of The
-    /// Rookie's rungs turned the roster into five identical paragraphs, which is the
-    /// "how much expression before it distracts" line being crossed.
-    private func rungRow(_ row: LadderRungRow, introducesBot: Bool) -> some View {
+    private func rungRow(_ row: LadderRungRow) -> some View {
         let locked = row.state == .locked
         Button {
             guard !locked else { Haptics.reject(); return }
@@ -195,12 +193,14 @@ struct LadderView: View {
                                 .clipShape(Capsule())
                         }
                     }
-                    Text(row.boardLine).font(.label11).foregroundStyle(Color.textMuted)
-                    // The style line, not the tagline: on a roster the useful question is
-                    // "what is this one like to play", and the tagline answers "who are they".
-                    if introducesBot, !row.bot.styleLine.isEmpty {
-                        Text(row.bot.styleLine)
-                            .font(.label11).foregroundStyle(Color.textMuted.opacity(0.85))
+                    // The tagline, and nothing else. The list used to carry the board line
+                    // ("K4C4 · NFL"), the style line and the clock — which made choosing an
+                    // opponent a spec comparison rather than meeting someone, and told you which
+                    // game you were about to play before the briefing sheet got to. Who they are
+                    // is the hook; what they play is the briefing's job.
+                    if !row.bot.tagline.isEmpty {
+                        Text(row.bot.tagline)
+                            .font(.label11).foregroundStyle(Color.textMuted)
                             .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -208,9 +208,6 @@ struct LadderView: View {
                 Spacer(minLength: 4)
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Label(DuelSession.clockText(row.rung.timeLimitSeconds), systemImage: "timer")
-                        .font(.label11).monospacedDigit()
-                        .foregroundStyle(Color.textMuted)
                     if row.state == .cleared {
                         Image(systemName: "checkmark.seal.fill")
                             .font(.system(size: 14))
