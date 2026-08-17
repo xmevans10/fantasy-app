@@ -320,13 +320,42 @@ export function resetApnsTokenCacheForTesting(): void {
  * Sends one push via APNs. `deps` is an injection seam so tests can assert the exact request
  * shape (URL, headers, body) without a network call or a real APNs key.
  */
+/** APNs has two entirely separate hosts, and a token minted for one is invalid on the other. */
+export const APNS_HOSTS = {
+  production: "https://api.push.apple.com",
+  development: "https://api.sandbox.push.apple.com",
+} as const;
+export type ApnsEnvironment = keyof typeof APNS_HOSTS;
+
+/** Thrown when APNs says the token is dead (410 Unregistered, or 400 BadDeviceToken). */
+export class ApnsTokenInvalid extends Error {
+  constructor(readonly deviceToken: string, readonly status: number, readonly reason: string) {
+    super(`sendApnsPush: APNs rejected push (${status}): ${reason}`);
+    this.name = "ApnsTokenInvalid";
+  }
+}
+
+/**
+ * Sends one push.
+ *
+ * **`environment` is not optional in practice, and getting it wrong is silent.** This function
+ * hardcoded the production host, which meant every token minted by a debug or simulator build —
+ * i.e. every token this app has ever registered during development — was posted to a host that
+ * has never heard of it. Result: 100% of pushes in the log's lifetime failed `BadDeviceToken`,
+ * with the cadence layer above it working perfectly and nobody receiving anything.
+ *
+ * The environment is a property of the TOKEN, not of the server, so it is stored per row in
+ * `device_tokens.apns_environment` and passed in here. Defaulting to production keeps shipped
+ * behaviour for App Store builds.
+ */
 export async function sendApnsPush(
   deviceToken: string,
   payload: PushPayload,
-  deps: { fetch?: typeof fetch; now?: () => number } = {},
+  deps: { fetch?: typeof fetch; now?: () => number; environment?: ApnsEnvironment } = {},
 ): Promise<void> {
   const doFetch = deps.fetch ?? fetch;
   const now = deps.now ?? Date.now;
+  const host = APNS_HOSTS[deps.environment ?? "production"] ?? APNS_HOSTS.production;
 
   const { keyId, teamId, privateKey, bundleId } = await loadApnsConfig(doFetch);
 
@@ -336,7 +365,7 @@ export async function sendApnsPush(
   }
 
   const jwt = await apnsToken(keyId, teamId, privateKey, now);
-  const res = await doFetch(`https://api.push.apple.com/3/device/${deviceToken}`, {
+  const res = await doFetch(`${host}/3/device/${deviceToken}`, {
     method: "POST",
     headers: {
       authorization: `bearer ${jwt}`,
@@ -352,8 +381,33 @@ export async function sendApnsPush(
 
   if (!res.ok) {
     const reason = await res.text().catch(() => "");
-    // 410/Unregistered means the device token is stale — the caller (notify-* functions) should
-    // prune it from device_tokens; wiring that cleanup is a fast-follow, not done here.
+    // A dead token is a different thing from a failed send, and the caller needs to tell them
+    // apart to prune `device_tokens` (see `pruneDeadToken`). 410 is Apple's "this token is
+    // Unregistered"; 400 BadDeviceToken means it was never valid for this host/topic at all.
+    if (res.status === 410 || (res.status === 400 && reason.includes("BadDeviceToken"))) {
+      throw new ApnsTokenInvalid(deviceToken, res.status, reason);
+    }
     throw new Error(`sendApnsPush: APNs rejected push (${res.status}): ${reason}`);
+  }
+}
+
+/**
+ * Deletes a token APNs has told us is dead.
+ *
+ * Without this a token that is uninstalled, reinstalled or moved between environments stays in
+ * `device_tokens` forever, so every future send retries it and every send fails — which is how a
+ * fleet of four tokens produced a 0% delivery rate that looked like a configuration problem.
+ * Safe to call optimistically: deleting a row that is already gone is a no-op.
+ */
+export async function pruneDeadToken(
+  sb: { from: (t: string) => any },
+  deviceToken: string,
+): Promise<void> {
+  try {
+    await sb.from("device_tokens").delete().eq("token", deviceToken);
+    console.log(`[apns] pruned dead token ${deviceToken.slice(0, 8)}…`);
+  } catch (e) {
+    // Pruning is housekeeping — never let it mask or replace the original send failure.
+    console.log(`[apns] prune failed for ${deviceToken.slice(0, 8)}…:`, String(e));
   }
 }

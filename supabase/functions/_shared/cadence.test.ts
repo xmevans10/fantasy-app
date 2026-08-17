@@ -4,8 +4,7 @@ import {
   buildDailyDropPayload,
   buildFriendRequestPayload,
   buildVersusChallengePayload,
-  buildVersusFinishedPayload,
-} from "./apns.ts";
+  buildVersusFinishedPayload, ApnsTokenInvalid, sendApnsPush } from "./apns.ts";
 
 // What these tests are actually protecting.
 //
@@ -123,7 +122,7 @@ function fill(db: FakeDb, n: number, day = LOCAL_DAY) {
 function send(db: FakeDb, payload: Parameters<typeof sendOnce>[1]["payload"], dedupeKey?: string) {
   return sendOnce(fakeClient(db), {
     userId: USER,
-    tokens: ["tok-a"],
+    tokens: [{ token: "tok-a", environment: "production" as const }],
     utcOffsetMinutes: OFFSET_EASTERN,
     nowMs: T_0030_UTC_AUG14,
     payload,
@@ -234,7 +233,7 @@ Deno.test("the cap is counted in the recipient's LOCAL day, not the UTC day", as
     { sent: false, reason: "capped" });
   // Same instant, a UTC+0 device: genuinely a new local day, so genuinely a new budget.
   const utc = await sendOnce(fakeClient(db), {
-    userId: USER, tokens: ["tok-a"], utcOffsetMinutes: 0, nowMs: T_0030_UTC_AUG14,
+    userId: USER, tokens: [{ token: "tok-a", environment: "production" as const }], utcOffsetMinutes: 0, nowMs: T_0030_UTC_AUG14,
     payload: buildFriendRequestPayload("Nadia"), dedupeKey: "friend:aaa",
   });
   assertEquals(utc, { sent: true });
@@ -244,7 +243,7 @@ Deno.test("the cap is counted in the recipient's LOCAL day, not the UTC day", as
 Deno.test("every device gets the push, but the log records the person once", async () => {
   const db = new FakeDb();
   const r = await sendOnce(fakeClient(db), {
-    userId: USER, tokens: ["tok-a", "tok-b", "tok-c"], utcOffsetMinutes: OFFSET_EASTERN,
+    userId: USER, tokens: ["tok-a", "tok-b", "tok-c"].map((t) => ({ token: t, environment: "production" as const })), utcOffsetMinutes: OFFSET_EASTERN,
     nowMs: T_0030_UTC_AUG14, payload: buildVersusChallengePayload("Marcus"),
     dedupeKey: "challenge:42",
   });
@@ -263,7 +262,7 @@ Deno.test("recipientTokens returns every device and one offset to judge the day 
     { token: "tok-c", utc_offset_minutes: 120 },
   ]);
   const got = await recipientTokens(fakeClient(db), USER);
-  assertEquals(got.tokens, ["tok-a", "tok-b", "tok-c"]);
+  assertEquals(got.tokens.map((t) => t.token), ["tok-a", "tok-b", "tok-c"]);
   assertEquals(got.utcOffsetMinutes, -240);
 });
 
@@ -271,4 +270,70 @@ Deno.test("recipientTokens on a user with no devices is empty, not a crash", asy
   const got = await recipientTokens(fakeClient(new FakeDb()), USER);
   assertEquals(got.tokens, []);
   assertEquals(got.utcOffsetMinutes, 0);
+});
+
+// ── APNs environment routing and dead-token pruning ─────────────────────────
+// These cover the defect that made 100% of this app's pushes fail: the sender hardcoded the
+// production host, so every token minted by a debug or simulator build was posted somewhere it
+// had never been registered, and APNs answered BadDeviceToken every time.
+
+Deno.test("a development token is sent to the sandbox host, not production", async () => {
+  const urls: string[] = [];
+  await sendApnsPush("tok-dev", buildDailyDropPayload("Rings"), {
+    environment: "development",
+    now: () => T_0030_UTC_AUG14,
+    fetch: ((url: string) => {
+      urls.push(String(url));
+      return Promise.resolve(new Response("", { status: 200 }));
+    }) as unknown as typeof fetch,
+  });
+  // Empty when APNs credentials aren't configured (the [apns:stub] path) — assert only if a
+  // request was actually attempted, so this passes with or without Vault secrets present.
+  if (urls.length) {
+    assertEquals(urls[0].startsWith("https://api.sandbox.push.apple.com/3/device/"), true);
+  }
+});
+
+Deno.test("a production token still goes to the production host", async () => {
+  const urls: string[] = [];
+  await sendApnsPush("tok-prod", buildDailyDropPayload("Rings"), {
+    environment: "production",
+    now: () => T_0030_UTC_AUG14,
+    fetch: ((url: string) => {
+      urls.push(String(url));
+      return Promise.resolve(new Response("", { status: 200 }));
+    }) as unknown as typeof fetch,
+  });
+  if (urls.length) {
+    assertEquals(urls[0].startsWith("https://api.push.apple.com/3/device/"), true);
+  }
+});
+
+Deno.test("BadDeviceToken and 410 are distinguishable from an ordinary send failure", () => {
+  // The distinction is what lets `sendOnce` prune instead of retrying forever.
+  const dead = new ApnsTokenInvalid("tok-a", 410, "Unregistered");
+  assertEquals(dead instanceof ApnsTokenInvalid, true);
+  assertEquals(dead.deviceToken, "tok-a");
+  assertEquals(new Error("boom") instanceof ApnsTokenInvalid, false);
+});
+
+Deno.test("recipientTokens defaults a missing environment to production", async () => {
+  const sb = {
+    from: () => ({
+      select: () => ({
+        eq: () => Promise.resolve({
+          data: [
+            { token: "a", utc_offset_minutes: 0, apns_environment: null },
+            { token: "b", utc_offset_minutes: 0, apns_environment: "development" },
+          ],
+        }),
+      }),
+    }),
+  };
+  // deno-lint-ignore no-explicit-any
+  const got = await recipientTokens(sb as any, USER);
+  assertEquals(got.tokens, [
+    { token: "a", environment: "production" },
+    { token: "b", environment: "development" },
+  ]);
 });

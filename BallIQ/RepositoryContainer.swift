@@ -850,14 +850,34 @@ final class RepositoryContainer: ObservableObject {
         Task { await pushPendingDeviceTokenIfNeeded() }
     }
 
+    /// Which APNs environment this build's tokens are minted for.
+    ///
+    /// APNs runs two separate hosts and a token is only valid on the one that issued it. The
+    /// server cannot infer this — it has to be recorded per token — and getting it wrong is
+    /// silent: the send is accepted, then rejected with `BadDeviceToken`, which reads exactly
+    /// like a corrupt token. That is what made 100% of this app's pushes fail for months.
+    ///
+    /// `DEBUG` is the right discriminator rather than a proxy for one: Xcode's Debug build uses
+    /// the development provisioning profile (`aps-environment: development`), while archives —
+    /// including TestFlight, which is *not* sandbox — are Release and get production.
+    private static var apnsEnvironment: String {
+        #if DEBUG
+        return "development"
+        #else
+        return "production"
+        #endif
+    }
+
     private func pushPendingDeviceTokenIfNeeded() async {
         guard let client, let uid = auth.userID, let token = pendingDeviceToken else { return }
         struct Row: Encodable {
             let userId: String; let token: String; let platform: String; let utcOffsetMinutes: Int
+            let apnsEnvironment: String
         }
         let offsetMinutes = TimeZone.current.secondsFromGMT() / 60
         try? await client.upsert("device_tokens",
-            values: Row(userId: uid, token: token, platform: "ios", utcOffsetMinutes: offsetMinutes),
+            values: Row(userId: uid, token: token, platform: "ios", utcOffsetMinutes: offsetMinutes,
+                        apnsEnvironment: Self.apnsEnvironment),
             onConflict: "user_id,token")
     }
 

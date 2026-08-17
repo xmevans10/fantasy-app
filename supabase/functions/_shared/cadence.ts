@@ -20,7 +20,8 @@
 // trigger-driven categories are the opposite — two people can challenge you on the same
 // Tuesday and both are real — so they pass a key naming the event, and the guard narrows from
 // "once a day" to "once per event". See `sendOnce`'s `dedupeKey` for the rule it must satisfy.
-import { sendApnsPush, type PushPayload } from "./apns.ts";
+import { ApnsTokenInvalid, pruneDeadToken, sendApnsPush,
+         type ApnsEnvironment, type PushPayload } from "./apns.ts";
 import { localDayString } from "./localtime.ts";
 
 /** Ceiling per recipient per local day, across every category. */
@@ -75,6 +76,12 @@ export interface SendResult {
  * strictly better: a push that is recorded but not delivered costs the user one slot of silence,
  * while a push delivered but not recorded costs them an extra buzz and hides it from the audit.
  */
+/** A device and the APNs host its token is valid on — the two are inseparable, see apns.ts. */
+export interface DeviceToken {
+  token: string;
+  environment: ApnsEnvironment;
+}
+
 export async function sendOnce(
   sb: Client,
   opts: {
@@ -84,7 +91,7 @@ export async function sendOnce(
      * get the notification on both. Keying the log by token instead would have let one person
      * collect three pushes for one event; keying delivery by the log (the first version of
      * this) silently dropped every device after the first. */
-    tokens: string[];
+    tokens: DeviceToken[];
     utcOffsetMinutes: number;
     nowMs: number;
     payload: PushPayload;
@@ -125,11 +132,15 @@ export async function sendOnce(
   }
 
   let delivered = 0;
-  for (const token of tokens) {
+  for (const { token, environment } of tokens) {
     try {
-      await sendApnsPush(token, payload);
+      await sendApnsPush(token, payload, { environment });
       delivered++;
     } catch (e) {
+      // A dead token is not a transient failure — retrying it forever is how a small fleet of
+      // stale tokens turns into a permanent 0% delivery rate. Drop it and keep going; the other
+      // devices for this person still deserve the push.
+      if (e instanceof ApnsTokenInvalid) await pruneDeadToken(sb, token);
       console.error("[cadence] push failed", e);
     }
   }
@@ -152,12 +163,19 @@ export async function sendOnce(
 export async function recipientTokens(
   sb: Client,
   userId: string,
-): Promise<{ tokens: string[]; utcOffsetMinutes: number }> {
+): Promise<{ tokens: DeviceToken[]; utcOffsetMinutes: number }> {
   const { data } = await sb
-    .from("device_tokens").select("token, utc_offset_minutes").eq("user_id", userId);
-  const rows = (data ?? []) as Array<{ token: string; utc_offset_minutes: number | null }>;
+    .from("device_tokens").select("token, utc_offset_minutes, apns_environment")
+    .eq("user_id", userId);
+  const rows = (data ?? []) as Array<
+    { token: string; utc_offset_minutes: number | null; apns_environment: string | null }>;
   return {
-    tokens: rows.map((r) => r.token),
+    tokens: rows.map((r) => ({
+      token: r.token,
+      // Defaulting to production matches the column default and shipped App Store behaviour;
+      // a debug build corrects its own row on the next registration upsert.
+      environment: (r.apns_environment === "development" ? "development" : "production"),
+    })),
     utcOffsetMinutes: rows[0]?.utc_offset_minutes ?? 0,
   };
 }

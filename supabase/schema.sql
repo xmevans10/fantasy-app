@@ -654,6 +654,23 @@ create table if not exists public.device_tokens (
   primary key (user_id, token)
 );
 
+-- Which APNs host a token is valid on (migration 0023).
+--
+-- APNs runs two entirely separate environments and a token minted for one is meaningless on the
+-- other. `_shared/apns.ts` hardcoded the production host, so every token registered by a debug or
+-- simulator build was posted somewhere that had never heard of it: 100% of the pushes this app
+-- ever attempted failed with BadDeviceToken, while the cadence layer above worked perfectly and
+-- the failure looked like corrupt tokens.
+--
+-- The environment belongs to the TOKEN, not the server, so it is stored per row. Defaulting to
+-- 'production' is right for App Store builds; a debug build corrects its own row on the next
+-- registration upsert, so no back-fill guess is needed.
+alter table public.device_tokens
+  add column if not exists apns_environment text not null default 'production';
+alter table public.device_tokens drop constraint if exists device_tokens_apns_env;
+alter table public.device_tokens add constraint device_tokens_apns_env
+  check (apns_environment in ('production', 'development'));
+
 -- Per-category opt-out. Rows are created lazily (missing row = all categories on);
 -- `notify-*` Edge Functions treat an absent row as all-true.
 create table if not exists public.notification_settings (
