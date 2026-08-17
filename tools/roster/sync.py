@@ -125,6 +125,22 @@ def portraits(bots: list[dict]) -> None:
                 args += [f"--{flag}Variant", b[trait], f"--{flag}Probability", "100"]
             else:
                 args += [f"--{flag}Probability", "0"]
+
+        # WHICH WAY THEY FACE, and how squarely.
+        #
+        # open-peeps draws one pose: the head variants change hair and features, not orientation.
+        # Thirty portraits generated without touching the transform therefore came out facing the
+        # same way at the same angle, which read as thirty crops of one photoshoot rather than
+        # thirty people. `flip` turns a character to face the other way and `tilt` breaks the
+        # shared horizon by a couple of degrees.
+        #
+        # Both are authored per character rather than randomised, because which way someone faces
+        # is characterisation: the ones who face the player square-on (Nadia, Rex, Nova) read as
+        # confrontational, and a slight tilt suits the ones who don't take it seriously.
+        if b.get("flip"):
+            args += ["--flip", "horizontal"]
+        if b.get("tilt"):
+            args += ["--rotate", str(b["tilt"])]
         subprocess.run(args, check=True, capture_output=True)
         svg = work / "open-peeps-0.svg"
 
