@@ -47,7 +47,7 @@
      "tagline": "Been watching since before you were a rumour.",
      "style_line": "Slow to start, and then suddenly remembers everything.",
      "backstory": "Sixty years in front of the same television in the same chair. Couldn't tell you a single advanced metric and could tell you what the weather was like.",
-     "skinTone": "light", "hair": "balding", "hairColor": "white", "body": "chest", "clothing": "vneck", "clothingColor": "white", "eyes": "squint", "eyebrows": "concerned", "mouth": "grin", "facialHair": "mediumBeard", "accessory": "tinyGlasses", "flip": true, "tilt": -2,
+     "skinTone": "light", "hair": "balding", "hairColor": "white", "body": "chest", "clothing": "vneck", "clothingColor": "white", "eyes": "squint", "eyebrows": "concerned", "mouth": "openSmile", "facialHair": "mediumBeard", "accessory": "tinyGlasses", "flip": true, "tilt": -2,
      "teams": [{"sport": "baseball", "abbr": "CHC"}, {"sport": "nfl", "abbr": "GB"}],
      "voice": {"intro": "Take your time. I've got all day.", "ahead": "Told you I'd get there.", "behind": "Give it a minute.", "win": "Experience.", "lose": "Good for you, kid.", "playerPerfect": "Now that was worth watching."}},
 
@@ -71,7 +71,7 @@
      "tagline": "One club. Everything about it.",
      "style_line": "Encyclopaedic in a narrow lane, guesswork everywhere else.",
      "backstory": "Can name every player to wear the shirt since 1994, including the ones who never got off the bench. Could not name three players on any other team.",
-     "skinTone": "brown", "hair": "long", "hairColor": "brown", "body": "breasts", "clothing": "shirt", "clothingColor": "red", "eyes": "heart", "eyebrows": "raised", "mouth": "grin", "facialHair": "none", "accessory": "none", "tilt": -3,
+     "skinTone": "brown", "hair": "long", "hairColor": "brown", "body": "breasts", "clothing": "shirt", "clothingColor": "red", "eyes": "happy", "eyebrows": "raised", "mouth": "grin", "facialHair": "none", "accessory": "none", "tilt": -3,
      "teams": [{"sport": "soccer", "abbr": "ATM"}],
      "voice": {"intro": "Is this one of ours?", "ahead": "See, I know this one.", "behind": "Wrong club. Not my fault.", "win": "Obviously.", "lose": "Ask me about the other lot.", "playerPerfect": "You're not one of us, are you?"}},
 
