@@ -125,3 +125,60 @@ def test_all_niche_candidates_finds_a_viable_pairwise_combo():
     seasons = [_bio_wr(f"Player {i}", 1200 - i * 40) for i in range(10)]
     niche = generate.all_niche_candidates(seasons)
     assert any(t.key == "gen2-wr-all-undrafted-sub6" for t in niche)
+
+
+# ── Cross-sport generator ────────────────────────────────────────────────────────
+
+def test_nfl_registry_entry_matches_the_legacy_module_level_config():
+    # NFL's generated keys are recorded in `puzzle_history` signatures, so the registry must
+    # be a pure re-expression of the old POSITIONS/QUIRKS/DECADES globals, not a rewrite.
+    nfl = curation.SPORTS["nfl"]
+    assert nfl.positions is curation.POSITIONS and nfl.quirks is curation.QUIRKS
+    assert [s.key for s in nfl.slices] == [str(d) if d else "all" for d in curation.DECADES]
+    assert all(t.key.startswith(("gen-", "gen2-")) and t.sport == "nfl"
+               for t in generate._candidates(nfl))
+    # ...and no sport-namespaced prefix, which would change every NFL key.
+    assert not any(t.key.startswith("gen-nfl-") for t in generate._candidates(nfl))
+
+
+def test_every_other_sport_namespaces_its_keys_by_sport():
+    for name, cfg in curation.SPORTS.items():
+        if cfg.sport == "nfl":
+            continue
+        for t in generate._candidates(cfg):
+            assert t.key.startswith(f"gen-{cfg.sport}-"), (name, t.key)
+            assert t.sport == cfg.sport
+
+
+def test_position_scoped_quirks_only_pair_with_their_own_cohort():
+    # "Goal-scoring" is an oddity for a centre-back and a tautology for a striker: crossed with
+    # the forward spec it built "Goal-scoring forward seasons", a filter every card already met.
+    soccer = curation.SPORTS["soccer"]
+    keys = {t.key for t in generate._candidates(soccer) + generate._pairwise_candidates(soccer)}
+    scoped = [k for k in keys if "scoring-defender" in k or "-wall" in k]
+    assert scoped, "expected the back-line quirks to still generate themes"
+    assert all("-back-" in k for k in scoped)
+
+
+def test_unscoped_quirks_still_cross_every_cohort():
+    # The NBA cross-products are the point — a guard with 12 rebounds, a big man with 8 assists.
+    keys = {t.key for t in generate._candidates(curation.SPORTS["nba"])}
+    assert any(k.startswith("gen-nba-g-") and k.endswith("-glass") for k in keys)
+    assert any(k.startswith("gen-nba-big-") and k.endswith("-dime") for k in keys)
+
+
+def test_quirk_columns_are_promoted_to_the_front_of_the_card():
+    # A board titled "20-20 club seasons" has to actually show SB.
+    hitters = curation.SPORTS["baseball"]
+    theme = next(t for t in generate._candidates(hitters) if t.key.endswith("-all-power-speed"))
+    assert theme.columns[0].stat == "stolen_bases"
+    assert len(theme.columns) <= generate._MAX_COLUMNS
+    assert len({c.stat for c in theme.columns}) == len(theme.columns)   # no duplicate stat
+
+
+def test_all_niche_candidates_skips_sports_absent_from_the_pull():
+    # A run that pulled only NFL must not spend time building five sports' candidate spaces.
+    nfl_only = [RawSeason(name=f"P{i}", team_abbr="X", season_year=2015, sport="nfl",
+                          position="WR", stats={"receiving_yards": 1200.0}, headshot="h")
+                for i in range(3)]
+    assert all(t.sport == "nfl" for t in generate.all_niche_candidates(nfl_only))

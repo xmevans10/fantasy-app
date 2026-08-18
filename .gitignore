@@ -44,3 +44,6 @@ build-ipad/
 # Simulator build used to capture App Store screenshots
 # (xcodebuild -derivedDataPath build-shots)
 build-shots/
+
+# Landing-page raw captures are regenerated from the simulator (see tools/marketing/landing/build.py)
+tools/marketing/landing/raw/

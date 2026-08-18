@@ -7,7 +7,7 @@
 // offset at registration, which drifts if the user travels. Good enough for a 9am-ish nudge.
 import { serviceClient } from "../_shared/supabase.ts";
 import { buildDailyDropPayload } from "../_shared/apns.ts";
-import { sendOnce } from "../_shared/cadence.ts";
+import { DEVICE_TOKEN_COLUMNS, pushRecipients, sendOnce } from "../_shared/cadence.ts";
 import { candidateLocalDays, localDayString, localHour } from "../_shared/localtime.ts";
 
 const TARGET_LOCAL_HOUR = 9; // 9am
@@ -27,30 +27,42 @@ Deno.serve(async (_req) => {
   // yesterday, so the push would have named yesterday's theme while the app showed today's.
   // Three days is the complete set (see `candidateLocalDays`), and still one query.
   const days = candidateLocalDays(nowMs);
-  const { data: dailyRows } = await sb
-    .from("puzzles").select("sport, content, active_date")
-    .eq("format", "keep4").in("active_date", days);
-  const themesByDay = new Map<string, Map<string, string>>();
+
+  // `puzzle_history` — not `puzzles.active_date` — is what identifies the canonical daily.
+  //
+  // active_date is ALSO stamped in bulk across the trailing archive window by main.py's
+  // `assign_active_dates`, so several keep4 rows can share one date for one sport (live on
+  // 2026-08-18: seven for NFL on 2026-08-17). Selecting on active_date alone therefore named
+  // whichever row PostgREST happened to return last — routinely a stale archive row rather
+  // than the puzzle the app actually shows. daily_puzzle.py writes exactly one
+  // `puzzle_history` row per (served_date, sport, format), which is the mint itself, so
+  // resolving through it is the only way to name the row the player will open.
+  const { data: historyRows } = await sb
+    .from("puzzle_history").select("sport, puzzle_id, served_date")
+    .eq("format", "keep4").in("served_date", days);
+  const dailyIds = (historyRows ?? []).map((r) => r.puzzle_id as string);
+  const { data: dailyRows } = dailyIds.length
+    ? await sb.from("puzzles").select("id, content").in("id", dailyIds)
+    : { data: [] as Array<{ id: string; content: unknown }> };
+  const themeById = new Map<string, string>();
   for (const row of dailyRows ?? []) {
     const theme = (row.content as { theme?: string } | undefined)?.theme;
+    if (theme) themeById.set(row.id as string, theme);
+  }
+  const themesByDay = new Map<string, Map<string, string>>();
+  for (const row of historyRows ?? []) {
+    const theme = themeById.get(row.puzzle_id as string);
     if (!theme) continue;
-    const day = row.active_date as string;
+    const day = row.served_date as string;
     if (!themesByDay.has(day)) themesByDay.set(day, new Map());
     themesByDay.get(day)!.set(row.sport as string, theme);
   }
 
+  // One decision per PERSON, delivered to all of their devices, each on the APNs host its own
+  // token was minted for — see `pushRecipients`.
   const { data: rows } = await sb
-    .from("device_tokens").select("user_id, token, utc_offset_minutes");
-  // One decision per PERSON, delivered to all of their devices. Iterating raw token rows
-  // (the first version) evaluated a multi-device user once per device.
-  const byUser = new Map<string, { user_id: string; utc_offset_minutes: number; tokens: string[] }>();
-  for (const r of rows ?? []) {
-    const e = byUser.get(r.user_id)
-      ?? { user_id: r.user_id, utc_offset_minutes: r.utc_offset_minutes, tokens: [] };
-    e.tokens.push(r.token);
-    byUser.set(r.user_id, e);
-  }
-  const tokens = [...byUser.values()];
+    .from("device_tokens").select(DEVICE_TOKEN_COLUMNS);
+  const tokens = pushRecipients(rows);
 
   let sent = 0;
 

@@ -381,15 +381,27 @@ def build_rows(seasons: list[RawSeason]) -> tuple[list[PuzzleRow], list[PuzzleRo
     return keep4, whoami, report
 
 
+# Archival stamping starts this many days back. It must clear *every* day some device could
+# still be calling "today", not just this process's own date: real offsets span UTC-12…UTC+14,
+# so when the runner's clock rolls over to a new day a device in Hawaii is still on the
+# previous one. At offset 1 the archival row landed on that device's live "today" and — since
+# `RemotePuzzleRepository.pick` takes `rows.first(where: activeDate == today)` over a pool
+# ordered by id — a stable pool row like `baseball-ace-pitchers-00` sorts ahead of that day's
+# real mint (`…-daily-20260817`) and gets served as the daily, complete with a TODAY badge.
+# The same collision fed `notify-daily-drop` the wrong theme name. Offset 2 is the smallest
+# value that can't collide, since archival dates only ever run backwards.
+_ARCHIVE_MIN_OFFSET_DAYS = 2
+
+
 def assign_active_dates(rows: list[PuzzleRow], backfill_days: int) -> None:
     """Spread rows across the trailing `backfill_days` so the archive isn't empty. Deliberately
-    never stamps *today* (offset starts at 1, not 0) — today's exact date is reserved for
-    daily_puzzle.py's single guaranteed-novel pick, which the client (RemotePuzzleRepository)
-    trusts as an exact `active_date` match to mean "the puzzle for today." Every other row's
-    active_date stays archival/informational, same as before."""
+    never stamps today *or yesterday* (see `_ARCHIVE_MIN_OFFSET_DAYS`) — those dates are
+    reserved for daily_puzzle.py's guaranteed-novel per-sport picks, which the client
+    (RemotePuzzleRepository) trusts as an exact `active_date` match to mean "the puzzle for
+    today." Every other row's active_date stays archival/informational, same as before."""
     today = dt.date.today()
     for i, row in enumerate(rows):
-        offset = (i % max(1, backfill_days)) + 1
+        offset = (i % max(1, backfill_days)) + _ARCHIVE_MIN_OFFSET_DAYS
         row.active_date = (today - dt.timedelta(days=offset)).isoformat()
 
 

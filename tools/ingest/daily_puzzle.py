@@ -49,6 +49,13 @@ SPORTS: tuple[str, ...] = tuple(sorted(_VALID_SPORTS))
 # to expose most of a pool_cap=24 theme's ~17 possible clean-boundary windows.
 SEARCH_VARIANTS = 20
 
+# How long a theme *title* stays on the bench after a sport serves it. Signature-novelty
+# already guarantees the eight cards are never repeated, but a theme has many signatures, and
+# the title is what the player reads (and what the daily-drop push announces). Three weeks is
+# comfortably inside every sport's post-expansion viable space, and the cooldown is a soft
+# ranking penalty (see `pick_novel_puzzle`) so it can never block a mint if it isn't.
+THEME_COOLDOWN_DAYS = 21
+
 
 def _signature(theme_key: str, row: PuzzleRow) -> str:
     ids = sorted(p["id"] for p in row.content["players"])
@@ -70,16 +77,25 @@ def build_candidates(seasons: list[RawSeason],
 
 def pick_novel_puzzle(
     candidates: list[tuple[Theme, PuzzleRow]], served: set[str], today: dt.date,
+    recent_themes: set[str] | frozenset[str] = frozenset(),
 ) -> tuple[Theme, PuzzleRow, str] | None:
     """Shuffle deterministically per-day (varied day to day, reproducible within a day) while
     keeping niche candidates ranked ahead of curated ones, then return the first row whose
-    signature was never served. `None` if the entire space is exhausted."""
+    signature was never served. `None` if the entire space is exhausted.
+
+    `recent_themes` are theme *keys* this sport has served inside the cooldown window
+    (`THEME_COOLDOWN_DAYS`). They're sorted to the back rather than filtered out, so the
+    cooldown shapes the pick without ever being able to starve a slot: a sport whose whole
+    space is inside the window still mints, it just mints last-resort. That soft form matters
+    because signature-novelty is the hard guarantee here and must stay the binding one."""
     rng = random.Random(today.isoformat())
     order = list(range(len(candidates)))
     rng.shuffle(order)
     rank = {idx: r for r, idx in enumerate(order)}
     is_curated = lambda i: 0 if candidates[i][0].key.startswith("gen") else 1
-    ranked = sorted(range(len(candidates)), key=lambda i: (is_curated(i), rank[i]))
+    is_recent = lambda i: 1 if candidates[i][0].key in recent_themes else 0
+    ranked = sorted(range(len(candidates)),
+                    key=lambda i: (is_recent(i), is_curated(i), rank[i]))
     for i in ranked:
         theme, row = candidates[i]
         sig = _signature(theme.key, row)
@@ -110,20 +126,28 @@ def group_by_sport(
 def mint_batch(
     candidates_by_sport: dict[str, list[tuple[Theme, PuzzleRow]]], served: set[str],
     targets: list[tuple[dt.date, str]],
+    recent_themes: dict[str, set[str]] | None = None,
 ) -> list[tuple[dt.date, Theme, PuzzleRow, str]]:
     """Pick a novel puzzle for each (date, sport) slot in order, mutating `served` in place
     as it goes so a later slot in the same batch can never reuse a signature an earlier one
     just picked — not just signatures from before this call. A sport whose candidate space is
     exhausted (or empty) skips just its own slots — it must never block the other sports'
-    mints for the same date."""
+    mints for the same date.
+
+    `recent_themes` (per sport, from `puzzle_history` inside the cooldown window) is likewise
+    mutated as the batch runs, so minting 30 days in one invocation spreads themes across the
+    whole batch instead of only avoiding what was already in the table when it started."""
+    recent = {s: set(k) for s, k in (recent_themes or {}).items()}
     minted: list[tuple[dt.date, Theme, PuzzleRow, str]] = []
     for date, sport in targets:
-        pick = pick_novel_puzzle(candidates_by_sport.get(sport, []), served, date)
+        pick = pick_novel_puzzle(candidates_by_sport.get(sport, []), served, date,
+                                 recent.get(sport, frozenset()))
         if pick is None:
             print(f"[daily] {date.isoformat()} {sport}: candidate space exhausted — skipped")
             continue
         theme, row, sig = pick
         served.add(sig)
+        recent.setdefault(sport, set()).add(theme.key)
         minted.append((date, theme, _finalize_row(date, theme, row), sig))
     return minted
 
@@ -153,7 +177,8 @@ def main() -> int:
     target_dates = [start + dt.timedelta(days=i) for i in range(args.count)]
     targets = [(d, sport) for d in target_dates for sport in SPORTS]
 
-    from .upsert import fetch_history_signatures, fetch_served_pairs, upsert, upsert_history
+    from .upsert import (fetch_history_signatures, fetch_recent_theme_keys, fetch_served_pairs,
+                         upsert, upsert_history)
     if args.upsert:
         already = fetch_served_pairs([d.isoformat() for d in target_dates])
         for d, sport in targets:
@@ -176,12 +201,17 @@ def main() -> int:
 
     if args.upsert:
         served = fetch_history_signatures()
-        print(f"[daily] {len(served)} signatures already served (puzzle_history)")
+        cooldown_since = (start - dt.timedelta(days=THEME_COOLDOWN_DAYS)).isoformat()
+        recent_themes = fetch_recent_theme_keys(cooldown_since)
+        print(f"[daily] {len(served)} signatures already served (puzzle_history); "
+              f"{sum(len(v) for v in recent_themes.values())} theme(s) on cooldown since "
+              f"{cooldown_since}")
     else:
         served = set()
+        recent_themes = {}
         print("[daily] --dry-run: skipping the puzzle_history lookup (starting from empty history)")
 
-    minted = mint_batch(candidates_by_sport, served, targets)
+    minted = mint_batch(candidates_by_sport, served, targets, recent_themes)
     for date, theme, row, _ in minted:
         _print_pick(date, theme, row)
     if len(minted) < len(targets):

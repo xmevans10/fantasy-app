@@ -1,6 +1,9 @@
 """Tests for main.py's catalog assembly. Season, career, AND single-game rows all reach
 the catalog — every grain is creatable in the app."""
+import datetime as dt
 from unittest.mock import patch
+
+from tools.ingest import main
 
 from tools.ingest.main import catalog_rows, filter_new_catalog_rows, merge_nfl_bio
 from tools.ingest.models import RawSeason
@@ -174,3 +177,25 @@ def test_filter_new_catalog_rows_never_queries_a_column_no_row_can_fill():
          patch("tools.ingest.upsert.fetch_catalog_ids_missing", side_effect=_record):
         filter_new_catalog_rows(rows)
     assert queried == []
+
+
+# ── Archival active_date stamping ────────────────────────────────────────────────
+
+def test_assign_active_dates_never_lands_on_a_day_a_device_could_call_today():
+    """Archival stamping must clear today AND yesterday.
+
+    Device offsets span UTC-12…UTC+14, so the moment the runner's clock rolls over, devices
+    to its west are still on the previous calendar day. At the old offset-1 the archive row
+    landed on that live "today" — and `RemotePuzzleRepository.pick` takes the FIRST row whose
+    active_date matches, over a pool ordered by id, so a stable pool row (`…-00`) beat the
+    day's real mint (`…-daily-20260817`) and was served as the daily under a TODAY badge.
+    """
+    from tools.ingest.assemble import PuzzleRow
+    rows = [PuzzleRow(id=f"r{i}", sport="nfl", format="keep4", content={}) for i in range(90)]
+    main.assign_active_dates(rows, backfill_days=30)
+    today = dt.date.today()
+    stamped = {row.active_date for row in rows}
+    assert today.isoformat() not in stamped
+    assert (today - dt.timedelta(days=1)).isoformat() not in stamped
+    # Still a contiguous 30-day archive window, just shifted back off the live days.
+    assert stamped == {(today - dt.timedelta(days=d)).isoformat() for d in range(2, 32)}

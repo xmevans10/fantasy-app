@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { DAILY_PUSH_CAP, recipientTokens, sendOnce } from "./cadence.ts";
+import { DAILY_PUSH_CAP, pushRecipients, recipientTokens, sendOnce } from "./cadence.ts";
 import {
   buildDailyDropPayload,
   buildFriendRequestPayload,
@@ -336,4 +336,43 @@ Deno.test("recipientTokens defaults a missing environment to production", async 
     { token: "a", environment: "production" },
     { token: "b", environment: "development" },
   ]);
+});
+
+// The cron sweep's grouping. Regression guard for the gap left by the 2026-08-17 environment
+// change: the three cron notifiers kept building `string[]`, which `sendOnce` destructures
+// into `{ token: undefined, environment: undefined }` — a silent 100% delivery failure that
+// still logged every push as if it had gone out.
+Deno.test("pushRecipients groups a person's devices and keeps each token's environment", () => {
+  const got = pushRecipients([
+    { user_id: "u1", token: "a", utc_offset_minutes: -240, apns_environment: "development" },
+    { user_id: "u1", token: "b", utc_offset_minutes: 120, apns_environment: null },
+    { user_id: "u2", token: "c", utc_offset_minutes: 0, apns_environment: "production" },
+  ]);
+  assertEquals(got.length, 2);
+  assertEquals(got[0].tokens, [
+    { token: "a", environment: "development" },
+    { token: "b", environment: "production" },
+  ]);
+  // First row wins the offset, same rule as `recipientTokens`.
+  assertEquals(got[0].utc_offset_minutes, -240);
+  assertEquals(got[1].tokens, [{ token: "c", environment: "production" }]);
+});
+
+Deno.test("pushRecipients yields tokens sendOnce can actually destructure", () => {
+  const [only] = pushRecipients([
+    { user_id: "u1", token: "tok", utc_offset_minutes: 0, apns_environment: null },
+  ]);
+  // The exact shape the previous hand-rolled grouping got wrong.
+  for (const { token, environment } of only.tokens) {
+    assertEquals(typeof token, "string");
+    assertEquals(environment, "production");
+  }
+});
+
+Deno.test("pushRecipients tolerates a null query result and a null offset", () => {
+  assertEquals(pushRecipients(null), []);
+  const [one] = pushRecipients([
+    { user_id: "u1", token: "t", utc_offset_minutes: null, apns_environment: null },
+  ]);
+  assertEquals(one.utc_offset_minutes, 0);
 });
