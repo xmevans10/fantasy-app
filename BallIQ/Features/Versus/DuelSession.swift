@@ -265,7 +265,11 @@ struct DuelTimerBar: View {
                     if let ladder = session.ladder, let botScore {
                         // The bot's score, climbing in real time off its pre-computed beats. This
                         // is the entire "live opponent" mechanic — see `LadderRunSession`.
-                        Text(ladder.bot.avatar).font(.system(size: 15))
+                        // The portrait, not the emoji. `BotPortrait` falls back to the emoji on
+                        // its own for any character without a shipped asset, so this is strictly
+                        // better than the emoji it replaces rather than a second thing to keep in
+                        // sync. 22pt is the largest that fits the bar without growing its height.
+                        BotPortrait(bot: ladder.bot, size: 22)
                         Text(ladder.bot.name).font(.label11).lineLimit(1)
                         Text("\(botScore)/\(ladder.outOf)")
                             .font(.custom(FontName.condBlack, size: 15))
@@ -326,7 +330,7 @@ struct DuelTimerBar: View {
     private var reactionBubble: some View {
         if let reactionText, let bot = session.ladder?.bot {
             HStack(alignment: .top, spacing: 8) {
-                Text(bot.avatar).font(.system(size: 13))
+                BotPortrait(bot: bot, size: 20)
                 Text(reactionText)
                     .font(.label12)
                     .foregroundStyle(Color.textPrimary)
