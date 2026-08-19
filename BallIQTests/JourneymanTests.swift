@@ -270,3 +270,95 @@ final class JourneymanBotTests: XCTestCase {
         XCTAssertLessThan(meanGuesses(skill: 0.95), meanGuesses(skill: 0.35))
     }
 }
+
+// MARK: - Archive teasers
+
+final class JourneymanTeaserTests: XCTestCase {
+
+    /// Club names are deliberately distinctive words, not "A"/"B"/"C": a single letter is inside
+    /// half the English language, so the leak assertion below would fail on "**A** stop" and
+    /// "**A**bsence" and prove nothing. Same reason `tools/ingest/validate.py`'s clue-leak check
+    /// skips short name parts — a substring test needs substrings worth testing.
+    private func board(id: String = "b", clubs: [(String, Int)],
+                       truncated: Bool? = nil) -> JourneymanPuzzle {
+        var year = 2000
+        var stints: [JourneymanPuzzle.Stint] = []
+        for (i, club) in clubs.enumerated() {
+            stints.append(JourneymanPuzzle.Stint(order: i + 1, teamAbbr: club.0, teamName: club.0,
+                                                 league: "", firstYear: year,
+                                                 lastYear: year + club.1 - 1))
+            year += club.1
+        }
+        return JourneymanPuzzle(id: id, sport: .nfl, stints: stints,
+                                answer: .init(canonical: "Drew Brees", aliases: []),
+                                truncated: truncated)
+    }
+
+    /// The card has to read the same on every launch and every device — `String.hashValue` is
+    /// randomized per process, which is exactly the trap this seeds around.
+    func testATeaserIsStableForAGivenPuzzle() {
+        let puzzle = board(id: "nfl-someone-journeyman", clubs: [("Zephyrs", 3), ("Quokkas", 4), ("Vipers", 2)])
+        let first = JourneymanTeaser.line(for: puzzle)
+        for _ in 0..<50 {
+            XCTAssertEqual(JourneymanTeaser.line(for: puzzle), first)
+        }
+    }
+
+    /// Two different boards should mostly not read identically — a pool that collapsed to one
+    /// line would make the archive a wall of the same joke.
+    func testDifferentPuzzlesGetDifferentTeasers() {
+        let lines = (0..<40).map { i in
+            JourneymanTeaser.line(for: board(id: "id-\(i)", clubs: [("Zephyrs", 3), ("Quokkas", 4), ("Vipers", 2)]))
+        }
+        XCTAssertGreaterThan(Set(lines).count, 1)
+    }
+
+    /// The one hard rule: a teaser is derived from the path's shape and can never name the
+    /// player. Checked against every branch, using an answer whose name parts are common words.
+    func testATeaserNeverContainsTheAnswer() {
+        let shapes: [[(String, Int)]] = [
+            [("Zephyrs", 12), ("Quokkas", 2)],                                        // loyal
+            [("Zephyrs", 1), ("Quokkas", 1), ("Vipers", 3)],                               // cup of coffee
+            [("Zephyrs", 3), ("Quokkas", 2), ("Zephyrs", 2)],                               // return
+            [("Zephyrs", 2), ("Quokkas", 2), ("Vipers", 2), ("Wombats", 2)],                     // wanderer
+            [("Zephyrs", 2), ("Quokkas", 2), ("Vipers", 2), ("Wombats", 2), ("Xenons", 2), ("Yaks", 2)], // journeyman
+            [("Zephyrs", 4), ("Quokkas", 3)],                                         // default
+        ]
+        for (i, shape) in shapes.enumerated() {
+            for seed in 0..<20 {
+                let puzzle = board(id: "s\(i)-\(seed)", clubs: shape)
+                let line = JourneymanTeaser.line(for: puzzle)
+                XCTAssertFalse(line.localizedCaseInsensitiveContains("Drew"), line)
+                XCTAssertFalse(line.localizedCaseInsensitiveContains("Brees"), line)
+                for stint in puzzle.stints {
+                    XCTAssertFalse(line.contains(stint.teamName), line)
+                }
+                XCTAssertFalse(line.isEmpty)
+            }
+        }
+    }
+
+    /// A truncated board must say so, whatever else its shape qualifies for — the club count
+    /// printed underneath it is a floor, not a total, and a joke about a "tidy little career"
+    /// over a truncated 12-club path is simply false.
+    func testATruncatedPathAlwaysSaysSo() {
+        for seed in 0..<20 {
+            let puzzle = board(id: "t\(seed)", clubs: [("Zephyrs", 2), ("Quokkas", 3)], truncated: true)
+            let line = JourneymanTeaser.line(for: puzzle)
+            XCTAssertTrue(line.contains("more") || line.contains("recent"), line)
+        }
+    }
+
+    func testAReturnSpellIsDetectedByClubNameNotByCode() {
+        let returned = board(clubs: [("Zephyrs", 2), ("Quokkas", 2), ("Zephyrs", 2)])
+        XCTAssertTrue(JourneymanTeaser.returnedSomewhere(returned.stints))
+        let straightThrough = board(clubs: [("Zephyrs", 2), ("Quokkas", 2), ("Vipers", 2)])
+        XCTAssertFalse(JourneymanTeaser.returnedSomewhere(straightThrough.stints))
+    }
+
+    /// Every board gets a line, including the degenerate ones the pipeline never mints.
+    func testEveryBoardGetsALine() {
+        XCTAssertFalse(JourneymanTeaser.line(for: board(clubs: [("Zephyrs", 1)])).isEmpty)
+        XCTAssertFalse(JourneymanTeaser.line(for: board(clubs: [("Zephyrs", 20), ("Quokkas", 20)])).isEmpty)
+    }
+}

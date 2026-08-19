@@ -6000,6 +6000,216 @@
           }
         }
       }
+    },
+    "Knew every baggage carousel" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se sabía todas las cintas de equipaje"
+          }
+        }
+      }
+    },
+    "Kept a moving company in business" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantuvo viva a una empresa de mudanzas"
+          }
+        }
+      }
+    },
+    "Never quite finished a lease" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nunca llegó a terminar un contrato de alquiler"
+          }
+        }
+      }
+    },
+    "Collected jerseys, not rings" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coleccionó camisetas, no anillos"
+          }
+        }
+      }
+    },
+    "Packed light, just in case" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viajaba ligero, por si acaso"
+          }
+        }
+      }
+    },
+    "A well-travelled résumé" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un currículum con muchos kilómetros"
+          }
+        }
+      }
+    },
+    "Always someone's new signing" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siempre el fichaje nuevo de alguien"
+          }
+        }
+      }
+    },
+    "Left. Thought about it. Came back." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se fue. Lo pensó. Volvió."
+          }
+        }
+      }
+    },
+    "Absence made the heart grow fonder" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La distancia solo aumentó el cariño"
+          }
+        }
+      }
+    },
+    "You can go home again, apparently" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al parecer, sí se puede volver a casa"
+          }
+        }
+      }
+    },
+    "Several very brief hellos" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varios saludos muy breves"
+          }
+        }
+      }
+    },
+    "Some of these barely count" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunas de estas apenas cuentan"
+          }
+        }
+      }
+    },
+    "Blink and you'd have missed a stop" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si parpadeas, te pierdes una parada"
+          }
+        }
+      }
+    },
+    "Loyal, right up until the end" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fiel, hasta el final"
+          }
+        }
+      }
+    },
+    "Practically had a mortgage there" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Casi que tenía hipoteca allí"
+          }
+        }
+      }
+    },
+    "One club, and then one goodbye" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un club, y luego una despedida"
+          }
+        }
+      }
+    },
+    "There were more. We ran out of room." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hubo más. No cabían todos."
+          }
+        }
+      }
+    },
+    "This is only the recent stuff" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto es solo lo más reciente"
+          }
+        }
+      }
+    },
+    "Not much of a journeyman, this one" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De trotamundos tiene poco"
+          }
+        }
+      }
+    },
+    "A tidy little career" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una carrera de lo más ordenada"
+          }
+        }
+      }
+    },
+    "Made a move, made it count" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambió de aires, y le salió bien"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

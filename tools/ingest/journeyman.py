@@ -278,10 +278,187 @@ class JourneymanEntry:
     fame: float
     truncated: bool = False
     aliases: list[str] = field(default_factory=list)
+    # The archive card's one line — see `build_teaser`. Defaults to "" so an older pool file
+    # still loads; the client falls back to its own shape-only line when this is absent.
+    teaser: str = ""
 
     @property
     def key(self) -> str:
         return slug(self.canonical)
+
+
+# ── Teasers: the archive card's one line ─────────────────────────────────────
+#
+# The archive lists ~150 boards per sport, and its cards used to be titled "Career path #7" —
+# a filing label, which tells a browsing player nothing and invites nobody.
+#
+# A teaser is instead **a real, low-reveal fact about the subject, with a jab about the shape of
+# their career**: "Part of the 2003 draft class — and no forwarding address." That is per-player
+# and generated here rather than templated on the client, for the reason a client-side version
+# can never escape: the app deliberately never sees the answer, so it can only ever joke about
+# the *shape* of a path, and 150 boards would share ~20 lines. The minter has the subject's
+# actual facts, so every board gets its own.
+#
+# The facts come from `whoami_clues.DIMENSIONS` — the same ~30 builders the Who Am I? clue engine
+# uses, already pronoun-free and already carrying a `reveal` score. Two filters make a clue safe
+# as a teaser:
+#   - `reveal <= MAX_TEASER_REVEAL` — a teaser hints, it doesn't solve. Nicknames, stat lines and
+#     draft slots are exactly the dimensions that WOULD solve it, and they sit above the cut.
+#   - not the `team` family — the board already IS the club history, so "Suited up for 6
+#     different franchises" is the card's own subtitle wearing a hat.
+MAX_TEASER_REVEAL = 0.36
+_TEASER_EXCLUDED_FAMILIES = frozenset({"team"})
+
+# Characters the archive card can carry before the joke costs more than it earns. Measured on
+# device (iPhone 17, default text size): the card's title wraps at ~26 characters, so 72 is three
+# lines — which renders cleanly, PLAY button and all. The live pool's first draft ran to 96
+# ("Broke in during the 1970s and last played in 1993 — with a couple of stops you'd blink and
+# miss."), which is four-plus lines of card for one gag. Deliberately not tightened to two lines:
+# that would cost roughly half the fact, and every card would collapse toward "Pitcher — …".
+# `fit` spends the budget on the LONGEST fact that fits, for the same reason.
+MAX_TEASER_CHARS = 72
+
+# Jabs are continuations, not sentences: they follow a dash after the fact, so they start
+# lowercase and carry no final stop. Pronoun-free, like everything else the pipeline writes —
+# this catalog serves men's and women's sports.
+TEASER_JABS: dict[str, tuple[str, ...]] = {
+    "journeyman": (
+        "and never quite finished a lease",
+        "and a moving company's best customer",
+        "with the jersey collection to prove it",
+        "and no forwarding address",
+    ),
+    "wanderer": (
+        "and always someone's new signing",
+        "with a well-travelled résumé",
+        "and packed light, just in case",
+    ),
+    "return": (
+        "left, thought about it, came back",
+        "and living proof you can go home again",
+        "with one very familiar reunion",
+    ),
+    "brief": (
+        "with a couple of stops you'd blink and miss",
+        "and some hellos barely worth unpacking for",
+    ),
+    "loyal": (
+        "and practically had a mortgage there",
+        "and loyal right up until the end",
+    ),
+    "truncated": (
+        "and that's only the recent stuff",
+        "and more clubs than we had room for",
+    ),
+    # Two clubs exactly — the only shape that may say "one move".
+    "oneMove": (
+        "and made the one move count",
+        "with exactly one change of address",
+        "and not much of a journeyman, this one",
+    ),
+    # Three clubs. Says nothing about career LENGTH: the first draft paired "with a tidy little
+    # career to show for it" with "Lasted 12 seasons", and a jab that contradicts the fact next
+    # to it is worse than no jab. These are strictly about the size of the address book.
+    "short": (
+        "and a short list of addresses",
+        "and hardly a nomad",
+        "and not much of a journeyman, this one",
+    ),
+}
+
+
+def teaser_shape(stints: list["Stint"], truncated: bool) -> str:
+    """Which jab set this career earns, most specific first. Mirrors the client-side fallback
+    (`JourneymanTeaser.pool`) on purpose — the two must not disagree about what a career looks
+    like just because one of them also knows who the player is."""
+    if truncated:
+        return "truncated"
+    if len(stints) >= 6:
+        return "journeyman"
+    longest = max((s.last_year - s.first_year + 1 for s in stints), default=0)
+    if longest >= 10 and len(stints) <= 3:
+        return "loyal"
+    names = [s.team_name for s in stints]
+    if len(set(names)) < len(names):
+        return "return"
+    if sum(1 for s in stints if s.last_year == s.first_year) >= 2:
+        return "brief"
+    if len(stints) >= 4:
+        return "wanderer"
+    return "oneMove" if len(stints) <= 2 else "short"
+
+
+def build_teaser(entry, stints: list["Stint"], truncated: bool, seed: str) -> str:
+    """`"<low-reveal fact> — <shape jab>."` for one subject, deterministic per `seed`.
+
+    Deterministic because an archive card that reworded itself every time the pool was
+    regenerated would churn live content for no reason — and because a board a player looked at
+    yesterday should read the same today.
+    """
+    import random as _random
+
+    from . import whoami_clues
+
+    rng = _random.Random(f"journeyman-teaser-{seed}")
+    jabs = list(TEASER_JABS[teaser_shape(stints, truncated)])
+    rng.shuffle(jabs)
+
+    facts = []
+    for dimension in whoami_clues.DIMENSIONS:
+        if dimension.reveal > MAX_TEASER_REVEAL:
+            continue
+        if dimension.family in _TEASER_EXCLUDED_FAMILIES:
+            continue
+        text = dimension.build(entry, rng)
+        if text:
+            facts.append(text)
+    if not facts:
+        # Nothing fired — a subject this thin shouldn't have qualified, but a card still needs a
+        # title, so the jab stands on its own.
+        return jabs[0][0].upper() + jabs[0][1:] + "."
+    return fit(facts, jabs, rng)
+
+
+def fit(facts: list[str], jabs: list[str], rng) -> str:
+    """The longest `"<fact> — <jab>."` that fits `MAX_TEASER_CHARS`, else the shortest there is.
+
+    Deterministic: `facts` arrives in dimension order and `jabs` was already shuffled by the
+    seeded rng, so the same subject resolves to the same line every run.
+    """
+    def line(fact: str, jab: str) -> str:
+        return f"{fact} — {jab}."
+
+    pairs = [(fact, pick_jab(fact, jabs)) for fact in facts]
+    fitting = [p for p in pairs if len(line(*p)) <= MAX_TEASER_CHARS]
+    if fitting:
+        # Longest-that-fits, tie-broken by the seeded rng so two equally-long facts don't always
+        # resolve to whichever the dimension registry happens to list first.
+        rng.shuffle(fitting)
+        best = max(fitting, key=lambda p: len(line(*p)))
+        return line(*best)
+    return line(*min(pairs, key=lambda p: len(line(*p))))
+
+
+def pick_jab(fact: str, jabs: list[str]) -> str:
+    """The first jab that doesn't echo a word from `fact`, else the first one.
+
+    The fact and the jab are written independently and meet for the first time here, which is how
+    the live pool produced "Put together an 8-season career — with a tidy little career to show
+    for it." One repeated content word is all it takes to make a generated line read as generated.
+    """
+    for jab in jabs:
+        if not _shared_words(fact, jab):
+            return jab
+    return jabs[0]
+
+
+def _shared_words(a: str, b: str) -> set[str]:
+    """Content words in common. Five characters and up: "and"/"with"/"the" are shared by almost
+    every pair and say nothing about whether the line reads twice."""
+    def words(text: str) -> set[str]:
+        cleaned = "".join(ch.lower() if ch.isalnum() else " " for ch in text)
+        return {w for w in cleaned.split() if len(w) >= 5}
+    return words(a) & words(b)
 
 
 # ── The career path ───────────────────────────────────────────────────────────
@@ -388,7 +565,8 @@ def _headshot(rows: list[dict]) -> str:
 
 
 def build_entries(career_rows: list[dict], season_rows: list[dict],
-                  clubs: ClubNames, sport: str = "") -> list[JourneymanEntry]:
+                  clubs: ClubNames, sport: str = "",
+                  bio_by_name: dict[str, dict[str, str]] | None = None) -> list[JourneymanEntry]:
     """Qualified subjects with their career paths attached.
 
     Qualification is `whoami_pool`'s (see the module docstring); this adds the path gates. The
@@ -400,6 +578,7 @@ def build_entries(career_rows: list[dict], season_rows: list[dict],
     for row in season_rows:
         by_name[row["name"]].append(row)
 
+    bio_by_name = bio_by_name or {}
     candidates = whoami_pool.build_candidates(career_rows, season_rows, clubs.by_abbr)
     qualified = [c for c in candidates if c.sport in MIN_STINTS]
     qualified = whoami_pool.qualify(qualified)
@@ -414,6 +593,9 @@ def build_entries(career_rows: list[dict], season_rows: list[dict],
                          floor=floors.get(c.position, 0)):
             continue
         shown, was_truncated = truncate(stints)
+        # The same fact bag the Who Am I? clue engine reads, so the teaser draws on every
+        # dimension that pipeline already knows how to phrase (see `build_teaser`).
+        facts = whoami_pool.to_entry(c, fame[c.key], bio_by_name.get(c.name))
         entries.append(JourneymanEntry(
             sport=c.sport,
             canonical=c.name,
@@ -423,6 +605,7 @@ def build_entries(career_rows: list[dict], season_rows: list[dict],
             difficulty=tier_for_fame(fame[c.key]),
             fame=round(fame[c.key], 4),
             truncated=was_truncated,
+            teaser=build_teaser(facts, shown, was_truncated, seed=c.key),
         ))
     return entries
 
@@ -448,14 +631,16 @@ def select(entries: list[JourneymanEntry], cap: int = PER_SPORT_CAP) -> list[Jou
     return picked
 
 
-def generate_for_sport(sport: str, clubs: ClubNames) -> list[JourneymanEntry]:
+def generate_for_sport(sport: str, clubs: ClubNames,
+                       bio_by_name: dict[str, dict[str, str]] | None = None) -> list[JourneymanEntry]:
     from .upsert import WHOAMI_CATALOG_COLUMNS, fetch_player_seasons
     cols = WHOAMI_CATALOG_COLUMNS
     career_rows = fetch_player_seasons(sport, career=True, columns=cols)
     season_rows = fetch_player_seasons(sport, columns=cols)
     print(f"[journeyman] {sport}: {len(career_rows)} career + {len(season_rows)} season rows")
 
-    entries = build_entries(career_rows, season_rows, clubs, sport=sport)
+    entries = build_entries(career_rows, season_rows, clubs, sport=sport,
+                            bio_by_name=bio_by_name)
     picked = select(entries)
     tiers = collections.Counter(e.difficulty for e in picked)
     paths = collections.Counter(len(e.stints) for e in picked)
@@ -492,6 +677,8 @@ def build_row(entry: JourneymanEntry, suffix: str = "") -> PuzzleRow:
         content["headshot"] = entry.headshot
     if entry.truncated:
         content["truncated"] = True
+    if entry.teaser:
+        content["teaser"] = entry.teaser
     return PuzzleRow(id=puzzle_id, sport=entry.sport, format="journeyman", content=content)
 
 
@@ -566,9 +753,13 @@ def main() -> int:
 
     if args.write or args.dry_run:
         clubs = load_club_names()
+        # NFL is the only sport with a bio provider; every other one draws its teaser from the
+        # catalog dimensions alone (era, longevity, position), which always fire.
+        bio = whoami_pool.load_nfl_bio_by_name() if "nfl" in sports else {}
         generated: list[JourneymanEntry] = []
         for sport in sports:
-            generated.extend(generate_for_sport(sport, clubs))
+            generated.extend(generate_for_sport(sport, clubs,
+                                                bio_by_name=bio if sport == "nfl" else {}))
         if args.write:
             # Sports not regenerated in this run keep their existing entries, so
             # `--sport nfl` is a refresh of NFL rather than a truncation of the pool.
@@ -588,6 +779,7 @@ def main() -> int:
                                                for s in e.stints)
                         prefix = "… → " if e.truncated else ""
                         print(f"  {sport:8} {tier:6} {e.canonical:26} {prefix}{path_text}")
+                        print(f"  {'':8} {'':6} {'':26} \"{e.teaser}\"")
 
     entries = all_entries(ingest_main.DATA_DIR)
     if args.write_bundle:

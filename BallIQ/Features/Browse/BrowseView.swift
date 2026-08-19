@@ -168,8 +168,8 @@ struct BrowseView: View {
                             card(whoAmI: p, number: i + 1)
                         }
                     } else {
-                        ForEach(Array(journeyman.enumerated()), id: \.element.id) { i, p in
-                            card(journeyman: p, number: i + 1)
+                        ForEach(teasedJourneyman, id: \.puzzle.id) {
+                            card(journeyman: $0.puzzle, title: $0.title)
                         }
                     }
                 }
@@ -239,6 +239,18 @@ struct BrowseView: View {
         }
     }
 
+    /// Deliberately **not** numbered the way repeated Keep4 themes are below. A theme name is an
+    /// identity, so "Best Season #2" is useful; a teaser is a joke, and 150 archive boards drawn
+    /// from ~21 lines means almost every card would carry a "#n" — which is the filing label this
+    /// replaced, stapled onto the punchline. The list is keyed on `puzzle.id`, and a repeated
+    /// line costs a browsing player nothing.
+    private var teasedJourneyman: [(puzzle: JourneymanPuzzle, title: String)] {
+        // The minted teaser knows who the player is; the local one only knows the shape of the
+        // path. Prefer the real thing, fall back so a pre-teaser or hand-authored board still
+        // gets a title rather than a blank card.
+        journeyman.map { ($0, $0.teaser ?? JourneymanTeaser.line(for: $0)) }
+    }
+
     /// Themes repeat across many distinct puzzles, so number duplicates ("… #2") to tell them apart.
     private var numberedKeep4: [(puzzle: Keep4Puzzle, title: String)] {
         let visible = filteredKeep4
@@ -279,12 +291,14 @@ struct BrowseView: View {
         secondaryAction: { shareTarget = SharablePuzzle(whoAmI: p) }
     }
 
-    /// Anonymous for the same reason as Who Am I?'s card: a title, and even the club count on
-    /// its own, is a hint. The count stays because the board shows it in the first second
-    /// anyway, and it's what tells a browsing player which boards look long.
-    private func card(journeyman p: JourneymanPuzzle, number: Int) -> some View {
+    /// Titled with a joke about the shape of the career (`JourneymanTeaser`) rather than the
+    /// filing label these carried first ("Career path #7"), which told a browsing player nothing
+    /// and invited nobody. The teaser is derived only from the path, so it can't leak the answer
+    /// — see that type. The club count stays: the board shows it in the first second anyway, and
+    /// it's what tells a browser which boards look long.
+    private func card(journeyman p: JourneymanPuzzle, title: String) -> some View {
         DailyGameCard(formatName: "Journeyman", symbol: "arrow.triangle.branch", sport: p.sport,
-                      title: "Career path #\(number)",
+                      title: title,
                       subtitle: String(localized: "\(p.stints.count) clubs · archive"),
                       difficulty: p.difficulty,
                       completed: container.hasCompletedToday(puzzleID: p.id),

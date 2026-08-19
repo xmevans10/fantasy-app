@@ -27,6 +27,17 @@ struct JourneymanPuzzle: Identifiable, Codable, Equatable {
     /// The answer's headshot, for the reveal card. Empty/nil renders the initials fallback,
     /// exactly like every other player surface.
     let headshot: String?
+    /// The archive card's one line — a low-reveal fact about the subject with a jab about the
+    /// shape of their career ("Part of the 2003 draft class — and no forwarding address").
+    /// Written by `tools/ingest/journeyman.py`'s `build_teaser`, which draws it from the same
+    /// dimension library the Who Am I? clue engine uses and leak-checks it against the answer.
+    ///
+    /// Optional, and the client has a real fallback (`JourneymanTeaser`) rather than a blank
+    /// title: content minted before this existed carries no teaser, and a hand-authored board
+    /// never would. The fallback can only joke about the path's shape — it deliberately cannot
+    /// see the answer — which is exactly why the good version is generated server-side.
+    let teaser: String?
+
     /// True when the career had more clubs than the board shows (`journeyman.py` truncates very
     /// long paths to the most recent `MAX_STINTS`). Stated on the board rather than hidden: a
     /// player counting clubs to identify a journeyman deserves to know the count is a floor.
@@ -90,7 +101,7 @@ struct JourneymanPuzzle: Identifiable, Codable, Equatable {
 
     init(id: String, sport: Sport, stints: [Stint], answer: WhoAmIPuzzle.AcceptedAnswer,
          difficulty: SubjectDifficulty? = nil, position: String? = nil,
-         headshot: String? = nil, truncated: Bool? = nil) {
+         headshot: String? = nil, truncated: Bool? = nil, teaser: String? = nil) {
         self.id = id
         self.sport = sport
         self.stints = stints
@@ -99,6 +110,7 @@ struct JourneymanPuzzle: Identifiable, Codable, Equatable {
         self.position = position
         self.headshot = headshot
         self.truncated = truncated
+        self.teaser = teaser
     }
 }
 

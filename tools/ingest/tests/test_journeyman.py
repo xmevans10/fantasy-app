@@ -405,3 +405,132 @@ def test_an_uncontested_code_keeps_its_name_even_when_a_curated_club_shares_the_
             {"sport": "soccer", "team_abbr": "MUN", "league": "England",
              "full_name": "Manchester United"}]
     assert journeyman.contested_club_codes(rows) == set()
+
+
+# ── Teasers ───────────────────────────────────────────────────────────────────
+
+def _facts(**kw):
+    from tools.ingest.models import WhoAmIEntry
+    base = dict(sport="nfl", canonical="Test Player", aliases=[], position="Running back",
+                first_year=2010, last_year=2018, teams=["Chargers", "Saints"],
+                stat_line="8,000 rushing yards", jersey="21", fact="", seasons=9)
+    base.update(kw)
+    return WhoAmIEntry(**base)
+
+
+def _stints(*spans):
+    return [Stint(f"T{i}", f"Team {i}", "", lo, hi) for i, (lo, hi) in enumerate(spans)]
+
+
+def test_a_teaser_is_a_fact_plus_a_jab():
+    line = journeyman.build_teaser(_facts(), _stints((2010, 2014), (2015, 2018)),
+                                   False, seed="test-player")
+    assert " — " in line and line.endswith(".")
+    fact, jab = line.rsplit(" — ", 1)
+    assert fact and jab[0].islower()
+
+
+def test_the_same_subject_always_gets_the_same_teaser():
+    """An archive card that reworded itself on every pool regeneration would churn live content
+    for nothing, and a board looked at yesterday should read the same today."""
+    args = (_facts(), _stints((2010, 2014), (2015, 2018)), False)
+    first = journeyman.build_teaser(*args, seed="stable")
+    assert all(journeyman.build_teaser(*args, seed="stable") == first for _ in range(20))
+
+
+def test_different_subjects_get_different_teasers():
+    """The whole reason this moved into the minter: a client-side version can only joke about
+    the shape, so 150 boards would share one small pool of lines."""
+    lines = {journeyman.build_teaser(_facts(first_year=2000 + i, last_year=2008 + i),
+                                     _stints((2000 + i, 2004 + i), (2005 + i, 2008 + i)),
+                                     False, seed=f"player-{i}")
+             for i in range(30)}
+    assert len(lines) > 10
+
+
+def test_a_teaser_never_uses_a_revealing_dimension():
+    """A teaser hints; it must not solve. The dimensions that WOULD solve it — nickname, career
+    stat line, draft slot, the teams themselves — all sit above the reveal cut or in the excluded
+    family, so a subject carrying every fact still can't have them printed on the card."""
+    from tools.ingest import whoami_clues
+    rich = _facts(college="LSU", college_conference="SEC", height_in=72, weight_lb=210,
+                  birth_year=1988, draft_year=2010, draft_round=1, draft_pick=3,
+                  draft_team="Chargers", nickname="The Bus", accolades=["MVP"],
+                  best_season={"year": 2014, "team": "Saints", "line": "1,500 yards"})
+    lines = {journeyman.build_teaser(rich, _stints((2010, 2014), (2015, 2018)), False,
+                                     seed=f"rich-{i}")
+             for i in range(60)}
+    for line in lines:
+        for banned in ("The Bus", "MVP", "1,500", "8,000", "3rd", "Chargers", "Saints"):
+            assert banned not in line, line
+    # And the cut is a real filter, not an accident of which dimensions happened to fire: each
+    # answer-shaped dimension is excluded BY the rule, either for revealing too much or for
+    # being the board itself.
+    by_key = {d.key: d for d in whoami_clues.DIMENSIONS}
+    for key in ("nickname", "statLine", "bestSeason", "draftPick", "teams", "lastTeam"):
+        d = by_key[key]
+        excluded = d.reveal > journeyman.MAX_TEASER_REVEAL or d.family == "team"
+        assert excluded, f"{key} could be printed on an archive card"
+
+
+def test_a_jab_never_echoes_a_word_from_the_fact():
+    """The live pool produced "Put together an 8-season career — with a tidy little career to
+    show for it."; one repeated content word is all it takes to read as generated."""
+    for shape, jabs in journeyman.TEASER_JABS.items():
+        chosen = journeyman.pick_jab("Put together an 8-season career", list(jabs))
+        assert "career" not in chosen or all("career" in j for j in jabs), (shape, chosen)
+
+
+def test_every_shape_has_jabs_and_is_reachable():
+    assert journeyman.teaser_shape(_stints(*[(2000 + i, 2000 + i) for i in range(6)]), False) == "journeyman"
+    assert journeyman.teaser_shape(_stints((2000, 2012), (2013, 2015)), False) == "loyal"
+    assert journeyman.teaser_shape(_stints((2000, 2002), (2003, 2005), (2006, 2008), (2009, 2011)), False) == "wanderer"
+    assert journeyman.teaser_shape(_stints((2000, 2002), (2003, 2005)), True) == "truncated"
+    assert journeyman.teaser_shape(_stints((2000, 2000), (2001, 2001), (2002, 2004)), False) == "brief"
+    assert journeyman.teaser_shape(_stints((2000, 2003), (2004, 2007)), False) == "oneMove"
+    assert journeyman.teaser_shape(_stints((2000, 2002), (2003, 2005), (2006, 2008)), False) == "short"
+    assert set(journeyman.TEASER_JABS) >= {"journeyman", "loyal", "wanderer", "truncated",
+                                           "brief", "short", "oneMove", "return"}
+
+
+def test_only_a_two_club_career_may_claim_one_move():
+    """"Made the one move count" was landing on three-club careers, which is two moves."""
+    for shape, jabs in journeyman.TEASER_JABS.items():
+        if shape == "oneMove":
+            continue
+        assert not any("one move" in j for j in jabs), shape
+
+
+def test_a_returning_career_is_detected_by_club_name():
+    stints = [Stint("A", "Raiders", "", 2000, 2002), Stint("B", "Packers", "", 2003, 2005),
+              Stint("C", "Raiders", "", 2006, 2008)]
+    assert journeyman.teaser_shape(stints, False) == "return"
+
+
+def test_the_teaser_is_leak_checked_before_upsert():
+    entry = _entry(canonical="Drew Brees")
+    entry.teaser = "Played from 2001 to 2020 — and Brees never finished a lease."
+    with pytest.raises(ValueError, match="leaks"):
+        validate.validate(journeyman.build_row(entry))
+
+
+def test_a_teaser_fits_the_card():
+    """The card's title is two-ish lines of condensed black; the first draft produced a 96-char
+    line, which is four lines of card for one gag."""
+    facts = ["Broke in during the 1970s and last played in 1993", "Pitcher", "Debuted in 1974"]
+    line = journeyman.fit(facts, list(journeyman.TEASER_JABS["brief"]), __import__("random").Random(0))
+    assert len(line) <= journeyman.MAX_TEASER_CHARS, line
+
+
+def test_a_teaser_spends_its_budget_on_the_longest_fact_that_fits():
+    """Capping length must not collapse every card to "Pitcher — …": the point of the cap is to
+    fit the card, not to throw away the most informative hint."""
+    facts = ["Pitcher", "Debuted in 1974"]
+    line = journeyman.fit(facts, ["and hardly a nomad"], __import__("random").Random(0))
+    assert line.startswith("Debuted in 1974")
+
+
+def test_an_unfittable_teaser_falls_back_to_the_shortest_rather_than_nothing():
+    facts = ["A" * 200]
+    line = journeyman.fit(facts, ["and hardly a nomad"], __import__("random").Random(0))
+    assert line.endswith("and hardly a nomad.")

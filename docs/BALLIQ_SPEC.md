@@ -29,7 +29,10 @@ what changed most recently (DB hand-offs, TestFlight, App Store submission), see
   1000 / 800 / 600 / 400 / 200. The path is fully visible from the first second — an earlier
   build revealed it a club at a time and was corrected mid-build, because the drip-feed made the
   game about when to spend a reveal rather than who the player is. Same obscurity tiers as Who Am
-  I? (`SubjectDifficulty`, now shared), same guess typeahead as The Grid.
+  I? (`SubjectDifficulty`, now shared), same guess typeahead as The Grid. Archive cards are
+  titled with a minted **teaser** — a low-reveal fact about the subject plus a jab about the
+  career's shape ("Part of the 2003 draft class — and no forwarding address"), generated from the
+  Who Am I? clue dimensions under a reveal cap and leak-checked against the answer.
 
 **Surfaces (6 tabs, all live — none are stubs):** Home (daily games, streak, sport filter,
 rank), Leagues (weekly XP cohorts via `CohortRepository`/`Cohort.swift` — standings,

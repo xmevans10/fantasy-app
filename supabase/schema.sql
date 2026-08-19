@@ -316,6 +316,15 @@ create index if not exists player_seasons_sport_id_idx
 -- find nothing — baseball headshots blew the statement timeout (57014) in CI 2026-08-01/03.
 -- Partial indexes make the missing-set lookup an index-only scan of the tiny missing set,
 -- in id order as the keyset needs. Applied live 2026-08-03 (migration 0014).
+-- `upsert.fetch_player_seasons` pages by (sport = $1, [career = $2,] id > last, order by id).
+-- `player_seasons_sport_id_idx` above serves the sport + keyset half but leaves `career` as a
+-- filter: measured 2026-08-19, the FIRST page of the NFL career-grain fetch discarded 15,341
+-- rows to return 1,000 and took 1.0s, and deeper pages walk proportionally more — the pull began
+-- exceeding the statement timeout (57014) mid-run. (sport, career, id) matches the predicate and
+-- leaves the keyset column last: index scan, no filter, no sort. 16,461 buffers -> 999.
+-- Applied live (migration 0020).
+create index if not exists player_seasons_sport_grain_id_idx
+  on public.player_seasons (sport, career, id);
 -- The guess typeahead's payload (`grid_player_names`, used by The Grid and Journeyman) is
 -- `array_agg(distinct name order by name) where sport = $1 and not career`. With no index that
 -- is a seq scan + sort of the whole table: fine under the SQL editor's timeout, 57014 under the

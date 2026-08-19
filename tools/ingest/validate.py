@@ -85,6 +85,24 @@ def _validate_journeyman(row: PuzzleRow) -> None:
     answer = c.get("answer", {})
     if not answer.get("canonical"):
         raise ValueError(f"{row.id}: missing canonical answer")
+    # The teaser is the archive card's title, so it leaks exactly as badly as a clue would.
+    # Same word-boundary rule and the same >=4-character floor as `_validate_whoami` — see the
+    # long note there for why a bare substring test is unusable.
+    teaser = c.get("teaser")
+    if teaser is not None:
+        if not teaser.strip():
+            raise ValueError(f"{row.id}: empty teaser")
+        leaked = _leaked_name_part(answer["canonical"], teaser)
+        if leaked:
+            raise ValueError(f"{row.id}: teaser leaks {leaked!r} from the answer: {teaser!r}")
+
+
+def _leaked_name_part(canonical: str, text: str) -> str | None:
+    """The first name part `text` gives away, or None. Whole words only, >=4 characters."""
+    parts = [part.strip(".").lower() for part in canonical.split()]
+    lowered = text.lower()
+    return next((p for p in parts
+                 if len(p) >= 4 and re.search(rf"\b{re.escape(p)}\b", lowered)), None)
 
 
 def _validate_whoami(row: PuzzleRow) -> None:
@@ -130,11 +148,8 @@ def _validate_whoami(row: PuzzleRow) -> None:
     # innocent tennis clue "Competed for USA" as leaking "Pete" (Sampras), and short common
     # names are inside ordinary English words often enough that the check would either be
     # switched off or routinely overridden — neither of which catches a real leak.
-    name_parts = [part.strip(".").lower() for part in answer["canonical"].split()]
     for cl in clues:
-        text = cl["text"].lower()
-        leaked = next((p for p in name_parts
-                       if len(p) >= 4 and re.search(rf"\b{re.escape(p)}\b", text)), None)
+        leaked = _leaked_name_part(answer["canonical"], cl["text"])
         if leaked:
             raise ValueError(f"{row.id}: clue {cl['order']} leaks {leaked!r} "
                              f"from the answer: {cl['text']!r}")
