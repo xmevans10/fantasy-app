@@ -200,6 +200,14 @@ _CURATED_ALIASES: list[tuple[list[str], str, str]] = [
     (["Galatasaray Spor Kulübü", "Galatasaray"], "Turkey", "GAL"),
     (["Fenerbahçe Spor Kulübü", "Fenerbahce", "Fenerbahçe"], "Turkey", "FEN"),
     (["Beşiktaş Jimnastik Kulübü", "Besiktas", "Beşiktaş"], "Turkey", "BES"),
+    # Belgium — Anderlecht is here rather than in the override CSV because it is a SPELLING
+    # problem, not a code problem. It already owns RAND (319 live Belgium rows), via an
+    # override keyed on "royal anderlecht" — the name ESPN sends. Transfermarkt sends "RSC
+    # Anderlecht", which normalizes differently, misses that override, and derives RAN, where
+    # it collided with Rangers in the 2026-08-18 sweep. The override table is keyed one code
+    # per (name, country) and enforces globally unique codes, so it cannot express "two
+    # spellings, one club"; that is exactly what this alias layer is for.
+    (["RSC Anderlecht", "Royal Sporting Club Anderlecht", "Anderlecht"], "Belgium", "RAND"),
 ]
 
 

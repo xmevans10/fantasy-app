@@ -27,6 +27,22 @@ _COLLISION_PAIRS = [
      "Sport Club Internacional", "Brazil"),
     ("Athletic Club Bilbao", "Spain", "Aris Thessalonikis", "Greece"),
     ("Hamburger Sport Verein", "Germany", "Hamarkameratene", "Norway"),
+    # The eleven the 2026-08-18 weekly sweep raised, once Transfermarkt's coverage widened.
+    # Winner-vs-loser was decided by querying live `player_seasons` for each code, not by
+    # which club is more famous -- see `test_live_code_owner_keeps_its_code`.
+    ("Amiens SC", "France", "Angers SCO", "France"),
+    ("Gençlerbirliği", "Turkey", "Genoa", "Italy"),
+    ("KAA Gent", "Belgium", "KRC Genk", "Belgium"),
+    ("Middlesbrough", "England", "Midtjylland", "Denmark"),
+    ("Rangers Football Club", "Scotland", "Randers FC", "Denmark"),
+    ("Rangers Football Club", "Scotland", "RSC Anderlecht", "Belgium"),
+    ("Real Madrid", "Spain", "RCD Mallorca", "Spain"),
+    ("Stade Brestois", "France", "SC Braga", "Portugal"),
+    ("Sporting Clube de Portugal", "Portugal", "SC Poltava", "Ukraine"),
+    ("UC Sampdoria", "Italy", "US Sassuolo", "Italy"),
+    ("UC Sampdoria", "Italy", "Union Saint Gilloise", "Belgium"),
+    ("Vendsyssel FF", "Denmark", "Viborg FF", "Denmark"),
+    ("West Bromwich Albion", "England", "Werder Bremen", "Germany"),
 ]
 
 
@@ -48,6 +64,42 @@ def test_famous_club_keeps_its_original_code_in_a_collision():
         "Football Club Internazionale Milano S.p.A.", country="Italy") == "INT"
     assert resolve_code("Athletic Club Bilbao", country="Spain") == "ATH"
     assert resolve_code("Hamburger Sport Verein", country="Germany") == "HAM"
+
+
+def test_live_code_owner_keeps_its_code():
+    """Whoever already has rows under a code keeps it — otherwise those rows silently start
+    meaning a different club, and `player_seasons` stores only the code, never the club name.
+
+    Counted from production on 2026-08-19, and it contradicts the intuitive "more famous club
+    wins" answer five times out of eleven: GEN is Gençlerbirliği (217 rows) not Genoa (1), SBR
+    is Stade Brestois (175) not Braga, WBR is West Brom (156) not Werder, VFF is Vendsyssel
+    (its single 2018 top-flight season, 8 rows) not Viborg, and ASC is Amiens (62 rows ending
+    exactly at their 2020 relegation) not Angers."""
+    assert resolve_code("Gençlerbirliği", country="Turkey") == "GEN"
+    assert resolve_code("Stade Brestois", country="France") == "SBR"
+    assert resolve_code("West Bromwich Albion", country="England") == "WBR"
+    assert resolve_code("Vendsyssel FF", country="Denmark") == "VFF"
+    assert resolve_code("Amiens SC", country="France") == "ASC"
+    assert resolve_code("Middlesbrough", country="England") == "MID"
+    assert resolve_code("Rangers Football Club", country="Scotland") == "RAN"
+    assert resolve_code("Real Madrid", country="Spain") == "RMA"
+
+
+def test_anderlecht_resolves_the_same_from_either_provider_spelling():
+    # ESPN sends "Royal Anderlecht" (an override row); Transfermarkt sends "RSC Anderlecht",
+    # which normalizes differently, missed that override, derived RAN and collided with
+    # Rangers. Both must land on RAND, where 319 live Belgium rows already are.
+    assert resolve_code("Royal Anderlecht", country="Belgium") == "RAND"
+    assert resolve_code("RSC Anderlecht", country="Belgium") == "RAND"
+    assert resolve_code("Anderlecht", country="Belgium") == "RAND"
+
+
+def test_usa_is_no_longer_a_club_code():
+    # `player_seasons.team_abbr` is shared across sports and tennis stores NATIONALITY there,
+    # so a soccer club coded "USA" is actively misleading. All three colliding clubs moved.
+    for name, country in [("UC Sampdoria", "Italy"), ("US Sassuolo", "Italy"),
+                          ("Union Saint Gilloise", "Belgium")]:
+        assert resolve_code(name, country=country) != "USA"
 
 
 def test_disambiguated_codes_stay_short():

@@ -13,6 +13,7 @@ al nassr,Saudi Arabia,ANAS
 al riyadh saudi,Saudi Arabia,ARIY
 al taawoun,Saudi Arabia,ATAA
 alanyaspor,Turkey,ALAT
+angers sco,France,ANGE
 ao platanias,Greece,APLA
 aps atromitos athinon,Greece,AATR
 aris thessalonikis,Greece,ATHE
@@ -62,6 +63,7 @@ fudbalski klub čukarički beograd,Serbia,FKL9
 futbolniy klub dynamo kyiv,Ukraine,FUTU
 fußballclub red bull salzburg,Austria,FRED
 gaziantepspor,Turkey,GAZT
+genoa,Italy,GENO
 giresunspor,Turkey,GIRT
 godoy cruz antonio tomba,Argentina,GCRU
 göteborgs atlet och idrottssällskap,Sweden,GATL
@@ -78,12 +80,14 @@ klub sportowy górnik zabrze sportowa spółka akcyjna,Poland,KSPO
 klub sportowy lechia gdańsk,Poland,KLSP
 kolos kovalivka,Ukraine,KKOV
 krasnodar,Russia,KRAR
+krc genk,Belgium,GENK
 kryvbas kryvyi rig,Ukraine,KKRY
 livingston,Scotland,LIVS
 los angeles galaxy,United States,LANG
 malmö fotbollförening,Sweden,MFOT
 mariupol,Ukraine,MARU
 melbourne city,Australia,MCIT
+midtjylland,Denmark,FCMD
 millonarios,,MILX
 minnesota united,USA (MLS),MNU
 minnesota united,United States,MUNI
@@ -99,6 +103,8 @@ parma,Italy,PARI
 pendikspor,Turkey,PENT
 pfk stal kamyanske,Ukraine,PSTA
 pumas unam,Mexico,PUM
+randers,Denmark,RNDR
+rcd mallorca,Spain,MALL
 real valladolid,Spain,RVAL
 red bull new york,United States,RBUL
 regatas vasco gama,Brazil,RVAS
@@ -111,10 +117,12 @@ san jose earthquakes,United States,SJOS
 san martín san juan,Argentina,SMAR
 sandefjord fotball,Norway,SFOT
 sarpsborg fotballforening,Norway,SAFO
+sc braga,Portugal,BRAG
 sc cambuur leeuwarden,Netherlands,SCAM
 sc dinamo,Romania,SDIN
 sc fotbal fcsb,Romania,SCFO
 sc paderborn,Germany,SCP
+sc poltava,Ukraine,POLT
 sevastopol,Ukraine,SEVU
 shonan bellmare,Japan,SHBE
 sigma olomouc,Czech Republic,SOLO
@@ -133,14 +141,19 @@ swansea city,England,SCIT
 são paulo,Brazil,SÃPA
 toronto,United States,TORU
 turn sportverein egger glas hartberg,Austria,TSPO
+uc sampdoria,Italy,SAMP
+union saint gilloise,Belgium,USGB
 unione sportiva lecce,Italy,USPO
 unione sportiva sassuolo,Italy,UNSP
 unión magdalena,,UMAG
 us salernitana,Italy,USAL
+us sassuolo,Italy,SASS
 valenciennes,France,VALF
 varazdin,Croatia,VARC
 vejle boldklub,Denmark,VBOL
+viborg ff,Denmark,VIBO
 viking fotballklubb,Norway,VFOT
+werder bremen,Germany,WERD
 wigan athletic,England,WATH
 yokohama marinos,Japan,YMAR
 zorya lugansk,Ukraine,ZLUG
