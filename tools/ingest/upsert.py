@@ -243,6 +243,28 @@ def fetch_served_pairs(dates: list[str]) -> set[tuple[str, str]]:
     return {(r["served_date"], r["sport"]) for r in rows}
 
 
+def fetch_recent_theme_keys(since: str) -> dict[str, set[str]]:
+    """`{sport: {theme_key, …}}` for every keep4 daily served on/after `since` (YYYY-MM-DD).
+
+    Feeds `daily_puzzle`'s theme cooldown. The picker already excludes exact player-set
+    signatures forever, but a *theme* has many signatures, so a sport with six curated themes
+    re-served the same title constantly — live on 2026-08-18, baseball had served "Ace pitching
+    seasons" 9 times in 23 days, and the daily-drop push names the theme, so the repetition was
+    the most visible thing about the whole content pipeline. This is what lets the picker
+    prefer a title the sport hasn't shown recently."""
+    if not since:
+        return {}
+    base, key = _require_env()
+    endpoint = (f"{base}/rest/v1/puzzle_history?select=sport,theme_key&format=eq.keep4"
+                f"&served_date=gte.{since}")
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    rows = _get_json(endpoint, headers, what="recent theme keys")
+    out: dict[str, set[str]] = {}
+    for r in rows:
+        out.setdefault(r["sport"], set()).add(r["theme_key"])
+    return out
+
+
 def fetch_whoami_history() -> list[dict]:
     """Every Who Am I? pick ever served (sport, player_key, served_date) — small,
     service-role-only table (one row per day per sport), so a full pull is fine. Feeds

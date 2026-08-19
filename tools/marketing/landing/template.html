@@ -1,0 +1,381 @@
+<!-- Self-hosted, this file is the whole document, so it carries its own viewport rule:
+     without it a phone lays the page out at 980px and zooms out, which is the wrong
+     failure mode for an iPhone app's landing page. Published as an Artifact the wrapper
+     supplies an identical rule, so this is a harmless duplicate there. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playbook</title>
+<style>
+/* ── Tokens ───────────────────────────────────────────────────────────────────
+   Lifted from BallIQ/DesignSystem/Theme.swift so the page and the app are one
+   brand: warm cream ground, near-black warm ink, electric blue accent, volt
+   green for the KEEP state, gold for grades. Light is the base palette; dark is
+   redefined token-only, twice, so it wins under both `prefers-color-scheme` and
+   an explicit `data-theme` stamp.                                            */
+:root {
+  --ground:        #F4F1E9;
+  --surface:       #FFFFFF;
+  --surface-muted: #ECE6D7;
+  --ink:           #15120B;
+  --ink-2:         #57503F;
+  --ink-3:         #8C8470;
+  --hairline:      #E0D9C7;
+  --border-strong: #C9C0AB;
+  --accent:        #1E50FF;
+  --accent-text:   #1A47E0;
+  --accent-bg:     #E3E9FF;
+  --volt:          #C2F03A;
+  --volt-ink:      #4F6A00;
+  --volt-bg:       #EEFAC4;
+  --gold:          #E0A92E;
+  --gold-ink:      #8A6410;
+  --danger:        #C5251B;
+  --danger-bg:     #FCE2E0;
+  /* The closing panel inverts against the cream page in light mode; in dark it becomes a
+     RAISED surface instead of a second inversion, which would have put warm grey on cream
+     at about 3:1. Its own tokens, so both themes are stated rather than inherited. */
+  --cta-bg:     #15120B;
+  --cta-ink:    #F4F1E9;
+  --cta-muted:  #B4AD9A;
+  --shadow: 0 1px 0 rgba(21,18,11,.05), 0 12px 28px -18px rgba(21,18,11,.45);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:        #0E0C08;
+    --surface:       #1A1611;
+    --surface-muted: #232019;
+    --ink:           #F4F1E9;
+    --ink-2:         #CFC8B8;
+    --ink-3:         #978E7C;
+    --hairline:      #322E26;
+    --border-strong: #423D33;
+    --accent:        #1E50FF;
+    --accent-text:   #7C9CFF;
+    --accent-bg:     #16224F;
+    --volt:          #C2F03A;
+    --volt-ink:      #C2F03A;
+    --volt-bg:       #2A3500;
+    --gold:          #E0A92E;
+    --gold-ink:      #E0A92E;
+    --danger:        #FF6E63;
+    --danger-bg:     #3A0F0B;
+    --cta-bg:        #232019;
+    --cta-ink:       #F4F1E9;
+    --cta-muted:     #978E7C;
+    --shadow: 0 1px 0 rgba(0,0,0,.4), 0 14px 30px -18px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"] {
+  --ground:        #0E0C08;
+  --surface:       #1A1611;
+  --surface-muted: #232019;
+  --ink:           #F4F1E9;
+  --ink-2:         #CFC8B8;
+  --ink-3:         #978E7C;
+  --hairline:      #322E26;
+  --border-strong: #423D33;
+  --accent:        #1E50FF;
+  --accent-text:   #7C9CFF;
+  --accent-bg:     #16224F;
+  --volt:          #C2F03A;
+  --volt-ink:      #C2F03A;
+  --volt-bg:       #2A3500;
+  --gold:          #E0A92E;
+  --gold-ink:      #E0A92E;
+  --danger:        #FF6E63;
+  --danger-bg:     #3A0F0B;
+  --cta-bg:        #232019;
+  --cta-ink:       #F4F1E9;
+  --cta-muted:     #978E7C;
+  --shadow: 0 1px 0 rgba(0,0,0,.4), 0 14px 30px -18px rgba(0,0,0,.9);
+}
+
+/* The app's own typefaces (SIL Open Font License), inlined — the artifact CSP
+   blocks font CDNs, and a silent fallback would lose the whole identity. */
+@font-face { font-family:"Anton"; src:url(__ANTON__) format("truetype"); font-weight:400; font-display:block; }
+@font-face { font-family:"SairaCond"; src:url(__SAIRA_COND_BLACK__) format("truetype"); font-weight:900; font-display:block; }
+@font-face { font-family:"Saira"; src:url(__SAIRA_REGULAR__) format("truetype"); font-weight:400; font-display:swap; }
+@font-face { font-family:"Saira"; src:url(__SAIRA_SEMIBOLD__) format("truetype"); font-weight:600; font-display:swap; }
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Saira", ui-sans-serif, -apple-system, system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+.narrow { max-width: 62ch; }
+
+h1, h2, h3 { font-family: "Anton", "SairaCond", Impact, sans-serif; font-weight: 400;
+             text-transform: uppercase; text-wrap: balance; margin: 0; line-height: .95;
+             letter-spacing: -0.005em; }
+h1 { font-size: clamp(2.9rem, 8.5vw, 5.6rem); }
+h2 { font-size: clamp(1.9rem, 4.4vw, 3rem); }
+h3 { font-size: 1.15rem; letter-spacing: .01em; }
+p  { margin: 0; }
+
+.eyebrow {
+  font-family: "SairaCond", sans-serif; font-weight: 900; text-transform: uppercase;
+  letter-spacing: .14em; font-size: .78rem; color: var(--ink-2);
+}
+.lede { font-size: clamp(1.05rem, 2.2vw, 1.3rem); color: var(--ink-2); }
+
+a { color: var(--accent-text); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 2px;
+}
+
+/* ── Masthead ─────────────────────────────────────────────────────────────── */
+.masthead {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 22px 0 18px; border-bottom: 1px solid var(--hairline);
+}
+.wordmark {
+  font-family: "Anton", sans-serif; text-transform: uppercase; font-size: 1.45rem;
+  letter-spacing: .02em; display: inline-flex; align-items: baseline; gap: .5ch;
+}
+.wordmark span { color: var(--accent-text); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: .6ch; text-decoration: none;
+  font-family: "SairaCond", sans-serif; font-weight: 900; text-transform: uppercase;
+  letter-spacing: .06em; font-size: .95rem; padding: 11px 20px; border-radius: 999px;
+  background: var(--ink); color: var(--ground); border: 1px solid var(--ink);
+  transition: transform .12s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-ghost  { background: transparent; color: var(--ink); }
+
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+.hero { padding: clamp(44px, 8vw, 88px) 0 0; }
+.hero h1 { margin-bottom: 18px; }
+.hero .lede { max-width: 46ch; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 28px; }
+.hero-note { font-size: .9rem; color: var(--ink-2); }
+
+
+/* ── App screens ───────────────────────────────────────────────────
+   Raw simulator captures -- not mockups, not re-creations. They already carry the
+   app's own card treatment (ink outline + hard offset shadow), so the page adds only
+   a corner radius and a hairline; anything more would fight the artwork. */
+.screen {
+  display: block; width: 100%; height: auto; border-radius: 26px;
+  border: 1px solid var(--border-strong); background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.hero-grid {
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: clamp(28px, 5vw, 64px); align-items: center;
+  padding: clamp(40px, 7vw, 76px) 0 0;
+}
+@media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+.hero-shot { max-width: 340px; justify-self: center; width: 100%; }
+.caption {
+  margin-top: 12px; font-size: .82rem; color: var(--ink-2); text-align: center;
+  max-width: 34ch; margin-left: auto; margin-right: auto;
+}
+.showcase { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+            gap: clamp(28px, 5vw, 56px); align-items: center; }
+@media (max-width: 880px) { .showcase { grid-template-columns: 1fr; } }
+.showcase .shot { max-width: 320px; width: 100%; justify-self: center; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+           gap: clamp(20px, 2.6vw, 28px); }
+.g-item { display: flex; flex-direction: column; gap: 12px; }
+.g-item .tag { font-family: "SairaCond", sans-serif; font-weight: 900; font-size: .66rem;
+               letter-spacing: .1em; text-transform: uppercase; color: var(--accent-text);
+               background: var(--accent-bg); align-self: flex-start; padding: 2px 7px;
+               border-radius: 4px; }
+.g-item p { font-size: .9rem; color: var(--ink-2); }
+
+/* ── Sections ─────────────────────────────────────────────────────────────── */
+section { padding: clamp(56px, 9vw, 104px) 0 0; }
+.sec-head { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+
+.formats { display: grid; grid-template-columns: repeat(auto-fit, minmax(228px, 1fr)); gap: 1px;
+           background: var(--hairline); border: 1px solid var(--hairline); border-radius: 16px;
+           overflow: hidden; }
+.fmt { background: var(--surface); padding: 22px 20px; display: flex; flex-direction: column; gap: 8px; }
+.fmt .tag { font-family: "SairaCond", sans-serif; font-weight: 900; font-size: .66rem;
+            letter-spacing: .1em; text-transform: uppercase; color: var(--accent-text);
+            background: var(--accent-bg); align-self: flex-start; padding: 2px 7px; border-radius: 4px; }
+.fmt p { font-size: .93rem; color: var(--ink-2); }
+
+.rail { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 24px; border-top: 2px solid var(--ink); padding-top: 24px; }
+.rail .n { font-family: "Anton", sans-serif; font-size: clamp(2rem, 4.5vw, 2.9rem);
+           font-variant-numeric: tabular-nums; line-height: 1; }
+.rail .k { font-size: .86rem; color: var(--ink-2); margin-top: 6px; }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+@media (max-width: 760px) { .split { grid-template-columns: 1fr; gap: 28px; } }
+.notes { display: flex; flex-direction: column; gap: 18px; }
+.note { display: flex; flex-direction: column; gap: 5px; padding-left: 16px;
+        border-left: 2px solid var(--hairline); }
+.note b { font-family: "SairaCond", sans-serif; font-weight: 900; text-transform: uppercase;
+          letter-spacing: .04em; font-size: .9rem; }
+.note span { font-size: .93rem; color: var(--ink-2); }
+
+.cta {
+  margin-top: clamp(56px, 9vw, 104px); background: var(--cta-bg); color: var(--cta-ink);
+  border-radius: 24px; padding: clamp(34px, 6vw, 64px);
+  display: flex; flex-direction: column; gap: 20px; align-items: flex-start;
+}
+.cta h2 { color: var(--cta-ink); }
+.cta p { color: var(--cta-muted); max-width: 48ch; }
+.cta .eyebrow { color: var(--volt); }
+.cta .btn { background: var(--volt); border-color: var(--volt); color: #15120B; }
+
+footer { margin-top: 64px; padding: 28px 0 56px; border-top: 1px solid var(--hairline);
+         font-size: .86rem; color: var(--ink-2); display: flex; flex-wrap: wrap;
+         gap: 8px 22px; align-items: center; }
+footer a { color: var(--ink-2); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="wordmark">Play<span>book</span></div>
+    <a class="btn btn-accent" href="https://apps.apple.com/app/id6785275045">Get it on iPhone</a>
+  </header>
+
+  <div class="hero-grid">
+    <div>
+      <p class="eyebrow">Daily sports trivia · NFL · NBA · MLB · Soccer · Tennis</p>
+      <h1>Everyone says they know ball.</h1>
+      <p class="lede">Playbook settles it with box scores. Eight real player-seasons, dealt
+        one at a time, no opinions and no multiple choice — keep the four that actually
+        scored the most, cut the four that didn't.</p>
+      <div class="hero-actions">
+        <a class="btn" href="https://apps.apple.com/app/id6785275045">Download free</a>
+        <span class="hero-note">Free daily puzzles · iPhone, iOS 17+</span>
+      </div>
+    </div>
+    <div class="hero-shot">
+      <img class="screen" src="__SHOT_GAME__" width="680" height="1477"
+           fetchpriority="high" decoding="async"
+           alt="A Keep 4 / Cut 4 card in Playbook: Marcedes Lewis, Jacksonville, 2012, with his full receiving line and Cut and Keep buttons.">
+      <p class="caption">Card 1 of 8. You see the season, not the answer — and each
+        decision is final.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head narrow">
+      <p class="eyebrow">Why it's hard</p>
+      <h2>The stat line is right there. It still isn't enough.</h2>
+      <p class="lede">Every card shows the full box score. What it hides is the grade —
+        the same fantasy-points math for every player, so a 1975 season and a 2015 season
+        can be ranked against each other honestly. Era adjustment is what makes
+        Marino's 44 touchdowns a cut and a 1970s workhorse a keep.</p>
+    </div>
+    <div class="showcase">
+      <div class="notes">
+        <div class="note"><b>No trivia questions</b><span>Nothing comes from a quiz bank. Every card is a real season pulled from real box-score data.</span></div>
+        <div class="note"><b>One grading rule</b><span>The same scoring formula grades every season in a sport. You are never guessing what the app "meant".</span></div>
+        <div class="note"><b>Hard mode hides the stats</b><span>Name, team, year. That is all you get. It is the version people send to the group chat.</span></div>
+        <div class="note"><b>A new board every day</b><span>Boards are minted nightly and never repeat — once a puzzle has been the daily, it is retired for good.</span></div>
+      </div>
+      <div class="shot">
+        <img class="screen" src="__SHOT_RESULT__" width="680" height="1477" loading="lazy" decoding="async"
+             alt="Playbook's result screen: a final score of 1,500, six of eight correct, the board's top season, and the full keeps-and-cuts answer.">
+        <p class="caption">Every grade is revealed at the end, next to what the board's real
+          top four turned out to be.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head narrow">
+      <p class="eyebrow">Five ways to play</p>
+      <h2>One app, five arguments.</h2>
+    </div>
+    <div class="gallery">
+      <div class="g-item">
+        <img class="screen" src="__SHOT_HOME__" width="680" height="1477" loading="lazy" decoding="async"
+             alt="Playbook's Home tab showing today's daily games for the NFL.">
+        <span class="tag">Daily</span><h3>Keep 4 / Cut 4</h3>
+        <p>Eight seasons, dealt one at a time. Keep four, cut four. Normal shows the stats; Hard doesn't.</p>
+      </div>
+      <div class="g-item">
+        <img class="screen" src="__SHOT_WHOAMI__" width="680" height="1477" loading="lazy" decoding="async"
+             alt="Playbook's Who Am I? screen with the first of six clues and a guess field.">
+        <span class="tag">Daily</span><h3>Who Am I?</h3>
+        <p>Six clues drawn from about thirty real career and biographical dimensions, vague to specific. Solve early, score more.</p>
+      </div>
+      <div class="g-item">
+        <img class="screen" src="__SHOT_OVERUNDER__" width="680" height="1477" loading="lazy" decoding="async"
+             alt="Playbook's Over/Under screen: a player card with a stat line and Under and Over buttons.">
+        <span class="tag">Arcade</span><h3>Over / Under</h3>
+        <p>One stat, one line, one call. Miss three and you are out.</p>
+      </div>
+      <div class="g-item">
+        <img class="screen" src="__SHOT_DRAFTSPIN__" width="680" height="1477" loading="lazy" decoding="async"
+             alt="Playbook's Draft and Spin reveal: a team and a year locked in under a marquee of lights.">
+        <span class="tag">Arcade</span><h3>Draft &amp; Spin</h3>
+        <p>Spin for a team and a year, build the roster, live with your picks. Everyone gets the same spins on the daily.</p>
+      </div>
+      <div class="g-item">
+        <img class="screen" src="__SHOT_GRID__" width="680" height="1477" loading="lazy" decoding="async"
+             alt="Playbook's Grid: a three-by-three board of NFL teams crossed with statistical milestones.">
+        <span class="tag">Pro</span><h3>The Grid</h3>
+        <p>Nine cells, two axes, one player each. Name a Bear with a hundred-tackle season.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head narrow">
+      <p class="eyebrow">The data</p>
+      <h2>Real seasons. All the way back.</h2>
+      <p class="lede">An automated pipeline pulls from open sports-data sources every day
+        and pushes new seasons into the catalog the puzzles are cut from.</p>
+    </div>
+    <div class="rail">
+      <div><div class="n">380k+</div><div class="k">real player-seasons in the catalog</div></div>
+      <div><div class="n">5</div><div class="k">sports — NFL, NBA, MLB, soccer, tennis</div></div>
+      <div><div class="n">1876</div><div class="k">earliest season on file (MLB)</div></div>
+      <div><div class="n">Daily</div><div class="k">fresh boards minted for every sport</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head narrow">
+      <p class="eyebrow">Beyond the daily</p>
+      <h2>Then you have to prove it twice.</h2>
+    </div>
+    <div class="showcase">
+      <div class="shot">
+        <img class="screen" src="__SHOT_LADDER__" width="680" height="1477" loading="lazy" decoding="async"
+             alt="Playbook's Versus ladder: thirty named opponents, the first unlocked and the rest greyed out.">
+        <p class="caption">Thirty rungs, each a named opponent with their own habits.</p>
+      </div>
+      <div class="notes">
+        <div class="note"><b>The ladder</b><span>Thirty opponents in order, each one a little sharper than the last. You watch their score climb while you play.</span></div>
+        <div class="note"><b>Versus</b><span>Challenge anyone by username. You both play the same board, on the clock. Wins stack into a best-of-seven series.</span></div>
+        <div class="note"><b>Leagues</b><span>Every Monday you are placed in a cohort of up to 30. Everything you play that week earns League XP. Top finishers go up, bottom finishers go down.</span></div>
+        <div class="note"><b>Ratings and tiers</b><span>A per-sport rating that moves on ranked daily games only, with season badges when the ladder resets.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta">
+    <p class="eyebrow">Free to play</p>
+    <h2>Settle it tomorrow morning.</h2>
+    <p>A new board for every sport, every day. Keep the streak, climb the league,
+      and find out how much of what you know is actually right.</p>
+    <a class="btn" href="https://apps.apple.com/app/id6785275045">Download Playbook</a>
+  </div>
+
+  <footer>
+    <span>Playbook — Sports Trivia</span>
+    <a href="privacy.html">Support &amp; Privacy</a>
+    <a href="mailto:xmevans10@gmail.com">xmevans10@gmail.com</a>
+    <span>Player photos via Wikimedia Commons and the NFL. Typefaces: Anton &amp; Saira (SIL OFL).</span>
+  </footer>
+</div>
+

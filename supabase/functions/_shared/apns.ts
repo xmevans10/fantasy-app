@@ -34,16 +34,39 @@ export function buildStreakAtRiskPayload(streak: number): PushPayload {
   };
 }
 
+/** How a sport is written in push copy. The keyspace is `puzzles.sport`, which spells MLB
+ * "baseball" — nobody says "today's baseball K4C4" about a Bob Gibson board. */
+const SPORT_LABEL: Record<string, string> = {
+  nfl: "NFL",
+  nba: "NBA",
+  baseball: "MLB",
+  soccer: "Soccer",
+  tennis: "Tennis",
+};
+
 /** `theme` is today's minted K4C4 theme when known — naming it makes the push concrete proof
- * of fresh content; null (row not landed yet, or lookup failed) falls back to generic copy. */
-export function buildDailyDropPayload(theme: string | null): PushPayload {
+ * of fresh content; null (row not landed yet, or lookup failed) falls back to generic copy.
+ *
+ * `sport` is named alongside it because the theme title alone does not say which sport it is:
+ * "Career pitching leaders" and "Rim-protector seasons" read as the same kind of thing in a
+ * notification list, and a run of them looked to the user like one repeating push. It also
+ * makes the wrong-sport case self-evident rather than silently confusing. */
+export function buildDailyDropPayload(theme: string | null,
+                                      sport: string | null = null): PushPayload {
+  const label = sport ? SPORT_LABEL[sport] ?? null : null;
   return {
     category: "daily_drop",
     title: "Today's puzzles just dropped",
     body: theme
-      ? `New K4C4: “${theme}” — plus a new mystery player. Both are live now.`
+      ? `New ${label ? `${label} ` : ""}K4C4: “${theme}” — plus a new mystery player. ` +
+        "Both are live now."
       : "A new K4C4 and a new mystery player are live now.",
-    data: { tab: "home" },
+    // `sport` rides along so a future client can open Home ON the featured sport's page.
+    // Today the pager lands on `sportFilter.sport ?? .nfl` (HomeView.loadDaily) regardless,
+    // so a rotated push can name a board the app does not open on; carrying the key now costs
+    // nothing and is what a deep-link would need. Unknown keys in `data` are ignored by the
+    // current app, so this is safe to ship ahead of the client.
+    data: sport ? { tab: "home", sport } : { tab: "home" },
   };
 }
 

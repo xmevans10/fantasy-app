@@ -13,7 +13,7 @@ import itertools
 
 from . import assemble, curation
 from .models import RawSeason
-from .themes import Filter, Theme
+from .themes import Filter, StatColumn, Theme
 
 
 def _quirk_filters(q: curation.Quirk, spec: curation.PositionSpec) -> tuple[Filter, ...]:
@@ -22,35 +22,70 @@ def _quirk_filters(q: curation.Quirk, spec: curation.PositionSpec) -> tuple[Filt
     return curation.weight_filters(spec).get(q.key, q.filters)
 
 
+# On-card columns are capped at five (the curated themes all sit at 4-5, and the card layout
+# is built for that) — a quirk's promoted columns take the front, the spec's fill the rest.
+_MAX_COLUMNS = 5
+
+
+def _columns(spec: curation.PositionSpec, quirks: tuple[curation.Quirk, ...]) -> list[StatColumn]:
+    """The spec's columns with each quirk's own stat promoted to the front, deduped by stat.
+
+    Without this a puzzle titled "20-20 club seasons" would show HR but not SB — the card
+    wouldn't display the stat the theme is named after, which is the one thing the player
+    needs to reason about. NFL's quirks are all biographical and promote nothing, so its
+    generated cards are unchanged."""
+    ordered: list[StatColumn] = [c for q in quirks for c in q.columns] + list(spec.columns)
+    seen: set[str] = set()
+    out: list[StatColumn] = []
+    for col in ordered:
+        if col.stat in seen:
+            continue
+        seen.add(col.stat)
+        out.append(col)
+    return out[:_MAX_COLUMNS]
+
+
 def _theme(key: str, title: str, spec: curation.PositionSpec,
-           filters: tuple[Filter, ...]) -> Theme:
+           filters: tuple[Filter, ...], sport: str = "nfl",
+           quirks: tuple[curation.Quirk, ...] = ()) -> Theme:
     return Theme(
         key=key,
         title=title,
-        sport="nfl",
+        sport=sport,
         scale=spec.scale,
-        positions=frozenset({spec.pos}),
+        positions=spec.position_set,
         min_stats=dict(spec.min_stats),
-        columns=spec.columns,
+        columns=_columns(spec, quirks),
         filters=filters,
-        grain="season",
+        grain=spec.grain,
+        pool_cap=spec.pool_cap,
     )
 
 
-def _candidates() -> list[Theme]:
+def _key_prefix(cfg: curation.SportCuration) -> str:
+    """NFL's generated keys predate the cross-sport registry and are recorded verbatim in
+    `puzzle_history` signatures, so they keep their original `gen-{pos}-…` shape; every other
+    sport is namespaced by sport so keys stay unambiguous as the registry grows."""
+    return "" if cfg.sport == "nfl" else f"{cfg.sport}-"
+
+
+def _candidates(cfg: curation.SportCuration | None = None) -> list[Theme]:
     """Every single-quirk theme we'll *try* — viability is checked separately."""
+    cfg = cfg or curation.SPORTS["nfl"]
+    pre = _key_prefix(cfg)
     out: list[Theme] = []
-    for spec in curation.POSITIONS.values():
-        for decade in curation.DECADES:
-            dfilter = () if decade is None else (Filter("decade", "eq", decade),)
-            prefix = curation.decade_prefix(decade)
-            # bio-quirk themes
-            for q in curation.QUIRKS:
-                key = f"gen-{spec.pos}-{decade or 'all'}-{q.key}".lower()
+    for spec_key, spec in cfg.positions.items():
+        for sl in cfg.slices:
+            for q in cfg.quirks:
+                if not q.applies_to(spec_key):
+                    continue
+                key = f"gen-{pre}{spec.pos}-{sl.key}-{q.key}".lower()
                 if key in curation.DENYLIST:
                     continue
-                title = prefix + q.title.format(pos=spec.label)
-                out.append(_theme(key, title, spec, dfilter + _quirk_filters(q, spec)))
+                title = sl.prefix + q.title.format(pos=spec.label) + sl.suffix
+                out.append(_theme(key, title, spec,
+                                  sl.filters + _quirk_filters(q, spec),
+                                  sport=cfg.sport, quirks=(q,)))
     # NOTE: single-first-name Keep4 themes (curation.NAME_VARIANTS) were evaluated and
     # dropped — exact-name pools rarely field 8 *recognizable*, close-graded seasons, so they
     # produced obscure puzzles. That hyper-niche single-name hook belongs in WhoAmI (the
@@ -58,33 +93,36 @@ def _candidates() -> list[Theme]:
     return out
 
 
-def _combo_title(prefix: str, q1: curation.Quirk, q2: curation.Quirk, label: str) -> str:
+def _combo_title(prefix: str, q1: curation.Quirk, q2: curation.Quirk, label: str,
+                 suffix: str = "") -> str:
     frag = f"{q1.adjective}, {q2.adjective} {label} seasons"
     if not prefix:
         frag = frag[0].upper() + frag[1:]
-    return prefix + frag
+    return prefix + frag + suffix
 
 
-def _pairwise_candidates() -> list[Theme]:
+def _pairwise_candidates(cfg: curation.SportCuration | None = None) -> list[Theme]:
     """Two-quirk combos (undrafted+sub-6-foot, first-round+under-24, …) — a much bigger,
     more specific niche space than any single quirk alone. Uncapped and not fed into the
     balanced/capped `generate_themes()` picker used by the daily bulk-refresh job; this is
     for the daily novel-puzzle picker (see daily_puzzle.py) to search over, since that job
     wants the full space so it can pick something never served before, not a fixed pool."""
+    cfg = cfg or curation.SPORTS["nfl"]
+    pre = _key_prefix(cfg)
     out: list[Theme] = []
-    for spec in curation.POSITIONS.values():
-        for decade in curation.DECADES:
-            dfilter = () if decade is None else (Filter("decade", "eq", decade),)
-            prefix = curation.decade_prefix(decade)
-            for q1, q2 in itertools.combinations(curation.QUIRKS, 2):
+    for spec_key, spec in cfg.positions.items():
+        for sl in cfg.slices:
+            for q1, q2 in itertools.combinations(cfg.quirks, 2):
                 if curation.redundant_pair(q1, q2):
                     continue
-                key = f"gen2-{spec.pos}-{decade or 'all'}-{q1.key}-{q2.key}".lower()
+                if not (q1.applies_to(spec_key) and q2.applies_to(spec_key)):
+                    continue
+                key = f"gen2-{pre}{spec.pos}-{sl.key}-{q1.key}-{q2.key}".lower()
                 if key in curation.DENYLIST:
                     continue
-                title = _combo_title(prefix, q1, q2, spec.label)
-                filters = dfilter + _quirk_filters(q1, spec) + _quirk_filters(q2, spec)
-                out.append(_theme(key, title, spec, filters))
+                title = _combo_title(sl.prefix, q1, q2, spec.label, sl.suffix)
+                filters = sl.filters + _quirk_filters(q1, spec) + _quirk_filters(q2, spec)
+                out.append(_theme(key, title, spec, filters, sport=cfg.sport, quirks=(q1, q2)))
     return out
 
 
@@ -139,5 +177,11 @@ def all_niche_candidates(seasons: list[RawSeason]) -> list[Theme]:
     `generate_themes()` (capped at MAX_GENERATED for the daily bulk-refresh pool), this is
     for the daily novel-puzzle picker (daily_puzzle.py), which wants the full candidate
     space so it can find something never served before rather than a fixed balanced set."""
-    candidates = _candidates() + _pairwise_candidates()
+    candidates: list[Theme] = []
+    for cfg in curation.SPORTS.values():
+        if not any(s.sport == cfg.sport for s in seasons):
+            continue          # nothing pulled for this sport this run — skip the build work
+        candidates += _candidates(cfg)
+        if cfg.pairwise:
+            candidates += _pairwise_candidates(cfg)
     return [t for t in candidates if _is_viable(t, seasons)]

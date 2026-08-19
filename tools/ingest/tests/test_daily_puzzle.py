@@ -138,3 +138,64 @@ def test_group_by_sport_preserves_candidate_order_within_a_sport():
     pairs = [(niche, _row("n", ["a"])), (curated, _row("c", ["b"]))]
     grouped = group_by_sport(pairs)
     assert [t.key for t, _ in grouped["nfl"]] == ["gen-wr-niche", "nfl-wr-receiving"]
+
+
+# ── Theme cooldown ───────────────────────────────────────────────────────────────
+# Signature-novelty alone let one theme's many variants monopolize a sport: live on
+# 2026-08-18, baseball had served "Ace pitching seasons" 9 times in 23 days with a different
+# eight cards each time. These cover the soft ranking penalty that fixes it.
+
+def test_cooldown_prefers_a_theme_the_sport_has_not_served_recently():
+    hot = _theme("baseball-ace-pitchers", sport="baseball")
+    cold = _theme("baseball-power-hitters", sport="baseball")
+    # Hot theme first in candidate order, so only the cooldown can dislodge it.
+    candidates = [(hot, _row("hot", [f"h{i}" for i in range(8)], sport="baseball")),
+                  (cold, _row("cold", [f"c{i}" for i in range(8)], sport="baseball"))]
+    theme, _, _ = pick_novel_puzzle(candidates, set(), TODAY, {"baseball-ace-pitchers"})
+    assert theme.key == "baseball-power-hitters"
+
+
+def test_cooldown_never_blocks_a_mint_when_every_theme_is_on_it():
+    hot = _theme("baseball-ace-pitchers", sport="baseball")
+    candidates = [(hot, _row("hot", [f"h{i}" for i in range(8)], sport="baseball"))]
+    pick = pick_novel_puzzle(candidates, set(), TODAY, {"baseball-ace-pitchers"})
+    assert pick is not None and pick[0].key == "baseball-ace-pitchers"
+
+
+def test_cooldown_still_yields_to_signature_novelty():
+    # A cold theme whose only variant was already served must not be picked over a hot theme
+    # with an unserved one — signature-novelty is the hard guarantee, cooldown is a preference.
+    hot = _theme("t-hot", sport="nba")
+    cold = _theme("t-cold", sport="nba")
+    hot_row = _row("hot", [f"h{i}" for i in range(8)], sport="nba")
+    cold_row = _row("cold", [f"c{i}" for i in range(8)], sport="nba")
+    served = {_signature("t-cold", cold_row)}
+    theme, _, _ = pick_novel_puzzle([(cold, cold_row), (hot, hot_row)], served, TODAY, {"t-hot"})
+    assert theme.key == "t-hot"
+
+
+def test_mint_batch_spreads_themes_across_its_own_days():
+    # Three days, two themes with plenty of variants each: a batch must alternate rather than
+    # spend all three days on whichever theme sorts first.
+    a = _theme("s-a", sport="soccer")
+    b = _theme("s-b", sport="soccer")
+    candidates = [(a, _row(f"a{i}", [f"a{i}-{j}" for j in range(8)], sport="soccer"))
+                  for i in range(5)]
+    candidates += [(b, _row(f"b{i}", [f"b{i}-{j}" for j in range(8)], sport="soccer"))
+                   for i in range(5)]
+    dates = [TODAY + dt.timedelta(days=i) for i in range(3)]
+    minted = mint_batch(group_by_sport(candidates), set(), _targets(dates, ["soccer"]))
+    keys = [theme.key for _, theme, _, _ in minted]
+    assert len(minted) == 3
+    assert len(set(keys)) == 2          # both themes used; no single-theme run
+    assert keys[0] != keys[1]           # consecutive days never repeat a theme
+
+
+def test_mint_batch_honours_history_cooldown_passed_in():
+    a = _theme("s-a", sport="soccer")
+    b = _theme("s-b", sport="soccer")
+    candidates = [(a, _row("a", [f"a{j}" for j in range(8)], sport="soccer")),
+                  (b, _row("b", [f"b{j}" for j in range(8)], sport="soccer"))]
+    minted = mint_batch(group_by_sport(candidates), set(), _targets([TODAY], ["soccer"]),
+                        {"soccer": {"s-a"}})
+    assert [theme.key for _, theme, _, _ in minted] == ["s-b"]

@@ -180,6 +180,43 @@ export async function recipientTokens(
   };
 }
 
+/** Every push-reachable person, with all of their devices — the cron sweep's counterpart to
+ * `recipientTokens` (which resolves one known recipient).
+ *
+ * This exists because the environment-aware `DeviceToken` change (2026-08-17, "Push
+ * notifications have never worked") updated `sendOnce` and the three *trigger-driven*
+ * notifiers but not the three *cron* ones, which each carried their own hand-rolled copy of
+ * this grouping and kept pushing a bare `string[]`. `sendOnce` destructures `{ token,
+ * environment }` per element, and destructuring a string yields `undefined` for both — so
+ * every scheduled push posted to `/3/device/undefined`, failed, and (worse) fed `undefined`
+ * into `pruneDeadToken`. The cadence and logging layers above looked perfectly healthy the
+ * whole time, which is exactly how the previous 100%-failure bug hid for so long too.
+ *
+ * One offset per person, first row wins — same rule and same rationale as `recipientTokens`. */
+export function pushRecipients(
+  rows: Array<{ user_id: string; token: string; utc_offset_minutes: number | null;
+                apns_environment?: string | null }> | null,
+): Array<{ user_id: string; utc_offset_minutes: number; tokens: DeviceToken[] }> {
+  const byUser = new Map<string, { user_id: string; utc_offset_minutes: number;
+                                   tokens: DeviceToken[] }>();
+  for (const r of rows ?? []) {
+    const e = byUser.get(r.user_id)
+      ?? { user_id: r.user_id, utc_offset_minutes: r.utc_offset_minutes ?? 0, tokens: [] };
+    e.tokens.push({
+      token: r.token,
+      // Same default as `recipientTokens`: production matches the column default and shipped
+      // App Store behaviour, and a debug build corrects its row on the next registration.
+      environment: r.apns_environment === "development" ? "development" : "production",
+    });
+    byUser.set(r.user_id, e);
+  }
+  return [...byUser.values()];
+}
+
+/** The columns `pushRecipients` needs. Kept next to it so a caller can't select a subset and
+ * silently lose the environment again. */
+export const DEVICE_TOKEN_COLUMNS = "user_id, token, utc_offset_minutes, apns_environment";
+
 /** Whether a category is switched on for this user. A missing settings row means all-on, which
  * is the convention `notification_settings` documents. */
 export async function categoryEnabled(

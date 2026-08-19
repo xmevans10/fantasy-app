@@ -22,7 +22,7 @@ import {
   buildYourTurnPayload,
   type PushPayload,
 } from "../_shared/apns.ts";
-import { categoryEnabled, sendOnce } from "../_shared/cadence.ts";
+import { DEVICE_TOKEN_COLUMNS, pushRecipients, categoryEnabled, sendOnce } from "../_shared/cadence.ts";
 import { localDayString, localHour } from "../_shared/localtime.ts";
 
 const MIDDAY_HOUR = 13;
@@ -115,18 +115,11 @@ Deno.serve(async (req) => {
   // schedule, which is exactly the failure this whole file is careful about.
   const forceSlot = dry ? params.get("slot") : null;
 
+  // One decision per PERSON, delivered to all of their devices, each on the APNs host its own
+  // token was minted for — see `pushRecipients`.
   const { data: rows } = await sb
-    .from("device_tokens").select("user_id, token, utc_offset_minutes");
-  // One decision per PERSON, delivered to all of their devices. Iterating raw token rows
-  // (the first version) evaluated a multi-device user once per device.
-  const byUser = new Map<string, { user_id: string; utc_offset_minutes: number; tokens: string[] }>();
-  for (const r of rows ?? []) {
-    const e = byUser.get(r.user_id)
-      ?? { user_id: r.user_id, utc_offset_minutes: r.utc_offset_minutes, tokens: [] };
-    e.tokens.push(r.token);
-    byUser.set(r.user_id, e);
-  }
-  const tokens = [...byUser.values()];
+    .from("device_tokens").select(DEVICE_TOKEN_COLUMNS);
+  const tokens = pushRecipients(rows);
 
   let sent = 0;
   const planned: Array<Record<string, unknown>> = [];

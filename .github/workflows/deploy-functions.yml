@@ -1,0 +1,103 @@
+name: deploy-functions
+
+# Edge functions were the last piece of production still deployed from somebody's laptop.
+# That is how `main` and production drifted apart on 2026-08-17: commit 3184401 changed
+# `sendOnce` to take `{token, environment}` and updated the three trigger-driven notifiers,
+# the three cron notifiers were left passing `string[]`, and nothing deployed or type-checked
+# them — so every scheduled push posted to `/3/device/undefined` for a full day while the
+# cadence layer above it logged each one as delivered.
+#
+# Now a push to main that touches `supabase/functions/**` type-checks the whole tree, runs the
+# shared unit tests, and deploys only the functions that actually changed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/**"
+      - ".github/workflows/deploy-functions.yml"
+  workflow_dispatch:
+    inputs:
+      functions:
+        description: "Space-separated function names to deploy (blank = every function)"
+        required: false
+        default: ""
+
+concurrency:
+  # Never let two deploys race; a later commit's code should win.
+  group: deploy-functions
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_REF: nhccgufqwndtoasdbkhc
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need the previous commit to diff against for the changed-function detection below.
+          fetch-depth: 2
+
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v2.x
+
+      # The gate that would have caught the 2026-08-17 regression before it shipped. Checks
+      # EVERY function, not just changed ones: the break was in a shared file, and it surfaced
+      # in the callers that were not touched.
+      - name: Type-check every function
+        run: deno check supabase/functions/*/index.ts
+
+      - name: Unit-test the shared modules
+        # --allow-env is required by apns.test.ts (it sets APNS_* to exercise the signing
+        # path), not optional.
+        run: deno test --allow-env supabase/functions/_shared/
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Work out which functions to deploy
+        id: pick
+        run: |
+          set -euo pipefail
+          MANUAL="${{ github.event.inputs.functions }}"
+          if [ -n "$MANUAL" ]; then
+            echo "list=$MANUAL" >> "$GITHUB_OUTPUT"
+            echo "Deploying (manual): $MANUAL"
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only HEAD^ HEAD -- supabase/functions/ || true)
+          # A change under _shared/ is compiled into every function's bundle, so it has to
+          # redeploy all of them — that is precisely the case this workflow exists for.
+          if echo "$CHANGED" | grep -q "supabase/functions/_shared/"; then
+            LIST=$(find supabase/functions -mindepth 1 -maxdepth 1 -type d \
+                     ! -name "_shared" -exec basename {} \; | sort | tr '\n' ' ')
+            echo "Shared code changed — redeploying every function."
+          else
+            LIST=$(echo "$CHANGED" | awk -F/ '/^supabase\/functions\// {print $3}' \
+                     | grep -v '^_shared$' | sort -u | tr '\n' ' ')
+          fi
+          echo "list=$LIST" >> "$GITHUB_OUTPUT"
+          echo "Deploying: ${LIST:-<nothing>}"
+
+      - name: Deploy
+        if: steps.pick.outputs.list != ''
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
+            echo "::error::SUPABASE_ACCESS_TOKEN is not set on this repository, so the"
+            echo "::error::functions cannot be deployed. Add it once with:"
+            echo "::error::  gh secret set SUPABASE_ACCESS_TOKEN --repo xmevans10/fantasy-app"
+            echo "::error::(the value is SUPABASE_ACCESS_TOKEN in gitignored tools/ingest/.env)."
+            echo "::error::Failing loudly on purpose: a deploy that silently does not happen is"
+            echo "::error::exactly how main and production drifted apart in the first place."
+            exit 1
+          fi
+          for fn in ${{ steps.pick.outputs.list }}; do
+            echo "::group::$fn"
+            supabase functions deploy "$fn" --project-ref "$PROJECT_REF"
+            echo "::endgroup::"
+          done
