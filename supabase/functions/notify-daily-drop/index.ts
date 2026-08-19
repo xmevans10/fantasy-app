@@ -9,18 +9,9 @@ import { serviceClient } from "../_shared/supabase.ts";
 import { buildDailyDropPayload } from "../_shared/apns.ts";
 import { DEVICE_TOKEN_COLUMNS, pushRecipients, sendOnce } from "../_shared/cadence.ts";
 import { candidateLocalDays, localDayString, localHour } from "../_shared/localtime.ts";
-import { sportForPush } from "../_shared/sport.ts";
+import { sportForDay } from "../_shared/sport.ts";
 
 const TARGET_LOCAL_HOUR = 9; // 9am
-
-/** How far back play history counts. Long enough to survive a quiet fortnight; past this the
- * client's own `sportFilter` is the better guess anyway, and that is what the NFL fallback is. */
-const PLAY_WINDOW_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
-
-/** Ceiling on the play-history fetch. PostgREST caps a response at 1000 rows regardless, so
- * this is mostly documentation — but it is ordered newest-first, and only the first row per
- * user matters, so a truncated page still answers the question for everyone it reaches. */
-const PLAY_ROW_CAP = 1000;
 
 Deno.serve(async (_req) => {
   const sb = serviceClient();
@@ -74,33 +65,6 @@ Deno.serve(async (_req) => {
     .from("device_tokens").select(DEVICE_TOKEN_COLUMNS);
   const tokens = pushRecipients(rows);
 
-  // Which sport each recipient will actually LAND on, from `game_results`.
-  //
-  // `profiles.primary_sport` is the field this used to read, and it is NULL for every profile
-  // in production (11/11 on 2026-08-19) — nothing in the app ever sets it. So the lookup always
-  // missed and every push fell through to "first entry of the themes map", which is baseball,
-  // because daily_puzzle.py mints sports in sorted order and PostgREST returns them that way.
-  // Result: every user got BASEBALL's theme every single day, and baseball drew a pitching
-  // theme on 7 of 8 days, so the push read "Ace pitching seasons" over and over — to people
-  // whose actual play history was 14 NFL games and 3 baseball.
-  //
-  // One batched query, aggregated per user in memory; a per-recipient query would be N+1 for
-  // a value that is cheap to fetch once.
-  const userIds = tokens.map((t) => t.user_id);
-  const { data: playRows } = userIds.length
-    ? await sb.from("game_results").select("user_id, sport, played_at")
-        .in("user_id", userIds).gte("played_at", new Date(nowMs - PLAY_WINDOW_MS).toISOString())
-        .order("played_at", { ascending: false }).limit(PLAY_ROW_CAP)
-    : { data: [] as Array<{ user_id: string; sport: string }> };
-  // Most-recent-first per user, deduped — `sportForPush` only needs the ORDER, not the counts.
-  const recentByUser = new Map<string, string[]>();
-  for (const r of playRows ?? []) {
-    if (!r.sport) continue;
-    const seen = recentByUser.get(r.user_id) ?? [];
-    if (!seen.includes(r.sport)) seen.push(r.sport);
-    recentByUser.set(r.user_id, seen);
-  }
-
   let sent = 0;
 
   for (const t of tokens ?? []) {
@@ -118,12 +82,13 @@ Deno.serve(async (_req) => {
       .from("progress").select("last_played_day").eq("user_id", t.user_id).maybeSingle();
     if (progress?.last_played_day === localToday) continue;
 
-    // Lead with the sport this person actually plays. Read from THIS device's local day (see
-    // the index comment above), so a push can never name a different day's puzzle; with no
+    // One shared notification, featuring a sport that rotates per day (see `sportForDay`).
+    // Resolved from THIS device's local day, so a push can never name a different day's
+    // puzzle — and so everyone rolling into a given calendar day gets the same one. With no
     // themes for the day at all, `null` degrades to the generic drop copy.
     const themesBySport = themesByDay.get(localToday);
     const available = [...(themesBySport?.keys() ?? [])].sort();
-    const sport = sportForPush(recentByUser.get(t.user_id) ?? [], available);
+    const sport = sportForDay(localToday, available);
     const theme = (sport && themesBySport?.get(sport)) || null;
 
     // Through `sendOnce` so this counts against the same daily ceiling as the other slots and

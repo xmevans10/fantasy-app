@@ -213,3 +213,11 @@ Deno.test("the daily drop names the sport, so a run of pushes reads as different
   assertStringIncludes(buildDailyDropPayload("Some theme", "kabaddi").body, "New K4C4:");
   assertStringIncludes(buildDailyDropPayload("Some theme").body, "New K4C4:");
 });
+
+Deno.test("the daily drop carries the featured sport for a future deep link", () => {
+  const nba = buildDailyDropPayload("Rim-protector seasons", "nba");
+  assertEquals(nba.data?.tab, "home");
+  assertEquals(nba.data?.sport, "nba");
+  // No sport resolved (nothing minted) — no stray key.
+  assertEquals(buildDailyDropPayload(null).data?.sport, undefined);
+});

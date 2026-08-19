@@ -61,7 +61,12 @@ export function buildDailyDropPayload(theme: string | null,
       ? `New ${label ? `${label} ` : ""}K4C4: “${theme}” — plus a new mystery player. ` +
         "Both are live now."
       : "A new K4C4 and a new mystery player are live now.",
-    data: { tab: "home" },
+    // `sport` rides along so a future client can open Home ON the featured sport's page.
+    // Today the pager lands on `sportFilter.sport ?? .nfl` (HomeView.loadDaily) regardless,
+    // so a rotated push can name a board the app does not open on; carrying the key now costs
+    // nothing and is what a deep-link would need. Unknown keys in `data` are ignored by the
+    // current app, so this is safe to ship ahead of the client.
+    data: sport ? { tab: "home", sport } : { tab: "home" },
   };
 }
 
