@@ -479,11 +479,25 @@ def merge_csvs(inputs: list[Path], out_path: Path) -> None:
     `refresh(..., out_path=...)`) into the one committed CSV — the counterpart to that
     partitioning. Every input already has this module's own headshot/cameo gates applied
     (each leg ran a real `refresh()`), so this is a plain concatenate + re-sort, no
-    re-filtering."""
+    re-filtering.
+
+    Inputs that are not season partitions are skipped rather than merged. `refresh()`
+    deliberately writes each leg's team-identity table as a SIBLING of its `--out` partition
+    (`<stem>_team_identity.csv`) so parallel legs never race on one shared file — and the CI
+    step merges by globbing the whole directory, so that sibling lands here too. Its schema is
+    `TEAM_IDENTITY_FIELDS`, which has no `name` column, and merging it blindly crashed the
+    weekly refresh with `KeyError: 'name'` after a 1h57m sweep (2026-08-19). Checked on the
+    header rather than the filename so a future partition naming scheme cannot reintroduce it.
+    """
     rows: list[dict] = []
     for path in inputs:
         with path.open(encoding="utf-8") as f:
-            rows.extend(csv.DictReader(f))
+            reader = csv.DictReader(f)
+            if not reader.fieldnames or "name" not in reader.fieldnames:
+                print(f"[espn-soccer] skipping non-season CSV {path.name} "
+                      f"(columns: {reader.fieldnames})")
+                continue
+            rows.extend(reader)
     rows.sort(key=lambda r: (r["name"], int(r["season_year"]), r["team_abbr"]))
 
     out_path.parent.mkdir(parents=True, exist_ok=True)

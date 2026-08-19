@@ -313,3 +313,52 @@ def test_refresh_exposes_the_photo_gate_and_defaults_to_strict():
     import inspect
     sig = inspect.signature(espn_soccer.refresh)
     assert sig.parameters["require_headshot"].default is True
+
+
+def test_merge_csvs_skips_the_team_identity_sibling(tmp_path, capsys):
+    """The weekly refresh globs the whole partition directory, and `refresh()` writes each
+    leg's team-identity table as a sibling of its `--out` partition. That sibling's schema has
+    no `name` column, so merging it blindly raised `KeyError: 'name'` and took down the weekly
+    soccer refresh after a 1h57m sweep (2026-08-19)."""
+    from tools.ingest.providers.espn_soccer import (
+        CSV_FIELDS, TEAM_IDENTITY_FIELDS, merge_csvs)
+
+    part = tmp_path / "fresh_current_season.csv"
+    with part.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+        w.writeheader()
+        w.writerow({**{k: "" for k in CSV_FIELDS}, "name": "Kevin De Bruyne",
+                    "team_abbr": "MCI", "season_year": "2024", "position": "MF"})
+
+    identity = tmp_path / "fresh_current_season_team_identity.csv"
+    with identity.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=TEAM_IDENTITY_FIELDS)
+        w.writeheader()
+        w.writerow({**{k: "" for k in TEAM_IDENTITY_FIELDS},
+                    "team_abbr": "MCI", "full_name": "Manchester City"})
+
+    out = tmp_path / "merged.csv"
+    merge_csvs(sorted(tmp_path.glob("*.csv")), out)   # must not raise
+
+    with out.open(encoding="utf-8") as f:
+        merged = list(csv.DictReader(f))
+    assert [r["name"] for r in merged] == ["Kevin De Bruyne"]
+    assert "skipping non-season CSV" in capsys.readouterr().out
+
+
+def test_merge_csvs_tolerates_an_empty_partition(tmp_path):
+    # A league leg that legitimately found nothing writes a header-only (or empty) file.
+    from tools.ingest.providers.espn_soccer import CSV_FIELDS, merge_csvs
+
+    (tmp_path / "empty.csv").write_text("", encoding="utf-8")
+    good = tmp_path / "good.csv"
+    with good.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+        w.writeheader()
+        w.writerow({**{k: "" for k in CSV_FIELDS}, "name": "Bukayo Saka",
+                    "team_abbr": "ARS", "season_year": "2024"})
+
+    out = tmp_path / "merged.csv"
+    merge_csvs(sorted(tmp_path.glob("*.csv")), out)
+    with out.open(encoding="utf-8") as f:
+        assert [r["name"] for r in csv.DictReader(f)] == ["Bukayo Saka"]
