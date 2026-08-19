@@ -9,8 +9,14 @@ import { serviceClient } from "../_shared/supabase.ts";
 import { buildDailyDropPayload } from "../_shared/apns.ts";
 import { DEVICE_TOKEN_COLUMNS, pushRecipients, sendOnce } from "../_shared/cadence.ts";
 import { candidateLocalDays, localDayString, localHour } from "../_shared/localtime.ts";
+import { favouriteSport, rotatingSport } from "../_shared/sport.ts";
 
 const TARGET_LOCAL_HOUR = 9; // 9am
+
+/** How far back play history counts toward "your sport". Long enough to survive a quiet
+ * fortnight, short enough that someone who has moved from baseball to NFL stops being told
+ * about baseball. */
+const PLAY_WINDOW_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
 
 Deno.serve(async (_req) => {
   const sb = serviceClient();
@@ -64,6 +70,31 @@ Deno.serve(async (_req) => {
     .from("device_tokens").select(DEVICE_TOKEN_COLUMNS);
   const tokens = pushRecipients(rows);
 
+  // Which sport each recipient actually plays, from `game_results`.
+  //
+  // `profiles.primary_sport` is the field this used to read, and it is NULL for every profile
+  // in production (11/11 on 2026-08-19) — nothing in the app ever sets it. So the lookup always
+  // missed and every push fell through to "first entry of the themes map", which is baseball,
+  // because daily_puzzle.py mints sports in sorted order and PostgREST returns them that way.
+  // Result: every user got BASEBALL's theme every single day, and baseball drew a pitching
+  // theme on 7 of 8 days, so the push read "Ace pitching seasons" over and over — to people
+  // whose actual play history was 14 NFL games and 3 baseball.
+  //
+  // One batched query, aggregated per user in memory; a per-recipient query would be N+1 for
+  // a value that is cheap to fetch once.
+  const userIds = tokens.map((t) => t.user_id);
+  const { data: playRows } = userIds.length
+    ? await sb.from("game_results").select("user_id, sport")
+        .in("user_id", userIds).gte("played_at", new Date(nowMs - PLAY_WINDOW_MS).toISOString())
+    : { data: [] as Array<{ user_id: string; sport: string }> };
+  const playsByUser = new Map<string, Map<string, number>>();
+  for (const r of playRows ?? []) {
+    if (!r.sport) continue;
+    const counts = playsByUser.get(r.user_id) ?? new Map<string, number>();
+    counts.set(r.sport, (counts.get(r.sport) ?? 0) + 1);
+    playsByUser.set(r.user_id, counts);
+  }
+
   let sent = 0;
 
   for (const t of tokens ?? []) {
@@ -81,22 +112,20 @@ Deno.serve(async (_req) => {
       .from("progress").select("last_played_day").eq("user_id", t.user_id).maybeSingle();
     if (progress?.last_played_day === localToday) continue;
 
-    // Lead with the user's own sport's theme when their profile declares one — with every
-    // sport minting daily, a generic theme could name a sport this user never plays. Read
-    // from THIS device's local day (see the index comment above); the `anyTheme` fallback is
-    // likewise scoped to that day, so a push can never name a different day's puzzle. With
-    // no themes for the day at all, `null` degrades to the generic drop copy.
+    // Lead with the sport this person actually plays. Read from THIS device's local day (see
+    // the index comment above), so a push can never name a different day's puzzle; with no
+    // themes for the day at all, `null` degrades to the generic drop copy.
     const themesBySport = themesByDay.get(localToday);
-    const { data: profile } = await sb
-      .from("profiles").select("primary_sport").eq("id", t.user_id).maybeSingle();
-    const theme = (profile?.primary_sport && themesBySport?.get(profile.primary_sport)) ||
-      themesBySport?.values().next().value || null;
+    const available = [...(themesBySport?.keys() ?? [])].sort();
+    const sport = favouriteSport(playsByUser.get(t.user_id), available)
+      ?? rotatingSport(localToday, available);
+    const theme = (sport && themesBySport?.get(sport)) || null;
 
     // Through `sendOnce` so this counts against the same daily ceiling as the other slots and
     // leaves an audit row — see _shared/cadence.ts.
     const result = await sendOnce(sb, {
       userId: t.user_id, tokens: t.tokens, utcOffsetMinutes: t.utc_offset_minutes,
-      nowMs, payload: buildDailyDropPayload(theme),
+      nowMs, payload: buildDailyDropPayload(theme, sport),
     });
     if (result.sent) sent++;
   }

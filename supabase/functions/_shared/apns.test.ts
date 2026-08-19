@@ -201,3 +201,15 @@ Deno.test("daily-drop payload names today's theme when known, stays generic othe
   assertEquals(generic.category, "daily_drop");
   assertStringIncludes(generic.body, "mystery player");
 });
+
+Deno.test("the daily drop names the sport, so a run of pushes reads as different puzzles", () => {
+  // "Career pitching leaders" and "Rim-protector seasons" are indistinguishable in a
+  // notification list without this; several days of them looked like one repeating push.
+  assertStringIncludes(buildDailyDropPayload("Career pitching leaders", "baseball").body,
+                       "New MLB K4C4:");
+  assertStringIncludes(buildDailyDropPayload("Rim-protector seasons", "nba").body,
+                       "New NBA K4C4:");
+  // An unknown or absent sport degrades to the old wording rather than printing a raw key.
+  assertStringIncludes(buildDailyDropPayload("Some theme", "kabaddi").body, "New K4C4:");
+  assertStringIncludes(buildDailyDropPayload("Some theme").body, "New K4C4:");
+});
