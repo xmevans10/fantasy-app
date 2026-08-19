@@ -1,46 +1,36 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { favouriteSport, rotatingSport } from "./sport.ts";
+import { DEFAULT_PUSH_SPORT, sportForPush } from "./sport.ts";
 
-const DAY_SPORTS = ["baseball", "nba", "nfl", "soccer", "tennis"];
+const ALL = ["baseball", "nba", "nfl", "soccer", "tennis"];
 
-Deno.test("favouriteSport picks what the user actually plays, not what sorts first", () => {
-  // The live case on 2026-08-19: 14 NFL games to 3 baseball, being told about baseball daily.
-  const counts = new Map([["nfl", 14], ["baseball", 3], ["nba", 3]]);
-  assertEquals(favouriteSport(counts, DAY_SPORTS), "nfl");
+Deno.test("names the sport the user last played, not the one that sorts first", () => {
+  // The live 2026-08-19 case: an NFL player being told about baseball every morning, because
+  // baseball is simply what PostgREST returned first.
+  assertEquals(sportForPush(["nfl", "baseball", "nba"], ALL), "nfl");
+  assertEquals(sportForPush(["nba"], ALL), "nba");
 });
 
-Deno.test("favouriteSport ignores sports with no puzzle today", () => {
-  // They play soccer most, but soccer's mint is missing for this day.
-  const counts = new Map([["soccer", 20], ["nba", 2]]);
-  assertEquals(favouriteSport(counts, ["baseball", "nba"]), "nba");
+Deno.test("recency wins over frequency, because the pager reads last-played", () => {
+  // Fourteen NFL games, then one NBA game yesterday: Home opens on NBA, so the push says NBA.
+  assertEquals(sportForPush(["nba", "nfl", "nfl", "nfl", "nfl"], ALL), "nba");
 });
 
-Deno.test("favouriteSport returns null with no history, so the caller can rotate", () => {
-  assertEquals(favouriteSport(undefined, DAY_SPORTS), null);
-  assertEquals(favouriteSport(new Map(), DAY_SPORTS), null);
-  // Counts that are all for unavailable sports are also "no signal", not a zero-count pick.
-  assertEquals(favouriteSport(new Map([["tennis", 5]]), ["nba"]), null);
+Deno.test("skips a last-played sport that has no board today", () => {
+  // They last played soccer, but soccer's mint is missing for this day — fall to the next
+  // most recent sport that actually has something to open.
+  assertEquals(sportForPush(["soccer", "nba", "nfl"], ["baseball", "nba", "nfl"]), "nba");
 });
 
-Deno.test("favouriteSport breaks ties by the caller's sorted order, not map order", () => {
-  const insertionOrder = new Map([["tennis", 4], ["baseball", 4]]);
-  assertEquals(favouriteSport(insertionOrder, DAY_SPORTS), "baseball");
-  // Same counts, opposite insertion order — must not change the answer.
-  const reversed = new Map([["baseball", 4], ["tennis", 4]]);
-  assertEquals(favouriteSport(reversed, DAY_SPORTS), "baseball");
+Deno.test("no history mirrors the client's own NFL fallback", () => {
+  // HomeView: `container.sportFilter.sport ?? .nfl`. A brand-new install lands on NFL.
+  assertEquals(sportForPush([], ALL), DEFAULT_PUSH_SPORT);
+  assertEquals(sportForPush([], ALL), "nfl");
 });
 
-Deno.test("rotatingSport spreads a new user's first week across sports", () => {
-  const week = ["2026-08-19", "2026-08-20", "2026-08-21", "2026-08-22",
-                "2026-08-23", "2026-08-24", "2026-08-25"]
-    .map((d) => rotatingSport(d, DAY_SPORTS));
-  // The whole point: not seven days of the same sport.
-  assertEquals(new Set(week).size > 1, true);
-  assertEquals(week.every((s) => s !== null && DAY_SPORTS.includes(s)), true);
-});
-
-Deno.test("rotatingSport is deterministic per day and safe when nothing is minted", () => {
-  assertEquals(rotatingSport("2026-08-19", DAY_SPORTS), rotatingSport("2026-08-19", DAY_SPORTS));
-  assertEquals(rotatingSport("2026-08-19", []), null);
-  assertEquals(rotatingSport("2026-08-19", ["nba"]), "nba");
+Deno.test("names nothing rather than a sport the app will not show", () => {
+  // Nothing minted at all → generic copy.
+  assertEquals(sportForPush(["nfl"], []), null);
+  // History and fallback both unavailable: naming any of these would promise a board the
+  // pager does not open on.
+  assertEquals(sportForPush(["soccer"], ["baseball", "tennis"]), null);
 });
