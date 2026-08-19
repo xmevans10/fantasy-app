@@ -402,6 +402,34 @@ class Candidate:
     difficulty: float
     diffs: list[float]
     true_keeps: list[bool] | None = None
+    # What the PLAYER would recognize as "the same puzzle" — see `content_signature`. Every
+    # exclusivity check in this module keys on this rather than `puzzle_id`, because one board
+    # legitimately exists under several ids.
+    signature: str = ""
+
+
+def content_signature(fmt: str, puzzle_id: str, content: dict) -> str:
+    """Identity as a PLAYER experiences it: the cards, not the row id.
+
+    `daily_puzzle._finalize_row` re-ids a stable pool row when it mints it as a daily
+    (`soccer-playmakers-00` -> `soccer-playmakers-00-daily-20260814`), so one board is live under
+    two ids with byte-identical content. Keying exclusivity on `puzzle_id` treated those as two
+    boards and put the same eight cards on rungs 4 and 5 — reported from the app on 2026-08-19,
+    and invisible to a `select ... group by puzzle_id having count(*) > 1` check because the ids
+    genuinely differ.
+
+    Falls back to the id when a format has no recognizable per-card identity, which keeps the
+    behaviour of any format this does not understand exactly as it was.
+    """
+    if fmt == "keep4":
+        ids = sorted(str(p.get("id") or p.get("name")) for p in content.get("players", []))
+    elif fmt == "whoami":
+        ids = [str(content.get("answer") or content.get("playerKey") or "")]
+    elif fmt == "grid":
+        ids = [str(content.get("id") or "")]
+    else:
+        return puzzle_id
+    return f"{fmt}|" + ",".join(i for i in ids if i) if any(ids) else puzzle_id
 
 
 def lerp(a: float, b: float, t: float) -> float:
@@ -459,7 +487,10 @@ def board_seed(rung: int, ordinal: int) -> int:
 def build_pool(fmt: str, primary: Candidate, candidates: list[Candidate],
                bot_skill: float, bot_style: str, target_win: float,
                rung: int) -> tuple[list[dict], list[str]]:
-    """The rung's ordered pool, `primary` first, and the ids it consumed.
+    """The rung's ordered pool, `primary` first, and the content SIGNATURES it consumed.
+
+    Signatures, not ids: one board is live under several ids (a stable pool row and its
+    `-daily-` re-id), so returning ids would let the next rung take the same cards back.
 
     Candidates are tried nearest-difficulty first and each one is re-simulated against the rung's
     solved `bot_skill`, so a board only joins the pool if it actually plays like the rung it is
@@ -468,7 +499,7 @@ def build_pool(fmt: str, primary: Candidate, candidates: list[Candidate],
     """
     boards = [{"rung": rung, "ordinal": 0, "puzzle_id": primary.puzzle_id,
                "board_difficulty": round(primary.difficulty, 3), "seed": board_seed(rung, 0)}]
-    consumed = [primary.puzzle_id]
+    consumed = [primary.signature]
 
     tolerance = (POOL_WIN_RATE_TOLERANCE_SLOW_BURN if bot_style == "slowBurn"
                  else POOL_WIN_RATE_TOLERANCE)
@@ -481,7 +512,7 @@ def build_pool(fmt: str, primary: Candidate, candidates: list[Candidate],
     # the real fix is upstream, in `build_rungs`, which now prefers primaries that HAVE neighbours
     # (see `poolable`). Fixing the choice of board beats loosening what the choice promises.
     near = sorted((c for c in candidates
-                   if c.puzzle_id != primary.puzzle_id
+                   if c.signature != primary.signature
                    and abs(c.difficulty - primary.difficulty) <= POOL_DIFFICULTY_TOLERANCE),
                   key=lambda c: abs(c.difficulty - primary.difficulty))
     measured: list[tuple[float, Candidate]] = []
@@ -496,7 +527,7 @@ def build_pool(fmt: str, primary: Candidate, candidates: list[Candidate],
         boards.append({"rung": rung, "ordinal": len(boards), "puzzle_id": c.puzzle_id,
                        "board_difficulty": round(c.difficulty, 3),
                        "seed": board_seed(rung, len(boards))})
-        consumed.append(c.puzzle_id)
+        consumed.append(c.signature)
 
     # A rung with ONE board is the replay bug itself — the player retries and gets the board they
     # just solved. If the strict screen leaves a rung there, spend some of the pin's headroom
@@ -513,7 +544,7 @@ def build_pool(fmt: str, primary: Candidate, candidates: list[Candidate],
             boards.append({"rung": rung, "ordinal": len(boards), "puzzle_id": c.puzzle_id,
                            "board_difficulty": round(c.difficulty, 3),
                            "seed": board_seed(rung, len(boards))})
-            consumed.append(c.puzzle_id)
+            consumed.append(c.signature)
             print(f"  rung {rung}: admitted a second board at drift {drift:.3f} "
                   f"(screen {tolerance}) — the alternative was a replayable rung")
     return boards, consumed
@@ -548,7 +579,7 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
         want_win = lerp(TARGET_WIN_RATE_START, TARGET_WIN_RATE_END, t)
 
         candidates = [c for c in by_mode.get(fmt, [])
-                      if c.puzzle_id not in used and c.difficulty >= BOARD_DIFFICULTY_FLOOR]
+                      if c.signature not in used and c.difficulty >= BOARD_DIFFICULTY_FLOOR]
         if not candidates:
             # Floor is a hard requirement, not a preference: below it the rung cannot
             # distinguish two players at all. Better to reuse a board than to seed a dud.
@@ -581,7 +612,7 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
 
         def poolable(c: Candidate) -> int:
             return sum(1 for o in pool_by_id
-                       if o.puzzle_id != c.puzzle_id and o.puzzle_id not in used
+                       if o.signature != c.signature and o.signature not in used
                        and abs(o.difficulty - c.difficulty) <= POOL_DIFFICULTY_TOLERANCE)
 
         def rank(c: Candidate) -> tuple:
@@ -593,7 +624,7 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
             return (-depth, recency, abs(c.difficulty - want_difficulty))
 
         pick = min(band, key=rank)
-        used.add(pick.puzzle_id)
+        used.add(pick.signature)
         recent_sports = ([pick.sport] + recent_sports)[:4]
 
         # ONE CHARACTER PER RUNG. The roster is ordered by `base_skill` and assigned 1:1, so rung
@@ -665,13 +696,13 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
     # costs the roomy rungs a board they had spares of.
     def available(fmt: str, pick: Candidate) -> int:
         return sum(1 for c in by_mode.get(fmt, [])
-                   if c.puzzle_id not in used and c.puzzle_id != pick.puzzle_id
+                   if c.signature not in used and c.signature != pick.signature
                    and abs(c.difficulty - pick.difficulty) <= POOL_DIFFICULTY_TOLERANCE)
 
     for rung, fmt, pick, style, skill, achieved in sorted(
             plan, key=lambda p: available(p[1], p[2])):
         rung_boards, consumed = build_pool(
-            fmt, pick, [c for c in by_mode.get(fmt, []) if c.puzzle_id not in used],
+            fmt, pick, [c for c in by_mode.get(fmt, []) if c.signature not in used],
             skill, style, achieved, rung)
         used.update(consumed)
         boards.extend(rung_boards)
@@ -702,7 +733,8 @@ def fetch_pool(url: str, key: str) -> list[Candidate]:
             if not diffs:
                 continue
             out.append(Candidate(r["id"], fmt, r["sport"],
-                                 board_difficulty(fmt, content), diffs, keeps))
+                                 board_difficulty(fmt, content), diffs, keeps,
+                                 content_signature(fmt, r["id"], content)))
     return out
 
 

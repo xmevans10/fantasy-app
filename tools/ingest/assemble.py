@@ -101,6 +101,25 @@ def grade_pool(theme: Theme, seasons: list[RawSeason],
     return ranked[: theme.pool_cap]
 
 
+def _same_person(a: str, b: str) -> bool:
+    """Whether two card names are one human under two spellings.
+
+    Providers list the same player under a short display name and a formal full one, as
+    separate rows with separate ids — Transfermarkt carries both "Cristiano Ronaldo" and
+    "Cristiano Ronaldo dos Santos Aveiro", so four live boards asked players to rank Ronaldo
+    against himself (found 2026-08-19). Neither the id check nor an exact-name check can see
+    it, because both genuinely differ.
+
+    A strict prefix on a word boundary is the shape this actually takes: the formal name
+    EXTENDS the display name. Requiring the shorter side to be a full name itself (two or more
+    words) keeps it from firing on a shared surname."""
+    a, b = a.casefold().strip(), b.casefold().strip()
+    if a == b:
+        return True
+    short, long = (a, b) if len(a) < len(b) else (b, a)
+    return " " in short and long.startswith(short + " ")
+
+
 def _windows(ranked: list[tuple[RawSeason, float]], max_variants: int) -> list[list[tuple[RawSeason, float]]]:
     """Contiguous 8-season windows clustered in grade, with an unambiguous
     top-4/bottom-4 split (grade[3] != grade[4]). Evenly sampled for variety."""
@@ -110,8 +129,13 @@ def _windows(ranked: list[tuple[RawSeason, float]], max_variants: int) -> list[l
     candidates = []
     for i in range(n - KEEP_COUNT + 1):
         win = ranked[i:i + KEEP_COUNT]
-        if win[3][1] != win[4][1]:           # clean keep/cut boundary
-            candidates.append(win)
+        if win[3][1] == win[4][1]:           # no clean keep/cut boundary
+            continue
+        names = [season.name for season, _ in win]
+        if any(_same_person(names[x], names[y])
+               for x in range(len(names)) for y in range(x + 1, len(names))):
+            continue                          # the same human twice — see `_same_person`
+        candidates.append(win)
     if not candidates:
         return []
     if len(candidates) <= max_variants:

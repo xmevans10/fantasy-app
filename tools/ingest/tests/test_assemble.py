@@ -152,3 +152,40 @@ def test_photo_less_lower_division_soccer_row_never_becomes_a_puzzle_card():
     pool = assemble.grade_pool(theme, [photoless, withphoto])
     names = {s.name for s, _ in pool}
     assert names == {"Top Flight Guy"}
+
+
+# ── One human per board ──────────────────────────────────────────────────────────
+
+def test_same_person_matches_a_display_name_and_its_formal_extension():
+    from tools.ingest.assemble import _same_person
+    assert _same_person("Cristiano Ronaldo", "Cristiano Ronaldo dos Santos Aveiro")
+    assert _same_person("Cristiano Ronaldo dos Santos Aveiro", "Cristiano Ronaldo")
+    assert _same_person("Kylian Mbappé", "kylian mbappé")
+
+
+def test_same_person_does_not_fire_on_a_shared_surname_or_first_name():
+    from tools.ingest.assemble import _same_person
+    # Different players who merely share a name part must stay distinct.
+    assert not _same_person("Gary Neville", "Phil Neville")
+    assert not _same_person("Eden Hazard", "Thorgan Hazard")
+    assert not _same_person("Ronaldo", "Ronaldo Luis Nazario")   # one-word side is too weak
+    assert not _same_person("Diego Costa", "Diego Forlan")
+
+
+def test_a_window_containing_one_player_twice_is_rejected():
+    """Four live boards asked players to rank Cristiano Ronaldo against himself, because the
+    catalog carries him under both a display and a formal name with different ids."""
+    from tools.ingest.assemble import _windows
+    from tools.ingest.models import RawSeason
+
+    def season(name, year):
+        return RawSeason(name=name, team_abbr="RMA", season_year=year, sport="soccer",
+                         position="FW", stats={"goals": 30.0}, headshot="h")
+
+    ranked = [(season(f"Player {i}", 2010 + i), 100.0 - i) for i in range(8)]
+    assert _windows(ranked, 1), "sanity: a clean window builds"
+
+    # Same eight, but two cards are one human.
+    ranked[2] = (season("Cristiano Ronaldo", 2013), ranked[2][1])
+    ranked[5] = (season("Cristiano Ronaldo dos Santos Aveiro", 2016), ranked[5][1])
+    assert _windows(ranked, 1) == [], "a board must never contain the same player twice"
