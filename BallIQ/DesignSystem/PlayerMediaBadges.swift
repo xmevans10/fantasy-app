@@ -66,6 +66,11 @@ struct TeamLogoBadge: View {
     /// just narrows the lookup when a caller happens to have one).
     var league: String? = nil
     var size: CGFloat = 40
+    /// Set false when the crest for this code would be *wrong* rather than merely missing —
+    /// Journeyman's era-renamed franchises, where `nfl/hou` is the Texans' badge and the label
+    /// next to it says "Oilers". Falls through to the abbreviation chip, which is the same
+    /// fallback a 404 already produces, so the two cases render identically.
+    var showsLogo: Bool = true
 
     private var abbrText: some View {
         Text(teamAbbr.uppercased())
@@ -78,7 +83,7 @@ struct TeamLogoBadge: View {
     /// `teamLogoURL` itself already prefers the fetched `teams.logo_url` over the CDN guess.
     @ViewBuilder private var content: some View {
         if sport.hasTeams {
-            if let url = sport.teamLogoURL(forAbbr: teamAbbr, league: league) {
+            if showsLogo, let url = sport.teamLogoURL(forAbbr: teamAbbr, league: league) {
                 RemoteImage(url: url, targetSize: CGSize(width: size, height: size),
                             failure: { abbrText })
             } else {

@@ -85,10 +85,11 @@ enum DuelBoard: Identifiable {
     case keep4(DuelSession, Keep4Puzzle)
     case grid(DuelSession, GridPuzzle)
     case whoami(DuelSession, WhoAmIPuzzle)
+    case journeyman(DuelSession, JourneymanPuzzle)
 
     var session: DuelSession {
         switch self {
-        case .keep4(let s, _), .grid(let s, _), .whoami(let s, _): return s
+        case .keep4(let s, _), .grid(let s, _), .whoami(let s, _), .journeyman(let s, _): return s
         }
     }
 
@@ -104,6 +105,8 @@ enum DuelBoard: Identifiable {
             GridGameView(duel: session, duelPuzzle: puzzle)
         case .whoami(let session, let puzzle):
             WhoAmIGameView(puzzle: puzzle, ranked: false, duel: session)
+        case .journeyman(let session, let puzzle):
+            JourneymanGameView(puzzle: puzzle, ranked: false, duel: session)
         }
     }
 }
@@ -140,7 +143,9 @@ struct LadderRunSession: Equatable {
     /// its `beats` are one per revealed clue, so their count *is* the clues it used.
     var verdictHits: (hits: Int, outOf: Int) {
         switch rung.mode {
-        case .keep4, .grid:
+        // Journeyman rides with these two: `BotSolver.playJourneyman` already reports guess
+        // efficiency out of five, so there is nothing left to convert.
+        case .keep4, .grid, .journeyman:
             return (run.correct, run.outOf)
         case .whoami:
             let solved = run.correct > 0

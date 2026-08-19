@@ -58,17 +58,20 @@ def test_every_dimension_has_a_distinct_key_and_a_label():
 
 
 def test_point_multipliers_match_the_swift_table():
-    """`WhoAmIPuzzle.Difficulty.multiplier` is the client's own copy of POINT_MULTIPLIER (the
-    client deliberately doesn't trust a number from content). Read it back out of the Swift
-    source so the two can't drift silently — the same posture as the grade-formula ports."""
+    """`SubjectDifficulty.multiplier` is the client's own copy of POINT_MULTIPLIER (the client
+    deliberately doesn't trust a number from content). Read it back out of the Swift source so
+    the two can't drift silently — the same posture as the grade-formula ports.
+
+    Lives in `SubjectDifficulty.swift` since Journeyman started sharing the same three tiers;
+    `WhoAmIPuzzle.Difficulty` is a typealias for it."""
     import pathlib
     import re
     swift = (pathlib.Path(__file__).resolve().parents[3]
-             / "BallIQ" / "Models" / "WhoAmIPuzzle.swift").read_text(encoding="utf-8")
-    # Scoped to the `multiplier` body — `Difficulty` has several other easy/medium/hard
-    # switches (symbol, tint, tintBg …) and a looser pattern picks those up too.
-    body = re.search(r"var multiplier: Double \{(.*?)\n        \}", swift, re.S)
-    assert body, "couldn't find Difficulty.multiplier's switch in WhoAmIPuzzle.swift"
+             / "BallIQ" / "Models" / "SubjectDifficulty.swift").read_text(encoding="utf-8")
+    # Scoped to the `multiplier` body — the enum has several other easy/medium/hard switches
+    # (symbol, tint, tintBg …) and a looser pattern picks those up too.
+    body = re.search(r"var multiplier: Double \{(.*?)\n    \}", swift, re.S)
+    assert body, "couldn't find SubjectDifficulty.multiplier's switch"
     found = dict(re.findall(r"case \.(easy|medium|hard): return ([0-9.]+)", body.group(1)))
     assert {k: float(v) for k, v in found.items()} == POINT_MULTIPLIER
 

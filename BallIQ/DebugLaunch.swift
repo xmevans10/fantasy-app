@@ -9,10 +9,14 @@ enum DebugLaunch {
     }
     static var autoOpenGame: Bool { has("-screenshotGame") || has("-screenshotResult") }
     static var autoOpenWhoAmI: Bool { has("-screenshotWhoAmI") || has("-screenshotWhoAmIResult") }
+    static var autoOpenJourneyman: Bool {
+        has("-screenshotJourneyman") || has("-screenshotJourneymanResult")
+    }
     /// `-autoSubmit` alone works with `-openURL` (deep-linked game → result) without also
     /// auto-opening the daily the way `-screenshotResult` does.
     static var autoSubmitResult: Bool {
-        has("-screenshotResult") || has("-screenshotWhoAmIResult") || has("-autoSubmit")
+        has("-screenshotResult") || has("-screenshotWhoAmIResult")
+            || has("-screenshotJourneymanResult") || has("-autoSubmit")
     }
     static var autoOpenCreateKeep4: Bool { has("-screenshotCreate") }
     static var autoOpenStats: Bool { has("-screenshotStats") }
@@ -217,6 +221,7 @@ enum DebugLaunch {
     #else
     static let autoOpenGame = false
     static let autoOpenWhoAmI = false
+    static let autoOpenJourneyman = false
     static let autoSubmitResult = false
     static let autoOpenCreateKeep4 = false
     static let autoOpenStats = false

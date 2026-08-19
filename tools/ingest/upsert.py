@@ -288,6 +288,28 @@ def upsert_whoami_history(rows: list[dict]) -> int:
     return _upsert_table("whoami_history", rows, conflict="served_date,sport")
 
 
+def fetch_journeyman_history() -> list[dict]:
+    """Every Journeyman pick ever served — same shape, size and purpose as
+    `fetch_whoami_history` (one row per day per sport), feeding daily_journeyman.py's
+    least-recently-served ranking and its idempotency check in one round trip."""
+    base, key = _require_env()
+    endpoint = f"{base}/rest/v1/journeyman_history?select=sport,player_key,served_date"
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    req = urllib.request.Request(endpoint, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as err:
+        body = err.read().decode("utf-8", "ignore")
+        raise RuntimeError(f"journeyman_history fetch failed ({err.code}): {body}") from err
+
+
+def upsert_journeyman_history(rows: list[dict]) -> int:
+    """Record daily Journeyman picks (on_conflict=served_date,sport — same idempotent posture
+    as `upsert_whoami_history`)."""
+    return _upsert_table("journeyman_history", rows, conflict="served_date,sport")
+
+
 def fetch_grid_history(since_date: str) -> list[dict]:
     """Grid combos served on/after `since_date` (sport, row_teams, col_decades) — the
     trailing-window rejection set grid.py uses to keep a freshly-minted board from

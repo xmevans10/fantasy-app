@@ -12,8 +12,11 @@ enum GameFormatKind: String, Codable, CaseIterable {
     /// Pro-only, 9-guess board (M5 Phase E) — the hardest daily format, so it outranks
     /// Who Am I? exactly as this file's own comment long anticipated.
     case grid
+    /// Career-path guessing (M22). Weighted just under Who Am I?: it's the same one-answer
+    /// grammar, but a club history is a narrower search space than thirty clue dimensions.
+    case journeyman
 
-    /// Relative difficulty weight (Keep4 Normal < Keep4 Hard < Who Am I? < Grid).
+    /// Relative difficulty weight (Keep4 Normal < Keep4 Hard < Journeyman < Who Am I? < Grid).
     var ratingWeight: Double {
         switch self {
         case .keep4Normal: return 1.0
@@ -22,6 +25,7 @@ enum GameFormatKind: String, Codable, CaseIterable {
         case .overUnder:   return 1.0
         case .draftSpin:   return 1.0
         case .grid:        return 2.0
+        case .journeyman:  return 1.5
         }
     }
 
@@ -34,6 +38,7 @@ enum GameFormatKind: String, Codable, CaseIterable {
         case .overUnder:   return 100
         case .grid:        return 200
         case .draftSpin:   return 100
+        case .journeyman:  return 100
         }
     }
 

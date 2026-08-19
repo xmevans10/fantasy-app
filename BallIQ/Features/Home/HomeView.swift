@@ -13,6 +13,7 @@ struct HomeView: View {
     /// disambiguates that from a genuine empty result once the fetch resolves.
     @State private var keep4BySport: [Sport: DailyPick<Keep4Puzzle>] = [:]
     @State private var whoAmIBySport: [Sport: DailyPick<WhoAmIPuzzle>] = [:]
+    @State private var journeymanBySport: [Sport: DailyPick<JourneymanPuzzle>] = [:]
     @State private var loadedSports: Set<Sport> = []
     /// The local calendar day the maps above were loaded for. iOS keeps the app in memory for
     /// days, so without this the `loadedSports` guard would pin every user to the FIRST day's
@@ -25,6 +26,7 @@ struct HomeView: View {
     @State private var dailyPage: Sport = .nfl
     @State private var activePuzzle: Keep4Puzzle?
     @State private var activeWhoAmI: WhoAmIPuzzle?
+    @State private var activeJourneyman: JourneymanPuzzle?
     @State private var showBrowse = false
     @State private var showPaywall = false
     /// Home gates two different things behind the same sheet — the archive row and The Grid —
@@ -41,6 +43,7 @@ struct HomeView: View {
     /// shallowest tap on the page.
     @State private var showKeep4Hub = false
     @State private var showWhoAmIHub = false
+    @State private var showJourneymanHub = false
     @State private var shareTarget: SharablePuzzle?
     /// Which daily the player just opened. The game runs in a `fullScreenCover(item:)`, whose
     /// `onDismiss` can no longer see the item, so the activation milestone needs the puzzle
@@ -72,8 +75,12 @@ struct HomeView: View {
     private var whoAmICompletedToday: Bool? {
         whoAmIBySport[dailyPage].map { container.hasCompletedToday(puzzleID: $0.content.id) }
     }
-    private var bothDailiesComplete: Bool {
-        HomeDailyLoop.bothDailiesComplete(keep4Completed: keep4CompletedToday, whoAmICompleted: whoAmICompletedToday)
+    private var journeymanCompletedToday: Bool? {
+        journeymanBySport[dailyPage].map { container.hasCompletedToday(puzzleID: $0.content.id) }
+    }
+    private var allDailiesComplete: Bool {
+        HomeDailyLoop.allDailiesComplete(keep4CompletedToday, whoAmICompletedToday,
+                                         journeymanCompletedToday)
     }
 
     var body: some View {
@@ -103,7 +110,7 @@ struct HomeView: View {
 
                     section("Today's daily games") {
                         VStack(spacing: 14) {
-                            if bothDailiesComplete {
+                            if allDailiesComplete {
                                 // Sells tomorrow instead of leaving the section reading as
                                 // "two finished cards and nothing else to do" — the arcade
                                 // formats are still fair game today even once the ranked
@@ -123,7 +130,7 @@ struct HomeView: View {
                             DailyGamesPager(sports: Sport.allCases, selection: $dailyPage) { sport in
                                 dailyCardStack(for: sport)
                             }
-                            .opacity(bothDailiesComplete ? 0.6 : 1)
+                            .opacity(allDailiesComplete ? 0.6 : 1)
                         }
                     }
                     .heroReveal(1)
@@ -165,6 +172,9 @@ struct HomeView: View {
             .fullScreenCover(item: $activeWhoAmI, onDismiss: finishDailyGame) { puzzle in
                 WhoAmIGameView(puzzle: puzzle).environmentObject(container)
             }
+            .fullScreenCover(item: $activeJourneyman, onDismiss: finishDailyGame) { puzzle in
+                JourneymanGameView(puzzle: puzzle).environmentObject(container)
+            }
             // The arcade covers carry `onDismiss: evaluateMoment` where they previously carried
             // nothing: a Grid or Over/Under session is just as much a finished game as a daily,
             // and the moment layer's post-game trigger has to fire for all of them or the
@@ -186,6 +196,9 @@ struct HomeView: View {
             }
             .navigationDestination(isPresented: $showWhoAmIHub) {
                 BrowseView(pinnedFormat: .whoami).environmentObject(container)
+            }
+            .navigationDestination(isPresented: $showJourneymanHub) {
+                BrowseView(pinnedFormat: .journeyman).environmentObject(container)
             }
             .sheet(item: $shareTarget) { target in
                 PuzzleShareSheet(puzzle: target, surface: "puzzle_home")
@@ -226,6 +239,7 @@ struct HomeView: View {
         loadedSports.removeAll()
         keep4BySport.removeAll()
         whoAmIBySport.removeAll()
+        journeymanBySport.removeAll()
     }
 
     /// Current streak, shown inline in the page body (not a nav-bar icon — that read as a
@@ -393,6 +407,7 @@ struct HomeView: View {
         switch format.id {
         case "keep4": showKeep4Hub = true
         case "whoami": showWhoAmIHub = true
+        case "journeyman": showJourneymanHub = true
         case "versus": selectedTab = 2
         case "overunder": showOverUnder = true
         case "draft": launchDraftSpin(daily: false)
@@ -432,6 +447,8 @@ struct HomeView: View {
         await loadDaily(for: initial)
         if DebugLaunch.autoOpenWhoAmI, activeWhoAmI == nil {
             activeWhoAmI = whoAmIBySport[initial]?.content
+        } else if DebugLaunch.autoOpenJourneyman, activeJourneyman == nil {
+            activeJourneyman = journeymanBySport[initial]?.content
         } else if DebugLaunch.autoOpenGame, activePuzzle == nil {
             activePuzzle = keep4BySport[initial]?.content
         } else if DebugLaunch.autoOpenBrowse {
@@ -457,8 +474,10 @@ struct HomeView: View {
         // Independent reads — starting them together removes an avoidable round trip.
         async let keep4Task = container.puzzles.keep4Puzzle(for: filter, date: Date())
         async let whoAmITask = container.puzzles.whoAmIPuzzle(for: filter, date: Date())
+        async let journeymanTask = container.puzzles.journeymanPuzzle(for: filter, date: Date())
         keep4BySport[sport] = await keep4Task
         whoAmIBySport[sport] = await whoAmITask
+        journeymanBySport[sport] = await journeymanTask
     }
 
     /// One pager page: that sport's K4C4 + Who Am I? daily cards, stacked exactly like the
@@ -508,6 +527,27 @@ struct HomeView: View {
                     activeWhoAmI = puzzle
                 }
                 secondaryAction: { shareTarget = SharablePuzzle(whoAmI: puzzle) }
+            } else {
+                dailyCardPlaceholder(loaded: loadedSports.contains(sport))
+            }
+            if let pick = journeymanBySport[sport] {
+                let puzzle = pick.content
+                // No `secondaryAction`: the pre-game share sheet renders a puzzle preview, and
+                // for this format the preview IS the board — there's nothing to show that
+                // wouldn't hand the reader the first club for free.
+                DailyGameCard(formatName: "Journeyman",
+                              symbol: "arrow.triangle.branch",
+                              sport: puzzle.sport,
+                              title: String(localized: "Name the player from their clubs"),
+                              subtitle: String(localized: "\(puzzle.stints.count) clubs"),
+                              difficulty: puzzle.difficulty,
+                              completed: container.hasCompletedToday(puzzleID: puzzle.id),
+                              typeColor: .goldFill, onTypeColor: .onGold,
+                              ranked: true,
+                              dateBadge: pick.isCanonicalToday ? DailyGameCard.todayDateBadge : nil) {
+                    launchDaily(format: "journeyman", id: puzzle.id, sport: puzzle.sport)
+                    activeJourneyman = puzzle
+                }
             } else {
                 dailyCardPlaceholder(loaded: loadedSports.contains(sport))
             }

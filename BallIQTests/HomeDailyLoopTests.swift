@@ -2,25 +2,33 @@ import XCTest
 @testable import BallIQ
 
 /// Tests for the pure logic behind Home's post-completion "come back tomorrow" state
-/// (backlog #2) — the UTC-midnight countdown target and the "both dailies done" rule.
+/// (backlog #2) — the local-midnight countdown target and the "every daily done" rule.
 final class HomeDailyLoopTests: XCTestCase {
 
-    // MARK: - bothDailiesComplete
+    // MARK: - allDailiesComplete
 
     func testBothCompleteWhenBothTrue() {
-        XCTAssertTrue(HomeDailyLoop.bothDailiesComplete(keep4Completed: true, whoAmICompleted: true))
+        XCTAssertTrue(HomeDailyLoop.allDailiesComplete(true, true))
+    }
+
+    /// Journeyman made it three (M22). A third ranked daily that the completion card ignored
+    /// would put "you're done for today" over an unplayed board.
+    func testThreeDailiesAllHaveToBeDone() {
+        XCTAssertTrue(HomeDailyLoop.allDailiesComplete(true, true, true))
+        XCTAssertFalse(HomeDailyLoop.allDailiesComplete(true, true, false))
+        XCTAssertFalse(HomeDailyLoop.allDailiesComplete(true, true, nil))
     }
 
     func testNotBothCompleteWhenOnlyOneDone() {
-        XCTAssertFalse(HomeDailyLoop.bothDailiesComplete(keep4Completed: true, whoAmICompleted: false))
-        XCTAssertFalse(HomeDailyLoop.bothDailiesComplete(keep4Completed: false, whoAmICompleted: true))
+        XCTAssertFalse(HomeDailyLoop.allDailiesComplete(true, false))
+        XCTAssertFalse(HomeDailyLoop.allDailiesComplete(false, true))
     }
 
     /// A puzzle that failed to load reports `nil`, not `false` — must not be treated as done.
     func testFailedLoadIsNotTreatedAsComplete() {
-        XCTAssertFalse(HomeDailyLoop.bothDailiesComplete(keep4Completed: nil, whoAmICompleted: true))
-        XCTAssertFalse(HomeDailyLoop.bothDailiesComplete(keep4Completed: true, whoAmICompleted: nil))
-        XCTAssertFalse(HomeDailyLoop.bothDailiesComplete(keep4Completed: nil, whoAmICompleted: nil))
+        XCTAssertFalse(HomeDailyLoop.allDailiesComplete(nil, true))
+        XCTAssertFalse(HomeDailyLoop.allDailiesComplete(true, nil))
+        XCTAssertFalse(HomeDailyLoop.allDailiesComplete(nil, nil))
     }
 
     // MARK: - nextMidnight

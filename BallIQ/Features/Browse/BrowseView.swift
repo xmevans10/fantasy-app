@@ -29,20 +29,30 @@ struct BrowseView: View {
     @State private var searchExpanded = false
     @State private var keep4: [Keep4Puzzle] = []
     @State private var whoami: [WhoAmIPuzzle] = []
+    @State private var journeyman: [JourneymanPuzzle] = []
     @State private var dailyKeep4: DailyPick<Keep4Puzzle>?
     @State private var dailyWhoAmI: DailyPick<WhoAmIPuzzle>?
+    @State private var dailyJourneyman: DailyPick<JourneymanPuzzle>?
     @State private var loading = false
 
     @State private var activeKeep4: Keep4Puzzle?
     @State private var activeWhoAmI: WhoAmIPuzzle?
+    @State private var activeJourneyman: JourneymanPuzzle?
     @State private var activeDailyKeep4: Keep4Puzzle?
     @State private var activeDailyWhoAmI: WhoAmIPuzzle?
+    @State private var activeDailyJourneyman: JourneymanPuzzle?
     @State private var shareTarget: SharablePuzzle?
     @State private var showPaywall = false
 
     enum BrowseFormat: String, CaseIterable {
-        case keep4, whoami
-        var title: String { self == .keep4 ? "K4C4" : "Who Am I?" }
+        case keep4, whoami, journeyman
+        var title: String {
+            switch self {
+            case .keep4: return "K4C4"
+            case .whoami: return "Who Am I?"
+            case .journeyman: return "Journeyman"
+            }
+        }
     }
 
     var body: some View {
@@ -61,6 +71,9 @@ struct BrowseView: View {
         .fullScreenCover(item: $activeWhoAmI) { p in
             WhoAmIGameView(puzzle: p, ranked: false).environmentObject(container)
         }
+        .fullScreenCover(item: $activeJourneyman) { p in
+            JourneymanGameView(puzzle: p, ranked: false).environmentObject(container)
+        }
         // Today's daily from the hub is the real ranked run — same semantics as Home's
         // daily cards, distinct from the unranked archive covers above.
         .fullScreenCover(item: $activeDailyKeep4) { p in
@@ -68,6 +81,9 @@ struct BrowseView: View {
         }
         .fullScreenCover(item: $activeDailyWhoAmI) { p in
             WhoAmIGameView(puzzle: p).environmentObject(container)
+        }
+        .fullScreenCover(item: $activeDailyJourneyman) { p in
+            JourneymanGameView(puzzle: p).environmentObject(container)
         }
         .sheet(item: $shareTarget) { target in
             PuzzleShareSheet(puzzle: target, surface: "puzzle_browse")
@@ -79,7 +95,13 @@ struct BrowseView: View {
     }
 
     private var refreshKey: String { "\(format.rawValue)-\(sportFilter.rawValue)" }
-    private var currentEmpty: Bool { format == .keep4 ? filteredKeep4.isEmpty : whoami.isEmpty }
+    private var currentEmpty: Bool {
+        switch format {
+        case .keep4: return filteredKeep4.isEmpty
+        case .whoami: return whoami.isEmpty
+        case .journeyman: return journeyman.isEmpty
+        }
+    }
 
     // MARK: - Controls
 
@@ -141,9 +163,13 @@ struct BrowseView: View {
                         emptyState.frame(maxWidth: .infinity)
                     } else if format == .keep4 {
                         ForEach(numberedKeep4, id: \.puzzle.id) { card(keep4: $0.puzzle, title: $0.title) }
-                    } else {
+                    } else if format == .whoami {
                         ForEach(Array(whoami.enumerated()), id: \.element.id) { i, p in
                             card(whoAmI: p, number: i + 1)
+                        }
+                    } else {
+                        ForEach(Array(journeyman.enumerated()), id: \.element.id) { i, p in
+                            card(journeyman: p, number: i + 1)
                         }
                     }
                 }
@@ -153,7 +179,12 @@ struct BrowseView: View {
     }
 
     private var dailyPuzzleMissing: Bool {
-        pinnedFormat == nil || (format == .keep4 ? dailyKeep4 == nil : dailyWhoAmI == nil)
+        guard pinnedFormat != nil else { return true }
+        switch format {
+        case .keep4: return dailyKeep4 == nil
+        case .whoami: return dailyWhoAmI == nil
+        case .journeyman: return dailyJourneyman == nil
+        }
     }
 
     /// Today's ranked daily for the chosen sport — the same card Home shows, so the hub
@@ -185,6 +216,18 @@ struct BrowseView: View {
                 activeDailyWhoAmI = p
             }
             secondaryAction: { shareTarget = SharablePuzzle(whoAmI: p) }
+        } else if format == .journeyman, let pick = dailyJourneyman {
+            let p = pick.content
+            DailyGameCard(formatName: "Journeyman", symbol: "arrow.triangle.branch", sport: p.sport,
+                          title: String(localized: "Name the player from their clubs"),
+                          subtitle: String(localized: "\(p.stints.count) clubs"),
+                          difficulty: p.difficulty,
+                          completed: container.hasCompletedToday(puzzleID: p.id),
+                          typeColor: .goldFill, onTypeColor: .onGold,
+                          ranked: true,
+                          dateBadge: pick.isCanonicalToday ? DailyGameCard.todayDateBadge : nil) {
+                activeDailyJourneyman = p
+            }
         }
     }
 
@@ -236,6 +279,20 @@ struct BrowseView: View {
         secondaryAction: { shareTarget = SharablePuzzle(whoAmI: p) }
     }
 
+    /// Anonymous for the same reason as Who Am I?'s card: a title, and even the club count on
+    /// its own, is a hint. The count stays because the board shows it in the first second
+    /// anyway, and it's what tells a browsing player which boards look long.
+    private func card(journeyman p: JourneymanPuzzle, number: Int) -> some View {
+        DailyGameCard(formatName: "Journeyman", symbol: "arrow.triangle.branch", sport: p.sport,
+                      title: "Career path #\(number)",
+                      subtitle: String(localized: "\(p.stints.count) clubs · archive"),
+                      difficulty: p.difficulty,
+                      completed: container.hasCompletedToday(puzzleID: p.id),
+                      typeColor: .goldFill, onTypeColor: .onGold) {
+            playArchive { activeJourneyman = p }
+        }
+    }
+
     private var emptyState: some View {
         let filtersActive = format == .keep4 &&
             (decadeFilter != .all || grainFilter != .all || !searchText.isEmpty)
@@ -251,16 +308,19 @@ struct BrowseView: View {
     private func load() async {
         loading = true
         defer { loading = false }
-        if format == .keep4 {
-            keep4 = await container.puzzles.allKeep4(for: sportFilter)
-        } else {
-            whoami = await container.puzzles.allWhoAmI(for: sportFilter)
+        switch format {
+        case .keep4: keep4 = await container.puzzles.allKeep4(for: sportFilter)
+        case .whoami: whoami = await container.puzzles.allWhoAmI(for: sportFilter)
+        case .journeyman: journeyman = await container.puzzles.allJourneyman(for: sportFilter)
         }
         if pinnedFormat != nil {
-            if format == .keep4 {
+            switch format {
+            case .keep4:
                 dailyKeep4 = await container.puzzles.keep4Puzzle(for: sportFilter, date: Date())
-            } else {
+            case .whoami:
                 dailyWhoAmI = await container.puzzles.whoAmIPuzzle(for: sportFilter, date: Date())
+            case .journeyman:
+                dailyJourneyman = await container.puzzles.journeymanPuzzle(for: sportFilter, date: Date())
             }
         }
         if let query = DebugLaunch.searchQuery { searchText = query }

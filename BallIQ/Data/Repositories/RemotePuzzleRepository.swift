@@ -36,6 +36,14 @@ final class RemotePuzzleRepository: PuzzleRepository {
         return await fallback.whoAmIPuzzle(for: filter, date: date)
     }
 
+    func journeymanPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<JourneymanPuzzle>? {
+        if let rows = await fetch(format: "journeyman", filter: filter, as: JourneymanPuzzle.self),
+           !rows.isEmpty {
+            return pick(rows, date: date)
+        }
+        return await fallback.journeymanPuzzle(for: filter, date: date)
+    }
+
     func allKeep4(for filter: SportFilter) async -> [Keep4Puzzle] {
         if let rows = await fetch(format: "keep4", filter: filter, as: Keep4Puzzle.self), !rows.isEmpty {
             let released = Self.released(rows)
@@ -50,6 +58,15 @@ final class RemotePuzzleRepository: PuzzleRepository {
             if !released.isEmpty { return released.map(\.content) }
         }
         return await fallback.allWhoAmI(for: filter)
+    }
+
+    func allJourneyman(for filter: SportFilter) async -> [JourneymanPuzzle] {
+        if let rows = await fetch(format: "journeyman", filter: filter, as: JourneymanPuzzle.self),
+           !rows.isEmpty {
+            let released = Self.released(rows)
+            if !released.isEmpty { return released.map(\.content) }
+        }
+        return await fallback.allJourneyman(for: filter)
     }
 
     /// Drops rows dated later than today — the archive is "everything up to and including

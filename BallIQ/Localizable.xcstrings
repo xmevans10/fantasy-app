@@ -5857,6 +5857,149 @@
           }
         }
       }
+    },
+    "Journeyman" : {
+      "shouldTranslate" : false
+    },
+    "Name the player from their clubs" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adivina al jugador por sus clubes"
+          }
+        }
+      }
+    },
+    "%lld clubs" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld clubes"
+          }
+        }
+      }
+    },
+    "%lld clubs · archive" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld clubes · archivo"
+          }
+        }
+      }
+    },
+    "Career path #%lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trayectoria n.º %lld"
+          }
+        }
+      }
+    },
+    "1 guess left" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 intento restante"
+          }
+        }
+      }
+    },
+    "%lld guesses left" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld intentos restantes"
+          }
+        }
+      }
+    },
+    "A wrong guess costs %lld pts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un fallo cuesta %lld pts"
+          }
+        }
+      }
+    },
+    "Last guess" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Último intento"
+          }
+        }
+      }
+    },
+    "Earlier clubs not shown" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se muestran los clubes anteriores"
+          }
+        }
+      }
+    },
+    "THE PATH" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LA TRAYECTORIA"
+          }
+        }
+      }
+    },
+    "FIRST-GUESS GENIUS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GENIO AL PRIMER INTENTO"
+          }
+        }
+      }
+    },
+    "NAMED ON GUESS %lld OF %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ACERTADO EN EL INTENTO %lld DE %lld"
+          }
+        }
+      }
+    },
+    "Journeyman challenge" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reto de Journeyman"
+          }
+        }
+      }
+    },
+    "My Journeyman result" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mi resultado de Journeyman"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

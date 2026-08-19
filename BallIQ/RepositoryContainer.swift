@@ -771,6 +771,14 @@ final class RepositoryContainer: ObservableObject {
             guard let p = await ladder.puzzle(WhoAmIPuzzle.self, id: served.puzzleId) else { return nil }
             return .whoami(session(BotSolver.playWhoAmI(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
                                                  style: row.bot.style)), p)
+        // No rung is minted in journeyman mode today (`ladder_rungs.mode` still refuses the
+        // value server-side), but the arm is real rather than a `return nil`: the ladder's
+        // 30-rung curve is a server-side artifact, and the client should be able to play
+        // whatever it is served the day that curve is re-cut.
+        case .journeyman:
+            guard let p = await ladder.puzzle(JourneymanPuzzle.self, id: served.puzzleId) else { return nil }
+            return .journeyman(session(BotSolver.playJourneyman(p, skill: rung.botSkill, seed: seed,
+                                                 timeLimit: limit, style: row.bot.style)), p)
         }
     }
 
@@ -790,6 +798,9 @@ final class RepositoryContainer: ObservableObject {
         case .whoami:
             guard let p = await versus.puzzle(WhoAmIPuzzle.self, id: id) else { return nil }
             return .whoami(session, p)
+        case .journeyman:
+            guard let p = await versus.puzzle(JourneymanPuzzle.self, id: id) else { return nil }
+            return .journeyman(session, p)
         }
     }
 

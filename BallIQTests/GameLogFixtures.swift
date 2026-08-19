@@ -122,6 +122,24 @@ enum GameLogFixtures {
             details.answerName = whoAmIPool(rng: &rng)
             if !solved { details.missedPlayerNames = [details.answerName!] }
 
+        case .journeyman:
+            // Five guesses against a fully-visible career path — same shape as `.whoAmI` above,
+            // which is the point: they share a scoring table, so a fixture that drifted from it
+            // would quietly make cross-format analytics compare two different scales.
+            attempted = 1
+            let namedIt = rng.chance(0.75)
+            let guesses = namedIt ? rng.nextInt(1..<6) : 5
+            correct = namedIt ? 1 : 0
+            maxScore = 5
+            score = namedIt ? 6 - guesses : 0
+            perfect = namedIt && guesses == 1
+            performance = namedIt ? Double(6 - guesses) / 5.0 : 0
+            details.solved = namedIt
+            details.cluesUsed = guesses
+            details.wrongGuesses = namedIt ? guesses - 1 : guesses
+            details.answerName = whoAmIPool(rng: &rng)
+            if !namedIt { details.missedPlayerNames = [details.answerName!] }
+
         case .overUnder:
             let picks = rng.nextInt(6..<15)
             let overPicks = rng.nextInt(0..<(picks + 1))

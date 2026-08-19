@@ -14,6 +14,7 @@ struct ContentView: View {
     // with communityID nil (play never logged, report action hidden, author uncredited).
     @State private var linkKeep4: LinkedPlay<Keep4Puzzle>?
     @State private var linkWhoAmI: LinkedPlay<WhoAmIPuzzle>?
+    @State private var linkJourneyman: LinkedPlay<JourneymanPuzzle>?
     /// An accepted `balliq://challenge` — the same-board head-to-head loop. Separate from
     /// `linkKeep4`/`linkWhoAmI` because a challenge names a *board* (sport + day), not a puzzle
     /// id, and resolves inside the game view rather than here.
@@ -115,6 +116,12 @@ struct ContentView: View {
                           challenge: link.challenge)
                 .environmentObject(container)
         }
+        // No `communityID`: Journeyman has no community authoring surface yet, so a linked
+        // board is always a daily/archive one.
+        .fullScreenCover(item: $linkJourneyman) { link in
+            JourneymanGameView(puzzle: link.puzzle, ranked: false, challenge: link.challenge)
+                .environmentObject(container)
+        }
     }
 
     /// Resolve an inbound link. Two shapes exist:
@@ -146,6 +153,8 @@ struct ContentView: View {
             linkKeep4 = LinkedPlay(puzzle: p)
         } else if let p = await container.puzzles.allWhoAmI(for: .all).first(where: { $0.id == id }) {
             linkWhoAmI = LinkedPlay(puzzle: p)
+        } else if let p = await container.puzzles.allJourneyman(for: .all).first(where: { $0.id == id }) {
+            linkJourneyman = LinkedPlay(puzzle: p)
         }
     }
 
@@ -197,6 +206,16 @@ struct ContentView: View {
                                                 "sport": challenge.sport.rawValue,
                                                 "board": exact ? "exact" : "fallback"])
             linkWhoAmI = LinkedPlay(puzzle: resolved.content, challenge: exact ? challenge : nil)
+        case .journeyman:
+            guard let day = challenge.date else { return }
+            let filter = SportFilter(rawValue: challenge.sport.rawValue) ?? .all
+            guard let resolved = await container.puzzles.journeymanPuzzle(for: filter, date: day)
+            else { return }
+            let exact = resolved.isCanonicalToday
+            container.track(.challengeStarted, ["format": challenge.format.rawValue,
+                                                "sport": challenge.sport.rawValue,
+                                                "board": exact ? "exact" : "fallback"])
+            linkJourneyman = LinkedPlay(puzzle: resolved.content, challenge: exact ? challenge : nil)
         }
     }
 }

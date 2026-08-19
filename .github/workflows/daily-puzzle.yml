@@ -68,3 +68,11 @@ jobs:
           python -m tools.ingest.daily_whoami --upsert \
             --count "${{ github.event.inputs.count || '2' }}" \
             ${{ github.event.inputs.start_date != '' && format('--date {0}', github.event.inputs.start_date) || '' }}
+      # Journeyman's daily mint (M22) — same least-recently-served rotation and the same
+      # seconds-not-minutes cost as the Who Am I? step above, and its own step for the same
+      # reason: one format running out of pool must not cost the other two their picks.
+      - if: always()
+        run: |
+          python -m tools.ingest.daily_journeyman --upsert \
+            --count "${{ github.event.inputs.count || '2' }}" \
+            ${{ github.event.inputs.start_date != '' && format('--date {0}', github.event.inputs.start_date) || '' }}

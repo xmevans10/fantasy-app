@@ -27,6 +27,7 @@ final class LocalizationTests: XCTestCase {
 
     func testKnownKeyResolvesToSpanish() {
         XCTAssertEqual(es("Home"), "Inicio")
+        XCTAssertEqual(es("THE PATH"), "LA TRAYECTORIA")
         XCTAssertEqual(es("KEEP"), "MANTENER")
         XCTAssertEqual(es("CUT"), "CORTAR")
     }
@@ -37,6 +38,7 @@ final class LocalizationTests: XCTestCase {
     func testBrandedFormatNamesStayEnglish() {
         XCTAssertEqual(es("K4C4"), "K4C4")
         XCTAssertEqual(es("THE GRID"), "THE GRID")
+        XCTAssertEqual(es("Journeyman"), "Journeyman")
     }
 
     /// Every key in the catalog is its own English source string (verified: no `en`

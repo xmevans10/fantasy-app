@@ -26,6 +26,8 @@ struct GameFormat: Identifiable {
                    subtitle: "Daily + archive", tint: .accentFill, onTint: .onAccent),
         GameFormat(id: "whoami", name: "Who am I?", symbol: "questionmark.circle.fill", isPro: false, isPlayable: true,
                    subtitle: "Daily + archive", tint: .voltFill, onTint: .onVolt),
+        GameFormat(id: "journeyman", name: "Journeyman", symbol: "arrow.triangle.branch", isPro: false,
+                   isPlayable: true, subtitle: "Daily + archive", tint: .goldFill, onTint: .onGold),
         GameFormat(id: "draft", name: "Draft & Spin", symbol: "dice.fill", isPro: false, isPlayable: true, subtitle: "Arcade",
                    tint: .warningFill, onTint: .onWarning),
         // No explicit subtitle: Over/Under's first run each local day is ranked (see

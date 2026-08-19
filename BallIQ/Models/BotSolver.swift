@@ -258,6 +258,48 @@ enum BotSolver {
         return BotRun(performance: result.performance, correct: solved ? 1 : 0, outOf: 1, beats: beats)
     }
 
+    /// Journeyman, on the same axis as `playWhoAmI` — each of the five guesses is one more
+    /// chance to land the name, priced hardest on the first and easiest on the last. The two
+    /// share `hitProbability` rather than growing a second difficulty curve, because they are
+    /// the same decision ("do I commit now or spend one?") and a bot that behaved differently
+    /// across them would be a tuning surface nobody asked for.
+    ///
+    /// `puzzle` is unused by the simulation and taken anyway: it pins the call to a real board
+    /// (the caller can't accidentally run a bot against nothing) and leaves the door open for a
+    /// board-aware curve — a two-club path is a harder ask than an eight-club one.
+    static func playJourneyman(_ puzzle: JourneymanPuzzle, skill: Double, seed: UInt64,
+                               timeLimit: TimeInterval, style: BotStyle = .consistent) -> BotRun {
+        let limit = JourneymanScoring.maxGuesses
+        var gen = SeededGenerator(seed: seed)
+
+        var solved = false
+        var used = limit
+        for i in 0..<limit {
+            let difficulty = 1 - Double(i) / Double(limit - 1)
+            let progress = Double(i) / Double(limit - 1)
+            let p = hitProbability(skill: skill, difficulty: difficulty,
+                                   style: style, progress: progress)
+            if Double.random(in: 0..<1, using: &gen) < p {
+                solved = true
+                used = i + 1
+                break
+            }
+        }
+
+        let outcomes = (0..<used).map { $0 == used - 1 && solved }
+        let beats = paceBeats(outcomes: outcomes, skill: skill, style: style,
+                              timeLimit: timeLimit, gen: &gen)
+        let result = JourneymanScoring.score(guessesUsed: used, solved: solved,
+                                             difficulty: puzzle.difficulty)
+        // Reported in the duel's comparable unit (guess efficiency out of five), not 1/1: unlike
+        // Who Am I?, whose `verdictHits` converts at the banner, this format's denominator is a
+        // constant, so there is no reason to defer the conversion. See `LadderRunSession
+        // .verdictHits`, which takes these two numbers as they are.
+        return BotRun(performance: result.performance,
+                      correct: ChallengeLink.journeymanHits(result),
+                      outOf: ChallengeLink.journeymanOutOf, beats: beats)
+    }
+
     // MARK: - Pacing
 
     /// Spaces `outcomes.count` decisions across the clock. Random per-decision weights (drawn

@@ -14,9 +14,13 @@ struct DailyPick<T> {
 protocol PuzzleRepository {
     func keep4Puzzle(for filter: SportFilter, date: Date) async -> DailyPick<Keep4Puzzle>?
     func whoAmIPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<WhoAmIPuzzle>?
+    /// Journeyman (M22) — career-path guessing. Bundled fallback, same as Keep4/Who Am I?,
+    /// because it's a free daily: a signed-out or offline session must still get a board.
+    func journeymanPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<JourneymanPuzzle>?
     /// The full pool (for the Browse/Archive surface), not just today's pick.
     func allKeep4(for filter: SportFilter) async -> [Keep4Puzzle]
     func allWhoAmI(for filter: SportFilter) async -> [WhoAmIPuzzle]
+    func allJourneyman(for filter: SportFilter) async -> [JourneymanPuzzle]
     /// The Grid (M5 Phase E) — server-generated only, no bundled offline fallback (it's
     /// Pro-gated content anyway; a signed-out/local-only session can't play it either way).
     func gridPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<GridPuzzle>?
@@ -53,16 +57,19 @@ extension PuzzleRepository {
 final class LocalPuzzleRepository: PuzzleRepository {
     private let keep4: [Keep4Puzzle]
     private let whoami: [WhoAmIPuzzle]
+    private let journeyman: [JourneymanPuzzle]
 
     init() {
-        // Reuse the existing Keep4 loader; load Who Am I? alongside.
+        // Reuse the existing Keep4 loader; load Who Am I? and Journeyman alongside.
         self.keep4 = PuzzleStore.shared.puzzles
         self.whoami = Self.loadBundle("whoami_puzzles")
+        self.journeyman = Self.loadBundle("journeyman_puzzles")
     }
 
     var availableSports: [Sport] {
         Sport.allCases.filter { sport in
             keep4.contains { $0.sport == sport } || whoami.contains { $0.sport == sport }
+                || journeyman.contains { $0.sport == sport }
         }
     }
 
@@ -74,8 +81,15 @@ final class LocalPuzzleRepository: PuzzleRepository {
         pick(from: filtered(whoami, by: filter), date: date)
     }
 
+    func journeymanPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<JourneymanPuzzle>? {
+        pick(from: filtered(journeyman, by: filter), date: date)
+    }
+
     func allKeep4(for filter: SportFilter) async -> [Keep4Puzzle] { filtered(keep4, by: filter) }
     func allWhoAmI(for filter: SportFilter) async -> [WhoAmIPuzzle] { filtered(whoami, by: filter) }
+    func allJourneyman(for filter: SportFilter) async -> [JourneymanPuzzle] {
+        filtered(journeyman, by: filter)
+    }
 
     /// No bundled Grid content in v1 (see protocol doc comment) — local-only sessions simply
     /// can't play it, same as any other Pro-only surface without a network connection.
@@ -116,3 +130,4 @@ final class LocalPuzzleRepository: PuzzleRepository {
 protocol SportScoped { var sport: Sport { get } }
 extension Keep4Puzzle: SportScoped {}
 extension WhoAmIPuzzle: SportScoped {}
+extension JourneymanPuzzle: SportScoped {}

@@ -15,7 +15,7 @@ import Foundation
 /// at all, so adding a second duelable format meant inventing a third spelling of the same three
 /// strings. The raw values are the wire contract with the server — do not rename them.
 enum PuzzleFormat: String, Codable, CaseIterable, Equatable, Hashable {
-    case keep4, whoami, grid
+    case keep4, whoami, grid, journeyman
 
     /// Player-facing name. Matches the format tiles on Home (`GameFormat.all`), which is where
     /// most players learn these names.
@@ -24,6 +24,7 @@ enum PuzzleFormat: String, Codable, CaseIterable, Equatable, Hashable {
         case .keep4:  return String(localized: "K4C4")
         case .whoami: return String(localized: "Who am I?")
         case .grid:   return String(localized: "The Grid")
+        case .journeyman: return String(localized: "Journeyman")
         }
     }
 
@@ -39,6 +40,7 @@ enum PuzzleFormat: String, Codable, CaseIterable, Equatable, Hashable {
         case .keep4:  return String(localized: "K4C4")
         case .whoami: return String(localized: "Who Am I?")
         case .grid:   return String(localized: "Grid")
+        case .journeyman: return String(localized: "Journeyman")
         }
     }
 
@@ -48,6 +50,7 @@ enum PuzzleFormat: String, Codable, CaseIterable, Equatable, Hashable {
         case .keep4:  return "rectangle.stack.fill"
         case .whoami: return "questionmark.circle.fill"
         case .grid:   return "square.grid.3x3.fill"
+        case .journeyman: return "arrow.triangle.branch"
         }
     }
 
@@ -59,6 +62,7 @@ enum PuzzleFormat: String, Codable, CaseIterable, Equatable, Hashable {
         case .keep4:  return .keep4Normal
         case .whoami: return .whoAmI
         case .grid:   return .grid
+        case .journeyman: return .journeyman
         }
     }
 
@@ -69,6 +73,9 @@ enum PuzzleFormat: String, Codable, CaseIterable, Equatable, Hashable {
         case .keep4:  return 8
         case .whoami: return 1
         case .grid:   return 9
+        // One name, same as Who Am I? — the reveals are the price of the answer, not
+        // decisions the scoreboard should count as separate hits.
+        case .journeyman: return 1
         }
     }
 
@@ -80,6 +87,9 @@ enum PuzzleFormat: String, Codable, CaseIterable, Equatable, Hashable {
         case .keep4:  return 120
         case .whoami: return 90
         case .grid:   return 180
+        // Between Who Am I? and Keep4: reading a career path takes longer than reading one
+        // clue line, but the board is a scan rather than eight typed answers.
+        case .journeyman: return 120
         }
     }
 

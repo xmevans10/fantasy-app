@@ -48,7 +48,7 @@ create table if not exists public.progress (
 create table if not exists public.puzzles (
   id          text primary key,
   sport       text not null,                 -- 'nfl' | 'nba' | 'baseball' | 'soccer' | 'tennis'
-  format      text not null,                 -- 'keep4' | 'whoami' | 'grid'
+  format      text not null,                 -- 'keep4' | 'whoami' | 'grid' | 'journeyman'
   content     jsonb not null,
   active_date date
 );
@@ -112,6 +112,25 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 alter table public.whoami_history enable row level security;
+-- no policies -> service-role only
+
+-- Journeyman's canonical-pick audit trail (tools/ingest/daily_journeyman.py) — identical
+-- shape and posture to whoami_history: a finite pool rotated least-recently-served, one
+-- canonical pick per (day, sport), the unique constraint doubling as the mint's idempotency
+-- key. Applied live 2026-08-19 (migration 0018).
+create table if not exists public.journeyman_history (
+  id          bigint generated always as identity primary key,
+  sport       text not null,
+  player_key  text not null,     -- normalized canonical player name
+  served_date date not null,
+  puzzle_id   text not null
+);
+do $$ begin
+  alter table public.journeyman_history
+    add constraint journeyman_history_date_sport_key unique (served_date, sport);
+exception when duplicate_object then null;
+end $$;
+alter table public.journeyman_history enable row level security;
 -- no policies -> service-role only
 
 -- Grid's lightweight novelty guard (tools/ingest/grid.py): records each day's minted
@@ -297,6 +316,14 @@ create index if not exists player_seasons_sport_id_idx
 -- find nothing — baseball headshots blew the statement timeout (57014) in CI 2026-08-01/03.
 -- Partial indexes make the missing-set lookup an index-only scan of the tiny missing set,
 -- in id order as the keyset needs. Applied live 2026-08-03 (migration 0014).
+-- The guess typeahead's payload (`grid_player_names`, used by The Grid and Journeyman) is
+-- `array_agg(distinct name order by name) where sport = $1 and not career`. With no index that
+-- is a seq scan + sort of the whole table: fine under the SQL editor's timeout, 57014 under the
+-- anon role's — so the RPC 500'd in production and the client's `try?` turned it into an empty
+-- array, i.e. a typeahead that silently wasn't one. Measured live 2026-08-19: 500 before,
+-- 200 in 0.3-3.0s after, across all five sports. Applied live (migration 0019).
+create index if not exists player_seasons_sport_name_idx
+  on public.player_seasons (sport, career, name);
 create index if not exists player_seasons_missing_headshot_idx
   on public.player_seasons (sport, id)
   where headshot is null or headshot = '';
@@ -582,7 +609,8 @@ create table if not exists public.versus_series (
   created_at timestamptz not null default now(),
   constraint versus_series_ordered check (user_a < user_b)
 );
--- 'keep4' | 'whoami' | 'grid' — the same domain as `puzzles.format` (Swift: `PuzzleFormat`).
+-- 'keep4' | 'whoami' | 'grid' | 'journeyman' — the same domain as `puzzles.format`
+-- (Swift: `PuzzleFormat`).
 -- Added 2026-08-13 (migration 0015). Without it the uniqueness index below was
 -- `(user_a, user_b, sport)`, so a Grid duel between two players who already had a Keep4 series
 -- in the same sport silently collided with it.
@@ -841,7 +869,9 @@ declare
   limit_s int := least(greatest(coalesce(p_time_limit, 120), 30), 900);
 begin
   if me is null or me = p_opponent then raise exception 'invalid opponent'; end if;
-  if p_format not in ('keep4', 'grid', 'whoami') then raise exception 'unsupported format'; end if;
+  -- Widened for Journeyman 2026-08-19 (migration 0018): `PuzzleFormat.allCases` drives the
+  -- duel format picker, so a format the client offers must be a format this accepts.
+  if p_format not in ('keep4', 'grid', 'whoami', 'journeyman') then raise exception 'unsupported format'; end if;
   a := least(me, p_opponent); b := greatest(me, p_opponent);
 
   select id into s_id from public.versus_series

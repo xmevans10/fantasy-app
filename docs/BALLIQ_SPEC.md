@@ -24,6 +24,12 @@ what changed most recently (DB hand-offs, TestFlight, App Store submission), see
   specific. Each subject carries an obscurity tier (EASY / MEDIUM / HARD, shown as a chip)
   that scales the payout ×1.0 / ×1.25 / ×1.6 and biases the clue draw. Earlier solves score
   more, wrong guesses cost a flat 100 at every tier.
+- **Journeyman (M22)** — a player's whole club history as a crest timeline (badge + club name +
+  year span, chronological, return spells shown as their own row), and five guesses to name them:
+  1000 / 800 / 600 / 400 / 200. The path is fully visible from the first second — an earlier
+  build revealed it a club at a time and was corrected mid-build, because the drip-feed made the
+  game about when to spend a reveal rather than who the player is. Same obscurity tiers as Who Am
+  I? (`SubjectDifficulty`, now shared), same guess typeahead as The Grid.
 
 **Surfaces (6 tabs, all live — none are stubs):** Home (daily games, streak, sport filter,
 rank), Leagues (weekly XP cohorts via `CohortRepository`/`Cohort.swift` — standings,
@@ -395,6 +401,11 @@ generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
   (a live board never shifts content mid-day). The client treats a puzzle as "today's" only
   on an exact `active_date` match (`DailyPick.isCanonicalToday`); the modulo index survives
   purely as an offline/content-unavailability fallback and never claims the TODAY badge.
+  Journeyman: `daily_journeyman.py`, a straight port of the Who Am I? picker (tier draw per
+  (date, sport), least-recently-served within tier, `journeyman_history` as both audit trail and
+  idempotency key). Its pool (`journeyman.py` → `data/journeyman_pool.json`, 525 subjects) reuses
+  Who Am I?'s qualification wholesale and adds only the path gates: ≥2 clubs (soccer ≥3), every
+  club nameable, no hole wider than a year, a debut inside measured coverage, ≤8 clubs rendered.
 - **Archival rows:** deterministic ids (`<theme-key>-<variant>`); `active_date` on them is
   archival spread only (never today — reserved for the minted picks).
   Regeneration+upsert overwrites them.
@@ -412,9 +423,9 @@ generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
 - Python: `python3 -m venv /tmp/balliq-venv && /tmp/balliq-venv/bin/pip install pytest &&
   /tmp/balliq-venv/bin/python -m pytest tools/ingest/tests/ -q`
 - Screenshots: `xcrun simctl install/launch booted com.balliqfantasy.app
-  [-screenshotGame|-screenshotResult|-screenshotWhoAmI[Result]|-screenshotCreate|
-  -screenshotStats|-screenshotLeagues|-screenshotVersus|-screenshotCommunity|
-  -screenshotBrowse]` then `xcrun simctl io booted screenshot out.png`
+  [-screenshotGame|-screenshotResult|-screenshotWhoAmI[Result]|
+  -screenshotJourneyman[Result]|-screenshotCreate|-screenshotStats|-screenshotLeagues|
+  -screenshotVersus|-screenshotCommunity|-screenshotBrowse]` then `xcrun simctl io booted screenshot out.png`
   ([DebugLaunch.swift](../BallIQ/DebugLaunch.swift)). Quit Xcode before driving the
   simulator (its auto-reinstall kills the app mid-session). For view states a single
   screenshot can't reach (e.g. every scoring-kind badge variant), render with
@@ -441,6 +452,7 @@ generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
 | M17 puzzle grain + community career creation | ✅ shipped, including the live catalog migration/backfill |
 | M19 social layer (friends graph + public profiles) | ✅ shipped 2026-07-12; server side live-verified 16/16 (RLS negatives included); signed-in UI pass still needs two TestFlight accounts |
 | M20 social follow-through | ✅ shipped 2026-07-12 — FRIENDS leaderboard scope on Leagues (`friend_profiles` RPC), onboarding username claim, friend-request push (deployed + chain verified), pg_net DB triggers for both notify webhooks |
+| M22 Journeyman (career-path format) | ✅ shipped 2026-08-19 — fourth daily format (`journeyman.py`/`daily_journeyman.py`, 525-subject pool, `journeyman_history`, migration 0018), duel + dare-a-friend parity, `SubjectDifficulty` extracted for reuse. Four content defects caught by reading the live pool (era-renamed franchises, one franchise under two codes, soccer code collisions, coverage-truncated careers) — see `prompts/M22-journeyman.md` §2.5. Migration 0019 indexes `grid_player_names`, which had been timing out under anon since The Grid shipped |
 
 **Release status (updated 2026-07-16):** **the app is LIVE on the App Store.** v1.0's
 2026-07-05 review submission was approved (`READY_FOR_SALE`, confirmed via the ASC API
@@ -2006,6 +2018,14 @@ outright bugs (below), not design.
   building once there's enough volume for the numbers to mean anything.
 - **Content-depth crumbs**: backlog #8 defunct-franchise styling (last unshipped Tier-3 item,
   §9.0); more NBA/MLB single-game themes now that grain and weekly refresh both auto-run.
+- **Soccer club-code collisions (opened by M22).** `providers/club_codes.resolve_code` derives
+  the same code for different clubs *within one country* — "POR" is both FC Porto and
+  Portimonense, and the `teams` sweep holds only the latter, so Porto's players carry a code that
+  resolves to the wrong club. Journeyman guards itself (`journeyman.contested_club_codes` drops
+  any code a curated famous club claims but the sweep assigned elsewhere) and simply serves fewer
+  soccer subjects; the real fix is an override row per collision plus a catalog regen, which
+  rewrites stored `team_abbr` values and therefore needs its own migration. Latent in every
+  surface that shows a soccer club name.
 - **APNs stale-token pruning**: fast-follow noted in `_shared/apns.ts` — the pre-1.2.1 sandbox
   token never gets pruned from `device_tokens`, harmless today (each send just errors in the
   function log) but worth closing before the table grows much further.

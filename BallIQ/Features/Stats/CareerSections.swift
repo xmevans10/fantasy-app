@@ -161,6 +161,7 @@ private extension GameFormatKind {
         case .overUnder:   return "Over/Under"
         case .draftSpin:   return "Draft & Spin"
         case .grid:        return "The Grid"
+        case .journeyman:  return "Journeyman"
         }
     }
 }

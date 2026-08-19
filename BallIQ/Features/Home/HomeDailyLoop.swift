@@ -7,12 +7,16 @@ import Foundation
 /// timezone's row exists), so the countdown here targets local midnight, the same boundary the
 /// content actually rotates on.
 enum HomeDailyLoop {
-    /// Whether Home should show the countdown/streak-at-stake state instead of the two play
-    /// cards. A puzzle that failed to load (`nil`, not `false`) never counts as completed —
-    /// otherwise a network blip on one daily would look identical to "you already finished
-    /// today's games" and hide the real play card behind a countdown.
-    static func bothDailiesComplete(keep4Completed: Bool?, whoAmICompleted: Bool?) -> Bool {
-        keep4Completed == true && whoAmICompleted == true
+    /// Whether Home should show the countdown/streak-at-stake state instead of the play cards.
+    /// A puzzle that failed to load (`nil`, not `false`) never counts as completed — otherwise a
+    /// network blip on one daily would look identical to "you already finished today's games"
+    /// and hide the real play card behind a countdown.
+    ///
+    /// Variadic since Journeyman made it three (M22): a card that says "you're done for today"
+    /// over an unplayed ranked daily is simply false, and hard-coding the arity is what made
+    /// adding the third daily a two-place change instead of one.
+    static func allDailiesComplete(_ completions: Bool?...) -> Bool {
+        !completions.isEmpty && completions.allSatisfy { $0 == true }
     }
 
     /// The next local-midnight boundary strictly after `now` — the instant the daily rolls over

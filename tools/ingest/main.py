@@ -53,6 +53,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = Path(__file__).resolve().parent / "data"
 FALLBACK_KEEP4 = ROOT / "BallIQ" / "Data" / "keep4_puzzles.json"
 FALLBACK_WHOAMI = ROOT / "BallIQ" / "Data" / "whoami_puzzles.json"
+FALLBACK_JOURNEYMAN = ROOT / "BallIQ" / "Data" / "journeyman_puzzles.json"
 FALLBACK_CATALOG = ROOT / "BallIQ" / "Data" / "player_seasons.json"
 FALLBACK_BASELINES = ROOT / "BallIQ" / "Data" / "stat_baselines.json"
 FALLBACK_THEMES = ROOT / "BallIQ" / "Data" / "keep4_themes.json"

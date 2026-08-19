@@ -243,4 +243,13 @@ struct ChallengeLink: Equatable, Identifiable {
 
     /// The denominator matching `whoAmIHits(_:)` — the number of clues a Who Am I? puzzle carries.
     static let whoAmIOutOf = WhoAmIScoring.perClue.count
+
+    /// Journeyman's equivalent: guesses *not* needed, plus one, so naming the player first time
+    /// scores the full five and an unsolved run scores nothing.
+    static func journeymanHits(_ result: JourneymanScoring.Result) -> Int {
+        result.solved ? JourneymanScoring.maxGuesses + 1 - result.guessesUsed : 0
+    }
+
+    /// The denominator matching `journeymanHits(_:)` — the format's guess limit.
+    static let journeymanOutOf = JourneymanScoring.maxGuesses
 }

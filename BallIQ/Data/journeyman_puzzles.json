@@ -1,0 +1,4852 @@
+[
+  {
+    "id": "baseball-barry-bonds-journeyman",
+    "sport": "baseball",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Barry Bonds",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PIT",
+        "teamName": "Pirates",
+        "league": "",
+        "firstYear": 1986,
+        "lastYear": 1992
+      },
+      {
+        "order": 2,
+        "teamAbbr": "SF",
+        "teamName": "Giants",
+        "league": "",
+        "firstYear": 1993,
+        "lastYear": 2007
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/111188/headshot/67/current"
+  },
+  {
+    "id": "baseball-alex-rodriguez-journeyman",
+    "sport": "baseball",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Alex Rodriguez",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "SEA",
+        "teamName": "Mariners",
+        "league": "",
+        "firstYear": 1994,
+        "lastYear": 2000
+      },
+      {
+        "order": 2,
+        "teamAbbr": "TEX",
+        "teamName": "Rangers",
+        "league": "",
+        "firstYear": 2001,
+        "lastYear": 2003
+      },
+      {
+        "order": 3,
+        "teamAbbr": "NYY",
+        "teamName": "Yankees",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2016
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121347/headshot/67/current"
+  },
+  {
+    "id": "baseball-steve-carlton-journeyman",
+    "sport": "baseball",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Steve Carlton",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "STL",
+        "teamName": "Cardinals",
+        "league": "",
+        "firstYear": 1965,
+        "lastYear": 1971
+      },
+      {
+        "order": 2,
+        "teamAbbr": "PHI",
+        "teamName": "Phillies",
+        "league": "",
+        "firstYear": 1972,
+        "lastYear": 1985
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CWS",
+        "teamName": "White Sox",
+        "league": "",
+        "firstYear": 1986,
+        "lastYear": 1986
+      },
+      {
+        "order": 4,
+        "teamAbbr": "MIN",
+        "teamName": "Twins",
+        "league": "",
+        "firstYear": 1987,
+        "lastYear": 1988
+      }
+    ],
+    "position": "P",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112008/headshot/67/current"
+  },
+  {
+    "id": "baseball-albert-pujols-journeyman",
+    "sport": "baseball",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Albert Pujols",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "STL",
+        "teamName": "Cardinals",
+        "league": "",
+        "firstYear": 2001,
+        "lastYear": 2011
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LAA",
+        "teamName": "Angels",
+        "league": "",
+        "firstYear": 2012,
+        "lastYear": 2020
+      },
+      {
+        "order": 3,
+        "teamAbbr": "LAD",
+        "teamName": "Dodgers",
+        "league": "",
+        "firstYear": 2021,
+        "lastYear": 2021
+      },
+      {
+        "order": 4,
+        "teamAbbr": "STL",
+        "teamName": "Cardinals",
+        "league": "",
+        "firstYear": 2022,
+        "lastYear": 2022
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/405395/headshot/67/current"
+  },
+  {
+    "id": "baseball-willie-mays-journeyman",
+    "sport": "baseball",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Willie Mays",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "SF",
+        "teamName": "Giants",
+        "league": "",
+        "firstYear": 1951,
+        "lastYear": 1971
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NYM",
+        "teamName": "Mets",
+        "league": "",
+        "firstYear": 1972,
+        "lastYear": 1973
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/118495/headshot/67/current"
+  },
+  {
+    "id": "baseball-hank-aaron-journeyman",
+    "sport": "baseball",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Hank Aaron",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "ATL",
+        "teamName": "Braves",
+        "league": "",
+        "firstYear": 1954,
+        "lastYear": 1974
+      },
+      {
+        "order": 2,
+        "teamAbbr": "MIL",
+        "teamName": "Brewers",
+        "league": "",
+        "firstYear": 1975,
+        "lastYear": 1976
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/110001/headshot/67/current"
+  },
+  {
+    "id": "baseball-rickey-henderson-journeyman",
+    "sport": "baseball",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Rickey Henderson",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "SD",
+        "teamName": "Padres",
+        "league": "",
+        "firstYear": 1996,
+        "lastYear": 1996
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LAA",
+        "teamName": "Angels",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 1997
+      },
+      {
+        "order": 3,
+        "teamAbbr": "ATH",
+        "teamName": "Athletics",
+        "league": "",
+        "firstYear": 1998,
+        "lastYear": 1998
+      },
+      {
+        "order": 4,
+        "teamAbbr": "NYM",
+        "teamName": "Mets",
+        "league": "",
+        "firstYear": 1999,
+        "lastYear": 1999
+      },
+      {
+        "order": 5,
+        "teamAbbr": "SEA",
+        "teamName": "Mariners",
+        "league": "",
+        "firstYear": 2000,
+        "lastYear": 2000
+      },
+      {
+        "order": 6,
+        "teamAbbr": "SD",
+        "teamName": "Padres",
+        "league": "",
+        "firstYear": 2001,
+        "lastYear": 2001
+      },
+      {
+        "order": 7,
+        "teamAbbr": "BOS",
+        "teamName": "Red Sox",
+        "league": "",
+        "firstYear": 2002,
+        "lastYear": 2002
+      },
+      {
+        "order": 8,
+        "teamAbbr": "LAD",
+        "teamName": "Dodgers",
+        "league": "",
+        "firstYear": 2003,
+        "lastYear": 2003
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/115749/headshot/67/current",
+    "truncated": true
+  },
+  {
+    "id": "baseball-ken-griffey-jr-journeyman",
+    "sport": "baseball",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Ken Griffey Jr.",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "SEA",
+        "teamName": "Mariners",
+        "league": "",
+        "firstYear": 1989,
+        "lastYear": 1999
+      },
+      {
+        "order": 2,
+        "teamAbbr": "CIN",
+        "teamName": "Reds",
+        "league": "",
+        "firstYear": 2000,
+        "lastYear": 2007
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CWS",
+        "teamName": "White Sox",
+        "league": "",
+        "firstYear": 2008,
+        "lastYear": 2008
+      },
+      {
+        "order": 4,
+        "teamAbbr": "SEA",
+        "teamName": "Mariners",
+        "league": "",
+        "firstYear": 2009,
+        "lastYear": 2010
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/115135/headshot/67/current"
+  },
+  {
+    "id": "baseball-lance-berkman-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Lance Berkman",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "HOU",
+        "teamName": "Astros",
+        "league": "",
+        "firstYear": 1999,
+        "lastYear": 2009
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NYY",
+        "teamName": "Yankees",
+        "league": "",
+        "firstYear": 2010,
+        "lastYear": 2010
+      },
+      {
+        "order": 3,
+        "teamAbbr": "STL",
+        "teamName": "Cardinals",
+        "league": "",
+        "firstYear": 2011,
+        "lastYear": 2012
+      },
+      {
+        "order": 4,
+        "teamAbbr": "TEX",
+        "teamName": "Rangers",
+        "league": "",
+        "firstYear": 2013,
+        "lastYear": 2013
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/204020/headshot/67/current"
+  },
+  {
+    "id": "baseball-jerry-koosman-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Jerry Koosman",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "NYM",
+        "teamName": "Mets",
+        "league": "",
+        "firstYear": 1967,
+        "lastYear": 1978
+      },
+      {
+        "order": 2,
+        "teamAbbr": "MIN",
+        "teamName": "Twins",
+        "league": "",
+        "firstYear": 1979,
+        "lastYear": 1980
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CWS",
+        "teamName": "White Sox",
+        "league": "",
+        "firstYear": 1981,
+        "lastYear": 1983
+      },
+      {
+        "order": 4,
+        "teamAbbr": "PHI",
+        "teamName": "Phillies",
+        "league": "",
+        "firstYear": 1984,
+        "lastYear": 1985
+      }
+    ],
+    "position": "P",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/117255/headshot/67/current"
+  },
+  {
+    "id": "baseball-craig-kimbrel-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Craig Kimbrel",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BOS",
+        "teamName": "Red Sox",
+        "league": "",
+        "firstYear": 2016,
+        "lastYear": 2018
+      },
+      {
+        "order": 2,
+        "teamAbbr": "CHC",
+        "teamName": "Cubs",
+        "league": "",
+        "firstYear": 2019,
+        "lastYear": 2020
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CWS",
+        "teamName": "White Sox",
+        "league": "",
+        "firstYear": 2021,
+        "lastYear": 2021
+      },
+      {
+        "order": 4,
+        "teamAbbr": "LAD",
+        "teamName": "Dodgers",
+        "league": "",
+        "firstYear": 2022,
+        "lastYear": 2022
+      },
+      {
+        "order": 5,
+        "teamAbbr": "PHI",
+        "teamName": "Phillies",
+        "league": "",
+        "firstYear": 2023,
+        "lastYear": 2023
+      },
+      {
+        "order": 6,
+        "teamAbbr": "BAL",
+        "teamName": "Orioles",
+        "league": "",
+        "firstYear": 2024,
+        "lastYear": 2024
+      },
+      {
+        "order": 7,
+        "teamAbbr": "HOU",
+        "teamName": "Astros",
+        "league": "",
+        "firstYear": 2025,
+        "lastYear": 2025
+      },
+      {
+        "order": 8,
+        "teamAbbr": "KC",
+        "teamName": "Royals",
+        "league": "",
+        "firstYear": 2026,
+        "lastYear": 2026
+      }
+    ],
+    "position": "P",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/518886/headshot/67/current",
+    "truncated": true
+  },
+  {
+    "id": "baseball-kenley-jansen-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Kenley Jansen",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "LAD",
+        "teamName": "Dodgers",
+        "league": "",
+        "firstYear": 2010,
+        "lastYear": 2021
+      },
+      {
+        "order": 2,
+        "teamAbbr": "ATL",
+        "teamName": "Braves",
+        "league": "",
+        "firstYear": 2022,
+        "lastYear": 2022
+      },
+      {
+        "order": 3,
+        "teamAbbr": "BOS",
+        "teamName": "Red Sox",
+        "league": "",
+        "firstYear": 2023,
+        "lastYear": 2024
+      },
+      {
+        "order": 4,
+        "teamAbbr": "LAA",
+        "teamName": "Angels",
+        "league": "",
+        "firstYear": 2025,
+        "lastYear": 2025
+      },
+      {
+        "order": 5,
+        "teamAbbr": "DET",
+        "teamName": "Tigers",
+        "league": "",
+        "firstYear": 2026,
+        "lastYear": 2026
+      }
+    ],
+    "position": "P",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/445276/headshot/67/current"
+  },
+  {
+    "id": "baseball-dave-parker-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Dave Parker",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PIT",
+        "teamName": "Pirates",
+        "league": "",
+        "firstYear": 1973,
+        "lastYear": 1983
+      },
+      {
+        "order": 2,
+        "teamAbbr": "CIN",
+        "teamName": "Reds",
+        "league": "",
+        "firstYear": 1984,
+        "lastYear": 1987
+      },
+      {
+        "order": 3,
+        "teamAbbr": "ATH",
+        "teamName": "Athletics",
+        "league": "",
+        "firstYear": 1988,
+        "lastYear": 1989
+      },
+      {
+        "order": 4,
+        "teamAbbr": "MIL",
+        "teamName": "Brewers",
+        "league": "",
+        "firstYear": 1990,
+        "lastYear": 1990
+      },
+      {
+        "order": 5,
+        "teamAbbr": "TOR",
+        "teamName": "Blue Jays",
+        "league": "",
+        "firstYear": 1991,
+        "lastYear": 1991
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/120225/headshot/67/current"
+  },
+  {
+    "id": "baseball-tom-glavine-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Tom Glavine",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "ATL",
+        "teamName": "Braves",
+        "league": "",
+        "firstYear": 1987,
+        "lastYear": 2002
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NYM",
+        "teamName": "Mets",
+        "league": "",
+        "firstYear": 2003,
+        "lastYear": 2007
+      },
+      {
+        "order": 3,
+        "teamAbbr": "ATL",
+        "teamName": "Braves",
+        "league": "",
+        "firstYear": 2008,
+        "lastYear": 2008
+      }
+    ],
+    "position": "P",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/114849/headshot/67/current"
+  },
+  {
+    "id": "baseball-ryne-sandberg-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Ryne Sandberg",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PHI",
+        "teamName": "Phillies",
+        "league": "",
+        "firstYear": 1981,
+        "lastYear": 1981
+      },
+      {
+        "order": 2,
+        "teamAbbr": "CHC",
+        "teamName": "Cubs",
+        "league": "",
+        "firstYear": 1982,
+        "lastYear": 1997
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121665/headshot/67/current"
+  },
+  {
+    "id": "baseball-andruw-jones-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Andruw Jones",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "ATL",
+        "teamName": "Braves",
+        "league": "",
+        "firstYear": 1996,
+        "lastYear": 2007
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LAD",
+        "teamName": "Dodgers",
+        "league": "",
+        "firstYear": 2008,
+        "lastYear": 2008
+      },
+      {
+        "order": 3,
+        "teamAbbr": "TEX",
+        "teamName": "Rangers",
+        "league": "",
+        "firstYear": 2009,
+        "lastYear": 2009
+      },
+      {
+        "order": 4,
+        "teamAbbr": "CWS",
+        "teamName": "White Sox",
+        "league": "",
+        "firstYear": 2010,
+        "lastYear": 2010
+      },
+      {
+        "order": 5,
+        "teamAbbr": "NYY",
+        "teamName": "Yankees",
+        "league": "",
+        "firstYear": 2011,
+        "lastYear": 2012
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/116662/headshot/67/current"
+  },
+  {
+    "id": "baseball-derrek-lee-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Derrek Lee",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "SD",
+        "teamName": "Padres",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 1997
+      },
+      {
+        "order": 2,
+        "teamAbbr": "MIA",
+        "teamName": "Marlins",
+        "league": "",
+        "firstYear": 1998,
+        "lastYear": 2003
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CHC",
+        "teamName": "Cubs",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2009
+      },
+      {
+        "order": 4,
+        "teamAbbr": "ATL",
+        "teamName": "Braves",
+        "league": "",
+        "firstYear": 2010,
+        "lastYear": 2010
+      },
+      {
+        "order": 5,
+        "teamAbbr": "PIT",
+        "teamName": "Pirates",
+        "league": "",
+        "firstYear": 2011,
+        "lastYear": 2011
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/117601/headshot/67/current"
+  },
+  {
+    "id": "baseball-pete-rose-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Pete Rose",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "CIN",
+        "teamName": "Reds",
+        "league": "",
+        "firstYear": 1963,
+        "lastYear": 1978
+      },
+      {
+        "order": 2,
+        "teamAbbr": "PHI",
+        "teamName": "Phillies",
+        "league": "",
+        "firstYear": 1979,
+        "lastYear": 1983
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CIN",
+        "teamName": "Reds",
+        "league": "",
+        "firstYear": 1984,
+        "lastYear": 1986
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121454/headshot/67/current"
+  },
+  {
+    "id": "baseball-shawn-green-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Shawn Green",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "TOR",
+        "teamName": "Blue Jays",
+        "league": "",
+        "firstYear": 1993,
+        "lastYear": 1999
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LAD",
+        "teamName": "Dodgers",
+        "league": "",
+        "firstYear": 2000,
+        "lastYear": 2004
+      },
+      {
+        "order": 3,
+        "teamAbbr": "AZ",
+        "teamName": "Diamondbacks",
+        "league": "",
+        "firstYear": 2005,
+        "lastYear": 2005
+      },
+      {
+        "order": 4,
+        "teamAbbr": "NYM",
+        "teamName": "Mets",
+        "league": "",
+        "firstYear": 2006,
+        "lastYear": 2007
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/115094/headshot/67/current"
+  },
+  {
+    "id": "baseball-norm-cash-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Norm Cash",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "CWS",
+        "teamName": "White Sox",
+        "league": "",
+        "firstYear": 1958,
+        "lastYear": 1959
+      },
+      {
+        "order": 2,
+        "teamAbbr": "DET",
+        "teamName": "Tigers",
+        "league": "",
+        "firstYear": 1960,
+        "lastYear": 1974
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112090/headshot/67/current"
+  },
+  {
+    "id": "baseball-david-cone-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "David Cone",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "KC",
+        "teamName": "Royals",
+        "league": "",
+        "firstYear": 1986,
+        "lastYear": 1986
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NYM",
+        "teamName": "Mets",
+        "league": "",
+        "firstYear": 1987,
+        "lastYear": 1991
+      },
+      {
+        "order": 3,
+        "teamAbbr": "TOR",
+        "teamName": "Blue Jays",
+        "league": "",
+        "firstYear": 1992,
+        "lastYear": 1992
+      },
+      {
+        "order": 4,
+        "teamAbbr": "KC",
+        "teamName": "Royals",
+        "league": "",
+        "firstYear": 1993,
+        "lastYear": 1994
+      },
+      {
+        "order": 5,
+        "teamAbbr": "NYY",
+        "teamName": "Yankees",
+        "league": "",
+        "firstYear": 1995,
+        "lastYear": 2000
+      },
+      {
+        "order": 6,
+        "teamAbbr": "BOS",
+        "teamName": "Red Sox",
+        "league": "",
+        "firstYear": 2001,
+        "lastYear": 2001
+      },
+      {
+        "order": 7,
+        "teamAbbr": "NYM",
+        "teamName": "Mets",
+        "league": "",
+        "firstYear": 2003,
+        "lastYear": 2003
+      }
+    ],
+    "position": "P",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112552/headshot/67/current"
+  },
+  {
+    "id": "baseball-mark-teixeira-journeyman",
+    "sport": "baseball",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Mark Teixeira",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "TEX",
+        "teamName": "Rangers",
+        "league": "",
+        "firstYear": 2003,
+        "lastYear": 2006
+      },
+      {
+        "order": 2,
+        "teamAbbr": "ATL",
+        "teamName": "Braves",
+        "league": "",
+        "firstYear": 2007,
+        "lastYear": 2007
+      },
+      {
+        "order": 3,
+        "teamAbbr": "LAA",
+        "teamName": "Angels",
+        "league": "",
+        "firstYear": 2008,
+        "lastYear": 2008
+      },
+      {
+        "order": 4,
+        "teamAbbr": "NYY",
+        "teamName": "Yankees",
+        "league": "",
+        "firstYear": 2009,
+        "lastYear": 2016
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/407893/headshot/67/current"
+  },
+  {
+    "id": "baseball-tony-clark-journeyman",
+    "sport": "baseball",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Tony Clark",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "DET",
+        "teamName": "Tigers",
+        "league": "",
+        "firstYear": 1995,
+        "lastYear": 2001
+      },
+      {
+        "order": 2,
+        "teamAbbr": "BOS",
+        "teamName": "Red Sox",
+        "league": "",
+        "firstYear": 2002,
+        "lastYear": 2002
+      },
+      {
+        "order": 3,
+        "teamAbbr": "NYM",
+        "teamName": "Mets",
+        "league": "",
+        "firstYear": 2003,
+        "lastYear": 2003
+      },
+      {
+        "order": 4,
+        "teamAbbr": "NYY",
+        "teamName": "Yankees",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2004
+      },
+      {
+        "order": 5,
+        "teamAbbr": "AZ",
+        "teamName": "Diamondbacks",
+        "league": "",
+        "firstYear": 2005,
+        "lastYear": 2009
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112316/headshot/67/current"
+  },
+  {
+    "id": "baseball-rick-monday-journeyman",
+    "sport": "baseball",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Rick Monday",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "ATH",
+        "teamName": "Athletics",
+        "league": "",
+        "firstYear": 1966,
+        "lastYear": 1971
+      },
+      {
+        "order": 2,
+        "teamAbbr": "CHC",
+        "teamName": "Cubs",
+        "league": "",
+        "firstYear": 1972,
+        "lastYear": 1976
+      },
+      {
+        "order": 3,
+        "teamAbbr": "LAD",
+        "teamName": "Dodgers",
+        "league": "",
+        "firstYear": 1977,
+        "lastYear": 1984
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/119246/headshot/67/current"
+  },
+  {
+    "id": "baseball-jose-cruz-jr-journeyman",
+    "sport": "baseball",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "José Cruz Jr.",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "TOR",
+        "teamName": "Blue Jays",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 2002
+      },
+      {
+        "order": 2,
+        "teamAbbr": "SF",
+        "teamName": "Giants",
+        "league": "",
+        "firstYear": 2003,
+        "lastYear": 2003
+      },
+      {
+        "order": 3,
+        "teamAbbr": "TB",
+        "teamName": "Devil Rays",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2004,
+        "historical": true
+      },
+      {
+        "order": 4,
+        "teamAbbr": "LAD",
+        "teamName": "Dodgers",
+        "league": "",
+        "firstYear": 2005,
+        "lastYear": 2006
+      },
+      {
+        "order": 5,
+        "teamAbbr": "SD",
+        "teamName": "Padres",
+        "league": "",
+        "firstYear": 2007,
+        "lastYear": 2007
+      },
+      {
+        "order": 6,
+        "teamAbbr": "HOU",
+        "teamName": "Astros",
+        "league": "",
+        "firstYear": 2008,
+        "lastYear": 2008
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112903/headshot/67/current"
+  },
+  {
+    "id": "baseball-heath-bell-journeyman",
+    "sport": "baseball",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Heath Bell",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "NYM",
+        "teamName": "Mets",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2006
+      },
+      {
+        "order": 2,
+        "teamAbbr": "SD",
+        "teamName": "Padres",
+        "league": "",
+        "firstYear": 2007,
+        "lastYear": 2011
+      },
+      {
+        "order": 3,
+        "teamAbbr": "MIA",
+        "teamName": "Marlins",
+        "league": "",
+        "firstYear": 2012,
+        "lastYear": 2012
+      },
+      {
+        "order": 4,
+        "teamAbbr": "AZ",
+        "teamName": "Diamondbacks",
+        "league": "",
+        "firstYear": 2013,
+        "lastYear": 2013
+      },
+      {
+        "order": 5,
+        "teamAbbr": "TB",
+        "teamName": "Rays",
+        "league": "",
+        "firstYear": 2014,
+        "lastYear": 2014
+      }
+    ],
+    "position": "P",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/425514/headshot/67/current"
+  },
+  {
+    "id": "baseball-randy-wolf-journeyman",
+    "sport": "baseball",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Randy Wolf",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PHI",
+        "teamName": "Phillies",
+        "league": "",
+        "firstYear": 1999,
+        "lastYear": 2006
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LAD",
+        "teamName": "Dodgers",
+        "league": "",
+        "firstYear": 2007,
+        "lastYear": 2007
+      },
+      {
+        "order": 3,
+        "teamAbbr": "HOU",
+        "teamName": "Astros",
+        "league": "",
+        "firstYear": 2008,
+        "lastYear": 2008
+      },
+      {
+        "order": 4,
+        "teamAbbr": "LAD",
+        "teamName": "Dodgers",
+        "league": "",
+        "firstYear": 2009,
+        "lastYear": 2009
+      },
+      {
+        "order": 5,
+        "teamAbbr": "MIL",
+        "teamName": "Brewers",
+        "league": "",
+        "firstYear": 2010,
+        "lastYear": 2011
+      },
+      {
+        "order": 6,
+        "teamAbbr": "BAL",
+        "teamName": "Orioles",
+        "league": "",
+        "firstYear": 2012,
+        "lastYear": 2012
+      },
+      {
+        "order": 7,
+        "teamAbbr": "MIA",
+        "teamName": "Marlins",
+        "league": "",
+        "firstYear": 2014,
+        "lastYear": 2014
+      },
+      {
+        "order": 8,
+        "teamAbbr": "DET",
+        "teamName": "Tigers",
+        "league": "",
+        "firstYear": 2015,
+        "lastYear": 2015
+      }
+    ],
+    "position": "P",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/150116/headshot/67/current"
+  },
+  {
+    "id": "baseball-al-bumbry-journeyman",
+    "sport": "baseball",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Al Bumbry",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BAL",
+        "teamName": "Orioles",
+        "league": "",
+        "firstYear": 1972,
+        "lastYear": 1984
+      },
+      {
+        "order": 2,
+        "teamAbbr": "SD",
+        "teamName": "Padres",
+        "league": "",
+        "firstYear": 1985,
+        "lastYear": 1985
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/111687/headshot/67/current"
+  },
+  {
+    "id": "baseball-scott-erickson-journeyman",
+    "sport": "baseball",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Scott Erickson",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "MIN",
+        "teamName": "Twins",
+        "league": "",
+        "firstYear": 1990,
+        "lastYear": 1994
+      },
+      {
+        "order": 2,
+        "teamAbbr": "BAL",
+        "teamName": "Orioles",
+        "league": "",
+        "firstYear": 1995,
+        "lastYear": 2002
+      },
+      {
+        "order": 3,
+        "teamAbbr": "TEX",
+        "teamName": "Rangers",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2004
+      },
+      {
+        "order": 4,
+        "teamAbbr": "LAD",
+        "teamName": "Dodgers",
+        "league": "",
+        "firstYear": 2005,
+        "lastYear": 2005
+      },
+      {
+        "order": 5,
+        "teamAbbr": "NYY",
+        "teamName": "Yankees",
+        "league": "",
+        "firstYear": 2006,
+        "lastYear": 2006
+      }
+    ],
+    "position": "P",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/113884/headshot/67/current"
+  },
+  {
+    "id": "baseball-pete-harnisch-journeyman",
+    "sport": "baseball",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Pete Harnisch",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BAL",
+        "teamName": "Orioles",
+        "league": "",
+        "firstYear": 1988,
+        "lastYear": 1990
+      },
+      {
+        "order": 2,
+        "teamAbbr": "HOU",
+        "teamName": "Astros",
+        "league": "",
+        "firstYear": 1991,
+        "lastYear": 1994
+      },
+      {
+        "order": 3,
+        "teamAbbr": "NYM",
+        "teamName": "Mets",
+        "league": "",
+        "firstYear": 1995,
+        "lastYear": 1996
+      },
+      {
+        "order": 4,
+        "teamAbbr": "MIL",
+        "teamName": "Brewers",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 1997
+      },
+      {
+        "order": 5,
+        "teamAbbr": "CIN",
+        "teamName": "Reds",
+        "league": "",
+        "firstYear": 1998,
+        "lastYear": 2001
+      }
+    ],
+    "position": "P",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/115487/headshot/67/current"
+  },
+  {
+    "id": "baseball-chet-lemon-journeyman",
+    "sport": "baseball",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Chet Lemon",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "CWS",
+        "teamName": "White Sox",
+        "league": "",
+        "firstYear": 1975,
+        "lastYear": 1981
+      },
+      {
+        "order": 2,
+        "teamAbbr": "DET",
+        "teamName": "Tigers",
+        "league": "",
+        "firstYear": 1982,
+        "lastYear": 1990
+      }
+    ],
+    "position": "H",
+    "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/117669/headshot/67/current"
+  },
+  {
+    "id": "nba-lebron-james-journeyman",
+    "sport": "nba",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "LeBron James",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "CLE",
+        "teamName": "Cavaliers",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2010
+      },
+      {
+        "order": 2,
+        "teamAbbr": "MIA",
+        "teamName": "Heat",
+        "league": "",
+        "firstYear": 2011,
+        "lastYear": 2014
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CLE",
+        "teamName": "Cavaliers",
+        "league": "",
+        "firstYear": 2015,
+        "lastYear": 2018
+      },
+      {
+        "order": 4,
+        "teamAbbr": "LAL",
+        "teamName": "Lakers",
+        "league": "",
+        "firstYear": 2019,
+        "lastYear": 2026
+      }
+    ],
+    "position": "F",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1966.png"
+  },
+  {
+    "id": "nba-karl-malone-journeyman",
+    "sport": "nba",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Karl Malone",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "UTAH",
+        "teamName": "Jazz",
+        "league": "",
+        "firstYear": 1986,
+        "lastYear": 2003
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LAL",
+        "teamName": "Lakers",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2004
+      }
+    ],
+    "position": "F",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/501.png"
+  },
+  {
+    "id": "nba-hakeem-olajuwon-journeyman",
+    "sport": "nba",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Hakeem Olajuwon",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "HOU",
+        "teamName": "Rockets",
+        "league": "",
+        "firstYear": 1985,
+        "lastYear": 2001
+      },
+      {
+        "order": 2,
+        "teamAbbr": "TOR",
+        "teamName": "Raptors",
+        "league": "",
+        "firstYear": 2002,
+        "lastYear": 2002
+      }
+    ],
+    "position": "C",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/619.png"
+  },
+  {
+    "id": "nba-charles-barkley-journeyman",
+    "sport": "nba",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Charles Barkley",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PHI",
+        "teamName": "76ers",
+        "league": "",
+        "firstYear": 1985,
+        "lastYear": 1992
+      },
+      {
+        "order": 2,
+        "teamAbbr": "PHX",
+        "teamName": "Suns",
+        "league": "",
+        "firstYear": 1993,
+        "lastYear": 1996
+      },
+      {
+        "order": 3,
+        "teamAbbr": "HOU",
+        "teamName": "Rockets",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 2000
+      }
+    ],
+    "position": "F",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Charles_Barkley_in_2026.jpg/330px-Charles_Barkley_in_2026.jpg"
+  },
+  {
+    "id": "nba-scottie-pippen-journeyman",
+    "sport": "nba",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Scottie Pippen",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "CHI",
+        "teamName": "Bulls",
+        "league": "",
+        "firstYear": 1988,
+        "lastYear": 1998
+      },
+      {
+        "order": 2,
+        "teamAbbr": "HOU",
+        "teamName": "Rockets",
+        "league": "",
+        "firstYear": 1999,
+        "lastYear": 1999
+      },
+      {
+        "order": 3,
+        "teamAbbr": "POR",
+        "teamName": "Trail Blazers",
+        "league": "",
+        "firstYear": 2000,
+        "lastYear": 2003
+      },
+      {
+        "order": 4,
+        "teamAbbr": "CHI",
+        "teamName": "Bulls",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2004
+      }
+    ],
+    "position": "F",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/663.png"
+  },
+  {
+    "id": "nba-moses-malone-journeyman",
+    "sport": "nba",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Moses Malone",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "HOU",
+        "teamName": "Rockets",
+        "league": "",
+        "firstYear": 1977,
+        "lastYear": 1982
+      },
+      {
+        "order": 2,
+        "teamAbbr": "PHI",
+        "teamName": "76ers",
+        "league": "",
+        "firstYear": 1983,
+        "lastYear": 1986
+      },
+      {
+        "order": 3,
+        "teamAbbr": "WSB",
+        "teamName": "Bullets",
+        "league": "",
+        "firstYear": 1987,
+        "lastYear": 1988
+      },
+      {
+        "order": 4,
+        "teamAbbr": "ATL",
+        "teamName": "Hawks",
+        "league": "",
+        "firstYear": 1989,
+        "lastYear": 1991
+      },
+      {
+        "order": 5,
+        "teamAbbr": "MIL",
+        "teamName": "Bucks",
+        "league": "",
+        "firstYear": 1992,
+        "lastYear": 1993
+      },
+      {
+        "order": 6,
+        "teamAbbr": "PHI",
+        "teamName": "76ers",
+        "league": "",
+        "firstYear": 1994,
+        "lastYear": 1994
+      },
+      {
+        "order": 7,
+        "teamAbbr": "SA",
+        "teamName": "Spurs",
+        "league": "",
+        "firstYear": 1995,
+        "lastYear": 1995
+      }
+    ],
+    "position": "C",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Moses_Malone_cropped_portrait.jpg/330px-Moses_Malone_cropped_portrait.jpg"
+  },
+  {
+    "id": "nba-patrick-ewing-journeyman",
+    "sport": "nba",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Patrick Ewing",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "NY",
+        "teamName": "Knicks",
+        "league": "",
+        "firstYear": 1986,
+        "lastYear": 2000
+      },
+      {
+        "order": 2,
+        "teamAbbr": "SEA",
+        "teamName": "SuperSonics",
+        "league": "",
+        "firstYear": 2001,
+        "lastYear": 2001
+      },
+      {
+        "order": 3,
+        "teamAbbr": "ORL",
+        "teamName": "Magic",
+        "league": "",
+        "firstYear": 2002,
+        "lastYear": 2002
+      }
+    ],
+    "position": "C",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/237.png"
+  },
+  {
+    "id": "nba-dominique-wilkins-journeyman",
+    "sport": "nba",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Dominique Wilkins",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "ATL",
+        "teamName": "Hawks",
+        "league": "",
+        "firstYear": 1983,
+        "lastYear": 1993
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LAC",
+        "teamName": "Clippers",
+        "league": "",
+        "firstYear": 1994,
+        "lastYear": 1994
+      },
+      {
+        "order": 3,
+        "teamAbbr": "BOS",
+        "teamName": "Celtics",
+        "league": "",
+        "firstYear": 1995,
+        "lastYear": 1995
+      },
+      {
+        "order": 4,
+        "teamAbbr": "SA",
+        "teamName": "Spurs",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 1997
+      },
+      {
+        "order": 5,
+        "teamAbbr": "ORL",
+        "teamName": "Magic",
+        "league": "",
+        "firstYear": 1999,
+        "lastYear": 1999
+      }
+    ],
+    "position": "F",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Dominique_Wilkins_2022.jpg/330px-Dominique_Wilkins_2022.jpg"
+  },
+  {
+    "id": "nba-tom-chambers-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Tom Chambers",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "SDC",
+        "teamName": "Clippers",
+        "league": "",
+        "firstYear": 1982,
+        "lastYear": 1983
+      },
+      {
+        "order": 2,
+        "teamAbbr": "SEA",
+        "teamName": "SuperSonics",
+        "league": "",
+        "firstYear": 1984,
+        "lastYear": 1988
+      },
+      {
+        "order": 3,
+        "teamAbbr": "PHX",
+        "teamName": "Suns",
+        "league": "",
+        "firstYear": 1989,
+        "lastYear": 1993
+      },
+      {
+        "order": 4,
+        "teamAbbr": "UTAH",
+        "teamName": "Jazz",
+        "league": "",
+        "firstYear": 1994,
+        "lastYear": 1995
+      },
+      {
+        "order": 5,
+        "teamAbbr": "CHH",
+        "teamName": "Hornets",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 1997
+      }
+    ],
+    "position": "F",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Tom_Chambers_by_Gage_Skidmore.jpg/330px-Tom_Chambers_by_Gage_Skidmore.jpg"
+  },
+  {
+    "id": "nba-demar-derozan-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "DeMar DeRozan",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "TOR",
+        "teamName": "Raptors",
+        "league": "",
+        "firstYear": 2010,
+        "lastYear": 2018
+      },
+      {
+        "order": 2,
+        "teamAbbr": "SA",
+        "teamName": "Spurs",
+        "league": "",
+        "firstYear": 2019,
+        "lastYear": 2021
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CHI",
+        "teamName": "Bulls",
+        "league": "",
+        "firstYear": 2022,
+        "lastYear": 2024
+      },
+      {
+        "order": 4,
+        "teamAbbr": "SAC",
+        "teamName": "Kings",
+        "league": "",
+        "firstYear": 2025,
+        "lastYear": 2026
+      }
+    ],
+    "position": "G",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3978.png"
+  },
+  {
+    "id": "nba-jack-sikma-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Jack Sikma",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "SEA",
+        "teamName": "SuperSonics",
+        "league": "",
+        "firstYear": 1978,
+        "lastYear": 1986
+      },
+      {
+        "order": 2,
+        "teamAbbr": "MIL",
+        "teamName": "Bucks",
+        "league": "",
+        "firstYear": 1987,
+        "lastYear": 1991
+      }
+    ],
+    "position": "C",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Jack_Sikma_IWU.jpg/330px-Jack_Sikma_IWU.jpg"
+  },
+  {
+    "id": "nba-robert-parish-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Robert Parish",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "GS",
+        "teamName": "Warriors",
+        "league": "",
+        "firstYear": 1977,
+        "lastYear": 1980
+      },
+      {
+        "order": 2,
+        "teamAbbr": "BOS",
+        "teamName": "Celtics",
+        "league": "",
+        "firstYear": 1981,
+        "lastYear": 1994
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CHH",
+        "teamName": "Hornets",
+        "league": "",
+        "firstYear": 1995,
+        "lastYear": 1996
+      },
+      {
+        "order": 4,
+        "teamAbbr": "CHI",
+        "teamName": "Bulls",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 1997
+      }
+    ],
+    "position": "C",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Robert_Parish.jpg/330px-Robert_Parish.jpg"
+  },
+  {
+    "id": "nba-buck-williams-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Buck Williams",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "NJN",
+        "teamName": "Nets",
+        "league": "",
+        "firstYear": 1982,
+        "lastYear": 1989
+      },
+      {
+        "order": 2,
+        "teamAbbr": "POR",
+        "teamName": "Trail Blazers",
+        "league": "",
+        "firstYear": 1990,
+        "lastYear": 1996
+      },
+      {
+        "order": 3,
+        "teamAbbr": "NY",
+        "teamName": "Knicks",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 1998
+      }
+    ],
+    "position": "F",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/5/53/Buck_Williams_-_Defense.gov_News_Photo_060406-N-0696M-015_%28cropped%29.jpg"
+  },
+  {
+    "id": "nba-steve-nash-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Steve Nash",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PHX",
+        "teamName": "Suns",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 1998
+      },
+      {
+        "order": 2,
+        "teamAbbr": "DAL",
+        "teamName": "Mavericks",
+        "league": "",
+        "firstYear": 1999,
+        "lastYear": 2004
+      },
+      {
+        "order": 3,
+        "teamAbbr": "PHX",
+        "teamName": "Suns",
+        "league": "",
+        "firstYear": 2005,
+        "lastYear": 2012
+      },
+      {
+        "order": 4,
+        "teamAbbr": "LAL",
+        "teamName": "Lakers",
+        "league": "",
+        "firstYear": 2013,
+        "lastYear": 2014
+      }
+    ],
+    "position": "G",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/592.png"
+  },
+  {
+    "id": "nba-larry-nance-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Larry Nance",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PHX",
+        "teamName": "Suns",
+        "league": "",
+        "firstYear": 1982,
+        "lastYear": 1987
+      },
+      {
+        "order": 2,
+        "teamAbbr": "CLE",
+        "teamName": "Cavaliers",
+        "league": "",
+        "firstYear": 1988,
+        "lastYear": 1994
+      }
+    ],
+    "position": "F",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/2/26/Larry_Nance_-_Phoenix_Suns.jpg"
+  },
+  {
+    "id": "nba-artis-gilmore-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Artis Gilmore",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "CHI",
+        "teamName": "Bulls",
+        "league": "",
+        "firstYear": 1977,
+        "lastYear": 1982
+      },
+      {
+        "order": 2,
+        "teamAbbr": "SA",
+        "teamName": "Spurs",
+        "league": "",
+        "firstYear": 1983,
+        "lastYear": 1987
+      },
+      {
+        "order": 3,
+        "teamAbbr": "BOS",
+        "teamName": "Celtics",
+        "league": "",
+        "firstYear": 1988,
+        "lastYear": 1988
+      }
+    ],
+    "position": "C",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Artis_Gilmore.jpg/330px-Artis_Gilmore.jpg"
+  },
+  {
+    "id": "nba-chris-mullin-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Chris Mullin",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "GS",
+        "teamName": "Warriors",
+        "league": "",
+        "firstYear": 1986,
+        "lastYear": 1997
+      },
+      {
+        "order": 2,
+        "teamAbbr": "IND",
+        "teamName": "Pacers",
+        "league": "",
+        "firstYear": 1998,
+        "lastYear": 2000
+      },
+      {
+        "order": 3,
+        "teamAbbr": "GS",
+        "teamName": "Warriors",
+        "league": "",
+        "firstYear": 2001,
+        "lastYear": 2001
+      }
+    ],
+    "position": "F",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Chris_Mullin.jpg/330px-Chris_Mullin.jpg"
+  },
+  {
+    "id": "nba-latrell-sprewell-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Latrell Sprewell",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "GS",
+        "teamName": "Warriors",
+        "league": "",
+        "firstYear": 1993,
+        "lastYear": 1998
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NY",
+        "teamName": "Knicks",
+        "league": "",
+        "firstYear": 1999,
+        "lastYear": 2003
+      },
+      {
+        "order": 3,
+        "teamAbbr": "MIN",
+        "teamName": "Timberwolves",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2005
+      }
+    ],
+    "position": "G",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/800.png"
+  },
+  {
+    "id": "nba-mookie-blaylock-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Mookie Blaylock",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "NJN",
+        "teamName": "Nets",
+        "league": "",
+        "firstYear": 1990,
+        "lastYear": 1992
+      },
+      {
+        "order": 2,
+        "teamAbbr": "ATL",
+        "teamName": "Hawks",
+        "league": "",
+        "firstYear": 1993,
+        "lastYear": 1999
+      },
+      {
+        "order": 3,
+        "teamAbbr": "GS",
+        "teamName": "Warriors",
+        "league": "",
+        "firstYear": 2000,
+        "lastYear": 2002
+      }
+    ],
+    "position": "G",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/68.png"
+  },
+  {
+    "id": "nba-andre-iguodala-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Andre Iguodala",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PHI",
+        "teamName": "76ers",
+        "league": "",
+        "firstYear": 2005,
+        "lastYear": 2012
+      },
+      {
+        "order": 2,
+        "teamAbbr": "DEN",
+        "teamName": "Nuggets",
+        "league": "",
+        "firstYear": 2013,
+        "lastYear": 2013
+      },
+      {
+        "order": 3,
+        "teamAbbr": "GS",
+        "teamName": "Warriors",
+        "league": "",
+        "firstYear": 2014,
+        "lastYear": 2019
+      },
+      {
+        "order": 4,
+        "teamAbbr": "MIA",
+        "teamName": "Heat",
+        "league": "",
+        "firstYear": 2020,
+        "lastYear": 2021
+      },
+      {
+        "order": 5,
+        "teamAbbr": "GS",
+        "teamName": "Warriors",
+        "league": "",
+        "firstYear": 2022,
+        "lastYear": 2023
+      }
+    ],
+    "position": "F",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/2386.png"
+  },
+  {
+    "id": "nba-detlef-schrempf-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Detlef Schrempf",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "DAL",
+        "teamName": "Mavericks",
+        "league": "",
+        "firstYear": 1986,
+        "lastYear": 1988
+      },
+      {
+        "order": 2,
+        "teamAbbr": "IND",
+        "teamName": "Pacers",
+        "league": "",
+        "firstYear": 1989,
+        "lastYear": 1993
+      },
+      {
+        "order": 3,
+        "teamAbbr": "SEA",
+        "teamName": "SuperSonics",
+        "league": "",
+        "firstYear": 1994,
+        "lastYear": 1999
+      },
+      {
+        "order": 4,
+        "teamAbbr": "POR",
+        "teamName": "Trail Blazers",
+        "league": "",
+        "firstYear": 2000,
+        "lastYear": 2001
+      }
+    ],
+    "position": "F",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Detlef_Schrempf_at_NBA_All-Star_Center_Court_2016_%2824742228990%29.jpg/330px-Detlef_Schrempf_at_NBA_All-Star_Center_Court_2016_%2824742228990%29.jpg"
+  },
+  {
+    "id": "nba-mark-aguirre-journeyman",
+    "sport": "nba",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Mark Aguirre",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "DAL",
+        "teamName": "Mavericks",
+        "league": "",
+        "firstYear": 1982,
+        "lastYear": 1988
+      },
+      {
+        "order": 2,
+        "teamAbbr": "DET",
+        "teamName": "Pistons",
+        "league": "",
+        "firstYear": 1989,
+        "lastYear": 1993
+      },
+      {
+        "order": 3,
+        "teamAbbr": "LAC",
+        "teamName": "Clippers",
+        "league": "",
+        "firstYear": 1994,
+        "lastYear": 1994
+      }
+    ],
+    "position": "F",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Mark_Aguirre_2007_%28cropped%29.jpg/330px-Mark_Aguirre_2007_%28cropped%29.jpg"
+  },
+  {
+    "id": "nba-joakim-noah-journeyman",
+    "sport": "nba",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Joakim Noah",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "CHI",
+        "teamName": "Bulls",
+        "league": "",
+        "firstYear": 2008,
+        "lastYear": 2016
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NY",
+        "teamName": "Knicks",
+        "league": "",
+        "firstYear": 2017,
+        "lastYear": 2018
+      },
+      {
+        "order": 3,
+        "teamAbbr": "MEM",
+        "teamName": "Grizzlies",
+        "league": "",
+        "firstYear": 2019,
+        "lastYear": 2019
+      },
+      {
+        "order": 4,
+        "teamAbbr": "LAC",
+        "teamName": "Clippers",
+        "league": "",
+        "firstYear": 2020,
+        "lastYear": 2020
+      }
+    ],
+    "position": "C",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3224.png"
+  },
+  {
+    "id": "nba-allan-houston-journeyman",
+    "sport": "nba",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Allan Houston",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "DET",
+        "teamName": "Pistons",
+        "league": "",
+        "firstYear": 1994,
+        "lastYear": 1996
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NY",
+        "teamName": "Knicks",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 2005
+      }
+    ],
+    "position": "G",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/349.png"
+  },
+  {
+    "id": "nba-fred-vanvleet-journeyman",
+    "sport": "nba",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Fred VanVleet",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "TOR",
+        "teamName": "Raptors",
+        "league": "",
+        "firstYear": 2017,
+        "lastYear": 2023
+      },
+      {
+        "order": 2,
+        "teamAbbr": "HOU",
+        "teamName": "Rockets",
+        "league": "",
+        "firstYear": 2024,
+        "lastYear": 2025
+      }
+    ],
+    "position": "G",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/2991230.png"
+  },
+  {
+    "id": "nba-myles-turner-journeyman",
+    "sport": "nba",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Myles Turner",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "IND",
+        "teamName": "Pacers",
+        "league": "",
+        "firstYear": 2016,
+        "lastYear": 2025
+      },
+      {
+        "order": 2,
+        "teamAbbr": "MIL",
+        "teamName": "Bucks",
+        "league": "",
+        "firstYear": 2026,
+        "lastYear": 2026
+      }
+    ],
+    "position": "C",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3133628.png"
+  },
+  {
+    "id": "nba-lasalle-thompson-journeyman",
+    "sport": "nba",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "LaSalle Thompson",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "KCK",
+        "teamName": "Kings",
+        "league": "",
+        "firstYear": 1983,
+        "lastYear": 1988
+      },
+      {
+        "order": 2,
+        "teamAbbr": "IND",
+        "teamName": "Pacers",
+        "league": "",
+        "firstYear": 1989,
+        "lastYear": 1995
+      },
+      {
+        "order": 3,
+        "teamAbbr": "PHI",
+        "teamName": "76ers",
+        "league": "",
+        "firstYear": 1996,
+        "lastYear": 1996
+      },
+      {
+        "order": 4,
+        "teamAbbr": "DEN",
+        "teamName": "Nuggets",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 1997
+      }
+    ],
+    "position": "C",
+    "headshot": "https://upload.wikimedia.org/wikipedia/commons/3/32/LaSalle_Thompson_1986-87.jpg"
+  },
+  {
+    "id": "nba-rick-fox-journeyman",
+    "sport": "nba",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Rick Fox",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BOS",
+        "teamName": "Celtics",
+        "league": "",
+        "firstYear": 1992,
+        "lastYear": 1997
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LAL",
+        "teamName": "Lakers",
+        "league": "",
+        "firstYear": 1998,
+        "lastYear": 2004
+      }
+    ],
+    "position": "F",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/252.png"
+  },
+  {
+    "id": "nba-toni-kukoc-journeyman",
+    "sport": "nba",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Toni Kukoc",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "CHI",
+        "teamName": "Bulls",
+        "league": "",
+        "firstYear": 1994,
+        "lastYear": 1999
+      },
+      {
+        "order": 2,
+        "teamAbbr": "PHI",
+        "teamName": "76ers",
+        "league": "",
+        "firstYear": 2000,
+        "lastYear": 2000
+      },
+      {
+        "order": 3,
+        "teamAbbr": "ATL",
+        "teamName": "Hawks",
+        "league": "",
+        "firstYear": 2001,
+        "lastYear": 2002
+      },
+      {
+        "order": 4,
+        "teamAbbr": "MIL",
+        "teamName": "Bucks",
+        "league": "",
+        "firstYear": 2003,
+        "lastYear": 2006
+      }
+    ],
+    "position": "F",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/446.png"
+  },
+  {
+    "id": "nba-robert-horry-journeyman",
+    "sport": "nba",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Robert Horry",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "HOU",
+        "teamName": "Rockets",
+        "league": "",
+        "firstYear": 1993,
+        "lastYear": 1996
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LAL",
+        "teamName": "Lakers",
+        "league": "",
+        "firstYear": 1997,
+        "lastYear": 2003
+      },
+      {
+        "order": 3,
+        "teamAbbr": "SA",
+        "teamName": "Spurs",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2008
+      }
+    ],
+    "position": "F",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/347.png"
+  },
+  {
+    "id": "nba-clint-capela-journeyman",
+    "sport": "nba",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Clint Capela",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "HOU",
+        "teamName": "Rockets",
+        "league": "",
+        "firstYear": 2015,
+        "lastYear": 2020
+      },
+      {
+        "order": 2,
+        "teamAbbr": "ATL",
+        "teamName": "Hawks",
+        "league": "",
+        "firstYear": 2021,
+        "lastYear": 2025
+      },
+      {
+        "order": 3,
+        "teamAbbr": "HOU",
+        "teamName": "Rockets",
+        "league": "",
+        "firstYear": 2026,
+        "lastYear": 2026
+      }
+    ],
+    "position": "C",
+    "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3102529.png"
+  },
+  {
+    "id": "nfl-jerry-rice-journeyman",
+    "sport": "nfl",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Jerry Rice",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "SF",
+        "teamName": "49ers",
+        "league": "",
+        "firstYear": 1985,
+        "lastYear": 2000
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LV",
+        "teamName": "Raiders",
+        "league": "",
+        "firstYear": 2001,
+        "lastYear": 2003
+      },
+      {
+        "order": 3,
+        "teamAbbr": "SEA",
+        "teamName": "Seahawks",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2004
+      }
+    ],
+    "position": "WR",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g1vjcnbryx3nmg0ppsnl"
+  },
+  {
+    "id": "nfl-ladainian-tomlinson-journeyman",
+    "sport": "nfl",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "LaDainian Tomlinson",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "LAC",
+        "teamName": "Chargers",
+        "league": "",
+        "firstYear": 2001,
+        "lastYear": 2009
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NYJ",
+        "teamName": "Jets",
+        "league": "",
+        "firstYear": 2010,
+        "lastYear": 2011
+      }
+    ],
+    "position": "RB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
+  },
+  {
+    "id": "nfl-emmitt-smith-journeyman",
+    "sport": "nfl",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Emmitt Smith",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "DAL",
+        "teamName": "Cowboys",
+        "league": "",
+        "firstYear": 1990,
+        "lastYear": 2002
+      },
+      {
+        "order": 2,
+        "teamAbbr": "ARI",
+        "teamName": "Cardinals",
+        "league": "",
+        "firstYear": 2003,
+        "lastYear": 2004
+      }
+    ],
+    "position": "RB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ub78gyoyi3x1wlaow49n"
+  },
+  {
+    "id": "nfl-karlos-dansby-journeyman",
+    "sport": "nfl",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Karlos Dansby",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "ARI",
+        "teamName": "Cardinals",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2009
+      },
+      {
+        "order": 2,
+        "teamAbbr": "MIA",
+        "teamName": "Dolphins",
+        "league": "",
+        "firstYear": 2010,
+        "lastYear": 2012
+      },
+      {
+        "order": 3,
+        "teamAbbr": "ARI",
+        "teamName": "Cardinals",
+        "league": "",
+        "firstYear": 2013,
+        "lastYear": 2013
+      },
+      {
+        "order": 4,
+        "teamAbbr": "CLE",
+        "teamName": "Browns",
+        "league": "",
+        "firstYear": 2014,
+        "lastYear": 2015
+      },
+      {
+        "order": 5,
+        "teamAbbr": "CIN",
+        "teamName": "Bengals",
+        "league": "",
+        "firstYear": 2016,
+        "lastYear": 2016
+      },
+      {
+        "order": 6,
+        "teamAbbr": "ARI",
+        "teamName": "Cardinals",
+        "league": "",
+        "firstYear": 2017,
+        "lastYear": 2017
+      }
+    ],
+    "position": "ILB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lumuwuwq9kdemsw5uefz"
+  },
+  {
+    "id": "nfl-j-j-watt-journeyman",
+    "sport": "nfl",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "J.J. Watt",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "HOU",
+        "teamName": "Texans",
+        "league": "",
+        "firstYear": 2011,
+        "lastYear": 2020
+      },
+      {
+        "order": 2,
+        "teamAbbr": "ARI",
+        "teamName": "Cardinals",
+        "league": "",
+        "firstYear": 2021,
+        "lastYear": 2022
+      }
+    ],
+    "position": "DE",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pooulgm7mdcx5x9gza7l"
+  },
+  {
+    "id": "nfl-tom-brady-journeyman",
+    "sport": "nfl",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Tom Brady",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "NE",
+        "teamName": "Patriots",
+        "league": "",
+        "firstYear": 2000,
+        "lastYear": 2019
+      },
+      {
+        "order": 2,
+        "teamAbbr": "TB",
+        "teamName": "Buccaneers",
+        "league": "",
+        "firstYear": 2020,
+        "lastYear": 2022
+      }
+    ],
+    "position": "QB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q7dpdlxyu5rs05rgh1le"
+  },
+  {
+    "id": "nfl-jared-allen-journeyman",
+    "sport": "nfl",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Jared Allen",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "KC",
+        "teamName": "Chiefs",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2007
+      },
+      {
+        "order": 2,
+        "teamAbbr": "MIN",
+        "teamName": "Vikings",
+        "league": "",
+        "firstYear": 2008,
+        "lastYear": 2013
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CHI",
+        "teamName": "Bears",
+        "league": "",
+        "firstYear": 2014,
+        "lastYear": 2014
+      },
+      {
+        "order": 4,
+        "teamAbbr": "CAR",
+        "teamName": "Panthers",
+        "league": "",
+        "firstYear": 2015,
+        "lastYear": 2015
+      }
+    ],
+    "position": "DE",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/kvicq39281koeupyxqvz"
+  },
+  {
+    "id": "nfl-randy-moss-journeyman",
+    "sport": "nfl",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Randy Moss",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "MIN",
+        "teamName": "Vikings",
+        "league": "",
+        "firstYear": 1998,
+        "lastYear": 2004
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LV",
+        "teamName": "Raiders",
+        "league": "",
+        "firstYear": 2005,
+        "lastYear": 2006
+      },
+      {
+        "order": 3,
+        "teamAbbr": "NE",
+        "teamName": "Patriots",
+        "league": "",
+        "firstYear": 2007,
+        "lastYear": 2009
+      },
+      {
+        "order": 4,
+        "teamAbbr": "TEN",
+        "teamName": "Titans",
+        "league": "",
+        "firstYear": 2010,
+        "lastYear": 2010
+      },
+      {
+        "order": 5,
+        "teamAbbr": "SF",
+        "teamName": "49ers",
+        "league": "",
+        "firstYear": 2012,
+        "lastYear": 2012
+      }
+    ],
+    "position": "WR",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/udotyrimbuirasxxkd8p"
+  },
+  {
+    "id": "nfl-eddie-george-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Eddie George",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "HOU",
+        "teamName": "Oilers",
+        "league": "",
+        "firstYear": 1996,
+        "lastYear": 1998,
+        "historical": true
+      },
+      {
+        "order": 2,
+        "teamAbbr": "TEN",
+        "teamName": "Titans",
+        "league": "",
+        "firstYear": 1999,
+        "lastYear": 2003
+      },
+      {
+        "order": 3,
+        "teamAbbr": "DAL",
+        "teamName": "Cowboys",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2004
+      }
+    ],
+    "position": "RB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/htepvetwtvjnl3viu9af"
+  },
+  {
+    "id": "nfl-keenan-allen-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Keenan Allen",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "LAC",
+        "teamName": "Chargers",
+        "league": "",
+        "firstYear": 2013,
+        "lastYear": 2023
+      },
+      {
+        "order": 2,
+        "teamAbbr": "CHI",
+        "teamName": "Bears",
+        "league": "",
+        "firstYear": 2024,
+        "lastYear": 2024
+      },
+      {
+        "order": 3,
+        "teamAbbr": "LAC",
+        "teamName": "Chargers",
+        "league": "",
+        "firstYear": 2025,
+        "lastYear": 2025
+      }
+    ],
+    "position": "WR",
+    "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/ri267r6lzfwarh89hsn6"
+  },
+  {
+    "id": "nfl-michael-griffin-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Michael Griffin",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "TEN",
+        "teamName": "Titans",
+        "league": "",
+        "firstYear": 2007,
+        "lastYear": 2015
+      },
+      {
+        "order": 2,
+        "teamAbbr": "CAR",
+        "teamName": "Panthers",
+        "league": "",
+        "firstYear": 2016,
+        "lastYear": 2016
+      }
+    ],
+    "position": "FS",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/akzgpj0wv64wa1fwub99"
+  },
+  {
+    "id": "nfl-joey-bosa-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Joey Bosa",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "LAC",
+        "teamName": "Chargers",
+        "league": "",
+        "firstYear": 2016,
+        "lastYear": 2024
+      },
+      {
+        "order": 2,
+        "teamAbbr": "BUF",
+        "teamName": "Bills",
+        "league": "",
+        "firstYear": 2025,
+        "lastYear": 2025
+      }
+    ],
+    "position": "DE",
+    "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/soo7a4n5mxia4iky4so8"
+  },
+  {
+    "id": "nfl-charlie-garner-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Charlie Garner",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PHI",
+        "teamName": "Eagles",
+        "league": "",
+        "firstYear": 1994,
+        "lastYear": 1998
+      },
+      {
+        "order": 2,
+        "teamAbbr": "SF",
+        "teamName": "49ers",
+        "league": "",
+        "firstYear": 1999,
+        "lastYear": 2000
+      },
+      {
+        "order": 3,
+        "teamAbbr": "LV",
+        "teamName": "Raiders",
+        "league": "",
+        "firstYear": 2001,
+        "lastYear": 2003
+      },
+      {
+        "order": 4,
+        "teamAbbr": "TB",
+        "teamName": "Buccaneers",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2004
+      }
+    ],
+    "position": "RB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i6vgoizxzlnf1ecxnzbq"
+  },
+  {
+    "id": "nfl-kevin-byard-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Kevin Byard",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "TEN",
+        "teamName": "Titans",
+        "league": "",
+        "firstYear": 2016,
+        "lastYear": 2022
+      },
+      {
+        "order": 2,
+        "teamAbbr": "PHI",
+        "teamName": "Eagles",
+        "league": "",
+        "firstYear": 2023,
+        "lastYear": 2023
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CHI",
+        "teamName": "Bears",
+        "league": "",
+        "firstYear": 2024,
+        "lastYear": 2025
+      }
+    ],
+    "position": "FS",
+    "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/ymu0jcrm7clsyhhvmcki"
+  },
+  {
+    "id": "nfl-fred-taylor-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Fred Taylor",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "JAX",
+        "teamName": "Jaguars",
+        "league": "",
+        "firstYear": 1998,
+        "lastYear": 2008
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NE",
+        "teamName": "Patriots",
+        "league": "",
+        "firstYear": 2009,
+        "lastYear": 2010
+      }
+    ],
+    "position": "RB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/hj3mtwjx0byr01a7463p"
+  },
+  {
+    "id": "nfl-jamal-lewis-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Jamal Lewis",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BAL",
+        "teamName": "Ravens",
+        "league": "",
+        "firstYear": 2000,
+        "lastYear": 2006
+      },
+      {
+        "order": 2,
+        "teamAbbr": "CLE",
+        "teamName": "Browns",
+        "league": "",
+        "firstYear": 2007,
+        "lastYear": 2009
+      }
+    ],
+    "position": "RB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mmsyfpojbxmisiujuwym"
+  },
+  {
+    "id": "nfl-terance-mathis-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Terance Mathis",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "NYJ",
+        "teamName": "Jets",
+        "league": "",
+        "firstYear": 1990,
+        "lastYear": 1993
+      },
+      {
+        "order": 2,
+        "teamAbbr": "ATL",
+        "teamName": "Falcons",
+        "league": "",
+        "firstYear": 1994,
+        "lastYear": 2001
+      },
+      {
+        "order": 3,
+        "teamAbbr": "PIT",
+        "teamName": "Steelers",
+        "league": "",
+        "firstYear": 2002,
+        "lastYear": 2002
+      }
+    ],
+    "position": "WR",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/l85b7pux5chdlvk1tqc4"
+  },
+  {
+    "id": "nfl-evan-engram-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Evan Engram",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "NYG",
+        "teamName": "Giants",
+        "league": "",
+        "firstYear": 2017,
+        "lastYear": 2021
+      },
+      {
+        "order": 2,
+        "teamAbbr": "JAX",
+        "teamName": "Jaguars",
+        "league": "",
+        "firstYear": 2022,
+        "lastYear": 2024
+      },
+      {
+        "order": 3,
+        "teamAbbr": "DEN",
+        "teamName": "Broncos",
+        "league": "",
+        "firstYear": 2025,
+        "lastYear": 2025
+      }
+    ],
+    "position": "TE",
+    "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/vsrjso6phkjqki88qw9y"
+  },
+  {
+    "id": "nfl-maurice-jones-drew-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Maurice Jones-Drew",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "JAX",
+        "teamName": "Jaguars",
+        "league": "",
+        "firstYear": 2006,
+        "lastYear": 2013
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LV",
+        "teamName": "Raiders",
+        "league": "",
+        "firstYear": 2014,
+        "lastYear": 2014
+      }
+    ],
+    "position": "RB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/imza3kc0cmkjaym7sjsn"
+  },
+  {
+    "id": "nfl-jordy-nelson-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Jordy Nelson",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "GB",
+        "teamName": "Packers",
+        "league": "",
+        "firstYear": 2008,
+        "lastYear": 2017
+      },
+      {
+        "order": 2,
+        "teamAbbr": "LV",
+        "teamName": "Raiders",
+        "league": "",
+        "firstYear": 2018,
+        "lastYear": 2018
+      }
+    ],
+    "position": "WR",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bde2n4ozsakatgs4yyp2"
+  },
+  {
+    "id": "nfl-jonathan-vilma-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Jonathan Vilma",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "NYJ",
+        "teamName": "Jets",
+        "league": "",
+        "firstYear": 2004,
+        "lastYear": 2007
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NO",
+        "teamName": "Saints",
+        "league": "",
+        "firstYear": 2008,
+        "lastYear": 2013
+      }
+    ],
+    "position": "OLB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/kotc7yfsezsbomyxwmvm"
+  },
+  {
+    "id": "nfl-mario-williams-journeyman",
+    "sport": "nfl",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Mario Williams",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "HOU",
+        "teamName": "Texans",
+        "league": "",
+        "firstYear": 2006,
+        "lastYear": 2011
+      },
+      {
+        "order": 2,
+        "teamAbbr": "BUF",
+        "teamName": "Bills",
+        "league": "",
+        "firstYear": 2012,
+        "lastYear": 2015
+      },
+      {
+        "order": 3,
+        "teamAbbr": "MIA",
+        "teamName": "Dolphins",
+        "league": "",
+        "firstYear": 2016,
+        "lastYear": 2016
+      }
+    ],
+    "position": "DE",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/rkr8vhlxprfgajyaqe0x"
+  },
+  {
+    "id": "nfl-kyle-van-noy-journeyman",
+    "sport": "nfl",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Kyle Van Noy",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "DET",
+        "teamName": "Lions",
+        "league": "",
+        "firstYear": 2014,
+        "lastYear": 2015
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NE",
+        "teamName": "Patriots",
+        "league": "",
+        "firstYear": 2016,
+        "lastYear": 2019
+      },
+      {
+        "order": 3,
+        "teamAbbr": "MIA",
+        "teamName": "Dolphins",
+        "league": "",
+        "firstYear": 2020,
+        "lastYear": 2020
+      },
+      {
+        "order": 4,
+        "teamAbbr": "NE",
+        "teamName": "Patriots",
+        "league": "",
+        "firstYear": 2021,
+        "lastYear": 2021
+      },
+      {
+        "order": 5,
+        "teamAbbr": "LAC",
+        "teamName": "Chargers",
+        "league": "",
+        "firstYear": 2022,
+        "lastYear": 2022
+      },
+      {
+        "order": 6,
+        "teamAbbr": "BAL",
+        "teamName": "Ravens",
+        "league": "",
+        "firstYear": 2023,
+        "lastYear": 2025
+      }
+    ],
+    "position": "MLB",
+    "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/kxj2hipcguahh4l60vaa"
+  },
+  {
+    "id": "nfl-ron-springs-journeyman",
+    "sport": "nfl",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Ron Springs",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "DAL",
+        "teamName": "Cowboys",
+        "league": "",
+        "firstYear": 1979,
+        "lastYear": 1984
+      },
+      {
+        "order": 2,
+        "teamAbbr": "TB",
+        "teamName": "Buccaneers",
+        "league": "",
+        "firstYear": 1985,
+        "lastYear": 1986
+      }
+    ],
+    "position": "RB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vr3hkcgggerkqi56uz6s"
+  },
+  {
+    "id": "nfl-george-pickens-journeyman",
+    "sport": "nfl",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "George Pickens",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PIT",
+        "teamName": "Steelers",
+        "league": "",
+        "firstYear": 2022,
+        "lastYear": 2024
+      },
+      {
+        "order": 2,
+        "teamAbbr": "DAL",
+        "teamName": "Cowboys",
+        "league": "",
+        "firstYear": 2025,
+        "lastYear": 2025
+      }
+    ],
+    "position": "WR",
+    "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cbpyykoguf7rsxezqzvk"
+  },
+  {
+    "id": "nfl-bubba-franks-journeyman",
+    "sport": "nfl",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Bubba Franks",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "GB",
+        "teamName": "Packers",
+        "league": "",
+        "firstYear": 2000,
+        "lastYear": 2007
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NYJ",
+        "teamName": "Jets",
+        "league": "",
+        "firstYear": 2008,
+        "lastYear": 2008
+      }
+    ],
+    "position": "TE",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/hzbdidiabtfbheboo1nv"
+  },
+  {
+    "id": "nfl-cole-beasley-journeyman",
+    "sport": "nfl",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Cole Beasley",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "DAL",
+        "teamName": "Cowboys",
+        "league": "",
+        "firstYear": 2012,
+        "lastYear": 2018
+      },
+      {
+        "order": 2,
+        "teamAbbr": "BUF",
+        "teamName": "Bills",
+        "league": "",
+        "firstYear": 2019,
+        "lastYear": 2022
+      },
+      {
+        "order": 3,
+        "teamAbbr": "TB",
+        "teamName": "Buccaneers",
+        "league": "",
+        "firstYear": 2022,
+        "lastYear": 2022
+      }
+    ],
+    "position": "WR",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/y5r0fhwctl6ljwvmktvu"
+  },
+  {
+    "id": "nfl-drue-tranquill-journeyman",
+    "sport": "nfl",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Drue Tranquill",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "LAC",
+        "teamName": "Chargers",
+        "league": "",
+        "firstYear": 2019,
+        "lastYear": 2022
+      },
+      {
+        "order": 2,
+        "teamAbbr": "KC",
+        "teamName": "Chiefs",
+        "league": "",
+        "firstYear": 2023,
+        "lastYear": 2025
+      }
+    ],
+    "position": "LB",
+    "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/azjrwh0rdddskgckydsq"
+  },
+  {
+    "id": "nfl-c-j-spiller-journeyman",
+    "sport": "nfl",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "C.J. Spiller",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BUF",
+        "teamName": "Bills",
+        "league": "",
+        "firstYear": 2010,
+        "lastYear": 2014
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NO",
+        "teamName": "Saints",
+        "league": "",
+        "firstYear": 2015,
+        "lastYear": 2015
+      },
+      {
+        "order": 3,
+        "teamAbbr": "NYJ",
+        "teamName": "Jets",
+        "league": "",
+        "firstYear": 2016,
+        "lastYear": 2016
+      },
+      {
+        "order": 4,
+        "teamAbbr": "SEA",
+        "teamName": "Seahawks",
+        "league": "",
+        "firstYear": 2016,
+        "lastYear": 2016
+      },
+      {
+        "order": 5,
+        "teamAbbr": "KC",
+        "teamName": "Chiefs",
+        "league": "",
+        "firstYear": 2017,
+        "lastYear": 2017
+      }
+    ],
+    "position": "RB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jqbnrdpq9c2nbchzntxt"
+  },
+  {
+    "id": "nfl-jamaal-williams-journeyman",
+    "sport": "nfl",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Jamaal Williams",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "GB",
+        "teamName": "Packers",
+        "league": "",
+        "firstYear": 2017,
+        "lastYear": 2020
+      },
+      {
+        "order": 2,
+        "teamAbbr": "DET",
+        "teamName": "Lions",
+        "league": "",
+        "firstYear": 2021,
+        "lastYear": 2022
+      },
+      {
+        "order": 3,
+        "teamAbbr": "NO",
+        "teamName": "Saints",
+        "league": "",
+        "firstYear": 2023,
+        "lastYear": 2024
+      }
+    ],
+    "position": "RB",
+    "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/yxrxpgcwq5qwp88vqnp3"
+  },
+  {
+    "id": "nfl-johnny-johnson-journeyman",
+    "sport": "nfl",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Johnny Johnson",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PHO",
+        "teamName": "Cardinals",
+        "league": "",
+        "firstYear": 1990,
+        "lastYear": 1992
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NYJ",
+        "teamName": "Jets",
+        "league": "",
+        "firstYear": 1993,
+        "lastYear": 1994
+      }
+    ],
+    "position": "RB",
+    "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/kc18d8ahr53vtt2svcce"
+  },
+  {
+    "id": "soccer-kylian-mbappe-journeyman",
+    "sport": "soccer",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Kylian Mbappé",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "MON",
+        "teamName": "AS Monaco",
+        "league": "France",
+        "firstYear": 2016,
+        "lastYear": 2017
+      },
+      {
+        "order": 2,
+        "teamAbbr": "PSG",
+        "teamName": "Paris Saint-Germain",
+        "league": "France",
+        "firstYear": 2018,
+        "lastYear": 2024
+      },
+      {
+        "order": 3,
+        "teamAbbr": "RMA",
+        "teamName": "Real Madrid",
+        "league": "Spain",
+        "firstYear": 2025,
+        "lastYear": 2026
+      }
+    ],
+    "position": "FW",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/342229-1682683695.jpg?lm=1"
+  },
+  {
+    "id": "soccer-achraf-hakimi-journeyman",
+    "sport": "soccer",
+    "difficulty": "easy",
+    "answer": {
+      "canonical": "Achraf Hakimi",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "RMA",
+        "teamName": "Real Madrid",
+        "league": "Spain",
+        "firstYear": 2018,
+        "lastYear": 2018
+      },
+      {
+        "order": 2,
+        "teamAbbr": "BVB",
+        "teamName": "Borussia Dortmund",
+        "league": "Germany",
+        "firstYear": 2019,
+        "lastYear": 2020
+      },
+      {
+        "order": 3,
+        "teamAbbr": "INT",
+        "teamName": "Internazionale",
+        "league": "Italy",
+        "firstYear": 2021,
+        "lastYear": 2021
+      },
+      {
+        "order": 4,
+        "teamAbbr": "PSG",
+        "teamName": "Paris Saint-Germain",
+        "league": "France",
+        "firstYear": 2022,
+        "lastYear": 2026
+      }
+    ],
+    "position": "DF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/398073-1672304327.jpg?lm=1"
+  },
+  {
+    "id": "soccer-francisco-trincao-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Francisco Trincão",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BRA",
+        "teamName": "Braga",
+        "league": "Portugal",
+        "firstYear": 2019,
+        "lastYear": 2020
+      },
+      {
+        "order": 2,
+        "teamAbbr": "FCB",
+        "teamName": "Barcelona",
+        "league": "Spain",
+        "firstYear": 2021,
+        "lastYear": 2021
+      },
+      {
+        "order": 3,
+        "teamAbbr": "WOL",
+        "teamName": "Wolverhampton Wanderers",
+        "league": "England",
+        "firstYear": 2022,
+        "lastYear": 2022
+      },
+      {
+        "order": 4,
+        "teamAbbr": "SPO",
+        "teamName": "Sporting CP",
+        "league": "Portugal",
+        "firstYear": 2023,
+        "lastYear": 2026
+      }
+    ],
+    "position": "MF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/412669-1739308729.jpg?lm=1"
+  },
+  {
+    "id": "soccer-ousmane-dembele-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Ousmane Dembélé",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "SREN",
+        "teamName": "Stade Rennais",
+        "league": "France",
+        "firstYear": 2016,
+        "lastYear": 2016
+      },
+      {
+        "order": 2,
+        "teamAbbr": "BVB",
+        "teamName": "Borussia Dortmund",
+        "league": "Germany",
+        "firstYear": 2017,
+        "lastYear": 2017
+      },
+      {
+        "order": 3,
+        "teamAbbr": "FCB",
+        "teamName": "Barcelona",
+        "league": "Spain",
+        "firstYear": 2018,
+        "lastYear": 2023
+      },
+      {
+        "order": 4,
+        "teamAbbr": "PSG",
+        "teamName": "Paris Saint-Germain",
+        "league": "France",
+        "firstYear": 2024,
+        "lastYear": 2026
+      }
+    ],
+    "position": "FW",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/288230-1684148641.jpg?lm=1"
+  },
+  {
+    "id": "soccer-christopher-nkunku-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Christopher Nkunku",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PSG",
+        "teamName": "Paris Saint-Germain",
+        "league": "France",
+        "firstYear": 2016,
+        "lastYear": 2019
+      },
+      {
+        "order": 2,
+        "teamAbbr": "RBL",
+        "teamName": "RB Leipzig",
+        "league": "Germany",
+        "firstYear": 2020,
+        "lastYear": 2023
+      },
+      {
+        "order": 3,
+        "teamAbbr": "CHE",
+        "teamName": "Chelsea",
+        "league": "England",
+        "firstYear": 2024,
+        "lastYear": 2025
+      },
+      {
+        "order": 4,
+        "teamAbbr": "MIL",
+        "teamName": "AC Milan",
+        "league": "Italy",
+        "firstYear": 2026,
+        "lastYear": 2026
+      }
+    ],
+    "position": "FW",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/344381-1663686834.jpg?lm=1"
+  },
+  {
+    "id": "soccer-kieran-trippier-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Kieran Trippier",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "TOT",
+        "teamName": "Tottenham Hotspur",
+        "league": "England",
+        "firstYear": 2016,
+        "lastYear": 2019
+      },
+      {
+        "order": 2,
+        "teamAbbr": "ATM",
+        "teamName": "Atlético Madrid",
+        "league": "Spain",
+        "firstYear": 2020,
+        "lastYear": 2021
+      },
+      {
+        "order": 3,
+        "teamAbbr": "NEW",
+        "teamName": "Newcastle United",
+        "league": "England",
+        "firstYear": 2022,
+        "lastYear": 2026
+      }
+    ],
+    "position": "DF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/95810-1696454076.jpg?lm=1"
+  },
+  {
+    "id": "soccer-matthijs-de-ligt-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Matthijs de Ligt",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "AJA",
+        "teamName": "Ajax Amsterdam",
+        "league": "Netherlands",
+        "firstYear": 2017,
+        "lastYear": 2019
+      },
+      {
+        "order": 2,
+        "teamAbbr": "JUV",
+        "teamName": "Juventus",
+        "league": "Italy",
+        "firstYear": 2020,
+        "lastYear": 2022
+      },
+      {
+        "order": 3,
+        "teamAbbr": "BAY",
+        "teamName": "Bayern Munich",
+        "league": "Germany",
+        "firstYear": 2023,
+        "lastYear": 2024
+      },
+      {
+        "order": 4,
+        "teamAbbr": "MUN",
+        "teamName": "Manchester United",
+        "league": "England",
+        "firstYear": 2025,
+        "lastYear": 2026
+      }
+    ],
+    "position": "DF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/326031-1700659567.jpg?lm=1"
+  },
+  {
+    "id": "soccer-raul-jimenez-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Raúl Jiménez",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BEN",
+        "teamName": "Benfica",
+        "league": "Portugal",
+        "firstYear": 2016,
+        "lastYear": 2018
+      },
+      {
+        "order": 2,
+        "teamAbbr": "WOL",
+        "teamName": "Wolverhampton Wanderers",
+        "league": "England",
+        "firstYear": 2019,
+        "lastYear": 2023
+      },
+      {
+        "order": 3,
+        "teamAbbr": "FUL",
+        "teamName": "Fulham",
+        "league": "England",
+        "firstYear": 2024,
+        "lastYear": 2026
+      }
+    ],
+    "position": "FW",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/206040-1782888297.jpg?lm=1"
+  },
+  {
+    "id": "soccer-franck-kessie-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Franck Kessié",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "ATA",
+        "teamName": "Atalanta",
+        "league": "Italy",
+        "firstYear": 2017,
+        "lastYear": 2017
+      },
+      {
+        "order": 2,
+        "teamAbbr": "MIL",
+        "teamName": "AC Milan",
+        "league": "Italy",
+        "firstYear": 2018,
+        "lastYear": 2022
+      },
+      {
+        "order": 3,
+        "teamAbbr": "FCB",
+        "teamName": "Barcelona",
+        "league": "Spain",
+        "firstYear": 2023,
+        "lastYear": 2023
+      }
+    ],
+    "position": "MF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/294808-1749205138.jpg?lm=1"
+  },
+  {
+    "id": "soccer-jadon-sancho-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Jadon Sancho",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BVB",
+        "teamName": "Borussia Dortmund",
+        "league": "Germany",
+        "firstYear": 2018,
+        "lastYear": 2021
+      },
+      {
+        "order": 2,
+        "teamAbbr": "MUN",
+        "teamName": "Manchester United",
+        "league": "England",
+        "firstYear": 2022,
+        "lastYear": 2023
+      },
+      {
+        "order": 3,
+        "teamAbbr": "BVB",
+        "teamName": "Borussia Dortmund",
+        "league": "Germany",
+        "firstYear": 2024,
+        "lastYear": 2024
+      },
+      {
+        "order": 4,
+        "teamAbbr": "CHE",
+        "teamName": "Chelsea",
+        "league": "England",
+        "firstYear": 2025,
+        "lastYear": 2025
+      },
+      {
+        "order": 5,
+        "teamAbbr": "AVL",
+        "teamName": "Aston Villa",
+        "league": "England",
+        "firstYear": 2026,
+        "lastYear": 2026
+      }
+    ],
+    "position": "FW",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/401173-1688564217.jpg?lm=1"
+  },
+  {
+    "id": "soccer-pedro-porro-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Pedro Porro",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "GIR",
+        "teamName": "Girona",
+        "league": "Spain",
+        "firstYear": 2019,
+        "lastYear": 2019
+      },
+      {
+        "order": 2,
+        "teamAbbr": "RVAL",
+        "teamName": "Real Valladolid",
+        "league": "Spain",
+        "firstYear": 2020,
+        "lastYear": 2020
+      },
+      {
+        "order": 3,
+        "teamAbbr": "SPO",
+        "teamName": "Sporting CP",
+        "league": "Portugal",
+        "firstYear": 2021,
+        "lastYear": 2022
+      },
+      {
+        "order": 4,
+        "teamAbbr": "TOT",
+        "teamName": "Tottenham Hotspur",
+        "league": "England",
+        "firstYear": 2023,
+        "lastYear": 2026
+      }
+    ],
+    "position": "DF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/553875-1730812390.jpg?lm=1"
+  },
+  {
+    "id": "soccer-callum-wilson-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Callum Wilson",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BOU",
+        "teamName": "AFC Bournemouth",
+        "league": "England",
+        "firstYear": 2016,
+        "lastYear": 2020
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NEW",
+        "teamName": "Newcastle United",
+        "league": "England",
+        "firstYear": 2021,
+        "lastYear": 2025
+      },
+      {
+        "order": 3,
+        "teamAbbr": "WHU",
+        "teamName": "West Ham United",
+        "league": "England",
+        "firstYear": 2026,
+        "lastYear": 2026
+      }
+    ],
+    "position": "FW",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/123682-1668090039.jpg?lm=1"
+  },
+  {
+    "id": "soccer-matheus-nunes-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Matheus Nunes",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "SPO",
+        "teamName": "Sporting CP",
+        "league": "Portugal",
+        "firstYear": 2020,
+        "lastYear": 2022
+      },
+      {
+        "order": 2,
+        "teamAbbr": "WOL",
+        "teamName": "Wolverhampton Wanderers",
+        "league": "England",
+        "firstYear": 2023,
+        "lastYear": 2023
+      },
+      {
+        "order": 3,
+        "teamAbbr": "MCI",
+        "teamName": "Manchester City",
+        "league": "England",
+        "firstYear": 2024,
+        "lastYear": 2026
+      }
+    ],
+    "position": "DF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/601883-1761076097.jpg?lm=1"
+  },
+  {
+    "id": "soccer-rodri-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Rodri",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "VIL",
+        "teamName": "Villarreal",
+        "league": "Spain",
+        "firstYear": 2017,
+        "lastYear": 2018
+      },
+      {
+        "order": 2,
+        "teamAbbr": "ATM",
+        "teamName": "Atlético Madrid",
+        "league": "Spain",
+        "firstYear": 2019,
+        "lastYear": 2019
+      },
+      {
+        "order": 3,
+        "teamAbbr": "MCI",
+        "teamName": "Manchester City",
+        "league": "England",
+        "firstYear": 2020,
+        "lastYear": 2026
+      }
+    ],
+    "position": "MF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/357565-1682587890.jpg?lm=1"
+  },
+  {
+    "id": "soccer-kai-havertz-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Kai Havertz",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "LEV",
+        "teamName": "Bayer Leverkusen",
+        "league": "Germany",
+        "firstYear": 2017,
+        "lastYear": 2020
+      },
+      {
+        "order": 2,
+        "teamAbbr": "CHE",
+        "teamName": "Chelsea",
+        "league": "England",
+        "firstYear": 2021,
+        "lastYear": 2023
+      },
+      {
+        "order": 3,
+        "teamAbbr": "ARS",
+        "teamName": "Arsenal",
+        "league": "England",
+        "firstYear": 2024,
+        "lastYear": 2026
+      }
+    ],
+    "position": "FW",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/309400-1782889722.jpg?lm=1"
+  },
+  {
+    "id": "soccer-carlos-soler-journeyman",
+    "sport": "soccer",
+    "difficulty": "medium",
+    "answer": {
+      "canonical": "Carlos Soler",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "VAL",
+        "teamName": "Valencia",
+        "league": "Spain",
+        "firstYear": 2017,
+        "lastYear": 2022
+      },
+      {
+        "order": 2,
+        "teamAbbr": "PSG",
+        "teamName": "Paris Saint-Germain",
+        "league": "France",
+        "firstYear": 2023,
+        "lastYear": 2024
+      },
+      {
+        "order": 3,
+        "teamAbbr": "WHU",
+        "teamName": "West Ham United",
+        "league": "England",
+        "firstYear": 2025,
+        "lastYear": 2025
+      },
+      {
+        "order": 4,
+        "teamAbbr": "RSO",
+        "teamName": "Real Sociedad",
+        "league": "Spain",
+        "firstYear": 2026,
+        "lastYear": 2026
+      }
+    ],
+    "position": "MF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/372246-1759159072.jpg?lm=1"
+  },
+  {
+    "id": "soccer-leonardo-spinazzola-journeyman",
+    "sport": "soccer",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Leonardo Spinazzola",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "ATA",
+        "teamName": "Atalanta",
+        "league": "Italy",
+        "firstYear": 2017,
+        "lastYear": 2018
+      },
+      {
+        "order": 2,
+        "teamAbbr": "JUV",
+        "teamName": "Juventus",
+        "league": "Italy",
+        "firstYear": 2019,
+        "lastYear": 2019
+      },
+      {
+        "order": 3,
+        "teamAbbr": "ROM",
+        "teamName": "AS Roma",
+        "league": "Italy",
+        "firstYear": 2020,
+        "lastYear": 2024
+      },
+      {
+        "order": 4,
+        "teamAbbr": "NAP",
+        "teamName": "Napoli",
+        "league": "Italy",
+        "firstYear": 2025,
+        "lastYear": 2026
+      }
+    ],
+    "position": "DF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/118689-1663580982.jpg?lm=1"
+  },
+  {
+    "id": "soccer-lucas-hernandez-journeyman",
+    "sport": "soccer",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Lucas Hernández",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "ATM",
+        "teamName": "Atlético Madrid",
+        "league": "Spain",
+        "firstYear": 2016,
+        "lastYear": 2019
+      },
+      {
+        "order": 2,
+        "teamAbbr": "BAY",
+        "teamName": "Bayern Munich",
+        "league": "Germany",
+        "firstYear": 2020,
+        "lastYear": 2023
+      },
+      {
+        "order": 3,
+        "teamAbbr": "PSG",
+        "teamName": "Paris Saint-Germain",
+        "league": "France",
+        "firstYear": 2024,
+        "lastYear": 2026
+      }
+    ],
+    "position": "DF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/281963-1667830435.jpg?lm=1"
+  },
+  {
+    "id": "soccer-steven-bergwijn-journeyman",
+    "sport": "soccer",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Steven Bergwijn",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "PSV",
+        "teamName": "PSV Eindhoven",
+        "league": "Netherlands",
+        "firstYear": 2016,
+        "lastYear": 2019
+      },
+      {
+        "order": 2,
+        "teamAbbr": "TOT",
+        "teamName": "Tottenham Hotspur",
+        "league": "England",
+        "firstYear": 2020,
+        "lastYear": 2022
+      },
+      {
+        "order": 3,
+        "teamAbbr": "AJA",
+        "teamName": "Ajax Amsterdam",
+        "league": "Netherlands",
+        "firstYear": 2023,
+        "lastYear": 2024
+      }
+    ],
+    "position": "FW",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/284165-1660913350.jpg?lm=1"
+  },
+  {
+    "id": "soccer-mikel-merino-journeyman",
+    "sport": "soccer",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Mikel Merino",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BVB",
+        "teamName": "Borussia Dortmund",
+        "league": "Germany",
+        "firstYear": 2017,
+        "lastYear": 2017
+      },
+      {
+        "order": 2,
+        "teamAbbr": "NEW",
+        "teamName": "Newcastle United",
+        "league": "England",
+        "firstYear": 2018,
+        "lastYear": 2018
+      },
+      {
+        "order": 3,
+        "teamAbbr": "RSO",
+        "teamName": "Real Sociedad",
+        "league": "Spain",
+        "firstYear": 2019,
+        "lastYear": 2024
+      },
+      {
+        "order": 4,
+        "teamAbbr": "ARS",
+        "teamName": "Arsenal",
+        "league": "England",
+        "firstYear": 2025,
+        "lastYear": 2026
+      }
+    ],
+    "position": "MF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/338424-1716803831.jpg?lm=1"
+  },
+  {
+    "id": "soccer-clement-lenglet-journeyman",
+    "sport": "soccer",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Clément Lenglet",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "SEV",
+        "teamName": "Sevilla",
+        "league": "Spain",
+        "firstYear": 2017,
+        "lastYear": 2018
+      },
+      {
+        "order": 2,
+        "teamAbbr": "FCB",
+        "teamName": "Barcelona",
+        "league": "Spain",
+        "firstYear": 2019,
+        "lastYear": 2022
+      },
+      {
+        "order": 3,
+        "teamAbbr": "TOT",
+        "teamName": "Tottenham Hotspur",
+        "league": "England",
+        "firstYear": 2023,
+        "lastYear": 2023
+      },
+      {
+        "order": 4,
+        "teamAbbr": "AVL",
+        "teamName": "Aston Villa",
+        "league": "England",
+        "firstYear": 2024,
+        "lastYear": 2024
+      },
+      {
+        "order": 5,
+        "teamAbbr": "ATM",
+        "teamName": "Atlético Madrid",
+        "league": "Spain",
+        "firstYear": 2025,
+        "lastYear": 2026
+      }
+    ],
+    "position": "DF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/182904-1599988301.jpg?lm=1"
+  },
+  {
+    "id": "soccer-german-pezzella-journeyman",
+    "sport": "soccer",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Germán Pezzella",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BET",
+        "teamName": "Real Betis",
+        "league": "Spain",
+        "firstYear": 2016,
+        "lastYear": 2017
+      },
+      {
+        "order": 2,
+        "teamAbbr": "FIO",
+        "teamName": "Fiorentina",
+        "league": "Italy",
+        "firstYear": 2018,
+        "lastYear": 2021
+      },
+      {
+        "order": 3,
+        "teamAbbr": "BET",
+        "teamName": "Real Betis",
+        "league": "Spain",
+        "firstYear": 2022,
+        "lastYear": 2024
+      }
+    ],
+    "position": "DF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/113133-1762437810.png?lm=1"
+  },
+  {
+    "id": "soccer-manuel-akanji-journeyman",
+    "sport": "soccer",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Manuel Akanji",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "BVB",
+        "teamName": "Borussia Dortmund",
+        "league": "Germany",
+        "firstYear": 2018,
+        "lastYear": 2022
+      },
+      {
+        "order": 2,
+        "teamAbbr": "MCI",
+        "teamName": "Manchester City",
+        "league": "England",
+        "firstYear": 2023,
+        "lastYear": 2025
+      },
+      {
+        "order": 3,
+        "teamAbbr": "INT",
+        "teamName": "Internazionale",
+        "league": "Italy",
+        "firstYear": 2026,
+        "lastYear": 2026
+      }
+    ],
+    "position": "DF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/284730-1684165752.jpg?lm=1"
+  },
+  {
+    "id": "soccer-matt-doherty-journeyman",
+    "sport": "soccer",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Matt Doherty",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "WOL",
+        "teamName": "Wolverhampton Wanderers",
+        "league": "England",
+        "firstYear": 2019,
+        "lastYear": 2020
+      },
+      {
+        "order": 2,
+        "teamAbbr": "TOT",
+        "teamName": "Tottenham Hotspur",
+        "league": "England",
+        "firstYear": 2021,
+        "lastYear": 2023
+      },
+      {
+        "order": 3,
+        "teamAbbr": "WOL",
+        "teamName": "Wolverhampton Wanderers",
+        "league": "England",
+        "firstYear": 2024,
+        "lastYear": 2026
+      }
+    ],
+    "position": "DF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/171679-1682598455.jpg?lm=1"
+  },
+  {
+    "id": "soccer-frank-anguissa-journeyman",
+    "sport": "soccer",
+    "difficulty": "hard",
+    "answer": {
+      "canonical": "Frank Anguissa",
+      "aliases": []
+    },
+    "stints": [
+      {
+        "order": 1,
+        "teamAbbr": "MAR",
+        "teamName": "Marseille",
+        "league": "France",
+        "firstYear": 2016,
+        "lastYear": 2018
+      },
+      {
+        "order": 2,
+        "teamAbbr": "FUL",
+        "teamName": "Fulham",
+        "league": "England",
+        "firstYear": 2019,
+        "lastYear": 2019
+      },
+      {
+        "order": 3,
+        "teamAbbr": "VIL",
+        "teamName": "Villarreal",
+        "league": "Spain",
+        "firstYear": 2020,
+        "lastYear": 2020
+      },
+      {
+        "order": 4,
+        "teamAbbr": "FUL",
+        "teamName": "Fulham",
+        "league": "England",
+        "firstYear": 2021,
+        "lastYear": 2021
+      },
+      {
+        "order": 5,
+        "teamAbbr": "NAP",
+        "teamName": "Napoli",
+        "league": "Italy",
+        "firstYear": 2022,
+        "lastYear": 2026
+      }
+    ],
+    "position": "MF",
+    "headshot": "https://img.a.transfermarkt.technology/portrait/header/354361-1695026237.jpg?lm=1"
+  }
+]
