@@ -9,9 +9,11 @@ Pure given a fixed `seasons` list, so the daily archive is reproducible.
 """
 from __future__ import annotations
 
+import collections
 import itertools
 
 from . import assemble, curation
+from .models import slug
 from .models import RawSeason
 from .themes import Filter, StatColumn, Theme
 
@@ -69,13 +71,43 @@ def _key_prefix(cfg: curation.SportCuration) -> str:
     return "" if cfg.sport == "nfl" else f"{cfg.sport}-"
 
 
-def _candidates(cfg: curation.SportCuration | None = None) -> list[Theme]:
+def team_slices(cfg: curation.SportCuration, seasons: list[RawSeason]) -> tuple[curation.Slice, ...]:
+    """Franchise slices for `cfg`, derived from the data rather than a hardcoded roster.
+
+    Ranked by how many player-seasons each franchise actually has, so the axis follows coverage
+    instead of somebody's memory of which clubs matter — and so relocations, renames and
+    expansion teams need no edit here. Season-grain rows only: a franchise's game-grain volume
+    says nothing about whether it can field eight close SEASONS.
+
+    Returns both the plain franchise slices and, for sports configured for it, franchise x era
+    ("1990s seasons — NYY") — the most specific cut the data supports.
+    """
+    if not cfg.team_slices:
+        return ()
+    counts = collections.Counter(
+        s.team_abbr for s in seasons
+        if s.sport == cfg.sport and s.team_abbr and not s.career and s.week is None)
+    ranked = [team for team, _ in counts.most_common(cfg.team_slices)]
+    plain = tuple(curation.Slice(key=slug(team), filters=(Filter("team", "eq", team),),
+                                 suffix=f" — {team}")
+                  for team in ranked)
+    if not cfg.team_era_slices or not cfg.team_era_decades:
+        return plain
+    eras = curation.decade_slices(list(cfg.team_era_decades))
+    crossed = tuple(curation.combine(era, team_slice)
+                    for team_slice in plain[:cfg.team_era_slices]
+                    for era in eras)
+    return plain + crossed
+
+
+def _candidates(cfg: curation.SportCuration | None = None,
+                extra_slices: tuple[curation.Slice, ...] = ()) -> list[Theme]:
     """Every single-quirk theme we'll *try* — viability is checked separately."""
     cfg = cfg or curation.SPORTS["nfl"]
     pre = _key_prefix(cfg)
     out: list[Theme] = []
     for spec_key, spec in cfg.positions.items():
-        for sl in cfg.slices:
+        for sl in cfg.slices + extra_slices:
             for q in cfg.quirks:
                 if not q.applies_to(spec_key):
                     continue
@@ -101,7 +133,8 @@ def _combo_title(prefix: str, q1: curation.Quirk, q2: curation.Quirk, label: str
     return prefix + frag + suffix
 
 
-def _pairwise_candidates(cfg: curation.SportCuration | None = None) -> list[Theme]:
+def _pairwise_candidates(cfg: curation.SportCuration | None = None,
+                         extra_slices: tuple[curation.Slice, ...] = ()) -> list[Theme]:
     """Two-quirk combos (undrafted+sub-6-foot, first-round+under-24, …) — a much bigger,
     more specific niche space than any single quirk alone. Uncapped and not fed into the
     balanced/capped `generate_themes()` picker used by the daily bulk-refresh job; this is
@@ -111,7 +144,7 @@ def _pairwise_candidates(cfg: curation.SportCuration | None = None) -> list[Them
     pre = _key_prefix(cfg)
     out: list[Theme] = []
     for spec_key, spec in cfg.positions.items():
-        for sl in cfg.slices:
+        for sl in cfg.slices + extra_slices:
             for q1, q2 in itertools.combinations(cfg.quirks, 2):
                 if curation.redundant_pair(q1, q2):
                     continue
@@ -181,7 +214,11 @@ def all_niche_candidates(seasons: list[RawSeason]) -> list[Theme]:
     for cfg in curation.SPORTS.values():
         if not any(s.sport == cfg.sport for s in seasons):
             continue          # nothing pulled for this sport this run — skip the build work
-        candidates += _candidates(cfg)
+        teams = team_slices(cfg, seasons)
+        candidates += _candidates(cfg, teams)
         if cfg.pairwise:
+            # Franchise slices are already narrow; crossing them with a SECOND quirk on top
+            # mostly produces empty pools that cost a build each. Pairwise stays on the
+            # era/league axes, where the pool is wide enough to survive two predicates.
             candidates += _pairwise_candidates(cfg)
     return [t for t in candidates if _is_viable(t, seasons)]

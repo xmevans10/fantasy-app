@@ -268,6 +268,17 @@ def decade_slices(decades: list[int | None]) -> tuple[Slice, ...]:
     )
 
 
+def combine(outer: Slice, inner: Slice) -> Slice:
+    """AND two slices into one — "1990s" x "NYY" -> 1990s Yankees seasons.
+
+    Filters concatenate (they are ANDed anyway), the era keeps the prefix and the franchise
+    keeps the suffix, so the title still reads as a sentence rather than a key."""
+    return Slice(key=f"{outer.key}-{inner.key}",
+                 filters=outer.filters + inner.filters,
+                 prefix=outer.prefix or inner.prefix,
+                 suffix=inner.suffix + outer.suffix)
+
+
 @dataclass(frozen=True)
 class SportCuration:
     """One sport's generator config: what to slice by, which cohorts, which quirks."""
@@ -278,6 +289,16 @@ class SportCuration:
     # Whether to also enumerate two-quirk combos for this sport. On everywhere; the viability
     # gate is what actually decides whether a combo survives.
     pairwise: bool = True
+    # How many franchises to slice by, most-seasons-first, computed from the data at generation
+    # time rather than listed here. A hardcoded roster of clubs is a literal that encodes "now"
+    # (AGENTS.md §2): teams relocate, rename and get added, and the list would rot silently.
+    # 0 disables the axis — tennis, where `team_abbr` is a NATIONALITY and is already sliced.
+    team_slices: int = 0
+    # Franchises crossed with eras ("1990s Yankees"), the most specific slice the data
+    # supports. Deliberately a smaller cross than `team_slices` x every era: the product grows
+    # fast and a thin cell just fails the viability gate after paying to build it.
+    team_era_slices: int = 0
+    team_era_decades: tuple[int, ...] = ()
 
 
 # ── Column sets (lifted from the curated themes so a generated card looks identical) ──
@@ -501,14 +522,21 @@ _TENNIS_SLICES: tuple[Slice, ...] = decade_slices(
 
 
 SPORTS: dict[str, SportCuration] = {
-    "nfl": SportCuration("nfl", POSITIONS, QUIRKS, decade_slices(DECADES)),
-    "baseball": SportCuration("baseball", {"H": _MLB_HITTER}, _MLB_HITTER_QUIRKS, _MLB_SLICES),
+    "nfl": SportCuration("nfl", POSITIONS, QUIRKS, decade_slices(DECADES),
+                         team_slices=32, team_era_slices=12,
+                         team_era_decades=(2000, 2010, 2020)),
+    "baseball": SportCuration("baseball", {"H": _MLB_HITTER}, _MLB_HITTER_QUIRKS, _MLB_SLICES,
+                              team_slices=30, team_era_slices=16,
+                              team_era_decades=(1950, 1970, 1990, 2010)),
     "nba": SportCuration("nba", {"ALL": _NBA_ALL, "G": _NBA_GUARD, "BIG": _NBA_BIG},
-                         _NBA_QUIRKS, _NBA_SLICES),
+                         _NBA_QUIRKS, _NBA_SLICES,
+                         team_slices=30, team_era_slices=12,
+                         team_era_decades=(1980, 1990, 2000, 2010)),
     "soccer": SportCuration("soccer",
                             {"ATT": _SOCCER_ATT, "FW": _SOCCER_FW, "MF": _SOCCER_MF,
                              "BACK": _SOCCER_BACK},
-                            _SOCCER_QUIRKS, _SOCCER_SLICES),
+                            _SOCCER_QUIRKS, _SOCCER_SLICES,
+                            team_slices=40, team_era_slices=0),
     "tennis": SportCuration("tennis", {"Player": _TENNIS}, _TENNIS_QUIRKS, _TENNIS_SLICES),
 }
 
@@ -517,4 +545,6 @@ SPORTS: dict[str, SportCuration] = {
 # per-sport, not per-position. Registered as its own entry keyed by cohort; `generate.py`
 # reads `SportCuration.sport` for the theme's sport, never the dict key.
 SPORTS["baseball-pitchers"] = SportCuration(
-    "baseball", {"P": _MLB_PITCHER}, _MLB_PITCHER_QUIRKS, _MLB_SLICES)
+    "baseball", {"P": _MLB_PITCHER}, _MLB_PITCHER_QUIRKS, _MLB_SLICES,
+    team_slices=30, team_era_slices=16,
+    team_era_decades=(1950, 1970, 1990, 2010))

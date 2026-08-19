@@ -182,3 +182,62 @@ def test_all_niche_candidates_skips_sports_absent_from_the_pull():
                           position="WR", stats={"receiving_yards": 1200.0}, headshot="h")
                 for i in range(3)]
     assert all(t.sport == "nfl" for t in generate.all_niche_candidates(nfl_only))
+
+
+# ── Franchise + era slices ───────────────────────────────────────────────────────
+
+def _mlb(name, team, year, hr=30.0):
+    return RawSeason(name=name, team_abbr=team, season_year=year, sport="baseball",
+                     position="H", stats={"home_runs": hr, "plate_appearances": 600.0},
+                     headshot="h")
+
+
+def test_team_slices_rank_franchises_by_actual_coverage():
+    """Derived from the data, not a hardcoded roster — teams relocate, rename and get added,
+    and a literal list would rot silently (AGENTS.md §2)."""
+    cfg = curation.SPORTS["baseball"]
+    seasons = ([_mlb(f"Yankee {i}", "NYY", 1990 + i) for i in range(30)]
+               + [_mlb(f"Met {i}", "NYM", 1990 + i) for i in range(10)]
+               + [_mlb(f"Ray {i}", "TB", 1990 + i) for i in range(2)])
+    slices = generate.team_slices(cfg, seasons)
+    keys = [s.key for s in slices]
+    assert keys[0].startswith("nyy") and keys[1].startswith("nym")
+    assert all(f.field == "team" for s in slices for f in s.filters if f.field == "team")
+
+
+def test_team_slices_ignore_career_and_game_rows():
+    # A franchise's game-grain volume says nothing about whether it can field eight close
+    # SEASONS, and career rows are aggregates, not seasons.
+    cfg = curation.SPORTS["baseball"]
+    def variant(**kw):
+        base = dict(name="Noise", team_abbr="TB", season_year=2000, sport="baseball",
+                    position="H", stats={"home_runs": 30.0}, headshot="h")
+        return RawSeason(**{**base, **kw})
+
+    seasons = [_mlb("Real Season", "NYY", 2000)]
+    noisy = [variant(week=5), variant(career=True)] * 20
+    slices = generate.team_slices(cfg, seasons + noisy)
+    assert [s.key for s in slices][0].startswith("nyy")
+
+
+def test_team_slices_are_off_where_team_is_not_a_franchise():
+    # Tennis stores NATIONALITY in team_abbr and already slices on it explicitly.
+    assert generate.team_slices(curation.SPORTS["tennis"], []) == ()
+
+
+def test_combine_crosses_an_era_with_a_franchise_and_reads_as_a_sentence():
+    era = curation.decade_slices([1990])[0]
+    team = curation.Slice(key="nyy", filters=(Filter("team", "eq", "NYY"),), suffix=" — NYY")
+    both = curation.combine(era, team)
+    assert both.prefix == "1990s " and both.suffix == " — NYY"
+    # Both predicates survive the cross — that is the whole point of the axis.
+    assert {(f.field, f.value) for f in both.filters} == {("decade", 1990), ("team", "NYY")}
+
+
+def test_team_slices_produce_themes_that_name_the_franchise():
+    cfg = curation.SPORTS["baseball"]
+    seasons = [_mlb(f"Yankee {i}", "NYY", 1990 + i) for i in range(30)]
+    themes = generate._candidates(cfg, generate.team_slices(cfg, seasons))
+    titles = [t.title for t in themes]
+    assert any(t.endswith("— NYY") for t in titles), titles[:3]
+    assert any("1990s" in t and t.endswith("— NYY") for t in titles), "expected an era x franchise cut"
