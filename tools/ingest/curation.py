@@ -250,11 +250,16 @@ class Slice:
     Generalizes what `DECADES` did for NFL. `key` is the fragment that lands in the theme key
     (so it must be stable — it's half of a `puzzle_history` signature); `prefix`/`suffix`
     frame the title around the quirk's own wording.
+
+    `axis` names the DIMENSION this slice belongs to, so the roller can pick at most one value
+    per dimension (two eras ANDed is an empty pool; an era AND a club is the good stuff). The
+    enumerated path ignores it and treats every slice as one flat list, exactly as before.
     """
     key: str
     filters: tuple[Filter, ...] = ()
     prefix: str = ""
     suffix: str = ""
+    axis: str = "era"
 
 
 def decade_slices(decades: list[int | None]) -> tuple[Slice, ...]:
@@ -263,7 +268,7 @@ def decade_slices(decades: list[int | None]) -> tuple[Slice, ...]:
     return tuple(
         Slice(key=str(d) if d is not None else "all",
               filters=() if d is None else (Filter("decade", "eq", d),),
-              prefix=decade_prefix(d))
+              prefix=decade_prefix(d), axis="era")
         for d in decades
     )
 
@@ -276,7 +281,8 @@ def combine(outer: Slice, inner: Slice) -> Slice:
     return Slice(key=f"{outer.key}-{inner.key}",
                  filters=outer.filters + inner.filters,
                  prefix=outer.prefix or inner.prefix,
-                 suffix=inner.suffix + outer.suffix)
+                 suffix=inner.suffix + outer.suffix,
+                 axis=f"{outer.axis}+{inner.axis}")
 
 
 @dataclass(frozen=True)
@@ -488,7 +494,7 @@ _SOCCER_LEAGUES = ["England", "Spain", "Italy", "Germany", "France", "Portugal",
                    "Ukraine", "Denmark", "USA (MLS)"]
 _SOCCER_SLICES: tuple[Slice, ...] = decade_slices([None, 2010, 2020]) + tuple(
     Slice(key=slug(league), filters=(Filter("league", "eq", league),),
-          suffix=f" — {'MLS' if league.startswith('USA') else league}")
+          suffix=f" — {'MLS' if league.startswith('USA') else league}", axis="scope")
     for league in _SOCCER_LEAGUES
 )
 
@@ -516,7 +522,8 @@ _TENNIS_NATIONS = ["USA", "ESP", "FRA", "AUS", "GER", "ARG", "SUI", "SRB", "RUS"
 _TENNIS_SLICES: tuple[Slice, ...] = decade_slices(
     [None, 1970, 1980, 1990, 2000, 2010, 2020]
 ) + tuple(
-    Slice(key=nation.lower(), filters=(Filter("team", "eq", nation),), suffix=f" ({nation})")
+    Slice(key=nation.lower(), filters=(Filter("team", "eq", nation),), suffix=f" ({nation})",
+          axis="scope")
     for nation in _TENNIS_NATIONS
 )
 

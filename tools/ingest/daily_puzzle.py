@@ -32,7 +32,7 @@ import argparse
 import datetime as dt
 import random
 
-from . import assemble, generate
+from . import assemble, curation, generate
 from . import main as ingest_main
 from .assemble import PuzzleRow
 from .baselines import compute_baselines
@@ -62,14 +62,38 @@ def _signature(theme_key: str, row: PuzzleRow) -> str:
     return f"{theme_key}|{','.join(ids)}"
 
 
-def build_candidates(seasons: list[RawSeason],
-                     baselines: BaselineTable) -> list[tuple[Theme, PuzzleRow]]:
-    """Every (theme, variant-row) pair worth considering. Niche generated themes (single- and
-    pairwise-quirk) come first, curated themes last — `pick_novel_puzzle` preserves that order
-    so the daily pick favors the more interesting angle whenever an unused one is available."""
-    niche = generate.all_niche_candidates(seasons)
+# How many viable themes to ROLL per sport per batch, and the ceiling on rolls spent finding
+# them. Enough that a day's pick has real choice and the theme cooldown can be satisfied,
+# without re-enumerating a space we only take five puzzles from.
+ROLL_THEMES = 60
+ROLL_ATTEMPTS = 500
+
+
+def build_candidates(seasons: list[RawSeason], baselines: BaselineTable,
+                     rng: random.Random | None = None) -> list[tuple[Theme, PuzzleRow]]:
+    """Every (theme, variant-row) pair worth considering. Rolled niche themes come first,
+    curated themes last — `pick_novel_puzzle` preserves that order so the daily pick favors the
+    more interesting angle whenever an unused one is available.
+
+    Themes are ROLLED, not enumerated. Enumerating every (position x slice x quirk) combination
+    cost 14,888 viability builds and 20.9 minutes on the live catalog to choose five puzzles,
+    and could only ever reach the combinations the grid was written to produce. Rolling composes
+    a spec at random from the axes — era, franchise, league/nationality, one or two quirks — so
+    the reachable space is their full product (including era x club x two quirks, which the grid
+    never enumerated because crossing everything with everything is what made it unaffordable),
+    at a cost of tens of builds instead of thousands.
+
+    The curated themes stay in the pool unrolled: they are editorial, they are the fallback when
+    a thin sport's rolls all miss, and `pick_novel_puzzle` already ranks them last."""
+    rng = rng or random.Random(0)
     pairs: list[tuple[Theme, PuzzleRow]] = []
-    for theme in [*niche, *KEEP4_THEMES]:
+    themes: list[Theme] = []
+    for cohort, cfg in curation.SPORTS.items():
+        if not any(s.sport == cfg.sport for s in seasons):
+            continue          # nothing pulled for this sport this run
+        themes += generate.roll_viable_themes(cfg, seasons, rng, ROLL_THEMES, ROLL_ATTEMPTS,
+                                              label=cohort)
+    for theme in [*themes, *KEEP4_THEMES]:
         rows = assemble.build_keep4_rows(theme, seasons, baselines, max_variants=SEARCH_VARIANTS)
         pairs += [(theme, row) for row in rows]
     return pairs
@@ -193,7 +217,10 @@ def main() -> int:
     seasons = ingest_main.gather_seasons(ingest_main.DEFAULT_NFL_YEARS, ingest_main.DEFAULT_GAME_YEARS)
     baselines = BaselineTable(compute_baselines(seasons))
 
-    candidates_by_sport = group_by_sport(build_candidates(seasons, baselines))
+    # Seeded on the batch's first date, so a re-dispatched run for the same day rolls the same
+    # themes and the mint stays reproducible.
+    candidates_by_sport = group_by_sport(
+        build_candidates(seasons, baselines, random.Random(f"roll-{start.isoformat()}")))
     total = sum(len(v) for v in candidates_by_sport.values())
     per_sport = ", ".join(f"{s}: {len(candidates_by_sport.get(s, []))}" for s in SPORTS)
     print(f"[daily] {total} candidate (theme, variant) pairs built ({per_sport}), "

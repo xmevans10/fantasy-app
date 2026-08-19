@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import collections
 import itertools
+import random
 
 from . import assemble, curation
 from .models import slug
@@ -89,7 +90,7 @@ def team_slices(cfg: curation.SportCuration, seasons: list[RawSeason]) -> tuple[
         if s.sport == cfg.sport and s.team_abbr and not s.career and s.week is None)
     ranked = [team for team, _ in counts.most_common(cfg.team_slices)]
     plain = tuple(curation.Slice(key=slug(team), filters=(Filter("team", "eq", team),),
-                                 suffix=f" — {team}")
+                                 suffix=f" — {team}", axis="club")
                   for team in ranked)
     if not cfg.team_era_slices or not cfg.team_era_decades:
         return plain
@@ -222,3 +223,126 @@ def all_niche_candidates(seasons: list[RawSeason]) -> list[Theme]:
             # era/league axes, where the pool is wide enough to survive two predicates.
             candidates += _pairwise_candidates(cfg)
     return [t for t in candidates if _is_viable(t, seasons)]
+
+
+# ── Rolled themes ────────────────────────────────────────────────────────────────
+#
+# The enumerated path above builds every (position x slice x quirk) combination there is,
+# viability-checks all of them, and hands the lot to the daily picker. Measured on the live
+# catalog once franchises joined the grid: 14,888 candidates, 20.9 minutes, to choose FIVE
+# puzzles. That is the wrong shape twice over — it pays for 14,883 boards nobody sees, and the
+# space it can reach is capped at whatever the grid happens to enumerate.
+#
+# Rolling inverts it: compose ONE spec at random from the axes, test it, keep it or roll again.
+# Cost drops to the number of attempts (tens of builds, seconds), and the reachable space is
+# the full product of the axes rather than a hand-drawn subset — an era AND a club AND two
+# quirks is a combination the grid never enumerated, because crossing every axis with every
+# other was exactly what made it unaffordable.
+#
+# Keys are composed from the parts, so a rolled theme and the same combination enumerated
+# produce the SAME key. `puzzle_history`'s theme cooldown therefore works across both paths
+# without knowing which one produced a given row.
+
+# How often each optional axis is included. Tuned so most boards carry some context (a bare
+# "20-20 club seasons" is the least interesting thing this can produce) without stacking so
+# many predicates that the pool empties and every roll fails.
+P_ERA = 0.55          # narrow to a decade
+P_CLUB = 0.30         # narrow to a franchise
+P_SCOPE = 0.30        # narrow to a league / nationality, where the sport has them
+P_SECOND_QUIRK = 0.45 # two quirks rather than one
+
+# Composition order, outermost first — see `roll_theme`.
+_AXIS_ORDER = ["era", "club", "scope"]
+
+
+def roll_theme(cfg: curation.SportCuration, rng: random.Random,
+               teams: tuple[curation.Slice, ...] = ()) -> Theme | None:
+    """Compose one random theme spec for `cfg`. `None` if the roll produced nothing usable.
+
+    At most one value per axis: two eras ANDed is an empty pool, but an era AND a club is
+    exactly the specific-but-real cut worth minting. Deterministic given `rng`, so a day's
+    mint is reproducible.
+    """
+    spec_key, spec = rng.choice(sorted(cfg.positions.items()))
+
+    chosen: list[curation.Slice] = []
+    eras = [s for s in cfg.slices if s.axis == "era" and s.filters]
+    scopes = [s for s in cfg.slices if s.axis == "scope"]
+    if eras and rng.random() < P_ERA:
+        chosen.append(rng.choice(eras))
+    # Plain franchises only. `team_slices` also returns pre-crossed era x franchise slices for
+    # the enumerated path; taking one here could stack a second era on the one rolled above.
+    plain_teams = [t for t in teams if t.axis == "club"]
+    if plain_teams and rng.random() < P_CLUB:
+        chosen.append(rng.choice(plain_teams))
+    elif scopes and rng.random() < P_SCOPE:
+        chosen.append(rng.choice(scopes))
+
+    usable = [q for q in cfg.quirks if q.applies_to(spec_key)]
+    if not usable:
+        return None
+    quirks: list[curation.Quirk] = [rng.choice(usable)]
+    if len(usable) > 1 and rng.random() < P_SECOND_QUIRK:
+        second = rng.choice([q for q in usable if q.key != quirks[0].key])
+        # Same-axis pairs narrow one dimension twice instead of crossing two — the exact
+        # thing `redundant_pair` exists to skip in the enumerated path.
+        if not curation.redundant_pair(quirks[0], second):
+            quirks.append(second)
+
+    # Compose in a FIXED axis order, era outermost. `team_slices` builds its era x franchise
+    # cross as `combine(era, team)`, so folding the other way would key the identical theme
+    # "lad-2020" here and "2020-lad" there — two keys for one puzzle, and the `puzzle_history`
+    # theme cooldown would stop recognising rolled themes it had already served.
+    chosen.sort(key=lambda part: _AXIS_ORDER.index(part.axis)
+                if part.axis in _AXIS_ORDER else len(_AXIS_ORDER))
+    sl = chosen[0] if chosen else curation.Slice(key="all")
+    for part in chosen[1:]:
+        sl = curation.combine(sl, part)
+
+    pre = _key_prefix(cfg)
+    if len(quirks) == 1:
+        q = quirks[0]
+        key = f"gen-{pre}{spec.pos}-{sl.key}-{q.key}".lower()
+        title = sl.prefix + q.title.format(pos=spec.label) + sl.suffix
+    else:
+        q1, q2 = quirks
+        key = f"gen2-{pre}{spec.pos}-{sl.key}-{q1.key}-{q2.key}".lower()
+        title = _combo_title(sl.prefix, q1, q2, spec.label, sl.suffix)
+    if key in curation.DENYLIST:
+        return None
+
+    filters = sl.filters
+    for q in quirks:
+        filters += _quirk_filters(q, spec)
+    return _theme(key, title, spec, filters, sport=cfg.sport, quirks=tuple(quirks))
+
+
+def roll_viable_themes(cfg: curation.SportCuration, seasons: list[RawSeason],
+                       rng: random.Random, wanted: int, attempts: int,
+                       teams: tuple[curation.Slice, ...] | None = None,
+                       label: str | None = None) -> list[Theme]:
+    """Roll until `wanted` viable themes are found or `attempts` rolls are spent.
+
+    Reports how hard it had to work: a sport whose rolls mostly miss is a coverage signal, not
+    something to silently absorb.
+    """
+    if teams is None:
+        teams = team_slices(cfg, seasons)
+    found: list[Theme] = []
+    seen: set[str] = set()
+    rolled = 0
+    for _ in range(attempts):
+        if len(found) >= wanted:
+            break
+        rolled += 1
+        theme = roll_theme(cfg, rng, teams)
+        if theme is None or theme.key in seen:
+            continue
+        seen.add(theme.key)
+        if _is_viable(theme, seasons):
+            found.append(theme)
+    # `label` is the registry KEY, not `cfg.sport` — baseball has two cohorts (hitters and
+    # pitchers) under one sport, and logging both as "baseball" reads like a duplicate run.
+    print(f"[roll] {label or cfg.sport}: {len(found)} viable from {rolled} rolls "
+          f"(wanted {wanted})")
+    return found

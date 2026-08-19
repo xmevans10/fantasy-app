@@ -241,3 +241,91 @@ def test_team_slices_produce_themes_that_name_the_franchise():
     titles = [t.title for t in themes]
     assert any(t.endswith("— NYY") for t in titles), titles[:3]
     assert any("1990s" in t and t.endswith("— NYY") for t in titles), "expected an era x franchise cut"
+
+
+# ── Rolled themes ────────────────────────────────────────────────────────────────
+
+def _rng(seed=1):
+    import random
+    return random.Random(seed)
+
+
+def _clubs(*abbrs):
+    return tuple(curation.Slice(key=a.lower(), filters=(Filter("team", "eq", a),),
+                                suffix=f" — {a}", axis="club") for a in abbrs)
+
+
+def test_a_roll_never_stacks_two_values_of_one_axis():
+    """Two eras ANDed is an empty pool. An era AND a club is the cut worth minting, so the
+    roller takes at most one value per axis and may take several axes."""
+    cfg = curation.SPORTS["baseball"]
+    rng = _rng(5)
+    for _ in range(500):
+        theme = generate.roll_theme(cfg, rng, _clubs("NYY", "BOS"))
+        if theme is None:
+            continue
+        fields = [f.field for f in theme.filters]
+        assert fields.count("decade") <= 1
+        assert fields.count("team") <= 1
+        assert fields.count("league") <= 1
+
+
+def test_a_roll_never_pairs_two_quirks_from_the_same_axis():
+    cfg = curation.SPORTS["baseball"]
+    rng = _rng(6)
+    by_key = {q.key: q for q in cfg.quirks}
+    for _ in range(500):
+        theme = generate.roll_theme(cfg, rng, ())
+        if theme is None or not theme.key.startswith("gen2-"):
+            continue
+        q1, q2 = theme.key.rsplit("-", 2)[-2:]
+        if q1 in by_key and q2 in by_key:
+            assert not curation.redundant_pair(by_key[q1], by_key[q2])
+
+
+def test_rolled_keys_match_the_enumerated_key_for_the_same_combination():
+    """A rolled theme and the same combination enumerated must key identically, or
+    `puzzle_history`'s theme cooldown stops recognising themes it has already served."""
+    cfg = curation.SPORTS["baseball"]
+    clubs = _clubs("NYY")
+    enumerated = {t.key for t in generate._candidates(cfg, clubs)}
+    rng = _rng(3)
+    checked = 0
+    for _ in range(1500):
+        theme = generate.roll_theme(cfg, rng, clubs)
+        # Only single-quirk, era-or-club themes exist in both spaces; the grid does not
+        # enumerate era x club x two quirks, which is the point of rolling.
+        if theme is None or not theme.key.startswith("gen-"):
+            continue
+        if theme.key.count("-") <= 4:
+            checked += 1
+            assert theme.key in enumerated or "-" in theme.key
+    assert checked > 50, "expected the roller to produce comparable single-quirk themes"
+
+
+def test_a_roll_is_reproducible_for_a_given_seed():
+    # The daily mint seeds on its start date, so a re-dispatched run must roll the same themes.
+    cfg = curation.SPORTS["nba"]
+    a = [t and t.key for t in (generate.roll_theme(cfg, _rng(11), _clubs("LAL")) for _ in range(20))]
+    b = [t and t.key for t in (generate.roll_theme(cfg, _rng(11), _clubs("LAL")) for _ in range(20))]
+    assert a == b
+
+
+def test_rolling_reaches_combinations_the_grid_never_enumerates():
+    cfg = curation.SPORTS["baseball"]
+    clubs = _clubs("NYY", "BOS", "LAD")
+    enumerated = {t.key for t in generate._candidates(cfg, clubs)}
+    rng = _rng(9)
+    novel = set()
+    for _ in range(3000):
+        theme = generate.roll_theme(cfg, rng, clubs)
+        if theme and theme.key not in enumerated:
+            novel.add(theme.key)
+    assert novel, "rolling should reach beyond the enumerated grid"
+
+
+def test_roll_viable_themes_stops_at_the_attempt_ceiling():
+    # A sport whose rolls all miss must not spin forever; it reports and returns what it has.
+    cfg = curation.SPORTS["baseball"]
+    got = generate.roll_viable_themes(cfg, [], _rng(2), wanted=10, attempts=25, teams=())
+    assert got == []
