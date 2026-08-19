@@ -12,6 +12,7 @@ from __future__ import annotations
 import collections
 import itertools
 import random
+import typing
 
 from . import assemble, curation
 from .models import slug
@@ -255,9 +256,24 @@ P_SECOND_QUIRK = 0.45 # two quirks rather than one
 _AXIS_ORDER = ["era", "club", "scope"]
 
 
-def roll_theme(cfg: curation.SportCuration, rng: random.Random,
-               teams: tuple[curation.Slice, ...] = ()) -> Theme | None:
-    """Compose one random theme spec for `cfg`. `None` if the roll produced nothing usable.
+class RolledSpec(typing.NamedTuple):
+    """What a roll chose, before it is rendered into a `Theme`.
+
+    Returned separately so callers (and tests) can inspect the actual quirks and slices rather
+    than parsing them back out of the composed key — quirk keys contain hyphens themselves
+    ("all-or-nothing", "power-arm"), so any positional or suffix parse of a key is ambiguous:
+    `empty-average` + `contact` composes a key ending in the same characters as the genuinely
+    forbidden pair `average` + `contact`.
+    """
+    spec_key: str
+    spec: curation.PositionSpec
+    slices: tuple[curation.Slice, ...]
+    quirks: tuple[curation.Quirk, ...]
+
+
+def roll_spec(cfg: curation.SportCuration, rng: random.Random,
+              teams: tuple[curation.Slice, ...] = ()) -> RolledSpec | None:
+    """Choose one random combination of axes for `cfg`. `None` if nothing usable was drawn.
 
     At most one value per axis: two eras ANDed is an empty pool, but an era AND a club is
     exactly the specific-but-real cut worth minting. Deterministic given `rng`, so a day's
@@ -289,12 +305,23 @@ def roll_theme(cfg: curation.SportCuration, rng: random.Random,
         if not curation.redundant_pair(quirks[0], second):
             quirks.append(second)
 
-    # Compose in a FIXED axis order, era outermost. `team_slices` builds its era x franchise
-    # cross as `combine(era, team)`, so folding the other way would key the identical theme
-    # "lad-2020" here and "2020-lad" there — two keys for one puzzle, and the `puzzle_history`
-    # theme cooldown would stop recognising rolled themes it had already served.
+    # Order the axes FIXED, era outermost. `team_slices` builds its era x franchise cross as
+    # `combine(era, team)`, so folding the other way would key the identical theme "lad-2020"
+    # here and "2020-lad" there — two keys for one puzzle, and `puzzle_history`'s theme
+    # cooldown would stop recognising rolled themes it had already served.
     chosen.sort(key=lambda part: _AXIS_ORDER.index(part.axis)
                 if part.axis in _AXIS_ORDER else len(_AXIS_ORDER))
+    return RolledSpec(spec_key, spec, tuple(chosen), tuple(quirks))
+
+
+def roll_theme(cfg: curation.SportCuration, rng: random.Random,
+               teams: tuple[curation.Slice, ...] = ()) -> Theme | None:
+    """Compose one random theme for `cfg`. `None` if the roll produced nothing usable."""
+    rolled = roll_spec(cfg, rng, teams)
+    if rolled is None:
+        return None
+    spec, chosen, quirks = rolled.spec, list(rolled.slices), list(rolled.quirks)
+
     sl = chosen[0] if chosen else curation.Slice(key="all")
     for part in chosen[1:]:
         sl = curation.combine(sl, part)

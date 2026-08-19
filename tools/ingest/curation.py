@@ -159,6 +159,40 @@ QUIRKS: list[Quirk] = [
           adjective="ageless-wonder"),
     Quirk("rookie-year", (Filter("is_rookie_season", "eq", True),), "Rookie-season {pos} breakouts",
           adjective="rookie-season"),
+
+    # ── Stat-line quirks ────────────────────────────────────────────────────────
+    # Every quirk above is BIOGRAPHICAL, and bio comes from one place: `merge_nfl_bio`'s
+    # join onto nflverse `players.csv` by gsis id. When that join is unavailable the entire
+    # NFL quirk vocabulary filters to nothing — measured on a catalog without it, NFL rolled
+    # 11 viable themes from 500 attempts while every other sport filled 60 in ~150. These are
+    # written against the stat line, which is always present, so the sport degrades to a
+    # smaller vocabulary instead of an empty one. They are also just more angles.
+    Quirk("deep-threat", (Filter("ypr", "gte", 16.0), Filter("receptions", "gte", 40)),
+          "Deep-threat {pos} seasons", adjective="deep-threat", axis="explosiveness",
+          only=("WR", "TE")),
+    Quirk("target-hog", (Filter("targets", "gte", 140),), "Target-hog {pos} seasons",
+          adjective="target-hog", axis="usage"),
+    Quirk("hands-team", (Filter("receptions", "gte", 100),), "100-catch {pos} seasons",
+          adjective="100-catch", axis="usage", only=("WR", "TE", "RB")),
+    Quirk("endzone", (Filter("receiving_tds", "gte", 12),), "Twelve-touchdown {pos} seasons",
+          adjective="twelve-touchdown", axis="scoring", only=("WR", "TE")),
+    Quirk("bellcow", (Filter("carries", "gte", 300),), "300-carry {pos} seasons",
+          adjective="300-carry", axis="usage", only=("RB",)),
+    Quirk("explosive-rb", (Filter("ypc", "gte", 5.0), Filter("carries", "gte", 150)),
+          "Five-yards-a-carry {pos} seasons", adjective="five-a-carry", axis="explosiveness",
+          only=("RB",)),
+    Quirk("goal-line", (Filter("rushing_tds", "gte", 15),), "Fifteen-rushing-TD {pos} seasons",
+          adjective="fifteen-rushing-TD", axis="scoring", only=("RB",)),
+    Quirk("gunslinger", (Filter("passing_tds", "gte", 35),), "35-touchdown {pos} seasons",
+          adjective="35-touchdown", axis="scoring", only=("QB",)),
+    Quirk("pick-prone", (Filter("interceptions", "gte", 18),), "Interception-prone {pos} seasons",
+          adjective="interception-prone", axis="turnovers", only=("QB",)),
+    # The one every fantasy player argues about: production that came with the ball in his
+    # hands on the ground as well as through the air.
+    Quirk("dual-threat-stat", (Filter("passing_yards", "gte", 3500),
+                               Filter("rushing_yards", "gte", 500)),
+          "Pass-and-run {pos} seasons", adjective="pass-and-run", axis="profile",
+          only=("QB",)),
 ]
 
 # Quirk pairs that are structurally redundant or contradictory to combine (the viability gate
@@ -394,6 +428,22 @@ _MLB_HITTER_QUIRKS: list[Quirk] = [
           adjective="triples-hitting", axis="gap-power", columns=(_TRIPLES,)),
     Quirk("everyday", (Filter("plate_appearances", "gte", 700),), "Every-day {pos} seasons",
           adjective="every-day", axis="volume"),
+    Quirk("xbh", (Filter("extra_base_hits", "gte", 75),), "Extra-base-hit {pos} seasons",
+          adjective="extra-base", axis="gap-power", columns=(_DOUBLES,)),
+    Quirk("iso-power", (Filter("iso", "gte", 0.250),), "Pure-power {pos} seasons",
+          adjective="pure-power", axis="power", columns=(_SLG,)),
+    # The two opposite shapes of a "good" batting line, which is what makes them fun to rank
+    # against each other once a board mixes them.
+    Quirk("all-or-nothing", (Filter("home_runs", "gte", 35), Filter("avg", "lte", 0.250)),
+          "All-or-nothing {pos} seasons", adjective="all-or-nothing", axis="profile"),
+    Quirk("empty-average", (Filter("avg", "gte", 0.310), Filter("home_runs", "lte", 8)),
+          "Singles-hitting {pos} seasons", adjective="singles-hitting", axis="profile"),
+    Quirk("run-scorer", (Filter("runs", "gte", 120),), "120-run {pos} seasons",
+          adjective="120-run", axis="scoring"),
+    Quirk("rbi-machine", (Filter("rbi", "gte", 130),), "130-RBI {pos} seasons",
+          adjective="130-RBI", axis="scoring"),
+    Quirk("thirty-thirty", (Filter("home_runs", "gte", 30), Filter("stolen_bases", "gte", 30)),
+          "30-30 club seasons", adjective="30-30", axis="speed", columns=(_SB,)),
 ]
 
 _MLB_PITCHER_QUIRKS: list[Quirk] = [
@@ -414,6 +464,23 @@ _MLB_PITCHER_QUIRKS: list[Quirk] = [
           "Hard-luck ace seasons", adjective="hard-luck", axis="wins", columns=(_LOSSES,)),
     Quirk("wild", (Filter("base_on_balls", "gte", 110),), "Effectively-wild {pos} seasons",
           adjective="effectively-wild", axis="command", columns=(_BB,)),
+    # Rate stats, not counting stats: these separate a strikeout artist from a workhorse once
+    # both clear the innings floor, which a raw K total cannot.
+    Quirk("power-arm", (Filter("innings_pitched", "gte", 120), Filter("k_per_9", "gte", 9.5)),
+          "Power-arm {pos} seasons", adjective="power-arm", axis="strikeout"),
+    Quirk("command", (Filter("innings_pitched", "gte", 120), Filter("k_bb_ratio", "gte", 4.5)),
+          "Elite-command {pos} seasons", adjective="elite-command", axis="command"),
+    Quirk("nibbler", (Filter("innings_pitched", "gte", 120), Filter("bb_per_9", "gte", 4.5)),
+          "Walk-prone {pos} seasons", adjective="walk-prone", axis="command", columns=(_BB,)),
+    Quirk("innings-eater", (Filter("innings_pitched", "gte", 260),), "260-inning {pos} seasons",
+          adjective="260-inning", axis="volume"),
+    Quirk("unlucky", (Filter("era", "lte", 3.00), Filter("wins", "lte", 10),
+                      Filter("innings_pitched", "gte", 150)),
+          "Great-ERA, no-wins {pos} seasons", adjective="no-run-support", axis="wins",
+          columns=(_LOSSES,)),
+    Quirk("swingman", (Filter("saves", "gte", 10), Filter("wins", "gte", 8)),
+          "Save-and-win {pos} seasons", adjective="save-and-win", axis="role",
+          columns=(_SAVES,)),
 ]
 
 # Baseball's catalog reaches back to 1876, so it earns a much longer era ladder than NFL's.
@@ -453,6 +520,18 @@ _NBA_QUIRKS: list[Quirk] = [
           "Two-way disruptor {pos} seasons", adjective="two-way-disruptor", axis="defense"),
     Quirk("ironman", (Filter("games", "gte", 80),), "Never-miss-a-game {pos} seasons",
           adjective="never-miss-a-game", axis="availability", columns=(_GAMES,)),
+    Quirk("stocks", (Filter("stocks", "gte", 3.0),), "Steal-and-block {pos} seasons",
+          adjective="steal-and-block", axis="defense", columns=(_BPG,)),
+    Quirk("pra", (Filter("pra", "gte", 40),), "40-PRA {pos} seasons",
+          adjective="40-PRA", axis="all-round"),
+    Quirk("volume-shooter", (Filter("fg3_pct", "gte", 0.380), Filter("ppg", "gte", 20)),
+          "20-point, 38%-from-deep {pos} seasons", adjective="20-and-38%", axis="shooting",
+          columns=(_FG3,)),
+    Quirk("quiet-efficiency", (Filter("ts_pct", "gte", 0.620), Filter("ppg", "lte", 15)),
+          "Quietly-efficient {pos} seasons", adjective="quietly-efficient", axis="efficiency"),
+    Quirk("workhorse-scorer", (Filter("games", "gte", 75), Filter("ppg", "gte", 20)),
+          "20-a-night, 75-game {pos} seasons", adjective="20-a-night-75-game",
+          axis="availability", columns=(_GAMES,)),
 ]
 
 _NBA_SLICES = decade_slices([None, 1960, 1970, 1980, 1990, 2000, 2010, 2020])
@@ -485,6 +564,18 @@ _SOCCER_QUIRKS: list[Quirk] = [
     # the back line for exactly that reason -- see `Quirk.only`.
     Quirk("scoring-defender", (Filter("goals", "gte", 7),), "Goal-scoring {pos} seasons",
           adjective="goal-scoring", axis="scoring", only=("BACK",)),
+    Quirk("contributor", (Filter("goal_contributions", "gte", 25),),
+          "25-goal-contribution {pos} seasons", adjective="25-contribution", axis="production"),
+    # A rate, so a 20-goal season in 25 games outranks 22 goals in 38 — the counting stat
+    # cannot express that, and it is the more interesting question.
+    Quirk("clinical", (Filter("appearances", "gte", 20), Filter("goals_per_app", "gte", 0.70)),
+          "Goal-a-game {pos} seasons", adjective="goal-a-game", axis="efficiency"),
+    Quirk("prolific-30", (Filter("goals", "gte", 30),), "30-goal {pos} seasons",
+          adjective="30-goal", axis="scoring"),
+    Quirk("creator-15", (Filter("assists", "gte", 15),), "15-assist {pos} seasons",
+          adjective="15-assist", axis="creation"),
+    Quirk("fortress", (Filter("clean_sheets", "gte", 20),), "20-clean-sheet {pos} seasons",
+          adjective="20-clean-sheet", axis="clean-sheets", columns=(_CLEAN,), only=("BACK",)),
 ]
 
 # Soccer's catalog starts at 2002, so eras are thin — the league IS the interesting axis, and
@@ -514,6 +605,19 @@ _TENNIS_QUIRKS: list[Quirk] = [
           "High-mileage {pos} seasons", adjective="high-mileage", axis="volume"),
     Quirk("dominant", (Filter("matches_won", "gte", 50), Filter("matches_lost", "lte", 12)),
           "Barely-lost {pos} seasons", adjective="barely-lost", axis="win-rate"),
+    # Tennis stores four counting stats and nothing else, so every quirk written against them
+    # was another threshold on the same number. Rates and volume are a different question and
+    # reach seasons the counts cannot describe.
+    Quirk("win-rate", (Filter("matches_played", "gte", 40), Filter("win_pct", "gte", 0.80)),
+          "80%-win-rate {pos} seasons", adjective="80%-win-rate", axis="win-rate"),
+    Quirk("iron", (Filter("matches_played", "gte", 85),), "85-match {pos} seasons",
+          adjective="85-match", axis="volume"),
+    Quirk("slamless", (Filter("matches_won", "gte", 45), Filter("grand_slams", "lte", 0)),
+          "45-win, no-slam {pos} seasons", adjective="no-slam", axis="slams"),
+    Quirk("slam-sweep", (Filter("grand_slams", "gte", 3),), "Three-slam {pos} seasons",
+          adjective="three-slam", axis="slams"),
+    Quirk("title-machine", (Filter("titles", "gte", 9),), "Nine-title {pos} seasons",
+          adjective="nine-title", axis="titles"),
 ]
 
 # Tennis stores nationality in `team_abbr`, so country is a first-class slice for this sport.

@@ -50,7 +50,53 @@ def field_value(season, field_name: str) -> object:
         return season.week
     if field_name in season.stats:
         return season.stats.get(field_name)
+    derived = _DERIVED.get(field_name)
+    if derived is not None:
+        return derived(season.stats)
     return season.meta.get(field_name)
+
+
+def _ratio(num: float | None, den: float | None, scale: float = 1.0) -> float | None:
+    """`num/den * scale`, or None when the denominator is missing or zero — a season with no
+    innings pitched has no K/9, and inventing one would put it in a pool it does not belong to."""
+    if num is None or not den:
+        return None
+    return (num / den) * scale
+
+
+def _sum(stats: dict, *keys: str) -> float | None:
+    present = [stats[k] for k in keys if stats.get(k) is not None]
+    return sum(present) if len(present) == len(keys) else None
+
+
+# Fields computed from the stat line rather than stored on it.
+#
+# These exist because the raw vocabularies are narrow — tennis stores four numbers, soccer
+# four — and every quirk written against them is another threshold on the same stat. A rate
+# is a different QUESTION: "who won 80% of their matches" is not "who won 60 matches", and it
+# reaches seasons the counting stats cannot describe. Pure functions of `stats`, so they cost
+# nothing to add and nothing to store.
+_DERIVED: dict[str, object] = {
+    # Soccer
+    "goal_contributions": lambda st: _sum(st, "goals", "assists"),
+    "goals_per_app": lambda st: _ratio(st.get("goals"), st.get("appearances")),
+    # Baseball — hitters
+    "extra_base_hits": lambda st: _sum(st, "doubles", "triples", "home_runs"),
+    "iso": lambda st: (None if st.get("slg") is None or st.get("avg") is None
+                       else st["slg"] - st["avg"]),
+    # Baseball — pitchers. Rate stats are what separate a workhorse from a strikeout artist
+    # once both clear an innings floor.
+    "k_per_9": lambda st: _ratio(st.get("strike_outs"), st.get("innings_pitched"), 9.0),
+    "bb_per_9": lambda st: _ratio(st.get("base_on_balls"), st.get("innings_pitched"), 9.0),
+    "k_bb_ratio": lambda st: _ratio(st.get("strike_outs"), st.get("base_on_balls")),
+    # NBA
+    "stocks": lambda st: _sum(st, "spg", "bpg"),
+    "pra": lambda st: _sum(st, "ppg", "rpg", "apg"),
+    # Tennis — the whole point: four counting stats become rates and volume.
+    "matches_played": lambda st: _sum(st, "matches_won", "matches_lost"),
+    "win_pct": lambda st: _ratio(st.get("matches_won"),
+                                 _sum(st, "matches_won", "matches_lost")),
+}
 
 
 @dataclass(frozen=True)

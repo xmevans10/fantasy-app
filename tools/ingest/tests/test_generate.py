@@ -271,16 +271,31 @@ def test_a_roll_never_stacks_two_values_of_one_axis():
 
 
 def test_a_roll_never_pairs_two_quirks_from_the_same_axis():
+    """Inspects the rolled quirks directly. Parsing them back out of the composed key is
+    ambiguous — quirk keys contain hyphens, so `empty-average` + `contact` produces a key
+    ending in the same characters as the genuinely forbidden `average` + `contact`."""
     cfg = curation.SPORTS["baseball"]
     rng = _rng(6)
-    by_key = {q.key: q for q in cfg.quirks}
-    for _ in range(500):
-        theme = generate.roll_theme(cfg, rng, ())
-        if theme is None or not theme.key.startswith("gen2-"):
+    seen_pairs = 0
+    for _ in range(800):
+        rolled = generate.roll_spec(cfg, rng, ())
+        if rolled is None or len(rolled.quirks) < 2:
             continue
-        q1, q2 = theme.key.rsplit("-", 2)[-2:]
-        if q1 in by_key and q2 in by_key:
-            assert not curation.redundant_pair(by_key[q1], by_key[q2])
+        seen_pairs += 1
+        a, b = rolled.quirks
+        assert not curation.redundant_pair(a, b), f"{a.key} + {b.key} share an axis"
+    assert seen_pairs > 50, "expected the roller to produce two-quirk themes"
+
+
+def test_a_roll_takes_at_most_one_value_per_axis():
+    cfg = curation.SPORTS["baseball"]
+    rng = _rng(8)
+    for _ in range(500):
+        rolled = generate.roll_spec(cfg, rng, _clubs("NYY", "BOS"))
+        if rolled is None:
+            continue
+        axes = [s.axis for s in rolled.slices]
+        assert len(axes) == len(set(axes)), axes
 
 
 def test_rolled_keys_match_the_enumerated_key_for_the_same_combination():
