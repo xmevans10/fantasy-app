@@ -440,7 +440,7 @@ generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
 | Milestone | Status |
 |-----------|--------|
 | M1–M4 core app, backend, social retention | ✅ shipped. M4's backend tables (`seasons`/`cohorts`/`versus_*`/`device_tokens`/`notification_settings`) were missing from production until 2026-07-05 despite the app-side feature being live the whole time — now applied, see below |
-| M5 breadth/scoring | ✅ **fully shipped, monetization live.** Breadth + monetization (StoreKit 2 foundation + gating, server-validated entitlements 2026-07-07; Over/Under + Draft & Spin + The Grid 2026-07-08), **Phase F 8-week rating seasons shipped 2026-07-20** (roadmap v1.4 — see §9.1): `rating_seasons`/`season_ratings`/`season_badges` + leaderboard RPCs + `rating-season-rollover` cron, a parallel season ladder reusing the same `RatingEngine`, SEASON scope on Leagues + Profile badges. **The ASC-UI monetization submission steps are done — Pro/packs are selling** (v1.3, build 21, `READY_FOR_SALE` as of 2026-07-31; see the "1.3 approved" note below) |
+| M5 breadth/scoring | ✅ **fully shipped, monetization live.** Breadth + monetization (StoreKit 2 foundation + gating, server-validated entitlements 2026-07-07; Over/Under + Draft & Spin + The Grid 2026-07-08), **Phase F 8-week rating seasons shipped 2026-07-20** (roadmap v1.4 — see §9.1): `rating_seasons`/`season_ratings`/`season_badges` + leaderboard RPCs + `rating-season-rollover` cron, a parallel season ladder reusing the same `RatingEngine`, SEASON scope on Leagues + Profile badges. 🔴 **Monetization is NOT live — corrected 2026-08-20.** This row previously read "Pro/packs are selling"; that was never true. All four products sit in ASC state `IN_REVIEW` and have never been approved, so StoreKit returns nothing in production: `product_load_failed` ("store returned no products for 4 ids", receipt `production`) has fired 231 times across 4 users from 2026-07-30 to 2026-08-20, against 216 `paywall_viewed` from 9 users and 0 rows in `entitlements`. Two candidate blockers (orphaned 2026-07-27 submission; Paid Applications Agreement) — see the release-status note below |
 | M6 community fixes + hardening | ✅ shipped |
 | M7 content scale + CI | ✅ shipped |
 | M8 single-game grain | ✅ shipped |
@@ -467,6 +467,42 @@ approval); screenshots carried over from 1.5.0 unchanged. The previous release, 
 Note for the next release: a new `reviewSubmission` POST succeeded cleanly even with the stale
 submission below still open, so "one open submission per app" evidently does not bite when the
 open one is in `UNRESOLVED_ISSUES` — no cancel was needed, and none should be attempted.
+
+🔴 **Monetization has never worked in production** (diagnosed 2026-08-20). The live app's
+StoreKit fetch returns nothing, so every paywall is a dead end. Measured, not inferred:
+
+| signal | value |
+|---|---|
+| `product_load_failed` ("store returned no products for 4 ids", receipt `production`) | 231 events, 4 users, 2026-07-30 → 2026-08-20 06:36 UTC, retrying up to 33 times |
+| `paywall_viewed` | 216 events, 9 users |
+| `purchase_completed` | 1, by 1 user (2026-08-12), surrounded by that same user's `cancelled` failures — a test, and it wrote no entitlement |
+| `entitlements` rows | 0 |
+
+**Two candidate blockers, and they are not mutually exclusive — check both.**
+
+1. **The orphaned review submission.** `a4e07699-…` holds six items: the five monetization
+   products, all still `READY_FOR_REVIEW`, and the 1.3 app version, `REMOVED`. That is the shape
+   the 2026-07-27 cancel left behind — the version was pulled out and the products were left in a
+   submission that can never complete, since a submission needs a version to be reviewed against.
+   The products have read `IN_REVIEW` ever since and have never been approved.
+2. **The Paid Applications Agreement.** Per the hard-won 1.3 finding, an inactive agreement makes
+   `Product.products(for:)` return an empty array *with no error* in every environment, and it is
+   completely invisible to the REST API — products still read `IN_REVIEW`, prices and territories
+   still look right. Banking and tax were completed around 2026-07-30, which is exactly when these
+   failures start, so this may have been resolved and the products left stuck behind (1) — or it
+   may never have gone Active. **It cannot be ruled out from the API; someone has to look.**
+
+**The fix is ASC-UI-only and cannot be done from here.** `reviewSubmissionItems` accepts only an
+`appStoreVersion` relationship — `inAppPurchase`, `inAppPurchaseV2`, `subscription` and
+`subscriptionGroup` all return `ENTITY_ERROR.RELATIONSHIP.UNKNOWN` (verified again 2026-08-20) —
+and the Resolution Center has no API at all. Steps for the user, in order:
+1. Resolution Center: read and clear whatever put `a4e07699-…` into `UNRESOLVED_ISSUES`.
+2. Monetization → each of the four products → **Add for Review**, attached to a version. 1.6.0 is
+   in review now, so doing this while it is still `WAITING_FOR_REVIEW` gets the products reviewed
+   alongside it rather than waiting for 1.7.
+3. Business → Agreements: confirm the **Paid Applications Agreement** is active. An inactive
+   agreement produces the identical empty-product-fetch symptom and is likewise invisible to the
+   API, so it has to be ruled out by eye.
 
 ⚠️ **A stale review submission from 2026-07-27 (`a4e07699-…`) is still open in state
 `UNRESOLVED_ISSUES`, and it holds five monetization items in `READY_FOR_REVIEW`** (item type
@@ -2035,7 +2071,11 @@ outright bugs (below), not design.
   raising `--grid-days` per sport as it stays cheap (~45s/board on NFL — see the
   `grid-pool-depth` memory), and revisit the client-side membership-index random-generation
   endgame (§9.2) once the served-pool approach's per-open payload growth becomes the bottleneck.
-- **Monetization-funnel instrumentation**: Pro/packs are now actually selling (§8) — there's no
+- 🔴 **Monetization is broken in production, and this is the highest-value open item.** Nobody
+  can buy anything: the four products have never been approved, so the live app's StoreKit fetch
+  returns nothing (§8). Fixing it is ASC-UI work — see the release-status note — and until it's
+  done, every paywall impression is a dead end.
+- **Monetization-funnel instrumentation**: once purchases actually work (§8) — there's no
   conversion-funnel view yet (paywall impression → trial start → purchase → churn). Worth
   building once there's enough volume for the numbers to mean anything.
 - **Content-depth crumbs**: backlog #8 defunct-franchise styling (last unshipped Tier-3 item,
