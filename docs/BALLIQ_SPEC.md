@@ -457,7 +457,26 @@ generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
 | M20 social follow-through | ✅ shipped 2026-07-12 — FRIENDS leaderboard scope on Leagues (`friend_profiles` RPC), onboarding username claim, friend-request push (deployed + chain verified), pg_net DB triggers for both notify webhooks |
 | M22 Journeyman (career-path format) | ✅ shipped 2026-08-19 — fourth daily format (`journeyman.py`/`daily_journeyman.py`, 525-subject pool, `journeyman_history`, migration 0018), duel + dare-a-friend parity, `SubjectDifficulty` extracted for reuse. Four content defects caught by reading the live pool (era-renamed franchises, one franchise under two codes, soccer code collisions, coverage-truncated careers) — see `prompts/M22-journeyman.md` §2.5. Migration 0019 indexes `grid_player_names`, which had been timing out under anon since The Grid shipped |
 
-**Release status (updated 2026-07-16):** **the app is LIVE on the App Store.** v1.0's
+**Release status (updated 2026-08-20):** **1.6.0 (build 38) is `WAITING_FOR_REVIEW`**, submitted
+2026-08-20 08:54 UTC. Cut from `main` @ `bfe35cd`, carrying Journeyman (M22) plus the two index
+fixes it turned up. Version `99643a50-04f5-4998-ba8e-961bedeea4a6`, submission
+`04540675-7a5f-4c2d-a028-b465729dbeb4`, release type `AFTER_APPROVAL` (goes live automatically on
+approval); screenshots carried over from 1.5.0 unchanged. The previous release, 1.5.0, is
+`READY_FOR_SALE`.
+
+Note for the next release: a new `reviewSubmission` POST succeeded cleanly even with the stale
+submission below still open, so "one open submission per app" evidently does not bite when the
+open one is in `UNRESOLVED_ISSUES` — no cancel was needed, and none should be attempted.
+
+⚠️ **A stale review submission from 2026-07-27 (`a4e07699-…`) is still open in state
+`UNRESOLVED_ISSUES`, and it holds five monetization items in `READY_FOR_REVIEW`** (item type
+codes 17/18/19 — the IAPs and subscription group that were re-added through the ASC UI after
+that day's cancel incident). 1.4.x and 1.5.0 all shipped alongside it, so it does not appear to
+block new submissions. **Do not cancel it to tidy up:** cancelling sets every item to `REMOVED`,
+which is exactly how monetization got un-shipped once already, and re-adding products is
+ASC-UI-only. See the `testflight-release` skill's red-flag note.
+
+**The app is LIVE on the App Store.** v1.0's
 2026-07-05 review submission was approved (`READY_FOR_SALE`, confirmed via the ASC API
 2026-07-16 — ASC name "Playbook: Sports Trivia", app record `6785275045`). **v1.1 (build 9,
 cut from `main` @ `bbe5910`) was submitted for review 2026-07-16 20:15 UTC** and is
