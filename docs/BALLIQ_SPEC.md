@@ -457,12 +457,28 @@ generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
 | M20 social follow-through | ✅ shipped 2026-07-12 — FRIENDS leaderboard scope on Leagues (`friend_profiles` RPC), onboarding username claim, friend-request push (deployed + chain verified), pg_net DB triggers for both notify webhooks |
 | M22 Journeyman (career-path format) | ✅ shipped 2026-08-19 — fourth daily format (`journeyman.py`/`daily_journeyman.py`, 525-subject pool, `journeyman_history`, migration 0018), duel + dare-a-friend parity, `SubjectDifficulty` extracted for reuse. Four content defects caught by reading the live pool (era-renamed franchises, one franchise under two codes, soccer code collisions, coverage-truncated careers) — see `prompts/M22-journeyman.md` §2.5. Migration 0019 indexes `grid_player_names`, which had been timing out under anon since The Grid shipped |
 
-**Release status (updated 2026-08-20):** **1.6.0 (build 38) is `WAITING_FOR_REVIEW`**, submitted
-2026-08-20 08:54 UTC. Cut from `main` @ `bfe35cd`, carrying Journeyman (M22) plus the two index
-fixes it turned up. Version `99643a50-04f5-4998-ba8e-961bedeea4a6`, submission
-`04540675-7a5f-4c2d-a028-b465729dbeb4`, release type `AFTER_APPROVAL` (goes live automatically on
-approval); screenshots carried over from 1.5.0 unchanged. The previous release, 1.5.0, is
-`READY_FOR_SALE`.
+**Release status (updated 2026-08-20):** **1.6.0 (build 38) is `WAITING_FOR_REVIEW` — and for the
+first time, the four monetization products are in the submission with it.** Submission
+`054a2034-01f1-4633-ac7e-40b6b37a3e14`, submitted 2026-08-20 10:22 UTC, carries **six items**: the
+app version, both packs, both Pro subscriptions and the subscription group. Version
+`99643a50-04f5-4998-ba8e-961bedeea4a6`, cut from `main` @ `bfe35cd`, release type
+`AFTER_APPROVAL`; screenshots carried over from 1.5.0. Previous release 1.5.0 is `READY_FOR_SALE`.
+
+Getting there took two false starts worth remembering. The first submission
+(`04540675-…`, API-made) held only the app version, because
+`POST /v1/reviewSubmissionItems` still refuses every product relationship type
+(`ENTITY_ERROR.RELATIONSHIP.UNKNOWN`, re-verified 2026-08-20) — so it would have shipped without
+monetization, exactly as 1.1 did. Attaching the products afterwards is impossible: ASC answers
+"Your first auto-renewable subscription must be submitted with a new app version", where *new*
+means unsubmitted. The only exit was cancelling that submission (safe here — one item, no
+products) to make 1.6.0 editable again, then attaching the products in the UI and submitting from
+the version page. **For any future release while products are first-of-type: stage the version,
+attach the products in the UI, and let the UI submit. Never POST the submission first.**
+
+⚠️ **Still unverified: the Paid Applications Agreement.** Approval of these products is necessary
+but not sufficient — an inactive agreement produces the same empty product fetch and is invisible
+to the API. Confirm Business → Agreements reads Active, and re-check the telemetry below after
+1.6.0 goes live.
 
 Note for the next release: a new `reviewSubmission` POST succeeded cleanly even with the stale
 submission below still open, so "one open submission per app" evidently does not bite when the
