@@ -2469,6 +2469,17 @@ create table if not exists public.ladder_rung_boards (
 create unique index if not exists ladder_rung_boards_unique_board
   on public.ladder_rung_boards (rung, puzzle_id);
 
+-- And no puzzle may be served by two DIFFERENT bots either. The index above is (rung, puzzle_id),
+-- which only stops one rung listing a board twice; two rungs could each be handed the same puzzle
+-- and nothing would complain. Live data was clean when this was added (165 rows, 165 distinct) but
+-- clean by luck — `build_pool` de-duplicates in memory within a single reseed, so the guarantee
+-- lasted exactly as long as one process. A partial reseed or a manual insert would collide
+-- silently, and the symptom (the same board under two different bot names) reads as a content bug
+-- rather than a constraint gap. Applied live 2026-08-21 (migration 0022), probed with a rejected
+-- cross-rung duplicate insert.
+create unique index if not exists ladder_rung_boards_puzzle_unique
+  on public.ladder_rung_boards (puzzle_id);
+
 create table if not exists public.ladder_progress (
   user_id      uuid primary key references auth.users(id) on delete cascade,
   highest_rung int not null default 0,
