@@ -6210,6 +6210,196 @@
           }
         }
       }
+    },
+    "BACK TO VERSUS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VOLVER A VERSUS"
+          }
+        }
+      }
+    },
+    "BEATEN TO THE ANSWER" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TE GANARON LA RESPUESTA"
+          }
+        }
+      }
+    },
+    "Both ready — opening the board…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambos listos: abriendo el tablero…"
+          }
+        }
+      }
+    },
+    "CLOCK RAN OUT ON BOTH OF YOU" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SE OS ACABÓ EL TIEMPO A LOS DOS"
+          }
+        }
+      }
+    },
+    "Couldn't load the board. Pull to refresh from Versus and try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo cargar el tablero. Actualiza desde Versus e inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "Couldn't ready up — check your connection and try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo confirmar: revisa tu conexión e inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "DEAD HEAT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EMPATE TÉCNICO"
+          }
+        }
+      }
+    },
+    "Duel closed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duelo cerrado"
+          }
+        }
+      }
+    },
+    "FIRST TO SOLVE WINS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GANA QUIEN ACIERTE PRIMERO"
+          }
+        }
+      }
+    },
+    "Having trouble reaching the server — retrying…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problemas para conectar con el servidor: reintentando…"
+          }
+        }
+      }
+    },
+    "Opponent" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rival"
+          }
+        }
+      }
+    },
+    "SOLVED FIRST" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ACERTASTE PRIMERO"
+          }
+        }
+      }
+    },
+    "Still live — they can still lose it." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sigue en juego: aún pueden fallar."
+          }
+        }
+      }
+    },
+    "THEY SOLVED IT FIRST" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ACERTARON PRIMERO"
+          }
+        }
+      }
+    },
+    "This duel closed before it could start — likely nobody showed up in time." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este duelo se cerró antes de empezar: seguramente nadie llegó a tiempo."
+          }
+        }
+      }
+    },
+    "Waiting for %@…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando a %@…"
+          }
+        }
+      }
+    },
+    "Waiting for your opponent…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando a tu rival…"
+          }
+        }
+      }
+    },
+    "Your opponent is on the other side of this one." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu rival está al otro lado de esta."
+          }
+        }
+      }
+    },
+    "%@ is on the other side of this one." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ está al otro lado de esta."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

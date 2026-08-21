@@ -131,9 +131,27 @@ private extension URLRequest {
         guard let path = url?.path, let range = path.range(of: "/rpc/") else { return nil }
         return String(path[range.upperBound...])
     }
+    /// **Reads `httpBodyStream`, not just `httpBody`, and that is load-bearing.** `URLSession`
+    /// converts a POST body to a stream before `URLProtocol` ever sees the request, so
+    /// `httpBody` is `nil` inside a mock for exactly the calls that carry arguments. Relying on
+    /// it alone made every `p_guesses` read as 0 while the header-only `mark_versus_ready` kept
+    /// working — so the handshake passed, the strips silently never ticked, and the failure
+    /// looked like a bug in `LiveDuelSession` rather than in this helper.
     var jsonBody: [String: Any] {
-        guard let body = httpBody,
-              let obj = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
+        let data: Data? = httpBody ?? {
+            guard let stream = httpBodyStream else { return nil }
+            stream.open()
+            defer { stream.close() }
+            var buffer = [UInt8](repeating: 0, count: 4096)
+            var collected = Data()
+            while stream.hasBytesAvailable {
+                let read = stream.read(&buffer, maxLength: buffer.count)
+                if read <= 0 { break }
+                collected.append(contentsOf: buffer[..<read])
+            }
+            return collected
+        }()
+        guard let data, let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return [:] }
         return obj
     }
@@ -198,18 +216,18 @@ final class LiveDuelSessionResilienceTests: XCTestCase {
         // for this to actually prove anything about its resilience.
         session.start()
 
-        XCTAssertTrue(await waitUntil(timeout: 3) { session.opponentGuesses == 0 && session.state != nil },
-                      "the healthy first poll should have landed")
+        let reached0 = await waitUntil(timeout: 3) { session.opponentGuesses == 0 && session.state != nil }
+        XCTAssertTrue(reached0, "the healthy first poll should have landed")
         XCTAssertFalse(session.pollFailing)
 
-        XCTAssertTrue(await waitUntil(timeout: 3) { session.pollFailing },
-                      "the malformed poll should be flagged, not silently ignored")
+        let reached1 = await waitUntil(timeout: 3) { session.pollFailing }
+        XCTAssertTrue(reached1, "the malformed poll should be flagged, not silently ignored")
         XCTAssertEqual(session.opponentGuesses, 0,
                        "a malformed poll must not clear the last good state")
         XCTAssertNotNil(session.state, "a malformed poll must not throw the whole duel away")
 
-        XCTAssertTrue(await waitUntil(timeout: 3) { session.opponentGuesses == 2 },
-                      "the next good poll should recover")
+        let reached2 = await waitUntil(timeout: 3) { session.opponentGuesses == 2 }
+        XCTAssertTrue(reached2, "the next good poll should recover")
         XCTAssertFalse(session.pollFailing)
 
         session.stop()
@@ -368,16 +386,17 @@ final class LiveDuelRaceSimulationTests: XCTestCase {
                       "the second READY should immediately see both sides in, without waiting a poll tick")
 
         // A's own poll loop should catch up to the same fact on its own next tick.
-        XCTAssertTrue(await waitUntil(timeout: 3) { sessionA.bothReady })
+        let bothReady = await waitUntil(timeout: 3) { sessionA.bothReady }
+        XCTAssertTrue(bothReady, "both sides readied, so the race should have started")
 
         // Interleaved guesses — each bump has to reach the *other* side's strip.
         await sessionA.reportGuesses(1)
         await sessionB.reportGuesses(1)
         await sessionA.reportGuesses(2)
-        XCTAssertTrue(await waitUntil(timeout: 3) { sessionB.opponentGuesses == 2 },
-                      "B's strip should show A's latest guess count")
-        XCTAssertTrue(await waitUntil(timeout: 3) { sessionA.opponentGuesses == 1 },
-                      "A's strip should show B's guess count")
+        let reached3 = await waitUntil(timeout: 3) { sessionB.opponentGuesses == 2 }
+        XCTAssertTrue(reached3, "B's strip should show A's latest guess count")
+        let reached4 = await waitUntil(timeout: 3) { sessionA.opponentGuesses == 1 }
+        XCTAssertTrue(reached4, "A's strip should show B's guess count")
 
         // A solves. `submitResult` polls once more itself, so A sees its own resolution
         // immediately — no waiting on the loop's own cadence.
@@ -395,8 +414,8 @@ final class LiveDuelRaceSimulationTests: XCTestCase {
         // already started) is the *only* thing that can tell it the duel is over. This is the
         // milestone's single most important behavior: B's board closes with a loss it never
         // chose, purely from what the poll reports.
-        XCTAssertTrue(await waitUntil(timeout: 3) { sessionB.opponentAlreadyWon },
-                      "B's board must detect the opponent's win from the poll alone")
+        let reached5 = await waitUntil(timeout: 3) { sessionB.opponentAlreadyWon }
+        XCTAssertTrue(reached5, "B's board must detect the opponent's win from the poll alone")
         XCTAssertEqual(
             LiveRaceOutcome.decide(mySolved: sessionB.state?.me.solved ?? false,
                                    myFinished: sessionB.iAmFinished,
