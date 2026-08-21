@@ -23,6 +23,11 @@ struct VersusView: View {
     /// actually started server-side, so a failed `start_versus_challenge` can never present a
     /// board with no clock on it.
     @State private var board: DuelBoard?
+    /// A live duel (M23) being opened — routed to `LiveDuelLobbyView` instead of straight to
+    /// `board`, because a live board can't be started the way an async one is: nothing should
+    /// stamp a clock until *both* sides have readied up, and only the lobby's poll loop knows
+    /// when that's happened.
+    @State private var liveDuelRow: VersusChallengeRow?
     @State private var startingID: Int?
     @State private var startError: String?
 
@@ -86,6 +91,27 @@ struct VersusView: View {
         }
         .fullScreenCover(item: $board, onDismiss: { Task { await load() } }) { board in
             board.view.environmentObject(container)
+        }
+        .fullScreenCover(item: $liveDuelRow, onDismiss: { Task { await load() } }) { row in
+            liveDuelLobby(for: row).environmentObject(container)
+        }
+    }
+
+    /// Built here rather than as a `RepositoryContainer` method (the pattern every other duel
+    /// entry point on this screen uses) because `LiveDuelSession` is a per-duel polling engine
+    /// with its own start/stop lifecycle, not a fire-and-forget request — this view still only
+    /// ever reads `container.versus` to hand it in, the same discipline `startVersusBoard` above
+    /// follows on `RepositoryContainer`'s side. Nil only if `versus`/`auth.userID` are unset,
+    /// which can't happen for a row this screen itself just rendered a PLAY button for.
+    @ViewBuilder
+    private func liveDuelLobby(for row: VersusChallengeRow) -> some View {
+        if let versus = container.versus, let me = auth.userID {
+            LiveDuelLobbyView(opponentName: row.opponentUsername,
+                              opponentUserID: row.challenge.opponentID(me: me),
+                              sport: row.challenge.sport, puzzleID: row.challenge.puzzleId,
+                              challengeID: row.challenge.id, repository: versus)
+        } else {
+            EmptyView()
         }
     }
 
@@ -486,6 +512,19 @@ struct VersusView: View {
     /// would be worse the other way round — the clock would be running while the fetch failed.
     private func play(_ row: VersusChallengeRow) async {
         guard startingID == nil else { return }
+        // Live duels never call `start_versus_challenge` — that RPC stamps the async clock, and
+        // a live board's clock only starts once *both* sides have readied up. `LiveDuelLobbyView`
+        // owns everything from here (M23).
+        //
+        // Gated on the format (the milestone's stated rule) AND the row's own `mode`: a
+        // Journeyman challenge created *before* `create_versus_challenge` learned to stamp
+        // `mode = 'live'` still has `mode == "async"` and must keep playing the path it was
+        // actually created for, or its lobby would poll a ready state that was never wired up
+        // for it.
+        if row.challenge.format.supportsLiveDuel && row.challenge.isLive {
+            liveDuelRow = row
+            return
+        }
         startingID = row.challenge.id
         defer { startingID = nil }
         // `startVersusBoard` starts the clock server-side first and only then fetches the board,

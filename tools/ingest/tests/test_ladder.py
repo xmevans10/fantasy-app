@@ -59,3 +59,58 @@ def test_two_ids_for_one_board_cannot_occupy_two_rungs():
     for b in boards:
         by_rung.setdefault(b["puzzle_id"], set()).add(b["rung"])
     assert not [pid for pid, rungs in by_rung.items() if len(rungs) > 1]
+
+
+def test_board_difficulty_is_the_lever_at_the_bottom_of_the_ladder():
+    """The finding behind M24 D1, pinned because it is counter-intuitive and expensive to
+    rediscover: a rung's bot score is driven by the BOARD as much as by `bot_skill`. Measured on
+    a uniform board, worst possible bot (skill 0.05): 0.465 at difficulty 0.25 → 0.255 at 0.45.
+
+    Consequence: on rung 1's deliberately-easy board there is no `bot_skill` that produces a low
+    score, so the solver pins at minimum and the early rungs separate on board difficulty alone.
+    Anyone "softening Bronze" by lowering skill will find it already is as low as it goes.
+    """
+    from tools.ingest import ladder
+
+    keeps = [i < 4 for i in range(8)]
+    worst = 0.05
+    scores = [ladder.mean_score("keep4", [d] * 8, worst, keeps, trials=400)
+              for d in (0.25, 0.45, 0.70)]
+    assert scores == sorted(scores, reverse=True), f"harder boards must score lower: {scores}"
+    assert scores[0] - scores[-1] > 0.25, (
+        f"board difficulty should move the bot's score substantially, got {scores}")
+
+
+def test_skill_still_moves_the_score_so_the_objective_has_a_lever():
+    """The other half: `solve_bot_skill` bisects on score, which only works if score is
+    monotone in skill. If this ever goes flat the solver silently returns whatever `lo` was."""
+    from tools.ingest import ladder
+
+    keeps = [i < 4 for i in range(8)]
+    board = [0.35] * 8
+    scores = [ladder.mean_score("keep4", board, sk, keeps, trials=400) for sk in (0.05, 0.3, 0.6)]
+    assert scores == sorted(scores), f"score must rise with skill: {scores}"
+
+
+def test_chance_is_where_keep4_scoring_sits_not_where_it_bottoms_out():
+    """`FORMAT_SCORE_FLOOR['keep4'] == 0.5` marks CHANCE, not a hard floor. Below it the bot is
+    systematically making the wrong call, which is a product decision (see M24 D1), not an
+    impossibility — the original claim that four forced keeps made 4/8 unreachable was wrong."""
+    from tools.ingest import ladder
+
+    assert ladder.FORMAT_SCORE_FLOOR["keep4"] == 0.5
+    sub_chance = ladder.mean_score("keep4", [0.7] * 8, 0.05, [i < 4 for i in range(8)], trials=400)
+    assert sub_chance < 0.5, (
+        "a hard board plus a minimum-skill bot should score BELOW chance — if this ever stops "
+        f"being true the D1 reasoning needs revisiting, got {sub_chance:.2f}")
+
+
+def test_the_ladder_comparable_no_longer_includes_speed():
+    """Bot duels have no clock (M24 D2), so pace must not decide them. `win_rate` is a pure
+    accuracy comparison now; if speed creeps back in, a rung can be lost on reading speed."""
+    import inspect
+
+    from tools.ingest import ladder
+    body = "".join(line.split("#", 1)[0]
+                   for line in inspect.getsource(ladder.win_rate).splitlines(keepends=True))
+    assert "speed_adjusted(" not in body, "speed is back in the ladder comparable"

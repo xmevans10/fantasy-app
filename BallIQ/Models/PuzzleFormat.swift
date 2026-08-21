@@ -93,6 +93,14 @@ enum PuzzleFormat: String, Codable, CaseIterable, Equatable, Hashable {
         }
     }
 
+    /// Whether a duel in this format races live (M23) instead of playing async — true for
+    /// `.journeyman` only in this milestone. The plumbing (`LiveDuelSession`, the ready
+    /// handshake, the opponent progress strip) is format-agnostic on purpose, but shipping one
+    /// format's race first keeps the blast radius honest: Keep4/Grid/Who Am I? each need their
+    /// own answer to "what does progress mean mid-race" before they earn a strip, and until then
+    /// their duels must keep behaving exactly as before.
+    var supportsLiveDuel: Bool { self == .journeyman }
+
     /// Unknown formats decode as `.keep4` rather than throwing. A thrown error here would fail
     /// the decode for a whole array of challenges (they are decoded as one batch), emptying the
     /// Versus tab over one unrecognized word — the same trap `ClueKind` documents. A future

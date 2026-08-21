@@ -185,4 +185,66 @@ final class VersusRepository {
         }
         try? await client.rpc("submit_versus_result", args: Args(pChallengeId: challengeID, pScore: score))
     }
+
+    // MARK: - Live duels (M23)
+    //
+    // Four RPCs, all returning/consuming `LiveDuelState` rather than a bare score, because a
+    // live race has two sides to report instead of one eventual number. Same posture as the
+    // async RPCs above — security definer, participant-checked, `for update`-locked,
+    // first-write-wins — see supabase/schema.sql's own comment on each for the exact rules.
+
+    private struct ChallengeIDArgs: Encodable {
+        let pChallengeId: Int
+        enum CodingKeys: String, CodingKey { case pChallengeId = "p_challenge_id" }
+    }
+
+    /// Stamps my readiness; the server stamps `live_started_at` exactly once, when the second
+    /// side readies. Throws (rather than the `try?` below) because the lobby has to tell a real
+    /// failure — the duel closed or expired between opening it and tapping READY — apart from
+    /// "still waiting on them", which a swallowed error can't do.
+    func markReady(challengeID: Int) async throws -> LiveDuelState {
+        let data = try await client.rpc("mark_versus_ready", args: ChallengeIDArgs(pChallengeId: challengeID))
+        // `LiveDuelState` carries explicit snake_case `CodingKeys` (see its own doc comment for
+        // why `winnerID` specifically can't go through `.convertFromSnakeCase`), so this reuses
+        // `rowDecoder` — already `.supabaseExplicitKeys` — rather than standing up a third decoder.
+        do { return try rowDecoder.decode(LiveDuelState.self, from: data) }
+        catch { throw SupabaseError.decoding(String(describing: error)) }
+    }
+
+    /// The poll. Throws on a network/decode failure so `LiveDuelSession` can tell a dropped poll
+    /// (retry next tick, duel stays open — M23 §2) apart from a real state change; swallowing it
+    /// here the way `submitResult` does below would make every blip look identical to "nothing
+    /// happened yet" and hide a real outage from the caller that most needs to know about it.
+    func liveState(challengeID: Int) async throws -> LiveDuelState {
+        let data = try await client.rpc("versus_live_state", args: ChallengeIDArgs(pChallengeId: challengeID))
+        do { return try rowDecoder.decode(LiveDuelState.self, from: data) }
+        catch { throw SupabaseError.decoding(String(describing: error)) }
+    }
+
+    /// Reports a guess count without finishing, so the opponent's progress strip ticks up.
+    /// Fire-and-forget: a dropped bump costs one tick of staleness on a strip that polls again
+    /// in `LiveDuelSession.pollInterval`, never the duel itself.
+    func bumpGuesses(challengeID: Int, guesses: Int) async {
+        struct Args: Encodable {
+            let pChallengeId: Int; let pGuesses: Int
+            enum CodingKeys: String, CodingKey { case pChallengeId = "p_challenge_id", pGuesses = "p_guesses" }
+        }
+        try? await client.rpc("bump_versus_guesses", args: Args(pChallengeId: challengeID, pGuesses: guesses))
+    }
+
+    /// Finishes my side (solved, exhausted guesses, or gave up). `try?`, mirroring
+    /// `submitResult` above and for the same reason: the call is already `for update`-locked and
+    /// first-write-wins server-side, so a client-side retry loop would buy nothing a dropped call
+    /// didn't already cost — a solve the network never delivered is scored the same way any other
+    /// silence on this row is, by the clock's own grace period.
+    func submitLiveResult(challengeID: Int, solved: Bool, guesses: Int) async {
+        struct Args: Encodable {
+            let pChallengeId: Int; let pSolved: Bool; let pGuesses: Int
+            enum CodingKeys: String, CodingKey {
+                case pChallengeId = "p_challenge_id", pSolved = "p_solved", pGuesses = "p_guesses"
+            }
+        }
+        try? await client.rpc("submit_versus_live_result",
+                              args: Args(pChallengeId: challengeID, pSolved: solved, pGuesses: guesses))
+    }
 }

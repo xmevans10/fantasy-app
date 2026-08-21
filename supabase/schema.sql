@@ -679,6 +679,39 @@ alter table public.versus_challenges drop constraint if exists versus_challenges
 alter table public.versus_challenges add constraint versus_challenges_status_domain
   check (status in ('pending', 'completed', 'forfeited'));
 
+-- Live duels (migration 0021, 2026-08-21). Until now every duel was asynchronous: both sides
+-- played the same board alone within 24h and the higher `performance` won, so "first to solve
+-- wins" was never literally true and the two players were never on the board together. A live
+-- duel keeps the same row, the same series and the same first-to-4 maths — it changes only *when*
+-- the row resolves, and adds the shared start instant that makes one clock serve both players.
+--
+-- Every column is additive and nullable-or-defaulted, so the duels that were in flight when this
+-- landed stayed valid: `mode` defaults to 'async' and none of the async RPCs read any of them.
+alter table public.versus_challenges
+  add column if not exists mode                text not null default 'async',   -- 'async' | 'live'
+  add column if not exists challenger_ready_at timestamptz,
+  add column if not exists opponent_ready_at   timestamptz,
+  add column if not exists live_started_at     timestamptz,   -- stamped once, on the second ready
+  add column if not exists challenger_solved   boolean,
+  add column if not exists opponent_solved     boolean,
+  add column if not exists challenger_guesses  int,
+  add column if not exists opponent_guesses    int;
+
+-- `*_solved` is three-valued on purpose. NULL means "still on the board", which is what makes
+-- `finished` a separate fact from `solved` on the wire: a player who burns all five guesses is
+-- finished-and-not-solved and does NOT end the duel — the opponent can still take the point by
+-- solving — whereas a player who hasn't answered is NULL and only the clock bounds them.
+-- Collapsing the two into one boolean would make "out of guesses" indistinguishable from
+-- "hasn't answered yet", and the draw rule in `submit_versus_live_result` is exactly the
+-- difference between them.
+
+-- Constrained for the same reason `versus_challenges_status_domain` above is: `'active'` proved
+-- that a status-ish text column with no domain check acquires a third value nobody handles, and
+-- then every sweep that filters on the known values skips those rows forever.
+alter table public.versus_challenges drop constraint if exists versus_challenges_mode_domain;
+alter table public.versus_challenges add constraint versus_challenges_mode_domain
+  check (mode in ('async', 'live'));
+
 -- Per-user push registration (a user may have several devices). `utc_offset_minutes` is the
 -- device's local offset at registration time (no per-user timezone table yet) — used to
 -- approximate "8pm local" for `notify-streak-risk` without a full tz database on the server.
@@ -1067,6 +1100,305 @@ begin
   end if;
 end;
 $$;
+
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Live duels (migration 0021) — "first to solve wins", Journeyman first.
+-- Design + wire contract: prompts/M23-live-duels.md §§1-3. The async RPCs above are untouched;
+-- these four are a parallel path, and a row only ever travels one of them.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- The shared shape returned by both `mark_versus_ready` and `versus_live_state`. Kept in one
+-- place so the two can never drift: the Swift `LiveDuelState` decoder is written against these
+-- exact keys, and a duel where the ready-handshake response disagrees with the poll response
+-- would desync the lobby from the board.
+--
+-- Guess *counts* cross the wire; guessed *names* never do. A wrong name is a hint — handing one
+-- player the other's eliminations turns a race into a collaboration.
+--
+-- Timestamps go out as Postgres's own `timestamptz` rendering ("…+00:00", microsecond
+-- precision). That is deliberate: `SupabaseDate.parse` (Backend/SupabaseClient.swift) already
+-- tolerates exactly that form, and Foundation's plain `.iso8601` strategy — which rejects
+-- fractional seconds — is not what decodes these.
+create or replace function public.versus_live_payload(c public.versus_challenges, p_me uuid)
+returns jsonb language plpgsql stable as $$
+declare
+  is_challenger boolean := (p_me = c.challenger_id);
+  my_ready   timestamptz := case when is_challenger then c.challenger_ready_at else c.opponent_ready_at end;
+  their_ready timestamptz := case when is_challenger then c.opponent_ready_at else c.challenger_ready_at end;
+  my_solved   boolean := case when is_challenger then c.challenger_solved else c.opponent_solved end;
+  their_solved boolean := case when is_challenger then c.opponent_solved else c.challenger_solved end;
+  my_guesses   int := case when is_challenger then c.challenger_guesses else c.opponent_guesses end;
+  their_guesses int := case when is_challenger then c.opponent_guesses else c.challenger_guesses end;
+begin
+  return jsonb_build_object(
+    'mode', c.mode,
+    'live_started_at', c.live_started_at,
+    -- The client renders the countdown from (server_now, live_started_at, time_limit_seconds)
+    -- rather than from its own clock, so a device with a skewed clock still sees the same
+    -- remaining time as its opponent — the same reason `start_versus_challenge` returns seconds
+    -- remaining instead of a timestamp.
+    'server_now', now(),
+    'time_limit_seconds', c.time_limit_seconds,
+    'status', c.status,
+    'winner_id', c.winner_id,
+    'me', jsonb_build_object(
+      'ready', my_ready is not null,
+      'guesses', coalesce(my_guesses, 0),
+      'finished', my_solved is not null,
+      'solved', coalesce(my_solved, false)),
+    'them', jsonb_build_object(
+      'ready', their_ready is not null,
+      'guesses', coalesce(their_guesses, 0),
+      'finished', their_solved is not null,
+      'solved', coalesce(their_solved, false)));
+end;
+$$;
+-- Not a client-facing RPC: it takes the caller's identity as a parameter, so anyone who could
+-- call it directly could ask for the row from the *other* player's point of view.
+revoke all on function public.versus_live_payload(public.versus_challenges, uuid) from public, anon, authenticated;
+
+-- Resolution for the live path. Deliberately NOT `resolve_versus_challenge`: that one derives the
+-- winner from two submitted scores and cannot fire until both sides have finished, which is the
+-- exact property a race must not have. The series maths below is copied from it verbatim —
+-- first to 4 takes the series, 7 played is the backstop, draws advance neither counter — because
+-- a live duel is worth exactly one series point, the same as an async one.
+--
+-- Idempotent and lock-guarded: the `status <> 'pending'` early-out under `for update` is what
+-- makes two simultaneous solves produce one winner instead of two counter increments.
+create or replace function public.resolve_versus_live_challenge(p_challenge_id bigint, p_winner uuid)
+returns void language plpgsql security definer as $$
+declare
+  c public.versus_challenges%rowtype;
+begin
+  select * into c from public.versus_challenges where id = p_challenge_id for update;
+  if c.id is null or c.status <> 'pending' then return; end if;
+  if p_winner is not null and p_winner not in (c.challenger_id, c.opponent_id) then
+    raise exception 'winner is not a participant';
+  end if;
+
+  -- A draw is `completed` with a null winner, never `forfeited` — `forfeited` stays reserved for
+  -- the double no-show so the two remain distinguishable in the history.
+  update public.versus_challenges
+    set status = 'completed', winner_id = p_winner
+    where id = p_challenge_id;
+
+  if p_winner is not null then
+    update public.versus_series s
+      set wins_a = s.wins_a + (case when p_winner = s.user_a then 1 else 0 end),
+          wins_b = s.wins_b + (case when p_winner = s.user_b then 1 else 0 end),
+          status = case
+            when greatest(s.wins_a + (case when p_winner = s.user_a then 1 else 0 end),
+                          s.wins_b + (case when p_winner = s.user_b then 1 else 0 end)) >= 4
+              or s.wins_a + s.wins_b + 1 >= 7
+            then 'completed' else s.status end
+      where s.id = c.series_id;
+  end if;
+end;
+$$;
+-- Takes the winner as an argument, so it is service-side only: exposing it would let either
+-- player POST themselves a series point.
+revoke all on function public.resolve_versus_live_challenge(bigint, uuid) from public, anon, authenticated;
+
+-- Ready handshake. Neither board opens until both sides are in, and the second ready stamps
+-- `live_started_at` — ONE shared start instant for both players, so the countdown is identical
+-- on both devices and a slow network buys nobody a head start.
+--
+-- `for update` is doing real work here: two players hitting READY in the same instant serialize
+-- on the row lock, so the second call is the only one that ever sees both `*_ready_at` set, and
+-- `live_started_at` is written exactly once. The `is null` predicate on the update is the belt to
+-- that braces.
+--
+-- Marking ready is also what flips `mode` to 'live'. `create_versus_challenge` has no mode
+-- argument on purpose: adding one would have meant dropping and recreating the function that the
+-- shipping app calls to create every duel, and readiness is unambiguous — nothing but a live duel
+-- ever asks for it.
+create or replace function public.mark_versus_ready(p_challenge_id bigint)
+returns jsonb language plpgsql security definer as $$
+declare
+  c public.versus_challenges%rowtype;
+  me uuid := auth.uid();
+begin
+  select * into c from public.versus_challenges where id = p_challenge_id for update;
+  if c.id is null then raise exception 'challenge not found'; end if;
+  if me not in (c.challenger_id, c.opponent_id) then raise exception 'not a participant'; end if;
+
+  -- Readying a duel that already resolved is a no-op rather than an error: the loser's client
+  -- can have a READY tap in flight at the moment the winner's solve lands, and failing it would
+  -- surface as an error alert on top of the verdict they are about to be shown.
+  if c.status = 'pending' then
+    update public.versus_challenges
+      set mode = 'live',
+          -- First write wins per side: re-readying after a reconnect must not restart anything.
+          challenger_ready_at = case when me = c.challenger_id
+            then coalesce(c.challenger_ready_at, now()) else c.challenger_ready_at end,
+          opponent_ready_at = case when me = c.opponent_id
+            then coalesce(c.opponent_ready_at, now()) else c.opponent_ready_at end
+      where id = p_challenge_id
+      returning * into c;
+
+    if c.challenger_ready_at is not null and c.opponent_ready_at is not null then
+      update public.versus_challenges
+        set live_started_at = now()
+        where id = p_challenge_id and live_started_at is null
+        returning * into c;
+      if c.id is null then
+        select * into c from public.versus_challenges where id = p_challenge_id;
+      end if;
+    end if;
+  end if;
+
+  return public.versus_live_payload(c, me);
+end;
+$$;
+revoke all on function public.mark_versus_ready(bigint) from public, anon;
+grant execute on function public.mark_versus_ready(bigint) to authenticated, service_role;
+
+-- The poll (1.5s, two clients, one ~120-byte row — see prompts/M23-live-duels.md §2 for why this
+-- is cheaper than the websocket dependency the app has spent its whole life avoiding).
+--
+-- It is also the liveness detector, which is why a read function writes: if the clock runs out
+-- with nobody having solved, whichever client is still polling resolves the duel to a draw. A
+-- client that has backgrounded or died therefore cannot hold a duel open, and nothing about the
+-- outcome depends on a client staying alive. (`versus-timeout`'s 24h sweep is the last backstop
+-- for the case where *both* clients are gone.)
+create or replace function public.versus_live_state(p_challenge_id bigint)
+returns jsonb language plpgsql security definer as $$
+declare
+  c public.versus_challenges%rowtype;
+  me uuid := auth.uid();
+begin
+  select * into c from public.versus_challenges where id = p_challenge_id for update;
+  if c.id is null then raise exception 'challenge not found'; end if;
+  if me not in (c.challenger_id, c.opponent_id) then raise exception 'not a participant'; end if;
+
+  -- Expiry → draw. No solve can be sitting unrecorded past this point: a solve resolves the row
+  -- the moment it arrives, and one arriving after the same +10s grace scores as not-solved
+  -- anyway (see `submit_versus_live_result`), so the two clocks agree by construction.
+  if c.mode = 'live' and c.status = 'pending' and c.live_started_at is not null
+     and extract(epoch from (now() - c.live_started_at)) > c.time_limit_seconds + 10 then
+    perform public.resolve_versus_live_challenge(p_challenge_id, null);
+    select * into c from public.versus_challenges where id = p_challenge_id;
+  end if;
+
+  return public.versus_live_payload(c, me);
+end;
+$$;
+revoke all on function public.versus_live_state(bigint) from public, anon;
+grant execute on function public.versus_live_state(bigint) to authenticated, service_role;
+
+-- Progress ping. The opponent's strip ticking up in real time is the whole reason this is a live
+-- duel and not an async one with extra steps — without it neither player can tell whether the
+-- other is closing in, and the race has no tension.
+--
+-- Monotonic (`greatest`) because the poll and the ping race each other over a lossy network: a
+-- retried or reordered ping must never walk a count backwards on the opponent's screen.
+create or replace function public.bump_versus_guesses(p_challenge_id bigint, p_guesses int)
+returns void language plpgsql security definer as $$
+declare
+  c public.versus_challenges%rowtype;
+  is_challenger boolean;
+  n int := least(greatest(coalesce(p_guesses, 0), 0), 99);
+begin
+  select * into c from public.versus_challenges where id = p_challenge_id for update;
+  if c.id is null then raise exception 'challenge not found'; end if;
+  if auth.uid() not in (c.challenger_id, c.opponent_id) then raise exception 'not a participant'; end if;
+  -- Silent no-op once the duel is over, or once this side has finished: a guess ping is fire-and-
+  -- forget from the client's point of view, and the one in flight when the opponent solves must
+  -- not fail loudly on a board that is already showing a verdict.
+  if c.status <> 'pending' then return; end if;
+
+  is_challenger := auth.uid() = c.challenger_id;
+  if is_challenger then
+    if c.challenger_solved is not null then return; end if;
+    update public.versus_challenges
+      set challenger_guesses = greatest(coalesce(c.challenger_guesses, 0), n)
+      where id = p_challenge_id;
+  else
+    if c.opponent_solved is not null then return; end if;
+    update public.versus_challenges
+      set opponent_guesses = greatest(coalesce(c.opponent_guesses, 0), n)
+      where id = p_challenge_id;
+  end if;
+end;
+$$;
+revoke all on function public.bump_versus_guesses(bigint, int) from public, anon;
+grant execute on function public.bump_versus_guesses(bigint, int) to authenticated, service_role;
+
+-- Finish. This is where "first to solve wins" actually lives:
+--
+--   * a correct solve resolves the whole challenge on the spot — status, winner, series counter —
+--     without waiting for the opponent, who is beaten the moment their next poll returns;
+--   * a finisher who did NOT solve (five burned, or gave up) resolves nothing: they are out, but
+--     the duel stays open and the opponent can still take the point by solving;
+--   * both finished without a solve → draw, exactly like the existing dead-heat rule: completed,
+--     no winner, neither series counter moves.
+--
+-- The clock is server-authoritative, with the same +10s network grace and the same reasoning as
+-- `submit_versus_result`: a late solve is scored as *not solved* rather than rejected, because a
+-- rejected submit leaves the duel open and stalling would become a strategy.
+create or replace function public.submit_versus_live_result(
+  p_challenge_id bigint,
+  p_solved boolean,
+  p_guesses int)
+returns void language plpgsql security definer as $$
+declare
+  c public.versus_challenges%rowtype;
+  me uuid := auth.uid();
+  is_challenger boolean;
+  solved boolean := coalesce(p_solved, false);
+  n int := least(greatest(coalesce(p_guesses, 0), 0), 99);
+  recorded boolean;
+begin
+  select * into c from public.versus_challenges where id = p_challenge_id for update;
+  if c.id is null then raise exception 'challenge not found'; end if;
+  if me not in (c.challenger_id, c.opponent_id) then raise exception 'not a participant'; end if;
+  is_challenger := (me = c.challenger_id);
+
+  if solved and c.live_started_at is not null
+     and extract(epoch from (now() - c.live_started_at)) > c.time_limit_seconds + 10 then
+    solved := false;
+  end if;
+
+  -- First write wins per side (mirrors `submit_versus_result`): a replay, a retry, or a second
+  -- tab can never overwrite the result already locked in for this player.
+  if is_challenger then
+    if c.challenger_solved is null then
+      update public.versus_challenges
+        set challenger_solved = solved,
+            challenger_guesses = greatest(coalesce(c.challenger_guesses, 0), n),
+            challenger_completed_at = coalesce(c.challenger_completed_at, now())
+        where id = p_challenge_id;
+    end if;
+  else
+    if c.opponent_solved is null then
+      update public.versus_challenges
+        set opponent_solved = solved,
+            opponent_guesses = greatest(coalesce(c.opponent_guesses, 0), n),
+            opponent_completed_at = coalesce(c.opponent_completed_at, now())
+        where id = p_challenge_id;
+    end if;
+  end if;
+
+  select * into c from public.versus_challenges where id = p_challenge_id;
+  -- Resolve off the STORED value, never off `solved`: a second submit claiming a solve after this
+  -- side already reported a miss has to lose to the first write, or first-write-wins is theatre.
+  recorded := case when is_challenger then c.challenger_solved else c.opponent_solved end;
+
+  if c.status = 'pending' then
+    if coalesce(recorded, false) then
+      perform public.resolve_versus_live_challenge(p_challenge_id, me);
+    elsif c.challenger_solved is not null and c.opponent_solved is not null then
+      -- Both out, neither solved. (Not reachable with a solve on either side: that resolved the
+      -- row when it arrived, so `status` would not still be 'pending'.)
+      perform public.resolve_versus_live_challenge(p_challenge_id, null);
+    end if;
+  end if;
+end;
+$$;
+revoke all on function public.submit_versus_live_result(bigint, boolean, int) from public, anon;
+grant execute on function public.submit_versus_live_result(bigint, boolean, int) to authenticated, service_role;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────

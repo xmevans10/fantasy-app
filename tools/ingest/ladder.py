@@ -67,11 +67,37 @@ RUNG_COUNT = 30
 # attempt's score and the bot's.
 REFERENCE_PLAYER_SKILL = 0.75
 
-# What fraction of the time the reference player should beat each rung, rung 1 -> 30.
-# Starts generous (the ladder has to be enterable) and ends genuinely hard without being a
-# lottery — 0.30 rather than 0.05 because a rung that needs 20 attempts stops reading as skill.
-TARGET_WIN_RATE_START = 0.90
-TARGET_WIN_RATE_END = 0.30
+# ── The objective: what the bot SCORES, not how often it wins (M24) ──────────
+#
+# `bot_skill` used to be solved so that P(reference player wins) followed a 0.90 -> 0.30 curve.
+# Two things were wrong with that. It is invisible — no player can check "this rung beats me 40%
+# of the time", so nobody could tell a miscalibrated ladder from a hard one. And it folded the
+# CLOCK into the comparable (see `speed_adjusted`), which meant a rung could be won or lost on
+# how fast the player read eight cards rather than on whether they knew the answers — the exact
+# thing BALLIQ_SPEC §1 theme 5 forbids ("luck can flavor a result; it can never make skill
+# mathematically irrelevant"). Bot duels have no clock now, so that lever is gone and every
+# previously-solved skill was invalid anyway.
+#
+# A score target is legible: "Bronze bots get 4 or 5 of 8, Gold bots get 7 of 8" is a sentence
+# you can check by playing. It is also the unit the ask arrived in.
+TARGET_SCORE_START = 0.52      # rung 1, as a fraction of the board
+TARGET_SCORE_END = 0.90        # rung 30
+
+# The lowest score a format's bot can reach WITHOUT playing worse than chance.
+#
+# Keep4 forces exactly four keeps, so a bot choosing at random scores 4/8 on average — 0.5 is
+# where chance sits, not where the format bottoms out. Measured 2026-08-20, worst possible bot
+# (skill 0.05) by board difficulty: 5.3/8 at 0.25, 4.0/8 at 0.35, 2.9/8 at 0.45, 2.2/8 at 0.55,
+# 1.5/8 at 0.70. So sub-4/8 IS reachable — but only because `hit_probability` falls below 0.5 on
+# a hard board, i.e. the bot is then *systematically wrong*, which is theme 5 violated from the
+# other side: the outcome stops being about play.
+#
+# The trap this constant guards is the other half of that table: on an EASY board even the worst
+# possible bot scores 5.3/8, so a low score target there is simply unreachable and the bisection
+# pins at `lo`. Early rungs are easy by design (`BOARD_DIFFICULTY_START`), which means **bot skill
+# cannot be the differentiator at the bottom of the ladder — board difficulty has to be.** Aim a
+# target below this and you get a flat spot, not a gentler rung.
+FORMAT_SCORE_FLOOR = {"keep4": 0.5, "whoami": 0.0, "grid": 0.0}
 
 # Board difficulty (0 = every answer obvious, 1 = every call a coin flip) targeted per rung.
 # The floor is the important half: below ~0.15 both sides score at ceiling, the duel is decided
@@ -119,6 +145,10 @@ POOL_DIFFICULTY_TOLERANCE = 0.04
 # Each rung's PRIMARY board never had this problem: it is *solved* to hit its target rather than
 # screened against it. Only pool boards are screened.
 POOL_WIN_RATE_TOLERANCE = 0.03
+# The same screen, in the score unit the objective now uses: a board joins a rung's pool only if
+# the rung's solved bot actually SCORES on it what the rung promises. 0.04 of a board is half a
+# card on Keep4 — tight enough that a pool stays one rung, loose enough to fill.
+POOL_SCORE_TOLERANCE = 0.04
 # `slowBurn` no longer needs a tighter screen, and the history is worth keeping.
 #
 # Keep4 used to be simulated by `BotSolver` in the SERVE order (a seeded shuffle), while this file
@@ -356,34 +386,44 @@ def win_rate(fmt: str, diffs: list[float], bot_skill: float,
     for _ in range(trials):
         p = simulate_performance(fmt, diffs, player_skill, rng, true_keeps)
         b = simulate_performance(fmt, diffs, bot_skill, rng, true_keeps, bot_style)
-        # Speed is part of the comparable (see `SPEED_BONUS`). The reference player is paced by
-        # the same model as the bot — the same symmetry the accuracy model already assumes, since
-        # there is still no play data to derive a human pace distribution from.
-        p = speed_adjusted(p, elapsed_fraction(player_skill, "consistent", rng))
-        b = speed_adjusted(b, elapsed_fraction(bot_skill, bot_style, rng))
+        # Speed used to be folded in here via `speed_adjusted`. It is gone with the bot clock
+        # (M24): a ladder duel is no longer raced, so pace cannot decide it. What remains is a
+        # pure accuracy comparison — which is what a knowledge game should be measuring, and what
+        # makes the score objective above meaningful in the first place.
         if p >= b:
             wins += 1
     return wins / trials
 
 
-def solve_bot_skill(fmt: str, diffs: list[float], target: float,
+def mean_score(fmt: str, diffs: list[float], bot_skill: float,
+               true_keeps: list[bool] | None = None, bot_style: str = "consistent",
+               trials: int = TRIALS, seed: int = 12345) -> float:
+    """The bot's mean `performance` on this board, 0..1 — the objective `bot_skill` is solved
+    against since M24. Same simulator the client's `BotSolver` mirrors, so a number here is a
+    prediction about the real game rather than about this file."""
+    rng = random.Random(seed)
+    return sum(simulate_performance(fmt, diffs, bot_skill, rng, true_keeps, bot_style)
+               for _ in range(trials)) / trials
+
+
+def solve_bot_skill(fmt: str, diffs: list[float], target_score: float,
                     true_keeps: list[bool] | None = None,
                     bot_style: str = "consistent") -> tuple[float, float]:
-    """Binary-search the `bot_skill` whose win rate is `target`.
+    """Binary-search the `bot_skill` that SCORES `target_score` on this board.
 
-    Win rate is monotonically decreasing in bot skill (a better bot is harder to beat), so a
-    bisection is sound. Returns the skill and the win rate actually achieved — which can miss
-    the target at the extremes, because a board only affords so much separation and that is
-    worth surfacing rather than hiding.
+    Mean score is monotonically increasing in skill, so a bisection is sound. Returns the skill
+    and the score actually achieved — which legitimately misses the target below a format's
+    `FORMAT_SCORE_FLOOR` (Keep4 cannot go under ~0.5 at any skill) and that miss is surfaced
+    rather than hidden, because it is the honest ceiling, not a solver failure.
     """
     lo, hi = 0.05, 1.0
-    best = (0.5, win_rate(fmt, diffs, 0.5, true_keeps=true_keeps, bot_style=bot_style))
+    best = (0.5, mean_score(fmt, diffs, 0.5, true_keeps, bot_style))
     for _ in range(18):
         mid = (lo + hi) / 2
-        w = win_rate(fmt, diffs, mid, true_keeps=true_keeps, bot_style=bot_style)
-        if abs(w - target) < abs(best[1] - target):
-            best = (mid, w)
-        if w > target:      # player wins too often -> bot must get better
+        m = mean_score(fmt, diffs, mid, true_keeps, bot_style)
+        if abs(m - target_score) < abs(best[1] - target_score):
+            best = (mid, m)
+        if m < target_score:    # bot scores too low -> it must get better
             lo = mid
         else:
             hi = mid
@@ -485,7 +525,7 @@ def board_seed(rung: int, ordinal: int) -> int:
 
 
 def build_pool(fmt: str, primary: Candidate, candidates: list[Candidate],
-               bot_skill: float, bot_style: str, target_win: float,
+               bot_skill: float, bot_style: str, target_score: float,
                rung: int) -> tuple[list[dict], list[str]]:
     """The rung's ordered pool, `primary` first, and the content SIGNATURES it consumed.
 
@@ -502,7 +542,7 @@ def build_pool(fmt: str, primary: Candidate, candidates: list[Candidate],
     consumed = [primary.signature]
 
     tolerance = (POOL_WIN_RATE_TOLERANCE_SLOW_BURN if bot_style == "slowBurn"
-                 else POOL_WIN_RATE_TOLERANCE)
+                 else POOL_SCORE_TOLERANCE)
     checked: set[str] = set()
 
     # The window does NOT widen when a rung is short, and that was tried and reverted. Letting it
@@ -519,10 +559,10 @@ def build_pool(fmt: str, primary: Candidate, candidates: list[Candidate],
     for c in near[:POOL_MAX_CHECKS]:
         if len(boards) >= POOL_SIZE:
             break
-        w = win_rate(fmt, c.diffs, bot_skill, true_keeps=c.true_keeps, bot_style=bot_style,
-                     trials=POOL_TRIALS)
-        measured.append((abs(w - target_win), c))
-        if abs(w - target_win) > tolerance:
+        m = mean_score(fmt, c.diffs, bot_skill, true_keeps=c.true_keeps, bot_style=bot_style,
+                       trials=POOL_TRIALS)
+        measured.append((abs(m - target_score), c))
+        if abs(m - target_score) > tolerance:
             continue
         boards.append({"rung": rung, "ordinal": len(boards), "puzzle_id": c.puzzle_id,
                        "board_difficulty": round(c.difficulty, 3),
@@ -576,7 +616,10 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
         fmt = mode_for(rung)
         want_difficulty = max(BOARD_DIFFICULTY_FLOOR,
                               lerp(BOARD_DIFFICULTY_START, BOARD_DIFFICULTY_END, t))
-        want_win = lerp(TARGET_WIN_RATE_START, TARGET_WIN_RATE_END, t)
+        # Floored at what the format can actually reach — see `FORMAT_SCORE_FLOOR`. Bronze Keep4
+        # rungs land ON the floor, which is the closest an honest bot gets to the "2/8-4/8" ask.
+        want_score = max(FORMAT_SCORE_FLOOR.get(fmt, 0.0),
+                         lerp(TARGET_SCORE_START, TARGET_SCORE_END, t))
 
         candidates = [c for c in by_mode.get(fmt, [])
                       if c.signature not in used and c.difficulty >= BOARD_DIFFICULTY_FLOOR]
@@ -636,8 +679,8 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
         # because style moves the win rate a given skill produces. Solving first and assigning
         # after would miscalibrate every non-baseline bot.
         bot = ordered_bots[rung - 1]
-        skill, achieved = solve_bot_skill(fmt, pick.diffs, want_win, pick.true_keeps,
-                                          bot.get("style", "consistent"))
+        skill, achieved_score = solve_bot_skill(fmt, pick.diffs, want_score, pick.true_keeps,
+                                                bot.get("style", "consistent"))
         is_boss = rung % BOSS_EVERY == 0
         if is_boss:
             # A boss is a step up on the same board, not a different kind of thing.
@@ -645,16 +688,28 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
 
         # Re-measure the settled skill at high precision before storing it.
         #
-        # `solve_bot_skill` returns the win rate from whichever bisection step landed closest, a
-        # single `TRIALS`-run estimate carrying ~±0.04 of sampling noise. That number becomes
-        # `ladder_rungs.target_win_rate`, which is the value `LadderCurveTests` measures every
-        # board against — so its noise is charged to every board in the pool, not just this one.
-        # Paying for more trials once per rung removes that error from the whole comparison.
+        # `solve_bot_skill` returns a single `TRIALS`-run estimate carrying ~±0.04 of sampling
+        # noise. `target_win_rate` is the value `LadderCurveTests` measures every board against,
+        # so its noise would be charged to every board in the pool, not just this one. Paying for
+        # more trials once per rung removes that error from the whole comparison.
+        #
+        # Win rate is no longer the OBJECTIVE (score is), but it is still recorded and still
+        # measured against — as a diagnostic. It is how a flat or inverted curve gets caught, and
+        # dropping it would trade a legible objective for a blind one.
         achieved = win_rate(fmt, pick.diffs, skill, true_keeps=pick.true_keeps,
                             bot_style=bot.get("style", "consistent"), trials=POOL_TRIALS)
+        achieved_score = mean_score(fmt, pick.diffs, skill, true_keeps=pick.true_keeps,
+                                    bot_style=bot.get("style", "consistent"), trials=POOL_TRIALS)
 
-        plan.append((rung, fmt, pick, bot.get("style", "consistent"), skill, achieved))
+        # `achieved_score`, not `achieved` (the win rate): the pool screen downstream asks
+        # "does this board play at the rung's SCORE", which is the objective now. Passing the win
+        # rate here compiled fine and silently screened every pool against the wrong number.
+        plan.append((rung, fmt, pick, bot.get("style", "consistent"), skill, achieved_score))
 
+        # The clock is no longer a difficulty lever (M24): a ladder duel is not a race, so a
+        # tightening clock only measured how fast the player could read. The column is `not null
+        # check (> 0)`, so the format's full base is written and never tightened — the client
+        # stops rendering a timer bar for ladder duels, at which point this becomes vestigial.
         base_seconds = {"keep4": 120, "whoami": 90, "grid": 180}[fmt]
         rows.append({
             "rung": rung,
@@ -664,7 +719,7 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
             "puzzle_id": pick.puzzle_id,
             "bot_id": bot["id"],
             "bot_skill": round(skill, 3),
-            "time_limit_seconds": round(base_seconds * (1 - 0.45 * t)),
+            "time_limit_seconds": base_seconds,
             # Deliberately `board_seed(rung, 0)` and not its own formula: `ladder_rungs.puzzle_id`
             # IS the pool's ordinal-0 board, and a client that falls back to the rung's own columns
             # (offline, or an old build that never calls `next_ladder_board`) must reproduce the
@@ -699,11 +754,11 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
                    if c.signature not in used and c.signature != pick.signature
                    and abs(c.difficulty - pick.difficulty) <= POOL_DIFFICULTY_TOLERANCE)
 
-    for rung, fmt, pick, style, skill, achieved in sorted(
+    for rung, fmt, pick, style, skill, target_score in sorted(
             plan, key=lambda p: available(p[1], p[2])):
         rung_boards, consumed = build_pool(
             fmt, pick, [c for c in by_mode.get(fmt, []) if c.signature not in used],
-            skill, style, achieved, rung)
+            skill, style, target_score, rung)
         used.update(consumed)
         boards.extend(rung_boards)
     boards.sort(key=lambda b: (b["rung"], b["ordinal"]))

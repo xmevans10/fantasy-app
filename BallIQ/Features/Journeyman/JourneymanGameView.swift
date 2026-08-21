@@ -53,9 +53,18 @@ struct JourneymanGameView: View {
         GridGuessSheet.rank(query: trimmedGuess, normalized: normalizedNames)
     }
 
+    /// The `versus_challenges.mode = 'live'` half of a duel (M23) — `duel.live` non-nil is the
+    /// whole discriminator between "play it like the timed async duel always has" and "poll for
+    /// the opponent's guess count and an early loss". See `LiveJourneymanBoard`'s doc comment for
+    /// why that gets an entirely separate body instead of a handful of `if` branches threaded
+    /// through this one.
+    private var live: LiveDuelSession? { duel?.live }
+
     var body: some View {
         Group {
-            if let result {
+            if let live, let duel {
+                LiveJourneymanBoard(puzzle: puzzle, duel: duel, live: live) { dismiss() }
+            } else if let result {
                 JourneymanResultView(puzzle: puzzle, result: result, rewards: rewards,
                                      isDaily: isDaily, challenge: effectiveChallenge,
                                      duelVerdict: duel?.ladder?
@@ -66,12 +75,17 @@ struct JourneymanGameView: View {
         }
         .background(Color.appBackground)
         .task {
+            // `LiveJourneymanBoard` owns its own name index and its own start analytics — this
+            // solo/async path must stay byte-for-byte what 1.6.0 already shipped, so it skips
+            // both rather than growing a branch that could drift the async case by accident.
+            guard live == nil else { return }
             if nameIndex.isEmpty {
                 nameIndex = await container.puzzles.playerNameIndex(for: puzzle.sport)
                 normalizedNames = nameIndex.map { ($0, AnswerMatcher.normalize($0)) }
             }
         }
         .onAppear {
+            guard live == nil else { return }
             if !didLogStart {
                 didLogStart = true
                 startedAt = Date()
@@ -309,5 +323,395 @@ struct JourneymanGameView: View {
     private func autoSolveForScreenshot() {
         wrongGuesses = 1
         finish(solved: true)
+    }
+}
+
+// MARK: - Live duel (M23)
+
+/// The live-duel board: the same career path and guess bar as solo, plus the opponent's guess
+/// count ticking beside it (never *what* they guessed — see M23 §1), and a state machine that
+/// can end this run the instant a poll shows the opponent solved, whatever the player is
+/// mid-keystroke on.
+///
+/// A wholly separate type rather than a handful of `if let live` branches threaded through
+/// `JourneymanGameView`'s existing body: solo Journeyman is live on the App Store in 1.6.0, and
+/// this milestone's own brief is explicit that regressing it is worse than shipping no live
+/// mode at all. Keeping the two bodies structurally apart — separate `@State`, separate
+/// `submit`/`finish` — is what makes "solo is untouched" checkable by reading the diff instead
+/// of by trusting it, at the cost of some duplicated guess-bar markup that isn't worth the risk
+/// of factoring out of a shipped, working screen mid-milestone.
+///
+/// Polling lifecycle (start/stop, the ready handshake) is entirely `LiveDuelLobbyView`'s job —
+/// it stays mounted underneath `DuelBoard.journeyman(duel, puzzle).view` for the whole race and
+/// keeps owning `LiveDuelSession.start()`/`.stop()`, so this board only ever reads `live` and
+/// calls its two report methods; it never starts or stops the poll itself.
+private struct LiveJourneymanBoard: View {
+    let puzzle: JourneymanPuzzle
+    let duel: DuelSession
+    @ObservedObject var live: LiveDuelSession
+    let onDone: () -> Void
+
+    @EnvironmentObject private var container: RepositoryContainer
+
+    @State private var guess = ""
+    /// Wrong guesses so far. The *next* guess is number `wrongGuesses + 1`.
+    @State private var wrongGuesses = 0
+    @State private var wrongShake = false
+    /// Set once my own five guesses are spent (or I give up). The race isn't over — §1 says the
+    /// opponent can still lose it — so this swaps the guess bar for a waiting panel instead of
+    /// ending the run the way solo's `finish(solved: false)` would.
+    @State private var myExhausted = false
+    /// Set the instant my own solve is submitted, before the server has confirmed it actually
+    /// won the race (M23 §3's first-write-wins can still reject it). Blocks further input and
+    /// swaps in a "checking" panel rather than declaring victory on a local string match that
+    /// hasn't been confirmed server-side — see `checkTerminal`'s doc comment for why the win
+    /// itself is never rendered from here.
+    @State private var awaitingConfirmation = false
+    @State private var result: JourneymanScoring.Result?
+    @State private var liveOutcome: LiveRaceOutcome?
+    @State private var duelVerdict: DuelVerdict?
+    @State private var nameIndex: [String] = []
+    @State private var normalizedNames: [(display: String, norm: String)] = []
+    @FocusState private var fieldFocused: Bool
+    @State private var didLogStart = false
+    @State private var startedAt: Date?
+
+    private var currentGuess: Int { wrongGuesses + 1 }
+    private var guessesLeft: Int { JourneymanScoring.maxGuesses - wrongGuesses }
+    private var currentValue: Int {
+        JourneymanScoring.value(guess: currentGuess, difficulty: puzzle.difficulty)
+    }
+    private var nextGuessCost: Int {
+        JourneymanScoring.nextGuessCost(guess: currentGuess, difficulty: puzzle.difficulty)
+    }
+    private var trimmedGuess: String { guess.trimmingCharacters(in: .whitespaces) }
+    private var suggestions: [String] {
+        GridGuessSheet.rank(query: trimmedGuess, normalized: normalizedNames)
+    }
+    private var inputLocked: Bool { myExhausted || awaitingConfirmation || result != nil }
+
+    var body: some View {
+        Group {
+            if let result, let liveOutcome {
+                JourneymanResultView(puzzle: puzzle, result: result, isDaily: false,
+                                     duelVerdict: duelVerdict, liveOutcome: liveOutcome,
+                                     onDone: onDone)
+            } else {
+                board
+            }
+        }
+        .background(Color.appBackground)
+        .task {
+            if nameIndex.isEmpty {
+                nameIndex = await container.puzzles.playerNameIndex(for: puzzle.sport)
+                normalizedNames = nameIndex.map { ($0, AnswerMatcher.normalize($0)) }
+            }
+        }
+        .onAppear {
+            if !didLogStart {
+                didLogStart = true
+                startedAt = Date()
+                container.track(.gameStarted, ["format": "journeyman", "ranked": "false",
+                                               "difficulty": puzzle.difficulty?.rawValue ?? "unrated",
+                                               "clubs": "\(puzzle.stints.count)",
+                                               "duel": "true", "live": "true"])
+            }
+            // The session may already be resolved by the time this board appears (a slow
+            // launch racing the deadline, or the app returning from background after the poll
+            // caught the opponent's solve) — check the state that's already there, not just
+            // future changes to it.
+            checkTerminal()
+        }
+        // The single most important behavior in this milestone (§1): the moment a poll reports
+        // the opponent solved, this board closes with a loss — on the very next `state`
+        // publish, not on the player's next tap, whatever they're mid-typing right now.
+        .onChange(of: live.state) { _, _ in checkTerminal() }
+    }
+
+    private var board: some View {
+        VStack(spacing: 0) {
+            // The clock itself is unchanged from an async duel — `duel.secondsRemaining` /
+            // `.capturedAt` were snapshotted once from the live poll at hand-off (see
+            // `DuelSession.live`'s doc comment), so `DuelTimerBar` needs no live-aware variant.
+            // Expiry is resolved by the next poll (the server is the clock's real authority),
+            // not by this closure.
+            DuelTimerBar(session: duel) {}
+            opponentStrip
+            if myExhausted {
+                waitingOnOpponentPanel
+            } else {
+                header
+                GeometryReader { proxy in
+                    ScrollView {
+                        CareerPathTimeline(sport: puzzle.sport, stints: puzzle.stints,
+                                           truncated: puzzle.truncated ?? false)
+                            .padding(16)
+                            .frame(maxWidth: .infinity, minHeight: proxy.size.height,
+                                   alignment: .center)
+                    }
+                }
+                guessBar
+            }
+        }
+        .background(Color.appBackground)
+    }
+
+    /// Ticks up in real time off the poll — count only, never the guess itself (§1: a wrong
+    /// name handed to the other player turns the race into a collaboration).
+    private var opponentStrip: some View {
+        OpponentProgressStrip(opponentName: duel.opponentName, guesses: live.opponentGuesses,
+                              maxGuesses: JourneymanScoring.maxGuesses,
+                              finished: live.opponentFinished, solved: live.opponentSolved)
+    }
+
+    private var header: some View {
+        VStack(spacing: 12) {
+            HStack {
+                difficultyChip
+                Spacer()
+                Text(puzzle.sport.displayName)
+                    .font(.label12)
+                    .foregroundStyle(Color.textMuted)
+            }
+            VStack(spacing: 4) {
+                Text("Journeyman")
+                    .font(.label12)
+                    .foregroundStyle(Color.accentText)
+                Text("Worth \(currentValue) pts")
+                    .font(.heading)
+                    .foregroundStyle(Color.textPrimary)
+                Text(guessesLeft == 1 ? "1 guess left" : "\(guessesLeft) guesses left")
+                    .font(.label11)
+                    .foregroundStyle(guessesLeft == 1 ? Color.dangerText : Color.textMuted)
+            }
+        }
+        .padding(16)
+        .background(Color.surface)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Color.hairline).frame(height: Hairline.width)
+        }
+    }
+
+    @ViewBuilder
+    private var difficultyChip: some View {
+        if let difficulty = puzzle.difficulty {
+            HStack(spacing: 4) {
+                Image(systemName: difficulty.symbol).font(.system(size: 9, weight: .bold))
+                Text(difficulty.badgeLabel).font(.label11)
+                if difficulty != .easy {
+                    Text("· \(difficulty.multiplierLabel)").font(.label11).opacity(0.8)
+                }
+            }
+            .fixedSize()
+            .padding(.horizontal, 8).padding(.vertical, 3)
+            .foregroundStyle(difficulty.tintText)
+            .background(difficulty.tintBg)
+            .clipShape(Capsule())
+        }
+    }
+
+    /// A "you're out, they might not be" panel — deliberately not the result screen, because
+    /// per §1 this isn't a result yet: the opponent can still lose it.
+    private var waitingOnOpponentPanel: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "hourglass")
+                .font(.system(size: 28, weight: .bold))
+                .foregroundStyle(Color.textMuted)
+            Text("OUT OF GUESSES")
+                .font(.heading)
+                .foregroundStyle(Color.textPrimary)
+            Text("Still live — they can still lose it.")
+                .font(.body14)
+                .foregroundStyle(Color.textMuted)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(30)
+    }
+
+    // MARK: - Guessing
+
+    private var guessBar: some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(Color.hairline).frame(height: Hairline.width)
+            suggestionStrip
+            VStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    TextField("Name the player", text: $guess)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled()
+                        .focused($fieldFocused)
+                        .disabled(inputLocked)
+                        .submitLabel(.go)
+                        .onSubmit { submit(trimmedGuess) }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 11)
+                        .background(Color.surfaceMuted)
+                        .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+                        .offset(x: wrongShake ? -8 : 0)
+
+                    Button { submit(trimmedGuess) } label: {
+                        Text(awaitingConfirmation ? "…" : "GUESS")
+                            .font(.heading)
+                            .foregroundStyle(Color.onAccent)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 10)
+                            .background(Color.accentFill)
+                            .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
+                    }
+                    .buttonStyle(PrimePressStyle())
+                    .disabled(inputLocked)
+                    .accessibilityHint("Submits the name you entered")
+                }
+
+                HStack {
+                    Text(guessesLeft > 1
+                         ? "A wrong guess costs \(nextGuessCost) pts"
+                         : "Last guess")
+                        .font(.label12)
+                        .foregroundStyle(guessesLeft > 1 ? Color.textMuted : Color.dangerText)
+                    Spacer()
+                    Button("Give up", action: giveUp)
+                        .font(.body14)
+                        .foregroundStyle(Color.textMuted)
+                        .disabled(inputLocked)
+                }
+            }
+            .padding(16)
+            .background(Color.surface)
+        }
+    }
+
+    @ViewBuilder
+    private var suggestionStrip: some View {
+        let hits = suggestions
+        if !hits.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(hits, id: \.self) { name in
+                        Button { submit(name) } label: {
+                            Text(name)
+                                .font(.body14)
+                                .foregroundStyle(Color.textPrimary)
+                                .padding(.horizontal, 12).padding(.vertical, 8)
+                                .background(Color.surfaceMuted)
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(inputLocked)
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+            .frame(height: 52)
+            .background(Color.surface)
+        }
+    }
+
+    private func submit(_ raw: String) {
+        let trimmed = raw.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, !inputLocked else { return }
+        if AnswerMatcher.matches(trimmed, answer: puzzle.answer) {
+            solve()
+            return
+        }
+        wrongGuesses += 1
+        guess = ""
+        Haptics.reject()
+        withAnimation(Motion.snap) { wrongShake = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(Motion.snap) { wrongShake = false }
+        }
+        // Every guess reports its count, right or wrong, so the opponent's strip ticks (§1).
+        Task { await live.reportGuesses(wrongGuesses) }
+        if wrongGuesses >= JourneymanScoring.maxGuesses { exhaust() }
+    }
+
+    private func giveUp() { exhaust() }
+
+    /// Reports the exhaustion but does **not** end the run — §1: the board stays open until the
+    /// opponent finishes too or the clock runs out, because they can still lose it.
+    private func exhaust() {
+        guard !inputLocked else { return }
+        myExhausted = true
+        fieldFocused = false
+        Task { await live.submitResult(solved: false, guesses: wrongGuesses) }
+    }
+
+    /// The one guess that can end the whole challenge on the spot (§3 —
+    /// `submit_versus_live_result`'s first correct solve resolves it immediately). Deliberately
+    /// does **not** show a result here: `checkTerminal` is the only place that does, once the
+    /// server's own answer comes back on the next poll — see its doc comment.
+    private func solve() {
+        guard !inputLocked else { return }
+        awaitingConfirmation = true
+        fieldFocused = false
+        let guessesAtSolve = currentGuess
+        Task { await live.submitResult(solved: true, guesses: guessesAtSolve) }
+    }
+
+    /// Called on every `live.state` publish (and once on appear, in case the duel was already
+    /// resolved before this board mounted). This — not `solve()` — is the only place a verdict is
+    /// ever rendered, because a local "the name matched" is not the same fact as "the server says
+    /// I won": `submit_versus_live_result` is first-write-wins, and a solve that lands a beat
+    /// after the opponent's, or after the deadline's grace window, has to score as a loss or a
+    /// draw, never as a win the player briefly believed they'd earned. This is also what makes
+    /// the simultaneous-solve case resolve to exactly one winner: both clients call this off the
+    /// same poll cadence, and `LiveRaceOutcome.decide`'s tiebreak is symmetric across them.
+    private func checkTerminal() {
+        guard result == nil, live.isResolved else { return }
+        // `opponentAlreadyWon` folds "resolved" and "they're the one who solved it" together —
+        // the exact cue `OpponentProgressStrip`'s own doc comment says this board reads.
+        if live.opponentAlreadyWon {
+            let r = JourneymanScoring.score(guessesUsed: wrongGuesses, solved: false,
+                                            difficulty: puzzle.difficulty)
+            finalize(result: r, outcome: .lostToOpponentSolve,
+                    theirGuesses: live.opponentGuesses, theirSolved: true)
+        } else if live.state?.me.solved == true {
+            let r = JourneymanScoring.score(guessesUsed: live.myGuesses, solved: true,
+                                            difficulty: puzzle.difficulty)
+            finalize(result: r,
+                    outcome: live.opponentFinished ? .wonAfterOpponentExhausted : .wonBySolvingFirst,
+                    theirGuesses: live.opponentGuesses, theirSolved: false)
+        } else {
+            // Resolved, nobody solved — the clock ran out (or a server sweep closed an
+            // abandoned one). A real draw per §1, whether or not I'd already burned all five
+            // guesses.
+            let r = JourneymanScoring.score(guessesUsed: wrongGuesses, solved: false,
+                                            difficulty: puzzle.difficulty)
+            finalize(result: r, outcome: .draw, theirGuesses: live.opponentGuesses, theirSolved: false)
+        }
+    }
+
+    private func finalize(result r: JourneymanScoring.Result, outcome: LiveRaceOutcome,
+                          theirGuesses: Int, theirSolved: Bool) {
+        guard result == nil else { return }
+        fieldFocused = false
+        if r.solved { Haptics.success() }
+        liveOutcome = outcome
+        duelVerdict = JourneymanResultView.liveDuelVerdict(opponentName: duel.opponentName,
+            myResult: r, theirGuesses: theirGuesses, theirSolved: theirSolved)
+        // Shown the instant the poll says so — the personal career-log write below is
+        // fire-and-forget rather than something the board's transition waits on, because
+        // "closes your board immediately" (§1) has to win against a network round trip too.
+        withAnimation(Motion.easeOut) { result = r }
+
+        var details = GameResultDetails()
+        details.cluesUsed = r.guessesUsed
+        details.wrongGuesses = r.wrongGuesses
+        details.solved = r.solved
+        details.answerName = puzzle.answer.canonical
+        details.opponentUserID = duel.opponentUserID
+        let detail = RepositoryContainer.SessionDetail(
+            mode: .versus, score: r.total,
+            maxScore: JourneymanScoring.maxScore(difficulty: puzzle.difficulty),
+            correct: r.solved ? 1 : 0, attempted: 1,
+            startedAt: startedAt, details: details)
+        Task {
+            await container.logSession(format: .journeyman, sport: puzzle.sport,
+                                       performance: r.performance,
+                                       perfect: r.solved && wrongGuesses == 0,
+                                       puzzleID: puzzle.id, detail: detail)
+        }
     }
 }

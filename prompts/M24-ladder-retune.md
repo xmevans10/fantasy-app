@@ -22,21 +22,43 @@ The ask was 2/8–4/8 through Bronze. The first opponent a new player ever meets
 rung 8's Who Am I? bot answers 5.6 of 6 clues. Bronze is not an on-ramp; it is the same wall as
 Silver with a different label.
 
-## D1 — 2/8 is unreachable on Keep4, and faking it is the wrong trade
+## D1 — corrected: 2/8 *is* reachable, and that is not the reason to refuse it
 
-Keep4 forces exactly four keeps. A bot choosing at random therefore lands ~4/8 **by
-construction** — chance *is* the floor, and rung 1's 4.9/8 already sits near it at skill 0.243.
-Reaching 2/8 would require a bot that systematically picks the wrong card: anti-skill.
+**My first answer here was wrong and is corrected in place.** I claimed 4/8 was a structural
+floor because Keep4 forces four keeps. Forcing four keeps sets where *chance* lands, not where
+the format bottoms out. Measured — worst possible bot (skill 0.05), by board difficulty:
 
-Decided against, on his own recorded rules:
-- Theme 5 — "Luck can flavor a result; it can never make skill mathematically irrelevant." A bot
-  tuned to lose is the same violation from the other side: the outcome stops being about play.
-- Theme 6 — "hard ceilings get documented plainly." The 4/8 floor is a hard ceiling. Document it
-  where someone will hit it, don't engineer around it.
+| board difficulty | worst bot scores | player wins |
+|---|---|---|
+| 0.25 (rung 1 today) | **5.3/8** | 97% |
+| 0.35 | 4.0/8 | 98% |
+| 0.45 | 2.9/8 | 99% |
+| 0.55 | 2.2/8 | 100% |
+| 0.70 | 1.5/8 | 100% |
 
-**Decision:** 4/8 is the Bronze floor for Keep4, and rungs 1–3 are tuned to sit on it. The 2–4/8
-band applies to formats where a low score is honestly reachable — Who Am I?, Journeyman and Grid
-can all score zero. Recorded in `ladder.py` as a named constant with this reasoning attached.
+So 2/8 is reachable. Two real reasons not to chase the number anyway:
+
+1. **Below 4/8 the bot is playing worse than chance** — `hit_probability` has dropped under 0.5,
+   so it is systematically making the wrong call. That is theme 5 from the other side: the result
+   stops being about play. (Arguable counter, worth putting to him: a beginner isn't random
+   either — they're *consistently* wrong in predictable ways, so a sub-chance bot may read as a
+   bad player rather than a rigged one.)
+2. **The number and the on-ramp are in direct conflict.** Getting to 2–4/8 needs a board at 0.45+
+   difficulty. Rung 1's board is 0.25 *because it is rung 1*. You cannot have both an easy board
+   and a bad bot: on an easy board even the worst possible bot scores 5.3/8.
+
+**Decision:** keep the easy early boards, and read the ask as what it was a proxy for — Bronze
+must be beatable. The retuned curve delivers that: **player wins 93.8–100% of Bronze duels**
+(rungs 1–10 of the dry-run: .999 .999 .999 1.000 .988 .992 .984 .938 .989 .965). The literal 2–4/8 would cost
+the on-ramp, and it is the on-ramp the number was asking for.
+
+**Consequence to resolve (his call, flagged not decided).** At the bottom the solver pins at
+minimum skill on rungs 1–6, so those six rungs separate on board difficulty alone (0.25 → 0.36)
+and their player win rates sit flat at 0.99–1.00. That pinning is *correct behaviour*, not a
+solver bug — it means "as weak as this board allows" — but six near-identical rungs is the flat
+spot the ladder's own brief says to avoid. Options: fewer Bronze rungs, or start the board
+curve nearer the 0.18 floor and climb faster. Not decided autonomously because it changes how
+long the on-ramp is, which is a feel question rather than a measurable one.
 
 ## D2 — Bot clocks come out; the record disagrees, and here is the reconciliation
 
@@ -78,13 +100,16 @@ Today `bot_skill` is solved so that P(reference player at skill 0.75 beats the r
 even well defined. A score target is legible — "Bronze bots get 4 or 5 of 8, Gold bots get 7" is
 a sentence you can check against the game — and it is the unit the ask itself was written in.
 
-- `TARGET_SCORE_START` / `TARGET_SCORE_END` as fractions of the board, per format, floored at the
-  format's structural minimum (`FORMAT_SCORE_FLOOR` — 0.5 for keep4, 0.0 for the rest).
+- `TARGET_SCORE_START` / `TARGET_SCORE_END` as fractions of the board, floored at
+  `FORMAT_SCORE_FLOOR` — which marks where *chance* sits (0.5 for keep4), not where the format
+  bottoms out. See D1: below chance the bot is systematically wrong.
 - `solve_bot_skill` bisects on mean simulated score instead of win rate.
 - `win_rate` stays, no longer as the objective but as a **reported diagnostic**, so the
   progression is still visible and a regression is still catchable.
 - `speed_adjusted`/`elapsed_fraction` drop out of the ladder comparable entirely.
-- `time_limit_seconds` stops being written per rung.
+- `time_limit_seconds` stops *tightening* per rung: the column is `not null check (> 0)` and
+  `schema.sql` is held by another agent, so the format's full base is written and never scaled.
+  It goes away once the client stops rendering a timer bar for ladder duels.
 
 ## Work order and why it is split
 
@@ -100,8 +125,10 @@ pieces are blocked on the M23 agents holding those files, and will land after th
 
 ## Exit bar
 
-1. Re-simulated table showing Bronze bots in the 4–5/8 band (Keep4) and 2–4/8-equivalent on the
-   formats that can reach it, with the resulting win rates reported alongside.
-2. `pytest tools/ingest/tests` green, including a new test that pins the Keep4 floor so nobody
-   later "fixes" Bronze by tuning skill below chance.
-3. Reseeded rungs upserted, and the dedup constraint proven by a rejected duplicate insert.
+1. ✅ Full 30-rung dry-run against the live pool, win rates reported per rung.
+2. ✅ `pytest tools/ingest/tests` green (484), including a test pinning the board-difficulty/bot-
+   score relationship so nobody later "fixes" Bronze by tuning skill on an easy board.
+3. ⛔ **Not reseeded, deliberately.** The curve has a flat bottom (rungs 1–6 pinned at minimum
+   skill, win rates .99–1.00) and that is a product regression at the tier a new player meets
+   first. Reseeding is one command once the Bronze shape is decided — see D1's open consequence.
+4. ⏳ Dedup constraint + client timer removal: blocked on the M23 agents holding those files.

@@ -42,12 +42,27 @@ struct DuelSession: Equatable, Identifiable {
     /// this rather than from a timer that ticks — a timer stops in the background, and a duel
     /// that pauses when you switch apps is not a duel.
     let capturedAt: Date
+    /// Set only for a **live** Journeyman duel (M23) — the shared polling engine
+    /// `LiveDuelLobbyView` started once both sides readied up. `nil` for every async duel and
+    /// every ladder run, which is the one thing that makes this the seam a duelable game view
+    /// checks to tell a race from an ordinary timed duel: `duel?.live == nil` is "play it like
+    /// before", non-nil is "poll for the opponent's guess count and an early loss".
+    ///
+    /// Deliberately NOT re-derived from `challengeID`/a fresh RPC call on every game view init —
+    /// the lobby already has one poll loop running against the same row, and starting a second
+    /// would double the request volume `versus_live_state`'s own doc comment budgets for.
+    /// `secondsRemaining`/`capturedAt` above still carry the clock: they're snapshotted once
+    /// from `LiveDuelState.deadline`/`.serverNow` at hand-off, so `DuelTimerBar` needs no live
+    /// variant of its own — the discipline (server instants, not the device clock's absolute
+    /// value) is identical, just sourced from a poll instead of `start_versus_challenge`.
+    let live: LiveDuelSession?
 
     var id: Int { challengeID }
 
     init(challengeID: Int, format: PuzzleFormat, boardID: String,
          opponentUserID: String?, opponentName: String?,
-         secondsRemaining: Int, capturedAt: Date = Date(), ladder: LadderRunSession? = nil) {
+         secondsRemaining: Int, capturedAt: Date = Date(), ladder: LadderRunSession? = nil,
+         live: LiveDuelSession? = nil) {
         self.challengeID = challengeID
         self.boardID = boardID
         self.ladder = ladder
@@ -56,6 +71,7 @@ struct DuelSession: Equatable, Identifiable {
         self.opponentName = opponentName
         self.secondsRemaining = secondsRemaining
         self.capturedAt = capturedAt
+        self.live = live
     }
 
     var deadline: Date { capturedAt.addingTimeInterval(TimeInterval(secondsRemaining)) }

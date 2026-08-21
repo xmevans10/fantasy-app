@@ -1,5 +1,43 @@
 import SwiftUI
 
+/// How a **live** Journeyman race ended (M23 §1) — kept apart from `DuelVerdict.Outcome`'s
+/// plain win/loss/tie because two different mechanisms can each produce what is technically a
+/// "win" or a "loss", and the result screen has to say which: naming the player while the
+/// opponent was still in it reads nothing like naming them after the opponent had already
+/// burned all five guesses, and losing because the opponent solved first reads nothing like a
+/// dead-heat draw. Rendering "SOLVED" over a defeat the opponent actually won by being faster —
+/// or "OUT OF GUESSES" over a run that was cut short by their solve rather than by the guess
+/// limit — is the exact lie this milestone exists to prevent.
+enum LiveRaceOutcome: Equatable {
+    /// I named the player while the opponent was still active (not yet finished).
+    case wonBySolvingFirst
+    /// I named the player, but only after the opponent had already exhausted their five guesses
+    /// (or given up) — a real win, just not a race that was still live at the finish.
+    case wonAfterOpponentExhausted
+    /// The opponent named the player first. Ends my board immediately, whatever guess I still
+    /// had left — see `JourneymanGameView`'s live poll handler.
+    case lostToOpponentSolve
+    /// The clock reached zero (or both sides exhausted) with nobody having named the player.
+    case draw
+
+    /// Decides the outcome from each side's server-reported terminal flags — never from a
+    /// local guess of "I typed the right name", which is why `JourneymanGameView` only calls
+    /// this from the poll handler, not from the moment a guess matches.
+    ///
+    /// `theirSolved` always wins the tiebreak over `mySolved`. `submit_versus_live_result` is
+    /// first-write-wins server-side (M23 §3): if both flags somehow read true in the same
+    /// snapshot — a stale poll racing a fresh submit — the opponent's solve is the one that
+    /// actually closed the challenge and mine never landed. Treating that as a loss is the safe
+    /// read: a wrongly-shown loss is embarrassing, a wrongly-shown win on a board the server
+    /// recorded as lost is a lie a player could screenshot.
+    static func decide(mySolved: Bool, myFinished: Bool,
+                       theirSolved: Bool, theirFinished: Bool) -> LiveRaceOutcome {
+        if theirSolved { return .lostToOpponentSolve }
+        if mySolved { return theirFinished ? .wonAfterOpponentExhausted : .wonBySolvingFirst }
+        return .draw
+    }
+}
+
 struct JourneymanResultView: View {
     let puzzle: JourneymanPuzzle
     let result: JourneymanScoring.Result
@@ -9,6 +47,11 @@ struct JourneymanResultView: View {
     var isDaily: Bool = false
     var challenge: ChallengeLink? = nil
     var duelVerdict: DuelVerdict? = nil
+    /// Set only for a **live** duel (M23) — which of the four race outcomes ended it. The
+    /// win/loss/tie badge itself still comes from `duelVerdict` and `ChallengeResultBanner`
+    /// (one shared banner, not two — AGENTS.md §4); this only changes the headline above it,
+    /// which is the one place a plain win/loss reading would say something untrue about *why*.
+    var liveOutcome: LiveRaceOutcome? = nil
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
@@ -20,6 +63,61 @@ struct JourneymanResultView: View {
     private var firstGuess: Bool { result.solved && result.guessesUsed == 1 }
     private var heroFill: Color { result.solved ? (firstGuess ? .voltFill : .accentFill) : .surface1 }
     private var heroInk: Color { result.solved ? (firstGuess ? .onVolt : .onAccent) : .textPrimary }
+
+    /// The scoreHeader headline for this run. `result.solved` alone still decides the fill/ink
+    /// above (a live win is volt/accent, a live loss or draw is the neutral surface, exactly
+    /// like solo) — only the *words* change for a race, because "SOLVED" and "OUT OF GUESSES"
+    /// both claim something a live loss-by-being-beaten or a draw didn't actually do.
+    /// `String(localized:)` throughout — unlike the string-literal-into-`Text(_:)` spelling this
+    /// replaces, a `String` returned from a computed property no longer picks up `Text`'s
+    /// `LocalizedStringKey` overload for free, so it has to ask for localization explicitly.
+    private var headline: String {
+        guard let liveOutcome else {
+            return result.solved
+                ? (firstGuess ? String(localized: "FIRST-GUESS GENIUS") : String(localized: "SOLVED"))
+                : String(localized: "OUT OF GUESSES")
+        }
+        switch liveOutcome {
+        case .wonBySolvingFirst:
+            return firstGuess ? String(localized: "FIRST-GUESS GENIUS") : String(localized: "SOLVED FIRST")
+        case .wonAfterOpponentExhausted: return String(localized: "SOLVED")
+        case .lostToOpponentSolve: return String(localized: "THEY SOLVED IT FIRST")
+        case .draw: return String(localized: "DEAD HEAT")
+        }
+    }
+
+    private var headlineDetail: String {
+        guard let liveOutcome else {
+            return result.solved
+                ? String(localized: "NAMED ON GUESS \(result.guessesUsed) OF \(JourneymanScoring.maxGuesses)")
+                : String(localized: "BETTER LUCK TOMORROW")
+        }
+        switch liveOutcome {
+        case .wonBySolvingFirst, .wonAfterOpponentExhausted:
+            return String(localized: "NAMED ON GUESS \(result.guessesUsed) OF \(JourneymanScoring.maxGuesses)")
+        case .lostToOpponentSolve: return String(localized: "BEATEN TO THE ANSWER")
+        case .draw: return String(localized: "CLOCK RAN OUT ON BOTH OF YOU")
+        }
+    }
+
+    /// Builds the head-to-head banner for a **live** race in the same `DuelVerdict` shape a
+    /// bot duel uses (`LadderRunSession.verdict`), so `ChallengeResultBanner` needs no
+    /// live-specific case of its own.
+    ///
+    /// Hits alone fully determine the win/loss/tie here — unlike a bot duel's clue-efficiency
+    /// comparison, a live race can never produce two nonzero hit counts (only one side's solve
+    /// can land per §3), so `myScore`/`theirScore` never actually break a tie; they're carried
+    /// anyway so a future format that *can* tie on hits doesn't have to touch this call site.
+    /// `tieGoesToPlayer: false`: unlike the ladder, a dead heat between two humans is a real
+    /// tie, not a courtesy win.
+    static func liveDuelVerdict(opponentName: String?, myResult: JourneymanScoring.Result,
+                                theirGuesses: Int, theirSolved: Bool) -> DuelVerdict {
+        let theirHits = theirSolved ? JourneymanScoring.maxGuesses + 1 - theirGuesses : 0
+        return DuelVerdict(opponentName: opponentName,
+                           myHits: ChallengeLink.journeymanHits(myResult), theirHits: theirHits,
+                           outOf: ChallengeLink.journeymanOutOf, myScore: myResult.total,
+                           theirScore: nil, tieGoesToPlayer: false)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -61,15 +159,13 @@ struct JourneymanResultView: View {
 
     private var scoreHeader: some View {
         VStack(spacing: 4) {
-            Text(result.solved ? (firstGuess ? "FIRST-GUESS GENIUS" : "SOLVED") : "OUT OF GUESSES")
+            Text(headline)
                 .font(.heading)
                 .foregroundStyle(heroInk.opacity(0.85))
 
             CountUpText(value: result.total, font: .heroNumber, color: heroInk)
 
-            Text(result.solved
-                 ? "NAMED ON GUESS \(result.guessesUsed) OF \(JourneymanScoring.maxGuesses)"
-                 : "BETTER LUCK TOMORROW")
+            Text(headlineDetail)
                 .font(.label12)
                 .foregroundStyle(heroInk.opacity(0.75))
         }

@@ -34,9 +34,13 @@ struct VersusChallenge: Decodable, Identifiable, Equatable {
     let opponentStartedAt: Date?
     let createdAt: Date
     let expiresAt: Date
+    /// `"async" | "live"` (M23). Added alongside the live-duel columns — defaults to `"async"`
+    /// so a row cached before that migration (`DiskCache` has no schema version) still decodes
+    /// as the mode it was actually played in, rather than throwing and emptying the tab.
+    let mode: String
 
     enum CodingKeys: String, CodingKey {
-        case id, sport, status, format
+        case id, sport, status, format, mode
         case seriesId = "series_id"
         case puzzleId = "puzzle_id"
         case challengerId = "challenger_id"
@@ -73,6 +77,7 @@ struct VersusChallenge: Decodable, Identifiable, Equatable {
         opponentStartedAt = try c.decodeIfPresent(Date.self, forKey: .opponentStartedAt)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         expiresAt = try c.decode(Date.self, forKey: .expiresAt)
+        mode = try c.decodeIfPresent(String.self, forKey: .mode) ?? "async"
     }
 
     /// Memberwise init for tests and previews — `init(from:)` above suppresses the synthesized one.
@@ -81,7 +86,7 @@ struct VersusChallenge: Decodable, Identifiable, Equatable {
          challengerScore: Double? = nil, opponentScore: Double? = nil, winnerId: String? = nil,
          timeLimitSeconds: Int = 120, challengerStartedAt: Date? = nil,
          opponentStartedAt: Date? = nil, createdAt: Date = Date(),
-         expiresAt: Date = Date().addingTimeInterval(86_400)) {
+         expiresAt: Date = Date().addingTimeInterval(86_400), mode: String = "async") {
         self.id = id
         self.seriesId = seriesId
         self.sport = sport
@@ -98,7 +103,15 @@ struct VersusChallenge: Decodable, Identifiable, Equatable {
         self.opponentStartedAt = opponentStartedAt
         self.createdAt = createdAt
         self.expiresAt = expiresAt
+        self.mode = mode
     }
+
+    /// Whether this duel races live rather than playing async — the row-level fact that backs
+    /// `PuzzleFormat.supportsLiveDuel`'s client-side gate. Kept as its own check (not folded into
+    /// `format.supportsLiveDuel`) so a pre-milestone pending Journeyman row — created before
+    /// `create_versus_challenge` learned to stamp `mode = 'live'` — still plays the async path it
+    /// was actually created for instead of being routed into a lobby with no ready state to poll.
+    var isLive: Bool { mode == "live" }
 
     func opponentID(me: String) -> String { challengerId == me ? opponentId : challengerId }
     func myScore(me: String) -> Double? { challengerId == me ? challengerScore : opponentScore }

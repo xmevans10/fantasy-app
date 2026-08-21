@@ -107,7 +107,13 @@ decision this file can resolve.
 When a judgment call arrives, in order — stop at the first that resolves it:
 
 1. **Is there a measurement that settles it?** Take it. §1. Most "which is better" questions are
-   actually "nobody has counted yet".
+   actually "nobody has counted yet" — and take it *before* asserting the mechanism, not after.
+   Worked example, from the session that produced this file: "2/8 is unreachable on Keep4 because
+   four forced keeps make chance the floor" was asserted from the shape of the rules, sounded
+   authoritative, and was **false** — a five-line simulation showed the worst possible bot scores
+   5.3/8 on an easy board and 1.5/8 on a hard one. The real constraint was a different and more
+   interesting one (you cannot have both an easy board and a bad bot). Reasoning from mechanism
+   is how you get a confident wrong answer; the measurement is cheap.
 2. **Does the recorded intent already answer it?** `AGENTS.md`, `BALLIQ_SPEC.md` §1 themes and §9
    roadmap, the `prompts/HANDOFF-*.md` for that feature, the memory directory. Cite the line.
 3. **Does it make the game more about knowing ball?** That's the tiebreak. §4.
