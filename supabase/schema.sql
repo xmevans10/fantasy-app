@@ -993,7 +993,6 @@ returns void language plpgsql security definer as $$
 declare
   c public.versus_challenges%rowtype;
   is_challenger boolean;
-  started timestamptz;
   final_score double precision;
 begin
   select * into c from public.versus_challenges where id = p_challenge_id for update;
@@ -1003,18 +1002,17 @@ begin
   end if;
 
   is_challenger := auth.uid() = c.challenger_id;
-  started := case when is_challenger then c.challenger_started_at else c.opponent_started_at end;
 
   -- `p_score` is a client claim. Every mode's `performance` is 0...1, so anything outside that
-  -- is either a bug or an attempt (cf. `bump_weekly_xp`'s clamp).
+  -- is either a bug or an attempt (cf. `bump_weekly_xp`'s clamp). This clamp is the only
+  -- server-side judgement left on a submitted score.
+  --
+  -- M25 removed the lateness penalty that used to sit here: a run submitted past
+  -- `time_limit_seconds + 10` scored 0. Timers are gone app-wide — a clock may GRADE a run (via
+  -- `SpeedMultiplier`, which pays a bonus for finishing under par) but may never END one. A slow
+  -- player now records their real score and simply earns no bonus. `time_limit_seconds` survives
+  -- as that par time, not as a deadline.
   final_score := least(greatest(coalesce(p_score, 0), 0), 1);
-  -- The clock is server-authoritative. A run submitted past the limit (+10s of network grace)
-  -- scores 0 rather than being rejected — a blown clock still has to resolve the duel, or the
-  -- cheater's reward for stalling is that nobody ever wins.
-  if started is not null
-     and extract(epoch from (now() - started)) > c.time_limit_seconds + 10 then
-    final_score := 0;
-  end if;
 
   -- First write wins (mirrors `submit_daily_draft_score`): a replay, even a better one, can
   -- never overwrite the score already locked in.
@@ -1268,16 +1266,28 @@ returns jsonb language plpgsql security definer as $$
 declare
   c public.versus_challenges%rowtype;
   me uuid := auth.uid();
+  my_result boolean;
+  their_result boolean;
 begin
   select * into c from public.versus_challenges where id = p_challenge_id for update;
   if c.id is null then raise exception 'challenge not found'; end if;
   if me not in (c.challenger_id, c.opponent_id) then raise exception 'not a participant'; end if;
 
-  -- Expiry → draw. No solve can be sitting unrecorded past this point: a solve resolves the row
-  -- the moment it arrives, and one arriving after the same +10s grace scores as not-solved
-  -- anyway (see `submit_versus_live_result`), so the two clocks agree by construction.
+  my_result    := case when me = c.challenger_id then c.challenger_solved else c.opponent_solved end;
+  their_result := case when me = c.challenger_id then c.opponent_solved else c.challenger_solved end;
+
+  -- **Abandonment, not a deadline** (M25). This used to draw the duel the moment
+  -- `time_limit_seconds + 10` elapsed, which is a gameplay timer wearing a server's clothes — a
+  -- player still reading the board lost it to the clock. Timers are gone: a clock may GRADE a run
+  -- (`SpeedMultiplier`) but never end one.
+  --
+  -- What survives is the narrow case something still has to close: **I finished and they never
+  -- did.** Fifteen minutes is long enough that nobody racing is caught by it and short enough
+  -- that a series does not stall forever behind a player who walked away. It cannot fire while
+  -- both sides are still playing, because `my_result` would be null.
   if c.mode = 'live' and c.status = 'pending' and c.live_started_at is not null
-     and extract(epoch from (now() - c.live_started_at)) > c.time_limit_seconds + 10 then
+     and my_result is not null and their_result is null
+     and now() - c.live_started_at > interval '15 minutes' then
     perform public.resolve_versus_live_challenge(p_challenge_id, null);
     select * into c from public.versus_challenges where id = p_challenge_id;
   end if;
@@ -1356,10 +1366,9 @@ begin
   if me not in (c.challenger_id, c.opponent_id) then raise exception 'not a participant'; end if;
   is_challenger := (me = c.challenger_id);
 
-  if solved and c.live_started_at is not null
-     and extract(epoch from (now() - c.live_started_at)) > c.time_limit_seconds + 10 then
-    solved := false;
-  end if;
+  -- M25 removed the lateness downgrade that stood here: a solve arriving past
+  -- `time_limit_seconds + 10` was rewritten to not-solved, so a player who named the right person
+  -- was recorded as having failed. A solve is a solve. Slow costs the speed bonus, nothing else.
 
   -- First write wins per side (mirrors `submit_versus_result`): a replay, a retry, or a second
   -- tab can never overwrite the result already locked in for this player.
