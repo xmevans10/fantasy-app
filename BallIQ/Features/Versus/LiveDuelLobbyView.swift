@@ -213,10 +213,16 @@ struct LiveDuelLobbyView: View {
             puzzleLoadFailed = true
             return
         }
+        // `secondsRemaining` no longer drives anything on this path — the race ends when the
+        // poll reports a solve (`checkTerminal` in `JourneymanGameView`), never on a countdown —
+        // so this is `state.timeLimitSeconds`, the par both sides are scored against, not a
+        // recomputed "time left". `capturedAt` still has to be the instant the board actually
+        // opens: it's the anchor `DuelStatusBar` reads for the bot-elapsed clock on every other
+        // duel type, and duels share one `DuelSession` shape (AGENTS.md §4).
         let now = Date()
         duel = DuelSession(challengeID: session.challengeID, format: .journeyman, boardID: puzzleID,
                            opponentUserID: opponentUserID, opponentName: opponentName,
-                           secondsRemaining: session.secondsLeft(at: now), capturedAt: now,
+                           secondsRemaining: session.parSeconds, capturedAt: now,
                            live: session)
         puzzle = fetched
     }

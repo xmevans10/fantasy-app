@@ -79,10 +79,6 @@ final class LiveDuelSession: ObservableObject {
     @Published private(set) var pollFailing = false
 
     private var pollTask: Task<Void, Never>?
-    /// Device wall-clock time `state` was received at — the anchor `secondsLeft(at:)` measures
-    /// device-elapsed time from, so a device clock that's simply wrong (but ticking at the right
-    /// rate) can't skew the countdown. Mirrors `DuelSession.capturedAt`'s exact discipline.
-    private var receivedAt: Date?
 
     init(challengeID: Int, puzzleID: String, repository: VersusRepository) {
         self.challengeID = challengeID
@@ -111,18 +107,11 @@ final class LiveDuelSession: ObservableObject {
     /// guesses left; it can never be true from a wrong guess, because only a `solved` submit
     /// resolves the row early (M23 §1).
     var opponentAlreadyWon: Bool { isResolved && opponentSolved }
-
-    /// Seconds left on the shared clock at `now`, derived from the server's own instants —
-    /// never the device clock's absolute value. `now` only measures elapsed *wall time since the
-    /// last poll landed*, the same discipline `DuelSession.secondsLeft(at:)` already documents.
-    /// Zero before `live_started_at` is stamped (nobody's clock is running yet) or before the
-    /// first real poll has landed.
-    func secondsLeft(at now: Date = Date()) -> Int {
-        guard let state, let deadline = state.deadline, let receivedAt else { return 0 }
-        let elapsedSincePoll = max(0, now.timeIntervalSince(receivedAt))
-        let remainingAtPoll = deadline.timeIntervalSince(state.serverNow)
-        return max(0, Int((remainingAtPoll - elapsedSincePoll).rounded(.up)))
-    }
+    /// The shared par time both sides are scored against (M25b) — `DuelSession.secondsRemaining`
+    /// still needs an `Int` at hand-off, but nothing recomputes a live countdown from it any
+    /// more (the race ends on `isResolved`, not on this reaching zero). Zero before the first
+    /// poll lands, same as every other `state`-derived read here.
+    var parSeconds: Int { state?.timeLimitSeconds ?? 0 }
 
     // MARK: - Lifecycle
 
@@ -154,7 +143,6 @@ final class LiveDuelSession: ObservableObject {
         do {
             let fetched = try await repository.liveState(challengeID: challengeID)
             state = fetched
-            receivedAt = Date()
             pollFailing = false
         } catch is CancellationError {
             // The loop's own Task was cancelled mid-request (view went away) — not a network
@@ -175,7 +163,6 @@ final class LiveDuelSession: ObservableObject {
     func ready() async throws {
         let fetched = try await repository.markReady(challengeID: challengeID)
         state = fetched
-        receivedAt = Date()
         start()
     }
 

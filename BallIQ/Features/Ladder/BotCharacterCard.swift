@@ -18,7 +18,7 @@ struct BotCharacterCard<Footer: View>: View {
     /// "RUNG 7" / "BOSS · RUNG 7" under the portrait, or nil to omit it — the roster's card has
     /// no single rung in mind (a character can guard several across the ladder).
     var rungBadge: String? = nil
-    /// The board/clock/skill trio a pre-duel briefing reports. Empty hides the row entirely —
+    /// The board/par/skill trio a pre-duel briefing reports. Empty hides the row entirely —
     /// the roster's card has no live rung to describe.
     var stats: [(value: String, label: String)] = []
     /// "Your record" — nil hides the block outright (the pre-duel briefing has no record to
@@ -240,7 +240,7 @@ extension BotCharacterCard where Footer == EmptyView {
     return Color.clear.sheet(isPresented: .constant(true)) {
         BotCharacterCard(bot: bot,
                          rungBadge: "BOSS · RUNG 24",
-                         stats: [("K4C4 · NFL", "BOARD"), ("0:45", "CLOCK"), ("88%", "SKILL")],
+                         stats: [("K4C4 · NFL", "BOARD"), ("0:45", "PAR"), ("88%", "SKILL")],
                          record: .record(BotRecord(botId: "archivist", played: 3, won: 1,
                                                    bestScore: 0.82, bestBotScore: 0.91))) {
             VStack(spacing: 10) {

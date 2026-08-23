@@ -1,16 +1,17 @@
 import SwiftUI
 
-/// A timed Versus duel in progress, handed to a game view so it can run the clock, show it, and
-/// submit when it runs out.
+/// A Versus duel in progress, handed to a game view to present.
 ///
-/// **The clock is server-authoritative.** `secondsRemaining` is whatever
-/// `start_versus_challenge` returned — the server sets `*_started_at` the first time a player
-/// opens the board and computes the remainder itself, so nothing here trusts the device clock's
-/// absolute value, only its rate. Re-opening a duel after a crash resumes the same countdown
-/// rather than restarting it, because the server never rewrites `started_at`.
+/// **`secondsRemaining` is a par time now, not a deadline (M25/M25b).** It's still whatever
+/// `start_versus_challenge` returned (server-authoritative, same as before — the server sets
+/// `*_started_at` the first time a player opens the board and computes the remainder itself, so
+/// re-opening after a crash resumes the same par window rather than restarting it), but nothing
+/// here submits when it reaches zero any more. A run that goes over just stops earning
+/// `SpeedMultiplier`'s bonus — see that type's doc comment for the "grade, never end" rule every
+/// duel format now follows.
 ///
 /// One type for all three formats (AGENTS.md §4). The formats differ in what a "decision" is and
-/// in nothing else that matters to a countdown.
+/// in nothing else that matters here.
 struct DuelSession: Equatable, Identifiable {
     /// What the duel is addressed by: a `versus_challenges` row id for a human duel, or a
     /// `ladder_rungs.rung` for a bot duel. `ladder` below is the discriminator — when it is
@@ -36,11 +37,16 @@ struct DuelSession: Equatable, Identifiable {
     /// challenge lookup.
     let opponentUserID: String?
     let opponentName: String?
-    /// Server-authoritative seconds left at the instant `capturedAt` was taken.
+    /// Server-authoritative par time, captured once at `capturedAt`. `SpeedMultiplier`/
+    /// `LadderOutcome` score a run against this; nothing recomputes a live countdown from it any
+    /// more (M25b) — `deadline`/`secondsLeft`/`isExpired` below are dead in shipping UI (see
+    /// their own doc comments), and `clockText` below is a plain mm:ss formatter, still used
+    /// wherever a par time is shown (`LadderBriefingSheet`'s "PAR" stat).
     let secondsRemaining: Int
-    /// Device wall clock when `secondsRemaining` was captured. The countdown is derived from
-    /// this rather than from a timer that ticks — a timer stops in the background, and a duel
-    /// that pauses when you switch apps is not a duel.
+    /// Device wall clock when `secondsRemaining` was captured. Still load-bearing: `DuelStatusBar`
+    /// measures elapsed time from this to reveal a ladder bot's beats in real time, and a `Timer`
+    /// couldn't do that job — it stops in the background, and a duel that pauses when you switch
+    /// apps is not a duel.
     let capturedAt: Date
     /// Set only for a **live** Journeyman duel (M23) — the shared polling engine
     /// `LiveDuelLobbyView` started once both sides readied up. `nil` for every async duel and
@@ -51,10 +57,10 @@ struct DuelSession: Equatable, Identifiable {
     /// Deliberately NOT re-derived from `challengeID`/a fresh RPC call on every game view init —
     /// the lobby already has one poll loop running against the same row, and starting a second
     /// would double the request volume `versus_live_state`'s own doc comment budgets for.
-    /// `secondsRemaining`/`capturedAt` above still carry the clock: they're snapshotted once
-    /// from `LiveDuelState.deadline`/`.serverNow` at hand-off, so `DuelStatusBar` needs no live
-    /// variant of its own — the discipline (server instants, not the device clock's absolute
-    /// value) is identical, just sourced from a poll instead of `start_versus_challenge`.
+    /// `secondsRemaining`/`capturedAt` above are still snapshotted once at hand-off
+    /// (`LiveDuelSession.parSeconds`, the instant the board opens) — a live race ends when the
+    /// poll reports a solve, never on either of these, but `DuelStatusBar` still needs no
+    /// live-aware variant of its own, since the shape is identical either way.
     let live: LiveDuelSession?
 
     var id: Int { challengeID }
@@ -74,11 +80,16 @@ struct DuelSession: Equatable, Identifiable {
         self.live = live
     }
 
+    /// **Dead in shipping UI (M25b)** — no surface renders a countdown any more, and nothing
+    /// ends a run when this passes.
+    ///
+    /// `secondsLeft(at:)` — a countdown calculator — was **deleted** rather than left dead
+    /// (M25b). Nothing in the app called it, and leaving it on the type is the affordance that
+    /// invites the next person to put a countdown back on a board. What remains is `isExpired`,
+    /// kept for the opposite reason: `TimerRemovalRegressionTests` uses it to assert that an
+    /// "expired" session still scores normally, which is the guarantee this milestone exists to
+    /// make. Expiry is a fact you can ask about; it is not a thing that happens to you.
     var deadline: Date { capturedAt.addingTimeInterval(TimeInterval(secondsRemaining)) }
-
-    func secondsLeft(at now: Date = Date()) -> Int {
-        max(0, Int(deadline.timeIntervalSince(now).rounded(.up)))
-    }
 
     func isExpired(at now: Date = Date()) -> Bool { now >= deadline }
 

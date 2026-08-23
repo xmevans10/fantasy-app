@@ -19,8 +19,8 @@ extension EnvironmentValues {
 /// The bot ladder — 30 rungs of skill-limited solvers, climbed one at a time.
 ///
 /// This is not a consolation prize for having no players. It is the mode that works at N=1: the
-/// bot's run is computed on-device before the board opens and replayed against the clock beside
-/// you (see `LadderRunSession`), so a rung feels like a live opponent with no realtime
+/// bot's run is computed on-device before the board opens and replayed in real time beside you
+/// (see `LadderRunSession`), so a rung feels like a live opponent with no realtime
 /// infrastructure at all. It also teaches the duel format before anyone risks a real one, and
 /// fills `ladder_attempts` with the per-board score corpus human ghost duels will need later.
 struct LadderView: View {
@@ -256,12 +256,12 @@ struct LadderView: View {
                 .init(symbol: "cpu",
                       title: "They're bots, and we say so",
                       detail: "Each one is a real solver with a skill level — it makes a genuine call on every card, cell or clue, nails the obvious ones and fumbles the close ones, exactly like a human at that level."),
-                .init(symbol: "timer",
+                .init(symbol: "bolt.fill",
                       title: "Watch them play, live",
-                      detail: "Your opponent's score climbs beside the clock while you play. They get the same board and the same time you do."),
+                      detail: "Your opponent's score climbs in real time while you play the same board. Finish fast and you'll pick up a speed bonus — nothing here can end your run early."),
                 .init(symbol: "arrow.up.right",
                       title: "One rung at a time",
-                      detail: "Beat a rung to unlock the next. Bots get sharper, clocks get shorter, boards get harder, and the games start mixing."),
+                      detail: "Beat a rung to unlock the next. Bots get sharper, boards get harder, and the games start mixing."),
             ],
             callout: .init(symbol: "bolt.fill",
                            label: "XP and rank only",
@@ -290,11 +290,11 @@ struct LadderView: View {
     }
 }
 
-/// The pre-duel screen: who you're about to play, on what, and for how long.
+/// The pre-duel screen: who you're about to play, and on what.
 ///
-/// Worth its own sheet rather than starting on tap. A rung is a one-shot run against a clock,
-/// and the bot's persona is most of what makes the ladder a progression rather than a list —
-/// meeting the opponent before the buzzer is the difference between the two. The card itself is
+/// Worth its own sheet rather than starting on tap. A rung is a one-shot run, and the bot's
+/// persona is most of what makes the ladder a progression rather than a list — meeting the
+/// opponent before the run starts is the difference between the two. The card itself is
 /// `BotCharacterCard` — shared with `RosterView`'s discovery card so the two can't fork — with
 /// the rung's own badge/stats and a pinned "start the run" footer.
 private struct LadderBriefingSheet: View {
@@ -315,7 +315,11 @@ private struct LadderBriefingSheet: View {
                 : String(localized: "RUNG \(row.rung.rung)"),
             stats: [
                 (row.boardLine, String(localized: "BOARD")),
-                (DuelSession.clockText(row.rung.timeLimitSeconds), String(localized: "CLOCK")),
+                // Was "CLOCK" pre-M25 — `rung.timeLimitSeconds` never stopped being real data,
+                // it stopped being a deadline: `LadderOutcome.playerWon` still divides by it
+                // through `SpeedMultiplier`, so it's the target a fast run gets paid for beating,
+                // not a countdown that ends one. Same value, honest label.
+                (DuelSession.clockText(row.rung.timeLimitSeconds), String(localized: "PAR")),
                 ("\(Int((row.rung.botSkill * 100).rounded()))%", String(localized: "SKILL")),
             ]
         ) {
@@ -330,8 +334,8 @@ private struct LadderBriefingSheet: View {
                 .disabled(starting)
 
                 Text(signedIn
-                     ? String(localized: "The clock starts as soon as the board opens.")
-                     : String(localized: "The clock starts as soon as the board opens. Sign in to bank the result and unlock the next rung."))
+                     ? String(localized: "Solve fast for a speed bonus — no deadline, just points on the table.")
+                     : String(localized: "Solve fast for a speed bonus — no deadline, just points on the table. Sign in to bank the result and unlock the next rung."))
                     .font(.label11)
                     .foregroundStyle(signedIn ? Color.textMuted : Color.warningText)
                     .multilineTextAlignment(.center)

@@ -154,17 +154,17 @@ final class VersusStatusLineTests: XCTestCase {
         XCTAssertEqual(DuelSession.clockText(-5), "0:00")
     }
 
-    /// The countdown is derived from a captured instant, not from a ticking timer — so time
-    /// spent in the background is time spent on the clock.
-    func testSecondsLeftCountsWallClockNotTicks() {
+    /// `expired` is still a question you can ask a session — it is no longer something that
+    /// happens *to* a run (M25b). This pins the arithmetic that `TimerRemovalRegressionTests`
+    /// then leans on to prove expiry is inert; the old countdown assertions went with
+    /// `secondsLeft`, which was deleted because nothing called it.
+    func testExpiryIsMeasuredFromACapturedInstantNotATickingTimer() {
         let started = Date(timeIntervalSince1970: 1_000_000)
         let session = DuelSession(challengeID: 1, format: .keep4, boardID: "p1",
                                   opponentUserID: nil, opponentName: nil,
                                   secondsRemaining: 90, capturedAt: started)
-        XCTAssertEqual(session.secondsLeft(at: started), 90)
-        XCTAssertEqual(session.secondsLeft(at: started.addingTimeInterval(30)), 60)
         XCTAssertFalse(session.isExpired(at: started.addingTimeInterval(89)))
-        XCTAssertEqual(session.secondsLeft(at: started.addingTimeInterval(500)), 0)
-        XCTAssertTrue(session.isExpired(at: started.addingTimeInterval(500)))
+        XCTAssertTrue(session.isExpired(at: started.addingTimeInterval(500)),
+                      "time spent backgrounded is still time elapsed")
     }
 }

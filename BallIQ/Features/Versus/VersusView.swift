@@ -290,7 +290,7 @@ struct VersusView: View {
     private var versusInfoSheet: some View {
         HowItWorksSheet(
             title: "Versus Duels",
-            intro: "A 1v1 duel: you and your opponent play the same board, each against your own clock, and the scores settle it.",
+            intro: "A 1v1 duel: you and your opponent play the same board, and the scores settle it.",
             symbol: "bolt.fill",
             tint: Color.accentText,
             tintBackground: Color.accentBg,
@@ -298,9 +298,12 @@ struct VersusView: View {
                 .init(symbol: "person.2.fill",
                       title: "Same board, both of you",
                       detail: "Duel anyone in K4C4, Who am I? or The Grid. The board comes from the archive and is one neither of you has played, so nobody starts with the answers."),
-                .init(symbol: "timer",
-                      title: "Your clock starts when you open it",
-                      detail: "Play whenever you like — but once the board is on screen you're against the clock, and the timer keeps running if you leave the app."),
+                // Pre-M25 this named the countdown that could zero your score outright — it's
+                // par time now, not a deadline, so the rule that needs stating is the opposite
+                // one: nothing here can end your run before you do.
+                .init(symbol: "bolt.fill",
+                      title: "Finish fast for a bonus",
+                      detail: "Play whenever you like, and take as long as you need — nothing forces the run to end. Finish quick and you'll pick up a speed bonus on top of your score."),
                 .init(symbol: "hare.fill",
                       title: "A tie goes to the faster run",
                       detail: "Dead-even scores are broken on how long each of you took, not on who sent the duel."),
@@ -428,18 +431,17 @@ struct VersusView: View {
             Button {
                 Task { await play(row) }
             } label: {
-                // The label names the clock, because tapping it *starts* that clock server-side
-                // and there is no way back. "PLAY" undersold a decision the player can't undo.
-                VStack(spacing: 1) {
-                    Text(startingID == c.id ? "…" : "PLAY")
-                        .font(.heading)
-                    Text(DuelSession.clockText(c.timeLimitSeconds))
-                        .font(.label11).opacity(0.75).monospacedDigit()
-                }
-                .foregroundStyle(Color.onAccent)
-                .padding(.horizontal, 16).padding(.vertical, 6)
-                .background(Color.accentFill)
-                .clipShape(Capsule())
+                // Used to carry a clock subtitle — worth the warning back when tapping this
+                // started a countdown that could zero the score outright (pre-M25). It's par
+                // time now, not a deadline, so there's nothing left here that needs flagging;
+                // a bare "PLAY" is the whole truth. `ChallengeSheet`'s explainer is where the
+                // speed-bonus mechanic itself gets explained, once, rather than on every row.
+                Text(startingID == c.id ? "…" : "PLAY")
+                    .font(.heading)
+                    .foregroundStyle(Color.onAccent)
+                    .padding(.horizontal, 16).padding(.vertical, 6)
+                    .background(Color.accentFill)
+                    .clipShape(Capsule())
             }
             .buttonStyle(PrimePressStyle())
             .disabled(startingID != nil)
@@ -587,8 +589,11 @@ private struct ChallengeSheet: View {
                     friendChipRow
                 }
 
-                Label("\(DuelSession.clockText(format.defaultDuelSeconds)) on the clock, each. The board comes from the archive — one neither of you has played.",
-                      systemImage: "timer")
+                // Was "N on the clock, each" pre-M25 — a duel now runs on the same par-time
+                // mechanic as everything else (`SpeedMultiplier`): nothing ends the run, finishing
+                // under par just pays a bonus.
+                Label("Same board for both of you, from the archive — one neither has played. Finish fast for up to a \(Int((SpeedMultiplier.bonus * 100).rounded()))% score bonus.",
+                      systemImage: "bolt.fill")
                     .font(.label11)
                     .foregroundStyle(Color.textMuted)
                     .multilineTextAlignment(.leading)
