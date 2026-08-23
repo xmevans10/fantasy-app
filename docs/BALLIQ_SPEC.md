@@ -456,6 +456,9 @@ generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
 | M19 social layer (friends graph + public profiles) | ✅ shipped 2026-07-12; server side live-verified 16/16 (RLS negatives included); signed-in UI pass still needs two TestFlight accounts |
 | M20 social follow-through | ✅ shipped 2026-07-12 — FRIENDS leaderboard scope on Leagues (`friend_profiles` RPC), onboarding username claim, friend-request push (deployed + chain verified), pg_net DB triggers for both notify webhooks |
 | M22 Journeyman (career-path format) | ✅ shipped 2026-08-19 — fourth daily format (`journeyman.py`/`daily_journeyman.py`, 525-subject pool, `journeyman_history`, migration 0018), duel + dare-a-friend parity, `SubjectDifficulty` extracted for reuse. Four content defects caught by reading the live pool (era-renamed franchises, one franchise under two codes, soccer code collisions, coverage-truncated careers) — see `prompts/M22-journeyman.md` §2.5. Migration 0019 indexes `grid_player_names`, which had been timing out under anon since The Grid shipped |
+| M23 live duels (Journeyman) | ✅ shipped 2026-08-21 — first-to-solve racing on one shared board. Ready handshake stamps a single `live_started_at`; both clients poll `versus_live_state` at 1.5s (no Realtime dependency, per AGENTS.md §11); the first correct answer resolves the challenge immediately and closes the loser's board from the poll alone. Opponent presence is a **guess count only** — never their guesses, which would turn the race into collaboration. Migration 0021, four RPCs, live-verified including both simultaneity races (concurrent readies stamp once; concurrent solves yield exactly one winner). `PuzzleFormat.supportsLiveDuel` gates it to Journeyman |
+| M24 ladder retuned on score | ⚠️ **code shipped, content NOT reseeded** — `bot_skill` is now solved against what the bot *scores* rather than how often a reference player beats it, and the clock left the ladder's comparable. Held back deliberately: the new curve has a flat bottom (rungs 1–6 pin at minimum skill, 99–100% player win) and that is the tier a new player meets first. **Open decision: the Bronze shape** — fewer Bronze rungs, or a board curve starting nearer the 0.18 floor. Also corrects a wrong claim made in-session: 2/8 IS reachable on Keep4; the real constraint is that you cannot have both an easy board and a bad bot. See `prompts/M24-ladder-retune.md` |
+| M25 no timers, universal speed multiplier | ✅ shipped 2026-08-23 — **every countdown removed app-wide.** A clock may GRADE a run, never end one. `SpeedMultiplier` (`score × (1 + 0.20 × fractionOfParRemaining)`, par 120/90/120/180s) applied once in `recordGameResult`. **Points only, never `performance`** — that feeds the rating engine and is `0...1`-checked in Postgres. Server-side: no submission is zeroed or downgraded for lateness; the live-duel expiry became a narrow abandonment sweep (fires only when I finished and they never did, after 15 min). `DuelTimerBar` → `DuelStatusBar`, keeping the opponent and dropping the clock. See `prompts/M25-no-timers.md` and `M25b-timer-removal-completion.md` |
 
 **Release status (updated 2026-08-20):** **1.6.0 (build 38) is `WAITING_FOR_REVIEW` — and for the
 first time, the four monetization products are in the submission with it.** Submission
@@ -2049,13 +2052,16 @@ outright bugs (below), not design.
   4** rather than all seven; and `format` exists on both tables and in the pair-uniqueness index
   (without it a Grid duel silently collided with an existing Keep4 series in the same sport).
 - **Phase 1 — timed duels.** Per-side `time_limit_seconds` with `*_started_at` written
-  server-side when that player opens the board; `submit_versus_result` validates against the
-  server's own clock (a late submission scores 0) and is first-write-wins. Grid and Who Am I?
+  server-side when that player opens the board; `submit_versus_result` is first-write-wins.
+  ⚠️ **Superseded by M25 (2026-08-23): there are no timers anywhere in the app any more.** A late
+  submission no longer scores 0 — see the M25 row in §8. `time_limit_seconds` survives as the
+  **par time** the speed multiplier divides by. Grid and Who Am I?
   join Keep4 as duelable through one shared `DuelSession`/`DuelBoard` seam; `ChallengeLink`'s
   nested format enum became the shared `PuzzleFormat`. "Your opponent finished" push added
   (`notify-versus-result`).
 - **Phase 2 — the bot ladder** (migration 0016). 30 rungs, 6 named bots, four independent
-  difficulty levers (skill 0.35→0.98, clock tightening to 55%, puzzle difficulty band by tier,
+  difficulty levers (skill 0.35→0.98, clock tightening to 55% — **the clock lever was removed in
+  M24**, puzzle difficulty band by tier,
   mode mixing from rung 7). Bots are **skill-limited solvers**, not score generators: `BotSolver`
   runs the rung's real puzzle on-device and the run replays beside the player in real time, which
   delivers a live-feeling opponent with **zero realtime infrastructure**. `ladder_attempts`
