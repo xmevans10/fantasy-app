@@ -2,7 +2,7 @@ import XCTest
 import SwiftUI
 @testable import BallIQ
 
-/// `DuelReactionEngine` is the pure crossing/budget/gap policy pulled out of `DuelTimerBar`
+/// `DuelReactionEngine` is the pure crossing/budget/gap policy pulled out of `DuelStatusBar`
 /// specifically so it's testable without hosting the view (Task 2 of
 /// `prompts/HANDOFF-bot-characters.md`) — a `TimelineView` firing on a real clock isn't
 /// something XCTest can drive directly.

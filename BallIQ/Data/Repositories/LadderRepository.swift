@@ -164,22 +164,15 @@ private struct LadderContentEnvelope<C: Decodable>: Decodable { let content: C }
 /// is why it was capped below rung 15. Scoring both sides by the clock they left on the table
 /// drops that floor to ~0.00 and hands the rung its difficulty lever back.
 ///
-/// `speedBonus`'s exact value is deliberately modest and is **not** the difficulty dial —
+/// `SpeedMultiplier.bonus`'s value is deliberately modest and is **not** the difficulty dial —
 /// measured, K makes no difference between 0.10 and 0.50, because the pace spread never gets
 /// wide enough for a fast clue-2 solve to outrun a slow clue-1 one. What it does is let the
 /// faster side take a tie. `bot_skill` remains the lever; this just restores its range.
 enum LadderOutcome {
-    /// Mirrored by `SPEED_BONUS` in tools/ingest/ladder.py.
-    static let speedBonus = 0.20
-
-    /// A run's score once the clock it left on the table is counted.
-    ///
-    /// Scaled BY `score` rather than added to it, so being fast never rescues a run that was
-    /// wrong — a 0.4 performance finishing instantly is still 0.4-ish, not a win.
+    /// Delegates to `SpeedMultiplier` (M25) rather than keeping a second copy of the formula.
+    /// `limit` is a **par time** now, not a deadline — nothing expires, it only stops paying.
     static func adjusted(score: Double, elapsed: TimeInterval, limit: TimeInterval) -> Double {
-        guard limit > 0 else { return score }
-        let remaining = min(1, max(0, (limit - elapsed) / limit))
-        return score * (1 + speedBonus * remaining)
+        SpeedMultiplier.adjusted(score: score, elapsed: elapsed, par: limit)
     }
 
     /// The recorded outcome. `limit` of 0 (or unknown times) degrades to the pre-speed rule

@@ -101,10 +101,8 @@ struct WhoAmIGameView: View {
                 // rule as giving up, so it reuses `finish(solved: false)` directly.
                 // `revealedCount` starts at 1 (clue one is always shown), unlike the bot's binary
                 // solved/not-yet score — an imperfect comparable, same tradeoff as Keep4's
-                // `placement.count` (see `DuelTimerBar.playerScore`).
-                DuelTimerBar(session: duel, playerScore: revealedCount) {
-                    if result == nil { finish(solved: false) }
-                }
+                // `placement.count` (see `DuelStatusBar.playerScore`).
+                DuelStatusBar(session: duel, playerScore: revealedCount)
             }
             header
             ScrollView {

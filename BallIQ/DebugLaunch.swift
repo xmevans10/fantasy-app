@@ -33,7 +33,7 @@ enum DebugLaunch {
     static var autoOpenLadder: Bool { has("-screenshotLadder") }
     /// Starts the first unlocked rung's board with no taps (the briefing sheet's START button is
     /// a real tap simctl can't drive): `-screenshotLadderDuel`. Needed because the live-reaction
-    /// speech bubble (`DuelTimerBar`) only fires once real time has passed on a hosted view — a
+    /// speech bubble (`DuelStatusBar`) only fires once real time has passed on a hosted view — a
     /// static render can't produce it, so this is the only way to screenshot it at all.
     static var autoStartLadderDuel: Bool { has("-screenshotLadderDuel") }
     static var autoOpenCommunity: Bool { has("-screenshotCommunity") }

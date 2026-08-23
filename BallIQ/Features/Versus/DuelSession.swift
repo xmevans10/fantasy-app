@@ -52,7 +52,7 @@ struct DuelSession: Equatable, Identifiable {
     /// the lobby already has one poll loop running against the same row, and starting a second
     /// would double the request volume `versus_live_state`'s own doc comment budgets for.
     /// `secondsRemaining`/`capturedAt` above still carry the clock: they're snapshotted once
-    /// from `LiveDuelState.deadline`/`.serverNow` at hand-off, so `DuelTimerBar` needs no live
+    /// from `LiveDuelState.deadline`/`.serverNow` at hand-off, so `DuelStatusBar` needs no live
     /// variant of its own — the discipline (server instants, not the device clock's absolute
     /// value) is identical, just sourced from a poll instead of `start_versus_challenge`.
     let live: LiveDuelSession?
@@ -207,7 +207,7 @@ struct LadderRunSession: Equatable {
 }
 
 /// Decides when a ladder bot's live score change is worth a speech-bubble reaction, and enforces
-/// the budget — pulled out of `DuelTimerBar` so the crossing/cap/gap policy is unit-testable
+/// the budget — pulled out of `DuelStatusBar` so the crossing/cap/gap policy is unit-testable
 /// without a hosted view (see `DuelReactionTests`).
 ///
 /// "Crossing" is tracked through a tie rather than reset by one: if the bot pulls ahead, dips
@@ -241,13 +241,21 @@ struct DuelReactionEngine: Equatable {
     }
 }
 
-/// The duel clock, pinned to the top of whichever board is being played.
+/// The duel's opponent strip, pinned to the top of whichever board is being played.
 ///
-/// Drives itself off a `TimelineView(.periodic)` rather than a `Timer` + `@State`: a `Timer`
-/// invalidates when the app backgrounds and would silently hand back time, and `TimelineView`
-/// recomputes from the real date on every redraw, so the displayed number is always
-/// `deadline - now` no matter what happened in between.
-struct DuelTimerBar: View {
+/// **This used to be a countdown, and M25 removed the clock from it entirely.** A timer that can
+/// force-finish a run makes the clock a fail-state — a player who knew the answer but read slowly
+/// lost to the timer rather than to the opponent, which is theme 5 inverted. Speed still counts,
+/// through `SpeedMultiplier`, where being slow costs a bonus rather than the game.
+///
+/// What survives is the half that was never about time: **the opponent**. A ladder duel shows the
+/// bot's score climbing in real time off its pre-computed beats, which is the entire "live
+/// opponent" illusion and is driven by elapsed time, not by remaining time.
+///
+/// Still a `TimelineView(.periodic)` rather than a `Timer` + `@State`: a `Timer` invalidates when
+/// the app backgrounds and would silently hand back time, so the bot's progress would freeze and
+/// jump. `TimelineView` recomputes from the real date on every redraw.
+struct DuelStatusBar: View {
     let session: DuelSession
     /// The player's own live tally, in whatever unit this format's game view already tracks —
     /// `Keep4GameView.placement.count`, `GridGameView.solved.count`,
@@ -260,40 +268,30 @@ struct DuelTimerBar: View {
     /// comparison paths (AGENTS.md §4); the reaction is a vibe ("who's pulling ahead right now"),
     /// not a claim about final accuracy, and the result screen's real verdict is unaffected by it.
     var playerScore: Int? = nil
-    /// Fired once, when the clock reaches zero. The game view is expected to finish the run
-    /// with whatever the player has so far — an expired duel still has to resolve.
-    let onExpire: () -> Void
-
-    @State private var didExpire = false
     @State private var reactionEngine = DuelReactionEngine()
     @State private var reactionText: String?
     @State private var reactionToken: UUID?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// Under this many seconds the bar goes red and starts pulsing.
-    private let urgentThreshold = 10
     /// How long a reaction bubble stays up before it auto-dismisses.
     private let reactionDuration: TimeInterval = 2.5
 
     var body: some View {
         VStack(spacing: 0) {
             TimelineView(.periodic(from: .now, by: 0.5)) { context in
-                let left = session.secondsLeft(at: context.date)
-                let urgent = left <= urgentThreshold
-                let elapsed = TimeInterval(session.secondsRemaining - left)
+                // Elapsed since the board opened, not time remaining — there is no deadline to
+                // count back from any more, and the bot's beats were always keyed on elapsed.
+                let elapsed = max(0, context.date.timeIntervalSince(session.capturedAt))
                 let botScore = session.ladder?.botScore(after: elapsed)
                 HStack(spacing: 10) {
                     if let ladder = session.ladder, let botScore {
                         // The bot's score, climbing in real time off its pre-computed beats. This
                         // is the entire "live opponent" mechanic — see `LadderRunSession`.
-                        // The portrait, not the emoji. `BotPortrait` falls back to the emoji on
-                        // its own for any character without a shipped asset, so this is strictly
-                        // better than the emoji it replaces rather than a second thing to keep in
-                        // sync. 22pt is the largest that fits the bar without growing its height.
                         BotPortrait(bot: ladder.bot, size: 22)
                         Text(ladder.bot.name).font(.label11).lineLimit(1)
+                        Spacer(minLength: 8)
                         Text("\(botScore)/\(ladder.outOf)")
-                            .font(.custom(FontName.condBlack, size: 15))
+                            .font(.custom(FontName.condBlack, size: 20))
                             .monospacedDigit()
                             .contentTransition(.numericText())
                             .opacity(ladder.isDone(after: elapsed) ? 1 : 0.85)
@@ -304,33 +302,19 @@ struct DuelTimerBar: View {
                              ?? String(localized: "DUEL"))
                             .font(.label11)
                             .lineLimit(1)
+                        Spacer(minLength: 8)
                     }
-                    Spacer(minLength: 8)
-                    Text(DuelSession.clockText(left))
-                        .font(.custom(FontName.condBlack, size: 20))
-                        .monospacedDigit()
-                        .contentTransition(.numericText())
                 }
-                .foregroundStyle(urgent ? Color.onDanger : Color.onAccent)
+                .foregroundStyle(Color.onAccent)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .frame(maxWidth: .infinity)
-                .background(urgent ? Color.dangerFill : Color.accentFill)
-                .opacity(urgent && left % 2 == 1 ? 0.82 : 1)
-                .animation(Motion.snap, value: urgent)
+                .background(Color.accentFill)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(session.ladder.map { ladder in
-                    Text("\(ladder.bot.name) is on \(ladder.botScore(after: TimeInterval(session.secondsRemaining - left))) of \(ladder.outOf). \(left) seconds left")
-                } ?? Text("Duel clock, \(left) seconds left"))
-                .onChange(of: left) { _, newValue in
-                    // `onChange` rather than a check in `body`: mutating state during a view
-                    // update is what SwiftUI warns about, and the callback almost always
-                    // dismisses or rebuilds this view.
-                    guard newValue <= 0, !didExpire else { return }
-                    didExpire = true
-                    Haptics.reject()
-                    onExpire()
-                }
+                    Text("\(ladder.bot.name) is on \(ladder.botScore(after: elapsed)) of \(ladder.outOf)")
+                } ?? Text(session.opponentName.map { String(localized: "Duel against \($0)") }
+                          ?? String(localized: "Duel")))
                 .onChange(of: botScore.map { $0 - (playerScore ?? 0) }) { _, diff in
                     guard let diff, let bot = session.ladder?.bot else { return }
                     if let line = reactionEngine.reactionLine(diff: diff, ahead: bot.voice.ahead,
@@ -436,18 +420,18 @@ struct RematchButton: View {
                      beats: (0..<9).map { BotBeat(at: Double($0) * 8 + 4, index: $0, correct: $0 < 6) })
     VStack(spacing: 0) {
         // Human duel, comfortable.
-        DuelTimerBar(session: DuelSession(challengeID: 1, format: .keep4, boardID: "p",
+        DuelStatusBar(session: DuelSession(challengeID: 1, format: .keep4, boardID: "p",
                                           opponentUserID: nil, opponentName: "hoopsfan",
-                                          secondsRemaining: 95)) {}
-        // Human duel, no username to show, urgent (red + pulse).
-        DuelTimerBar(session: DuelSession(challengeID: 2, format: .grid, boardID: "p",
+                                          secondsRemaining: 95))
+        // Human duel, no username to show.
+        DuelStatusBar(session: DuelSession(challengeID: 2, format: .grid, boardID: "p",
                                           opponentUserID: nil, opponentName: nil,
-                                          secondsRemaining: 7)) {}
-        // Ladder duel — the widest state: emoji + a long bot name + a live score + the clock.
-        DuelTimerBar(session: DuelSession(challengeID: 17, format: .grid,
+                                          secondsRemaining: 7))
+        // Ladder duel — the widest state: portrait + a long bot name + a live score.
+        DuelStatusBar(session: DuelSession(challengeID: 17, format: .grid,
                                           boardID: "grid-nba-2026-08-02", opponentUserID: nil,
                                           opponentName: nil, secondsRemaining: 107,
-                                          ladder: LadderRunSession(rung: rung, bot: bot, run: run))) {}
+                                          ladder: LadderRunSession(rung: rung, bot: bot, run: run)))
         Spacer()
     }
     .background(Color.appBackground)

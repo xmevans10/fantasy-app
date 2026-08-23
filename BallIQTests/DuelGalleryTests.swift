@@ -33,7 +33,7 @@ final class DuelGalleryTests: XCTestCase {
     }
 
     /// The duel clock in every shape it takes.
-    func testRenderDuelTimerBarStates() throws {
+    func testRenderDuelStatusBarStates() throws {
         let ladderSession = DuelSession(
             challengeID: 27, format: .grid, boardID: "grid-nba-2026-08-02",
             opponentUserID: nil, opponentName: nil, secondsRemaining: 107,
@@ -58,7 +58,7 @@ final class DuelGalleryTests: XCTestCase {
             ForEach(Array(states.enumerated()), id: \.offset) { _, state in
                 VStack(alignment: .leading, spacing: 2) {
                     Text(state.0).font(.system(size: 9)).foregroundStyle(Color.textMuted)
-                    DuelTimerBar(session: state.1) {}
+                    DuelStatusBar(session: state.1)
                 }
             }
         }

@@ -362,3 +362,88 @@ final class JourneymanTeaserTests: XCTestCase {
         XCTAssertFalse(JourneymanTeaser.line(for: board(clubs: [("Zephyrs", 20), ("Quokkas", 20)])).isEmpty)
     }
 }
+
+// MARK: - The universal speed multiplier (M25)
+
+/// Timers were removed app-wide and replaced by a scoring gradient. These pin the properties that
+/// make that trade safe — most of all the one that stops it becoming a way to win badly.
+final class SpeedMultiplierTests: XCTestCase {
+
+    /// Deliberately tests `elapsed: 0` exactly, not 0.001. The first version of this test used
+    /// 0.001 and passed while a guard was silently scoring an instant finish as if it were
+    /// untimed — the boundary IS the case worth asserting.
+    func testFinishingInstantlyPaysTheFullBonusAndNoMore() {
+        XCTAssertEqual(SpeedMultiplier.adjusted(score: 1000, elapsed: 0, par: 120),
+                       1000 * (1 + SpeedMultiplier.bonus), accuracy: 0.001)
+        XCTAssertEqual(SpeedMultiplier.adjusted(score: 1000, elapsed: -5, par: 120),
+                       1000 * (1 + SpeedMultiplier.bonus), accuracy: 0.001,
+                       "clock skew must clamp, not explode")
+    }
+
+    /// The whole point of removing timers: being slow must cost the bonus, never the game.
+    func testFinishingOverParCostsNothingBeyondTheBonus() {
+        let atPar = SpeedMultiplier.adjusted(score: 1000, elapsed: 120, par: 120)
+        let wayOver = SpeedMultiplier.adjusted(score: 1000, elapsed: 6000, par: 120)
+        XCTAssertEqual(atPar, 1000, accuracy: 0.001)
+        XCTAssertEqual(wayOver, 1000, accuracy: 0.001,
+                       "there must be no penalty branch — that would re-create the fail-state")
+    }
+
+    /// Inherited from `LadderOutcome.adjusted` and the reason this mechanic is safe to apply
+    /// everywhere: speed separates two players who both knew it, and cannot promote one who
+    /// didn't above one who did.
+    func testFastNeverRescuesWrong() {
+        let fastAndWrong = SpeedMultiplier.adjusted(score: 400, elapsed: 0, par: 120)
+        let slowAndRight = SpeedMultiplier.adjusted(score: 1000, elapsed: 119, par: 120)
+        XCTAssertLessThan(fastAndWrong, slowAndRight)
+    }
+
+    func testTheBonusScalesSmoothlyWithHowMuchParIsLeft() {
+        let scores = [0.0, 30.0, 60.0, 90.0, 120.0].map {
+            SpeedMultiplier.adjusted(score: 1000, elapsed: $0, par: 120)
+        }
+        XCTAssertEqual(scores, scores.sorted(by: >), "faster must never pay less")
+        XCTAssertEqual(scores.last!, 1000, accuracy: 0.001)
+    }
+
+    /// Arcade formats are excluded on purpose — rewarding haste through a Draft & Spin run is
+    /// rewarding tapping, not knowing.
+    func testArcadeFormatsAreNotTimeSensitive() {
+        XCTAssertNil(SpeedMultiplier.par(for: .overUnder))
+        XCTAssertNil(SpeedMultiplier.par(for: .draftSpin))
+        XCTAssertNotNil(SpeedMultiplier.par(for: .journeyman))
+        XCTAssertEqual(SpeedMultiplier.par(for: .keep4Hard), SpeedMultiplier.par(for: .keep4Normal),
+                       "hiding the stats makes a board harder, not longer")
+    }
+
+    /// A session with no `startedAt` (offline, restored, a fixture) must score exactly as it did
+    /// before M25 rather than silently losing or gaining points.
+    func testAnUntimedSessionScoresExactlyItsRawPoints() {
+        XCTAssertEqual(SpeedMultiplier.points(800, startedAt: nil, kind: .journeyman), 800)
+        XCTAssertEqual(SpeedMultiplier.points(0, startedAt: Date(), kind: .journeyman), 0)
+        XCTAssertEqual(SpeedMultiplier.points(800, startedAt: Date(), kind: .draftSpin), 800,
+                       "a format with no par is scored raw")
+    }
+
+    /// `PuzzleFormat` and `GameFormatKind` share the case names `journeyman` and `grid`, so an
+    /// unqualified `par(for: .grid)` inside the `GameFormatKind` overload silently recurses into
+    /// itself. It compiles, and it crashes the whole test host with a SIGSEGV. Every duelable
+    /// format is exercised here so that can never come back quietly.
+    func testParDoesNotRecurseBetweenTheTwoFormatEnums() {
+        for kind: GameFormatKind in [.keep4Normal, .keep4Hard, .whoAmI, .journeyman, .grid,
+                                     .overUnder, .draftSpin] {
+            _ = SpeedMultiplier.par(for: kind)      // a stack overflow here is the regression
+        }
+        XCTAssertEqual(SpeedMultiplier.par(for: GameFormatKind.grid),
+                       SpeedMultiplier.par(for: PuzzleFormat.grid))
+        XCTAssertEqual(SpeedMultiplier.par(for: GameFormatKind.journeyman),
+                       SpeedMultiplier.par(for: PuzzleFormat.journeyman))
+    }
+
+    func testPointsAppliesTheBonusForAQuickFinish() {
+        let started = Date().addingTimeInterval(-12)      // 12s into a 120s par
+        let credited = SpeedMultiplier.points(1000, startedAt: started, kind: .journeyman)
+        XCTAssertGreaterThan(credited, 1000)
+        XCTAssertLessThanOrEqual(credited, Int((1000 * (1 + SpeedMultiplier.bonus)).rounded()))
+    }
+}

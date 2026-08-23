@@ -115,9 +115,9 @@ struct Keep4GameView: View {
                 // Above the header, not inside it: the clock has to be the first thing on
                 // screen at every scroll position and in every one of the header's states.
                 // `placement.count` is cards decided, not cards known-correct (blind sort) —
-                // see `DuelTimerBar.playerScore`'s doc comment for why that's still the right
+                // see `DuelStatusBar.playerScore`'s doc comment for why that's still the right
                 // number to race the bot's live score against.
-                DuelTimerBar(session: duel, playerScore: placement.count) { expire() }
+                DuelStatusBar(session: duel, playerScore: placement.count)
             }
             header
             Spacer(minLength: 0)

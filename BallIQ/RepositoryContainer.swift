@@ -586,9 +586,15 @@ final class RepositoryContainer: ObservableObject {
         let durationMs = detail.startedAt.map {
             max(0, Int(date.timeIntervalSince($0) * 1000))
         }
+        // The universal speed multiplier (M25), applied in exactly one place so every format
+        // gets it and none of them implement it twice (AGENTS.md §4). Timers are gone; this is
+        // what replaced them. Points only — `performance` is deliberately passed through
+        // untouched, because it feeds the rating engine and is `0...1`-checked in Postgres.
+        let score = SpeedMultiplier.points(detail.score, startedAt: detail.startedAt,
+                                           finishedAt: date, kind: format)
         let result = GameResult(playedAt: date, format: format, sport: sport, mode: detail.mode,
                                 ranked: ranked, perfect: perfect, performance: performance,
-                                score: detail.score, maxScore: detail.maxScore,
+                                score: score, maxScore: detail.maxScore,
                                 correct: detail.correct, attempted: detail.attempted,
                                 durationMs: durationMs,
                                 ratingBefore: ratingBefore, ratingAfter: ratingAfter,

@@ -101,9 +101,7 @@ struct JourneymanGameView: View {
     private var playBoard: some View {
         VStack(spacing: 0) {
             if let duel {
-                DuelTimerBar(session: duel, playerScore: wrongGuesses) {
-                    if result == nil { finish(solved: false) }
-                }
+                DuelStatusBar(session: duel, playerScore: wrongGuesses)
             }
             header
             // Centred rather than top-aligned: a two- or three-club board is short, and pinned to
@@ -432,10 +430,10 @@ private struct LiveJourneymanBoard: View {
         VStack(spacing: 0) {
             // The clock itself is unchanged from an async duel — `duel.secondsRemaining` /
             // `.capturedAt` were snapshotted once from the live poll at hand-off (see
-            // `DuelSession.live`'s doc comment), so `DuelTimerBar` needs no live-aware variant.
-            // Expiry is resolved by the next poll (the server is the clock's real authority),
-            // not by this closure.
-            DuelTimerBar(session: duel) {}
+            // `DuelSession.live`'s doc comment), so `DuelStatusBar` needs no live-aware
+            // variant. Nothing here ends the run on a clock (M25) — the race ends when somebody
+            // solves, which the poll reports.
+            DuelStatusBar(session: duel)
             opponentStrip
             if myExhausted {
                 waitingOnOpponentPanel
