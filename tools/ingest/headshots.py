@@ -539,6 +539,46 @@ def warm_transforms(workers: int, limit: int | None) -> int:
     return 0
 
 
+def detect_dupes(threshold: int, dry_run: bool) -> int:
+    """Find stock "no photo" graphics that every other check waves through.
+
+    Three sources now have been caught serving a placeholder at HTTP 200: MLB's grey silo,
+    cdn.nba.com's 12 KB stub, and — found only by LOOKING at a contact sheet of what we had
+    actually stored — NFL's generic helmet graphic, which is a normal-sized PNG and therefore
+    sailed past both the status check and the byte floor. It accounted for 7,222 of ~13,400
+    distinct NFL sources: 71.7% of the sport.
+
+    The signal that catches all of them: a real photograph is unique, a placeholder is
+    byte-identical across every player it's served for. So any (sport, bytes) group larger
+    than `threshold` is a stock graphic, not a photo. This runs on the ledger alone — no
+    re-downloading — because `bytes` was recorded at upload time.
+    """
+    load_dotenv()
+    base, key = _require_env()
+
+    rows = _rest(base, key,
+                 "rpc/headshot_dupe_groups", method="POST", body={"min_count": threshold})
+    if not rows:
+        print("[detect-dupes] no duplicate groups found", flush=True)
+        return 0
+    total = 0
+    for group in rows:
+        sport, size, count = group["sport"], group["bytes"], group["n"]
+        print(f"[detect-dupes] {sport}: {count} sources are byte-identical at {size} B "
+              f"-> placeholder", flush=True)
+        total += count
+        if not dry_run:
+            _rest(base, key,
+                  f"headshot_assets?sport=eq.{sport}&bytes=eq.{size}&status=eq.ok",
+                  method="PATCH",
+                  body={"status": "placeholder", "note": f"stock graphic ({size}B, x{count})",
+                        "public_url": None},
+                  extra_headers={"Prefer": "return=minimal"})
+    print(f"[detect-dupes] {'would mark' if dry_run else 'marked'} {total} sources as "
+          f"placeholder", flush=True)
+    return 0
+
+
 # ---------------------------------------------------------------- driver
 
 
@@ -657,6 +697,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-px", type=int, default=512,
                         help="downscale long edge before upload (needs Pillow; no-op without)")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--detect-dupes", action="store_true",
+                        help="mark byte-identical stock graphics (NFL's helmet, etc.) as "
+                             "placeholders so --repoint clears them")
+    parser.add_argument("--dupe-threshold", type=int, default=25)
     parser.add_argument("--warm-transforms", action="store_true",
                         help="pre-generate the 192px rendition for every rehosted headshot so "
                              "no real user is the first requester (run AFTER --repoint)")
@@ -684,6 +728,8 @@ def main(argv: list[str] | None = None) -> int:
         return repoint(args.dry_run)
     if args.nba_backfill:
         return nba_backfill(args.workers, args.max_px, args.limit, args.dry_run)
+    if args.detect_dupes:
+        return detect_dupes(args.dupe_threshold, args.dry_run)
     if args.warm_transforms:
         return warm_transforms(args.workers, args.limit)
     if args.wiki_backfill:
