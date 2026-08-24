@@ -378,6 +378,155 @@ def nba_backfill(workers: int, max_px: int, limit: int | None, dry_run: bool) ->
     return 0
 
 
+# ---------------------------------------------------------------- ESPN NFL backfill
+
+# Every rostered NFL player takes an official media-day headshot — grey backdrop, team
+# jersey. The league's own CDN only serves them for CURRENT rosters, and hands out a generic
+# helmet graphic for everyone else (7,222 sources, 71.7% of the sport). ESPN keeps its
+# archive far longer, and nflverse's player registry already carries the `espn_id` needed to
+# address it. Measured 2026-08-24 on random samples with an espn_id:
+#     2015+ 100% | 2000-14 35% | 1980-99 0% | pre-1980 4/7
+# The 2000-14 band is the one that matters: our own coverage there was 2%, and every image
+# ESPN returns is the real posed team photo rather than a candid.
+NFLVERSE_PLAYERS = ("https://github.com/nflverse/nflverse-data/releases/download/"
+                    "players/players.csv")
+ESPN_NFL = "https://a.espncdn.com/i/headshots/nfl/players/full/{eid}.png"
+
+
+def nfl_espn_ids() -> dict[str, str]:
+    """normalized display name -> ESPN athlete id, from nflverse's all-time registry."""
+    import csv
+    import io
+    req = urllib.request.Request(NFLVERSE_PLAYERS, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=180) as resp:
+        text = resp.read().decode("utf-8", "ignore")
+    index: dict[str, str] = {}
+    for row in csv.DictReader(io.StringIO(text)):
+        eid = (row.get("espn_id") or "").strip()
+        name = (row.get("display_name") or "").strip()
+        if not eid or not name:
+            continue
+        index.setdefault(normalize_name(name), eid.split(".")[0])
+    return index
+
+
+def espn_nfl_backfill(workers: int, max_px: int, limit: int | None, dry_run: bool) -> int:
+    """Fill photo-less NFL rows from ESPN's headshot archive. Run AFTER --repoint and
+    --detect-dupes, and BEFORE --wiki-backfill: ESPN returns the official posed team photo,
+    where Wikipedia returns whatever image exists (often a candid or an action shot)."""
+    load_dotenv()
+    base, key = _require_env()
+
+    print("[espn-nfl] loading nflverse registry …", flush=True)
+    ids = nfl_espn_ids()
+    print(f"[espn-nfl] {len(ids)} players carry an espn_id", flush=True)
+
+    names = _photoless_names(base, key, "nfl")
+    targets = [(n, ids[normalize_name(n)]) for n in names if normalize_name(n) in ids]
+    if limit:
+        targets = targets[:limit]
+    print(f"[espn-nfl] {len(names)} photo-less NFL names, {len(targets)} have an espn_id",
+          flush=True)
+    if dry_run or not targets:
+        return 0
+
+    counts: dict[str, int] = {}
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        results = pool.map(
+            lambda t: _adopt(base, key, "nfl", t[0], ESPN_NFL.format(eid=t[1]),
+                             max_px, "espn"),
+            targets)
+        for i, outcome in enumerate(results, 1):
+            counts[outcome] = counts.get(outcome, 0) + 1
+            if i % 500 == 0:
+                print(f"[espn-nfl] {i}/{len(targets)} {counts}", flush=True)
+    print(f"[espn-nfl] DONE {counts}", flush=True)
+    return 0
+
+
+# ---------------------------------------------------------------- ESPN search backfill
+
+# Every league runs an obligatory media day: each rostered player gets the same posed,
+# grey-backdrop, in-uniform headshot. The leagues' own public CDNs only serve the CURRENT
+# roster's — NFL swaps in a helmet graphic, MLB a grey silo — but ESPN keeps its archive far
+# longer, and an ESPN athlete id resolves straight to the original posed photo.
+#
+# For NFL the id comes free in nflverse's registry (see espn_nfl_backfill). For MLB there is
+# no such bridge: ESPN's bulk athlete index is capped at 13,291 and silently omits players it
+# definitely knows (Aubrey Huff is absent from the index but resolves via search to id 4479,
+# whose headshot is a real 174 KB photo). So this path resolves ids through ESPN's search
+# API, one player at a time. Measured 2026-08-24 on 10 photo-less modern MLB players: 6
+# recovered, all real 170-230 KB posed headshots.
+ESPN_SEARCH = "https://site.web.api.espn.com/apis/search/v2?limit=8&query={q}"
+ESPN_HEADSHOT = "https://a.espncdn.com/i/headshots/{league}/players/full/{eid}.png"
+# ESPN's uid grammar: `s:<sport>~l:<league>~a:<athlete>`. The league discriminator is what
+# keeps a search for a common name from returning the wrong sport's athlete.
+_ESPN_LEAGUE = {"baseball": ("mlb", "l:10"), "nba": ("nba", "l:46"), "nfl": ("nfl", "l:28")}
+
+
+def espn_search_id(name: str, league_tag: str) -> str | None:
+    """Resolve a display name to an ESPN athlete id, or None.
+
+    Requires an exact (case-insensitive) name match on top of the league tag: ESPN's search
+    is fuzzy and happily returns a different player for a near-miss, and a confidently wrong
+    face is worse than a monogram.
+    """
+    try:
+        req = urllib.request.Request(
+            ESPN_SEARCH.format(q=urllib.parse.quote(name)), headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            payload = json.loads(resp.read())
+    except Exception:  # noqa: BLE001
+        return None
+    for result in payload.get("results", []):
+        for item in result.get("contents", []):
+            uid = str(item.get("uid") or "")
+            if league_tag not in uid or "a:" not in uid:
+                continue
+            if (item.get("displayName") or "").strip().lower() != name.strip().lower():
+                continue
+            return uid.split("a:")[-1]
+    return None
+
+
+def espn_search_backfill(sports: list[str] | None, workers: int, max_px: int,
+                         limit: int | None, dry_run: bool) -> int:
+    """Fill photo-less rows from ESPN's headshot archive, resolving ids via ESPN search."""
+    load_dotenv()
+    base, key = _require_env()
+    targets_sports = sports or ["baseball"]
+
+    for sport in targets_sports:
+        mapping = _ESPN_LEAGUE.get(sport)
+        if not mapping:
+            print(f"[espn-search] no ESPN league for {sport}, skipping", flush=True)
+            continue
+        league, tag = mapping
+        names = _photoless_names(base, key, sport)
+        if limit:
+            names = names[:limit]
+        print(f"[espn-search] {sport}: {len(names)} photo-less names", flush=True)
+        if dry_run:
+            continue
+
+        counts: dict[str, int] = {}
+
+        def work(name: str) -> str:
+            eid = espn_search_id(name, tag)
+            if not eid:
+                return "unmatched"
+            return _adopt(base, key, sport, name,
+                          ESPN_HEADSHOT.format(league=league, eid=eid), max_px, "espn")
+
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            for i, outcome in enumerate(pool.map(work, names), 1):
+                counts[outcome] = counts.get(outcome, 0) + 1
+                if i % 250 == 0:
+                    print(f"[espn-search] {sport}: {i}/{len(names)} {counts}", flush=True)
+        print(f"[espn-search] {sport} DONE {counts}", flush=True)
+    return 0
+
+
 # ---------------------------------------------------------------- name-based backfills
 
 # Wikipedia is a markedly better source than any league CDN for players the leagues have
@@ -406,17 +555,25 @@ def _photoless_names(base: str, key: str, sport: str) -> list[str]:
     backfill can never overwrite a good image.
     """
     names: set[str] = set()
-    page, offset = 1000, 0
+    page = 1000
+    cursor = ""
     while True:
+        # Keyset pagination, not OFFSET: this set runs to tens of thousands of rows and a
+        # deep OFFSET makes Postgres walk everything it skipped, which timed out at 57014
+        # around offset 9000. Seeking on the ordered key keeps every page an index range scan.
+        after = f"&name=gt.{urllib.parse.quote(cursor, safe='')}" if cursor else ""
         rows = _rest(base, key,
                      f"player_seasons?select=name&sport=eq.{sport}&headshot=eq."
-                     f"&order=name&limit={page}&offset={offset}")
+                     f"{after}&order=name&limit={page}")
         if not rows:
             break
-        names.update(r["name"] for r in rows if r.get("name"))
-        offset += page
+        batch = [r["name"] for r in rows if r.get("name")]
+        if not batch:
+            break
+        names.update(batch)
         if len(rows) < page:
             break
+        cursor = batch[-1]
     return sorted(names)
 
 
@@ -704,6 +861,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--warm-transforms", action="store_true",
                         help="pre-generate the 192px rendition for every rehosted headshot so "
                              "no real user is the first requester (run AFTER --repoint)")
+    parser.add_argument("--espn-nfl-backfill", action="store_true",
+                        help="fill photo-less NFL rows from ESPN's headshot archive — the "
+                             "official posed team photos the league CDN drops on retirement")
+    parser.add_argument("--espn-search-backfill", action="store_true",
+                        help="fill photo-less rows from ESPN's archive, resolving athlete ids "
+                             "via ESPN search (MLB/NBA, where no id bridge exists)")
     parser.add_argument("--wiki-backfill", action="store_true",
                         help="fill photo-less rows from Wikipedia (run AFTER --repoint); "
                              "75%% hit rate on the baseball players MLB's CDN lacks")
@@ -732,6 +895,11 @@ def main(argv: list[str] | None = None) -> int:
         return detect_dupes(args.dupe_threshold, args.dry_run)
     if args.warm_transforms:
         return warm_transforms(args.workers, args.limit)
+    if args.espn_nfl_backfill:
+        return espn_nfl_backfill(args.workers, args.max_px, args.limit, args.dry_run)
+    if args.espn_search_backfill:
+        sp = [x.strip() for x in args.sports.split(",") if x.strip()] or None
+        return espn_search_backfill(sp, args.workers, args.max_px, args.limit, args.dry_run)
     if args.wiki_backfill:
         sports = [x.strip() for x in args.sports.split(",") if x.strip()] or None
         return wiki_backfill(sports, args.workers, args.max_px, args.limit, args.dry_run)
