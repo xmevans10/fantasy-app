@@ -378,6 +378,119 @@ def nba_backfill(workers: int, max_px: int, limit: int | None, dry_run: bool) ->
     return 0
 
 
+# ---------------------------------------------------------------- name-based backfills
+
+# Wikipedia is a markedly better source than any league CDN for players the leagues have
+# forgotten. Measured 2026-08-24 on 44 photo-less baseball players: Wikipedia had 75% of
+# them, including 10/10 who last played 1940–69 and 64% of the pre-1940 group — exactly the
+# era where MLB's own CDN collapses to 6%.
+#
+# `providers.wikimedia.headshot` is reused rather than reimplemented: it already does the
+# confident-match check that keeps a same-named politician's portrait out of the catalog
+# (a wrong face is worse than no face), caches for 90 days, and paces itself under
+# Wikipedia's anonymous rate limit.
+_WIKI_CONTEXT = {
+    "baseball": "baseball",
+    "nba": "basketball",
+    "nfl": "football",
+    "soccer": "football",
+    "tennis": "tennis",
+}
+
+
+def _photoless_names(base: str, key: str, sport: str) -> list[str]:
+    """Distinct names in `sport` with no usable photo left.
+
+    Reads rows already cleared to '' — which is what --repoint leaves behind for every source
+    proven to be a placeholder or a 404 — so this is an unambiguous "has no photo" set and a
+    backfill can never overwrite a good image.
+    """
+    names: set[str] = set()
+    page, offset = 1000, 0
+    while True:
+        rows = _rest(base, key,
+                     f"player_seasons?select=name&sport=eq.{sport}&headshot=eq."
+                     f"&order=name&limit={page}&offset={offset}")
+        if not rows:
+            break
+        names.update(r["name"] for r in rows if r.get("name"))
+        offset += page
+        if len(rows) < page:
+            break
+    return sorted(names)
+
+
+def _adopt(base: str, key: str, sport: str, name: str, source: str,
+           max_px: int, note: str) -> str:
+    """Fetch a candidate source, rehost it, and point this player's photo-less rows at it."""
+    status, data, ctype, _ = fetch_real_image(source)
+    if status != "ok":
+        return "stub" if status == "placeholder" else status
+    data, ctype = maybe_resize(data, ctype, max_px)
+    okey = object_key(sport, source, ctype)
+    try:
+        upload(base, key, okey, data, ctype)
+        target = public_url(base, okey)
+        record(base, key, [{"source_url": source, "sport": sport, "status": "ok",
+                            "storage_key": okey, "public_url": target, "bytes": len(data),
+                            "note": f"{note}:{name}", "shard": 0}])
+        _rest(base, key,
+              f"player_seasons?sport=eq.{sport}&headshot=eq."
+              f"&name=eq.{urllib.parse.quote(name, safe='')}",
+              method="PATCH", body={"headshot": target},
+              extra_headers={"Prefer": "return=minimal"})
+    except Exception:  # noqa: BLE001 — one player must not kill the pass
+        return "error"
+    return "ok"
+
+
+def wiki_backfill(sports: list[str] | None, workers: int, max_px: int,
+                  limit: int | None, dry_run: bool) -> int:
+    """Fill photo-less rows from Wikipedia. Run AFTER --repoint (and after --nba-backfill,
+    which has a better source for NBA specifically)."""
+    from .providers.wikimedia import headshot as wiki_headshot
+
+    load_dotenv()
+    base, key = _require_env()
+    targets = sports or sorted(_WIKI_CONTEXT)
+
+    for sport in targets:
+        context = _WIKI_CONTEXT.get(sport)
+        if not context:
+            print(f"[wiki-backfill] no context for {sport}, skipping", flush=True)
+            continue
+        names = _photoless_names(base, key, sport)
+        if limit:
+            names = names[:limit]
+        print(f"[wiki-backfill] {sport}: {len(names)} photo-less names", flush=True)
+        if dry_run:
+            continue
+
+        # Resolution is sequential on purpose: wikimedia.headshot paces itself between
+        # UNCACHED calls, and running it from a thread pool would defeat that pacing and
+        # get us 429-throttled — the same failure that made tennis unreliable to begin with.
+        resolved: list[tuple[str, str]] = []
+        for i, name in enumerate(names, 1):
+            url = wiki_headshot(name, context=context)
+            if url:
+                resolved.append((name, url))
+            if i % 250 == 0:
+                print(f"[wiki-backfill] {sport}: resolved {i}/{len(names)}, "
+                      f"{len(resolved)} hits", flush=True)
+        print(f"[wiki-backfill] {sport}: {len(resolved)}/{len(names)} resolved "
+              f"({100 * len(resolved) / max(len(names), 1):.0f}%)", flush=True)
+
+        counts: dict[str, int] = {}
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            outcomes = pool.map(
+                lambda item: _adopt(base, key, sport, item[0], item[1], max_px, "wiki"),
+                resolved)
+            for outcome in outcomes:
+                counts[outcome] = counts.get(outcome, 0) + 1
+        print(f"[wiki-backfill] {sport} DONE {counts}", flush=True)
+    return 0
+
+
 # ---------------------------------------------------------------- driver
 
 
@@ -463,6 +576,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-px", type=int, default=512,
                         help="downscale long edge before upload (needs Pillow; no-op without)")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--wiki-backfill", action="store_true",
+                        help="fill photo-less rows from Wikipedia (run AFTER --repoint); "
+                             "75%% hit rate on the baseball players MLB's CDN lacks")
+    parser.add_argument("--reset-errors", action="store_true",
+                        help="flip 'error' rows back to 'pending' so a re-run retries them "
+                             "(transfermarkt and Wikimedia both throttle under load)")
     parser.add_argument("--nba-backfill", action="store_true",
                         help="fill photo-less NBA rows from cdn.nba.com by name->person id "
                              "(run AFTER --repoint)")
@@ -470,10 +589,20 @@ def main(argv: list[str] | None = None) -> int:
                         help="after shards finish: rewrite player_seasons.headshot from the ledger")
     args = parser.parse_args(argv)
 
+    if args.reset_errors:
+        load_dotenv()
+        base, key = _require_env()
+        _rest(base, key, "headshot_assets?status=eq.error", method="PATCH",
+              body={"status": "pending"}, extra_headers={"Prefer": "return=minimal"})
+        print("[headshots] error rows reset to pending", flush=True)
+        return 0
     if args.repoint:
         return repoint(args.dry_run)
     if args.nba_backfill:
         return nba_backfill(args.workers, args.max_px, args.limit, args.dry_run)
+    if args.wiki_backfill:
+        sports = [x.strip() for x in args.sports.split(",") if x.strip()] or None
+        return wiki_backfill(sports, args.workers, args.max_px, args.limit, args.dry_run)
 
     try:
         index, total = (int(x) for x in args.shard.split("/"))
