@@ -61,3 +61,8 @@ implying a full historical run happened if it didn't.
 Every file created/edited, the exact row count the committed CSV ends up with, the
 pytest count, and anything you assumed rather than verified (e.g. "did not run the full
 historical backfill — validated on N/M scope, full run would take approximately X").
+
+Also report any **context defect** you hit: a brief that quoted a signature, path, flag, or
+row count that didn't match reality, or a fact you had to grep out because no doc stated it.
+Name the file that should have been right. You see these before anyone else does, and the
+orchestrator can only repair them (AGENTS.md §12) if you say so.

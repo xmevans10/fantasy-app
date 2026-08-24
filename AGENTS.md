@@ -218,3 +218,46 @@ deferred-simplification ledger), install it yourself — `claude plugin marketpl
 DietrichGebert/ponytail` then `claude plugin install ponytail@ponytail` — after reviewing what
 it does; an agent shouldn't add third-party plugin sources to your Claude Code config on your
 behalf even when asked to, the same way it shouldn't `curl | sh` an unreviewed script.
+
+## 12. When a session goes wrong, repair the context — not just the code
+
+Adopted from *Trace: TRajectory Attribution for Automated Context Engineering* (Amazon,
+[arXiv:2608.09153](https://arxiv.org/abs/2608.09153)), the same way §11 adopts ponytail.dev's
+ruleset as text rather than as a tool. Its finding: in a deployment like this one, agent
+failures are overwhelmingly *context-layer* failures — a stale procedure, a fact nobody wrote
+down, a command quoted wrong — and the repair belongs in the context files, not in the model
+and usually not in the product code.
+
+This repo is the evidence. The memory directory is, read honestly, a list of times a session
+burned real hours on something no file said: that the `supabase` CLI is authenticated to a
+different account than this project; that an inactive Paid Apps Agreement returns an empty
+product fetch with no error anywhere; that two Supabase decoders exist and the wrong one turns
+every row into `[]` — which hid the entire Versus tab for *months*. Every one of those was
+diagnosed once, at cost, and the only thing that stopped it recurring was writing it down.
+
+Three mechanics are worth following exactly, because the paper measured the alternatives:
+
+- **Attribute in one backward pass, not step by step.** Read the whole session at once, in
+  reverse order, and find the *earliest* point inconsistent with "expected X, got Y." Walking
+  forward step-by-step asking "did this one contain the error" scored half the accuracy at 16×
+  the cost, because everything downstream of a bad fact contains the error and only one step
+  introduced it.
+- **Read the file before deciding CREATE vs UPDATE.** Verifying by opening the target scored
+  83% against 33% for inferring it — and reading *overturned* the initial diagnosis 67% of the
+  time that diagnosis was wrong. This is the same instinct as §1 (verify against the live
+  system) pointed at the docs instead of the data.
+- **Treat an implicit signal as a real one.** The user rephrasing a request, re-stating a
+  constraint they already gave, or correcting a fact you stated confidently is the signal that
+  a context source failed. Waiting to be told "update CLAUDE.md" means it never gets updated.
+
+**Rule:** when the user corrects a fact you asserted, when a documented command or contract
+turns out to be wrong, or when you had to grep for something the docs should have told you —
+that is a defect in `CLAUDE.md` / `AGENTS.md` / `docs/BALLIQ_SPEC.md` / the memory directory /
+a subagent brief, and fixing only the immediate task leaves it in place for the next session.
+Diagnose it and write the smallest correct fix in the same session. The full loop — signal
+taxonomy, attribution procedure, verification before writing, CRUD table, and what *not* to
+repair — is the `context-repair` skill (`.claude/skills/context-repair/SKILL.md`).
+
+Two guardrails: not every failure is a context failure (a plain bug with no documentary cause
+is just a bug — the skill's NO_ACTION path exists for that), and this loop is a diagnosis plus
+a small write, never a licence to turn a bugfix session into a documentation project.

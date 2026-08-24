@@ -64,3 +64,8 @@ State plainly: every file you created/edited, the exact test count before/after,
 you verified (build + full suite) vs. what you assumed (e.g. "did not independently
 verify the RPC shape the orchestrator pasted — trusted it as given"). If you had to make
 a judgment call the brief didn't cover, say what you chose and why.
+
+Also report any **context defect** you hit: a brief that quoted an API contract, file path,
+or build command that didn't match reality, or a convention you had to grep out because no
+doc stated it. Name the file that should have been right. You see these before anyone else
+does, and the orchestrator can only repair them (AGENTS.md §12) if you say so.
