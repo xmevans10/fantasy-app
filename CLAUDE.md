@@ -83,3 +83,21 @@ time — `Agent({ subagent_type: "balliq-swift-feature", ... })` for a SwiftUI s
 know the pbxproj/RepositoryContainer/design-vocabulary/stdlib-runtime rules and the
 verification bar; your brief only needs the task-specific parts (exact file ownership, API
 contracts to paste, what "done" looks like).
+
+## When you get corrected, fix the context that misled you
+
+If the user corrects a fact you asserted, a documented command/flag/path turns out to be
+wrong, a subagent reports its brief didn't match the code, or you had to grep for something
+these docs should have told you — that is a defect in this file, `AGENTS.md`,
+`docs/BALLIQ_SPEC.md`, the memory directory, or a subagent brief. Fixing only the immediate
+task leaves it in place for the next session, which is how this repo lost months to a
+silently-empty Versus tab and re-derived the same Supabase auth gotcha more than once.
+
+Invoke the **`context-repair`** skill and follow it: attribute in one backward pass over the
+session (earliest inconsistent step, not the latest), **read the target file before deciding
+CREATE vs UPDATE**, then write the smallest correct fix. Not every failure qualifies — a
+plain bug with no documentary cause is just a bug, and the skill has a NO_ACTION path.
+
+**Why this rule exists:** established 2026-08-24, adopting the mechanics from Amazon's TRACE
+paper (arXiv:2608.09153). It lives here rather than only in AGENTS.md §12 because this file
+is loaded into every session automatically and `AGENTS.md` is not.
