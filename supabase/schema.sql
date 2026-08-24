@@ -2871,3 +2871,8 @@ $$;
 
 revoke all on function public.headshot_repoint(boolean) from public, anon, authenticated;
 grant execute on function public.headshot_repoint(boolean) to service_role;
+
+-- headshot_repoint() joins player_seasons.headshot against headshot_assets.source_url.
+-- Without this the join is a seq scan over ~382k rows and the RPC dies with 57014
+-- (statement timeout) before touching a row.
+create index if not exists player_seasons_headshot_idx on public.player_seasons (headshot);

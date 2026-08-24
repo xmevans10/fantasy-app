@@ -491,6 +491,54 @@ def wiki_backfill(sports: list[str] | None, workers: int, max_px: int,
     return 0
 
 
+def warm_transforms(workers: int, limit: int | None) -> int:
+    """Pre-generate the 192 px rendition for every rehosted headshot.
+
+    Storage's render endpoint resizes on FIRST request and caches the result immutably — so
+    without this, the first player to open a given puzzle pays ~1-2s per uncached headshot
+    while the rendition is generated. Measured on one 8-card board: 1.94s cold vs 0.10-0.27s
+    warm. Doing it here means no real user is ever the first requester.
+
+    192 px is the only size worth warming: every headshot call site in the app draws at <=48 pt,
+    which resolves to that single bucket (AppImagePipeline.buckets).
+    """
+    load_dotenv()
+    base, key = _require_env()
+
+    urls: list[str] = []
+    page, offset = 1000, 0
+    while True:
+        rows = _rest(base, key,
+                     f"headshot_assets?select=public_url&status=eq.ok&public_url=not.is.null"
+                     f"&order=public_url&limit={page}&offset={offset}")
+        if not rows:
+            break
+        urls.extend(r["public_url"] for r in rows if r.get("public_url"))
+        offset += page
+        if len(rows) < page:
+            break
+    if limit:
+        urls = urls[:limit]
+    print(f"[warm-transforms] {len(urls)} renditions to generate", flush=True)
+
+    def warm(url: str) -> bool:
+        rendered = url.replace("/storage/v1/object/public/",
+                               "/storage/v1/render/image/public/")
+        rendered += "?width=192&height=192&resize=contain&quality=80"
+        code, _, _ = _get(rendered, timeout=45)
+        return 200 <= code < 300
+
+    done = failed = 0
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for ok_ in pool.map(warm, urls):
+            done += 1
+            failed += 0 if ok_ else 1
+            if done % 2000 == 0:
+                print(f"[warm-transforms] {done}/{len(urls)} ({failed} failed)", flush=True)
+    print(f"[warm-transforms] DONE {done} generated, {failed} failed", flush=True)
+    return 0
+
+
 # ---------------------------------------------------------------- driver
 
 
@@ -555,12 +603,45 @@ def run(shard: int, shards: int, *, sports: list[str] | None, limit: int | None,
 def repoint(dry_run: bool) -> int:
     """Point `player_seasons.headshot` at our rehosted copies, and clear the ones the ledger
     proved are placeholders or dead so the app falls back to its designed treatment rather
-    than rendering a grey silo or a broken image."""
+    than rendering a grey silo or a broken image.
+
+    Loops in batches: ~292k rows is far past Postgres's statement timeout in one UPDATE
+    (the first version counted fine and then died with 57014 on the write).
+    """
     load_dotenv()
     base, key = _require_env()
-    stats = _rest(base, key, "rpc/headshot_repoint", method="POST",
-                  body={"dry_run": dry_run})
-    print(f"[headshots] repoint {'(dry run) ' if dry_run else ''}-> {stats}", flush=True)
+    if dry_run:
+        stats = _rest(base, key, "rpc/headshot_repoint", method="POST",
+                      body={"dry_run": True})
+        print(f"[headshots] repoint (dry run) -> {stats}", flush=True)
+        return 0
+
+    total_pointed = total_cleared = 0
+    stalls = 0
+    while True:
+        try:
+            stats = _rest(base, key, "rpc/headshot_repoint_batch", method="POST",
+                          body={"batch_size": 1000}, timeout=180)
+        except RuntimeError as exc:
+            # 57014 under concurrent shard writes is transient contention, not a dead end —
+            # the whole point of batching is that a failed batch costs one batch, so back off
+            # and keep going rather than abandoning a partially-repointed catalog.
+            if "57014" not in str(exc) or stalls >= 40:
+                raise
+            stalls += 1
+            print(f"[headshots] repoint batch timed out ({stalls}), backing off …", flush=True)
+            time.sleep(5 * min(stalls, 6))
+            continue
+        pointed = int(stats.get("repointed") or 0)
+        cleared = int(stats.get("cleared") or 0)
+        total_pointed += pointed
+        total_cleared += cleared
+        if pointed == 0 and cleared == 0:
+            break
+        print(f"[headshots] repoint … +{pointed} pointed, +{cleared} cleared "
+              f"(running {total_pointed}/{total_cleared})", flush=True)
+    print(f"[headshots] repoint DONE repointed={total_pointed} cleared={total_cleared}",
+          flush=True)
     return 0
 
 
@@ -576,6 +657,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-px", type=int, default=512,
                         help="downscale long edge before upload (needs Pillow; no-op without)")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--warm-transforms", action="store_true",
+                        help="pre-generate the 192px rendition for every rehosted headshot so "
+                             "no real user is the first requester (run AFTER --repoint)")
     parser.add_argument("--wiki-backfill", action="store_true",
                         help="fill photo-less rows from Wikipedia (run AFTER --repoint); "
                              "75%% hit rate on the baseball players MLB's CDN lacks")
@@ -600,6 +684,8 @@ def main(argv: list[str] | None = None) -> int:
         return repoint(args.dry_run)
     if args.nba_backfill:
         return nba_backfill(args.workers, args.max_px, args.limit, args.dry_run)
+    if args.warm_transforms:
+        return warm_transforms(args.workers, args.limit)
     if args.wiki_backfill:
         sports = [x.strip() for x in args.sports.split(",") if x.strip()] or None
         return wiki_backfill(sports, args.workers, args.max_px, args.limit, args.dry_run)
