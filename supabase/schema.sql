@@ -2782,3 +2782,92 @@ on conflict (rung) do update set
   puzzle_id = excluded.puzzle_id, bot_id = excluded.bot_id, bot_skill = excluded.bot_skill,
   time_limit_seconds = excluded.time_limit_seconds, seed = excluded.seed,
   is_boss = excluded.is_boss;
+
+-- ============================================================================
+-- M26 — player headshot rehost (2026-08-24)
+--
+-- Headshots were hotlinked to five third-party CDNs while only team logos were ever
+-- rehosted, and every one of them failed differently and silently:
+--   * img.mlbstatic.com carried Cloudinary's d_people:generic:headshot:silo fallback on all
+--     90,092 baseball rows, so "no photo" returned 200 OK with a grey silhouette;
+--   * a.espncdn.com 404s retired players (Michael Jordan included);
+--   * upload.wikimedia.org rate-limits us (26 of 40 probes returned 429).
+-- Because player_seasons.headshot was 100% non-null throughout, none of this was visible
+-- as a coverage metric. Rehosting also unlocks Storage's render/transform endpoint, which
+-- AppImagePipeline.transformed() only applies to Storage URLs — hotlinked NFL headshots
+-- were shipping at a 373 KB median for circles drawn at ~40 pt.
+-- ============================================================================
+
+-- One row per distinct SOURCE url seen in player_seasons.headshot. Doubles as the work
+-- queue for the rehost: shards claim a disjoint slice by (status, shard) rather than each
+-- paginating player_seasons, which at 18 concurrent deep-OFFSET scans produced 57014
+-- statement timeouts.
+create table if not exists public.headshot_assets (
+  source_url  text primary key,
+  sport       text,
+  status      text not null,
+  storage_key text,
+  public_url  text,
+  bytes       integer,
+  note        text,
+  shard       smallint,
+  checked_at  timestamptz not null default now()
+);
+
+alter table public.headshot_assets drop constraint if exists headshot_assets_status_check;
+alter table public.headshot_assets add constraint headshot_assets_status_check
+  check (status in ('pending','ok','placeholder','missing','error'));
+
+create index if not exists headshot_assets_status_idx on public.headshot_assets (status);
+create index if not exists headshot_assets_sport_idx  on public.headshot_assets (sport);
+create index if not exists headshot_assets_claim_idx  on public.headshot_assets (status, shard);
+
+alter table public.headshot_assets enable row level security;
+-- Ingest-side bookkeeping only: service-role writes it, nothing in the app reads it.
+-- RLS on with no policy = anon sees nothing; service_role bypasses.
+
+-- World-readable, same contract as team-logos (objects served immutable, max-age 1y).
+insert into storage.buckets (id, name, public)
+values ('player-headshots', 'player-headshots', true)
+on conflict (id) do update set public = true;
+
+-- Applies the ledger to the catalog. 'ok' rows get repointed at our copy; 'placeholder' and
+-- 'missing' are CLEARED to '' so PlayerHeadshotBadge renders its initials-on-team-colors
+-- monogram — a designed fallback beats a grey silo, and clearing is the only way to get
+-- there because the silo returns 200 to every layer above it.
+create or replace function public.headshot_repoint(dry_run boolean default true)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  to_point bigint;
+  to_clear bigint;
+begin
+  select count(*) into to_point
+  from player_seasons p
+  join headshot_assets a on a.source_url = p.headshot
+  where a.status = 'ok' and a.public_url is not null and p.headshot <> a.public_url;
+
+  select count(*) into to_clear
+  from player_seasons p
+  join headshot_assets a on a.source_url = p.headshot
+  where a.status in ('placeholder','missing') and coalesce(p.headshot,'') <> '';
+
+  if not dry_run then
+    update player_seasons p set headshot = a.public_url
+      from headshot_assets a
+     where a.source_url = p.headshot and a.status = 'ok' and a.public_url is not null;
+
+    update player_seasons p set headshot = ''
+      from headshot_assets a
+     where a.source_url = p.headshot and a.status in ('placeholder','missing');
+  end if;
+
+  return jsonb_build_object('dry_run', dry_run, 'repointed', to_point, 'cleared', to_clear);
+end;
+$$;
+
+revoke all on function public.headshot_repoint(boolean) from public, anon, authenticated;
+grant execute on function public.headshot_repoint(boolean) to service_role;

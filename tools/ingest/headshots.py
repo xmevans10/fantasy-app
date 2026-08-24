@@ -256,6 +256,128 @@ def upload(base: str, service_key: str, key: str, data: bytes, content_type: str
             time.sleep(2 * (attempt + 1))
 
 
+# ---------------------------------------------------------------- NBA id backfill
+
+# `player_seasons` stores ESPN athlete ids for NBA, and ESPN simply has no headshot for most
+# retired players: Michael Jordan's own id 404s, and players who last played 1990–2009 sat at
+# 7.8% coverage. The NBA's own CDN *does* have them — verified 2026-08-24 for Jordan (893),
+# Iverson (947) and Reggie Miller (397) — but it is keyed on NBA person ids, which we don't
+# store. This bridges the two by name, using the static historical roster the nba_api project
+# publishes (6,424 players, including everyone pre-2000).
+NBA_STATIC_URL = ("https://raw.githubusercontent.com/swar/nba_api/master/"
+                  "src/nba_api/stats/library/data.py")
+NBA_CDN = "https://cdn.nba.com/headshots/nba/latest/1040x760/{pid}.png"
+
+_SUFFIXES = {"jr", "sr", "ii", "iii", "iv", "v"}
+
+
+def normalize_name(name: str) -> str:
+    """Fold a display name to a match key: accents stripped, punctuation dropped, generational
+    suffix removed. 'Nenê'/'Nene' and 'Gary Payton II'/'Gary Payton' have to collide, or the
+    bridge misses exactly the players it exists to find."""
+    import unicodedata
+    folded = unicodedata.normalize("NFKD", name)
+    folded = "".join(c for c in folded if not unicodedata.combining(c))
+    folded = re.sub(r"[^a-zA-Z ]", " ", folded).lower()
+    parts = [p for p in folded.split() if p and p not in _SUFFIXES]
+    return " ".join(parts)
+
+
+def nba_person_ids() -> dict[str, int]:
+    """normalized name -> NBA person id, from the published static roster."""
+    req = urllib.request.Request(NBA_STATIC_URL, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=90) as resp:
+        source = resp.read().decode("utf-8", "ignore")
+    # rows look like: [893, "Jordan", "Michael", "Michael Jordan", False],
+    rows = re.findall(r"\[(\d+),\s*\"[^\"]*\",\s*\"[^\"]*\",\s*\"([^\"]+)\",\s*(?:True|False)\]",
+                      source)
+    index: dict[str, int] = {}
+    for pid, full in rows:
+        key = normalize_name(full)
+        # First id wins: the list is roughly chronological and a duplicate name is far more
+        # likely to be a modern namesake than the historical player we're missing a photo for.
+        index.setdefault(key, int(pid))
+    return index
+
+
+def nba_backfill(workers: int, max_px: int, limit: int | None, dry_run: bool) -> int:
+    """Fill NBA rows the ledger left with no usable photo, from cdn.nba.com.
+
+    Run this AFTER --repoint: repoint clears every source proven to be a placeholder or a 404
+    to '', so "headshot is empty" is then an unambiguous statement of "this player has no
+    photo", and the backfill can target exactly those without risking a good image.
+    """
+    load_dotenv()
+    base, key = _require_env()
+
+    print("[nba-backfill] loading NBA person-id roster …", flush=True)
+    ids = nba_person_ids()
+    print(f"[nba-backfill] {len(ids)} historical NBA players indexed", flush=True)
+
+    names: set[str] = set()
+    page, offset = 1000, 0
+    while True:
+        rows = _rest(base, key,
+                     f"player_seasons?select=name&sport=eq.nba&headshot=eq."
+                     f"&order=name&limit={page}&offset={offset}")
+        if not rows:
+            break
+        names.update(r["name"] for r in rows if r.get("name"))
+        offset += page
+        if len(rows) < page:
+            break
+
+    targets = []
+    unmatched = 0
+    for name in sorted(names):
+        pid = ids.get(normalize_name(name))
+        if pid is None:
+            unmatched += 1
+            continue
+        targets.append((name, pid))
+    if limit:
+        targets = targets[:limit]
+    print(f"[nba-backfill] {len(names)} photo-less names, {len(targets)} matched to a person "
+          f"id, {unmatched} unmatched", flush=True)
+    if dry_run or not targets:
+        return 0
+
+    counts = {"ok": 0, "stub": 0, "missing": 0, "error": 0}
+
+    def work(item: tuple[str, int]) -> str:
+        name, pid = item
+        url = NBA_CDN.format(pid=pid)
+        status, data, ctype, _ = fetch_real_image(url)
+        if status != "ok":
+            return "stub" if status == "placeholder" else status
+        data, ctype = maybe_resize(data, ctype, max_px)
+        okey = object_key("nba", url, ctype)
+        try:
+            upload(base, key, okey, data, ctype)
+            target = public_url(base, okey)
+            record(base, key, [{"source_url": url, "sport": "nba", "status": "ok",
+                                "storage_key": okey, "public_url": target,
+                                "bytes": len(data), "note": f"nba-backfill:{name}",
+                                "shard": 0}])
+            # Only rows still proven photo-less are touched — never one holding a good image.
+            _rest(base, key,
+                  f"player_seasons?sport=eq.nba&headshot=eq."
+                  f"&name=eq.{urllib.parse.quote(name, safe='')}",
+                  method="PATCH", body={"headshot": target},
+                  extra_headers={"Prefer": "return=minimal"})
+        except Exception:  # noqa: BLE001 — one player must not kill the pass
+            return "error"
+        return "ok"
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for i, outcome in enumerate(pool.map(work, targets), 1):
+            counts[outcome] = counts.get(outcome, 0) + 1
+            if i % 200 == 0:
+                print(f"[nba-backfill] {i}/{len(targets)} {counts}", flush=True)
+    print(f"[nba-backfill] DONE {counts}", flush=True)
+    return 0
+
+
 # ---------------------------------------------------------------- driver
 
 
@@ -341,12 +463,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-px", type=int, default=512,
                         help="downscale long edge before upload (needs Pillow; no-op without)")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--nba-backfill", action="store_true",
+                        help="fill photo-less NBA rows from cdn.nba.com by name->person id "
+                             "(run AFTER --repoint)")
     parser.add_argument("--repoint", action="store_true",
                         help="after shards finish: rewrite player_seasons.headshot from the ledger")
     args = parser.parse_args(argv)
 
     if args.repoint:
         return repoint(args.dry_run)
+    if args.nba_backfill:
+        return nba_backfill(args.workers, args.max_px, args.limit, args.dry_run)
 
     try:
         index, total = (int(x) for x in args.shard.split("/"))
