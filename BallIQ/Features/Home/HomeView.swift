@@ -478,6 +478,12 @@ struct HomeView: View {
         keep4BySport[sport] = await keep4Task
         whoAmIBySport[sport] = await whoAmITask
         journeymanBySport[sport] = await journeymanTask
+        // The player is on Home, which draws no headshots — spend that idle network on the
+        // photos this sport's dailies will need if they open one. Bounded and .utility, so it
+        // yields to anything actually on screen; see PuzzleImageWarmer.
+        PuzzleImageWarmer.warmDailies(
+            keep4: [keep4BySport[sport]?.content].compactMap { $0 },
+            journeyman: [journeymanBySport[sport]?.content].compactMap { $0 })
     }
 
     /// One pager page: that sport's K4C4 + Who Am I? daily cards, stacked exactly like the

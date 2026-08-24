@@ -1,0 +1,364 @@
+"""Rehost player headshots into the public Supabase Storage `player-headshots` bucket.
+
+Why this exists (measured 2026-08-24, before any of it was written):
+
+`player_seasons.headshot` is 100% non-null, which is exactly why the coverage problem was
+invisible for so long — the *column* is full, the *images* are not. Every headshot was
+hotlinked to one of five third-party CDNs, and each one fails differently:
+
+  * `img.mlbstatic.com` — all 90,092 baseball rows carry Cloudinary's
+    `d_people:generic:headshot:silo` default-image parameter, so a player with no photo
+    returns **200 OK with a grey silhouette**. Probed without that parameter, only 35% of
+    baseball sources have a real photo (6% for players who last played before 1970).
+  * `a.espncdn.com` — 404s on retired players. Michael Jordan (`full/1035.png`) was a 404;
+    NBA players who last played 1990–2009 were at 7.8% coverage.
+  * `upload.wikimedia.org` — rate-limits us: 26 of 40 probes returned 429. Tennis is 100%
+    Wikimedia, so tennis headshots were at the mercy of a throttle.
+  * `static.www.nfl.com` / `a.espncdn.com` — serve full-resolution source images (NFL median
+    373 KB, NBA 232 KB) for circles the app draws at ~40 pt.
+
+That last point is why this tool fixes latency as well as coverage. `AppImagePipeline
+.transformed()` (BallIQ/DesignSystem/RemoteImage.swift) only rewrites **Supabase Storage**
+URLs to the render/transform endpoint, so a hotlinked headshot could never be resized
+server-side. Rehosting puts every headshot behind that endpoint with no client change —
+verified on this project: a 40,228-byte object serves as 18,806 bytes at width=192.
+
+Design notes:
+
+  * **Sharded.** `--shard i/N` claims a disjoint slice by `sha1(source_url)`, so N processes
+    run in parallel without coordinating. Ledger writes are per-source-url upserts, so two
+    shards racing on the same row (they can't, but if the sharding were ever changed) would
+    converge rather than corrupt.
+  * **Idempotent.** Shards claim only rows still marked `pending`, so a re-run picks up
+    exactly what an interrupted run left behind. Re-running is cheap and safe.
+  * **Placeholders are not rehosted.** Copying MLB's grey silo into our own bucket would make
+    a permanent asset out of a non-photo. They're recorded as `placeholder` and the row's
+    headshot is cleared, so the app's designed initials-on-team-colors fallback takes over —
+    which looks intentional in a way a silhouette never does.
+  * **stdlib at runtime.** Pillow is imported lazily and only for `--resize`; without it the
+    tool uploads originals and the transform endpoint still handles delivery sizing. Matches
+    the optional-dependency contract in requirements.txt.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import io
+import json
+import os
+import re
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+
+from .main import load_dotenv
+
+BUCKET = "player-headshots"
+UA = "balliq-ingest/1.0 (+https://github.com/xmevans10/fantasy-app)"
+
+# Cloudinary's "if the real asset is missing, serve this instead" parameter. Stripping it
+# turns MLB's silent silhouette into an honest 404, which is the only way to tell whether a
+# baseball player actually has a photo.
+MLB_SILO_RE = re.compile(r",?d_people:generic:headshot:silo:current\.png")
+
+# cdn.nba.com answers 200 for unknown person ids with a ~12 KB generic stub; real headshots
+# run 180–280 KB. Anything at or under this is treated as a placeholder, not a photo.
+NBA_STUB_MAX_BYTES = 20_000
+
+# A source that returns fewer bytes than this isn't a usable headshot regardless of host.
+MIN_REAL_BYTES = 2_000
+
+
+def _require_env() -> tuple[str, str]:
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    if not url or not key:
+        raise RuntimeError(
+            "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set to rehost headshots"
+        )
+    return url.rstrip("/"), key
+
+
+# ---------------------------------------------------------------- PostgREST helpers
+
+
+def _rest(base: str, key: str, path: str, *, method: str = "GET", body=None,
+          extra_headers: dict | None = None, timeout: int = 90):
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    if body is not None:
+        headers["Content-Type"] = "application/json"
+    headers.update(extra_headers or {})
+    data = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(f"{base}/rest/v1/{path}", data=data,
+                                 headers=headers, method=method)
+    last = None
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read()
+                return json.loads(raw) if raw else None
+        except urllib.error.HTTPError as err:
+            raise RuntimeError(
+                f"{method} {path} failed ({err.code}): "
+                f"{err.read().decode('utf-8', 'ignore')[:400]}"
+            ) from err
+        except Exception as exc:  # noqa: BLE001 — transient socket/TLS, GET+upsert are idempotent
+            last = exc
+            time.sleep(1.5 * (attempt + 1))
+    raise RuntimeError(f"{method} {path} failed after retries: {last}")
+
+
+def claim_pending(base: str, key: str, shard: int, shards: int,
+                  sports: list[str] | None, limit: int | None) -> list[tuple[str, str]]:
+    """Claim this shard's slice of the work queue.
+
+    The queue is `headshot_assets` itself, seeded server-side with every distinct non-Storage
+    source (see the headshot_assets_work_queue migration). Each row carries a stable
+    `shard` bucket (0..63), so N parallel processes take buckets where `bucket % N == i` and
+    never overlap without talking to each other.
+
+    This replaced a version that paginated player_seasons per shard: 18 concurrent deep-OFFSET
+    scans over 380k rows produced 57014 statement timeouts past ~offset 30000. Here the query
+    is an index lookup on (status, shard) against a 44k-row table.
+    """
+    buckets = [b for b in range(64) if b % shards == shard]
+    filt = f"&shard=in.({','.join(str(b) for b in buckets)})"
+    if sports:
+        filt += f"&sport=in.({','.join(sports)})"
+    out: list[tuple[str, str]] = []
+    page, offset = 1000, 0
+    while True:
+        rows = _rest(base, key,
+                     f"headshot_assets?select=source_url,sport&status=eq.pending{filt}"
+                     f"&order=source_url&limit={page}&offset={offset}")
+        if not rows:
+            break
+        out.extend((r["source_url"], r.get("sport") or "") for r in rows)
+        offset += page
+        if len(rows) < page or (limit and len(out) >= limit):
+            break
+    return out[:limit] if limit else out
+
+
+# ---------------------------------------------------------------- image fetch / classify
+
+
+def _get(url: str, timeout: int = 30) -> tuple[int, bytes, str]:
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.status, resp.read(), resp.headers.get("Content-Type", "image/png")
+    except urllib.error.HTTPError as err:
+        return err.code, b"", ""
+    except Exception:  # noqa: BLE001
+        return -1, b"", ""
+
+
+def fetch_real_image(source_url: str) -> tuple[str, bytes, str, str]:
+    """Fetch `source_url`, distinguishing a real photo from a served placeholder.
+
+    Returns (status, data, content_type, note) where status is ok/placeholder/missing/error.
+    """
+    probe = MLB_SILO_RE.sub("", source_url)
+    stripped = probe != source_url
+
+    code, data, ctype = _get(probe)
+
+    if code == 429:
+        # Wikimedia throttles bursts. Back off once — this is the whole reason tennis
+        # headshots were unreliable in the app, and a shard that ignores it just re-creates
+        # the problem on our side.
+        time.sleep(5)
+        code, data, ctype = _get(probe)
+
+    if code in (403, 404):
+        # For MLB this is the honest answer the silo parameter was hiding: no photo exists.
+        return ("placeholder" if stripped else "missing"), b"", "", f"http {code}"
+    if code == -1 or not (200 <= code < 300):
+        return "error", b"", "", f"http {code}"
+    if len(data) < MIN_REAL_BYTES:
+        return "placeholder", b"", "", f"{len(data)}B too small"
+    if "cdn.nba.com" in probe and len(data) <= NBA_STUB_MAX_BYTES:
+        return "placeholder", b"", "", f"nba stub {len(data)}B"
+    return "ok", data, ctype or "image/png", ""
+
+
+def maybe_resize(data: bytes, content_type: str, max_px: int) -> tuple[bytes, str]:
+    """Downscale to `max_px` on the long edge. Lazy Pillow import per requirements.txt's
+    optional-dependency contract — without Pillow this is a no-op and the Storage transform
+    endpoint still sizes on delivery, just from a larger stored original."""
+    try:
+        from PIL import Image  # noqa: PLC0415 — deliberately lazy
+    except ImportError:
+        return data, content_type
+    try:
+        img = Image.open(io.BytesIO(data))
+        img.load()
+        if max(img.size) <= max_px:
+            return data, content_type
+        img.thumbnail((max_px, max_px), Image.LANCZOS)
+        out = io.BytesIO()
+        if img.mode in ("RGBA", "LA", "P"):
+            img = img.convert("RGBA")
+            img.save(out, format="PNG", optimize=True)
+            return out.getvalue(), "image/png"
+        img.convert("RGB").save(out, format="JPEG", quality=88, optimize=True)
+        return out.getvalue(), "image/jpeg"
+    except Exception:  # noqa: BLE001 — a source we can't decode is uploaded untouched
+        return data, content_type
+
+
+# ---------------------------------------------------------------- storage
+
+
+def object_key(sport: str, source_url: str, content_type: str) -> str:
+    """Content-addressed by source URL: stable across runs, dedupes the many rows that share
+    one source, and a changed source naturally lands on a new key instead of overwriting."""
+    ext = "jpg" if "jpeg" in content_type else "png" if "png" in content_type else "img"
+    digest = hashlib.sha1(source_url.encode()).hexdigest()[:20]
+    return f"{sport or 'unknown'}/{digest}.{ext}"
+
+
+def public_url(base: str, key: str) -> str:
+    return f"{base}/storage/v1/object/public/{BUCKET}/{key}"
+
+
+def upload(base: str, service_key: str, key: str, data: bytes, content_type: str) -> None:
+    req = urllib.request.Request(
+        f"{base}/storage/v1/object/{BUCKET}/{key}",
+        data=data,
+        headers={
+            "apikey": service_key,
+            "Authorization": f"Bearer {service_key}",
+            "Content-Type": content_type,
+            "x-upsert": "true",
+            # Matches the team-logos contract: fetched once per install, never revalidated.
+            "Cache-Control": "public, max-age=31536000, immutable",
+        },
+        method="POST",
+    )
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=90) as resp:
+                resp.read()
+                return
+        except urllib.error.HTTPError as err:
+            raise RuntimeError(
+                f"upload failed ({err.code}) for {key}: "
+                f"{err.read().decode('utf-8', 'ignore')[:300]}"
+            ) from err
+        except Exception:  # noqa: BLE001
+            if attempt == 2:
+                raise
+            time.sleep(2 * (attempt + 1))
+
+
+# ---------------------------------------------------------------- driver
+
+
+def record(base: str, key: str, rows: list[dict]) -> None:
+    if not rows:
+        return
+    _rest(base, key, "headshot_assets?on_conflict=source_url", method="POST", body=rows,
+          extra_headers={"Prefer": "resolution=merge-duplicates,return=minimal"})
+
+
+def run(shard: int, shards: int, *, sports: list[str] | None, limit: int | None,
+        workers: int, max_px: int, dry_run: bool) -> int:
+    load_dotenv()
+    base, key = _require_env()
+
+    print(f"[headshots] shard {shard}/{shards} — claiming from queue …", flush=True)
+    mine = claim_pending(base, key, shard, shards, sports, limit)
+    print(f"[headshots] shard {shard}/{shards}: {len(mine)} to process", flush=True)
+    if dry_run or not mine:
+        return 0
+
+    counts: dict[str, int] = {}
+    pending: list[dict] = []
+    processed = 0
+
+    def work(item: tuple[str, str]) -> dict:
+        source_url, sport = item
+        status, data, ctype, note = fetch_real_image(source_url)
+        # Every row carries the identical key set: PostgREST rejects a bulk insert whose
+        # objects differ in shape ("All object keys must match", PGRST102).
+        row = {"source_url": source_url, "sport": sport, "status": status,
+               "note": note or None, "bytes": len(data) or None,
+               "storage_key": None, "public_url": None}
+        if status != "ok":
+            return row
+        data, ctype = maybe_resize(data, ctype, max_px)
+        okey = object_key(sport, source_url, ctype)
+        try:
+            upload(base, key, okey, data, ctype)
+        except Exception as exc:  # noqa: BLE001 — one bad object must not kill the shard
+            return {**row, "status": "error", "note": str(exc)[:200], "bytes": None}
+        row.update({"storage_key": okey, "public_url": public_url(base, okey),
+                    "bytes": len(data)})
+        return row
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for row in pool.map(work, mine):
+            counts[row["status"]] = counts.get(row["status"], 0) + 1
+            pending.append(row)
+            processed += 1
+            if len(pending) >= 200:
+                record(base, key, pending)
+                pending = []
+                print(f"[headshots] shard {shard}: {processed}/{len(mine)} {counts}",
+                      flush=True)
+    record(base, key, pending)
+    print(f"[headshots] shard {shard}/{shards} DONE {processed} processed {counts}",
+          flush=True)
+    return 0
+
+
+def repoint(dry_run: bool) -> int:
+    """Point `player_seasons.headshot` at our rehosted copies, and clear the ones the ledger
+    proved are placeholders or dead so the app falls back to its designed treatment rather
+    than rendering a grey silo or a broken image."""
+    load_dotenv()
+    base, key = _require_env()
+    stats = _rest(base, key, "rpc/headshot_repoint", method="POST",
+                  body={"dry_run": dry_run})
+    print(f"[headshots] repoint {'(dry run) ' if dry_run else ''}-> {stats}", flush=True)
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--shard", default="0/1",
+                        help="i/N — process only sources whose hash falls in shard i of N. "
+                             "Run N of these in parallel; they never overlap.")
+    parser.add_argument("--sports", default="",
+                        help="comma-separated sports to limit to (default: all)")
+    parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--workers", type=int, default=12)
+    parser.add_argument("--max-px", type=int, default=512,
+                        help="downscale long edge before upload (needs Pillow; no-op without)")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--repoint", action="store_true",
+                        help="after shards finish: rewrite player_seasons.headshot from the ledger")
+    args = parser.parse_args(argv)
+
+    if args.repoint:
+        return repoint(args.dry_run)
+
+    try:
+        index, total = (int(x) for x in args.shard.split("/"))
+    except ValueError:
+        parser.error("--shard must look like i/N, e.g. 0/8")
+    if not (0 <= index < total):
+        parser.error(f"--shard index {index} out of range for {total} shards")
+
+    sports = [s.strip() for s in args.sports.split(",") if s.strip()] or None
+    return run(index, total, sports=sports, limit=args.limit, workers=args.workers,
+               max_px=args.max_px, dry_run=args.dry_run)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

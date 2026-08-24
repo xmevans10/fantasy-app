@@ -460,12 +460,26 @@ generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
 | M24 ladder retuned on score | ⚠️ **code shipped, content NOT reseeded** — `bot_skill` is now solved against what the bot *scores* rather than how often a reference player beats it, and the clock left the ladder's comparable. Held back deliberately: the new curve has a flat bottom (rungs 1–6 pin at minimum skill, 99–100% player win) and that is the tier a new player meets first. **Open decision: the Bronze shape** — fewer Bronze rungs, or a board curve starting nearer the 0.18 floor. Also corrects a wrong claim made in-session: 2/8 IS reachable on Keep4; the real constraint is that you cannot have both an easy board and a bad bot. See `prompts/M24-ladder-retune.md` |
 | M25 no timers, universal speed multiplier | ✅ shipped 2026-08-23 — **every countdown removed app-wide.** A clock may GRADE a run, never end one. `SpeedMultiplier` (`score × (1 + 0.20 × fractionOfParRemaining)`, par 120/90/120/180s) applied once in `recordGameResult`. **Points only, never `performance`** — that feeds the rating engine and is `0...1`-checked in Postgres. Server-side: no submission is zeroed or downgraded for lateness; the live-duel expiry became a narrow abandonment sweep (fires only when I finished and they never did, after 15 min). `DuelTimerBar` → `DuelStatusBar`, keeping the opponent and dropping the clock. See `prompts/M25-no-timers.md` and `M25b-timer-removal-completion.md` |
 
-**Release status (updated 2026-08-20):** **1.6.0 (build 38) is `WAITING_FOR_REVIEW` — and for the
-first time, the four monetization products are in the submission with it.** Submission
-`054a2034-01f1-4633-ac7e-40b6b37a3e14`, submitted 2026-08-20 10:22 UTC, carries **six items**: the
-app version, both packs, both Pro subscriptions and the subscription group. Version
-`99643a50-04f5-4998-ba8e-961bedeea4a6`, cut from `main` @ `bfe35cd`, release type
-`AFTER_APPROVAL`; screenshots carried over from 1.5.0. Previous release 1.5.0 is `READY_FOR_SALE`.
+**Release status (updated 2026-08-24):** 🎉 **1.6.0 shipped AND monetization finally works.**
+1.6.0 (build 38) went `READY_FOR_SALE`, and — for the first time in the app's life — all four
+products came with it: `com.balliqfantasy.app.pro.monthly`, `.pro.yearly`, `.pack.grid` and
+`.pack.draftspin` all read **`APPROVED`**. That closes the outage that ran from 2026-07-30, and
+the fix was the six-item submission `054a2034` (version + 4 products + subscription group), which
+is the shape every first-of-type release has to have.
+
+**1.7.0 (build 39) is `WAITING_FOR_REVIEW`**, submitted 2026-08-24 15:27 UTC — version
+`ccba424b-e2f8-4c31-b71d-321eac841c97`, submission `69da482e-8283-4c6b-8c62-0f36d0d73550`,
+release type `AFTER_APPROVAL`. Carries M23 live duels, M25 timer removal + the speed multiplier,
+and the minted Journeyman teasers. Note the submission is a **single item** this time and that is
+correct: the products are approved now, so they no longer have to ride along, and the
+attach-before-submit ordering rule only binds while a product is first-of-type.
+
+⚠️ **Do not yet declare the paywall fixed — it is approved, not proven.** `product_load_failed`
+("store returned no products for 4 ids", receipt `production`) was still firing on 2026-08-24
+11:46 UTC, after approval, and `entitlements` still has **0 rows**. Either approval is still
+propagating (hours, occasionally ~24h) or the **Paid Applications Agreement** is still not Active
+— the second cause with the identical symptom, invisible to the API, and never confirmed. Re-run
+the telemetry check in §8 before anyone writes "selling" in this file again.
 
 Getting there took two false starts worth remembering. The first submission
 (`04540675-…`, API-made) held only the app version, because

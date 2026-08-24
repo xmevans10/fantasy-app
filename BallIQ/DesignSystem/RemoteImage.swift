@@ -152,6 +152,55 @@ actor ImageCache {
         return image
     }
 
+    // MARK: - Prefetch
+
+    /// Keys already queued for warming, so a repeated prefetch of the same screen's images
+    /// doesn't re-enqueue work already in flight or already failed. Bounded — a warm pass over
+    /// every daily in every sport is a few hundred entries, and this drops the whole set rather
+    /// than growing without limit on a very long session.
+    private var warmed: Set<String> = []
+
+    /// Warm images into the cache *before* anything asks to draw them.
+    ///
+    /// Fire-and-forget: returns immediately, does its work at `.utility` so it can never
+    /// outrank a fetch for something actually on screen. Safe to call repeatedly — anything
+    /// already cached, already warmed, or already in flight is skipped.
+    nonisolated static func prefetch(_ urls: [URL], targetSize: CGSize) {
+        guard !urls.isEmpty else { return }
+        Task(priority: .utility) { await shared.warm(urls, targetSize: targetSize) }
+    }
+
+    /// Bounded to `maxConcurrent` in-flight fetches. The cap is the point: a Keep4 daily is 8
+    /// headshots and warming every sport's dailies at once is ~100 URLs, which unbounded would
+    /// saturate the connection the visible screen is still using.
+    private func warm(_ urls: [URL], targetSize: CGSize, maxConcurrent: Int = 3) async {
+        let pixels = AppImagePipeline.pixelBucket(for: targetSize)
+        if warmed.count > 2_000 { warmed.removeAll(keepingCapacity: true) }
+
+        var queue: [URL] = []
+        for url in urls {
+            let key = Self.key(url, pixelSize: pixels)
+            if Self.store.object(forKey: key) != nil { continue }   // already decoded
+            let string = key as String
+            if warmed.contains(string) { continue }
+            warmed.insert(string)
+            queue.append(url)
+        }
+        guard !queue.isEmpty else { return }
+
+        var next = queue.makeIterator()
+        await withTaskGroup(of: Void.self) { group in
+            for _ in 0..<min(maxConcurrent, queue.count) {
+                guard let url = next.next() else { break }
+                group.addTask { _ = await self.image(for: url, targetSize: targetSize) }
+            }
+            while await group.next() != nil {
+                guard let url = next.next() else { continue }
+                group.addTask { _ = await self.image(for: url, targetSize: targetSize) }
+            }
+        }
+    }
+
     /// Returns nil (rather than throwing) on a non-2xx so the caller can fall back to the
     /// untransformed URL — the Supabase render endpoint is a paid feature and a project without
     /// it enabled must still get its logos, just unresized.
@@ -215,6 +264,12 @@ enum AppImagePipeline {
     /// where the design puts them, not on powers of two, so the rungs have to be chosen to
     /// straddle the clusters rather than land inside them.
     static let buckets: [CGFloat] = [192, 384]
+
+    /// The size `PuzzleImageWarmer` prefetches at. Every headshot call site in the app draws at
+    /// ≤48 pt, so this resolves to the 192 px bucket and one warm pass covers all of them —
+    /// warming at a size that landed in a different bucket would fill a cache entry no view
+    /// ever asks for.
+    static let warmSize = CGSize(width: 48, height: 48)
 
     /// Smallest bucket that covers `size` at native screen scale.
     static func pixelBucket(for size: CGSize) -> CGFloat {
