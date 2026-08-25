@@ -132,7 +132,7 @@ struct GridResultView: View {
 
     private var scoreHeader: some View {
         VStack(spacing: 4) {
-            Text(isPerfect ? "IMMACULATE GRID" : "GRID COMPLETE")
+            Text(isPerfect ? "PERFECT GRID" : "GRID COMPLETE")
                 .font(.heading)
                 .foregroundStyle((isPerfect ? Color.onVolt : Color.onAccent).opacity(0.85))
             CountUpText(value: score, font: .heroNumber, color: isPerfect ? .onVolt : .onAccent)
