@@ -252,6 +252,8 @@ enum DebugLaunch {
     static let autoOpenGrid = false
     static let autoSubmitGrid = false
     static let holdGridSetup = false
+    static let autoOpenBlitz = false
+    static let holdBlitzSetup = false
     static let autoOpenShare = false
     static let autoOpenScoringInfo = false
     static let autoOpenLeaguesInfo = false
