@@ -159,6 +159,21 @@ enum GameLogFixtures {
             details.bestCombo = rng.nextInt(0..<picks + 1)
             details.livesLeft = rng.nextInt(0..<4)
 
+        case .blitz:
+            // A whole timed run in one row (see `GameFormatKind.blitz`): `attempted`/`correct`
+            // are boards served and boards cleared, and `maxScore` is what a flawless run of
+            // that same sequence would have paid — so score/maxScore stays a real ratio here,
+            // unlike the open-ended arcade rows below.
+            let boards = rng.nextInt(3..<20)
+            let clean = rng.nextInt(0..<(boards + 1))
+            attempted = boards
+            correct = clean
+            maxScore = boards * 1000
+            score = rng.nextInt(0..<(maxScore + 1))
+            perfect = clean == boards
+            performance = boards > 0 ? Double(clean) / Double(boards) : 0
+            details.bestCombo = rng.nextInt(0..<(clean + 1))
+
         case .draftSpin:
             attempted = 0   // no right answers to attempt
             correct = 0

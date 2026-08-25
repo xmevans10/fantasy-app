@@ -15,6 +15,10 @@ struct WhoAmIGameView: View {
     /// because it's the server-mediated seam (a duel names its own board, which may not even be
     /// today's daily), and both flow into `finish` needing different submission paths.
     var duel: DuelSession? = nil
+    /// Set when this board is one round of a Puzzle Blitz run — suppresses this view's result
+    /// screen and its `complete` call, reporting to the session instead. See `BlitzSession` for
+    /// the contract, and `Keep4GameView.blitz` for the precedence note it shares.
+    var blitz: BlitzSession? = nil
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
@@ -38,6 +42,13 @@ struct WhoAmIGameView: View {
         max(0, WhoAmIScoring.value(cluesUsed: revealedCount, difficulty: puzzle.difficulty)
             + wrongGuesses * WhoAmIScoring.wrongPenalty)
     }
+    /// The next clue's price as a share of this board's own maximum — the blitz-safe form of
+    /// `nextCueCost`, which is in points. See `BlitzBoardValue`.
+    private var nextClueCostShare: String {
+        BlitzBoardValue.cost(nextCueCost,
+                             of: WhoAmIScoring.maxScore(difficulty: puzzle.difficulty))
+    }
+
     private var nextCueCost: Int {
         guard !allRevealed else { return 0 }
         return WhoAmIScoring.value(cluesUsed: revealedCount, difficulty: puzzle.difficulty)
@@ -55,7 +66,9 @@ struct WhoAmIGameView: View {
 
     var body: some View {
         Group {
-            if let result {
+            // See `Keep4GameView.body` — a blitz round sets `result` as its double-finish guard
+            // but must never show a score.
+            if let result, blitz == nil {
                 WhoAmIResultView(puzzle: puzzle, result: result, rewards: rewards,
                                  isDaily: isDaily, challenge: effectiveChallenge,
                                  duelVerdict: duel?.ladder?
@@ -96,7 +109,9 @@ struct WhoAmIGameView: View {
 
     private var playBoard: some View {
         VStack(spacing: 0) {
-            if let duel {
+            if let blitz {
+                BlitzStatusBar(session: blitz)
+            } else if let duel {
                 // A blown clock still resolves the duel — same "finish with whatever they have"
                 // rule as giving up, so it reuses `finish(solved: false)` directly.
                 // `revealedCount` starts at 1 (clue one is always shown), unlike the bot's binary
@@ -122,7 +137,7 @@ struct WhoAmIGameView: View {
     private var header: some View {
         VStack(spacing: 12) {
             HStack {
-                Button { dismiss() } label: {
+                Button { close() } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(Color.textMuted)
@@ -147,7 +162,14 @@ struct WhoAmIGameView: View {
                 Text("Who am I?")
                     .font(.label12)
                     .foregroundStyle(Color.accentText)
-                Text("Worth \(currentValue) pts")
+                // Inside a blitz this is a share of the board's own maximum, never points — see
+                // `BlitzBoardValue` for why the native number is wrong twice over there.
+                Text(blitz == nil
+                     ? String(localized: "Worth \(currentValue) pts")
+                     : BlitzBoardValue.remaining(
+                        current: WhoAmIScoring.value(cluesUsed: revealedCount,
+                                                     difficulty: puzzle.difficulty),
+                        max: WhoAmIScoring.maxScore(difficulty: puzzle.difficulty)))
                     .font(.heading)
                     .foregroundStyle(Color.textPrimary)
                 Text("Clue \(revealedCount) of \(puzzle.clues.count)")
@@ -255,12 +277,16 @@ struct WhoAmIGameView: View {
                             .foregroundStyle(Color.textMuted)
                     } else {
                         Button(action: nextClue) {
-                            Text("Next clue · −\(nextCueCost) pts")
+                            Text(blitz == nil
+                                 ? String(localized: "Next clue · −\(nextCueCost) pts")
+                                 : String(localized: "Next clue · \(nextClueCostShare)"))
                                 .font(.bodyStrong)
                                 .foregroundStyle(Color.accentText)
                         }
                         .accessibilityLabel("Reveal next clue")
-                        .accessibilityHint("Costs \(nextCueCost) points")
+                        .accessibilityHint(blitz == nil
+                                           ? String(localized: "Costs \(nextCueCost) points")
+                                           : String(localized: "Costs \(nextClueCostShare) of this board"))
                     }
                 }
             }
@@ -304,6 +330,14 @@ struct WhoAmIGameView: View {
                                     solved: solved, difficulty: puzzle.difficulty)
         if solved { Haptics.success() }
         let perfect = solved && revealedCount == 1 && wrongGuesses == 0
+        // Blitz: report up, no result screen, no `complete` — see `BlitzSession`. `cleared` is
+        // simply "solved": this format has no chance floor, nobody guesses a name by luck.
+        if let blitz {
+            result = r
+            blitz.finishRound(format: .whoami, sport: puzzle.sport, puzzleID: puzzle.id,
+                              performance: r.performance, cleared: solved)
+            return
+        }
         var details = GameResultDetails()
         details.cluesUsed = revealedCount
         details.wrongGuesses = wrongGuesses
@@ -334,6 +368,12 @@ struct WhoAmIGameView: View {
             }
             withAnimation(Motion.easeOut) { result = r }
         }
+    }
+
+    /// Leaving the board — ends the whole run inside a blitz rather than dismissing this view.
+    /// See `Keep4GameView.close`.
+    private func close() {
+        if let blitz { blitz.endEarly() } else { dismiss() }
     }
 
     /// Debug-only: reveal a few clues then solve, to screenshot the result.

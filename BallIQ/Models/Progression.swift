@@ -15,6 +15,15 @@ enum GameFormatKind: String, Codable, CaseIterable {
     /// Career-path guessing (M22). Weighted just under Who Am I?: it's the same one-answer
     /// grammar, but a club history is a narrower search space than thirty clue dimensions.
     case journeyman
+    /// One timed Puzzle Blitz run — a *sequence* of boards across formats and sports, recorded as
+    /// a single session rather than one row per board (the same call `OverUnderGameView` makes
+    /// for its multi-round runs, and for the same reason: fifteen rows per run would swamp every
+    /// volume stat in the career log).
+    ///
+    /// Always played `ranked: false` and `PlayMode.practice`: a run spans sports, so there is no
+    /// single rating to move, and it is infinitely repeatable. `ratingWeight` is declared for
+    /// completeness and never consulted.
+    case blitz
 
     /// Relative difficulty weight (Keep4 Normal < Keep4 Hard < Journeyman < Who Am I? < Grid).
     var ratingWeight: Double {
@@ -26,6 +35,7 @@ enum GameFormatKind: String, Codable, CaseIterable {
         case .draftSpin:   return 1.0
         case .grid:        return 2.0
         case .journeyman:  return 1.5
+        case .blitz:       return 1.0
         }
     }
 
@@ -39,6 +49,10 @@ enum GameFormatKind: String, Codable, CaseIterable {
         case .grid:        return 200
         case .draftSpin:   return 100
         case .journeyman:  return 100
+        // A run is many boards, so it pays more than a single daily — but flat, not per board:
+        // XP that scaled with round count would make the longest timer strictly correct and turn
+        // the timer choice into a chore rather than a taste.
+        case .blitz:       return 250
         }
     }
 

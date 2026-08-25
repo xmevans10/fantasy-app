@@ -5,6 +5,20 @@ import SwiftUI
 /// First session of the day is ranked; replays that same day are XP-only (mirrors the
 /// community `ranked: false` pattern — arcade replays must not farm the competitive ladder).
 struct OverUnderGameView: View {
+    /// Set when this is **one round** of a Puzzle Blitz rather than a full arcade session.
+    ///
+    /// The mode collapses to a single decision: no setup screen (the board arrives ready), no
+    /// lives (the blitz clock is the only limit), no score or combo chip in the header (a blitz
+    /// shows no score until it ends), and one `decide` before reporting to the session. See
+    /// `BlitzSession` for the contract the four blitzable formats share.
+    var blitz: BlitzSession? = nil
+    /// The round to play, supplied by `BlitzRoundLoader`. Only read when `blitz` is set — a solo
+    /// session still generates its own rounds from a pool it fetches itself.
+    var blitzRound: OverUnderRound? = nil
+    /// The sport `blitzRound` was drawn for. An `OverUnderRound` doesn't record its own sport,
+    /// and every palette/crest/stat lookup on this board needs one.
+    var blitzSport: Sport = .nfl
+
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
 
@@ -33,21 +47,29 @@ struct OverUnderGameView: View {
     @State private var loading = true
     @State private var showingSetup = true
     @State private var sport: Sport = .nfl
+    /// Blitz only: a round is one decision, and both the buttons and the swipe gesture can fire
+    /// it. Latches so a fast double-input can't report the same board twice.
+    @State private var blitzDecided = false
 
     private let store = LocalOverUnderStore()
     private let commitThreshold: CGFloat = 70
 
-    private var unlimitedLives: Bool { container.entitlements.hasUnlimitedOverUnderLives }
+    /// A blitz round has no lives at all — the run's clock is the only thing that ends anything,
+    /// and a heart lost on a coin flip inside a timed run would be a second, hidden fail-state.
+    private var unlimitedLives: Bool { blitz != nil || container.entitlements.hasUnlimitedOverUnderLives }
     private var dailyID: String { "overunder-\(sport.rawValue)-\(OverUnderRoundGenerator.dayString(Date()))" }
 
     var body: some View {
         Group {
-            if showResult {
+            // `blitz == nil` on both branches: a blitz round owns neither the setup screen (its
+            // board arrives ready) nor the result screen (the run's one score comes from
+            // `BlitzResultView`). See `Keep4GameView.body`.
+            if showResult, blitz == nil {
                 OverUnderResultView(sport: sport, score: score, correctCount: correctCount,
                                     wrongCount: wrongCount, highScore: store.highScore(for: sport),
                                     beatHighScore: beatHighScore, rewards: rewards,
                                     onDone: { dismiss() })
-            } else if showingSetup {
+            } else if showingSetup, blitz == nil {
                 GameSetupScreen(formatName: "Over / Under", title: "Pick your sport",
                                 startLabel: "Start the streak", sport: $sport,
                                 onStart: { Task { await load() } },
@@ -58,6 +80,16 @@ struct OverUnderGameView: View {
         }
         .background(Color.appBackground)
         .task {
+            // A blitz round is fully supplied: sport and board both come from the loader, so
+            // this skips the pool fetch, the setup screen and the prefetch entirely.
+            if blitz != nil {
+                sport = blitzSport
+                round = blitzRound
+                showingSetup = false
+                loading = false
+                startedAt = Date()
+                return
+            }
             sport = container.sportFilter.sport ?? .nfl
             container.catalog.prefetchDraftSpinSample(for: sport)
             // Screenshot flows target the board/result — skip the setup screen.
@@ -93,6 +125,7 @@ struct OverUnderGameView: View {
 
     private var playBoard: some View {
         VStack(spacing: 0) {
+            if let blitz { BlitzStatusBar(session: blitz) }
             header
             Spacer(minLength: 0)
             if loading {
@@ -114,20 +147,32 @@ struct OverUnderGameView: View {
     private var header: some View {
         VStack(spacing: 10) {
             HStack {
-                Button { dismiss() } label: {
+                Button { close() } label: {
                     Image(systemName: "xmark").font(.system(size: 16, weight: .medium)).foregroundStyle(Color.textMuted)
                 }
                 .accessibilityLabel("Close")
                 Spacer()
                 Text("OVER / UNDER").font(.label12).foregroundStyle(Color.accentText)
                 Spacer()
-                livesRow
+                // No hearts in a blitz — see `unlimitedLives`. A hidden mirror of the close
+                // glyph balances the row exactly, where a guessed spacer width left the title
+                // visibly off-centre.
+                if blitz == nil {
+                    livesRow
+                } else {
+                    Image(systemName: "xmark").font(.system(size: 16, weight: .medium)).hidden()
+                }
             }
-            HStack(spacing: 10) {
-                statChip(label: String(localized: "Score"), value: "\(score)")
-                if combo > 0 {
-                    statChip(label: String(localized: "Combo"), value: "×\(String(format: "%.1f", OverUnderScoring.comboMultiplier(consecutiveCorrect: combo)))",
-                            fill: .voltFill, on: .onVolt)
+            // The score and combo chips are the one thing a blitz must not render: "scoring
+            // displayed ONLY at the end" is this mode's defining rule, and a running total here
+            // would break it on the busiest board in the rotation.
+            if blitz == nil {
+                HStack(spacing: 10) {
+                    statChip(label: String(localized: "Score"), value: "\(score)")
+                    if combo > 0 {
+                        statChip(label: String(localized: "Combo"), value: "×\(String(format: "%.1f", OverUnderScoring.comboMultiplier(consecutiveCorrect: combo)))",
+                                fill: .voltFill, on: .onVolt)
+                    }
                 }
             }
         }
@@ -261,9 +306,30 @@ struct OverUnderGameView: View {
 
     // MARK: - Logic
 
+    /// Leaving the board — ends the whole run inside a blitz rather than dismissing this view.
+    /// See `Keep4GameView.close`.
+    private func close() {
+        if let blitz { blitz.endEarly() } else { dismiss() }
+    }
+
     private func decide(guessOver: Bool) {
         guard let round else { return }
         let correct = guessOver == round.isOver
+        // One decision is the whole blitz round: report it and stop. `performance` is binary
+        // here (there is one call and it was right or it wasn't), which `BlitzScoring` then
+        // rebases against this format's 0.5 chance floor — so a coin flip pays nothing and only
+        // calls you actually made pay out.
+        if let blitz {
+            // Neutral tap, deliberately not `success`/`reject`: an over/under call is the one
+            // board in the rotation where the player can't tell how they did, and a haptic
+            // verdict is a per-round score by another name.
+            guard !blitzDecided else { return }
+            blitzDecided = true
+            Haptics.tap()
+            blitz.finishRound(format: .overunder, sport: sport, puzzleID: round.id,
+                              performance: correct ? 1 : 0, cleared: correct)
+            return
+        }
         if guessOver { overPicks += 1 } else { underPicks += 1 }
         if correct {
             score += OverUnderScoring.points(consecutiveCorrectBeforeThisRound: combo)

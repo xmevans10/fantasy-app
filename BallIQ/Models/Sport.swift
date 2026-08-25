@@ -21,6 +21,21 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
 
     var abbreviation: String { displayName }
 
+    /// Whether this sport's careers are a **club history** at all — the precondition for
+    /// Journeyman, whose entire board is "which clubs, in which order".
+    ///
+    /// False for tennis, and permanently: a tour player has a nationality, not a club, so there
+    /// is no path to draw. This is a category fact about the sport, **not** a content gap waiting
+    /// on a backfill, and it mirrors the pipeline's own source of truth —
+    /// `tools/ingest/journeyman.py`'s `MIN_STINTS` is keyed `{nfl, nba, baseball, soccer}` and has
+    /// never had a tennis entry. Live pool counts agree (2026-08-25): 158 NFL / 150 NBA / 158 MLB
+    /// / 87 soccer boards, and 0 tennis.
+    ///
+    /// Declared here rather than inferred from an empty fetch because the two mean different
+    /// things: an empty fetch is "nothing right now" (retry, or wait for the mint), while this is
+    /// "never". Only the second one justifies hiding the format from a picker.
+    var hasClubCareers: Bool { self != .tennis }
+
     /// SF Symbol used in filter pills / format icons.
     var symbol: String {
         switch self {

@@ -31,6 +31,17 @@ struct GameSetupScreen<Options: View>: View {
     /// ends up drifting into launching a Pro session for free.
     var secondaryLabel: LocalizedStringKey? = nil
     var onSecondary: (() -> Void)? = nil
+    /// **Multi-sport mode** (Puzzle Blitz, the one format whose session spans sports). When
+    /// non-nil the SPORT card becomes a multi-select over this set, and `sport` follows the
+    /// first-ordered selection so everything else on this screen — the entitlement guard, the
+    /// app-wide sport-default write, the team-identity warm — keeps working unchanged rather
+    /// than growing a parallel multi-sport copy of itself.
+    ///
+    /// Added here rather than by writing Blitz its own setup screen because this scaffold is the
+    /// promise that every format's setup "looks and behaves identically" (see this type's own doc
+    /// comment); a second screen is how the two drift, and the Pro gate is exactly the thing that
+    /// must not drift. Defaulted to nil, so the four existing call sites are untouched.
+    var sports: Binding<Set<Sport>>? = nil
     @ViewBuilder var options: () -> Options
 
     @State private var showPaywall = false
@@ -55,7 +66,10 @@ struct GameSetupScreen<Options: View>: View {
                     }
                     .padding(.top, 8)
 
-                    SetupOptionCard(title: "SPORT", caption: nil) {
+                    // "SPORTS" (plural) in multi-select mode — the card title is the only thing
+                    // on screen that says whether ticking a second chip replaces the first or
+                    // adds to it.
+                    SetupOptionCard(title: sports == nil ? "SPORT" : "SPORTS", caption: nil) {
                         sportPicker
                     }
 
@@ -119,6 +133,17 @@ struct GameSetupScreen<Options: View>: View {
     /// into launching a Pro-tier session for free.
     private func begin(_ action: () -> Void) {
         let filter = SportFilter(rawValue: sport.rawValue) ?? .all
+        // In multi-sport mode EVERY selected sport has to clear the gate, not just the primary
+        // one `sport` tracks — otherwise ticking NFL plus a Pro sport would launch a session
+        // that serves the locked sport's boards for free, which is the same hole the
+        // single-sport guard below exists to close.
+        if let sports {
+            guard !sports.wrappedValue.isEmpty else { return }
+            let locked = sports.wrappedValue.contains {
+                !container.entitlements.canSelect(SportFilter(rawValue: $0.rawValue) ?? .all)
+            }
+            guard sportGateExempt || !locked else { showPaywall = true; return }
+        }
         // The picker's own default can seed a Pro-locked sport (date-seeded "sport of
         // the day", or the last sport played before a Pro trial lapsed) without the
         // user ever tapping a locked chip — that path skips the picker's own lock
@@ -146,13 +171,31 @@ struct GameSetupScreen<Options: View>: View {
     /// minutes) and which for soccer only knows 11 hardcoded clubs, so nearly every club
     /// rendered no crest at all.
     private func warmTeamIdentities() {
-        container.catalog.warmIdentities(for: sport)
+        // Multi-sport mode warms every ticked sport, not just the primary: a blitz serves boards
+        // from all of them, and an unwarmed sport is exactly the cold-index case this method's
+        // history is about (an empty index falls through to the ESPN CDN, which for soccer knows
+        // eleven clubs).
+        for sport in sports?.wrappedValue ?? [sport] { container.catalog.warmIdentities(for: sport) }
     }
 
     private func correctLockedDefault() {
         // An exempt screen's sport is forced externally (sport-of-the-day) and legitimately
         // allowed to be Pro-locked — snapping it to NFL would fight that forcing.
         guard !sportGateExempt else { return }
+        // Multi-sport mode: drop every locked sport from the persisted selection (a Pro trial
+        // can lapse between runs, leaving a saved config full of sports this account can no
+        // longer play) and never leave the set empty, which would disable Start with no
+        // explanation. Then fall through so `sport` is re-derived from what survived.
+        if let sports {
+            let allowed = sports.wrappedValue.filter {
+                container.entitlements.canSelect(SportFilter(rawValue: $0.rawValue) ?? .all)
+            }
+            let corrected = allowed.isEmpty ? Set([Sport.nfl]) : allowed
+            if corrected != sports.wrappedValue { sports.wrappedValue = corrected }
+            let primary = Sport.allCases.first(where: corrected.contains) ?? .nfl
+            if sport != primary { sport = primary }
+            return
+        }
         let filter = SportFilter(rawValue: sport.rawValue) ?? .all
         if !container.entitlements.canSelect(filter) { sport = .nfl }
     }
@@ -169,13 +212,16 @@ struct GameSetupScreen<Options: View>: View {
                 // renders as a normal selection even when it'd otherwise be Pro-locked.
                 let isLocked = !container.entitlements.canSelect(filter)
                     && !(sportGateExempt && candidate == sport)
-                let active = sport == candidate
+                // Multi-sport mode highlights every ticked sport, not just the primary.
+                let active = sports.map { $0.wrappedValue.contains(candidate) } ?? (sport == candidate)
                 Button {
                     if isLocked { showPaywall = true }
+                    else if let sports { withAnimation(Motion.snap) { toggle(candidate, in: sports) } }
                     else { withAnimation(Motion.snap) { sport = candidate } }
                 } label: {
                     HStack(spacing: 5) {
-                        Image(systemName: isLocked ? "lock.fill" : candidate.symbol)
+                        Image(systemName: isLocked ? "lock.fill"
+                              : (sports != nil && active ? "checkmark" : candidate.symbol))
                             .font(.system(size: 11, weight: .bold))
                         Text(candidate.displayName)
                             .font(.custom(active ? FontName.condBlack : FontName.condBold, size: 13))
@@ -191,6 +237,22 @@ struct GameSetupScreen<Options: View>: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+
+    /// Ticks/unticks one sport in multi-sport mode, refusing to empty the set — an empty
+    /// selection can't serve a board, and a Start button that silently does nothing is worse
+    /// than a chip that won't untick. `sport` follows so the entitlement guard, the app-wide
+    /// default write and the identity warm all keep reading one concrete sport.
+    private func toggle(_ candidate: Sport, in sports: Binding<Set<Sport>>) {
+        var next = sports.wrappedValue
+        if next.contains(candidate) {
+            guard next.count > 1 else { return }
+            next.remove(candidate)
+        } else {
+            next.insert(candidate)
+        }
+        sports.wrappedValue = next
+        sport = Sport.allCases.first(where: next.contains) ?? .nfl
     }
 }
 

@@ -81,6 +81,12 @@ enum DebugLaunch {
     /// Browse: auto-open the pre-play share sheet for the first archive puzzle. Consumed
     /// inside BrowseView, so it only fires combined with the flag that gets there:
     /// `-screenshotBrowse -screenshotShare`. Standalone it's a silent no-op (verified 2026-07-13).
+    /// Puzzle Blitz. `-screenshotBlitzSetup` holds on the setup screen (the only blitz surface a
+    /// single screenshot can reach reliably); `-screenshotBlitz` starts a run and lands on the
+    /// first board, whichever format it happens to deal.
+    static var autoOpenBlitz: Bool { has("-screenshotBlitz") || has("-screenshotBlitzSetup") }
+    static var holdBlitzSetup: Bool { has("-screenshotBlitzSetup") }
+
     static var autoOpenShare: Bool { has("-screenshotShare") }
     /// Keep4 game: auto-open the scoring-formula sheet (simctl can't tap the chip). Same
     /// combination rule as `autoOpenShare`: needs `-screenshotGame -screenshotScoringInfo`.

@@ -17,6 +17,15 @@ struct Keep4GameView: View {
     /// resolved board is exactly the one challenged (see `ContentView.accept`). If both are
     /// somehow set, `duel` wins — it is the one with a server row behind it.
     var challenge: ChallengeLink? = nil
+    /// Set when this board is one round of a Puzzle Blitz run. Suppresses this view's own result
+    /// screen and its `RepositoryContainer.complete` call — a blitz banks XP once for the whole
+    /// run — and reports the outcome to the session instead. See `BlitzSession`, which documents
+    /// the contract all four blitzable formats share.
+    ///
+    /// Mutually exclusive with `duel` and `challenge` in practice; `duel` still wins if both are
+    /// somehow set, for the same reason it wins over `challenge` (it is the one with a server row
+    /// behind it and an opponent waiting on a submission).
+    var blitz: BlitzSession? = nil
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
@@ -53,7 +62,11 @@ struct Keep4GameView: View {
 
     var body: some View {
         Group {
-            if let result {
+            // `blitz == nil` is the whole "score at the end only" rule at this call site: a blitz
+            // round still sets `result` (it's the double-finish guard), but must never render the
+            // result screen — the run's one score comes from `BlitzResultView`. The board stays
+            // up for the frame it takes `BlitzGameView` to swap in the next one.
+            if let result, blitz == nil {
                 Keep4ResultView(puzzle: puzzle,
                                 placement: placement,
                                 result: result,
@@ -111,7 +124,11 @@ struct Keep4GameView: View {
 
     private var playBoard: some View {
         VStack(spacing: 0) {
-            if let duel {
+            if let blitz {
+                // Same slot the duel bar uses, and only ever one of the two: a blitz board is
+                // never also a duel board.
+                BlitzStatusBar(session: blitz)
+            } else if let duel {
                 // Above the header, not inside it: the clock has to be the first thing on
                 // screen at every scroll position and in every one of the header's states.
                 // `placement.count` is cards decided, not cards known-correct (blind sort) —
@@ -168,7 +185,7 @@ struct Keep4GameView: View {
     private var header: some View {
         VStack(spacing: 12) {
             HStack {
-                Button { dismiss() } label: {
+                Button { close() } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(Color.textMuted)
@@ -340,12 +357,31 @@ struct Keep4GameView: View {
         finish()
     }
 
+    /// Leaving the board. Inside a blitz that means **ending the run**, not dismissing this view:
+    /// this board is presented inline by `BlitzGameView`, so a bare `dismiss()` would tear down
+    /// the whole blitz cover and the player would never see their score. Shared by every exit in
+    /// this view so none of them can drift.
+    private func close() {
+        if let blitz { blitz.endEarly() } else { dismiss() }
+    }
+
     private func finish() {
         // The clock and the eighth card can both try to finish the same run.
         guard result == nil else { return }
         let r = Keep4Scoring.score(puzzle: puzzle, placement: placement)
         if r.isPerfect { Haptics.success() } else { Haptics.commit() }
         let performance = Double(r.correctCount) / Double(puzzle.players.count)
+        // A blitz round reports up and stops here: no result screen (the run's score is shown
+        // once, at the end) and no `complete` (the run banks XP once, for all its boards).
+        // `cleared` is "beat the chance floor" for this format — a blind 4/4 sort expects four
+        // right by assignment alone, so five is the first score that means anything.
+        if let blitz {
+            result = r
+            blitz.finishRound(format: .keep4, sport: puzzle.sport, puzzleID: puzzle.id,
+                              performance: performance,
+                              cleared: r.correctCount > puzzle.players.count / 2)
+            return
+        }
         // Versus and community are both possible on the same session (a community-authored
         // puzzle can't currently be a Versus board, but if that ever changes, Versus should
         // win — it's the more specific mode).

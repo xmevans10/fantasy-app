@@ -162,6 +162,7 @@ private extension GameFormatKind {
         case .draftSpin:   return "Draft & Spin"
         case .grid:        return "The Grid"
         case .journeyman:  return "Journeyman"
+        case .blitz:       return "Puzzle Blitz"
         }
     }
 }

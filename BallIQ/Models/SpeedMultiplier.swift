@@ -55,7 +55,11 @@ enum SpeedMultiplier {
         case .whoAmI:                  return par(for: PuzzleFormat.whoami)
         case .journeyman:              return par(for: PuzzleFormat.journeyman)
         case .grid:                    return par(for: PuzzleFormat.grid)
-        case .overUnder, .draftSpin:   return nil
+        // Blitz joins these two in having no par, and it is the most load-bearing nil of the
+        // three: a blitz run is *already* priced on speed — finishing a board sooner is what
+        // buys the next one — so an M25 bonus on top would charge the same second twice. See
+        // `BlitzFormat`'s doc comment.
+        case .overUnder, .draftSpin, .blitz: return nil
         }
     }
 

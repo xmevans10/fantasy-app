@@ -39,6 +39,21 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(es("K4C4"), "K4C4")
         XCTAssertEqual(es("THE GRID"), "THE GRID")
         XCTAssertEqual(es("Journeyman"), "Journeyman")
+        // Puzzle Blitz joins them (M27) — the mode name and its status-bar label are branding.
+        XCTAssertEqual(es("Puzzle Blitz"), "Puzzle Blitz")
+        XCTAssertEqual(es("BLITZ"), "BLITZ")
+    }
+
+    /// Puzzle Blitz shipped a screen's worth of new copy at once (M27). Spot-checks one string
+    /// from each of its three surfaces — setup, the in-run board chrome, the result — because a
+    /// whole feature's keys going missing from the catalog is invisible in English and total in
+    /// every other locale.
+    func testBlitzCopyIsTranslated() {
+        XCTAssertEqual(es("Set your blitz"), "Configura tu blitz")
+        XCTAssertEqual(es("PUZZLE TYPES"), "TIPOS DE PUZLE")
+        XCTAssertEqual(es("FULL VALUE"), "VALOR COMPLETO")
+        XCTAssertEqual(es("BEST STREAK"), "MEJOR RACHA")
+        XCTAssertEqual(es("WHERE IT CAME FROM"), "DE DÓNDE SALIÓ")
     }
 
     /// Every key in the catalog is its own English source string (verified: no `en`

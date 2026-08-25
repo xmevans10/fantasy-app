@@ -15,6 +15,10 @@ struct JourneymanGameView: View {
     /// Set when this board is being played as a timed Versus duel. `duel` wins over `challenge`
     /// for the same reason it does in `WhoAmIGameView`.
     var duel: DuelSession? = nil
+    /// Set when this board is one round of a Puzzle Blitz run — suppresses this view's result
+    /// screen and its `complete` call, reporting to the session instead. See `BlitzSession` for
+    /// the contract, and `Keep4GameView.blitz` for the precedence note it shares.
+    var blitz: BlitzSession? = nil
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
@@ -45,6 +49,13 @@ struct JourneymanGameView: View {
         JourneymanScoring.nextGuessCost(guess: currentGuess, difficulty: puzzle.difficulty)
     }
 
+    /// A wrong guess's price as a share of this board's own maximum — the blitz-safe form of
+    /// `nextGuessCost`, which is in points. See `BlitzBoardValue`.
+    private var wrongGuessCostShare: String {
+        BlitzBoardValue.cost(nextGuessCost,
+                             of: JourneymanScoring.maxScore(difficulty: puzzle.difficulty))
+    }
+
     private var effectiveChallenge: ChallengeLink? { duel == nil ? challenge : nil }
     private var isDaily: Bool { duel == nil && (ranked || challenge != nil) }
 
@@ -60,11 +71,19 @@ struct JourneymanGameView: View {
     /// through this one.
     private var live: LiveDuelSession? { duel?.live }
 
+    /// Leaving the board — ends the whole run inside a blitz rather than dismissing this view.
+    /// See `Keep4GameView.close`.
+    private func close() {
+        if let blitz { blitz.endEarly() } else { dismiss() }
+    }
+
     var body: some View {
         Group {
             if let live, let duel {
                 LiveJourneymanBoard(puzzle: puzzle, duel: duel, live: live) { dismiss() }
-            } else if let result {
+            } else if let result, blitz == nil {
+                // See `Keep4GameView.body` — a blitz round sets `result` as its double-finish
+                // guard but must never show a score.
                 JourneymanResultView(puzzle: puzzle, result: result, rewards: rewards,
                                      isDaily: isDaily, challenge: effectiveChallenge,
                                      duelVerdict: duel?.ladder?
@@ -100,7 +119,9 @@ struct JourneymanGameView: View {
 
     private var playBoard: some View {
         VStack(spacing: 0) {
-            if let duel {
+            if let blitz {
+                BlitzStatusBar(session: blitz)
+            } else if let duel {
                 DuelStatusBar(session: duel, playerScore: wrongGuesses)
             }
             header
@@ -125,7 +146,7 @@ struct JourneymanGameView: View {
     private var header: some View {
         VStack(spacing: 12) {
             HStack {
-                Button { dismiss() } label: {
+                Button { close() } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(Color.textMuted)
@@ -141,7 +162,15 @@ struct JourneymanGameView: View {
                 Text("Journeyman")
                     .font(.label12)
                     .foregroundStyle(Color.accentText)
-                Text("Worth \(currentValue) pts")
+                // Blitz shows a share of this board's maximum instead of points — see
+                // `BlitzBoardValue`. (`LiveJourneymanBoard` keeps the points form: a live duel is
+                // never a blitz board, and that view is deliberately kept byte-identical to what
+                // 1.6.0 shipped.)
+                Text(blitz == nil
+                     ? String(localized: "Worth \(currentValue) pts")
+                     : BlitzBoardValue.remaining(
+                        current: currentValue,
+                        max: JourneymanScoring.maxScore(difficulty: puzzle.difficulty)))
                     .font(.heading)
                     .foregroundStyle(Color.textPrimary)
                 Text(guessesLeft == 1 ? "1 guess left" : "\(guessesLeft) guesses left")
@@ -216,8 +245,10 @@ struct JourneymanGameView: View {
                     // it's the only cost in this format, so hiding it until it's charged would
                     // make the score move for reasons the player never saw coming.
                     Text(guessesLeft > 1
-                         ? "A wrong guess costs \(nextGuessCost) pts"
-                         : "Last guess")
+                         ? (blitz == nil
+                            ? String(localized: "A wrong guess costs \(nextGuessCost) pts")
+                            : String(localized: "A wrong guess costs \(wrongGuessCostShare)"))
+                         : String(localized: "Last guess"))
                         .font(.label12)
                         .foregroundStyle(guessesLeft > 1 ? Color.textMuted : Color.dangerText)
                     Spacer()
@@ -288,6 +319,14 @@ struct JourneymanGameView: View {
                                         solved: solved, difficulty: puzzle.difficulty)
         if solved { Haptics.success() }
         let perfect = solved && wrongGuesses == 0
+        // Blitz: report up, no result screen, no `complete` — see `BlitzSession`. `cleared` is
+        // simply "solved", same as Who Am I?: a career path has no chance floor.
+        if let blitz {
+            result = r
+            blitz.finishRound(format: .journeyman, sport: puzzle.sport, puzzleID: puzzle.id,
+                              performance: r.performance, cleared: solved)
+            return
+        }
         var details = GameResultDetails()
         details.cluesUsed = r.guessesUsed
         details.wrongGuesses = r.wrongGuesses

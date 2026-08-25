@@ -38,6 +38,7 @@ struct HomeView: View {
     @State private var showDraftSpin = false
     @State private var showDailyDraft = false
     @State private var showGrid = false
+    @State private var showBlitz = false
     /// The K4C4/Who Am I? tiles open their format hub (daily + archive in one place,
     /// 2026-07-17 IA fix) — not just today's daily, which made the flashiest tiles the
     /// shallowest tap on the page.
@@ -190,6 +191,9 @@ struct HomeView: View {
             }
             .fullScreenCover(isPresented: $showGrid, onDismiss: evaluateMoment) {
                 GridGameView().environmentObject(container)
+            }
+            .fullScreenCover(isPresented: $showBlitz, onDismiss: evaluateMoment) {
+                BlitzGameView().environmentObject(container)
             }
             .navigationDestination(isPresented: $showKeep4Hub) {
                 BrowseView(pinnedFormat: .keep4).environmentObject(container)
@@ -410,6 +414,10 @@ struct HomeView: View {
         case "journeyman": showJourneymanHub = true
         case "versus": selectedTab = 2
         case "overunder": showOverUnder = true
+        // Free, like Over/Under and unlike the two packs: Blitz is an engagement surface
+        // (BALLIQ_SPEC §9.3 sequences those first) and it serves boards the player can't choose,
+        // which is a different product from the Pro archive's browse-and-replay.
+        case "blitz": showBlitz = true
         case "draft": launchDraftSpin(daily: false)
         case "grid":
             if container.entitlements.canPlayGrid() { showGrid = true }
@@ -461,6 +469,8 @@ struct HomeView: View {
             showDraftSpin = true
         } else if DebugLaunch.autoOpenGrid {
             showGrid = true
+        } else if DebugLaunch.autoOpenBlitz {
+            showBlitz = true
         }
     }
 

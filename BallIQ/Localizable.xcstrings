@@ -6400,6 +6400,372 @@
           }
         }
       }
+    },
+    "Set your blitz" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configura tu blitz"
+          }
+        }
+      }
+    },
+    "Start the blitz" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empezar el blitz"
+          }
+        }
+      }
+    },
+    "SPORTS" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DEPORTES"
+          }
+        }
+      }
+    },
+    "TIMER" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TEMPORIZADOR"
+          }
+        }
+      }
+    },
+    "PUZZLE TYPES" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TIPOS DE PUZLE"
+          }
+        }
+      }
+    },
+    "SCORING" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PUNTUACIÓN"
+          }
+        }
+      }
+    },
+    "%lld MIN" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld MIN"
+          }
+        }
+      }
+    },
+    "The clock decides how many puzzles you get — never how long you get on one. Time out mid-board and you still finish it; it's just your last." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El reloj decide cuántos puzles juegas, nunca cuánto tiempo tienes en uno. Si se acaba a mitad de tablero, lo terminas igual; solo será el último."
+          }
+        }
+      }
+    },
+    "About %lld puzzles at this mix. Drop the long formats for a faster blitz." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unos %lld puzles con esta mezcla. Quita los formatos largos para un blitz más rápido."
+          }
+        }
+      }
+    },
+    "No score until the clock stops. Every format pays the same per second at par, minus what a coin flip would have got you — so the mix you pick is taste, not strategy." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin puntuación hasta que pare el reloj. Cada formato paga lo mismo por segundo en el par, menos lo que te habría dado el azar: la mezcla que elijas es gusto, no estrategia."
+          }
+        }
+      }
+    },
+    "Timed · All formats" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cronometrado · Todos los formatos"
+          }
+        }
+      }
+    },
+    "DEALING PUZZLES" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "REPARTIENDO PUZLES"
+          }
+        }
+      }
+    },
+    "No puzzles for this mix" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay puzles para esta mezcla"
+          }
+        }
+      }
+    },
+    "Nothing's available for the sports and formats you picked. Try adding a sport or another puzzle type." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay nada para los deportes y formatos que elegiste. Prueba a añadir un deporte u otro tipo de puzle."
+          }
+        }
+      }
+    },
+    "BACK TO SETUP" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VOLVER A AJUSTES"
+          }
+        }
+      }
+    },
+    "%lld done" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld hechos"
+          }
+        }
+      }
+    },
+    "Blitz: %1$lld seconds left, %2$lld puzzles done" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blitz: quedan %1$lld segundos, %2$lld puzles hechos"
+          }
+        }
+      }
+    },
+    "NEW BLITZ BEST" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NUEVO RÉCORD DE BLITZ"
+          }
+        }
+      }
+    },
+    "RUN ENDED" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RONDA TERMINADA"
+          }
+        }
+      }
+    },
+    "TIME" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TIEMPO"
+          }
+        }
+      }
+    },
+    "1 puzzle · %lld clean" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 puzle · %lld limpios"
+          }
+        }
+      }
+    },
+    "%1$lld puzzles · %2$lld clean" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld puzles · %2$lld limpios"
+          }
+        }
+      }
+    },
+    "%1$lld MIN BEST: %2$lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MEJOR DE %1$lld MIN: %2$lld"
+          }
+        }
+      }
+    },
+    "BEST STREAK" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MEJOR RACHA"
+          }
+        }
+      }
+    },
+    "PER BOARD" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "POR TABLERO"
+          }
+        }
+      }
+    },
+    "WHERE IT CAME FROM" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DE DÓNDE SALIÓ"
+          }
+        }
+      }
+    },
+    "1 board" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 tablero"
+          }
+        }
+      }
+    },
+    "%lld boards" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld tableros"
+          }
+        }
+      }
+    },
+    "PLAY AGAIN" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JUGAR OTRA VEZ"
+          }
+        }
+      }
+    },
+    "FULL VALUE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALOR COMPLETO"
+          }
+        }
+      }
+    },
+    "%lld%% VALUE LEFT" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QUEDA %lld%% DEL VALOR"
+          }
+        }
+      }
+    },
+    "Next clue · %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siguiente pista · %@"
+          }
+        }
+      }
+    },
+    "Costs %@ of this board" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuesta %@ de este tablero"
+          }
+        }
+      }
+    },
+    "A wrong guess costs %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un fallo cuesta %@"
+          }
+        }
+      }
+    },
+    "Puzzle Blitz" : {
+      "shouldTranslate" : false
+    },
+    "BLITZ" : {
+      "shouldTranslate" : false
+    },
+    "%1$@ needs club careers, so it can't come up for %2$@. About %3$lld puzzles from the rest." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ necesita una trayectoria por clubes, así que no puede salir en %2$@. Unos %3$lld puzles del resto."
+          }
+        }
+      }
+    },
+    "Not available for %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No disponible para %@"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
