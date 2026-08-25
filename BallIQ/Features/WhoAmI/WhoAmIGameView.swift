@@ -88,6 +88,9 @@ struct WhoAmIGameView: View {
                                                "duel": "\(duel != nil)"])
             }
             if DebugLaunch.autoSubmitResult { autoSolveForScreenshot() }
+            else if DebugLaunch.whoAmIRevealedClues > 0 {
+                revealedCount = min(puzzle.clues.count, DebugLaunch.whoAmIRevealedClues)
+            }
         }
         .reportReasonDialog(isPresented: $showReportDialog) { reason in report(reason: reason) }
         .alert("Report sent", isPresented: $showReportSent) {

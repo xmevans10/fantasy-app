@@ -131,25 +131,36 @@ def panel(raw_path: str, headline: list[str], subhead: str, bg: tuple,
 # One background across the whole set, so the six panels read as a single run in the
 # product-page carousel and the screenshots themselves supply the colour variety.
 SUBTLE = (0xD5, 0xDE, 0xFF)
+# Lineup rebuilt 2026-08-25 against marketing/APP-STORE-SCREENSHOT-AUDIT.md. The old set led
+# with four result screens (a score summary is the payoff, not the pitch), promised "SIX CLUES"
+# over an image containing one, said "Ten real seasons" of an eight-card game, and showed the
+# league's faceless-helmet placeholder in three of six shots. Now: one result screen at most,
+# every shot is a live board, and Puzzle Blitz + Journeyman — both shipped, neither previously
+# represented — carry slots 3 and 4. Order matters more than the count: most people never swipe
+# past three, so the first three have to carry the whole pitch.
 PANELS = [
     dict(raw="01_home.png",
          headline=["Four new puzzles.", "Every day."],
          subhead="NFL, NBA, MLB, soccer and tennis — built from real stat lines."),
-    dict(raw="02_gridresult.png",
-         headline=["The 3x3 that", "settles it."],
-         subhead="Team by decade. Nine cells. Every roster since 1999."),
-    dict(raw="03_keep4.png",
+    dict(raw="02_keep4.png",
          headline=["Keep 4. Cut 4.", "No do-overs."],
-         subhead="Ten real seasons, one hidden stat, sorted blind."),
-    dict(raw="04_draftspin.png",
-         headline=["Spin a roster.", "Sim the season."],
-         subhead="Random team-and-year slots. Draft, then watch it play out."),
+         # Was "Ten real seasons" — the game deals eight, and the shot says CARD 1 OF 8
+         # directly above the caption.
+         subhead="Eight real seasons, one hidden stat, sorted blind."),
+    dict(raw="03_journeyman.png",
+         headline=["Name him from", "his clubs."],
+         subhead="Every team he played for, in order. Five guesses."),
+    dict(raw="04_blitz.png",
+         headline=["One clock.", "Every format."],
+         # Blitz deliberately excludes The Grid (BlitzFormat.excluded) — don't list it here.
+         subhead="Four formats, back to back. One score at the end."),
     dict(raw="05_whoami.png",
          headline=["Six clues.", "One player."],
          subhead="Guess early, score higher. Clues pull from thirty-odd angles."),
-    dict(raw="06_overunder.png",
-         headline=["Over or under?"],
-         subhead="Three lives, real stat lines. How long can you last?"),
+    dict(raw="06_grid.png",
+         headline=["The 3x3 that", "settles it."],
+         # Not "team by decade" any more — the axes carry positions and stat milestones now.
+         subhead="Nine cells. One player each, row and column."),
 ]
 
 SIZES = {"iphone": (1290, 2796), "ipad": (2064, 2752)}

@@ -224,9 +224,22 @@ enum DebugLaunch {
     /// the system "Sign in to Apple Account" sheet, which overlays every simctl screenshot
     /// run: `-skipStoreKit`.
     static var skipStoreKit: Bool { has("-skipStoreKit") }
+    /// Open Who Am I? with the first N clues already revealed, without solving the board:
+    /// `-screenshotWhoAmIClues 3`. `-screenshotWhoAmI` alone shows one clue over a screen of
+    /// empty cream, which is what made the live App Store shot promise "SIX CLUES" over an
+    /// image containing none. Distinct from `autoSubmitResult`'s `autoSolveForScreenshot`,
+    /// which reveals three and then *finishes* the board — that lands on the result, not the
+    /// game. 0 = leave it alone.
+    static var whoAmIRevealedClues: Int {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-screenshotWhoAmIClues"), i + 1 < args.count,
+              let n = Int(args[i + 1]) else { return 0 }
+        return n
+    }
     #else
     static let autoOpenGame = false
     static let autoOpenWhoAmI = false
+    static let whoAmIRevealedClues = 0
     static let autoOpenJourneyman = false
     static let autoSubmitResult = false
     static let autoOpenCreateKeep4 = false
