@@ -439,15 +439,29 @@ def catalog_rows(seasons: list[RawSeason]) -> list[dict]:
 IMPROVABLE_COLUMNS = ("headshot", "competition")
 
 
-def apply_headshot_ledger(rows: list[dict], ledger: dict[str, str] | None = None) -> dict:
-    """Rewrite each row's `headshot` through the rehosting ledger, in place.
+def apply_headshot_ledger(seasons: list[RawSeason],
+                          ledger: dict[str, str] | None = None) -> dict:
+    """Rewrite every season's `headshot` through the rehosting ledger, in place.
 
-    MUST run before `filter_new_catalog_rows`. The order is the whole point: a source the
-    ledger calls a placeholder becomes `''` here, which is falsy, so the `fillable` test in
-    the filter no longer treats the row as improvable and stops resending it. Applied the
-    other way round the filter would still queue the row and hand the raw CDN URL straight
-    back to the catalog — which is exactly the loop that put 35% of NFL back on the league's
-    faceless-helmet graphic (see `upsert.fetch_headshot_ledger`).
+    Applied to `RawSeason` at the top of the run, BEFORE anything derives from it, because
+    a headshot URL gets copied into two independent places and fixing only one leaves the
+    app still showing the placeholder:
+
+      * `player_seasons.headshot` — the creation catalog, and
+      * `puzzles.content` — where every minted daily FREEZES its own copy of the URL
+        (`content.players[].headshot` for keep4, top-level `content.headshot` for
+        journeyman). Repointing the catalog does nothing for an already-minted puzzle,
+        which is what the app actually serves on the daily. Measured 2026-08-25: 269
+        minted rows still pointed at NFL's CDN and *zero* at our Storage bucket, so the
+        faceless helmet kept rendering on the live daily long after the catalog was clean.
+
+    Doing it here means puzzles, the catalog and both bundled fallbacks all inherit one
+    decision instead of each needing its own repoint pass.
+
+    Ordering also matters downstream: a source the ledger calls a placeholder becomes `''`,
+    which is falsy, so `filter_new_catalog_rows`'s `fillable` test stops treating the row as
+    improvable. Applied after that filter instead, the row would still be queued and the raw
+    CDN URL handed straight back — the loop that put 35% of NFL back on the helmet.
 
     Passing `ledger` explicitly keeps this testable offline; the default fetches it."""
     if ledger is None:
@@ -455,8 +469,8 @@ def apply_headshot_ledger(rows: list[dict], ledger: dict[str, str] | None = None
         ledger = fetch_headshot_ledger()
 
     counts = {"repointed": 0, "cleared": 0, "unknown": 0}
-    for row in rows:
-        source = row.get("headshot") or ""
+    for season in seasons:
+        source = season.headshot or ""
         if not source:
             continue
         if source not in ledger:
@@ -465,7 +479,7 @@ def apply_headshot_ledger(rows: list[dict], ledger: dict[str, str] | None = None
         replacement = ledger[source]
         if replacement == source:
             continue
-        row["headshot"] = replacement
+        object.__setattr__(season, "headshot", replacement)
         counts["cleared" if replacement == "" else "repointed"] += 1
     print(f"[headshots] ledger applied: {counts['repointed']} repointed to Storage, "
           f"{counts['cleared']} cleared to the initials fallback, "
@@ -890,6 +904,14 @@ def main() -> int:
 
     load_dotenv()
     seasons = gather_seasons(args.nfl_years, args.game_years)
+    # Before build_rows/catalog_rows/the fallbacks, so the minted puzzles and the catalog
+    # can't disagree about a player's photo. Needs Supabase, so it's skipped on a --dry-run
+    # with no credentials; a dry run writes nothing, so nothing can go stale from skipping.
+    if not args.dry_run or os.getenv("SUPABASE_URL"):
+        try:
+            apply_headshot_ledger(seasons)
+        except Exception as err:                      # noqa: BLE001 - never block a run on it
+            print(f"[headshots] ledger skipped ({err}) — headshots stay as providers gave them")
     keep4, whoami, health_report = build_rows(seasons)
     all_rows = keep4 + whoami
 
@@ -916,9 +938,7 @@ def main() -> int:
         sent = upsert(all_rows)
         print(f"[upsert] sent {sent} puzzle rows to Supabase")
         if args.catalog:
-            rows = catalog_rows(seasons)
-            apply_headshot_ledger(rows)      # before the filter — see its docstring
-            rows = filter_new_catalog_rows(rows)
+            rows = filter_new_catalog_rows(catalog_rows(seasons))
             print(f"[upsert] sending {len(rows)} new/changed player_seasons …")
             print(f"[upsert] sent {upsert_catalog(rows)} catalog rows")
     elif args.catalog and not args.dry_run:
