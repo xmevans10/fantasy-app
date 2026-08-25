@@ -199,3 +199,60 @@ def test_assign_active_dates_never_lands_on_a_day_a_device_could_call_today():
     assert (today - dt.timedelta(days=1)).isoformat() not in stamped
     # Still a contiguous 30-day archive window, just shifted back off the live days.
     assert stamped == {(today - dt.timedelta(days=d)).isoformat() for d in range(2, 32)}
+
+
+# --- headshot ledger ------------------------------------------------------------------
+# Regression cover for the 2026-08-25 finding: 46,936 NFL rows (35% of the sport) were
+# hotlinked back to the league's faceless-helmet graphic despite 83,580 already being
+# rehosted, because the ingest pipeline wrote raw CDN URLs over a cleanup pass that only
+# ever ran afterwards.
+
+_HELMET = "https://static.www.nfl.com/image/private/f_auto,q_auto/league/gk8uzafftvq11sz4f2gn"
+_REAL = "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/realphoto"
+_STORAGE = "https://x.supabase.co/storage/v1/object/public/player-headshots/nfl/real.png"
+_LEDGER = {_HELMET: "", _REAL: _STORAGE}
+
+
+def test_apply_headshot_ledger_clears_placeholders_and_repoints_real_photos():
+    rows = catalog_rows([
+        _season("Helmet Guy", season_year=2015, headshot=_HELMET),
+        _season("Real Guy", season_year=2016, headshot=_REAL),
+        _season("Unknown Guy", season_year=2017, headshot="https://cdn.example/new.png"),
+    ])
+    counts = main.apply_headshot_ledger(rows, ledger=_LEDGER)
+
+    by_name = {r["name"]: r for r in rows}
+    assert by_name["Helmet Guy"]["headshot"] == ""          # -> initials monogram
+    assert by_name["Real Guy"]["headshot"] == _STORAGE
+    # Never seen before: left alone rather than guessed at.
+    assert by_name["Unknown Guy"]["headshot"] == "https://cdn.example/new.png"
+    assert counts == {"repointed": 1, "cleared": 1, "unknown": 1}
+
+
+def test_ledger_cleared_row_is_not_then_resent_as_improvable():
+    # The actual regression loop. A repointed placeholder is stored as '', which
+    # `fetch_catalog_ids_missing` reports as *missing*, so the filter used to call the row
+    # "improvable" and hand the helmet URL straight back. Applying the ledger FIRST makes
+    # the row's headshot falsy, so it is no longer fillable and drops out of the resend.
+    rows = catalog_rows([_season("Helmet Guy", season_year=2015, headshot=_HELMET)])
+    stored = {"nfl-helmet-guy-2015"}
+
+    main.apply_headshot_ledger(rows, ledger=_LEDGER)
+    with patch("tools.ingest.upsert.fetch_existing_catalog_ids", return_value=stored), \
+         patch("tools.ingest.upsert.fetch_catalog_ids_missing", return_value=stored):
+        out = filter_new_catalog_rows(rows)
+
+    assert out == [], "a ledger-cleared placeholder must not be resent to the catalog"
+
+
+def test_ledger_applied_after_the_filter_would_still_resend_the_helmet():
+    # Guards the ordering itself: same inputs, wrong order, bug reappears. If this ever
+    # starts failing, the call in main() has been moved below filter_new_catalog_rows().
+    rows = catalog_rows([_season("Helmet Guy", season_year=2015, headshot=_HELMET)])
+    stored = {"nfl-helmet-guy-2015"}
+
+    with patch("tools.ingest.upsert.fetch_existing_catalog_ids", return_value=stored), \
+         patch("tools.ingest.upsert.fetch_catalog_ids_missing", return_value=stored):
+        out = filter_new_catalog_rows(rows)
+
+    assert len(out) == 1 and out[0]["headshot"] == _HELMET

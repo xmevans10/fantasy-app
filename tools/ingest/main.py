@@ -439,6 +439,40 @@ def catalog_rows(seasons: list[RawSeason]) -> list[dict]:
 IMPROVABLE_COLUMNS = ("headshot", "competition")
 
 
+def apply_headshot_ledger(rows: list[dict], ledger: dict[str, str] | None = None) -> dict:
+    """Rewrite each row's `headshot` through the rehosting ledger, in place.
+
+    MUST run before `filter_new_catalog_rows`. The order is the whole point: a source the
+    ledger calls a placeholder becomes `''` here, which is falsy, so the `fillable` test in
+    the filter no longer treats the row as improvable and stops resending it. Applied the
+    other way round the filter would still queue the row and hand the raw CDN URL straight
+    back to the catalog — which is exactly the loop that put 35% of NFL back on the league's
+    faceless-helmet graphic (see `upsert.fetch_headshot_ledger`).
+
+    Passing `ledger` explicitly keeps this testable offline; the default fetches it."""
+    if ledger is None:
+        from .upsert import fetch_headshot_ledger
+        ledger = fetch_headshot_ledger()
+
+    counts = {"repointed": 0, "cleared": 0, "unknown": 0}
+    for row in rows:
+        source = row.get("headshot") or ""
+        if not source:
+            continue
+        if source not in ledger:
+            counts["unknown"] += 1
+            continue
+        replacement = ledger[source]
+        if replacement == source:
+            continue
+        row["headshot"] = replacement
+        counts["cleared" if replacement == "" else "repointed"] += 1
+    print(f"[headshots] ledger applied: {counts['repointed']} repointed to Storage, "
+          f"{counts['cleared']} cleared to the initials fallback, "
+          f"{counts['unknown']} not yet in the ledger")
+    return counts
+
+
 def filter_new_catalog_rows(rows: list[dict]) -> list[dict]:
     """Drop catalog rows that are already sitting in Supabase and can never change, so a
     daily run upserts only real deltas instead of resending the entire ~130k-row catalog
@@ -882,7 +916,9 @@ def main() -> int:
         sent = upsert(all_rows)
         print(f"[upsert] sent {sent} puzzle rows to Supabase")
         if args.catalog:
-            rows = filter_new_catalog_rows(catalog_rows(seasons))
+            rows = catalog_rows(seasons)
+            apply_headshot_ledger(rows)      # before the filter — see its docstring
+            rows = filter_new_catalog_rows(rows)
             print(f"[upsert] sending {len(rows)} new/changed player_seasons …")
             print(f"[upsert] sent {upsert_catalog(rows)} catalog rows")
     elif args.catalog and not args.dry_run:

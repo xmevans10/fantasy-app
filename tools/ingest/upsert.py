@@ -178,6 +178,50 @@ def fetch_catalog_ids_missing(sport: str, column: str, page_size: int = 1000) ->
     return ids
 
 
+def fetch_headshot_ledger(page_size: int = 1000) -> dict[str, str]:
+    """`headshot_assets.source_url` -> the value the catalog should carry for it: our Storage
+    `public_url` for a rehosted photo (`ok`), or `''` for a `placeholder`/`missing` source.
+
+    Exists because rehosting was only ever applied to the catalog *after the fact*, by
+    `headshot_repoint()`, while the ingest pipeline kept writing raw third-party CDN URLs
+    back over the top of it. Measured 2026-08-25: 46,936 NFL rows (35% of the sport) were
+    hotlinked again despite 83,580 already sitting in Storage, because
+      * a repointed placeholder is stored as `''`, which `fetch_catalog_ids_missing` counts
+        as *missing*, so every run "improved" it by resending the CDN URL, and
+      * career rows are in `filter_new_catalog_rows`'s unconditional `always_send` path and
+        got overwritten regardless.
+    The ledger is the source of truth for what a headshot should be, so the pipeline has to
+    consult it at write time rather than racing a cleanup pass that runs afterwards.
+
+    Rows with no ledger entry are absent from the dict and left untouched — a brand-new
+    player's photo has not been probed yet, and guessing would be worse than hotlinking it
+    for one cycle until the next `headshots.py` run classifies it."""
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    out: dict[str, str] = {}
+    last: str | None = None
+    while True:
+        query = ("select=source_url,status,public_url"
+                 "&status=in.(ok,placeholder,missing)"
+                 f"&order=source_url.asc&limit={page_size}")
+        if last is not None:
+            query += f"&source_url=gt.{urllib.parse.quote(last)}"
+        page = _get_json(f"{base}/rest/v1/headshot_assets?{query}", headers,
+                         what="headshot ledger fetch")
+        # Empty page, not a short one — same PostgREST row-cap reason as
+        # `fetch_existing_catalog_ids`.
+        if not page:
+            break
+        for r in page:
+            if r["status"] == "ok":
+                if r.get("public_url"):
+                    out[r["source_url"]] = r["public_url"]
+            else:
+                out[r["source_url"]] = ""
+        last = page[-1]["source_url"]
+    return out
+
+
 def upsert_grid(rows: list[dict]) -> int:
     """Upsert Grid puzzle rows (already-shaped id/sport/format/content/active_date dicts —
     unlike `upsert()`, which takes `PuzzleRow` objects) into `puzzles`."""
