@@ -92,6 +92,29 @@ metadata via its REST API — lives in gitignored `tools/release/`:
   Review** → select version). So: if the item count is greater than 1, a cancel is not a
   reversible build-management step — it is a destructive action only the user can repair,
   and it needs their explicit go-ahead.
+- 🔴 **A bad `fields[...]` list returns an EMPTY `data` array, not a 400.** Cost real time on
+  2026-08-25: `GET /v1/apps/<id>/reviewSubmissions?fields[reviewSubmissions]=state,platform,submitted,canceled`
+  returned `{"data":[]}` because `submitted`/`canceled` are write-only attributes and not valid
+  *fields*. That was read as "no open submissions", which sent the whole release down the
+  POST-a-new-submission path when the app in fact had one sitting in `UNRESOLVED_ISSUES`. **Query
+  `reviewSubmissions` with no `fields` parameter at all**, then read `state` off the raw response.
+  The tell that you are on the wrong path: `POST /v1/reviewSubmissionItems` returns
+  `STATE_ERROR.ENTITY_STATE_INVALID` "appStoreVersions with id 'N' is not in valid state" — that
+  error means *the version is already attached to an existing submission*, not that the version is
+  misconfigured. Do not go hunting through screenshots/IAPs/metadata as the cause (all four
+  products were `APPROVED` and both screenshot sets complete while this error was firing).
+- **`MARKETING_VERSION` must be bumped alongside `CURRENT_PROJECT_VERSION`.** On 2026-08-24 an
+  `appStoreVersion` 1.7.0 was created while the pbxproj still read 1.6.0, so build 39 shipped
+  `CFBundleShortVersionString` 1.6.0 against a 1.7.0 record. Apple requires them to match: the
+  version sat in `INVALID_BINARY`, its submission item went `REJECTED`, and the M23/M25 work never
+  reached users for a full day before anyone noticed. Verify before uploading:
+  `/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' build/BallIQ.xcarchive/Products/Applications/BallIQ.app/Info.plist`
+- **The `409 STATE_ERROR` propagation lag on the submit `PATCH` is real and can outlast two
+  attempts.** 2026-08-25: attempts at 18:47 and 18:48 both 409'd, 18:50 returned 200. Keep the
+  ~60s retry loop and give it at least 4-5 tries before concluding anything is actually wrong.
+- **Empty `reviewSubmissions` cannot be cancelled** (`PATCH {"canceled":true}` → 409) — a
+  submission with zero items has nothing to cancel. They appear to age out on their own; don't
+  burn time trying to clean them up, and don't create them speculatively in the first place.
   - `-authenticationKeyPath` for `-exportArchive` **must be an absolute path** — a repo-relative
     path fails with "must be an absolute path to an existing file". Wrap in `$(pwd)/…`.
 - App identity: app record id `6785275045` (bundle `com.balliqfantasy.app`, ASC name
