@@ -49,10 +49,25 @@ them `/image/private/`. Of the 14 `/private/` URLs sampled, 11 were helmets (79%
 Extrapolated: roughly **36,000 rows / ~5,000–6,000 players** currently render an anonymous
 helmet in the shipping app. M26 rehosted 62% of NFL and left the rest.
 
-**Fix before retaking screenshots:** run `tools/ingest/headshots.py` over the un-rehosted NFL
-rows. Its placeholder detection already clears byte-identical stock graphics to `''`, which hands
-them to `PlayerHeadshotBadge`'s initials monogram — a designed fallback that looks deliberate,
-where the helmet looks broken.
+**Fix before retaking screenshots:** ~~run `tools/ingest/headshots.py` over the un-rehosted NFL
+rows~~ — **RESOLVED 2026-08-25, and that prescription was wrong.** The ledger queue was already
+fully drained (0 `pending`): 7,047 of the hotlinked URLs were *already* classified `placeholder`
+and 3,162 already `ok`. Re-running the tool would have found nothing to do. Two real causes:
+
+1. **The ingest pipeline was writing the CDN URLs back.** `headshot_repoint()` clears a
+   placeholder to `''`, but `fetch_catalog_ids_missing` counts `''` as *missing*, so the next
+   `--upsert` "improved" the row by resending the provider's raw URL — and career rows are in
+   `filter_new_catalog_rows`'s unconditional `always_send` path regardless. The repoint had a
+   half-life of one ingest run.
+2. **Minted puzzles freeze their own copy of the URL** (`content.players[].headshot` for keep4,
+   `content.headshot` for journeyman). Repointing `player_seasons` never touches them, and the
+   daily is what the app actually serves — 269 puzzle rows were still on NFL's CDN with zero on
+   our Storage bucket while the catalog read clean.
+
+Fixed by `main.apply_headshot_ledger`, which applies the ledger to the `RawSeason` list at the top
+of a run so puzzles, catalog and both bundled fallbacks inherit one decision. Production now reads
+**0** rows on `static.www.nfl.com` on both surfaces (was 46,936 and 269). Verified in the app: the
+2001 Troy Brown card rendered the helmet before and the designed "TB" monogram after.
 
 ---
 
@@ -144,9 +159,9 @@ and #4 if the captured board is Journeyman or Grid. Shot #3 is safe to capture t
 
 ## Suggested order of work
 
-1. **Backfill the ~47k un-rehosted NFL headshots** — required, and it fixes the live app too.
-2. Fix the "Ten real seasons" copy error.
-3. Rename "Immaculate Grid" in-app.
+1. ~~**Backfill the ~47k un-rehosted NFL headshots**~~ — **DONE 2026-08-25**; see §1, the cause was not an unfinished backfill.
+2. ~~Fix the "Ten real seasons" copy error.~~ **DONE** — "Eight", in `make_store_screenshots.py`'s `PANELS`.
+3. ~~Rename "Immaculate Grid" in-app.~~ **DONE** — now "PERFECT GRID" (`GridResultView.scoreHeader`).
 4. Recapture all six with `-screenshotPro` on a 6.9" simulator, hand-playing the Grid board.
 5. Upload via `PATCH /v1/appScreenshotSets/...` — 1.7.0 is in review now, so this lands on 1.7.1
    or later. Screenshots are **not** blocking the current submission.
