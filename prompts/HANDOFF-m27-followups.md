@@ -264,6 +264,13 @@ someone to "helpfully" add a matching gate. Don't. The consequence of getting it
 one direction and a deadlock in the other, which is exactly the asymmetry that makes it worth a
 comment rather than trust.
 
+📝 **Fix-while-you're-there:** `logSession`'s own doc comment (:567–572) says *"Exists for Grid
+practice"* and has been wrong since duels shipped — see the six call sites above. It is
+deliberately **not** fixed on this branch: this branch doesn't touch `RepositoryContainer.swift` at
+all, so editing it purely for a comment would create a merge collision on a file that currently has
+none. Whoever implements the placement window is editing `complete()` directly above it and gets
+the correction for free. See AGENTS.md §13.
+
 Also read the count **before** `recordGameResult` writes the current row — rating applies at :515,
 the row is appended around :599–607, so the natural gate position excludes the current game. That
 is correct but invisible, and breaks silently if the gate moves.

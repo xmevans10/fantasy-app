@@ -267,9 +267,34 @@ from the three gates above it.
 still recorded as the rated surface it was, the counter increments, and the window closes after
 three. Orthogonal by construction: the field the counter reads is not the field the rule writes.
 
-`logSession` (`:573`, Grid practice) is a **second entry point** into the career log and already
-hard-codes `ranked: false` at `:577`. It correctly neither consumes a slot nor gets rated —
-**leave it alone**; it needs no gate.
+### The second entry point — `logSession` (`:573`)
+
+`logSession` is a **separate path** into the career log that bypasses `complete()` entirely, and
+it hard-codes `ranked: false` at `:577`. It has **six** call sites, and despite its doc comment
+only two are Grid:
+
+```
+WhoAmIGameView.swift:421       if let duel {        ← duel
+Keep4GameView.swift:401        if duel != nil {     ← duel
+JourneymanGameView.swift:345   if let duel {        ← duel
+JourneymanGameView.swift:748                        ← duel (async)
+GridGameView.swift:438                              ← Grid daily-in-duel
+GridGameView.swift:454                              ← Grid practice
+```
+
+This is **the duel/ladder path for all four formats**, not just re-rollable practice. Every one
+is correct as-is: a duel never moves rating, so none of these rows should increment the
+placement counter. **Leave all six alone — they need no gate.**
+
+🔴 The asymmetry is why this warning exists: leaving `logSession` alone is harmless, adding a
+gate re-creates the deadlock. Someone auditing Versus (rather than Grid) will arrive here from
+the other side and see an apparent inconsistency with the three gates above. It isn't one.
+
+⚠️ **Stale doc comment, fix it while you're in there.** `logSession`'s comment at `:567–572`
+says *"Exists for Grid practice"*. That was true once; it is now the duel path for four formats,
+and it is actively misleading — this brief asserted "Grid practice" on its authority and had to
+be corrected. You are editing `complete()` directly above it. Update the comment in the same
+change.
 
 This also answers Blitz, community and archive replays in general rather than by a format list —
 they pass `ranked: false`, so they neither consume a slot nor get rated, now or for any
