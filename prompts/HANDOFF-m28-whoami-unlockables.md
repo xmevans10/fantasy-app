@@ -60,7 +60,12 @@ that specific device. A lock whose session is gone from `ListAgents` is stale �
 holder before removing it, never just delete it.
 
 The roles below are what this doc's commands assume. **They are conventions, not reservations**
-— if one is locked, claim any comparable free device and substitute its UDID throughout.
+— if one is locked, claim a comparable free device and substitute its UDID, **with one
+exception**: A8.4's dead-space measurement is calibrated to the 6.9" `1320×2868` frame. Its
+numbers (1,533 px before, ~214 px after, one row = 226 px) do not transfer to any other screen
+size. If `Sprout-ProMax` is held, either wait for it or ask the holder — do not substitute a
+plain iPhone 17 or an SE and compare against these figures. Every other capture is
+size-agnostic.
 
 | purpose | name | udid |
 |---|---|---|
@@ -98,11 +103,38 @@ xcodebuild -scheme BallIQ -project BallIQ.xcodeproj -destination "id=$TEST_SIM" 
 ```
 
 Expected: `Executed 844 tests, with 12 tests skipped and 0 failures` → `** TEST SUCCEEDED **`,
-about 45s once built. **12 skipped is correct, not a problem** — see AGENTS.md §7.1 for why the
-purchase suite skips itself on the iOS 26.5 runtime.
+about 45s once built.
+
+🔴 **The skip count depends on which runtime you claimed, and both numbers are correct:**
+
+| runtime | skipped | why |
+|---|---|---|
+| **iOS 26.5** (`BallIQ-Test-iPhone17`, `Sprout-*`) | **12** | `PurchaseFlowTests`' 7 methods `XCTSkipUnless` themselves — `SKTestSession` silently drops writes on this runtime (AGENTS.md §7.1) — plus 5 others |
+| **iOS 18.3** (`BallIQ-18-3`, `BallIQ-SK-iOS18`) | **5** | the purchase suite actually runs here, 7/7 |
+
+So `5 skipped` is not a regression and `12 skipped` is not a bug — it tells you which runtime you
+are on. Do not "fix" either. And note AGENTS.md's standing rule: skipped tests are not coverage,
+so anything touching purchases must be run on 18.3 before shipping. M28 touches none, so 26.5 is
+the right default here.
 
 Hold this lock for the whole task — you re-run this suite after every step — and release it at
 the end. If it's held, claim another iOS 26.5 device and use that UDID everywhere below instead.
+
+⚠️ **One session saw the suite die early; another saw it green. Establish which you have.**
+On 2026-08-26 a run on a *shared* iOS 26.5 device died with `Failed to load test bundle` after
+`PaywallSignInPromptTests.testRenderEverySignInStateForVisualReview` — one of the in-flight
+files above. But the session that owns that work reports the full suite green on `BallIQ-18-3`
+the same afternoon: **873 tests, 0 failures, 5 skipped**. And the crash did not reproduce on a
+clean `95a5f13` at 10:22, which is where 844/12/0 comes from.
+
+Two green data points and one failure on the contended device makes simulator contention the
+leading explanation, not broken code — which is the whole reason §0.1 exists.
+
+This is exactly why 0.2 says take your own baseline. If the suite dies in the same place before
+you have changed anything, that is ambient: record where it stops, and from then on compare
+**which tests ran and their results**, not the totals. Do not debug the Paywall tests — they
+belong to another session. If it dies somewhere new *after* you start editing, that one is
+yours.
 
 ```bash
 /tmp/balliq-venv/bin/python -m pytest tools/ingest/tests/ -q 2>&1 | tail -3
@@ -656,8 +688,11 @@ Run it from the repo root, then confirm the churn is small — single digits of 
 deletions:
 
 ```bash
-python3 xcstrings_add.py && git diff --stat BallIQ/Localizable.xcstrings
+python3 tools/xcstrings_add.py && git diff --stat BallIQ/Localizable.xcstrings
 ```
+
+(The script above is also checked in at `tools/xcstrings_add.py`, so you can run it directly
+rather than pasting it.)
 
 If `git diff --stat` reports thousands of changed lines, you reserialized the file: `git
 checkout BallIQ/Localizable.xcstrings` **only if you have no other work in it** (§0 warns that

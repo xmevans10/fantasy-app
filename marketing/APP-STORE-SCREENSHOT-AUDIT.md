@@ -82,7 +82,24 @@ Most likely because `apply_headshot_ledger` runs over the `RawSeason` list at th
 run, so it only reaches puzzles that are **re-minted**; rows minted before the fix (including the
 2-day-lookahead dailies already sitting there) keep their frozen copy. The remedy is a one-off
 sweep over existing `puzzles.content`, not another ingest pass — re-minting would change boards
-that may already have been played. Tracked as task 3 in `prompts/HANDOFF-m27-followups.md`.
+that may already have been played.
+
+**RESOLVED 2026-08-26.** Swept all 33 puzzles / 241 cards. The sweep applies the ledger's own
+decision per card rather than blanking everything: the rehosted Storage photo where the catalog
+has one (**173 cards**), `''` for the monogram where it doesn't (**68**). A blanket blank would
+have thrown away 173 real faces.
+
+`puzzles.content` on `static.www.nfl.com` is now **0**, both surfaces clean. Integrity checked
+across all 32 keep4 boards: card counts unchanged, blind-sort order unchanged, and every field
+other than `headshot` byte-identical to the pre-sweep backup — important because Keep4's
+`blindOrder` derives from the array, so a reorder would have silently changed the game.
+
+Tomorrow's daily (`gen-qb-all-first-round-01-daily-20260827`) verified at the byte level: all
+seven rehosted URLs return HTTP 200 with distinct payloads and none match the 382,225-byte
+helmet; Daunte Culpepper is blank and renders the designed monogram.
+
+Pre-sweep content is preserved in `public.puzzle_headshot_backup_20260826` (33 rows) if any board
+needs restoring.
 
 ---
 

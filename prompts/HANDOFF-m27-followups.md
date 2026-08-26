@@ -23,7 +23,7 @@ dcb1c14  Record the 1.7.0 release and the two traps that delayed it
 |---|---|
 | Version `1.7.0` (`ccba424b-e2f8-4c31-b71d-321eac841c97`) | **`WAITING_FOR_REVIEW`** — in Apple's queue since 2026-08-25 16:50 UTC |
 | Build 40 | `VALID`, attached to 1.7.0 |
-| Live submission `69da482e-8283-4c6b-8c62-0f36d0d73550` | `WAITING_FOR_REVIEW`, **exactly 1 item** (the version — no IAPs riding along) |
+| Live submission `72babc8f-7976-4043-acfe-4145112f1cca` | `WAITING_FOR_REVIEW`, **exactly 1 item** (the version — no IAPs riding along). Superseded `69da482e-…`, which now reads `COMPLETE`. |
 | pbxproj | `MARKETING_VERSION = 1.7.0`, `CURRENT_PROJECT_VERSION = 40` |
 
 1.7.0 ships M23 live duels + M25 no-timers + M27 Puzzle Blitz together. It had been stuck in
@@ -40,12 +40,12 @@ version moved in commit `8b6ef7c`.
 You therefore **cannot** create and submit a new App Store version until 1.7.0 leaves the queue
 (approved, rejected, or developer-rejected). You **can** upload builds to TestFlight freely.
 
-Do **not** cancel `69da482e` to re-cut a build unless the user explicitly asks. Cancelling costs
+Do **not** cancel `72babc8f` to re-cut a build unless the user explicitly asks. Cancelling costs
 1.7.0 its place in the review queue, and per the `testflight-release` skill a cancel sets *every*
 item on the submission to `REMOVED` — on 2026-07-27 that silently un-shipped all four IAPs and
 the subscription group, and re-adding them is ASC-UI-only. This submission currently has 1 item,
 so the IAP blast radius is nil today, but **re-count with
-`GET /v1/reviewSubmissions/69da482e-.../items` before ever cancelling.**
+`GET /v1/reviewSubmissions/72babc8f-.../items` before ever cancelling.**
 
 ---
 
@@ -62,61 +62,30 @@ source .env && git push "https://x-access-token:${GITHUB_TOKEN}@github.com/xmeva
 
 Ask the user before merging to `main` — `main` is production.
 
-### 2. Delete two stray empty review submissions
+### 2. ~~Delete two stray empty review submissions~~ — DONE, resolved themselves
 
-`e27a2d4a-c7c2-4e7d-9137-03b70dbd008c` and `e31794d3-6148-4361-a25c-ef8e89232cba` are both
-`READY_FOR_REVIEW` with **0 items** — litter from a 409 retry loop, never submitted. They are
-safe to remove (verify 0 items first) and may otherwise interfere with creating the next
-submission. `DELETE /v1/reviewSubmissions/<id>`.
+`e27a2d4a-…` and `e31794d3-…` now 404. Apple superseded the whole submission record set: the
+submission carrying 1.7.0 is now **`72babc8f-7976-4043-acfe-4145112f1cca`** (the old
+`69da482e-…` reads `COMPLETE`). 1.7.0 itself is still `WAITING_FOR_REVIEW` with exactly one item,
+so the one-open-submission constraint above is unchanged — only the id moved.
 
-### 3. Finish the headshot cleanup — 90% done by another session, small residue left
+### 3. ~~Headshot cleanup~~ — DONE 2026-08-26, nothing to do
 
-⚠️ **This task changed after the handoff was first written. Do not re-run the backfill.**
+Left here as the record, not as work. The catalog fix landed in an earlier session
+(`main.apply_headshot_ledger`); the residue it left in minted puzzles — 33 rows / 241 cards,
+including tomorrow's NFL daily — was swept 2026-08-26. Both surfaces now read **0** rows on
+`static.www.nfl.com`.
 
-`fantasy-app-d1` resolved the main defect on 2026-08-25 and, in doing so, showed the original
-prescription here ("re-run `tools/ingest/headshots.py` over the un-rehosted rows") was **wrong**:
-the ledger queue was already fully drained, so that tool would have found nothing to do. The two
-real causes it found, now fixed in `main.apply_headshot_ledger`:
+The sweep applied the ledger's per-card decision rather than blanking everything: rehosted photo
+where the catalog had one (173 cards), `''` for the monogram where it didn't (68). Integrity
+verified across all 32 keep4 boards — card counts, blind-sort order and every non-headshot field
+unchanged. Pre-sweep content is in `public.puzzle_headshot_backup_20260826` if a restore is ever
+needed; that table can be dropped once 1.7.x is out and nobody has complained.
 
-1. **The ingest pipeline was writing the CDN URLs back.** `headshot_repoint()` clears a
-   placeholder to `''`, but `fetch_catalog_ids_missing` counts `''` as *missing*, so the next
-   `--upsert` "improved" the row by resending the provider's raw URL. The repoint had a half-life
-   of one ingest run.
-2. **Minted puzzles freeze their own copy of the URL** (`content.players[].headshot` for keep4,
-   `content.headshot` for journeyman). Repointing `player_seasons` never touched them — and the
-   minted puzzle is what the app actually serves.
-
-**Verified against production 2026-08-26 — the catalog is clean, the puzzle surface is not:**
-
-| Surface | `static.www.nfl.com` rows | Was |
-|---|---|---|
-| `player_seasons` (nfl) | **0** ✅ | 46,936 |
-| `puzzles.content` | **33** ⚠️ | 269 |
-
-Those 33 puzzles (32 keep4 + 1 journeyman, all NFL, `active_date` 2026-07-28 → **2026-08-27**)
-carry **242 affected cards**, 200 on the `/image/private/` path, **9 dated today or later**.
-
-Byte-checked five cards on `gen-qb-all-first-round-01-daily-20260827` — *tomorrow's NFL daily* —
-against the 382,225-byte helmet file: Rodgers, Newton, Mahomes and Josh Allen are real photos, but
-**Daunte Culpepper is byte-identical to the helmet.** So a live daily ships an anonymous helmet
-unless this is swept.
-
-Likely cause (confirm before acting): `apply_headshot_ledger` applies to the `RawSeason` list at
-the top of an ingest run, so it only reaches puzzles that get **re-minted** in that run. Rows
-minted before the fix — including the 2-day-lookahead dailies already sitting there — keep their
-frozen copy. If so the remedy is a **one-off sweep over existing `puzzles.content`**, not another
-ingest pass; re-minting would change the boards themselves, which is not what you want for a
-daily that may already have been played.
-
-**Coordinate with `fantasy-app-d1` before touching this** — it owns the fix and may already be on
-the residue. Verify with:
-
-```sql
-select count(*) from public.puzzles where content::text like '%static.www.nfl.com%';
-```
-
-Supabase project `nhccgufqwndtoasdbkhc` (NOT the `pyprjebfwqfdnfeliigo` decoy). Data pushes go
-through `python -m tools.ingest.main --upsert`; creds are in gitignored `tools/ingest/.env`.
+**The mechanism is still unfixed**, and that is the real follow-up: `apply_headshot_ledger` runs
+over the `RawSeason` list at the top of an ingest run, so it only reaches puzzles minted in that
+run. Any puzzle minted before a future placeholder is detected will freeze the bad URL again. A
+durable fix applies the ledger to `puzzles.content` as well, or re-checks at serve time.
 
 ### 4. Rename "Immaculate Grid" in-app
 
