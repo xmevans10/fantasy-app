@@ -214,12 +214,49 @@ row from outside the gate: the only producers are the daily paths (`HomeView` da
 `BrowseView` canonical-today, and the game views' `ranked` prop defaulting true). Everything else
 — Blitz, Browse archive, Versus, ladder, Draft & Spin, community — is hard-coded `false`.
 
-Count something orthogonal to the field being written. `filter { $0.mode == .daily }` works and
-needs no migration (`PlayMode` is set independently; Blitz is `.practice`, community `.community`,
-Versus `.versus`, archive `.archive`, Draft & Spin `.dailyDraft`). Also read the count **before**
-`recordGameResult` writes the current row — in `complete()` the rating applies ~line 514 and the
-row lands ~line 552, so the natural gate position excludes the current game, which is correct but
-invisible and easy to break by moving.
+**Counting `mode == .daily` instead does NOT work** — that was this handoff's first suggestion and
+it leaks. `mode` is a *surface* label, not a rating-eligibility label: `DraftSpinView:642` writes
+`mode: isDailyDraft ? .dailyDraft : .daily` next to a hard-coded `ranked: false` at :650, so every
+free-play spin lands as `.daily` + unranked; and `OverUnderGameView:396` hard-codes `mode: .daily`
+on *every* run while `ranked` varies at :394, so unranked replays count too. Draft & Spin is the
+second-highest-volume format in production, so three arcade spins would silently consume the whole
+window.
+
+**The working shape (credit `fantasy-app-d1`)** separates two things the data model already
+distinguishes — *was this a rated surface* (`ranked`, persisted) versus *does rating move this
+time* (local, not persisted):
+
+```swift
+let ratedSoFar  = await gameLog.all().filter(\.ranked).count
+let inPlacement = ratedSoFar < 3
+let applyRating = ranked && !inPlacement
+```
+
+`applyRating` gates exactly three sites in `complete()` — and there are exactly three:
+
+```
+:514  if ranked {  → localRating.apply        (all-time rating)
+:525  if ranked, let season = currentSeason { (season ladder)
+:538  if ranked {  → sync.pushRating          (server mirror + history)
+```
+
+🔴 **`:554`'s `recordGameResult(… ranked: ranked …)` must keep receiving the ORIGINAL `ranked`,
+never `applyRating`.** That is the entire mechanism: the placement daily is still recorded as the
+rated surface it was, so the counter increments and the window closes. Swapping that one argument
+looks like a tidy-up and silently restores the permanent-deadlock.
+
+Consumers of `GameResult.ranked` verified — only `RemoteSync.swift:127` (mirrors to server) and
+`CareerStats.swift:114` (`consistencyScore`). Neither means "rating moved"; `ratingDelta`
+(`GameResult.swift:57`) is that signal. `consistencyScore` reads `performance`, not rating, so
+including placement games is benign.
+
+Also read the count **before** `recordGameResult` writes the current row — rating applies at :515,
+the row is appended around :599–607, so the natural gate position excludes the current game. That
+is correct but invisible, and breaks silently if the gate moves.
+
+**Test it at game four.** Games 1–3 behave identically under the working and deadlocked designs, so
+every obvious assertion passes either way. Only "play four rated games, assert the fourth moves the
+rating" separates them.
 
 ## Also open, lower priority
 

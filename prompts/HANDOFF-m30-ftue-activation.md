@@ -190,24 +190,101 @@ because XP is also written by `RemoteSync.pull()`, so a returning player signing
 device would otherwise look like they had played hundreds of games. `MomentPresenter.context`
 already reads volume this way (`await container.gameLog.all()`); follow it.
 
-### 🔴 Count **rated** rows only
+### 🔴 The counting rule — read this whole section before writing the gate
 
-`MomentPresenter` uses a bare `rows.count`. **Do not copy that here.** `GameResult` carries
-`ranked: Bool` (`BallIQ/Models/GameResult.swift:25`), and the count that governs this window is:
+Two wrong answers have already been proposed for this. Both fail, in opposite directions, and
+the reason is one invariant:
 
-```swift
-await gameLog.all().filter(\.ranked).count
+> **The counter must be orthogonal to the field the rule writes.**
+
+**Wrong answer 1 — count every row.** `MomentPresenter` uses a bare `rows.count`. Copy that and
+unranked rows close the window: a player who opens Puzzle Blitz first burns three protected
+games on boards that were never going to move their rating, then meets their first real daily
+unprotected.
+
+**Wrong answer 2 — count rows where `ranked == true`, and have the gate force `ranked: false`.**
+This never terminates. The counter is filtering on the very field the rule sets, so it can only
+be incremented by a row the rule refuses to create:
+
+```
+game 1  ranked rows = 0 → 0 < 3 → force ranked:false → row written ranked:false
+game 2  ranked rows = 0 → 0 < 3 → force ranked:false
+…forever — rating never moves again, for anyone
 ```
 
-The window exists to protect the first *rated* boards. Anything that already passes
-`ranked: false` — Puzzle Blitz rounds, community puzzles, deep-linked replays — never moves the
-rating and so must never consume a placement slot. Counting them would let a new player who
-opened Blitz first burn all three protected games on boards that were never going to demote
-them, and then meet their first real daily unprotected — the exact opposite of the intent.
+The only producers of `ranked: true` are the daily paths (`HomeView.swift:517,540,562` and
+`BrowseView.swift:201,214,227`). Nothing else can rescue the count. **This would ship a
+permanently unrated app.**
 
-State this as one rule over `ranked`, **not** as a special case for Blitz. A per-format
-exclusion list would be wrong the next time an unranked surface is added, and this data model
-already answers the question in general.
+**Wrong answer 3 — count `mode == .daily` instead.** Tempting, because `PlayMode` is set
+independently of `ranked`. It leaks badly, in the arcade formats:
+
+```
+DraftSpinView.swift:642   mode: isDailyDraft ? .dailyDraft : .daily
+DraftSpinView.swift:650   ranked: false          ← always, by design
+OverUnderGameView.swift:394  let ranked = !container.hasCompletedToday(dailyID)
+OverUnderGameView.swift:396  mode: .daily         ← hard-coded, every run
+```
+
+So every arcade Draft & Spin run and every Over/Under replay-of-the-day writes
+`mode: .daily` with `ranked: false`. Draft & Spin is the second-highest-volume format in
+production (357 `game_started` rows). Three arcade spins would consume the entire window —
+reintroducing wrong answer 1's failure by a different route.
+
+### ✅ The rule to implement
+
+Separate the two concepts that the wrong answers conflate:
+
+| concept | where it lives | meaning |
+|---|---|---|
+| `ranked` (the argument, and `GameResult.ranked`) | written unchanged | **was this a rated surface?** |
+| a new local, e.g. `applyRating` | never persisted | **does rating move *this time*?** |
+
+```swift
+// Read BEFORE this session's row is written — see the ordering note below.
+let ratedSoFar = await gameLog.all().filter(\.ranked).count
+let inPlacement = ratedSoFar < 3
+let applyRating = ranked && !inPlacement
+```
+
+There are **exactly three** `if ranked` gates to switch to `applyRating`, and **one** call that
+must keep the original `ranked`:
+
+```
+:514  if ranked {                          → localRating.apply       switch to applyRating
+:525  if ranked, let season = currentSeason  → season ladder         switch to applyRating
+:538  if ranked {                          → sync.pushRating         switch to applyRating
+
+:554–555  recordGameResult(… ranked: ranked …)   ← MUST stay `ranked`. Do not touch.
+```
+
+🔴 **That last line is the whole mechanism.** Changing `ranked: ranked` to
+`ranked: applyRating` at `:555` re-creates the deadlock exactly, and it would look like a
+consistency tidy-up to anyone reading the diff. Leave a comment there saying why it differs
+from the three gates above it.
+
+**`ranked` is passed through to `GameResult` untouched**, so a daily played during placement is
+still recorded as the rated surface it was, the counter increments, and the window closes after
+three. Orthogonal by construction: the field the counter reads is not the field the rule writes.
+
+`logSession` (`:573`, Grid practice) is a **second entry point** into the career log and already
+hard-codes `ranked: false` at `:577`. It correctly neither consumes a slot nor gets rated —
+**leave it alone**; it needs no gate.
+
+This also answers Blitz, community and archive replays in general rather than by a format list —
+they pass `ranked: false`, so they neither consume a slot nor get rated, now or for any
+unranked surface added later.
+
+⚠️ **Ordering is load-bearing and invisible.** In `complete()` the rating is applied at
+`:515` and the row is built at `:599` / appended at `:607`, so a gate at the natural spot reads
+a count that excludes the current game — which is what you want. Put a comment on it. If anyone
+later moves the gate below the append, every threshold silently shifts by one.
+
+⚠️ **One consequence to verify, not hide.** `CareerStats.swift:114` does `rows.filter(\.ranked)`
+for recent form, so placement games will now appear there with a `ratingDelta` of 0. Check
+whether that dilutes the recent-form figure and, if it does, filter that call site on
+`ratingDelta != 0` or an explicit flag rather than changing what `ranked` means. The other
+consumer, `RemoteSync.swift:127`, just mirrors the field to the server and is unaffected.
 
 Requirements:
 
@@ -278,6 +355,13 @@ Extend the rating tests with locked values:
 - **Unranked rows never consume a slot.** Ten `ranked: false` completions followed by three
   rated ones must still leave the third rated game unrated and the fourth rated. This is the
   test that locks the Blitz/community/replay behaviour — name it so.
+- 🔴 **The window terminates.** A test that plays *four* rated games and asserts the fourth
+  moved the rating. Without it, the non-terminating variant in "wrong answer 2" passes every
+  other test in this list — each of games 1–3 is correctly unrated — while shipping an app
+  whose rating never moves again. Assert on game 4 explicitly.
+- **`GameResult.ranked` is preserved.** After three rated placement games, `gameLog.all()`
+  contains three rows with `ranked == true` and `ratingDelta == 0`. If a row comes back
+  `ranked: false`, the gate is writing the field it counts and the window will never close.
 - Season rating is untouched for rated games 1–3.
 
 ⚠️ These tests are **hosted** (they run inside the real app process). Any test that writes

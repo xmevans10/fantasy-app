@@ -62,8 +62,8 @@ holder before removing it, never just delete it.
 The roles below are what this doc's commands assume. **They are conventions, not reservations**
 — if one is locked, claim a comparable free device and substitute its UDID, **with one
 exception**: A8.4's dead-space measurement is calibrated to the 6.9" `1320×2868` frame. Its
-numbers (1,533 px before, ~214 px after, one row = 226 px) do not transfer to any other screen
-size. If `Sprout-ProMax` is held, either wait for it or ask the holder — do not substitute a
+numbers (1,533 px before, 329 px after, one row = 213 px of layout) do not transfer to any
+other screen size. If `Sprout-ProMax` is held, either wait for it or ask the holder — do not substitute a
 plain iPhone 17 or an SE and compare against these figures. Every other capture is
 size-agnostic.
 
@@ -99,7 +99,7 @@ TEST_SIM=448665F0-289F-47A6-BB48-8EFC0FB58A58
 ln -s "<your-session-name>" /tmp/balliq-sim-locks/$TEST_SIM 2>/dev/null \
   && echo GOT || echo "HELD BY $(readlink /tmp/balliq-sim-locks/$TEST_SIM)"
 
-xcodebuild -scheme BallIQ -project BallIQ.xcodeproj -destination "id=$TEST_SIM" -derivedDataPath build test 2>&1 | tail -20
+xcodebuild -scheme BallIQ -project BallIQ.xcodeproj -destination "id=$TEST_SIM" -derivedDataPath "$DD" test 2>&1 | tail -20
 ```
 
 Expected: `Executed 844 tests, with 12 tests skipped and 0 failures` → `** TEST SUCCEEDED **`,
@@ -120,15 +120,24 @@ the right default here.
 Hold this lock for the whole task — you re-run this suite after every step — and release it at
 the end. If it's held, claim another iOS 26.5 device and use that UDID everywhere below instead.
 
-⚠️ **One session saw the suite die early; another saw it green. Establish which you have.**
-On 2026-08-26 a run on a *shared* iOS 26.5 device died with `Failed to load test bundle` after
-`PaywallSignInPromptTests.testRenderEverySignInStateForVisualReview` — one of the in-flight
-files above. But the session that owns that work reports the full suite green on `BallIQ-18-3`
-the same afternoon: **873 tests, 0 failures, 5 skipped**. And the crash did not reproduce on a
-clean `95a5f13` at 10:22, which is where 844/12/0 comes from.
+🔴 **`-derivedDataPath build` is shared, and concurrent builds clobber it.** This is the one
+that will actually bite you, and **the device lock does not protect against it** — the collision
+is in the repo, not on the simulator.
 
-Two green data points and one failure on the contended device makes simulator contention the
-leading explanation, not broken code — which is the whole reason §0.1 exists.
+`build/` is a relative path in the working copy, so every session running
+`xcodebuild ... -derivedDataPath build` writes the same products directory. Two overlapping
+builds produce `Unable to initialize test bundle` / `Failed to load test bundle`, which reads
+exactly like a broken test target or a flaky simulator and is neither.
+
+**Use a private derived-data path** (that is why `DD` appears in every build command below):
+
+```bash
+DD=/tmp/balliq-dd-<your-session-name>     # stable across your runs, private to you
+```
+
+Diagnosed 2026-08-26 by the session that hit it: moving off the shared path fixed it outright
+and the suite went green *on the same device that had just failed*. An earlier guess in this doc
+blamed simulator contention — that was wrong, and the corrected mechanism is above.
 
 This is exactly why 0.2 says take your own baseline. If the suite dies in the same place before
 you have changed anything, that is ambient: record where it stops, and from then on compare
@@ -595,6 +604,34 @@ In `answerCard` (lines 96–116), swap the four hardcoded accent references:
 `TeamColors.palette(sport:abbr:league:)` already does the perceptual-luma check for
 `onPrimary`, so contrast is handled — do not hand-pick a text colour.
 
+### A5.3 What this will actually look like — say it before someone calls it a bug
+
+The reveal works, but "floods in the subject's club colours" oversells it, and the first
+implementer reasonably read the result as a data gap. It isn't. Measured against the live
+`teams` table on 2026-08-26:
+
+| | |
+|---|---|
+| colour coverage | **100%** NFL / NBA / MLB, **99.5%** soccer (322 of 323 rows) |
+| primaries dark enough to read as a black card (luma < 0.18) | **99 of 322 — 30.7%** |
+| worst sport | baseball, **53%** |
+
+So roughly **one reveal in three is a near-black card with white text.** That is correct, not
+broken: Inter Miami's stored primary really is `#231f20`, and Botafogo, Corinthians and Vasco are
+genuinely black-and-white clubs. `TeamColors.onPrimary` handles the contrast, so it stays
+legible — it just isn't vivid, and nobody should file that as a defect or "fix" it by reaching
+for `secondary` when `primary` is dark. `Keep4CardView` already floods primary the same way;
+consistency with it matters more than a brighter card.
+
+🔴 **Do not diagnose this by eye.** `TeamColors.fallback` slate (`0x2B2B2A`, luma 0.168) sits in
+the same luma band as a legitimately black club, so a no-match fallback and a correct black club
+are visually indistinguishable. Check `teams.primary_color` for that `team_abbr` instead. (This
+is exactly what made the first implementer read Messi's correct near-black card as a missing-data
+fallback.)
+
+If you want a vivid card for the PR screenshot, pick a subject whose club has a bright primary
+rather than retrying until one appears.
+
 **Leave `WhoAmIShareCardView` alone.** It deliberately takes only `sport`/`clueCount`/`result`
 so it is structurally impossible for the share image to leak the answer. Club colour is
 answer-identifying. Do not thread the palette into it.
@@ -882,7 +919,7 @@ No import changes needed: that module already does
 You should still hold the test-device lock from 0.2. If not, re-claim before running.
 
 ```bash
-xcodebuild -scheme BallIQ -project BallIQ.xcodeproj -destination "id=$TEST_SIM" -derivedDataPath build test 2>&1 | tail -20
+xcodebuild -scheme BallIQ -project BallIQ.xcodeproj -destination "id=$TEST_SIM" -derivedDataPath "$DD" test 2>&1 | tail -20
 /tmp/balliq-venv/bin/python -m pytest tools/ingest/tests/ -q 2>&1 | tail -3
 ```
 
@@ -920,7 +957,11 @@ ln -s "<your-session-name>" /tmp/balliq-sim-locks/$SIM 2>/dev/null \
 
 xcrun simctl uninstall $SIM com.balliqfantasy.app
 xcrun simctl spawn $SIM defaults delete com.balliqfantasy.app 2>/dev/null
-xcrun simctl install $SIM build/Build/Products/Debug-iphonesimulator/BallIQ.app
+xcrun simctl install $SIM "$DD/Build/Products/Debug-iphonesimulator/BallIQ.app"
+# 🔴 Put onboarding back. `defaults delete` above clears `hasOnboarded`, and RootView gates the
+# whole app on it — without this, -screenshotWhoAmI lands on the FTUE sport picker and you get
+# three plausible screenshots of the wrong screen. (Cost one session a full capture round.)
+xcrun simctl spawn $SIM defaults write com.balliqfantasy.app hasOnboarded -bool YES
 for n in 1 3 6; do
   xcrun simctl terminate $SIM com.balliqfantasy.app 2>/dev/null
   xcrun simctl launch $SIM com.balliqfantasy.app -screenshotWhoAmI -skipStoreKit -screenshotWhoAmIClues $n
@@ -957,29 +998,47 @@ for n in (1, 3, 6):
 EOF
 ```
 
-**Pass:** at 1 clue the largest empty block is **under 300 px**, down from 1,533 px. At 3 and 6
-clues it can only be smaller than at 1.
+**Pass, measured on the 6.9" device:**
 
-**The number to expect is ~214 px, and it is a prediction, not a measurement** — nobody has
-rendered this yet. The arithmetic, so you can tell a pass from a near-miss:
+| check | threshold | why it's the real test |
+|---|---|---|
+| 1 clue, largest empty block | **≤ 350 px** (was 1,533 px) | the composition fix |
+| 1 clue vs 3 clues | **identical** | proves no reflow — the ladder's actual point |
+| 6 clues | **105 px, unchanged from baseline** | proves the end state was not disturbed |
 
-| | px |
-|---|---|
-| scroll viewport on this device | 1,816 |
-| one row (measured on the shipping build) | 226 |
-| 6 rows + 5×10pt gaps + 16pt padding top and bottom | 1,602 |
-| → trailing empty | **214** |
+The middle row is the strongest of the three and the one to trust: if buying clues changes
+nothing about the page's empty space, the six slots are genuinely fixed. Measured after the
+first implementation: **329 px / 329 px / 105 px** — 4.7× better at the opening state, 1 and 3
+identical, 6 untouched. That is a pass.
 
-If you measure meaningfully more than ~214 px, the likely cause is a locked row rendering
-**shorter** than a revealed one — check that `lockedRow`'s two-line `VStack` matches `clueRow`'s
-`label11` + `body14` structure exactly. That is the whole reason A4.2 builds it that way instead
-of using a single line and a fixed height.
+**Do not chase a smaller number, and do not raise the `VStack` spacing to get one.** An earlier
+draft of this step suggested exactly that; it was wrong twice over. It buys 30 px — a 1 px pass,
+not a margin — and it changes the 6-clue state (105 px → 75 px), which violates A9's "the 6-clue
+layout is unchanged from `95a5f13` apart from chip colour". The remedy and the DoD could not
+both stand; the DoD wins.
 
-If it lands just over 300 px for a reason you've confirmed is only geometry, raise the `VStack`
-spacing from 10 to 12 rather than padding a row to a magic height, and say so in the PR.
+<details>
+<summary>Why an earlier draft predicted ~214 px, and why that was never reachable</summary>
 
-On `Sprout-SE` the viewport is far shorter, so the ladder will overflow and scroll at 1 clue.
-That is expected, not a failure — the criterion above is for the 6.9" device.
+It used **226 px** as the row height. That is *painted* extent, not layout height: `cardSurface()`
+adds a 1 pt stroke and a `.shadow(radius: 0, y: 3)` hard ledge that paint outside the layout
+bounds. A locked row uses a plain background and has no such bleed, so the two look 13 px
+different while being the same box.
+
+Confirmed against the baseline frames — the 6-clue capture shows a 243 px pitch (226 px painted
+card + 17 px visible gap) against a 10 pt / 30 px `VStack` spacing, so the true layout height is
+243 − 30 = **213 px**:
+
+    6 × 213 + 5 × 30 + 48 (top padding) = 1,476     viewport 1,805 → 329 px trailing
+
+which is the measured figure exactly. Substituting 226 for 213 is the whole error. **Nothing
+renders short — the two-line `VStack` in A4.2 is doing its job**, and a six-row ladder simply
+does not fill this viewport. 329 px (≈11.5%, of which 48 px is the container's own bottom
+padding) is this design's floor, not a defect to tune away.
+</details>
+
+On `Sprout-SE` the viewport is far shorter, so the ladder overflows and scrolls at 1 clue. That
+is expected, not a failure — every threshold above is for the 6.9" device only.
 
 ### A8.5 The states most likely to break (AGENTS.md §5)
 
@@ -1019,7 +1078,8 @@ Attach before/after pairs to the PR.
 - [ ] `ClueFamily.swift` exists; no pbxproj edit was needed.
 - [ ] Both suites green against your own 0.2 baseline: 0 failures, skip count unmoved.
 - [ ] A8.2's grep prints nothing.
-- [ ] A8.4 reports under 300 px at 1 clue (expect ~214 px), down from 1,533 px.
+- [ ] A8.4: 1 clue ≤ 350 px (down from 1,533), **1 clue and 3 clues measure identically**,
+      6 clues still 105 px.
 - [ ] Six chips on a live board show at most two of any one colour.
 - [ ] A legacy (`dimension`-nil) board renders six coloured chips.
 - [ ] The 6-clue layout is unchanged from `95a5f13` apart from chip colour.
