@@ -261,3 +261,32 @@ repair — is the `context-repair` skill (`.claude/skills/context-repair/SKILL.m
 Two guardrails: not every failure is a context failure (a plain bug with no documentary cause
 is just a bug — the skill's NO_ACTION path exists for that), and this loop is a diagnosis plus
 a small write, never a licence to turn a bugfix session into a documentation project.
+
+## 13. A declaration can be authoritative-looking and stale — grep the call sites
+
+Twice in one session (2026-08-26), across two different agents, a fact about *behaviour* was read
+off a declaration that looked authoritative and was wrong. Both were caught only by grepping
+producers, and each failed in the opposite direction:
+
+- **The type system said independent; the convention wasn't.** A proposed rule counted
+  `GameResult.mode == .daily` as a proxy for "was rating-eligible". `PlayMode` genuinely *is* a
+  separate field from `ranked`, which is what made it attractive. But `DraftSpinView:642` writes
+  `mode: .daily` beside a hard-coded `ranked: false`, and `OverUnderGameView:396` hard-codes
+  `.daily` on every run while `ranked` varies — two call sites using `.daily` as a *surface* label.
+  Nothing in the enum warns you. Three arcade spins would have silently consumed a new player's
+  entire placement window.
+- **The doc comment said one caller; there were six.** `RepositoryContainer.logSession`'s comment
+  reads *"Exists for Grid practice"*. It has been the duel path for all four formats since duels
+  shipped (`WhoAmI:421`, `Keep4:401`, `Journeyman:345` and `:748`, `Grid:438` and `:454`) and the
+  comment never caught up. A brief was written on its authority and had to be corrected.
+
+**Rule:** when a fact about how something *behaves* is load-bearing — especially when it decides a
+gate, a count, or an invariant — grep the call sites before asserting it. A type signature tells
+you what is *possible*; only the producers tell you what is *done*. Doc comments and enum cases age
+badly precisely because they keep compiling.
+
+The corollary is the cheaper half: when you find a declaration that has drifted, fix it in the same
+change *if you are already editing that region*. If you are not, note it for whoever will be —
+adding a file to your branch to correct a comment can create a merge collision that costs more than
+the drift does (this is why the `logSession` comment was left for the M30 implementer, who is
+editing `complete()` directly above it).
