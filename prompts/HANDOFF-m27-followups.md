@@ -193,19 +193,33 @@ its six files overlap this branch:
 
 | File | Overlap |
 |---|---|
-| `Keep4GameView.swift` | **Same function.** M30's "first three games unrated" changes `finish()`'s `ranked:` argument; this branch adds a blitz branch at the top of `finish()` that `return`s before that path is reached. Textual conflict, and a semantic one. |
+| `Keep4GameView.swift` | Textual only, resolved. M30's gate moved inside `complete()`, so no `ranked:` argument changes and this branch's early `return` in `finish()` is untouched. M30's other edit hides `modePicker` (referenced at ~line 241, inside `header`); this branch's `close()` change is at ~line 188 — same function, 53 lines apart, auto-merges under git's default context. Don't let anyone reformat `header` wholesale. |
 | `HomeView.swift` | Different regions (a `@State`, a `launch(_:)` case, a `fullScreenCover`, a `DebugLaunch` branch). Should auto-merge. |
 | `Localizable.xcstrings` | Both append. Trivial *if* both append at the trailing anchor as text; catastrophic if either rewrites the file (see the convention above). |
 
 `OnboardingView.swift`, `RepositoryContainer.swift` and `AnalyticsClient.swift` are clear.
 
-**Open design question M30 must answer explicitly:** do blitz rounds count toward the
-first-three-games grace window? Recommended answer is **no** — a blitz already runs `ranked: false`
-end to end and logs one `game_results` row per *run* as `mode: .practice`, so its boards never move
-rating. If they consumed the window, a new player who opened Puzzle Blitz first would burn all
-three protected games on runs that could never have demoted them, then meet their first real daily
-unprotected — the opposite of the window's purpose. The default falls out of implementation detail
-rather than intent, so it needs stating.
+**Resolved with M30's author:** blitz rounds must not consume the first-three-games grace
+window, and the clean expression is a rule over `GameResult.ranked` rather than a per-format
+exclusion — that answers Blitz, community, archive and Versus at once and stays correct for the
+next unranked surface. The gate lives inside `RepositoryContainer.complete()`, so **no call site's
+`ranked:` argument changes** and this branch's early `return` in `Keep4GameView.finish()` is
+untouched. The overlap is textual only.
+
+⚠️ **If you implement that window, do not count `ranked` rows.** The obvious form —
+`gameLog.all().filter(\.ranked).count` — never terminates: it filters on the field the rule
+sets, so game 1 is forced unranked, writes `ranked: false`, the count stays 0, and *every*
+subsequent game is unranked forever. Verified by grep that nothing else writes a `ranked: true`
+row from outside the gate: the only producers are the daily paths (`HomeView` daily cards,
+`BrowseView` canonical-today, and the game views' `ranked` prop defaulting true). Everything else
+— Blitz, Browse archive, Versus, ladder, Draft & Spin, community — is hard-coded `false`.
+
+Count something orthogonal to the field being written. `filter { $0.mode == .daily }` works and
+needs no migration (`PlayMode` is set independently; Blitz is `.practice`, community `.community`,
+Versus `.versus`, archive `.archive`, Draft & Spin `.dailyDraft`). Also read the count **before**
+`recordGameResult` writes the current row — in `complete()` the rating applies ~line 514 and the
+row lands ~line 552, so the natural gate position excludes the current game, which is correct but
+invisible and easy to break by moving.
 
 ## Also open, lower priority
 

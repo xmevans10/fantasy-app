@@ -39,8 +39,66 @@ Consequences:
   the edit as a **surgical text insertion** — Xcode writes `"key" : value` (space before the
   colon) and orders keys by ICU collation; a Python `json.dump` round-trip reformats all ~6,700
   lines. That has already happened once this week and had to be reverted by hand.
-- `Keep4GameView.swift` is yours alone. `HomeView.swift` is yours alone. Confirm with
-  `git diff --stat` before you start.
+### 0.3 🔴 Branch point — the remote is stale, and three files collide
+
+**Do not branch from `origin/m27-puzzle-blitz`.** As of 2026-08-26 that ref points at `95a5f13`,
+six commits behind the local branch HEAD (`6885f34`). The Puzzle Blitz work is committed but
+**unpushed**. Branching from origin — or from `main` — gets you a pre-Blitz `HomeView` and
+`Keep4GameView`, and you would write against code that does not have the seams described below.
+
+Verify before you start:
+
+```bash
+git log --oneline -1                       # expect 6885f34 or later
+git log --oneline -1 origin/m27-puzzle-blitz   # if this is 95a5f13, the push hasn't happened
+```
+
+If the remote is still behind, **ask the user before pushing** — do not push a peer's commits on
+your own initiative.
+
+Three files overlap with the Blitz branch:
+
+| file | overlap | risk |
+|---|---|---|
+| `Localizable.xcstrings` | ~386 lines | append-only, low **if** nobody rewrites it |
+| `Keep4GameView.swift` | ~42 lines | textual, in `finish()` — see below |
+| `HomeView.swift` | ~10 lines | should auto-merge; different regions |
+| `OnboardingView.swift` | — | clear |
+| `RepositoryContainer.swift` | — | clear |
+| `AnalyticsClient.swift` | — | clear |
+
+**`Keep4GameView.finish()`** now opens with an early return for Blitz:
+
+```swift
+if let blitz {
+    result = r
+    blitz.finishRound(format: .keep4, ..., cleared: ...)
+    return          // returns BEFORE the complete()/ranked: path entirely
+}
+```
+
+This is the reason A1.1 forbids implementing the window by editing `ranked:` at call sites: a
+Blitz round never reaches that argument, so a call-site implementation would silently leave
+Blitz outside the rule. Gating inside `complete()` and counting on `ranked` sidesteps the
+early return completely — A1 should not need to touch `finish()` at all. Your only edit in this
+file is A3's `modePicker` visibility, which is in a different region.
+
+**`Localizable.xcstrings` merge discipline.** Append as **text**, immediately before the
+trailing anchor:
+
+```
+  },
+  "version" : "1.1"
+}
+```
+
+Match Xcode's `"key" : value` spacing (space before the colon), then re-parse to prove the file
+is still valid JSON. **Never `json.dump` the parsed file** — Python reorders keys by a different
+collation and reformats, turning a six-line addition into a ~4,300-line diff that conflicts with
+everything. Two sessions appending at the same anchor produce adjacent-line adds that git
+merges cleanly; one rewrite produces a merge magnet. This has already gone wrong once this week.
+
+- Confirm the overlap set yourself with `git diff --stat` before you start; it will have moved.
 
 ### 0.1 🔴 Claim a simulator before you touch it — this Mac is shared
 
@@ -132,10 +190,32 @@ because XP is also written by `RemoteSync.pull()`, so a returning player signing
 device would otherwise look like they had played hundreds of games. `MomentPresenter.context`
 already reads volume this way (`await container.gameLog.all()`); follow it.
 
+### 🔴 Count **rated** rows only
+
+`MomentPresenter` uses a bare `rows.count`. **Do not copy that here.** `GameResult` carries
+`ranked: Bool` (`BallIQ/Models/GameResult.swift:25`), and the count that governs this window is:
+
+```swift
+await gameLog.all().filter(\.ranked).count
+```
+
+The window exists to protect the first *rated* boards. Anything that already passes
+`ranked: false` — Puzzle Blitz rounds, community puzzles, deep-linked replays — never moves the
+rating and so must never consume a placement slot. Counting them would let a new player who
+opened Blitz first burn all three protected games on boards that were never going to demote
+them, and then meet their first real daily unprotected — the exact opposite of the intent.
+
+State this as one rule over `ranked`, **not** as a special case for Blitz. A per-format
+exclusion list would be wrong the next time an unranked surface is added, and this data model
+already answers the question in general.
+
 Requirements:
 
-- A new install completing games 1, 2, 3 gets `RatingChange(old: n, new: n)` for each.
-- Game 4 onward rates normally.
+- A new install completing rated games 1, 2, 3 gets `RatingChange(old: n, new: n)` for each.
+- Rated game 4 onward rates normally.
+- **No call site's `ranked:` argument changes.** The gate lives entirely inside `complete()`.
+  Do not implement this by editing `ranked:` at the six game views — that would both miss the
+  paths that early-return before reaching it and collide with in-flight work (see 0.3).
 - The **season** ladder (`localSeasonRating.apply`) must be gated by the same condition — it is
   the same Elo engine on a parallel row, and leaving it live would demote the player on a
   surface the placement gate claims to protect.
@@ -192,13 +272,13 @@ Also verify the progress bar: at 990 in Bronze (`0...999`) it renders ~99% full,
 
 Extend the rating tests with locked values:
 
-- 3 completions → `ratingChange.old == ratingChange.new` each time, and the rating after game 3
-  equals `RatingEngine.startingRating`.
-- Game 4 moves the rating.
-- A `ranked: false` call during placement stays unranked and does not consume a placement slot
-  in a way that breaks the count (decide and lock the behaviour either way — state it in the
-  test name).
-- Season rating is untouched for games 1–3.
+- 3 rated completions → `ratingChange.old == ratingChange.new` each time, and the rating after
+  game 3 equals `RatingEngine.startingRating`.
+- Rated game 4 moves the rating.
+- **Unranked rows never consume a slot.** Ten `ranked: false` completions followed by three
+  rated ones must still leave the third rated game unrated and the fourth rated. This is the
+  test that locks the Blitz/community/replay behaviour — name it so.
+- Season rating is untouched for rated games 1–3.
 
 ⚠️ These tests are **hosted** (they run inside the real app process). Any test that writes
 UserDefaults or the game log must inject its own store — writing through `.standard` lands in
