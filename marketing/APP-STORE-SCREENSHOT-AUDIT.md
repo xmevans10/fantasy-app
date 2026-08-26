@@ -69,6 +69,21 @@ of a run so puzzles, catalog and both bundled fallbacks inherit one decision. Pr
 **0** rows on `static.www.nfl.com` on both surfaces (was 46,936 and 269). Verified in the app: the
 2001 Troy Brown card rendered the helmet before and the designed "TB" monogram after.
 
+**Re-verified 2026-08-26 — the catalog is clean, the puzzle surface has a residue.**
+`player_seasons` (nfl) is genuinely **0**, confirmed. `puzzles.content` is **33**, not 0:
+
+- 32 keep4 + 1 journeyman, all NFL, `active_date` 2026-07-28 → **2026-08-27**
+- **242 affected cards**, 200 on the `/image/private/` path, **9 dated today or later**
+- Byte-checked five cards on `gen-qb-all-first-round-01-daily-20260827` (*tomorrow's NFL daily*):
+  Rodgers, Newton, Mahomes and Josh Allen are real photos — **Daunte Culpepper is byte-identical
+  to the 382,225-byte helmet.**
+
+Most likely because `apply_headshot_ledger` runs over the `RawSeason` list at the top of an ingest
+run, so it only reaches puzzles that are **re-minted**; rows minted before the fix (including the
+2-day-lookahead dailies already sitting there) keep their frozen copy. The remedy is a one-off
+sweep over existing `puzzles.content`, not another ingest pass — re-minting would change boards
+that may already have been played. Tracked as task 3 in `prompts/HANDOFF-m27-followups.md`.
+
 ---
 
 ## 2. Factual error in the marketing copy

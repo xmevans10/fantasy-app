@@ -69,29 +69,50 @@ Ask the user before merging to `main` — `main` is production.
 safe to remove (verify 0 items first) and may otherwise interfere with creating the next
 submission. `DELETE /v1/reviewSubmissions/<id>`.
 
-### 3. Backfill the un-rehosted NFL headshots — the highest-value fix here
+### 3. Finish the headshot cleanup — 90% done by another session, small residue left
 
-**~35% of NFL rows still render an anonymous helmet in the shipping app.** Measured 2026-08-25
-against production:
+⚠️ **This task changed after the handoff was first written. Do not re-run the backfill.**
 
-| | rows | share |
+`fantasy-app-d1` resolved the main defect on 2026-08-25 and, in doing so, showed the original
+prescription here ("re-run `tools/ingest/headshots.py` over the un-rehosted rows") was **wrong**:
+the ledger queue was already fully drained, so that tool would have found nothing to do. The two
+real causes it found, now fixed in `main.apply_headshot_ledger`:
+
+1. **The ingest pipeline was writing the CDN URLs back.** `headshot_repoint()` clears a
+   placeholder to `''`, but `fetch_catalog_ids_missing` counts `''` as *missing*, so the next
+   `--upsert` "improved" the row by resending the provider's raw URL. The repoint had a half-life
+   of one ingest run.
+2. **Minted puzzles freeze their own copy of the URL** (`content.players[].headshot` for keep4,
+   `content.headshot` for journeyman). Repointing `player_seasons` never touched them — and the
+   minted puzzle is what the app actually serves.
+
+**Verified against production 2026-08-26 — the catalog is clean, the puzzle surface is not:**
+
+| Surface | `static.www.nfl.com` rows | Was |
 |---|---|---|
-| Rehosted to our Storage bucket | 83,580 | 62% |
-| Still hotlinked to NFL's CDN | **46,936** | **35%** |
-| …on the `/image/private/` path | 45,278 | 34% |
-| Blank (renders the initials monogram — correct) | 1,228 | 1% |
+| `player_seasons` (nfl) | **0** ✅ | 46,936 |
+| `puzzles.content` | **33** ⚠️ | 269 |
 
-Sampling 20 distinct NFL-CDN URLs: 11 returned a **byte-identical 382,225-byte file** — a
-faceless black NFL helmet. All 11 were `/image/private/`. Of the 14 `/private/` URLs sampled, 11
-were that file (79%). Extrapolated: ~36,000 rows / ~5,000+ players.
+Those 33 puzzles (32 keep4 + 1 journeyman, all NFL, `active_date` 2026-07-28 → **2026-08-27**)
+carry **242 affected cards**, 200 on the `/image/private/` path, **9 dated today or later**.
 
-Run `tools/ingest/headshots.py` over the un-rehosted NFL rows. Its placeholder detection already
-clears byte-identical stock graphics to `''`, which hands them to `PlayerHeadshotBadge`'s
-initials monogram — a designed fallback, where the helmet reads as broken. Verify after with:
+Byte-checked five cards on `gen-qb-all-first-round-01-daily-20260827` — *tomorrow's NFL daily* —
+against the 382,225-byte helmet file: Rodgers, Newton, Mahomes and Josh Allen are real photos, but
+**Daunte Culpepper is byte-identical to the helmet.** So a live daily ships an anonymous helmet
+unless this is swept.
+
+Likely cause (confirm before acting): `apply_headshot_ledger` applies to the `RawSeason` list at
+the top of an ingest run, so it only reaches puzzles that get **re-minted** in that run. Rows
+minted before the fix — including the 2-day-lookahead dailies already sitting there — keep their
+frozen copy. If so the remedy is a **one-off sweep over existing `puzzles.content`**, not another
+ingest pass; re-minting would change the boards themselves, which is not what you want for a
+daily that may already have been played.
+
+**Coordinate with `fantasy-app-d1` before touching this** — it owns the fix and may already be on
+the residue. Verify with:
 
 ```sql
-select count(*) filter (where headshot like '%static.www.nfl.com%') as still_hotlinked
-from public.player_seasons where sport = 'nfl';
+select count(*) from public.puzzles where content::text like '%static.www.nfl.com%';
 ```
 
 Supabase project `nhccgufqwndtoasdbkhc` (NOT the `pyprjebfwqfdnfeliigo` decoy). Data pushes go
@@ -112,10 +133,12 @@ K4C4 is **eight** cards; four of six show result screens rather than gameplay (W
 "SIX CLUES" over an image with zero clues); the Grid board's nine answers are all alphabetical
 autofill (every one starts with "A"); Puzzle Blitz, Journeyman, Versus and Leagues appear nowhere.
 
-**Sequence matters:** do task 3 first or the new screenshots will contain helmets too. The one
-shot safe to capture today is Journeyman (crests only, no headshot).
+**Sequence matters:** the catalog is clean now, so most boards are safe — but 33 puzzles still
+carry frozen helmet URLs (task 3). Before capturing any board with a headshot on it, spot-check
+that specific puzzle id against the query in task 3. Journeyman is safe unconditionally (crests
+only, no headshot).
 
-Capture with `-screenshotPro` on a 6.9" simulator. Upload via
+Capture with `-screenshotPro` on a 6.9" simulator — **claim a lock first, see below**. Upload via
 `POST /v1/appScreenshots` + the reservation/commit flow against the screenshot set. These land on
 1.7.1 — they are **not** blocking the queued 1.7.0.
 
@@ -141,6 +164,34 @@ Once 1–5 are done **and 1.7.0 has left the review queue**:
    final submit**; that step is outward-facing and hard to reverse.
 
 ---
+
+## 🔴 Simulator locks — claim before ANY simctl or simulator-MCP call
+
+Up to six Claude sessions share this Mac's eight simulators. On 2026-08-25 three of us drove
+`448665F0` at once: an FTUE cold-install run got steered into a game board it never tapped, and a
+test suite died mid-run with "Unable to initialize test bundle" plus two unattributable failures
+that were about to be bisected as a real regression. All ambient, all wasted time.
+
+Protocol is in `/tmp/balliq-sim-locks/README.md`. Claim atomically:
+
+```bash
+D=<UDID>; ME=<your-session-name>
+ln -s "$ME" /tmp/balliq-sim-locks/$D 2>/dev/null && echo GOT || echo "HELD BY $(readlink /tmp/balliq-sim-locks/$D)"
+```
+
+Release with `rm -f /tmp/balliq-sim-locks/$D`. Use `ln -s`, never `test -f` + write — only the
+symlink is atomic.
+
+**This handoff deliberately does not name a device.** An earlier draft called `448665F0` "the test
+device" and that alone routed a second session's `xcodebuild` onto an already-busy simulator.
+Take whichever of the eight is free; there are more devices than sessions, so prefer a free one
+over queueing. A lock naming a session that `ListAgents` doesn't return *may* be stale, but check
+its age first — a few-minutes-old lock is far more likely a live session using a descriptive alias
+than an abandoned one. Message the holder before removing anything.
+
+Also: `simctl uninstall` does **not** clear UserDefaults on this project (cfprefsd caches the
+plist by bundle id). A genuine clean-install needs
+`simctl spawn <sim> defaults delete com.balliqfantasy.app` as well.
 
 ## Repo conventions you will trip over otherwise
 
