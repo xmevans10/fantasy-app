@@ -280,11 +280,23 @@ unranked surface added later.
 a count that excludes the current game — which is what you want. Put a comment on it. If anyone
 later moves the gate below the append, every threshold silently shifts by one.
 
-⚠️ **One consequence to verify, not hide.** `CareerStats.swift:114` does `rows.filter(\.ranked)`
-for recent form, so placement games will now appear there with a `ratingDelta` of 0. Check
-whether that dilutes the recent-form figure and, if it does, filter that call site on
-`ratingDelta != 0` or an explicit flag rather than changing what `ranked` means. The other
-consumer, `RemoteSync.swift:127`, just mirrors the field to the server and is unaffected.
+⚠️ **One consequence to check — expected benign.** `CareerStats.swift:114` does
+`rows.filter(\.ranked)` for `consistencyScore`, so placement games now appear there. That
+function computes variance of `performance` and **never reads rating**, so a placement daily —
+a real board on a rated surface, with a real `performance` — arguably belongs in it. Expect this
+to come back clean, but confirm rather than assume. If it does need excluding, filter that call
+site on `ratingDelta != 0` rather than changing what `ranked` means.
+
+The complete set of `GameResult.ranked` readers, so nobody has to re-derive it:
+
+```
+RemoteSync.swift:127     ranked = r.ranked       mirrors to server — unaffected
+CareerStats.swift:114    rows.filter(\.ranked)   consistencyScore — see above
+GameResult.swift:72      self.ranked = ranked    init
+```
+
+Neither reader means "rating moved". `ratingDelta` (`GameResult.swift:57`, consumed at
+`StatCatalog.swift:307` for biggest-jump) is the field that does.
 
 Requirements:
 

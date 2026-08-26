@@ -250,6 +250,20 @@ Consumers of `GameResult.ranked` verified — only `RemoteSync.swift:127` (mirro
 (`GameResult.swift:57`) is that signal. `consistencyScore` reads `performance`, not rating, so
 including placement games is benign.
 
+**`logSession` (:573) is a second entry point into the career log — leave it alone.** It
+hard-codes `ranked: false` at :577 and has six call sites, all the duel/ladder/practice paths, not
+just Grid practice:
+
+```
+WhoAmIGameView:421   Keep4GameView:401   JourneymanGameView:345, :748   GridGameView:438, :454
+```
+
+Every one is correct as-is: a duel never moves rating (the Versus info sheet's standing promise),
+so those rows must not increment the placement counter. It is, however, the obvious place for
+someone to "helpfully" add a matching gate. Don't. The consequence of getting it wrong is benign in
+one direction and a deadlock in the other, which is exactly the asymmetry that makes it worth a
+comment rather than trust.
+
 Also read the count **before** `recordGameResult` writes the current row — rating applies at :515,
 the row is appended around :599–607, so the natural gate position excludes the current game. That
 is correct but invisible, and breaks silently if the gate moves.
