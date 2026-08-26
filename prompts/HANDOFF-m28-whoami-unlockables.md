@@ -506,6 +506,15 @@ Notes an implementer will otherwise wonder about:
   recessed slot rather than a card. `cardSurface()` on a locked row makes the ladder look like
   six real clues.
 - A community-authored puzzle can carry fewer than six clues. Nothing above assumes six.
+- **A board with *more* than six clues would price the extras at zero**, and the row would read
+  `−0 pts`. This cannot happen today — `CreateWhoAmIView` is hardcoded to exactly six kinds, and
+  all 916 production boards carry exactly six — but nothing in the decode path caps it, so it is
+  worth knowing why it's safe rather than discovering it later. The cause is pre-existing and
+  not something this change introduces: `WhoAmIScoring.perClue` has six entries and
+  `value(cluesUsed:)` clamps its index, so clue 7 is already worth the same as clue 6 today. The
+  ladder just makes that visible. **The real invariant is `perClue.count >= clues.count`**; if
+  the pipeline ever raises `whoami_clues.CLUE_COUNT` above 6, `perClue` has to grow in the same
+  change, and scoring is wrong with or without the ladder. A7.2 pins it.
 
 ---
 
@@ -825,6 +834,19 @@ final class ClueFamilyTests: XCTestCase {
         let ladder = (2...6).map { WhoAmIScoring.cost(toUnlock: $0, difficulty: .hard) }
         XCTAssertEqual(ladder, [320, 320, 320, 320, 160])
     }
+
+    /// Every clue on the longest board the scoring table can price must cost something — a
+    /// locked row reading `−0 pts` means the board outran `perClue`.
+    ///
+    /// Deliberately written against `perClue.count` rather than the literal 6, so that raising
+    /// the pipeline's `CLUE_COUNT` without extending `perClue` fails here instead of shipping a
+    /// ladder of free clues. Every fixture in these tests is a six-clue board built by hand, so
+    /// nothing else in the suite would notice.
+    func testEveryPricedClueCostsSomething() {
+        for n in 2...WhoAmIScoring.perClue.count {
+            XCTAssertGreaterThan(WhoAmIScoring.cost(toUnlock: n, difficulty: nil), 0, "clue \(n)")
+        }
+    }
 ```
 
 ### A7.3 Append to `tools/ingest/tests/test_whoami_clues.py`
@@ -1088,12 +1110,56 @@ create table if not exists public.user_unlocks (
 );
 ```
 
-Equipped state on `profiles` (`equipped_badges text[]`, `equipped_flair text`,
-`equipped_theme text`), with a trigger or RPC asserting the user owns what they equip —
-otherwise "equipped" becomes a second, unenforced grant path. RLS: `user_unlocks` world-readable
-(badges are public proof; the share card needs them), writable **only** by `service_role` or a
-`security definer` award RPC. Mirror every migration into `supabase/schema.sql` in the same
-change.
+RLS on `user_unlocks`: world-readable (badges are public proof; the share card needs them),
+writable **only** by `service_role` or a `security definer` award RPC — no insert/update/delete
+policy for `authenticated` at all. That mirrors `public.entitlements`, which answers "can a
+modified client grant itself Pro" structurally rather than procedurally. Copy that posture.
+
+🔴 **Do not put equipped state on `profiles`.** The first draft said to, with "a trigger or RPC
+asserting the user actually owns what they equip." That is the weak version, and the schema
+makes it weaker than it sounds:
+
+```sql
+create policy "profiles update own" on public.profiles
+  for update using (auth.uid() = id) with check (auth.uid() = id);
+```
+
+It's a blanket `for update` — so **any column added to `profiles` is user-writable the moment it
+exists**, defended only by whatever trigger someone remembers to write. Equipping is a grant if
+you can equip what you don't own, so that puts the trust boundary on a trigger that fails open.
+
+Give equipped state its own table and let a foreign key do the enforcing:
+
+```sql
+create table if not exists public.user_equipped (
+  user_id   uuid not null references auth.users(id) on delete cascade,
+  slot      text not null check (slot in ('badge','flair','theme')),
+  ordinal   int  not null default 0,
+  unlock_id text not null,
+  primary key (user_id, slot, ordinal),
+  -- Load-bearing: equipping something you don't own is an FK violation, not a policy decision.
+  foreign key (user_id, unlock_id)
+    references public.user_unlocks(user_id, unlock_id) on delete cascade
+);
+```
+
+The payoff is that users can then safely hold write policies on their own rows — the constraint
+does the enforcement, so there is nothing for a convenience upsert to erode later. Revoking an
+unlock also un-equips it for free via `on delete cascade`.
+
+Two halves, and only one of them is security: **ownership is structural** (the FK above);
+**slot count is procedural** — how many badges Pro lets you show has to be checked somewhere,
+because entitlement is dynamic. That's fine, because over-equipping is cosmetic overreach, not a
+forged grant. Don't conflate them and don't spend the FK's guarantee trying to cover both.
+
+**Concurrency:** `user_unlocks`' `primary key (user_id, unlock_id)` already makes a double-grant
+to one user impossible — good. But any *globally* limited unlock ("first 100 to clear rung 20",
+early access to a season's shelf) is a different race: a read-then-write "has anyone claimed
+this?" check passes for two concurrent requests. Enforce it with a unique constraint and map
+`23505` to a refusal rather than reasoning about interleavings. (Lesson borrowed from the
+entitlement-claim work landing in this same tree, where exactly that check was the bug.)
+
+Mirror every migration into `supabase/schema.sql` in the same change.
 
 ## B3. Generated, not hand-maintained — unchanged
 

@@ -84,8 +84,15 @@ needed; that table can be dropped once 1.7.x is out and nobody has complained.
 
 **The mechanism is still unfixed**, and that is the real follow-up: `apply_headshot_ledger` runs
 over the `RawSeason` list at the top of an ingest run, so it only reaches puzzles minted in that
-run. Any puzzle minted before a future placeholder is detected will freeze the bad URL again. A
-durable fix applies the ledger to `puzzles.content` as well, or re-checks at serve time.
+run. Any puzzle minted before a future placeholder is detected will freeze the bad URL again —
+this class of bug recurs on the next batch of retired players the CDN gives up on.
+
+**Recommended fix: re-check at serve time, not another sweep** (reasoning from `fantasy-app-d1`,
+and better than the framing this handoff originally carried). The failure is that *a URL which was
+good at mint time stops being good later*. Applying the ledger to `puzzles.content` is the
+narrower change but keeps the same freeze-at-mint shape — it only moves when the freeze happens,
+so the next CDN retirement re-creates the problem. Only a check after mint catches it. The cost is
+a per-serve lookup, which `TeamIdentityIndex` already demonstrates is affordable at this scale.
 
 ### 4. Rename "Immaculate Grid" in-app
 
@@ -178,6 +185,27 @@ plist by bundle id). A genuine clean-install needs
 - **Screenshots before and after any visual change**, on the state most likely to break.
 - If a documented command, path or fact here turns out to be wrong, invoke the `context-repair`
   skill and fix the doc — don't just work around it.
+
+## ⚠️ Known collision with M30 (FTUE activation)
+
+`fantasy-app-d1` has scoped `prompts/HANDOFF-m30-ftue-activation.md` off its FTUE audit. Three of
+its six files overlap this branch:
+
+| File | Overlap |
+|---|---|
+| `Keep4GameView.swift` | **Same function.** M30's "first three games unrated" changes `finish()`'s `ranked:` argument; this branch adds a blitz branch at the top of `finish()` that `return`s before that path is reached. Textual conflict, and a semantic one. |
+| `HomeView.swift` | Different regions (a `@State`, a `launch(_:)` case, a `fullScreenCover`, a `DebugLaunch` branch). Should auto-merge. |
+| `Localizable.xcstrings` | Both append. Trivial *if* both append at the trailing anchor as text; catastrophic if either rewrites the file (see the convention above). |
+
+`OnboardingView.swift`, `RepositoryContainer.swift` and `AnalyticsClient.swift` are clear.
+
+**Open design question M30 must answer explicitly:** do blitz rounds count toward the
+first-three-games grace window? Recommended answer is **no** — a blitz already runs `ranked: false`
+end to end and logs one `game_results` row per *run* as `mode: .practice`, so its boards never move
+rating. If they consumed the window, a new player who opened Puzzle Blitz first would burn all
+three protected games on runs that could never have demoted them, then meet their first real daily
+unprotected — the opposite of the window's purpose. The default falls out of implementation detail
+rather than intent, so it needs stating.
 
 ## Also open, lower priority
 
