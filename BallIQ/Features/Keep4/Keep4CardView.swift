@@ -149,7 +149,10 @@ struct Keep4CardView: View {
     private var crestWatermark: some View {
         HStack {
             Spacer(minLength: 0)
-            TeamLogoBadge(sport: sport, teamAbbr: player.teamAbbr, tint: team.onPrimary, size: 168)
+            TeamLogoBadge(sport: sport, teamAbbr: player.teamAbbr, tint: team.onPrimary, size: 168,
+                          // Drawn at 168, fetched at the badge size — see `fetchSize`. This is
+                          // what lets the warm pass cover it.
+                          fetchSize: 40)
                 .opacity(0.15)
                 .offset(x: 34, y: 14)
         }

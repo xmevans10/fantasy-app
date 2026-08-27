@@ -66,6 +66,16 @@ struct TeamLogoBadge: View {
     /// just narrows the lookup when a caller happens to have one).
     var league: String? = nil
     var size: CGFloat = 40
+    /// Pixel size to *fetch* at, when it should differ from the size drawn.
+    ///
+    /// Exists for the Keep4 card's crest watermark, which is drawn huge and faint. Left to
+    /// itself it would ask for `AppImagePipeline`'s 384 px bucket while every other crest in the
+    /// app asks for 192 — a different cache key for the same asset, so it could never hit a warm
+    /// entry, and it paid 43 KB / ~1.7 s for detail that is invisible at 15% opacity behind
+    /// stripes. Fetching at the badge size puts it on the shared entry.
+    var fetchSize: CGFloat? = nil
+
+    private var pixels: CGFloat { fetchSize ?? size }
     /// Set false when the crest for this code would be *wrong* rather than merely missing —
     /// Journeyman's era-renamed franchises, where `nfl/hou` is the Texans' badge and the label
     /// next to it says "Oilers". Falls through to the abbreviation chip, which is the same
@@ -84,7 +94,7 @@ struct TeamLogoBadge: View {
     @ViewBuilder private var content: some View {
         if sport.hasTeams {
             if showsLogo, let url = sport.teamLogoURL(forAbbr: teamAbbr, league: league) {
-                RemoteImage(url: url, targetSize: CGSize(width: size, height: size),
+                RemoteImage(url: url, targetSize: CGSize(width: pixels, height: pixels),
                             failure: { abbrText })
             } else {
                 abbrText

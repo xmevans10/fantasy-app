@@ -271,6 +271,19 @@ enum AppImagePipeline {
     /// ever asks for.
     static let warmSize = CGSize(width: 48, height: 48)
 
+    /// The size the Keep4 *board* card draws a headshot at, which since the 2026-08-27 redesign
+    /// is up to 150 pt — the 384 px bucket, not `warmSize`'s 192. Warming that card at
+    /// `warmSize` therefore filled an entry it never asks for, and the hero photo on all 8 cards
+    /// went back to fetching on first render. Headshots come from CDNs with no transform
+    /// endpoint, so both buckets are the same URL and the second one is served by `URLCache` —
+    /// which is why the compact 48 pt result card still renders promptly off this warm.
+    static let cardWarmSize = CGSize(width: 150, height: 150)
+
+    /// The size every crest is fetched at (`TeamLogoBadge`'s default, and what the Keep4
+    /// watermark pins itself to via `fetchSize`). One bucket for all crest call sites is the
+    /// whole point — a second one would double both the traffic and the warm set.
+    static let crestWarmSize = CGSize(width: 40, height: 40)
+
     /// Smallest bucket that covers `size` at native screen scale.
     static func pixelBucket(for size: CGSize) -> CGFloat {
         let needed = max(size.width, size.height) * screenScale
