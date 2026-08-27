@@ -120,7 +120,16 @@ enum WhoAmIAnswerPhoto {
         return first...last
     }
 
-    static func headshot(from rows: [CatalogSeason], for puzzle: WhoAmIPuzzle) -> String? {
+    /// The catalog row this puzzle's answer resolves to, under the conservative rules above.
+    /// `headshot(from:for:)` is a thin wrapper over this, so the two can never disagree about
+    /// *which* player matched — the result screen paints the reveal in this row's club colours
+    /// (M28 A5) and must be looking at the same player as the photo.
+    ///
+    /// Note this inherits the `headshot != nil` filter, so a subject with no photo also gets no
+    /// club colour. That's deliberate: a second, looser match would resolve a team for players
+    /// the strict rules rejected, and a *wrong* club colour on the reveal is worse than the
+    /// neutral blue it falls back to.
+    static func match(from rows: [CatalogSeason], for puzzle: WhoAmIPuzzle) -> CatalogSeason? {
         let accepted = Set(([puzzle.answer.canonical] + puzzle.answer.aliases)
             .map(AnswerMatcher.normalize))
         let span = eraSpan(of: puzzle)
@@ -133,8 +142,11 @@ enum WhoAmIAnswerPhoto {
                 let hi = Swift.max(lo, row.lastYear ?? row.seasonYear)
                 return (lo...hi).overlaps(span)
             }
-            .max { $0.seasonYear < $1.seasonYear }?   // latest row → most recent photo
-            .headshot
+            .max { $0.seasonYear < $1.seasonYear }   // latest row → most recent photo
+    }
+
+    static func headshot(from rows: [CatalogSeason], for puzzle: WhoAmIPuzzle) -> String? {
+        match(from: rows, for: puzzle)?.headshot
     }
 }
 
@@ -173,6 +185,19 @@ enum WhoAmIScoring {
     /// The most a puzzle at `difficulty` can pay — a first-clue solve with no wrong guesses.
     static func maxScore(difficulty: WhoAmIPuzzle.Difficulty?) -> Int {
         value(cluesUsed: 1, difficulty: difficulty)
+    }
+
+    /// What unlocking clue number `n` costs, for `2...clues.count`. Clue 1 is always shown, so
+    /// `cost(toUnlock: 1)` is 0.
+    ///
+    /// This is the whole price ladder the board renders now, not just the next step —
+    /// `WhoAmIGameView.nextCueCost` is one call into it. Derived from `value(cluesUsed:)`
+    /// rather than from `perClue` directly so the difficulty multiplier is applied exactly
+    /// once, the same way the header's "Worth N pts" already does it.
+    static func cost(toUnlock n: Int, difficulty: WhoAmIPuzzle.Difficulty?) -> Int {
+        guard n > 1 else { return 0 }
+        return value(cluesUsed: n - 1, difficulty: difficulty)
+             - value(cluesUsed: n, difficulty: difficulty)
     }
 
     static func score(cluesUsed: Int, wrongGuesses: Int, solved: Bool,

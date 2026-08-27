@@ -181,6 +181,45 @@ final class WhoAmIScoringTests: XCTestCase {
         XCTAssertFalse(AnswerMatcher.matches("Kobe Bryant", answer: answer))
         XCTAssertFalse(AnswerMatcher.matches("", answer: answer))
     }
+
+    /// `cost(toUnlock:)` must stay algebraically identical to the header delta it replaced —
+    /// this is the pin on A2's refactor.
+    func testUnlockCostIsTheDropInBoardValue() {
+        // Spelled out rather than inferred from the literal — a mixed `[nil, .easy, …]` array
+        // doesn't always infer to `[Difficulty?]`. nil is "unrated", which is its own tier
+        // (1.0×), not a synonym for medium.
+        let tiers: [WhoAmIPuzzle.Difficulty?] = [nil, .easy, .medium, .hard]
+        for difficulty in tiers {
+            XCTAssertEqual(WhoAmIScoring.cost(toUnlock: 1, difficulty: difficulty), 0)
+            for n in 2...WhoAmIScoring.perClue.count {
+                XCTAssertEqual(
+                    WhoAmIScoring.cost(toUnlock: n, difficulty: difficulty),
+                    WhoAmIScoring.value(cluesUsed: n - 1, difficulty: difficulty)
+                        - WhoAmIScoring.value(cluesUsed: n, difficulty: difficulty),
+                    "tier \(String(describing: difficulty)), clue \(n)")
+            }
+        }
+    }
+
+    /// The ladder a HARD board actually renders. Locked in as literals so a scoring tweak can't
+    /// silently change what the board advertises.
+    func testHardBoardPriceLadder() {
+        let ladder = (2...6).map { WhoAmIScoring.cost(toUnlock: $0, difficulty: .hard) }
+        XCTAssertEqual(ladder, [320, 320, 320, 320, 160])
+    }
+
+    /// A board with more clues than `perClue` has entries would price the extras at zero and
+    /// render "−0 pts" on the ladder. Unreachable today (all 916 production boards are six, and
+    /// `CreateWhoAmIView` offers exactly six kinds), and the clamp in `value(cluesUsed:)`
+    /// predates the ladder — but every fixture here is a hand-built six-clue board, so nothing
+    /// else in the suite would catch it. Written against `perClue.count`, not the literal 6, so
+    /// raising the pipeline's CLUE_COUNT without extending the Swift table fails here rather
+    /// than shipping a ladder of free clues.
+    func testEveryPricedClueCostsSomething() {
+        for n in 2...WhoAmIScoring.perClue.count {
+            XCTAssertGreaterThan(WhoAmIScoring.cost(toUnlock: n, difficulty: nil), 0, "clue \(n)")
+        }
+    }
 }
 
 /// `WhoAmIAnswerPhoto` — the reveal-time headshot resolution (WhoAmI content carries no

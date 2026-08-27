@@ -249,3 +249,18 @@ def test_join_list():
     assert whoami_clues.join_list(["A", "B"]) == "A and B"
     assert whoami_clues.join_list(["A", "B", "C"]) == "A, B and C"
     assert whoami_clues.join_list([]) == ""
+
+
+def test_clue_families_match_the_swift_map():
+    """`ClueFamily.byDimension` is a hand-port of DIMENSIONS' family column. Read it back out
+    of the Swift source so adding a dimension without updating the client fails here rather
+    than silently dropping that clue onto its `kind` fallback colour."""
+    import pathlib
+    import re
+    swift = (pathlib.Path(__file__).resolve().parents[3]
+             / "BallIQ" / "Models" / "ClueFamily.swift").read_text(encoding="utf-8")
+    body = re.search(r"byDimension: \[String: ClueFamily\] = \[(.*?)\n    \]", swift, re.S)
+    assert body, "couldn't find ClueFamily.byDimension"
+    found = dict(re.findall(r'"(\w+)":\s*\.(\w+)', body.group(1)))
+    expected = {d.key: d.family for d in DIMENSIONS}
+    assert found == expected

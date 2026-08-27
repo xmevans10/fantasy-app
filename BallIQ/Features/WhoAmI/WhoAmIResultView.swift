@@ -21,10 +21,19 @@ struct WhoAmIResultView: View {
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.ladderRematch) private var ladderRematch
     @State private var confetti = 0
-    /// Resolved from the live catalog at reveal time (WhoAmI content has no photo URL) —
-    /// see `WhoAmIAnswerPhoto` for the conservative matching rules. Stays nil (silhouette)
-    /// when no confident match exists.
-    @State private var answerHeadshot: String?
+    /// The catalog row the answer resolved to — supplies both the headshot and the club palette
+    /// the reveal is flooded with. nil when no confident match exists (see `WhoAmIAnswerPhoto`),
+    /// in which case the card stays on `accentFill` exactly as it shipped.
+    @State private var answerRow: CatalogSeason?
+
+    private var answerHeadshot: String? { answerRow?.headshot }
+    private var answerPalette: TeamPalette? {
+        guard let answerRow else { return nil }
+        return TeamColors.palette(sport: puzzle.sport, abbr: answerRow.teamAbbr,
+                                  league: answerRow.league)
+    }
+    private var answerFill: Color { answerPalette?.primary ?? .accentFill }
+    private var onAnswerFill: Color { answerPalette?.onPrimary ?? .onAccent }
     @State private var rematching = false
 
     private var heroFill: Color { result.solved ? (result.cluesUsed == 1 ? .voltFill : .accentFill) : .surface1 }
@@ -67,7 +76,7 @@ struct WhoAmIResultView: View {
         .task {
             let rows = await container.catalog.search(
                 CatalogQuery(sport: puzzle.sport, name: puzzle.answer.canonical), limit: 30)
-            answerHeadshot = WhoAmIAnswerPhoto.headshot(from: rows, for: puzzle)
+            answerRow = WhoAmIAnswerPhoto.match(from: rows, for: puzzle)
         }
     }
 
@@ -96,19 +105,19 @@ struct WhoAmIResultView: View {
     private var answerCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
-                PlayerHeadshotBadge(headshot: answerHeadshot, tint: Color.onAccent, size: 44, name: puzzle.answer.canonical)
+                PlayerHeadshotBadge(headshot: answerHeadshot, tint: onAnswerFill, size: 44, name: puzzle.answer.canonical)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("THE ANSWER WAS")
                         .font(.label11)
-                        .foregroundStyle(Color.onAccent.opacity(0.75))
+                        .foregroundStyle(onAnswerFill.opacity(0.75))
                     Text(puzzle.answer.canonical)
                         .font(.custom(FontName.condBlack, size: 20))
-                        .foregroundStyle(Color.onAccent)
+                        .foregroundStyle(onAnswerFill)
                 }
                 Spacer(minLength: 0)
             }
             .padding(16)
-            .background(Color.accentFill)
+            .background(answerFill)
             Text(puzzle.sport.displayName)
                 .font(.label11)
                 .foregroundStyle(Color.textMuted)
