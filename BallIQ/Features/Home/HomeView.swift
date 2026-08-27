@@ -79,6 +79,36 @@ struct HomeView: View {
         showsProSurfaces ? GameFormat.all : GameFormat.all.filter { !$0.isPro }
     }
 
+    /// Stands in for the rank widget until the rating is real. Says how many boards are left
+    /// rather than showing a tier the next game could still move — a new player who saw BRONZE
+    /// here on day one was being told their rank before the app had any basis for one.
+    private var placementCard: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "target")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(Color.onAccent)
+                .frame(width: 46, height: 46)
+                .background(Circle().fill(Color.accentFill))
+                .overlay(Circle().strokeBorder(Color.borderInk, lineWidth: 2.5))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(container.placementRemaining == 1
+                     ? String(localized: "1 GAME TO PLACE")
+                     : String(localized: "\(container.placementRemaining) GAMES TO PLACE"))
+                    .font(.title)
+                    .foregroundStyle(Color.textPrimary)
+                Text("Your rank appears once your rating starts counting.")
+                    .font(.label11)
+                    .foregroundStyle(Color.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .cardSurface()
+        .accessibilityElement(children: .combine)
+    }
+
     /// Sport whose rating the rank widget shows — tracks the pager's visible page
     /// (`dailyPage`), not `container.sportFilter`. The section sits directly beneath the
     /// daily-games pager (2026-07-17) precisely so it reads as describing whichever cards are
@@ -160,8 +190,16 @@ struct HomeView: View {
                     // Directly beneath the daily cards that feed it — the rank used to sit at
                     // the very bottom of the page, disconnected from the ranked games above
                     // (user feedback 2026-07-17: "ranked puzzles are not intuitively placed").
-                    section("Your rank") {
-                        RankWidget(sport: rankSport, rating: container.rating(for: rankSport))
+                    // During placement the rating hasn't moved yet, and showing a tier off a
+                    // provisional number is what produced the contradiction this fixes: Home read
+                    // the per-sport rating (BRONZE 990) while Profile read the global one
+                    // (SILVER 1,000) in the same session, ninety seconds after install.
+                    section(container.isInPlacement ? "Placement" : "Your rank") {
+                        if container.isInPlacement {
+                            placementCard
+                        } else {
+                            RankWidget(sport: rankSport, rating: container.rating(for: rankSport))
+                        }
                     }
                     .heroReveal(2)
 

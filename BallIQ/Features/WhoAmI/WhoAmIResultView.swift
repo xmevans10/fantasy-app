@@ -222,22 +222,49 @@ struct WhoAmIResultView: View {
 struct RewardsRow: View {
     let rewards: RepositoryContainer.SessionRewards
 
+    @EnvironmentObject private var container: RepositoryContainer
+
     var body: some View {
         let change = rewards.ratingChange
         let up = change.delta >= 0
-        return HStack(spacing: 16) {
-            metric(label: String(localized: "Rating"), value: "\(change.new)",
-                   accent: "\(up ? "+" : "")\(change.delta)",
-                   accentColor: up ? .successText : .dangerText)
-            Divider().frame(height: 32)
-            metric(label: String(localized: "XP"), value: "+\(rewards.xpEarned)", accent: nil, accentColor: .textMuted)
-            Divider().frame(height: 32)
-            metric(label: String(localized: "Streak"), value: "\(rewards.newStreak)", accent: nil, accentColor: .textMuted)
+        return VStack(spacing: 10) {
+            HStack(spacing: 16) {
+                if container.isInPlacement {
+                    // During placement the rating genuinely did not move, so showing "+0" would
+                    // be a true number that reads as a failure. The count is the honest thing to
+                    // show, and it turns the absence into something to finish.
+                    metric(label: String(localized: "Rating"),
+                           value: String(localized: "\(placementIndex) of \(RatingPlacement.games)"),
+                           accent: nil, accentColor: .textMuted)
+                } else {
+                    metric(label: String(localized: "Rating"), value: "\(change.new)",
+                           accent: "\(up ? "+" : "")\(change.delta)",
+                           accentColor: up ? .successText : .dangerText)
+                }
+                Divider().frame(height: 32)
+                metric(label: String(localized: "XP"), value: "+\(rewards.xpEarned)", accent: nil, accentColor: .textMuted)
+                Divider().frame(height: 32)
+                metric(label: String(localized: "Streak"), value: "\(rewards.newStreak)", accent: nil, accentColor: .textMuted)
+            }
+            if container.isInPlacement {
+                Text(container.placementRemaining == 1
+                     ? String(localized: "One more placement game and your rating starts counting.")
+                     : String(localized: "\(container.placementRemaining) more placement games and your rating starts counting."))
+                    .font(.label11)
+                    .foregroundStyle(Color.textMuted)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(16)
         .cardSurface()
     }
+
+    /// Which placement game the player has just finished — `ratedGames` already includes it, and
+    /// it is clamped so an unranked board (which does not consume a slot) can never render
+    /// "0 of 3" or "4 of 3".
+    private var placementIndex: Int { RatingPlacement.index(ratedGames: container.ratedGames) }
 
     private func metric(label: String, value: String, accent: String?, accentColor: Color) -> some View {
         VStack(spacing: 2) {

@@ -417,8 +417,23 @@ final class RepositoryContainer: ObservableObject {
     /// gate on it can never disagree (AGENTS.md §4).
     @Published private(set) var completedGames = 0
 
+    /// How many rated boards this player has finished. Drives the placement window; published
+    /// alongside `completedGames` because the result screens read it synchronously.
+    @Published private(set) var ratedGames = 0
+
+    /// Rated boards before the rating starts moving. See `RatingPlacement`.
+    static let placementGames = RatingPlacement.games
+
+    /// Rated boards still owed before the rating counts. `0` once placement is over.
+    var placementRemaining: Int { RatingPlacement.remaining(ratedGames: ratedGames) }
+
+    /// Whether the rating shown anywhere is provisional.
+    var isInPlacement: Bool { RatingPlacement.isInPlacement(ratedGames: ratedGames) }
+
     private func refreshCompletedGames() async {
-        completedGames = await gameLog.all().count
+        let rows = await gameLog.all()
+        completedGames = rows.count
+        ratedGames = rows.filter(\.ranked).count
     }
 
     private func refreshRatings() async {
@@ -528,7 +543,35 @@ final class RepositoryContainer: ObservableObject {
                                                          awardingXP: xp, date: date)
         let change: RatingChange
         let outcome = GameOutcome(format: format, sport: sport, performance: performance)
-        if ranked {
+
+        // Placement: the first `placementGames` **rated** boards do not move the rating.
+        //
+        // New accounts start at `RatingEngine.startingRating` (1000), which is the exact first
+        // point of Silver (`Tier.silver` is 1000...1199, bronze 0...999). The expected-score curve
+        // puts break-even at 50% on a blind eight-card sort, so the median first-timer loses
+        // rating and is visibly demoted a tier by their first game. Measured on a cold install:
+        // 2/8 correct, -10, Silver -> Bronze, with a red number as the first thing the
+        // progression system ever showed them.
+        //
+        // Two things are load-bearing here and are separately tested:
+        //
+        // 1. The count reads **rated rows only** (`GameResult.ranked`). Anything already unranked
+        //    — Blitz, community puzzles, archive replays, duels — must never consume a slot, or a
+        //    player who opened Blitz first would burn the window on boards that were never going
+        //    to move their rating and meet their first real daily unprotected.
+        //
+        // 2. `ranked` is passed through to `recordGameResult` **unchanged** (see the note there).
+        //    The counter reads the field the rule must not write. Gating on a value the gate
+        //    itself sets would mean the count could only be incremented by a row the rule refuses
+        //    to create — the window would never close and the app would be permanently unrated.
+        //
+        // Read before this session's row is appended, so the current game is excluded. That is
+        // what makes "the first three" mean the first three.
+        let ratedSoFar = await gameLog.all().filter(\.ranked).count
+        let applyRating = RatingPlacement.appliesRating(ranked: ranked,
+                                                        ratedGamesBefore: ratedSoFar)
+
+        if applyRating {
             change = await localRating.apply(outcome, date: date)
         } else {
             let current = await localRating.rating(for: sport)
@@ -539,7 +582,7 @@ final class RepositoryContainer: ObservableObject {
         // soft-reset snapshot of the all-time rating. Only when ranked and a season is active; the
         // all-time rating above is untouched by this.
         var seasonMove: (seasonID: Int, rating: Int, peak: Int)?
-        if ranked, let season = currentSeason {
+        if applyRating, let season = currentSeason {
             let seed = SeasonSeed.seed(fromAllTime: change.old)
             let seasonChange = localSeasonRating.apply(outcome, seasonID: season.id, seed: seed, date: date)
             let peak = localSeasonRating.peak(seasonID: season.id, sport: sport, seed: seed)
@@ -552,7 +595,7 @@ final class RepositoryContainer: ObservableObject {
         // Push to the server in the background (no-op when signed out / offline / unranked rating).
         if let sync {
             Task { await sync.pushProgress(snap)
-                   if ranked {
+                   if applyRating {
                        await sync.pushRating(sport: sport, rating: change.new, recordHistory: true)
                    }
                    if let move = seasonMove {
@@ -568,8 +611,15 @@ final class RepositoryContainer: ObservableObject {
         // Career log. Written here — after `progressSnapshot`/`refreshRatings()` and before the
         // analytics event — so rating before/after, XP and streak are all the settled values for
         // this session rather than a mix of pre- and post-state.
+        // 🔴 `ranked:`, NOT `applyRating`. This records whether the board was a *rated surface*,
+        // which is the field the placement counter above reads. Changing it to `applyRating` for
+        // consistency with the three gates would make the counter read its own output: it could
+        // then only be incremented by a row the gate refuses to create, the window would never
+        // close, and rating would stop moving for everyone, permanently. Locked by
+        // `RatingPlacementTests.testTheWindowCloses`.
         await recordGameResult(format: format, sport: sport, performance: performance,
-                               perfect: perfect, puzzleID: puzzleID, ranked: ranked, date: date,
+                               perfect: perfect, puzzleID: puzzleID,
+                               ranked: RatingPlacement.recordedRanked(ranked: ranked), date: date,
                                ratingBefore: change.old, ratingAfter: change.new,
                                xpEarned: xp, streakAfter: snap.streak, detail: detail)
 
