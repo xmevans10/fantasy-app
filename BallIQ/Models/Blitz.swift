@@ -248,6 +248,16 @@ struct BlitzRoundResult: Equatable, Identifiable {
     static func == (a: BlitzRoundResult, b: BlitzRoundResult) -> Bool { a.id == b.id }
 }
 
+/// A board that was on screen when the clock hit zero.
+///
+/// Carries only what the result screen needs to name it. There is no `performance` because the
+/// player never finished it — that is the whole point of the type existing separately from
+/// `BlitzRoundResult` rather than as a flag on it.
+struct BlitzCutOff: Equatable {
+    let format: BlitzFormat
+    let sport: Sport
+}
+
 /// Pure scoring for a blitz run. Nothing here reads a clock or a repository, so every number the
 /// result screen shows is reproducible from the round list alone.
 ///
@@ -319,6 +329,54 @@ enum BlitzScoring {
         return Int((base * combo).rounded())
     }
 
+    /// Every input that produced one round's points, kept together so the result screen can show
+    /// the arithmetic instead of asserting a number.
+    ///
+    /// **Why this exists rather than the view recomputing it.** A round's points depend on the
+    /// combo it landed on, which is a property of the *sequence* — so per-round points can only
+    /// be obtained by folding the run front to back. A view that called `points(_:consecutiveCleared:)`
+    /// per row would have to re-derive that fold and would get it wrong the first time someone
+    /// filtered or re-sorted the list. `rows` is the same fold `rawTotal` performs, exposed once.
+    struct RoundBreakdown: Equatable, Identifiable {
+        let round: BlitzRoundResult
+        /// Chance-rebased quality, `-1...1`. See `surplus`.
+        let surplus: Double
+        /// `pointsPerParSecond × parSeconds × surplus`, before any combo.
+        let base: Double
+        /// The multiplier this round actually received — `1` on a loss, since the combo
+        /// multiplies gains only.
+        let combo: Double
+        /// How many cleared boards immediately preceded this one.
+        let consecutiveCleared: Int
+        let points: Int
+
+        var id: UUID { round.id }
+        /// The combo did something visible here — the only case worth drawing attention to.
+        var comboApplied: Bool { combo > 1 }
+    }
+
+    /// The run folded in order, exposing each round's own arithmetic.
+    ///
+    /// `rows(_:).map(\.points).reduce(0,+) == rawTotal(_:)` by construction, and
+    /// `BlitzScoringTests` locks it — the result screen's per-round list has to reconcile against
+    /// the headline, and a breakdown that quietly disagreed with the total would be worse than no
+    /// breakdown at all.
+    static func rows(_ rounds: [BlitzRoundResult]) -> [RoundBreakdown] {
+        var combo = 0
+        var out: [RoundBreakdown] = []
+        out.reserveCapacity(rounds.count)
+        for round in rounds {
+            let value = surplus(round.performance, format: round.format)
+            let base = pointsPerParSecond * round.format.parSeconds * value
+            let multiplier = value > 0 ? comboMultiplier(consecutiveCleared: combo) : 1
+            out.append(RoundBreakdown(round: round, surplus: value, base: base,
+                                      combo: multiplier, consecutiveCleared: combo,
+                                      points: Int((base * multiplier).rounded())))
+            combo = round.cleared ? combo + 1 : 0
+        }
+        return out
+    }
+
     /// The run folded in order, **losses included** — the combo is a property of the *sequence*,
     /// so a run can only be scored front to back, never as a sum over an unordered set.
     ///
@@ -373,9 +431,24 @@ struct BlitzRunSummary: Equatable {
     /// The unclamped sum the per-format breakdown reconciles against. See `BlitzScoring.total`.
     let rawTotal: Int
 
-    init(config: BlitzConfig, rounds: [BlitzRoundResult], elapsed: TimeInterval) {
+    /// Per-round arithmetic, in play order — what the result screen's expandable list renders.
+    /// Folded once here rather than per row; see `BlitzScoring.RoundBreakdown`.
+    let breakdown: [BlitzScoring.RoundBreakdown]
+
+    /// The board the clock cut off, if it caught one mid-solve. Deliberately **not** a
+    /// `BlitzRoundResult`: it has no `performance`, so scoring it would mean inventing one, and
+    /// every honest choice there is wrong — a 0 would pay negative points on a format with a
+    /// chance floor (punishing the player for the clock), and skipping it silently would leave
+    /// the run's last board unaccounted for on a screen whose whole job is to account for them.
+    /// It is shown, unscored, and excluded from every total.
+    let cutOff: BlitzCutOff?
+
+    init(config: BlitzConfig, rounds: [BlitzRoundResult], elapsed: TimeInterval,
+         cutOff: BlitzCutOff? = nil) {
         self.config = config
         self.rounds = rounds
+        self.cutOff = cutOff
+        self.breakdown = BlitzScoring.rows(rounds)
         self.rawTotal = BlitzScoring.rawTotal(rounds)
         self.total = BlitzScoring.total(rounds)
         self.cleared = rounds.filter(\.cleared).count

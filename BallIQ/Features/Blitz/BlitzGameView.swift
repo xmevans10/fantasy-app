@@ -164,7 +164,7 @@ struct BlitzGameView: View {
                                        "sports": String(config.sports.count),
                                        "types": String(config.formats.count)])
         board = loader.next()
-        session.beginRound()
+        if let board { session.beginRound(format: board.format, sport: board.sport) }
         withAnimation(Motion.easeOut) { phase = board == nil ? .empty : .playing }
     }
 
@@ -188,7 +188,7 @@ struct BlitzGameView: View {
             return
         }
         withAnimation(Motion.easeOut) { board = next }
-        session.beginRound()
+        session.beginRound(format: next.format, sport: next.sport)
     }
 
     /// Banks the whole run: one career-log row, one XP award, one personal-best check.
@@ -201,7 +201,9 @@ struct BlitzGameView: View {
     /// single rating it could move.
     private func finish() async {
         guard let session, summary == nil else { return }
-        endedEarly = session.acceptsNewRound()
+        // "RUN ENDED" vs "TIME": time left on the clock means the player left a board. A run the
+        // clock cut off has `cutOff` set and no time left, so it reads as TIME either way.
+        endedEarly = session.acceptsNewRound() && session.cutOff == nil
         let run = session.summary()
         summary = run
         beatHighScore = store.recordScore(run.total, for: run.config.duration)
@@ -253,10 +255,33 @@ private struct BlitzRunObserver<Content: View>: View {
     let onRunOver: () -> Void
     @ViewBuilder var content: () -> Content
 
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some View {
         content()
             .onChange(of: session.rounds.count) { _, _ in onRoundFinished() }
             .onChange(of: session.isOver) { _, over in if over { onRunOver() } }
+            // The clock is a hard stop (see `BlitzSession.expire`), so something has to fire at
+            // the deadline even though no board finished. Sleeping to the deadline rather than
+            // ticking: one wake-up instead of hundreds, and it cannot drift.
+            //
+            // Deliberately NOT a `Timer` — a `Timer` invalidates when the app backgrounds, which
+            // would hand the player unlimited extra time by switching apps, the same trap
+            // `BlitzStatusBar` avoids by using `TimelineView`.
+            .task(id: session.startedAt) {
+                let remaining = session.deadline.timeIntervalSinceNow
+                if remaining > 0 {
+                    try? await Task.sleep(for: .seconds(remaining))
+                }
+                guard !Task.isCancelled else { return }
+                session.expire()
+            }
+            // The belt to that task's braces: a suspended app may not resume the sleep on time,
+            // so re-check on every return to the foreground. `expire()` is idempotent, so the
+            // two paths racing is harmless — whichever arrives first ends the run.
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active, session.secondsLeft() == 0 { session.expire() }
+            }
     }
 }
 

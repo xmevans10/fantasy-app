@@ -34,8 +34,15 @@ struct BlitzResultView: View {
                     scoreHeader.heroReveal(0)
                     statRow.heroReveal(1)
                     if !summary.rounds.isEmpty { formatBreakdown.heroReveal(2) }
-                    if let rewards { RewardsRow(rewards: rewards).heroReveal(3) }
-                    shareRow.heroReveal(4)
+                    // Per-board detail sits *below* the per-format roll-up on purpose: "which
+                    // format paid" is the first question, "what did that board score" is the
+                    // follow-up, and a run of a dozen boards would otherwise push the rewards
+                    // and share rows off the first screen.
+                    if !summary.breakdown.isEmpty || summary.cutOff != nil {
+                        BlitzRoundList(summary: summary).heroReveal(3)
+                    }
+                    if let rewards { RewardsRow(rewards: rewards).heroReveal(4) }
+                    shareRow.heroReveal(5)
                 }
                 .padding(16)
             }
@@ -60,6 +67,11 @@ struct BlitzResultView: View {
                  : String(localized: "\(summary.played) puzzles · \(summary.cleared) clean"))
                 .font(.label12)
                 .foregroundStyle(ink.opacity(0.75))
+            if summary.cutOff != nil {
+                Text("ONE PUZZLE CUT OFF BY THE CLOCK")
+                    .font(.label11)
+                    .foregroundStyle(ink.opacity(0.6))
+            }
             if !beatHighScore && highScore > 0 {
                 Text(String(localized: "\(summary.config.duration.minutes) MIN BEST: \(highScore)"))
                     .font(.label11)

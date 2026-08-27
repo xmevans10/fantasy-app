@@ -95,6 +95,16 @@ enum DebugLaunch {
     /// first board, whichever format it happens to deal.
     static var autoOpenBlitz: Bool { has("-screenshotBlitz") || has("-screenshotBlitzSetup") }
     static var holdBlitzSetup: Bool { has("-screenshotBlitzSetup") }
+    /// Override the run length in seconds so the end-of-run screen is reachable without waiting
+    /// out a real 1/3/5-minute clock: `-blitzSeconds 20`. The shortest real duration is 60s, and
+    /// the result screen — which since 2026-08-27 also has to render a board the clock cut off —
+    /// otherwise cannot be captured or eyeballed at all.
+    static var blitzSeconds: Int? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-blitzSeconds"), i + 1 < args.count,
+              let n = Int(args[i + 1]), n > 0 else { return nil }
+        return n
+    }
 
     static var autoOpenShare: Bool { has("-screenshotShare") }
     /// Keep4 game: auto-open the scoring-formula sheet (simctl can't tap the chip). Same
@@ -277,6 +287,7 @@ enum DebugLaunch {
     static let holdGridSetup = false
     static let autoOpenBlitz = false
     static let holdBlitzSetup = false
+    static let blitzSeconds: Int? = nil
     static let autoOpenShare = false
     static let autoOpenScoringInfo = false
     static let autoOpenLeaguesInfo = false

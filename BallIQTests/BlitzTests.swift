@@ -137,28 +137,32 @@ final class BlitzTests: XCTestCase {
 
     // MARK: - The clock
 
-    /// **The clock gates the next board and never the current one** — the entire reconciliation
-    /// with M25's "no timers" rule (see `BlitzFormat`'s doc comment). If this ever inverts, a
-    /// blitz becomes the fail-state timer the app deliberately removed.
-    func testTheClockOnlyGatesTheNextBoardNeverTheCurrentOne() async {
+    /// **The clock is a hard stop.** Reversed 2026-08-27 on request: it used to gate only the
+    /// *next* board, deliberately never reaching into the one on screen, which was the
+    /// reconciliation with M25's "no timers" rule. The run now ends the moment time is up.
+    ///
+    /// This replaces `testTheClockOnlyGatesTheNextBoardNeverTheCurrentOne`, which asserted the
+    /// opposite. Recorded here rather than deleted quietly so the reversal is visible to whoever
+    /// reads `BlitzFormat`'s doc comment and expects the old behaviour.
+    func testTheClockEndsTheRunOutright() async {
         let start = Date()
         let session = await BlitzSession(config: BlitzConfig(sports: [.nfl], formats: [.whoami],
                                                              duration: .one), now: start)
+        await session.beginRound(format: .whoami, sport: .nfl, at: start)
         let afterExpiry = start.addingTimeInterval(90)   // well past the 60s run
 
-        // The clock has run out, so no new board may be served...
         let accepts = await session.acceptsNewRound(at: afterExpiry)
         XCTAssertFalse(accepts)
 
-        // ...but a board finished *after* expiry is still recorded in full, at full value.
-        await session.finishRound(format: .whoami, sport: .nfl, puzzleID: "p1",
-                                  performance: 1, cleared: true, now: afterExpiry)
-        let rounds = await session.rounds
-        XCTAssertEqual(rounds.count, 1)
-        XCTAssertEqual(BlitzScoring.total(rounds), BlitzScoring.maxRoundPoints(.whoami),
-                       "a board finished over time must score exactly what it would have on time")
+        await session.expire(at: afterExpiry)
+
         let over = await session.isOver
-        XCTAssertTrue(over, "and *then* the run ends")
+        XCTAssertTrue(over, "time up must end the run immediately")
+        let rounds = await session.rounds
+        XCTAssertTrue(rounds.isEmpty, "the board in flight is not scored")
+        let cutOff = await session.cutOff
+        XCTAssertEqual(cutOff, BlitzCutOff(format: .whoami, sport: .nfl),
+                       "it is reported as cut off so the result screen can still account for it")
     }
 
     func testARunStaysOpenWhileTimeRemains() async {
@@ -428,4 +432,101 @@ final class BlitzTests: XCTestCase {
                        [.keep4, .whoami, .journeyman],
                        "The Grid stays out of blitz — a nine-cell board is a session, not a round")
     }
+
+    // MARK: - Per-round breakdown (M31: the result screen's expandable list)
+
+    /// The list on the result screen has to reconcile against the number above it. `rows` is the
+    /// same fold `rawTotal` performs, and this is what keeps it that way — a breakdown that
+    /// disagreed with the headline would be worse than showing no breakdown at all.
+    func testBreakdownRowsSumToRawTotal() {
+        let rounds = [
+            round(.keep4, performance: 0.90, cleared: true),
+            round(.overunder, performance: 1.0, cleared: true),
+            round(.whoami, performance: 0.0, cleared: false),
+            round(.overunder, performance: 0.0, cleared: false),
+            round(.journeyman, performance: 0.75, cleared: true),
+        ]
+        let rows = BlitzScoring.rows(rounds)
+        XCTAssertEqual(rows.count, rounds.count)
+        XCTAssertEqual(rows.map(\.points).reduce(0, +), BlitzScoring.rawTotal(rounds),
+                       "Per-round points must sum to the run's raw total")
+    }
+
+    /// The combo is a property of the sequence, so each row must carry the multiplier it actually
+    /// received — not one recomputed from its own position.
+    func testBreakdownCarriesTheComboEachRoundActuallyReceived() {
+        let rounds = [
+            round(.keep4, performance: 0.9, cleared: true),      // combo 0 → x1.0
+            round(.keep4, performance: 0.9, cleared: true),      // combo 1 → x1.1
+            round(.keep4, performance: 0.9, cleared: true),      // combo 2 → x1.2
+            round(.overunder, performance: 0.0, cleared: false), // loss: never multiplied
+            round(.keep4, performance: 0.9, cleared: true),      // streak reset → x1.0
+        ]
+        let rows = BlitzScoring.rows(rounds)
+        XCTAssertEqual(rows[0].combo, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(rows[1].combo, 1.1, accuracy: 0.0001)
+        XCTAssertEqual(rows[2].combo, 1.2, accuracy: 0.0001)
+        XCTAssertEqual(rows[3].combo, 1.0, accuracy: 0.0001, "The combo must never scale a loss")
+        XCTAssertEqual(rows[4].combo, 1.0, accuracy: 0.0001, "A miss resets the streak")
+        XCTAssertFalse(rows[0].comboApplied)
+        XCTAssertTrue(rows[1].comboApplied)
+    }
+
+    // MARK: - The clock is a hard stop (M31)
+
+    /// Reversed on 2026-08-27: the clock used to gate only the *next* board. It now ends the run
+    /// outright, and the board in flight is reported as `cutOff` rather than scored.
+    func testExpireEndsTheRunAndNamesTheBoardInFlight() async {
+        let session = await BlitzSession(config: BlitzConfig(sports: [.nfl], formats: [.keep4],
+                                                             duration: .one))
+        await session.beginRound(format: .keep4, sport: .nfl)
+        let before = await session.isOver
+        XCTAssertFalse(before)
+
+        await session.expire()
+
+        let over = await session.isOver
+        XCTAssertTrue(over, "The clock must end the run, not wait for the board")
+        let cutOff = await session.cutOff
+        XCTAssertEqual(cutOff, BlitzCutOff(format: .keep4, sport: .nfl))
+        let rounds = await session.rounds
+        XCTAssertTrue(rounds.isEmpty, "An unfinished board must not be scored")
+        let summary = await session.summary()
+        XCTAssertEqual(summary.total, 0)
+    }
+
+    /// A board finished on the same tick the clock ran out was completed — there is nothing to
+    /// cut off, and reporting one would show the player a board they actually finished as lost.
+    func testAFinishedBoardIsNeverReportedAsCutOff() async {
+        let session = await BlitzSession(config: BlitzConfig(sports: [.nfl], formats: [.keep4],
+                                                             duration: .one))
+        await session.beginRound(format: .keep4, sport: .nfl)
+        await session.finishRound(format: .keep4, sport: .nfl, puzzleID: "p1",
+                                  performance: 0.9, cleared: true)
+        await session.expire()
+
+        let cutOff = await session.cutOff
+        XCTAssertNil(cutOff)
+        let rounds = await session.rounds
+        XCTAssertEqual(rounds.count, 1)
+        let summary = await session.summary()
+        XCTAssertNil(summary.cutOff)
+    }
+
+    /// `expire()` is raced by the deadline task, the foreground re-check and a board landing on
+    /// the same tick. Only the first may take effect.
+    func testExpireIsIdempotent() async {
+        let session = await BlitzSession(config: BlitzConfig(sports: [.nfl], formats: [.whoami],
+                                                             duration: .one))
+        await session.beginRound(format: .whoami, sport: .nfl)
+        await session.expire()
+        let first = await session.cutOff
+
+        await session.beginRound(format: .keep4, sport: .nba)  // as if a board were served after
+        await session.expire()
+
+        let second = await session.cutOff
+        XCTAssertEqual(second, first, "A second expire must not overwrite the first")
+    }
+
 }

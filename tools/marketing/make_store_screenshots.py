@@ -163,7 +163,13 @@ PANELS = [
          subhead="Nine cells. One player each, row and column."),
 ]
 
-SIZES = {"iphone": (1290, 2796), "ipad": (2064, 2752)}
+# There is NO separate 6.9" display type in App Store Connect — verified against the API on
+# 2026-08-27, which rejects `APP_IPHONE_69` and lists `APP_IPHONE_67` as the largest iPhone
+# value. `APP_IPHONE_67` accepts both 1290x2796 and 1320x2868, so 6.9" art goes in that same
+# set. `iphone_native` renders at 1320x2868, which is what the raw captures already are — the
+# 1290x2796 `iphone` output downsamples them for no reason. Prefer `iphone_native` for new
+# uploads; both are valid in the same set.
+SIZES = {"iphone": (1290, 2796), "iphone_native": (1320, 2868), "ipad": (2064, 2752)}
 
 
 def main() -> None:
