@@ -3,7 +3,48 @@
      failure mode for an iPhone app's landing page. Published as an Artifact the wrapper
      supplies an identical rule, so this is a harmless duplicate there. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Playbook</title>
+<title>Playbook: Sports Trivia &mdash; Daily NFL, NBA, MLB, Soccer &amp; Tennis Puzzles</title>
+
+<!-- SEO. The page shipped with a bare <title> and nothing else, so a Google result
+     rendered as a URL with no summary and a shared link unfurled as a naked domain.
+     Every tag below is a crawler/unfurler signal; none of it is visible on the page.
+     Entities rather than literal punctuation because build.py writes the document as
+     ascii. Keep this copy in step with the App Store subtitle -- the two listings
+     should not disagree about what the app is. -->
+<meta name="description" content="Four new sports puzzles every day. Keep 4 Cut 4, Who Am I?, Journeyman and The Grid across NFL, NBA, MLB, soccer and tennis, all built from real stat lines. Free on iPhone and iPad.">
+<link rel="canonical" href="https://xmevans10.github.io/fantasy-app/">
+<meta name="robots" content="index,follow,max-image-preview:large">
+
+<!-- Smart App Banner: turns a mobile Safari visit into an App Store tap. The single
+     highest-yield tag here, because the whole page exists to install. -->
+<meta name="apple-itunes-app" content="app-id=6785275045">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Playbook">
+<meta property="og:title" content="Playbook: Sports Trivia">
+<meta property="og:description" content="Four new sports puzzles every day, built from real stat lines. NFL, NBA, MLB, soccer and tennis.">
+<meta property="og:url" content="https://xmevans10.github.io/fantasy-app/">
+<meta property="og:image" content="https://xmevans10.github.io/fantasy-app/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Playbook: Sports Trivia">
+<meta name="twitter:description" content="Four new sports puzzles every day, built from real stat lines.">
+<meta name="twitter:image" content="https://xmevans10.github.io/fantasy-app/og-card.png">
+
+<!-- SoftwareApplication schema: what Google reads to render an app rich result
+     (name, platform, price, category) instead of a plain blue link. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication",
+ "name":"Playbook: Sports Trivia",
+ "operatingSystem":"iOS 17.0 or later",
+ "applicationCategory":"GameApplication",
+ "applicationSubCategory":"Trivia",
+ "description":"Four new sports puzzles every day across NFL, NBA, MLB, soccer and tennis, built from real stat lines.",
+ "url":"https://apps.apple.com/app/id6785275045",
+ "installUrl":"https://apps.apple.com/app/id6785275045",
+ "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
 <style>
 /* ── Tokens ───────────────────────────────────────────────────────────────────
    Lifted from BallIQ/DesignSystem/Theme.swift so the page and the app are one
