@@ -22,7 +22,7 @@ struct OverUnderResultView: View {
                     scoreHeader.heroReveal(0)
                     leaderboardEntry.heroReveal(1)
                     if let rewards { RewardsRow(rewards: rewards).heroReveal(2) }
-                    if !container.entitlements.hasUnlimitedOverUnderLives {
+                    if !container.entitlements.hasUnlimitedOverUnderRuns {
                         livesUpsell.heroReveal(3)
                     }
                 }
@@ -72,14 +72,17 @@ struct OverUnderResultView: View {
         .blockCard(fill: beatHighScore ? .voltFill : .accentFill)
     }
 
+    /// Sells the *wait*, not the stakes. It used to promise "unlimited lives", which was true and
+    /// was the problem: three misses now end a Pro run too (2026-08-26), and what Pro removes is
+    /// the hour-per-life queue before the next one.
     private var livesUpsell: some View {
         Button { showPaywall = true } label: {
             HStack(spacing: 12) {
-                Image(systemName: "infinity")
+                Image(systemName: "bolt.fill")
                     .font(.system(size: 20, weight: .bold)).foregroundStyle(Color.proText)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Never wait for lives").font(.title).foregroundStyle(Color.textPrimary)
-                    Text("PRO GETS UNLIMITED OVER/UNDER").font(.label11).foregroundStyle(Color.textMuted)
+                    Text("Run it back right now").font(.title).foregroundStyle(Color.textPrimary)
+                    Text("PRO STARTS EVERY RUN ON A FULL BANK").font(.label11).foregroundStyle(Color.textMuted)
                 }
                 Spacer()
                 Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)

@@ -46,9 +46,18 @@ enum DebugLaunch {
     /// `GameSetupScreen.correctLockedDefault` snaps the locked sport back, which for Draft & Spin
     /// looks exactly like a content bug (soccer's 8 lineup slots against an NFL pool → an instant
     /// empty-lineup result). Reads through `Entitlements.isPro`, so it also unlocks Hard mode, the
-    /// archive, The Grid and unlimited Over/Under lives.
+    /// archive, The Grid and Over/Under's no-wait refill (not unlimited lives — a Pro run still
+    /// ends on the third miss).
     static var forcePro: Bool { has("-screenshotPro") }
-    static var autoOpenOverUnder: Bool { has("-screenshotOverUnder") || has("-screenshotOverUnderResult") }
+    static var autoOpenOverUnder: Bool {
+        has("-screenshotOverUnder") || has("-screenshotOverUnderResult") || has("-screenshotOverUnderEmpty")
+    }
+    /// Drains the Over/Under lives bank at open so the out-of-lives *gate* (the wait + upsell that
+    /// stands in front of the setup screen) can be captured: `-screenshotOverUnderEmpty`. The bank
+    /// lives in UserDefaults and a real drain takes three deliberate misses, so there is no other
+    /// way to reach this screen from `simctl` — and writing the defaults from outside doesn't
+    /// stick, since a running app's `cfprefsd` rewrites the plist from its own in-memory copy.
+    static var forceEmptyOverUnderLives: Bool { has("-screenshotOverUnderEmpty") }
     /// Forces an immediate out-of-lives finish once the session loads (simctl can't play a real
     /// round-by-round session): `-screenshotOverUnderResult`.
     static var autoSubmitOverUnder: Bool { has("-screenshotOverUnderResult") }
@@ -256,6 +265,7 @@ enum DebugLaunch {
     static let autoOpenPaywall = false
     static let forcePro = false
     static let autoOpenOverUnder = false
+    static let forceEmptyOverUnderLives = false
     static let autoSubmitOverUnder = false
     static let autoOpenDraftSpin = false
     static let autoSubmitDraftSpin = false

@@ -80,10 +80,12 @@ enum OverUnderScoring {
     }
 }
 
-/// 3 free lives, regenerating 1/hour — unlimited for Pro (checked at the call site via
-/// `Entitlements.hasUnlimitedOverUnderLives`, not baked into this type). Pure + clock-injected
-/// so the regen math is fully unit-testable (AGENTS.md: "regen math is exactly the kind of
-/// thing that ships broken untested").
+/// 3 lives per run, regenerating 1/hour. The **three-miss rule is universal** — Pro doesn't get
+/// an unkillable run (a run that can't end has nothing on the line), it gets a bank that's
+/// already full every time it opens, i.e. no regen wait between runs. That refill is decided at
+/// the call site via `Entitlements.hasUnlimitedOverUnderRuns`, not baked into this type. Pure +
+/// clock-injected so the regen math is fully unit-testable (AGENTS.md: "regen math is exactly
+/// the kind of thing that ships broken untested").
 struct LivesBank: Equatable {
     static let maxLives = 3
     static let regenInterval: TimeInterval = 3600
@@ -111,5 +113,13 @@ struct LivesBank: Equatable {
 
     func losingALife(now: Date = Date()) -> LivesBank {
         LivesBank(count: max(0, count - 1), lastLostAt: lastLostAt ?? now)
+    }
+
+    /// When the next life lands, or nil if the bank is already full (nothing is regenerating).
+    /// Assumes `self` has been `regenerated(now:)` — which is what `LocalOverUnderStore.loadLives`
+    /// always returns — so `lastLostAt` is the start of the *current* pending hour.
+    func nextLifeAt() -> Date? {
+        guard count < Self.maxLives, let lastLostAt else { return nil }
+        return lastLostAt.addingTimeInterval(Self.regenInterval)
     }
 }

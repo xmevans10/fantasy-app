@@ -164,6 +164,36 @@ final class OverUnderTests: XCTestCase {
         XCTAssertEqual(full.regenerated(now: Date().addingTimeInterval(100_000)), full)
     }
 
+    func testNextLifeIsOneRegenIntervalAfterTheLastLoss() {
+        let lost = Date()
+        let bank = LivesBank(count: 0, lastLostAt: lost)
+        XCTAssertEqual(bank.nextLifeAt(), lost.addingTimeInterval(LivesBank.regenInterval))
+    }
+
+    func testNextLifeCountsFromTheAdvancedTimestampNotTheOriginalLoss() {
+        // A partially-regenerated bank has already consumed whole hours; the countdown the
+        // out-of-lives gate shows must be to the *next* life, not to a long-past one.
+        let lost = Date()
+        let regened = LivesBank(count: 0, lastLostAt: lost).regenerated(now: lost.addingTimeInterval(3600 + 100))
+        XCTAssertEqual(regened.count, 1)
+        XCTAssertEqual(regened.nextLifeAt(), lost.addingTimeInterval(2 * 3600))
+    }
+
+    func testFullBankHasNoNextLife() {
+        XCTAssertNil(LivesBank.initial.nextLifeAt(), "nothing is regenerating at a full bank")
+    }
+
+    /// The 3-miss rule is universal (2026-08-26): Pro's perk is a bank that starts full, not a
+    /// run that can't end — so the entitlement must never reach into the bank's own arithmetic.
+    func testProEntitlementDoesNotChangeTheThreeMissRule() {
+        var lives = LivesBank.initial
+        for _ in 0..<LivesBank.maxLives { lives = lives.losingALife(now: Date()) }
+        XCTAssertTrue(lives.isEmpty)
+        XCTAssertTrue(Entitlements(isPro: true).hasUnlimitedOverUnderRuns,
+                      "Pro skips the regen wait between runs...")
+        XCTAssertEqual(LivesBank.maxLives, 3, "...but a run is still three misses for everyone")
+    }
+
     // MARK: - Session detail (over/under pick split)
 
     /// Simulates a sequence of picks the way `decide(guessOver:)` does — tracking each side's

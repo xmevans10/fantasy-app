@@ -50,13 +50,31 @@ struct OverUnderGameView: View {
     /// Blitz only: a round is one decision, and both the buttons and the swipe gesture can fire
     /// it. Latches so a fast double-input can't report the same board twice.
     @State private var blitzDecided = false
+    /// Set once a run has actually started. The out-of-lives gate reads it so an in-progress run
+    /// that just spent its last life finishes into the result screen instead of the gate.
+    @State private var sessionActive = false
 
     private let store = LocalOverUnderStore()
     private let commitThreshold: CGFloat = 70
 
     /// A blitz round has no lives at all — the run's clock is the only thing that ends anything,
     /// and a heart lost on a coin flip inside a timed run would be a second, hidden fail-state.
-    private var unlimitedLives: Bool { blitz != nil || container.entitlements.hasUnlimitedOverUnderLives }
+    /// This is the ONLY way a run becomes unkillable; Pro is deliberately not on this list.
+    private var livesDisabled: Bool { blitz != nil }
+    /// Pro's version of the lives perk: **the three-miss rule still ends every run** (2026-08-26 —
+    /// an endless run has nothing on the line, which drained the format of its whole point), Pro
+    /// just never waits on the 1-life-per-hour regen. Every run it starts opens on a full bank,
+    /// and its losses are never written to the shared bank, so a lapsed subscription inherits a
+    /// full one rather than whatever the last unlimited session drained.
+    private var refillsLivesInstantly: Bool { container.entitlements.hasUnlimitedOverUnderRuns }
+    /// Free player with a drained bank: nothing to start, so the setup screen would only lead to
+    /// a run that ends on its first round. Shows the wait/upsell gate instead. Keyed on
+    /// `sessionActive` rather than on `showingSetup` so the gate can never flash over the board
+    /// in the window between the third miss and `finish()`'s async result screen.
+    private var isLockedOut: Bool {
+        blitz == nil && !sessionActive && lives.isEmpty
+            && (!refillsLivesInstantly || DebugLaunch.forceEmptyOverUnderLives)
+    }
     private var dailyID: String { "overunder-\(sport.rawValue)-\(OverUnderRoundGenerator.dayString(Date()))" }
 
     var body: some View {
@@ -69,6 +87,10 @@ struct OverUnderGameView: View {
                                     wrongCount: wrongCount, highScore: store.highScore(for: sport),
                                     beatHighScore: beatHighScore, rewards: rewards,
                                     onDone: { dismiss() })
+            } else if isLockedOut {
+                // Ordered after `showResult` on purpose: the run that just emptied the bank still
+                // gets its result screen, and the gate only stands in front of *starting* a new one.
+                OutOfLivesGate(lives: lives, onClose: { dismiss() })
             } else if showingSetup, blitz == nil {
                 GameSetupScreen(formatName: "Over / Under", title: "Pick your sport",
                                 startLabel: "Start the streak", sport: $sport,
@@ -91,9 +113,15 @@ struct OverUnderGameView: View {
                 return
             }
             sport = container.sportFilter.sport ?? .nfl
+            // Read the bank before the setup screen renders, not just in `load()` — `isLockedOut`
+            // decides whether there is a session to set up at all.
+            lives = DebugLaunch.forceEmptyOverUnderLives
+                ? LivesBank(count: 0, lastLostAt: Date().addingTimeInterval(-18 * 60))
+                : (refillsLivesInstantly ? .initial : store.loadLives())
             container.catalog.prefetchDraftSpinSample(for: sport)
-            // Screenshot flows target the board/result — skip the setup screen.
-            if DebugLaunch.autoOpenOverUnder {
+            // Screenshot flows target the board/result — skip the setup screen. Not when the bank
+            // is empty: there is no run to open, and `-screenshotOverUnderEmpty` wants the gate.
+            if DebugLaunch.autoOpenOverUnder, !isLockedOut {
                 await load()
                 if DebugLaunch.autoSubmitOverUnder { forceOutOfLivesForScreenshot() }
             }
@@ -106,7 +134,10 @@ struct OverUnderGameView: View {
 
     private func load() async {
         showingSetup = false
-        lives = store.loadLives()
+        sessionActive = true
+        // Pro opens every run on a full bank; free players carry whatever the regen has given
+        // back since their last miss.
+        lives = refillsLivesInstantly ? .initial : store.loadLives()
         // Served from the shared cached arcade sample (see PlayerSeasonCatalog.arcadePool) —
         // warm from Home's prefetch or this setup screen's own, so start is instant.
         let fetched = await container.catalog.arcadePool(for: sport, limit: 200)
@@ -154,7 +185,7 @@ struct OverUnderGameView: View {
                 Spacer()
                 Text("OVER / UNDER").font(.label12).foregroundStyle(Color.accentText)
                 Spacer()
-                // No hearts in a blitz — see `unlimitedLives`. A hidden mirror of the close
+                // No hearts in a blitz — see `livesDisabled`. A hidden mirror of the close
                 // glyph balances the row exactly, where a guessed spacer width left the title
                 // visibly off-centre.
                 if blitz == nil {
@@ -181,19 +212,17 @@ struct OverUnderGameView: View {
         .overlay(alignment: .bottom) { Rectangle().fill(Color.hairline).frame(height: Hairline.width) }
     }
 
+    /// Hearts, for everyone. Pro used to render an infinity glyph here; three misses now end a
+    /// Pro run too, so the header has to show the same countable stake it shows a free player.
     private var livesRow: some View {
         HStack(spacing: 3) {
-            if unlimitedLives {
-                Image(systemName: "infinity").font(.system(size: 15, weight: .bold)).foregroundStyle(Color.proText)
-            } else {
-                ForEach(0..<LivesBank.maxLives, id: \.self) { i in
-                    Image(systemName: i < lives.count ? "heart.fill" : "heart")
-                        .font(.system(size: 13))
-                        .foregroundStyle(i < lives.count ? Color.dangerFill : Color.textMuted.opacity(0.4))
-                }
+            ForEach(0..<LivesBank.maxLives, id: \.self) { i in
+                Image(systemName: i < lives.count ? "heart.fill" : "heart")
+                    .font(.system(size: 13))
+                    .foregroundStyle(i < lives.count ? Color.dangerFill : Color.textMuted.opacity(0.4))
             }
         }
-        .accessibilityLabel(unlimitedLives ? "Unlimited lives" : "\(lives.count) of \(LivesBank.maxLives) lives")
+        .accessibilityLabel("\(lives.count) of \(LivesBank.maxLives) lives")
     }
 
     private func statChip(label: String, value: String, fill: Color = .surfaceMuted, on: Color = .textPrimary) -> some View {
@@ -342,13 +371,15 @@ struct OverUnderGameView: View {
             combo = 0
             wrongCount += 1
             Haptics.reject()
-            if !unlimitedLives {
+            if !livesDisabled {
                 lives = lives.losingALife()
-                store.saveLives(lives)
+                // Pro's bank is refilled at every start, so persisting its losses would only
+                // matter after the subscription lapses — and then as an unearned penalty.
+                if !refillsLivesInstantly { store.saveLives(lives) }
             }
         }
 
-        if !unlimitedLives && lives.isEmpty {
+        if !livesDisabled && lives.isEmpty {
             finish()
         } else {
             roundIndex += 1
@@ -384,6 +415,89 @@ struct OverUnderGameView: View {
         score = 350; correctCount = 3; wrongCount = 3
         lives = LivesBank(count: 0, lastLostAt: Date())
         finish()
+    }
+}
+
+/// The free tier's wait state, shown instead of the setup screen when the bank is empty: the
+/// hearts that are coming back, a live countdown to the next one, and the one thing that skips
+/// the wait. It replaces a silent failure — starting a run on a drained bank used to deal one
+/// board and then end the "run" on that single decision, whether it was right or wrong.
+private struct OutOfLivesGate: View {
+    let lives: LivesBank
+    let onClose: () -> Void
+
+    @EnvironmentObject private var container: RepositoryContainer
+    @State private var showPaywall = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button(action: onClose) {
+                    Image(systemName: "xmark").font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(Color.textMuted)
+                }
+                .accessibilityLabel("Close")
+                Spacer()
+            }
+            .padding(.horizontal, 16).padding(.top, 16)
+
+            Spacer(minLength: 0)
+            VStack(spacing: 18) {
+                countdownCard
+                upsell
+            }
+            .padding(16)
+            Spacer(minLength: 0)
+        }
+        .background(Color.appBackground)
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(trigger: .overUnderLives).environmentObject(container)
+        }
+    }
+
+    private var countdownCard: some View {
+        // Same once-a-second `TimelineView` the daily countdown uses, so the clock only ticks
+        // while this screen is actually on-screen.
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            VStack(spacing: 8) {
+                HStack(spacing: 3) {
+                    ForEach(0..<LivesBank.maxLives, id: \.self) { _ in
+                        Image(systemName: "heart").font(.system(size: 15))
+                    }
+                }
+                Text("OUT OF LIVES").font(.heading)
+                if let next = lives.nextLifeAt() {
+                    Text(HomeDailyLoop.countdownString(now: context.date, target: next))
+                        .font(.hero(46))
+                        .monospacedDigit()
+                    Text("UNTIL YOUR NEXT LIFE").font(.label11).opacity(0.75)
+                }
+            }
+            .foregroundStyle(Color.onDanger)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 28).padding(.horizontal, 16)
+        }
+        .blockCard(fill: .dangerFill)
+    }
+
+    private var upsell: some View {
+        Button { showPaywall = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 20, weight: .bold)).foregroundStyle(Color.proText)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Play right now").font(.title).foregroundStyle(Color.textPrimary)
+                    Text("PRO STARTS EVERY RUN ON A FULL BANK").font(.label11).foregroundStyle(Color.textMuted)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold)).foregroundStyle(Color.textMuted)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .cardSurface()
+        }
+        .buttonStyle(PrimePressStyle())
     }
 }
 
