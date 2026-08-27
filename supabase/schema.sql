@@ -433,6 +433,36 @@ create trigger on_community_play
 -- step: `update public.profiles set is_admin = true where id = '<operator uuid>';`
 alter table public.profiles add column if not exists is_admin boolean not null default false;
 
+-- `is_admin` must NOT be writable by the account it describes.
+--
+-- It was, from the day this column was added until 2026-08-26. Three things lined up: UPDATE on
+-- public.profiles was granted TABLE-WIDE to anon/authenticated (so it covered every column, and
+-- would have covered every column added later), the row policy is a blanket
+-- `for update using (auth.uid() = id) with check (auth.uid() = id)` with no column restriction,
+-- and there is no trigger on the table. So a signed-in user could PATCH their own row with
+-- {"is_admin": true} and pass every check — it is, after all, their own row.
+--
+-- That was a paywall bypass (`Entitlements.isAdmin` short-circuits every gate: `isPro || isAdmin`)
+-- and a moderation escalation — `public.is_admin()` below gates reading every report, reading
+-- hidden puzzles, and updating/deleting OTHER users' community puzzles.
+--
+-- The fix is structural rather than procedural, deliberately: a trigger asserting "you may not
+-- set is_admin" would be a guard someone has to remember to keep correct, and it would fail open
+-- for any privilege column added to this table in future. An explicit column grant fails closed —
+-- a new column is unwritable by users until someone grants it on purpose.
+--
+--  * `id` is granted because PostgREST's merge-duplicates upsert (RepositoryContainer's
+--    saveIdentity / saveFavoriteTeams, the only two writes the app makes to this table) can write
+--    the conflict-target column. `with check (auth.uid() = id)` already stops a row being
+--    repointed at another user.
+--  * `anon` is not granted at all: the row policy needs `auth.uid() = id`, never true for an
+--    anonymous caller, so its UPDATE grant was always dead weight.
+--  * `service_role` keeps table-wide UPDATE, so the out-of-band promotion above still works.
+--  * `created_at` is omitted — the app never writes it.
+revoke update on public.profiles from anon, authenticated;
+grant update (id, username, avatar, primary_sport, favorite_teams)
+  on public.profiles to authenticated;
+
 -- Whether the caller is a moderator. SECURITY DEFINER so policies below can consult
 -- `profiles` regardless of that table's own RLS.
 create or replace function public.is_admin()
@@ -1690,6 +1720,21 @@ create table if not exists public.entitlements (
 );
 create index if not exists entitlements_original_transaction_idx
   on public.entitlements (original_transaction_id);
+
+-- One account per (original transaction, product). `decideClaim`
+-- (supabase/functions/_shared/entitlement_claims.ts) already refuses a transaction another
+-- user has claimed, but that is a read-then-write: two concurrent claims can both see
+-- "unclaimed" and both write. This makes it a guarantee rather than a check. It does not
+-- constrain the legitimate cases — the primary key already limits a user to one row per
+-- product, and a monthly -> yearly upgrade keeps the original_transaction_id but changes
+-- product_id.
+do $$
+begin
+  alter table public.entitlements
+    add constraint entitlements_one_owner_per_transaction
+    unique (original_transaction_id, product_id);
+exception when duplicate_table or duplicate_object then null;
+end $$;
 
 alter table public.entitlements enable row level security;
 drop policy if exists "entitlements own read" on public.entitlements;

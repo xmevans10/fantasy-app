@@ -22,7 +22,12 @@ struct Entitlements: Equatable {
 
     var canPlayHardMode: Bool { isPro || isAdmin }
     var canAccessArchive: Bool { isPro || isAdmin }
-    var hasUnlimitedOverUnderLives: Bool { isPro || isAdmin }
+    /// Pro removes the *wait between runs*, not the stakes inside one: every Over/Under run
+    /// still ends on the third miss for everyone (product call, 2026-08-26 — a run that can't
+    /// end has nothing on the line, which is the whole appeal of the format). What Pro buys is
+    /// a bank that's full every time you open it, instead of the free tier's 1-life-per-hour
+    /// regen. See `OverUnderGameView.refillsLivesInstantly`.
+    var hasUnlimitedOverUnderRuns: Bool { isPro || isAdmin }
 
     func canPlayGrid() -> Bool { isPro || isAdmin || unlockedPacks.contains(StoreProduct.gridPack.rawValue) }
     func canPlayDraftSpin() -> Bool { isPro || isAdmin || unlockedPacks.contains(StoreProduct.draftSpinPack.rawValue) }

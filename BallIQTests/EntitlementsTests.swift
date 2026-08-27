@@ -10,7 +10,7 @@ final class EntitlementsTests: XCTestCase {
         XCTAssertFalse(free.isPro)
         XCTAssertFalse(free.canPlayHardMode)
         XCTAssertFalse(free.canAccessArchive)
-        XCTAssertFalse(free.hasUnlimitedOverUnderLives)
+        XCTAssertFalse(free.hasUnlimitedOverUnderRuns)
         XCTAssertFalse(free.canPlayGrid())
         XCTAssertFalse(free.canPlayDraftSpin())
     }
@@ -19,7 +19,7 @@ final class EntitlementsTests: XCTestCase {
         let pro = Entitlements(isPro: true)
         XCTAssertTrue(pro.canPlayHardMode)
         XCTAssertTrue(pro.canAccessArchive)
-        XCTAssertTrue(pro.hasUnlimitedOverUnderLives)
+        XCTAssertTrue(pro.hasUnlimitedOverUnderRuns)
         XCTAssertTrue(pro.canPlayGrid())
         XCTAssertTrue(pro.canPlayDraftSpin())
     }
@@ -28,7 +28,7 @@ final class EntitlementsTests: XCTestCase {
         let admin = Entitlements(isPro: false, isAdmin: true)
         XCTAssertTrue(admin.canPlayHardMode)
         XCTAssertTrue(admin.canAccessArchive)
-        XCTAssertTrue(admin.hasUnlimitedOverUnderLives)
+        XCTAssertTrue(admin.hasUnlimitedOverUnderRuns)
         XCTAssertTrue(admin.canPlayGrid())
         XCTAssertTrue(admin.canPlayDraftSpin())
         XCTAssertTrue(admin.canSelect(.baseball))

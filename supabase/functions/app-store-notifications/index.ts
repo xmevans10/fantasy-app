@@ -19,9 +19,9 @@ import {
   AppleNotificationPayload,
   AppleSignedPayloadError,
   AppleTransactionInfo,
-  deriveEntitlementStatus,
   verifyAppleSignedPayload,
 } from "../_shared/app_store_notifications.ts";
+import { entitlementRow, resolveNotificationOwner } from "../_shared/entitlement_claims.ts";
 
 Deno.serve(async (req) => {
   const rootPem = await loadAppleRootPem(fetch);
@@ -62,27 +62,40 @@ Deno.serve(async (req) => {
 
   const transaction = await verifyAppleSignedPayload(signedTransactionInfo, rootPem) as unknown as AppleTransactionInfo;
 
+  const sb = serviceClient();
+
   // `appAccountToken` is our own uuid, set at purchase time via
-  // `Product.PurchaseOption.appAccountToken` (see `StoreService.purchase`). Without it we have
-  // no way to know which Supabase user this transaction belongs to — ack and skip rather than
-  // guessing or writing an orphaned row.
-  if (!transaction.appAccountToken) {
-    console.warn(`notification for transaction ${transaction.transactionId} has no appAccountToken — skipping`);
+  // `Product.PurchaseOption.appAccountToken` (see `StoreService.purchase`), so it is present
+  // only when the buyer was signed in *at the moment of purchase*.
+  //
+  // When it's absent, fall back to whoever previously claimed this original transaction
+  // through `claim-entitlement`. That fallback is not a nicety — Apple echoes back only what
+  // was set at purchase time, and never starts supplying a token that wasn't there. Without
+  // it, every renewal, cancellation and refund for an anonymous-bought subscription stays
+  // unattributable for the life of the subscription, so a claimed row would freeze at the
+  // `expires_at` the claim wrote and silently age into "expired" while the user is still
+  // paying. Indexed by `entitlements_original_transaction_idx`.
+  const { data: priorOwner } = await sb
+    .from("entitlements")
+    .select("user_id")
+    .eq("original_transaction_id", transaction.originalTransactionId)
+    .limit(1)
+    .maybeSingle();
+
+  const userId = resolveNotificationOwner(transaction, priorOwner?.user_id ?? null);
+  if (!userId) {
+    console.warn(
+      `notification for transaction ${transaction.transactionId} has no appAccountToken and no ` +
+        `prior claim — skipping (the buyer can still claim it by signing in)`,
+    );
     return new Response(JSON.stringify({ ok: true, skipped: "no appAccountToken" }), {
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  const status = deriveEntitlementStatus(transaction);
-  const sb = serviceClient();
-  const { error } = await sb.from("entitlements").upsert({
-    user_id: transaction.appAccountToken,
-    product_id: transaction.productId,
-    status,
-    original_transaction_id: transaction.originalTransactionId,
-    expires_at: transaction.expiresDate ? new Date(transaction.expiresDate).toISOString() : null,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: "user_id,product_id" });
+  const row = entitlementRow(transaction, userId);
+  const status = row.status;
+  const { error } = await sb.from("entitlements").upsert(row, { onConflict: "user_id,product_id" });
 
   if (error) {
     console.error("failed to upsert entitlement:", error.message);

@@ -192,6 +192,26 @@ final class StoreService: ObservableObject {
         entitlements = Entitlements(isPro: isPro, unlockedPacks: packs)
     }
 
+    /// The signed JWS blobs behind the entitlements this Apple Account currently holds —
+    /// exactly what `claim-entitlement` verifies server-side.
+    ///
+    /// This is the raw payload Apple signed, not a claim we assemble: the Edge Function checks
+    /// its certificate chain against Apple's root CA before trusting a word of it, so an
+    /// altered or invented blob is rejected there rather than believed. Unverified
+    /// transactions are dropped here too — no reason to spend a round trip on a blob the
+    /// server is certain to refuse.
+    func signedTransactions() async -> [String] {
+        var jws: [String] = []
+        for await result in Transaction.currentEntitlements {
+            guard let transaction = try? checkVerified(result) else { continue }
+            // Only products we actually sell. A blob for anything else is noise the server
+            // would count as a refusal.
+            guard StoreProduct(rawValue: transaction.productID) != nil else { continue }
+            jws.append(result.jwsRepresentation)
+        }
+        return jws
+    }
+
     private func listenForTransactionUpdates() -> Task<Void, Never> {
         Task.detached { [weak self] in
             for await result in Transaction.updates {

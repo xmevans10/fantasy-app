@@ -210,6 +210,10 @@ final class RepositoryContainer: ObservableObject {
         await refreshFriendBadge()
         await refreshVersusBadge()
         await resubmitTodaysDailyDraftIfNeeded()
+        // Before the pull, not after: a guest-era purchase has no `entitlements` row until it
+        // is claimed, so pulling first would read an empty table and then throw away the row
+        // this call just created until the next launch.
+        await claimEntitlements(reason: "sign_in")
         serverEntitlements = await mirror.pullEntitlements()
         recomputeEntitlements()
         // Set last, and only on the path that actually populated the profile fields above.
@@ -956,12 +960,67 @@ final class RepositoryContainer: ObservableObject {
         let appAccountToken = auth.userID.flatMap(UUID.init(uuidString:))
         let purchased = try await store.purchase(product, appAccountToken: appAccountToken)
         if purchased {
-            track(.purchaseCompleted, ["product_id": product.id])
+            track(.purchaseCompleted, ["product_id": product.id, "signed_in": "\(isSignedIn)"])
+            // Don't wait for Apple to tell the server about a purchase the device already
+            // knows about. `app-store-notifications` can lag by minutes, and until it lands
+            // the buyer has no `entitlements` row — so a second device sees nothing. This also
+            // covers the case where the notification never arrives at all.
+            await claimEntitlements(reason: "purchase")
         }
         return purchased
     }
 
-    func restorePurchases() async { await store.restore() }
+    func restorePurchases() async {
+        await store.restore()
+        // Restore is the other way entitlements appear without a purchase in this session —
+        // typically a reinstall or a second device, which is precisely when the server row is
+        // most likely to be missing.
+        await claimEntitlements(reason: "restore")
+    }
+
+    /// Binds this Apple Account's purchases to the signed-in BallIQ user, server-side.
+    ///
+    /// **Why this exists.** `appAccountToken` — the only link between an Apple transaction and
+    /// a BallIQ account — can only be set *at purchase time*, from a session that was already
+    /// signed in. Most purchases aren't: of the 25 `purchase_attempted` events in production
+    /// on 2026-08-26, 19 were signed out. Apple then echoes that absence back on every
+    /// subsequent notification for the life of the subscription, so those buyers could never
+    /// get a `public.entitlements` row — no cross-device restore, no refund handling, no
+    /// revenue attribution.
+    ///
+    /// The alternative was demanding an account before allowing a purchase. That would have
+    /// gated 92% of paywall traffic (254 `paywall_viewed`, 21 signed in) to fix a problem the
+    /// buyer doesn't have — on-device entitlement already works fine without an account — and
+    /// invited a Guideline 5.1.1(v) argument, since nothing Pro unlocks is account-based.
+    /// Selling to everyone and reconciling afterwards costs the user nothing.
+    ///
+    /// Safe to call repeatedly: the server re-verifies every blob against Apple's PKI and
+    /// upserts, so a re-claim of what you already own is a no-op.
+    func claimEntitlements(reason: String) async {
+        guard let client, isSignedIn else { return }
+        let signed = await store.signedTransactions()
+        guard !signed.isEmpty else { return }
+
+        // Encoded by `JSONEncoder.supabase`, so this reaches the function as
+        // `signed_transactions` — which is the name it reads. Pinned by
+        // `SupabaseClientTests.testClaimEntitlementBodyUsesTheWireNameTheFunctionReads`.
+        struct Body: Encodable { let signedTransactions: [String] }
+        struct Result: Decodable { let claimed: Int }
+        do {
+            let data = try await client.invokeFunction("claim-entitlement",
+                                                       body: Body(signedTransactions: signed))
+            let result: Result = try client.decode(data)
+            track(.entitlementClaimed, ["reason": reason, "claimed": "\(result.claimed)"])
+        } catch is CancellationError {
+            // The caller's Task went away (a dismissed sheet mid-flight). Not a failure, and
+            // the next sign-in sync retries anyway.
+        } catch {
+            // Never surfaced: the user already has what they paid for via the on-device read,
+            // and this is bookkeeping. Logged so a systematically failing claim is visible as
+            // something other than an empty table.
+            track(.entitlementClaimFailed, ["reason": reason, "error": String(describing: error)])
+        }
+    }
 
     // MARK: - Favorite teams
 

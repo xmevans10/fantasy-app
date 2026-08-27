@@ -2,18 +2,36 @@ import SwiftUI
 import StoreKit
 
 /// The one paywall every locked touchpoint routes through (hard mode, archive, all-sport
-/// filter, The Grid, unlimited Over/Under lives). Reads `RepositoryContainer.products`/
+/// filter, The Grid, no wait between Over/Under runs). Reads `RepositoryContainer.products`/
 /// `purchase(_:)` directly — no parallel store, per the repository-seam constraint.
 struct PaywallView: View {
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
     @State private var purchasingID: String?
     @State private var errorMessage: String?
+    /// Whether the pre-purchase nudge has been opened into actual sign-in buttons. Collapsed by
+    /// default and it matters that it is: two 52pt provider buttons above the plans push the
+    /// thing the user came here to tap below the fold.
+    @State private var showSignInOptions: Bool
+    /// Set only after a purchase completes while signed out — see `postPurchaseSignIn`.
+    @State private var showPostPurchaseSignIn: Bool
 
     /// Which gate sent the user here, logged with `paywallViewed`. Defaults to `.other` so an
     /// un-updated call site degrades to an honest "unknown" bucket rather than silently
     /// attributing itself to whatever surface happens to be listed first.
     var trigger: PaywallTrigger = .other
+
+    /// Which sub-state the screen opens in. Production always uses `.offer`; the other two are
+    /// reachable only by actually buying something or tapping the disclosure, which is why
+    /// `PaywallGalleryTests` needs to be able to name them — a full-screen state that every
+    /// guest buyer sees is worth being able to look at without running a purchase.
+    enum Stage { case offer, offerWithSignInOpen, postPurchase }
+
+    init(trigger: PaywallTrigger = .other, stage: Stage = .offer) {
+        self.trigger = trigger
+        _showSignInOptions = State(initialValue: stage == .offerWithSignInOpen)
+        _showPostPurchaseSignIn = State(initialValue: stage == .postPurchase)
+    }
 
     /// App Store guideline 3.1.2(c) requires functional Terms of Use (EULA) + Privacy Policy
     /// links inside the subscription purchase flow. Apple's standard EULA (the app ships no
@@ -40,15 +58,20 @@ struct PaywallView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
-                    hero.heroReveal(0)
-                    benefits.heroReveal(1)
-                    plans.heroReveal(2)
-                    packSection.heroReveal(3)
-                    restoreButton.heroReveal(4)
-                    legalFooter.heroReveal(5)
+                if showPostPurchaseSignIn {
+                    postPurchaseSignIn.padding(16)
+                } else {
+                    VStack(spacing: 20) {
+                        hero.heroReveal(0)
+                        benefits.heroReveal(1)
+                        signInNudge.heroReveal(2)
+                        plans.heroReveal(3)
+                        packSection.heroReveal(4)
+                        restoreButton.heroReveal(5)
+                        legalFooter.heroReveal(6)
+                    }
+                    .padding(16)
                 }
-                .padding(16)
             }
             .background(Color.appBackground)
             .navigationTitle("")
@@ -121,7 +144,7 @@ struct PaywallView: View {
             benefitRow(symbol: "eye.slash", text: "Hard mode on every Keep4/Cut4")
             benefitRow(symbol: "square.grid.2x2.fill", text: "Full archive — replay every past daily")
             benefitRow(symbol: "sportscourt.fill", text: "All 5 sports on the daily filter")
-            benefitRow(symbol: "infinity", text: "Unlimited Over/Under lives")
+            benefitRow(symbol: "bolt.fill", text: "No wait between Over/Under runs")
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -151,6 +174,94 @@ struct PaywallView: View {
         case .loaded:
             return "Plans aren't available in your region right now."
         }
+    }
+
+    /// Optional, collapsed, and never in the way of the buy button.
+    ///
+    /// The problem it addresses is real — a purchase made signed out carries no
+    /// `appAccountToken`, so it can't be tied to an account server-side (see
+    /// `RepositoryContainer.claimEntitlements`) — but gating the purchase on an account would
+    /// have been the wrong trade by a wide margin. Measured in production on 2026-08-26: 254
+    /// `paywall_viewed`, 21 of them signed in. A sign-in wall here would stand in front of 92%
+    /// of the people who reach this screen, to fix something that costs them nothing (on-device
+    /// entitlement works fine without an account, and restores on any device with the same
+    /// Apple Account). It would also be arguing with Guideline 5.1.1(v), since none of the
+    /// five things Pro unlocks is account-based.
+    ///
+    /// So: offered before, insisted on never, and asked again after the purchase — when the
+    /// pitch is honest and there is no sale left to lose (`postPurchaseSignIn`).
+    @ViewBuilder
+    private var signInNudge: some View {
+        if PaywallSignInPrompt.offersSignIn(isSignedIn: container.isSignedIn) {
+            VStack(spacing: 12) {
+                Button {
+                    withAnimation(Motion.snap) { showSignInOptions.toggle() }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(Color.accentText)
+                        Text("Sign in to keep Pro on every device")
+                            .font(.label12)
+                            .foregroundStyle(Color.textPrimary)
+                            .multilineTextAlignment(.leading)
+                        Spacer(minLength: 4)
+                        Image(systemName: showSignInOptions ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(Color.textMuted)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if showSignInOptions {
+                    SignInButtons(surface: "paywall", height: 46, spacing: 10,
+                                  onError: { errorMessage = $0 })
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity)
+            .cardSurface()
+        }
+    }
+
+    /// Shown in place of the paywall once a signed-out player has actually bought something.
+    ///
+    /// This is the moment to ask, not before it: they have paid, there is no conversion left to
+    /// risk, and the offer is finally something they want rather than a hoop. Signed-in buyers
+    /// never see it — their transaction already carries an `appAccountToken`.
+    private var postPurchaseSignIn: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "crown.fill")
+                .font(.system(size: 40, weight: .bold))
+                .foregroundStyle(Color.onPro)
+                .frame(width: 84, height: 84)
+                .background(Color.proFill)
+                .clipShape(Circle())
+            Text("YOU'RE PRO")
+                .font(.display1)
+                .foregroundStyle(Color.textPrimary)
+            Text("Everything's unlocked on this device.")
+                .font(.body14)
+                .foregroundStyle(Color.textPrimary)
+                .multilineTextAlignment(.center)
+            Text("Sign in and Pro follows you to any device you play on — and comes straight back if you reinstall.")
+                .font(.label12)
+                .foregroundStyle(Color.textMuted)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 8)
+
+            SignInButtons(surface: "paywall_post_purchase",
+                          onError: { errorMessage = $0 },
+                          onSignedIn: { dismiss() })
+                .padding(.top, 4)
+
+            Button("Not now") { dismiss() }
+                .font(.label12)
+                .foregroundStyle(Color.textMuted)
+                .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 24)
     }
 
     private var plans: some View {
@@ -243,7 +354,8 @@ struct PaywallView: View {
             .blockCard(fill: isBest ? Color.accentFill : Color.surface1, radius: Radius.control, lift: 4)
         }
         .buttonStyle(PrimePressStyle())
-        .disabled(purchasingID != nil)
+        .disabled(!PaywallSignInPrompt.canPurchase(isSignedIn: container.isSignedIn,
+                                                   purchaseInFlight: purchasingID != nil))
         .accessibilityLabel(accessibilityLabel(for: product))
     }
 
@@ -356,7 +468,8 @@ struct PaywallView: View {
             .cardSurface()
         }
         .buttonStyle(PrimePressStyle())
-        .disabled(purchasingID != nil)
+        .disabled(!PaywallSignInPrompt.canPurchase(isSignedIn: container.isSignedIn,
+                                                   purchaseInFlight: purchasingID != nil))
         .accessibilityLabel("\(product.displayName), \(product.displayPrice)")
     }
 
@@ -369,7 +482,8 @@ struct PaywallView: View {
                 .foregroundStyle(Color.accentText)
         }
         .buttonStyle(.plain)
-        .disabled(purchasingID != nil)
+        .disabled(!PaywallSignInPrompt.canPurchase(isSignedIn: container.isSignedIn,
+                                                   purchaseInFlight: purchasingID != nil))
     }
 
     /// Legal disclosures required for auto-renewable subscriptions (App Store 3.1.2(c)):
@@ -420,7 +534,10 @@ struct PaywallView: View {
             // different signal from a thrown error (intent vs bug), so they're logged apart
             // rather than both collapsing into "no sale".
             let purchased = try await container.purchase(product)
-            if !purchased {
+            if purchased {
+                showPostPurchaseSignIn = PaywallSignInPrompt.promptsAfterPurchase(
+                    purchased: purchased, isSignedIn: container.isSignedIn)
+            } else {
                 container.track(.purchaseFailed,
                                 Self.failureProperties(productID: product.id, trigger: trigger, error: nil))
             }

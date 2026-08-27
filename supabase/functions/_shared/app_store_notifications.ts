@@ -61,10 +61,16 @@ export async function verifyAppleSignedPayload(
   trustedRootPem: string,
 ): Promise<Record<string, unknown>> {
   const { headerB64, payloadB64, sigB64 } = splitJws(jws);
-  const header = JSON.parse(new TextDecoder().decode(decodeBase64Url(headerB64))) as {
-    alg?: string;
-    x5c?: string[];
-  };
+  let header: { alg?: string; x5c?: string[] };
+  try {
+    header = JSON.parse(new TextDecoder().decode(decodeBase64Url(headerB64)));
+  } catch (e) {
+    // Same reasoning as the certificate parse below: bad base64 or bad JSON is an untrustworthy
+    // blob, not an internal fault.
+    throw new AppleSignedPayloadError(
+      `unparseable JWS header: ${e instanceof Error ? e.message : String(e)}`,
+    );
+  }
 
   if (header.alg !== "ES256") {
     throw new AppleSignedPayloadError(`unsupported JWS alg: ${header.alg}`);
@@ -74,7 +80,22 @@ export async function verifyAppleSignedPayload(
     throw new AppleSignedPayloadError("missing x5c certificate chain in JWS header");
   }
 
-  const certs = x5c.map((c) => new x509.X509Certificate(decodeBase64Std(c)));
+  // Parsing is part of verification, so a malformed certificate has to surface as an
+  // `AppleSignedPayloadError` like every other failure here — @peculiar/x509 and `atob` both
+  // throw their own error types on junk DER/base64, and callers branch on
+  // `instanceof AppleSignedPayloadError` to tell "this blob is not trustworthy" (expected,
+  // countable) from "something is broken" (a 500). Without this wrap, a single malformed x5c
+  // entry took down the whole request — found 2026-08-26 probing the deployed
+  // `claim-entitlement` with a hand-made blob, which returned 500 instead of counting it as
+  // unverified, and would have failed a batch containing genuine transactions alongside it.
+  let certs: x509.X509Certificate[];
+  try {
+    certs = x5c.map((c) => new x509.X509Certificate(decodeBase64Std(c)));
+  } catch (e) {
+    throw new AppleSignedPayloadError(
+      `unparseable certificate in x5c chain: ${e instanceof Error ? e.message : String(e)}`,
+    );
+  }
   const leaf = certs[0];
 
   // Every provided cert must be signed by the next one in the chain.
@@ -114,7 +135,13 @@ export async function verifyAppleSignedPayload(
   );
   if (!valid) throw new AppleSignedPayloadError("JWS signature verification failed");
 
-  return JSON.parse(new TextDecoder().decode(decodeBase64Url(payloadB64)));
+  try {
+    return JSON.parse(new TextDecoder().decode(decodeBase64Url(payloadB64)));
+  } catch (e) {
+    throw new AppleSignedPayloadError(
+      `unparseable JWS payload: ${e instanceof Error ? e.message : String(e)}`,
+    );
+  }
 }
 
 // MARK: - Notification payload shapes (subset of Apple's App Store Server Notifications V2)
@@ -132,6 +159,9 @@ export interface AppleTransactionInfo {
   productId: string;
   originalTransactionId: string;
   transactionId: string;
+  /** The app the purchase was made in. Checked when claiming (`decideClaim`): a JWS from
+   * another app is signed by the same Apple PKI and verifies perfectly well. */
+  bundleId?: string;
   /** Epoch milliseconds. Absent for non-consumables (they never expire). */
   expiresDate?: number;
   /** Epoch milliseconds — present only when Apple revoked/refunded the transaction. */

@@ -159,3 +159,52 @@ Deno.test("deriveEntitlementStatus: revoked takes priority over expiry", () => {
   };
   assertEquals(deriveEntitlementStatus(info, now), "revoked");
 });
+
+// MARK: - Malformed input must be a verification failure, not an internal fault
+//
+// Callers branch on `instanceof AppleSignedPayloadError` to tell "don't trust this blob"
+// (expected, countable) from "something is broken" (a 500). These were added 2026-08-26 after
+// probing the deployed `claim-entitlement` with a hand-made blob carrying a junk x5c entry:
+// it returned 500 instead of counting the blob as unverified, which in a batch would have
+// failed the genuine transactions sitting alongside it.
+
+Deno.test("verifyAppleSignedPayload rejects a junk certificate in the x5c chain", async () => {
+  const { root } = await buildFixtureChain();
+  const header = base64url(new TextEncoder().encode(JSON.stringify({ alg: "ES256", x5c: ["AAA="] })));
+  const payload = base64url(new TextEncoder().encode(JSON.stringify({ productId: "x" })));
+
+  await assertRejects(
+    () => verifyAppleSignedPayload(`${header}.${payload}.AAAA`, root.toString("pem")),
+    AppleSignedPayloadError,
+    "unparseable certificate",
+  );
+});
+
+Deno.test("verifyAppleSignedPayload rejects a JWS whose header isn't valid base64url JSON", async () => {
+  const { root } = await buildFixtureChain();
+  await assertRejects(
+    () => verifyAppleSignedPayload("!!!not-base64!!!.eyJhIjoxfQ.AAAA", root.toString("pem")),
+    AppleSignedPayloadError,
+    "unparseable JWS header",
+  );
+});
+
+Deno.test("verifyAppleSignedPayload rejects a correctly-signed JWS with a non-JSON payload", async () => {
+  // Signature valid, chain valid, body garbage — the last place a raw throw could escape.
+  const { root, intermediate, leaf, leafKeys } = await buildFixtureChain();
+  const header = { alg: "ES256", x5c: [toStdBase64(leaf.rawData), toStdBase64(intermediate.rawData)] };
+  const headerB64 = base64url(new TextEncoder().encode(JSON.stringify(header)));
+  const payloadB64 = base64url(new TextEncoder().encode("this is not json"));
+  const sig = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    leafKeys.privateKey,
+    new TextEncoder().encode(`${headerB64}.${payloadB64}`),
+  );
+  const jws = `${headerB64}.${payloadB64}.${base64url(new Uint8Array(sig))}`;
+
+  await assertRejects(
+    () => verifyAppleSignedPayload(jws, root.toString("pem")),
+    AppleSignedPayloadError,
+    "unparseable JWS payload",
+  );
+});

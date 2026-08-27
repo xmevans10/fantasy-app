@@ -163,6 +163,33 @@ final class SupabaseClient {
         return try await perform(restRequest(table: "rpc/\(function)", method: "POST", body: body))
     }
 
+    // MARK: - Edge Functions
+
+    /// Request builder for `POST /functions/v1/<name>`. Split out pure, like `restRequest`, so
+    /// the URL and headers are assertable without a network round trip.
+    ///
+    /// Deliberately reuses `applyHeaders`, which stamps the *user's* access token when one
+    /// exists. Every function in this project except the Apple webhook runs with
+    /// `verify_jwt = true`, and `claim-entitlement` reads the caller's identity straight off
+    /// that token — sending the anon key instead would authenticate as nobody.
+    func functionRequest(name: String, body: Data?) -> URLRequest {
+        var req = URLRequest(url: config.url.appendingPathComponent("functions/v1/\(name)"))
+        req.httpMethod = "POST"
+        applyHeaders(&req)
+        if let body {
+            req.httpBody = body
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+        return req
+    }
+
+    /// Invokes an Edge Function and returns its raw response body.
+    @discardableResult
+    func invokeFunction<Body: Encodable>(_ name: String, body: Body) async throws -> Data {
+        let encoded = try JSONEncoder.supabase.encode(body)
+        return try await perform(functionRequest(name: name, body: encoded))
+    }
+
     // MARK: - Storage
 
     /// Uploads raw bytes to `{bucket}/{path}` (Storage's object API, not PostgREST — no SDK,
