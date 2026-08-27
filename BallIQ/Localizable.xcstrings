@@ -5884,6 +5884,76 @@
         }
       }
     },
+    "Your streak" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu racha"
+          }
+        }
+      }
+    },
+    "Your rating" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu puntuación"
+          }
+        }
+      }
+    },
+    "Your league" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu liga"
+          }
+        }
+      }
+    },
+    "You're on %lld. Reinstall without an account and it starts over at zero." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vas por %lld. Reinstala sin cuenta y vuelve a cero."
+          }
+        }
+      }
+    },
+    "Play a day at a time and it builds. Without an account it starts over at zero." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Juega un día a la vez y crece. Sin cuenta, vuelve a cero."
+          }
+        }
+      }
+    },
+    "Every ranked game moves it. Signed in, it follows you to any device." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada partida clasificatoria la mueve. Con sesión iniciada, te sigue a cualquier dispositivo."
+          }
+        }
+      }
+    },
+    "You're placed with players at your level every Monday. That needs an account." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada lunes te colocan con jugadores de tu nivel. Eso requiere una cuenta."
+          }
+        }
+      }
+    },
     "Your rank" : {
       "localizations" : {
         "es" : {

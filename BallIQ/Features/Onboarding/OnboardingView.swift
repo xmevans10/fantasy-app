@@ -336,13 +336,39 @@ struct OnboardingView: View {
 
     private var accountStep: some View {
         VStack(spacing: 0) {
+            // `Spacer`s rather than a measuring container: this step must stay clear of
+            // `ViewThatFits` and `GeometryReader { ScrollView { … } }`, both of which render a
+            // measurement pass that draws a clipped ghost copy of "Not now" at the top of the
+            // screen on iPad (bisected 2026-07-28 — see `fitsOrScrolls`). Plain spacers around a
+            // content-sized ScrollView centre the pitch without any of that: they collapse to
+            // zero when the content is tall, so an SE-class screen still scrolls.
+            Spacer(minLength: 0)
             fitsOrScrolls { accountPitch }
-                .frame(maxHeight: .infinity)
+                // A ScrollView is greedy vertically — without this it swallows the whole gap and
+                // the spacers collapse to nothing, which is exactly the "one sentence stranded
+                // above 800pt of cream" this step started as. `fixedSize` asks it for its content
+                // height instead, so the spacers get the slack and centre the card. It is a
+                // modifier, not a measuring container, so it does not reintroduce the iPad ghost
+                // button; when the content is genuinely taller than the space, the VStack
+                // compresses it and `scrollBounceBehavior(.basedOnSize)` scrolls as before.
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
 
             authButtons.heroReveal(1)
         }
     }
 
+    /// The three things an account holds, shown rather than named.
+    ///
+    /// This used to be one sentence — "your streak, rating and league spot live on your account"
+    /// — above roughly 800pt of empty screen, which was both the emptiest view in the app and a
+    /// weaker argument than the facts allowed. The sentence listed three benefits and evidenced
+    /// none of them. The rows below say what each one actually is and what losing it costs, and
+    /// they close the gap with the answer to the question the screen is asking.
+    ///
+    /// Deliberately honest when there is nothing to show: a player who quit mid-board has no
+    /// streak, so the badge is absent and the streak row reads as the promise it is rather than
+    /// claiming a number they never earned.
     private var accountPitch: some View {
         VStack(spacing: 18) {
             if container.streak > 0 { streakBadge }
@@ -352,13 +378,50 @@ struct OnboardingView: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .minimumScaleFactor(0.6)
-            Text("Your streak, rating and league spot live on your account — sign in and they follow you to any device.")
-                .font(.body14)
-                .foregroundStyle(Color.textMuted)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
+
+            VStack(alignment: .leading, spacing: 14) {
+                keepRow("flame.fill", "Your streak",
+                        container.streak > 0
+                            ? "You're on \(container.streak). Reinstall without an account and it starts over at zero."
+                            : "Play a day at a time and it builds. Without an account it starts over at zero.")
+                keepRow("chart.line.uptrend.xyaxis", "Your rating",
+                        "Every ranked game moves it. Signed in, it follows you to any device.")
+                keepRow("trophy.fill", "Your league",
+                        "You're placed with players at your level every Monday. That needs an account.")
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .blockCard()
         }
         .heroReveal(0)
+    }
+
+    /// Mirrors `ruleRow` on the how-to-play step — same icon-tile-plus-copy rhythm, so the two
+    /// onboarding screens read as one flow rather than two designs.
+    private func keepRow(_ symbol: String, _ title: LocalizedStringKey,
+                         _ detail: LocalizedStringKey) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: symbol)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(Color.onAccent)
+                .frame(width: 26, height: 26)
+                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Color.accentFill))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .strokeBorder(Color.borderInk, lineWidth: 2)
+                )
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.bodyStrong)
+                    .foregroundStyle(Color.textPrimary)
+                Text(detail)
+                    .font(.label12)
+                    .foregroundStyle(Color.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .combine)
     }
 
     /// The reason to sign in, stated as a number the player just produced rather than a promise.

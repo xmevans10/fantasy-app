@@ -14,11 +14,17 @@ P = 'BallIQ/Localizable.xcstrings'
 # key -> (spanish, anchor key, 'before'|'after')  — anchors must already exist.
 # Position is cosmetic: Xcode re-collates on its next save. Validity is what matters.
 NEW = [
-    ("Clue %lld, locked, costs %lld points",
-     "Pista %lld, bloqueada, cuesta %lld puntos", "Clue %lld of %lld", "after"),
-    ("Clue %lld, locked", "Pista %lld, bloqueada", "Clue %lld of %lld", "after"),
-    ("Locked", "Bloqueada", "Locked character, unlocks at rung %lld", "before"),
-    ("−%lld pts", "−%lld pts", "@%@", "after"),
+    ("Your streak", "Tu racha", "Your rank", "before"),
+    ("Your rating", "Tu puntuación", "Your rank", "before"),
+    ("Your league", "Tu liga", "Your rank", "before"),
+    ("You're on %lld. Reinstall without an account and it starts over at zero.",
+     "Vas por %lld. Reinstala sin cuenta y vuelve a cero.", "Your rank", "before"),
+    ("Play a day at a time and it builds. Without an account it starts over at zero.",
+     "Juega un día a la vez y crece. Sin cuenta, vuelve a cero.", "Your rank", "before"),
+    ("Every ranked game moves it. Signed in, it follows you to any device.",
+     "Cada partida clasificatoria la mueve. Con sesión iniciada, te sigue a cualquier dispositivo.", "Your rank", "before"),
+    ("You're placed with players at your level every Monday. That needs an account.",
+     "Cada lunes te colocan con jugadores de tu nivel. Eso requiere una cuenta.", "Your rank", "before"),
 ]
 
 def block(key, es):
