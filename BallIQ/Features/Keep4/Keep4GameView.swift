@@ -237,7 +237,12 @@ struct Keep4GameView: View {
                 tally(label: String(localized: "Cut"), count: cutCount, color: .dangerText)
             }
 
-            if placement.isEmpty {
+            // `placement` here is the board's keep/cut card placement, not the M30 rating window —
+            // same word, unrelated concept. The added clause is the Pro one: the HARD · PRO control
+            // is a subscription upsell on card 1 of the first game a new player ever sees, so it
+            // stays hidden until they have finished one. Hidden, not disabled — a greyed-out paid
+            // control is the same ask wearing a worse outfit.
+            if placement.isEmpty, container.entitlements.isPro || container.completedGames >= 1 {
                 modePicker
             } else if mode == .hard {
                 Label("Hard mode — stats hidden", systemImage: "eye.slash")

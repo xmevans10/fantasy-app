@@ -129,7 +129,7 @@ final class MomentPresenter: ObservableObject {
             hasUsername: container.identity.username != nil,
             sportsWithFavorite: Set(container.favoriteTeams.teams.keys.compactMap(Sport.init(rawValue:))),
             acceptedFriends: container.acceptedFriends,
-            pushPrimerPending: await PushPrimer.shouldOffer(streak: container.streak))
+            pushPrimerPending: await PushPrimer.shouldOffer())
     }
 
     // MARK: - Outcomes

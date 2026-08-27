@@ -58,6 +58,27 @@ struct HomeView: View {
     private let gridColumns = [GridItem(.flexible(), spacing: 12),
                                GridItem(.flexible(), spacing: 12)]
 
+    /// Whether Home may show its paid surfaces yet.
+    ///
+    /// A brand-new player met Pro three times before their first session ended: the `HARD · PRO`
+    /// control above card 1 of 8, the archive row here, and the Grid tile below it. None is wrong
+    /// to exist; all three are wrong to show to someone with no basis for judging whether the
+    /// paid tier fits them. Production bears it out — 258 paywall views against 11 completed
+    /// first games, a 23:1 ratio of asking to delivering.
+    ///
+    /// Held for three games rather than one so the gate outlasts a single curious tap. A player
+    /// who already owns Pro sees them immediately: there is nothing to sell, and hiding paid
+    /// features from a subscriber would be a worse bug than showing them too early.
+    private var showsProSurfaces: Bool {
+        container.entitlements.isPro || container.completedGames >= 3
+    }
+
+    /// The Grid is the only `isPro` tile, but filtering on the flag rather than naming it keeps
+    /// this correct when a second paid format is added.
+    private var visibleFormats: [GameFormat] {
+        showsProSurfaces ? GameFormat.all : GameFormat.all.filter { !$0.isPro }
+    }
+
     /// Sport whose rating the rank widget shows — tracks the pager's visible page
     /// (`dailyPage`), not `container.sportFilter`. The section sits directly beneath the
     /// daily-games pager (2026-07-17) precisely so it reads as describing whichever cards are
@@ -144,16 +165,19 @@ struct HomeView: View {
                     }
                     .heroReveal(2)
 
-                    Button {
-                        if container.entitlements.canAccessArchive { showBrowse = true }
-                        else { paywallTrigger = .archive; showPaywall = true }
-                    } label: { browseRow }
-                        .buttonStyle(PrimePressStyle())
-                        .heroReveal(3)
+                    // Pro is held back for the first three games — see `showsProSurfaces`.
+                    if showsProSurfaces {
+                        Button {
+                            if container.entitlements.canAccessArchive { showBrowse = true }
+                            else { paywallTrigger = .archive; showPaywall = true }
+                        } label: { browseRow }
+                            .buttonStyle(PrimePressStyle())
+                            .heroReveal(3)
+                    }
 
                     section("Game formats") {
                         LazyVGrid(columns: gridColumns, spacing: 12) {
-                            ForEach(GameFormat.all) { format in
+                            ForEach(visibleFormats) { format in
                                 FormatGridItem(format: format) { launch(format) }
                             }
                         }
@@ -332,7 +356,7 @@ struct HomeView: View {
     /// system prompt is still unspent — a `denied` install must never see it again.
     private func refreshPushPrimer() async {
         if DebugLaunch.forcePushPrimer { showPushPrimer = true; return }
-        showPushPrimer = await PushPrimer.shouldOffer(streak: container.streak)
+        showPushPrimer = await PushPrimer.shouldOffer()
     }
 
     private func enableReminders() async {

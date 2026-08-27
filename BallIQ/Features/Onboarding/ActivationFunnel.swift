@@ -121,8 +121,20 @@ struct ActivationState {
 /// hook for the card, not a claim that the player is really owed one.
 @MainActor
 enum PushPrimer {
-    static func shouldOffer(streak: Int, state: ActivationState = ActivationState()) async -> Bool {
-        guard state.shouldOfferPushPrimer, streak > 0 else { return false }
+    /// Gated on the **first completed game**, not on a streak.
+    ///
+    /// It used to require `streak > 0`. That is the same threshold by a longer route — a streak
+    /// only exists once a game is finished — but it read as a retention gate and hid how narrow
+    /// it was. Measured against production on 2026-08-26: 64 installs ever started a first game
+    /// and 11 finished one, while 120 of 125 first opens ended with push still `notDetermined`.
+    /// The primer was positioned downstream of a threshold almost nobody crossed, so the whole
+    /// return loop was unreachable for the players who most needed it.
+    ///
+    /// Asking at the first completed game puts the request where the emotion already is, and
+    /// states the trigger the funnel actually measures (`activation.firstGameCompleted`) instead
+    /// of a value derived from it.
+    static func shouldOffer(state: ActivationState = ActivationState()) async -> Bool {
+        guard state.shouldOfferPushPrimer, state.has(.firstGameCompleted) else { return false }
         return await PushNotificationManager.currentAuthorizationStatus() == .notDetermined
     }
 }

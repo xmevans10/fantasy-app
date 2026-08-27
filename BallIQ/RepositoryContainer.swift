@@ -402,6 +402,23 @@ final class RepositoryContainer: ObservableObject {
     private func refreshFromLocal() async {
         progressSnapshot = await localProgress.load()
         await refreshRatings()
+        await refreshCompletedGames()
+    }
+
+    /// How many games this player has finished, from the **career log**.
+    ///
+    /// Deliberately not derived from `progressSnapshot`: XP is also written by `RemoteSync.pull()`,
+    /// so a returning player signing in on a new device would read as hundreds of games on their
+    /// first launch here. `MomentPresenter` reads volume the same way, for the same reason.
+    ///
+    /// Published rather than computed because `gameLog.all()` is async and the surfaces that need
+    /// it (`HomeView`'s Pro rows) are synchronous `body` reads. One stored value, refreshed at the
+    /// two moments it can change — bootstrap and game completion — so the three call sites that
+    /// gate on it can never disagree (AGENTS.md §4).
+    @Published private(set) var completedGames = 0
+
+    private func refreshCompletedGames() async {
+        completedGames = await gameLog.all().count
     }
 
     private func refreshRatings() async {
@@ -605,6 +622,9 @@ final class RepositoryContainer: ObservableObject {
                                 xpEarned: xpEarned, streakAfter: streakAfter,
                                 puzzleID: puzzleID, details: detail.details)
         await gameLog.append(result)
+        // The single place rows are appended, so refreshing here covers both `complete()` and
+        // `logSession()` — the two entry points into the log — without either having to remember.
+        await refreshCompletedGames()
         if let sync {
             // Local append above is the source of truth, so a failed mirror never costs the player
             // their history on THIS device — but it does cost them on the next one, which is
