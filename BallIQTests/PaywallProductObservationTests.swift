@@ -124,7 +124,7 @@ final class PaywallProductObservationTests: XCTestCase {
                 .flatMap(\.windows)
                 .first,
             "no window in hosted test app")
-        let host = UIHostingController(rootView: PaywallView().environmentObject(container))
+        let host = UIHostingController(rootView: PaywallView(trigger: .other).environmentObject(container))
         let previousRoot = window.rootViewController
         window.rootViewController = host
         defer { window.rootViewController = previousRoot }

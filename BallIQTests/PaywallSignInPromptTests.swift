@@ -92,7 +92,7 @@ final class PaywallSignInPromptTests: XCTestCase {
                     .flatMap(\.windows).first,
                 "no window in hosted test app")
             let host = UIHostingController(
-                rootView: PaywallView(stage: stage).environmentObject(container))
+                rootView: PaywallView(trigger: .other, stage: stage).environmentObject(container))
             let previous = window.rootViewController
             window.rootViewController = host
             defer { window.rootViewController = previous }

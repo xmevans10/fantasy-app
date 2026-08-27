@@ -16,10 +16,20 @@ struct PaywallView: View {
     /// Set only after a purchase completes while signed out — see `postPurchaseSignIn`.
     @State private var showPostPurchaseSignIn: Bool
 
-    /// Which gate sent the user here, logged with `paywallViewed`. Defaults to `.other` so an
-    /// un-updated call site degrades to an honest "unknown" bucket rather than silently
-    /// attributing itself to whatever surface happens to be listed first.
-    var trigger: PaywallTrigger = .other
+    /// Which gate sent the user here, logged with `paywallViewed`.
+    ///
+    /// **Deliberately has no default.** It used to default to `.other`, on the reasoning that an
+    /// un-updated call site should degrade to an honest "unknown" bucket. In practice that bucket
+    /// swallowed the majority of the funnel: 214 of 273 production paywall views arrived as
+    /// `other`, steady at ~30/week and not declining, spread across 207 distinct minutes — real
+    /// separate sessions, not a scripted burst and not old builds aging out. Every call site in
+    /// this source tree passes a trigger, so the path producing them could not be found by
+    /// reading the code.
+    ///
+    /// Removing the default converts that from a silent runtime fallback into a compile error, so
+    /// the question "which surface sells Pro" can never again be unanswerable by accident. If a
+    /// new presentation site genuinely has no meaningful gate, it must now say `.other` out loud.
+    var trigger: PaywallTrigger
 
     /// Which sub-state the screen opens in. Production always uses `.offer`; the other two are
     /// reachable only by actually buying something or tapping the disclosure, which is why
@@ -27,7 +37,7 @@ struct PaywallView: View {
     /// guest buyer sees is worth being able to look at without running a purchase.
     enum Stage { case offer, offerWithSignInOpen, postPurchase }
 
-    init(trigger: PaywallTrigger = .other, stage: Stage = .offer) {
+    init(trigger: PaywallTrigger, stage: Stage = .offer) {
         self.trigger = trigger
         _showSignInOptions = State(initialValue: stage == .offerWithSignInOpen)
         _showPostPurchaseSignIn = State(initialValue: stage == .postPurchase)
@@ -561,5 +571,5 @@ struct PaywallView: View {
 }
 
 #Preview {
-    PaywallView().environmentObject(RepositoryContainer.make())
+    PaywallView(trigger: .other).environmentObject(RepositoryContainer.make())
 }

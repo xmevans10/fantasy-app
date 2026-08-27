@@ -98,7 +98,10 @@ struct ContentView: View {
             NavigationStack { CreateKeep4View().environmentObject(container) }
         }
         .sheet(isPresented: $debugPaywall) {
-            PaywallView().environmentObject(container)
+            // `-screenshotPaywall` only: a capture hook with no gate behind it, so `.other` is
+            // the honest answer rather than a fallback. Now stated explicitly, because
+            // `PaywallView.trigger` no longer has a default — see its doc comment.
+            PaywallView(trigger: .other).environmentObject(container)
         }
         .fullScreenCover(item: $linkKeep4) { link in
             Keep4GameView(puzzle: link.puzzle, ranked: false, communityID: link.communityID,
