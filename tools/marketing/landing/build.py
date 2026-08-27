@@ -14,6 +14,16 @@ ROOT = HERE.parents[2]
 FONTS = ROOT / "BallIQ" / "Resources" / "Fonts"
 OUT = ROOT / "index.html"
 
+# ── Where the site lives ──────────────────────────────────────────────────────
+# The one place the public origin is written down. It reaches the canonical link,
+# og:url, og:image, twitter:image and the JSON-LD block in the template, plus the
+# generated robots.txt and sitemap.xml -- eight places that were previously eight
+# separate hardcoded strings, which is how a domain move turns into a hunt.
+#
+# Moving to a custom domain is this line plus a CNAME file plus DNS; nothing in the
+# template needs touching. Keep the trailing slash: the template concatenates onto it.
+SITE = "https://xmevans10.github.io/fantasy-app/"
+
 # Card art, downscaled to 240px squares. Kept in-repo so a rebuild doesn't re-hit the
 # original hosts (and so the page never depends on them staying up).
 SHOTS = HERE / "shots"
@@ -53,13 +63,27 @@ def main() -> int:
         html = html.replace(f"__SHOT_{name.upper()}__",
                             data_uri(SHOTS / f"{name}.webp", "image/webp"))
 
-    for leftover in ["__ANTON__", "__SAIRA", "__SHOT_"]:
+    html = html.replace("__SITE__", SITE)
+
+    for leftover in ["__ANTON__", "__SAIRA", "__SHOT_", "__SITE__"]:
         assert leftover not in html, f"unsubstituted token {leftover}"
 
     html = _asciify(html)
     assert html.isascii(), "output still carries non-ASCII"
     OUT.write_text(html, encoding="ascii")
     print(f"wrote {OUT} ({len(html.encode()) / 1024:.0f} KB)")
+
+    # Crawler files, generated rather than hand-maintained, so they cannot drift from
+    # SITE the way three hand-edited copies of a URL always eventually do.
+    (ROOT / "robots.txt").write_text(
+        "User-agent: *\nAllow: /\n\nSitemap: " + SITE + "sitemap.xml\n", encoding="ascii")
+    (ROOT / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f'  <url><loc>{SITE}</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n'
+        f'  <url><loc>{SITE}privacy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>\n'
+        '</urlset>\n', encoding="ascii")
+    print(f"wrote robots.txt + sitemap.xml for {SITE}")
     return 0
 
 
