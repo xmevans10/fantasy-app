@@ -254,9 +254,25 @@ struct RootView: View {
             } else if hasOnboarded {
                 ContentView()
                     .transition(.opacity)
+                    // In-app update messages (the "OPM" surface) — see `UpdateNotes` for the two
+                    // rules that govern what may appear here. `.current` shows the slides for
+                    // this bundle version once and then never again, keyed off a version string
+                    // Notelet persists itself.
+                    .noteletSheet(
+                        notes: UpdateNotes.noteletNotes,
+                        version: .current,
+                        configuration: NoteletConfiguration(doneButtonLabel: "Let's play",
+                                                            accentColor: .accentFill)
+                    )
             } else {
                 OnboardingView()
                     .transition(.opacity)
+                    // A fresh install is not an upgrade. Without this, someone who has been in
+                    // the app for ninety seconds is handed a slideshow about what changed in the
+                    // only version they have ever run — first-run noise for no benefit. Marking
+                    // the version seen *while they onboard* means their first sight of an update
+                    // message is the next release, which is when it actually says something.
+                    .onAppear { NoteletStorage.markCurrentVersionAsSeen() }
             }
         }
         .task { await openApp() }
