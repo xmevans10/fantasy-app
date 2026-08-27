@@ -1,102 +1,102 @@
 sport,team_abbr,primary_color,secondary_color,full_name
-nfl,ARI,#97233F,#000000,
-nfl,ATL,#A71930,#000000,
-nfl,BAL,#241773,#9E7C0C,
-nfl,BUF,#00338D,#C60C30,
-nfl,CAR,#0085CA,#101820,
-nfl,CHI,#0B162A,#C83803,
-nfl,CIN,#FB4F14,#000000,
-nfl,CLE,#311D00,#FF3C00,
-nfl,DAL,#003594,#869397,
-nfl,DEN,#FB4F14,#002244,
-nfl,DET,#0076B6,#B0B7BC,
-nfl,GB,#203731,#FFB612,
-nfl,HOU,#03202F,#A71930,
-nfl,IND,#002C5F,#A2AAAD,
-nfl,JAX,#101820,#D7A22A,
-nfl,KC,#E31837,#FFB81C,
-nfl,LV,#000000,#A5ACAF,
-nfl,LAC,#0080C6,#FFC20E,
-nfl,LAR,#003594,#FFA300,
-nfl,MIA,#008E97,#FC4C02,
-nfl,MIN,#4F2683,#FFC62F,
-nfl,NE,#002244,#C60C30,
-nfl,NO,#D3BC8D,#101820,
-nfl,NYG,#0B2265,#A71930,
-nfl,NYJ,#125740,#000000,
-nfl,PHI,#004C54,#A5ACAF,
-nfl,PIT,#FFB612,#101820,
-nfl,SEA,#002244,#69BE28,
-nfl,SF,#AA0000,#B3995D,
-nfl,TB,#D50A0A,#34302B,
-nfl,TEN,#0C2340,#4B92DB,
-nfl,WAS,#5A1414,#FFB612,
-nba,ATL,#E03A3E,#C1D32F,
-nba,BOS,#007A33,#BA9653,
-nba,BKN,#000000,#888888,
-nba,CHA,#1D1160,#00788C,
-nba,CHI,#CE1141,#000000,
-nba,CLE,#860038,#FDBB30,
-nba,DAL,#00538C,#002B5E,
-nba,DEN,#0E2240,#FEC524,
-nba,DET,#C8102E,#1D42BA,
-nba,GSW,#1D428A,#FFC72C,
-nba,HOU,#CE1141,#000000,
-nba,IND,#002D62,#FDBB30,
-nba,LAC,#C8102E,#1D428A,
-nba,LAL,#552583,#FDB927,
-nba,MEM,#5D76A9,#12173F,
-nba,MIA,#98002E,#F9A01B,
-nba,MIL,#00471B,#EEE1C6,
-nba,MIN,#0C2340,#236192,
-nba,NOP,#0C2340,#C8102E,
-nba,NYK,#006BB6,#F58426,
-nba,OKC,#007AC1,#EF3B24,
-nba,ORL,#0077C0,#C4CED4,
-nba,PHI,#006BB6,#ED174C,
-nba,PHX,#1D1160,#E56020,
-nba,POR,#E03A3E,#000000,
-nba,SAC,#5A2D81,#63727A,
-nba,SAS,#C4CED4,#000000,
-nba,TOR,#CE1141,#000000,
-nba,UTA,#002B5C,#00471B,
-nba,WAS,#002B5C,#E31837,
-nba,AND,#FA002C,#001689,
-nba,BLB,#CD1937,#193781,
-nba,CHS,#E03A3E,#003DA6,
-nba,DNN,#00008B,#D8D3C5,
-nba,INO,#0D2240,#FF0000,
-nba,SHE,#C41E3A,#E6D9D0,
-nba,STB,#D3232A,#D8D3C5,
-nba,WAT,#FFC72C,#000000,
-nba,WSC,#008348,#D8D3C5,
-baseball,LAA,#BA0021,#003263,
-baseball,AZ,#A71930,#000000,
-baseball,BAL,#DF4601,#000000,
-baseball,BOS,#BD3039,#0D2B56,
-baseball,CHC,#0E3386,#CC3433,
-baseball,CIN,#C6011F,#000000,
-baseball,CLE,#00385D,#E50022,
-baseball,COL,#33006F,#000000,
-baseball,DET,#0C2340,#FA4616,
-baseball,HOU,#002D62,#EB6E1F,
-baseball,KC,#004687,#BD9B60,
-baseball,LAD,#005A9C,#EF3E42,
-baseball,WSH,#AB0003,#14225A,
-baseball,NYM,#002D72,#FF5910,
-baseball,ATH,#003831,#EFB21E,
-baseball,PIT,#27251F,#FDB827,
-baseball,SD,#2F241D,#FFC425,
-baseball,SEA,#0C2C56,#005C5C,
-baseball,SF,#FD5A1E,#000000,
-baseball,STL,#C41E3A,#0C2340,
-baseball,TB,#092C5C,#8FBCE6,
-baseball,TEX,#003278,#C0111F,
-baseball,TOR,#134A8E,#E8291C,
-baseball,MIN,#002B5C,#D31145,
-baseball,PHI,#E81828,#002D72,
-baseball,ATL,#13274F,#CE1141,
-baseball,CWS,#27251F,#C4CED4,
-baseball,MIA,#00A3E0,#EF3340,
-baseball,NYY,#0C2340,#C4CED3,
-baseball,MIL,#0A2351,#B6922E,
+nfl,ARI,#97233F,#000000,Arizona Cardinals
+nfl,ATL,#A71930,#000000,Atlanta Falcons
+nfl,BAL,#241773,#9E7C0C,Baltimore Ravens
+nfl,BUF,#00338D,#C60C30,Buffalo Bills
+nfl,CAR,#0085CA,#101820,Carolina Panthers
+nfl,CHI,#0B162A,#C83803,Chicago Bears
+nfl,CIN,#FB4F14,#000000,Cincinnati Bengals
+nfl,CLE,#311D00,#FF3C00,Cleveland Browns
+nfl,DAL,#003594,#869397,Dallas Cowboys
+nfl,DEN,#FB4F14,#002244,Denver Broncos
+nfl,DET,#0076B6,#B0B7BC,Detroit Lions
+nfl,GB,#203731,#FFB612,Green Bay Packers
+nfl,HOU,#03202F,#A71930,Houston Texans
+nfl,IND,#002C5F,#A2AAAD,Indianapolis Colts
+nfl,JAX,#101820,#D7A22A,Jacksonville Jaguars
+nfl,KC,#E31837,#FFB81C,Kansas City Chiefs
+nfl,LV,#000000,#A5ACAF,Las Vegas Raiders
+nfl,LAC,#0080C6,#FFC20E,Los Angeles Chargers
+nfl,LAR,#003594,#FFA300,Los Angeles Rams
+nfl,MIA,#008E97,#FC4C02,Miami Dolphins
+nfl,MIN,#4F2683,#FFC62F,Minnesota Vikings
+nfl,NE,#002244,#C60C30,New England Patriots
+nfl,NO,#D3BC8D,#101820,New Orleans Saints
+nfl,NYG,#0B2265,#A71930,New York Giants
+nfl,NYJ,#125740,#000000,New York Jets
+nfl,PHI,#004C54,#A5ACAF,Philadelphia Eagles
+nfl,PIT,#FFB612,#101820,Pittsburgh Steelers
+nfl,SEA,#002244,#69BE28,Seattle Seahawks
+nfl,SF,#AA0000,#B3995D,San Francisco 49ers
+nfl,TB,#D50A0A,#34302B,Tampa Bay Buccaneers
+nfl,TEN,#0C2340,#4B92DB,Tennessee Titans
+nfl,WAS,#5A1414,#FFB612,Washington Commanders
+nba,ATL,#E03A3E,#C1D32F,Atlanta Hawks
+nba,BOS,#007A33,#BA9653,Boston Celtics
+nba,BKN,#000000,#888888,Brooklyn Nets
+nba,CHA,#1D1160,#00788C,Charlotte Hornets
+nba,CHI,#CE1141,#000000,Chicago Bulls
+nba,CLE,#860038,#FDBB30,Cleveland Cavaliers
+nba,DAL,#00538C,#002B5E,Dallas Mavericks
+nba,DEN,#0E2240,#FEC524,Denver Nuggets
+nba,DET,#C8102E,#1D42BA,Detroit Pistons
+nba,GSW,#1D428A,#FFC72C,Golden State Warriors
+nba,HOU,#CE1141,#000000,Houston Rockets
+nba,IND,#002D62,#FDBB30,Indiana Pacers
+nba,LAC,#C8102E,#1D428A,LA Clippers
+nba,LAL,#552583,#FDB927,Los Angeles Lakers
+nba,MEM,#5D76A9,#12173F,Memphis Grizzlies
+nba,MIA,#98002E,#F9A01B,Miami Heat
+nba,MIL,#00471B,#EEE1C6,Milwaukee Bucks
+nba,MIN,#0C2340,#236192,Minnesota Timberwolves
+nba,NOP,#0C2340,#C8102E,New Orleans Pelicans
+nba,NYK,#006BB6,#F58426,New York Knicks
+nba,OKC,#007AC1,#EF3B24,Oklahoma City Thunder
+nba,ORL,#0077C0,#C4CED4,Orlando Magic
+nba,PHI,#006BB6,#ED174C,Philadelphia 76ers
+nba,PHX,#1D1160,#E56020,Phoenix Suns
+nba,POR,#E03A3E,#000000,Portland Trail Blazers
+nba,SAC,#5A2D81,#63727A,Sacramento Kings
+nba,SAS,#C4CED4,#000000,San Antonio Spurs
+nba,TOR,#CE1141,#000000,Toronto Raptors
+nba,UTA,#002B5C,#00471B,Utah Jazz
+nba,WAS,#002B5C,#E31837,Washington Wizards
+nba,AND,#FA002C,#001689,Anderson Packers
+nba,BLB,#CD1937,#193781,Baltimore Bullets
+nba,CHS,#E03A3E,#003DA6,Chicago Stags
+nba,DNN,#00008B,#D8D3C5,Denver Nuggets (1949)
+nba,INO,#0D2240,#FF0000,Indianapolis Olympians
+nba,SHE,#C41E3A,#E6D9D0,Sheboygan Red Skins
+nba,STB,#D3232A,#D8D3C5,St. Louis Bombers
+nba,WAT,#FFC72C,#000000,Waterloo Hawks
+nba,WSC,#008348,#D8D3C5,Washington Capitols
+baseball,LAA,#BA0021,#003263,Los Angeles Angels
+baseball,AZ,#A71930,#000000,Arizona Diamondbacks
+baseball,BAL,#DF4601,#000000,Baltimore Orioles
+baseball,BOS,#BD3039,#0D2B56,Boston Red Sox
+baseball,CHC,#0E3386,#CC3433,Chicago Cubs
+baseball,CIN,#C6011F,#000000,Cincinnati Reds
+baseball,CLE,#00385D,#E50022,Cleveland Guardians
+baseball,COL,#33006F,#000000,Colorado Rockies
+baseball,DET,#0C2340,#FA4616,Detroit Tigers
+baseball,HOU,#002D62,#EB6E1F,Houston Astros
+baseball,KC,#004687,#BD9B60,Kansas City Royals
+baseball,LAD,#005A9C,#EF3E42,Los Angeles Dodgers
+baseball,WSH,#AB0003,#14225A,Washington Nationals
+baseball,NYM,#002D72,#FF5910,New York Mets
+baseball,ATH,#003831,#EFB21E,Athletics
+baseball,PIT,#27251F,#FDB827,Pittsburgh Pirates
+baseball,SD,#2F241D,#FFC425,San Diego Padres
+baseball,SEA,#0C2C56,#005C5C,Seattle Mariners
+baseball,SF,#FD5A1E,#000000,San Francisco Giants
+baseball,STL,#C41E3A,#0C2340,St. Louis Cardinals
+baseball,TB,#092C5C,#8FBCE6,Tampa Bay Rays
+baseball,TEX,#003278,#C0111F,Texas Rangers
+baseball,TOR,#134A8E,#E8291C,Toronto Blue Jays
+baseball,MIN,#002B5C,#D31145,Minnesota Twins
+baseball,PHI,#E81828,#002D72,Philadelphia Phillies
+baseball,ATL,#13274F,#CE1141,Atlanta Braves
+baseball,CWS,#27251F,#C4CED4,Chicago White Sox
+baseball,MIA,#00A3E0,#EF3340,Miami Marlins
+baseball,NYY,#0C2340,#C4CED3,New York Yankees
+baseball,MIL,#0A2351,#B6922E,Milwaukee Brewers

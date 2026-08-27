@@ -18,7 +18,40 @@ final class RemotePuzzleRepository: PuzzleRepository {
     /// `content` jsonb stores the puzzle in the same camelCase shape the bundled JSON uses.
     private let contentDecoder = JSONDecoder()
 
+    /// In-flight request coalescing for the three Grid reads that now have more than one caller
+    /// (a launch warm, the setup screen's warm, and the view's own load). Without it those sites
+    /// race: measured on device, the board was fetched twice on a single cold open, and the two
+    /// expensive ones would double too — the name index is 183 KB and the membership RPC is
+    /// 591 KB / ~10 s for NFL, so a player pressing "New random grid" while its warm is still in
+    /// flight would have started a second one.
+    ///
+    /// `PlayerSeasonCatalog` solves the same problem with a task map, and its doc comment states
+    /// the property this preserves: "pressing Start while this is still loading never doubles
+    /// traffic." Lock-guarded rather than actor-isolated because this class is reached from
+    /// several contexts and `TeamIdentityIndex` sets the precedent for a plain locked map here.
+    private let inFlightLock = NSLock()
+    private var inFlight: [String: Any] = [:]
+
     init(client: SupabaseClient) { self.client = client }
+
+    /// Runs `work` under `key`, or joins the run already under way for it. The result is not
+    /// cached beyond the call — each of these methods keeps its own disk cache, and this only
+    /// collapses concurrent duplicates.
+    private func coalesced<T>(_ key: String, _ work: @escaping @Sendable () async -> T?) async -> T? {
+        inFlightLock.lock()
+        if let existing = inFlight[key] as? Task<T?, Never> {
+            inFlightLock.unlock()
+            return await existing.value
+        }
+        let task = Task<T?, Never> { await work() }
+        inFlight[key] = task
+        inFlightLock.unlock()
+        let value = await task.value
+        inFlightLock.lock()
+        inFlight.removeValue(forKey: key)
+        inFlightLock.unlock()
+        return value
+    }
 
     var availableSports: [Sport] { fallback.availableSports }
 
@@ -87,11 +120,78 @@ final class RemotePuzzleRepository: PuzzleRepository {
 
     /// Grid has no bundled offline fallback (see protocol doc comment) — nil when the table
     /// has nothing for `filter`'s sport today, rather than falling through to anything local.
+    ///
+    /// Asks for the ONE row dated to the requested day before considering the pool. `fetch`
+    /// pulls a sport's entire pool so `pick` can index into it, which is affordable for the
+    /// other three formats (whole `keep4` table: 344 KB) and ruinous for this one: grid boards
+    /// carry every valid answer name per cell, so the NFL pool alone is 1.94 MB across 199
+    /// boards and grew every day the mint ran. That is the "opening The Grid takes forever"
+    /// report — a ~10 KB board behind a two-megabyte download, paid again on the first open of
+    /// each new day (the cache only counts while it holds today's row). This is the same
+    /// reasoning `randomGridPuzzle` was already written with; the daily path just never got it.
+    ///
+    /// The pool path stays as the fallback for a day with no dated row, where the modulo pick in
+    /// `pick` is the only way to answer at all — and it keeps its own stale-cache offline
+    /// behaviour, so nothing regresses when the network is gone.
     func gridPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<GridPuzzle>? {
+        let day = PuzzleStore.localDayString(date)
+        if let sport = filter.sport, let board = await gridBoard(sport: sport, day: day) {
+            // A row that matched `active_date` IS the canonical board for that day — the same
+            // thing `pick`'s first branch concludes, reached without the pool.
+            return DailyPick(content: board, isCanonicalToday: true)
+        }
         guard let rows = await fetch(format: "grid", filter: filter, as: GridPuzzle.self), !rows.isEmpty else {
             return nil
         }
         return pick(rows, date: date)
+    }
+
+    /// One grid board by (sport, day), disk-cached per sport.
+    ///
+    /// The cache holds whichever day was last fetched for that sport and counts as a hit only
+    /// when it holds the day being asked for — the same self-invalidating rule `fetch` uses,
+    /// which is what makes a local-midnight rollover pick up the new board without a TTL. A
+    /// challenge for some past day therefore evicts today's cached board; that costs one ~10 KB
+    /// refetch on the next daily open, which is the whole point of this path being small.
+    private func gridBoard(sport: Sport, day: String) async -> GridPuzzle? {
+        await coalesced("board-\(sport.rawValue)-\(day)") { await self.fetchGridBoard(sport: sport, day: day) }
+    }
+
+    private func fetchGridBoard(sport: Sport, day: String) async -> GridPuzzle? {
+        let key = "puzzles-grid-day-\(sport.rawValue)"
+        if let entry = await DiskCache.read([PuzzleContentRow<GridPuzzle>].self, key: key),
+           let hit = entry.value.first(where: { $0.activeDate == day }) {
+            #if DEBUG
+            print("[puzzles] \(Date()) \(key): disk hit (\(day))")
+            #endif
+            return hit.content
+        }
+        let query = [URLQueryItem(name: "select", value: "content,active_date"),
+                     URLQueryItem(name: "format", value: "eq.grid"),
+                     URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)"),
+                     URLQueryItem(name: "active_date", value: "eq.\(day)"),
+                     URLQueryItem(name: "limit", value: "1")]
+        guard let rows: [PuzzleContentRow<GridPuzzle>] = try? await client.select(
+                "puzzles", query: query, decoder: contentDecoder),
+              let row = rows.first else {
+            // Nothing dated for that day, or the network is down. Either way the caller's pool
+            // path is the right next move — it answers with a modulo pick, and offline it still
+            // has the stale pool cache to serve from.
+            return nil
+        }
+        #if DEBUG
+        print("[puzzles] \(Date()) \(key): network fetch (\(day))")
+        #endif
+        await DiskCache.write(rows, key: key)
+        return row.content
+    }
+
+    /// Fire-and-forget warm of everything opening The Grid blocks on: today's board (the fetch
+    /// above) and the typeahead's name index. Called at launch rather than when the player taps
+    /// the tile, so the board is already on disk by the time they get to it.
+    func prefetchGrid(for sport: Sport) {
+        Task { _ = await gridPuzzle(for: SportFilter(rawValue: sport.rawValue) ?? .nfl, date: Date()) }
+        Task { _ = await playerNameIndex(for: sport) }
     }
 
     /// Deliberately the `random_grid_puzzle` RPC rather than reusing `fetch` + `randomElement()`.
@@ -130,6 +230,10 @@ final class RemotePuzzleRepository: PuzzleRepository {
     /// gains players you expect users to be able to type.**
     private struct NameIndexArgs: Encodable { let p_sport: String }
     func playerNameIndex(for sport: Sport) async -> [String] {
+        await coalesced("names-\(sport.rawValue)") { await self.fetchPlayerNameIndex(for: sport) } ?? []
+    }
+
+    private func fetchPlayerNameIndex(for sport: Sport) async -> [String] {
         let key = "grid-names-v2-\(sport.rawValue)"
         if let entry = await DiskCache.read([String].self, key: key),
            Date().timeIntervalSince(entry.writtenAt) < 7 * 24 * 3600 {
@@ -166,6 +270,10 @@ final class RemotePuzzleRepository: PuzzleRepository {
         let p_version = GridMembershipIndex.currentVersion
     }
     func gridMembershipIndex(for sport: Sport) async -> GridMembershipIndex? {
+        await coalesced("memberships-\(sport.rawValue)") { await self.fetchMembershipIndex(for: sport) }
+    }
+
+    private func fetchMembershipIndex(for sport: Sport) async -> GridMembershipIndex? {
         // `-v2-` for the same reason as `playerNameIndex`'s key, and it must be bumped in step with
         // it: this payload decides which players on-device generation can put ON a board, so a
         // stale copy means locally-generated practice boards keep drawing from the old catalog even

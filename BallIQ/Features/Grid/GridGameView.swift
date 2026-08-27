@@ -55,6 +55,12 @@ struct GridGameView: View {
     /// The sport's membership relation, once fetched — the input `GridLocalGenerator` builds
     /// practice boards from. Held for the whole session so a re-roll is instant and offline.
     @State private var memberships: GridMembershipIndex?
+    /// Which sport `memberships` was fetched for. Without it the index is reused across a sport
+    /// change — reachable today: finish or bail out of a practice run, reopen setup, pick another
+    /// sport, re-roll, and the generator builds from the *previous* sport's relation while the
+    /// header reads the new one. The index is the board's whole content, so that isn't a stale
+    /// cache, it's the wrong game.
+    @State private var membershipsSport: Sport?
     /// Combo keys already played this session. Feeds the generator's rejection set so "new random
     /// grid" can't hand back the board just finished — the client-side twin of the `grid_history`
     /// trailing window the server mint uses.
@@ -148,6 +154,14 @@ struct GridGameView: View {
             // Screenshot flows target the board/result — skip the setup screen, unless the
             // setup screen is itself the thing being captured.
             if DebugLaunch.autoOpenGrid && !DebugLaunch.holdGridSetup { await load() }
+            else if showingSetup { warmSetup(for: sport) }
+        }
+        // Home warms the last-played sport at launch, but the setup screen is where the player
+        // may pick a different one — and that is still before they press Start, so the fetch has
+        // somewhere to hide. Only while the setup screen is up: once a board is loaded, a sport
+        // change can only come from re-opening setup.
+        .onChange(of: sport) { _, newValue in
+            if showingSetup { warmSetup(for: newValue) }
         }
         .sheet(isPresented: Binding(get: { activeCell != nil }, set: { if !$0 { activeCell = nil } })) {
             if let activeCell, let puzzle {
@@ -160,6 +174,27 @@ struct GridGameView: View {
                 )
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
+            }
+        }
+    }
+
+    /// Warm both of the setup screen's buttons while the player is still choosing a sport.
+    ///
+    /// "Open the grid" needs today's board (cheap since the daily fetch stopped pulling the pool)
+    /// and the typeahead index; "New random grid" needs the membership relation, which is the
+    /// bigger payload (93 KB NFL … 406 KB soccer) and is otherwise fetched *on the tap*. Both are
+    /// disk-cached — the board for the day, the index for a week — so this is usually a no-op.
+    /// Not done at launch, unlike `prefetchGrid`: standing on the setup screen is intent, a cold
+    /// launch is not, and the membership payload is too big to spend on a maybe.
+    private func warmSetup(for sport: Sport) {
+        container.puzzles.prefetchGrid(for: sport)
+        Task {
+            let index = await container.puzzles.gridMembershipIndex(for: sport)
+            // Only adopt it if the player hasn't moved on to another sport meanwhile — the same
+            // reason `membershipsSport` exists.
+            if self.sport == sport {
+                memberships = index
+                membershipsSport = sport
             }
         }
     }
@@ -225,7 +260,10 @@ struct GridGameView: View {
     /// generators that could drift; keeping the local one out of ranked play is what makes that
     /// drift a cosmetic risk rather than a competitive-integrity one.
     private func practiceBoard(filter: SportFilter) async -> GridPuzzle? {
-        if memberships == nil { memberships = await container.puzzles.gridMembershipIndex(for: sport) }
+        if memberships == nil || membershipsSport != sport {
+            memberships = await container.puzzles.gridMembershipIndex(for: sport)
+            membershipsSport = sport
+        }
         if let memberships {
             let generator = GridLocalGenerator(index: memberships)
             // Genuinely random per re-roll (the clock is in the seed), not a deterministic

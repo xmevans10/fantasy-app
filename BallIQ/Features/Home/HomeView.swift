@@ -160,6 +160,20 @@ struct HomeView: View {
                     if showPushPrimer { pushPrimerCard.heroReveal(1) }
                     else if let moment = inlineMoment { momentCard(moment).heroReveal(1) }
 
+                    // Formats first (2026-08-27): the grid is the page's actual menu — every
+                    // way to play, arcade included — and it sat below the rank widget and the
+                    // archive row, three scrolls down. The dailies below it are the day's
+                    // *specific* boards, which read better as "and here's today's" than as the
+                    // only thing above the fold.
+                    section("Game formats") {
+                        LazyVGrid(columns: gridColumns, spacing: 12) {
+                            ForEach(visibleFormats) { format in
+                                FormatGridItem(format: format) { launch(format) }
+                            }
+                        }
+                    }
+                    .heroReveal(1)
+
                     section("Today's daily games") {
                         VStack(spacing: 14) {
                             if allDailiesComplete {
@@ -185,7 +199,7 @@ struct HomeView: View {
                             .opacity(allDailiesComplete ? 0.6 : 1)
                         }
                     }
-                    .heroReveal(1)
+                    .heroReveal(2)
 
                     // Directly beneath the daily cards that feed it — the rank used to sit at
                     // the very bottom of the page, disconnected from the ranked games above
@@ -201,7 +215,7 @@ struct HomeView: View {
                             RankWidget(sport: rankSport, rating: container.rating(for: rankSport))
                         }
                     }
-                    .heroReveal(2)
+                    .heroReveal(3)
 
                     // Pro is held back for the first three games — see `showsProSurfaces`.
                     if showsProSurfaces {
@@ -210,17 +224,9 @@ struct HomeView: View {
                             else { paywallTrigger = .archive; showPaywall = true }
                         } label: { browseRow }
                             .buttonStyle(PrimePressStyle())
-                            .heroReveal(3)
+                            .heroReveal(4)
                     }
 
-                    section("Game formats") {
-                        LazyVGrid(columns: gridColumns, spacing: 12) {
-                            ForEach(visibleFormats) { format in
-                                FormatGridItem(format: format) { launch(format) }
-                            }
-                        }
-                    }
-                    .heroReveal(4)
                 }
                 .padding(16)
             }
@@ -514,6 +520,17 @@ struct HomeView: View {
         // last-played sport) while they're still looking at Home — Draft & Spin and
         // Over/Under then open with a hot cache instead of a first-fetch spinner.
         container.catalog.prefetchDraftSpinSample(for: initial)
+        // Same idea for The Grid, which is the slowest format to open by a wide margin: its
+        // board and its typeahead index are both fetched, not bundled, and both are only
+        // started once the player has already tapped through the setup screen. Warming here
+        // means the tap lands on a disk hit.
+        //
+        // Gated on `canPlayGrid()` rather than fired for everyone: the Grid is paid, so warming
+        // it for a free player spends their bandwidth on a board the paywall will stop them
+        // opening. This is the launch path — it runs for every session, on cellular.
+        if container.entitlements.canPlayGrid() {
+            container.puzzles.prefetchGrid(for: initial)
+        }
         await loadDaily(for: initial)
         if DebugLaunch.autoOpenWhoAmI, activeWhoAmI == nil {
             activeWhoAmI = whoAmIBySport[initial]?.content

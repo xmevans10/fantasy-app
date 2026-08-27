@@ -43,6 +43,8 @@ struct Keep4GameView: View {
     @State private var showReportSent = false
     @State private var showScoringInfo = false
     @State private var showPaywall = false
+    /// Flipped once the `teams` rows land — see the `.task` in `body`.
+    @State private var identitiesWarm = false
 
     private let pileLimit = 4
 
@@ -99,6 +101,16 @@ struct Keep4GameView: View {
             if DebugLaunch.autoSubmitResult { autoFillForScreenshot() }
             if DebugLaunch.autoOpenScoringInfo { showScoringInfo = true }
         }
+        // The card renders the franchise's real name and its data-driven crest off
+        // `TeamIdentityIndex`, which is read synchronously and warmed by somebody else — and on
+        // the daily path nobody did (only the setup screens and Grid call `warmIdentities`), so
+        // the name resolved to nil every time. Awaiting the fetch here and flipping state
+        // re-renders the board once the rows arrive rather than leaving the card permanently on
+        // its abbreviation-only fallback.
+        .task {
+            _ = await container.catalog.teamIdentities(for: puzzle.sport)
+            identitiesWarm = true
+        }
         .reportReasonDialog(isPresented: $showReportDialog) { reason in report(reason: reason) }
         .alert("Report sent", isPresented: $showReportSent) {
             Button("OK", role: .cancel) {}
@@ -137,7 +149,10 @@ struct Keep4GameView: View {
                 DuelStatusBar(session: duel, playerScore: placement.count)
             }
             header
-            Spacer(minLength: 0)
+            // The card takes the whole canvas between header and footer rather than sitting
+            // at its intrinsic height between two Spacers, which left the deck — the thing the
+            // whole screen is about — occupying roughly a quarter of it with dead background
+            // above and below (user, 2026-08-27: "too much white space").
             if let player = currentPlayer {
                 ZStack {
                     deckStack
@@ -146,40 +161,61 @@ struct Keep4GameView: View {
                                   assignment: nil,
                                   revealCorrect: nil,
                                   hideStats: mode == .hard,
-                                  disabledPile: forcedDisabledPile) { pile in
+                                  disabledPile: forcedDisabledPile,
+                                  fillsHeight: true,
+                                  // Passed in rather than read inside the card, so the value is
+                                  // recomputed by *this* view when `identitiesWarm` flips — a
+                                  // card reading the index itself has nothing to tell SwiftUI
+                                  // that the answer changed.
+                                  teamFullName: teamFullName(for: player)) { pile in
                         decide(player: player, pile: pile)
                     }
-                    .fixedSize(horizontal: false, vertical: true)
                     .id(player.id)
                     .transition(.asymmetric(
                         insertion: .opacity.combined(with: .offset(y: 14)),
                         removal: .opacity))
                 }
+                // Capped, then centered in whatever is left. Without the ceiling an iPad's
+                // ~1200pt canvas stretched the photo band into a flat field of team color
+                // taller than the rest of the card put together.
+                .frame(maxWidth: 520, maxHeight: 600)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.horizontal, 16)
+                .padding(.top, 20)
+                .padding(.bottom, 12)
             }
-            Spacer(minLength: 0)
             footer
         }
         .background(Color.appBackground)
     }
 
-    /// Hint of the remaining deck behind the current card.
+    /// The franchise's real name for a card, once `identitiesWarm` says the `teams` rows are in.
+    /// Reading `identitiesWarm` here is what ties the lookup to the fetch: the index itself is a
+    /// plain locked dictionary with nothing observable about it.
+    private func teamFullName(for player: PlayerSeason) -> String? {
+        guard identitiesWarm, !player.teamAbbr.isEmpty else { return nil }
+        return container.catalog.identity(sport: puzzle.sport, abbr: player.teamAbbr)?.fullName
+    }
+
+    /// Hint of the remaining deck behind the current card. Sized off the card's own frame (not
+    /// the old fixed 120/130pt heights, which were only ever right for a small card) so the
+    /// peeked edges stay parallel to it at any canvas height.
     private var deckStack: some View {
         let remaining = order.count - index - 1
         return ZStack {
-            if remaining >= 2 {
-                RoundedRectangle(cornerRadius: Radius.card)
-                    .fill(Color.surfaceMuted)
-                    .overlay(RoundedRectangle(cornerRadius: Radius.card).strokeBorder(Color.borderStrong, lineWidth: 1))
-                    .frame(height: 120).offset(y: 18).scaleEffect(0.92)
-            }
-            if remaining >= 1 {
-                RoundedRectangle(cornerRadius: Radius.card)
-                    .fill(Color.surface1)
-                    .overlay(RoundedRectangle(cornerRadius: Radius.card).strokeBorder(Color.borderStrong, lineWidth: 1))
-                    .frame(height: 130).offset(y: 9).scaleEffect(0.96)
-            }
+            if remaining >= 2 { deckPeek(fill: .surfaceMuted, scale: 0.92, drop: 38) }
+            if remaining >= 1 { deckPeek(fill: .surface1, scale: 0.96, drop: 22) }
         }
+    }
+
+    private func deckPeek(fill: Color, scale: CGFloat, drop: CGFloat) -> some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .fill(fill)
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.borderStrong, lineWidth: 2))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .scaleEffect(scale)
+            .offset(y: drop)
     }
 
     private var header: some View {

@@ -725,15 +725,15 @@ def load_nfl_bio_by_name() -> dict[str, dict[str, str]]:
 
 # ── Franchise names ───────────────────────────────────────────────────────────
 #
-# The live `teams` table only carries `full_name` for soccer (222/222); every US row is blank
-# (0/101), so there is no abbreviation → franchise map in the repo at all — the app renders
-# bare abbreviations everywhere and the curated entries' "Falcons"/"Packers" were hand-typed.
-# A generated clue reading "Started out with the NYG" is not a clue, so the map lives here.
+# A generated clue reading "Started out with the NYG" is not a clue, so this module needs an
+# abbreviation → franchise map.
 #
-# Kept local to this module rather than backfilling `data/us_team_colors.csv`'s (empty)
-# `full_name` column: that file feeds the live `teams` table and `TeamPicker`'s search and row
-# titles, so filling it would change app UI as a side effect of a clue-engine change. Worth
-# doing as its own piece of work.
+# `data/us_team_colors.csv`'s `full_name` column was backfilled as its own piece of work on
+# 2026-08-27 (the K4C4 card now prints the franchise name), so the live `teams` table does
+# carry US names — but it carries the CURRENT franchise name keyed by the CURRENT code, which
+# is not what a clue needs: this map covers era codes the table has no row for at all (OAK,
+# PHO, SD, RAM) and deliberately omits codes a fan would read differently by era. It stays
+# local for that reason, not because the column is empty any more.
 #
 # Only the abbreviations the catalog actually uses are listed, and **only where the code maps
 # to exactly one franchise**. Codes that a fan would read differently depending on era are

@@ -56,7 +56,11 @@ struct TeamIdentity: Equatable, Identifiable {
         sport = row.sport
         abbr = row.teamAbbr
         league = row.league
-        fullName = row.fullName
+        // Empty is absent. The column is NOT NULL-ish in practice — the ingest writes "" for a
+        // team it has no name for — and every consumer branches on `fullName == nil` to decide
+        // whether to fall back to the abbreviation. Passing "" through meant `TeamPicker`
+        // rendered a blank title with the code demoted to subtitle for all 101 US teams.
+        fullName = (row.fullName?.trimmingCharacters(in: .whitespaces)).flatMap { $0.isEmpty ? nil : $0 }
         logoURL = row.logoUrl.flatMap(URL.init(string:))
         primary = row.primaryColor.flatMap { Color(hexString: $0) }
         secondary = row.secondaryColor.flatMap { Color(hexString: $0) }

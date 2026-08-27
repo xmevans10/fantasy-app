@@ -39,6 +39,9 @@ protocol PuzzleRepository {
     /// **own** practice boards (`GridLocalGenerator`) instead of re-serving the small minted pool.
     /// Nil when unavailable — practice then falls back to `randomGridPuzzle`.
     func gridMembershipIndex(for sport: Sport) async -> GridMembershipIndex?
+    /// Warm today's Grid board and the typeahead index for `sport` ahead of the player opening
+    /// the format. Fire-and-forget: callers get no result and must not depend on completion.
+    func prefetchGrid(for sport: Sport)
     var availableSports: [Sport] { get }
 }
 
@@ -51,6 +54,9 @@ extension PuzzleRepository {
     /// Default: no pool. Grid content is server-only (see `gridPuzzle`), so every local/
     /// bundled repo correctly has nothing to draw a random board from.
     func randomGridPuzzle(for filter: SportFilter, excludingDate: String?) async -> GridPuzzle? { nil }
+    /// Default: nothing to warm, for the same reason — a local/bundled repo has no Grid content
+    /// and no network to fetch it over.
+    func prefetchGrid(for sport: Sport) {}
 }
 
 /// Loads bundled JSON; resolves the daily puzzle deterministically by the local calendar day.
