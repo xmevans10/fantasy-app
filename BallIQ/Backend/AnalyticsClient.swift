@@ -43,6 +43,12 @@ enum AnalyticsEvent: String {
     /// matters: cancellation is a pricing/intent signal, an error is a bug.
     case purchaseFailed        = "purchase_failed"
     case purchaseCompleted     = "purchase_completed"
+    /// A guest-era purchase was bound to a Supabase user server-side (`claim-entitlement`).
+    /// `reason` says what triggered it (sign_in / purchase / restore); `claimed` is the row
+    /// count, and a steady stream of `claimed=0` means the claim path is running but finding
+    /// nothing — a different problem from it never running.
+    case entitlementClaimed    = "entitlement_claimed"
+    case entitlementClaimFailed = "entitlement_claim_failed"
     // Viral loop. `share_tapped` shipped alone and unqualified, which made it unanswerable:
     // 6 taps, ever, with no way to tell which format produced them, what artifact went out, or
     // whether a single one led anywhere. These make it a loop you can compute a k-factor from:

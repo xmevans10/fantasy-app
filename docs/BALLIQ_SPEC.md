@@ -807,6 +807,11 @@ been silently carrying stale data forward). This also **lifts the Grid v2 conten
   the webhook is the primary, standard mechanism and is fully implemented; the companion path
   would mostly matter for closing a narrow race-condition window and is a reasonable fast-follow,
   not a gap in the core design.
+  **Superseded 2026-08-26** — the companion path was built (`claim-entitlement`, see the shipped
+  entry below), and the window it closes turned out not to be narrow: it is every purchase made
+  while signed out, which was the majority of them, and the webhook alone could never attribute
+  those *at any later point*. Read the "would mostly matter for a narrow race" judgement as
+  wrong rather than merely superseded.
 - **Verified live:** `POST /functions/v1/app-store-notifications` returns `500 {"error":"not
   configured"}` today (correct — `APPLE_ROOT_CA_PEM` isn't set yet per hand-off H3), confirming
   the function is deployed and reachable without crashing.
@@ -828,9 +833,24 @@ been silently carrying stale data forward). This also **lifts the Grid v2 conten
   score, mirroring `LocalProgressRepository`'s shape.
 - `BallIQ/Features/OverUnder/`: `OverUnderGameView` (swipe *and* tap Over/Under, mirroring
   Keep4's dual-input a11y pattern; live lives/score/combo header) + `OverUnderResultView`
-  (hero score card, `RewardsRow`, and — when not Pro — an "unlimited lives" paywall upsell
+  (hero score card, `RewardsRow`, and — when not Pro — a "skip the wait" paywall upsell
   touchpoint). Wired into `GameFormat.all` (`isPlayable: true` now) and `HomeView`'s launch
   dispatch; `-screenshotOverUnder`/`-screenshotOverUnderResult` debug flags added.
+- **Revised 2026-08-26 — Pro buys the wait, not the stakes.** Pro/admin used to play with
+  *unlimited lives*, i.e. a run that could not end; the user's call was that this "makes it
+  actually feel more boring — like there's nothing on the line". **Three misses now end an
+  Over/Under run for everyone**, and what Pro buys is that every run opens on a full bank
+  instead of queueing behind the free tier's 1-life-per-hour regen (`Entitlements
+  .hasUnlimitedOverUnderLives` → `.hasUnlimitedOverUnderRuns`; Pro's losses are deliberately
+  never written to the stored bank, so a lapsed subscription inherits a full one rather than a
+  drained one). The header renders real hearts for Pro now, not an infinity glyph. This also
+  closed a free-tier dead end that predated the change: opening the format on an empty bank
+  used to deal one board and end the "run" on that single decision, win or lose — an empty bank
+  now shows `OutOfLivesGate` (hearts, a live countdown to the next life off `LivesBank
+  .nextLifeAt()`, and the paywall route) in front of the setup screen instead of a doomed
+  session. Capture it with the new `-screenshotOverUnderEmpty` flag; the state is unreachable
+  from `simctl` otherwise, since a running app's `cfprefsd` rewrites the defaults plist over
+  any bank you inject from outside.
 - **Progression:** new `GameFormatKind.overUnder` case. First Over/Under session of a given day
   is ranked (via the existing `hasCompletedToday(puzzleID:)` check against a synthesized daily
   id); replays that day are XP-only — reuses the community `ranked: false` pattern rather than
@@ -1449,6 +1469,104 @@ compounding causes, all fixed together:
   change — it was already fully local-day after the 2026-07-17 fix.
   Timezone-hopping can preview adjacent days' boards — same exposure Wordle accepts;
   ranked plays are still one-per-(puzzle,day) locally so it's previewing, not farming.
+
+**Shipped 2026-08-26 (guest purchases become claimable — `public.entitlements` was empty while
+purchases were happening):** `appAccountToken` is the only link between an Apple transaction and
+a BallIQ account, it can only be set at purchase time from an already-signed-in session
+(`StoreService.purchase`), and Apple echoes back its absence on every later notification for the
+life of the subscription. So `app-store-notifications` was dropping the majority of purchases
+permanently, and the table sat at 0 rows. Production at the time of the fix: 25
+`purchase_attempted` (6 signed in), 2 `purchase_completed` (1 signed in), 254 `paywall_viewed`
+(21 signed in).
+- **The rejected fix — requiring sign-in before purchase.** It would have gated 92% of paywall
+  traffic to solve a problem the buyer does not experience (on-device entitlement works without
+  an account and restores on any device with the same Apple Account), and invited a Guideline
+  5.1.1(v) argument since none of the five things Pro unlocks is account-based. Recorded here
+  because it is the obvious-looking answer and will be proposed again.
+- `supabase/functions/claim-entitlement` (new, `verify_jwt: true`): the client posts the signed
+  JWS blobs it already holds (`Transaction.jwsRepresentation`); the function resolves the caller
+  via `sb.auth.getUser(jwt)`, re-verifies each blob against Apple's PKI with the *existing*
+  `verifyAppleSignedPayload`, and upserts. This is the "companion client-transaction verify
+  path" the 2026-07-07 scope note deferred as a fast-follow.
+- `_shared/entitlement_claims.ts` (new, pure, 19 Deno tests): `decideClaim` + `entitlementRow` +
+  `resolveNotificationOwner`, shared by the webhook and the claim function so the two writers
+  cannot derive `status`/`expires_at` differently. Three refusals close the replay hole (a
+  signed JWS proves the purchase is real, not that the presenter made it): `wrong-bundle` (any
+  other app's receipt verifies against the same Apple PKI), `other-account` (a transaction that
+  already names an owner), `already-claimed` (an anonymous transaction is claimable once; a
+  deleted account cascades the row away and frees it).
+- **Webhook renewal fallback** — `app-store-notifications` now resolves an absent
+  `appAccountToken` through whoever previously claimed that `original_transaction_id`. Without
+  it a claimed anonymous subscription would freeze at the `expires_at` the claim wrote and
+  silently age into "expired" while the user kept paying, because Apple never starts supplying
+  a token that was not set at purchase time.
+- `entitlements_one_owner_per_transaction` unique constraint on
+  `(original_transaction_id, product_id)` — applied live and mirrored into `schema.sql`. Turns
+  `decideClaim`'s read-then-write check into a guarantee; the function maps 23505 to a 409
+  refusal rather than a 500. Does not constrain a monthly→yearly upgrade (same original
+  transaction, different product).
+- Client: `SupabaseClient.functionRequest`/`invokeFunction` (sends the *user's* token, not the
+  anon key — the anon key resolves to no user and refuses every claim),
+  `StoreService.signedTransactions()`, and `RepositoryContainer.claimEntitlements(reason:)`
+  called on sign-in sync (before `pullEntitlements`, or the pull reads the table it is about to
+  populate), after a purchase, and after a restore.
+- **Wire format is snake_case** (`signed_transactions`). `JSONEncoder.supabase` uses
+  `.convertToSnakeCase`, so a `signedTransactions` field would have 400'd every single claim —
+  caught before shipping and pinned from the Swift side by
+  `EntitlementClaimTests.testClaimEntitlementBodyUsesTheWireNameTheFunctionReads`.
+- Paywall: a collapsed one-line sign-in nudge above the plans (guests only) and a post-purchase
+  ask that replaces the sheet once a guest actually buys. The rules live in
+  `PaywallSignInPrompt` rather than inside `body` — SwiftUI draws text into `CGDrawingView`s
+  with no accessibility labels materialised, so a hosted test genuinely cannot read the rendered
+  screen back. `canPurchase(isSignedIn:purchaseInFlight:)` takes `isSignedIn` and ignores it on
+  purpose: it is the one place a future gate would land, and the test asserts both values give
+  the same answer. `PaywallView.Stage` lets the gallery capture all three states without running
+  a purchase.
+- **Found by probing the deployed function, not by the unit tests:** a malformed x5c entry threw
+  a raw `@peculiar/x509` error rather than an `AppleSignedPayloadError`, so one junk blob
+  returned 500 and would have failed a batch containing genuine transactions. Fixed at the
+  source (parse failures are verification failures) with 3 new Deno tests, plus catch-all
+  defence in the claim loop.
+- **Verified live** against the deployed function with a throwaway user (created and deleted):
+  no auth → 401; anon key as bearer → 401 `not authenticated`; wrong method → 405; camelCase
+  field → 400; 20 transactions → 400; junk blobs → `200 {"claimed":0,"unverified":n}` with no
+  rows written. Suites: 873 Swift tests (0 failures, 5 skipped, iOS 18.3) + 78 Deno tests.
+- **Still an external hand-off (unchanged):** the production App Store Server Notifications URL
+  in App Store Connect. Note the claim path no longer depends on it — the client can populate
+  `entitlements` without Apple's webhook ever firing — but refunds and cancellations still do.
+
+**Shipped 2026-08-26 (security — `profiles.is_admin` was self-grantable in production):** found
+while checking whether the entitlement work above had a parallel bypass, after a peer session
+quoted the `profiles` update policy. It did.
+- **The hole.** UPDATE on `public.profiles` was granted TABLE-WIDE to `anon`/`authenticated`; the
+  row policy is a blanket `for update using (auth.uid() = id) with check (auth.uid() = id)` with
+  no column restriction; there was no trigger. So any signed-in user could
+  `PATCH /rest/v1/profiles?id=eq.<own uid>` with `{"is_admin": true}` and pass every check.
+  Present from the day the column was added (M12) until this fix.
+- **Blast radius.** A paywall bypass — `Entitlements.isAdmin` short-circuits every gate
+  (`isPro || isAdmin`), so it routes around the whole subscription system — and, worse, a
+  moderation escalation: `public.is_admin()` gates reading every report, reading hidden puzzles,
+  and **updating/deleting other users' community puzzles**.
+- **Fix (applied live + mirrored into `schema.sql`):** `revoke update on public.profiles from
+  anon, authenticated;` then `grant update (id, username, avatar, primary_sport, favorite_teams)
+  on public.profiles to authenticated;`. The row policy is untouched — only *which columns* a
+  user may write changes.
+- **Structural, not procedural, on purpose.** A trigger asserting "you may not set is_admin"
+  would be a guard someone has to keep correct, and it fails *open* for every privilege column
+  added to this table later. An explicit column grant fails closed: a new column is unwritable
+  until someone grants it deliberately. This is the same principle `public.entitlements` already
+  had for free (no user-facing write policy at all) and is worth applying to any future table
+  holding a privilege or a grant — see the M29 unlockables note in §9.3.
+- **Verified live** with throwaway users (created and deleted): before — the privilege catalog
+  showed table-wide UPDATE covering `is_admin`; after — the same PATCH returns
+  `403 {"code":"42501","message":"permission denied for table profiles"}` and the flag stays
+  `false`, while both of the app's real writes still return 200 (`saveIdentity`'s insert path AND
+  its `ON CONFLICT DO UPDATE` path, plus `saveFavoriteTeams`). The single legitimate admin was
+  unaffected — reads are not restricted, and promotion is service-role SQL.
+- **Note on evidence:** the escalation itself was never executed (the agent's own safety
+  classifier blocked it, correctly). It was established from the privilege catalog and then
+  confirmed *negatively* after the fix — the 403 lands on the privilege check, which means the
+  row policy was passing, i.e. the only thing that had ever stood in the way was gone.
 
 ## 9. Roadmap — remaining milestones + product backlog (PM audit 2026-07-09)
 

@@ -129,4 +129,11 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(es("REMATCH"), "REMATCH")
         XCTAssertEqual(es("Rung %lld unlocks"), "Rung %lld unlocks")
     }
+
+    /// M28's clue ladder added a screen's worth of locked-slot copy at once; a whole feature's
+    /// keys going missing from the catalog is invisible in English and total in every other
+    /// locale.
+    func testClueLadderCopyIsLocalized() {
+        XCTAssertEqual(es("Locked"), "Bloqueada")
+    }
 }
