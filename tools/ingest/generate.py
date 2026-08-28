@@ -66,6 +66,11 @@ def _theme(key: str, title: str, spec: curation.PositionSpec,
     )
 
 
+def _grain_noun(spec: curation.PositionSpec) -> str:
+    """The word a card of this grain is counted in."""
+    return {"game": "games", "career": "careers"}.get(spec.grain, "seasons")
+
+
 def _key_prefix(cfg: curation.SportCuration) -> str:
     """NFL's generated keys predate the cross-sport registry and are recorded verbatim in
     `puzzle_history` signatures, so they keep their original `gen-{pos}-…` shape; every other
@@ -91,7 +96,7 @@ def team_slices(cfg: curation.SportCuration, seasons: list[RawSeason]) -> tuple[
         if s.sport == cfg.sport and s.team_abbr and not s.career and s.week is None)
     ranked = [team for team, _ in counts.most_common(cfg.team_slices)]
     plain = tuple(curation.Slice(key=slug(team), filters=(Filter("team", "eq", team),),
-                                 suffix=f" — {team}", axis="club")
+                                 suffix=f", {team}", axis="club")
                   for team in ranked)
     if not cfg.team_era_slices or not cfg.team_era_decades:
         return plain
@@ -128,8 +133,13 @@ def _candidates(cfg: curation.SportCuration | None = None,
 
 
 def _combo_title(prefix: str, q1: curation.Quirk, q2: curation.Quirk, label: str,
-                 suffix: str = "") -> str:
-    frag = f"{q1.adjective}, {q2.adjective} {label} seasons"
+                 suffix: str = "", noun: str = "seasons") -> str:
+    """`noun` is the grain's word. Single-quirk titles get theirs from `curation.game_quirks`,
+    which rewords the quirk itself, but a COMBO title is composed here from two adjectives and
+    never touches either quirk's title, so it needs telling separately. Without this a
+    game-grain board came out as "2024 Week 7: bruiser, undrafted player seasons" over eight
+    single games."""
+    frag = f"{q1.adjective}, {q2.adjective} {label} {noun}"
     if not prefix:
         frag = frag[0].upper() + frag[1:]
     return prefix + frag + suffix
@@ -155,7 +165,8 @@ def _pairwise_candidates(cfg: curation.SportCuration | None = None,
                 key = f"gen2-{pre}{spec.pos}-{sl.key}-{q1.key}-{q2.key}".lower()
                 if key in curation.DENYLIST:
                     continue
-                title = _combo_title(sl.prefix, q1, q2, spec.label, sl.suffix)
+                title = _combo_title(sl.prefix, q1, q2, spec.label, sl.suffix,
+                                     noun=_grain_noun(spec))
                 filters = sl.filters + _quirk_filters(q1, spec) + _quirk_filters(q2, spec)
                 out.append(_theme(key, title, spec, filters, sport=cfg.sport, quirks=(q1, q2)))
     return out
@@ -247,13 +258,53 @@ def all_niche_candidates(seasons: list[RawSeason]) -> list[Theme]:
 # How often each optional axis is included. Tuned so most boards carry some context (a bare
 # "20-20 club seasons" is the least interesting thing this can produce) without stacking so
 # many predicates that the pool empties and every roll fails.
-P_ERA = 0.55          # narrow to a decade
-P_CLUB = 0.30         # narrow to a franchise
-P_SCOPE = 0.30        # narrow to a league / nationality, where the sport has them
-P_SECOND_QUIRK = 0.45 # two quirks rather than one
+# Retuned 2026-08-28 against 38 real BallGame Pod "Keep 4, Cut 4" titles, which are the
+# closest public reference for this format. What that sample actually looks like:
+#   50%  position only, with NO qualifying hook at all ("NFL Cornerbacks")
+#   21%  a division or conference ("All-Time AFC East Seasons")
+#   100% carry either zero or ONE qualifier. Not one of the 38 stacks two.
+#    3%  reference a draft pick, once, in the whole sample.
+# The previous values did close to the opposite: a quirk every single time, two of them 45% of
+# the time, and no way to express a division at all. A season replay under the old numbers
+# produced a draft-themed board in 8 of 18 weeks.
+P_ERA = 0.40          # narrow to a decade or to "Active"
+P_CLUB = 0.16         # narrow to a single franchise
+P_DIVISION = 0.20     # narrow to a division or conference
+P_SCOPE = 0.22        # narrow to a league / nationality, where the sport has them
+P_NO_QUIRK = 0.45     # no hook at all: the bare position cohort, the reference's commonest shape
+P_SECOND_QUIRK = 0.12 # two quirks rather than one, now the exception it should always have been
 
-# Composition order, outermost first — see `roll_theme`.
-_AXIS_ORDER = ["era", "club", "scope"]
+# Composition order, outermost first — see `roll_theme`. `period` leads: a fresh-drop theme
+# reads "2026 Week 3: Undrafted WR games", never "Undrafted WR games, 2026 Week 3". The order
+# has to stay FIXED for the same reason era already did — folding two axes the other way
+# keys one identical puzzle two different ways, and `puzzle_history`'s theme cooldown then
+# stops recognising a theme it has already served.
+_AXIS_ORDER = ["period", "era", "division", "club", "scope"]
+
+
+def _weighted_quirk(usable: list[curation.Quirk], rng: random.Random) -> curation.Quirk:
+    """Draw a quirk by FAMILY share, then uniformly inside the family.
+
+    Two-stage because inventory share and output share diverge badly otherwise. Draft quirks
+    are 6 of NFL's 25, but at game grain most stat quirks fail viability (no one meets a
+    300-carry threshold in one game), so uniform sampling over the survivors handed draft 44%
+    of a replayed season. Weighting the FAMILY makes the target independent of how many quirks
+    happen to sit in it, so adding a fifth age quirk does not quietly steal share from stats.
+    """
+    families: dict[str, list[curation.Quirk]] = {}
+    for q in usable:
+        families.setdefault(q.group, []).append(q)
+    pinned = {g: w for g, w in curation.QUIRK_GROUP_SHARE.items() if g in families}
+    free = [g for g in families if g not in pinned]
+    remainder = max(0.0, 1.0 - sum(pinned.values()))
+    weights = dict(pinned)
+    for g in free:
+        weights[g] = remainder / len(free)
+    if not any(weights.values()):                    # every present family pinned at 0
+        weights = {g: 1.0 for g in families}
+    groups = sorted(weights)
+    group = rng.choices(groups, weights=[weights[g] for g in groups], k=1)[0]
+    return rng.choice(sorted(families[group], key=lambda q: q.key))
 
 
 class RolledSpec(typing.NamedTuple):
@@ -284,26 +335,38 @@ def roll_spec(cfg: curation.SportCuration, rng: random.Random,
     chosen: list[curation.Slice] = []
     eras = [s for s in cfg.slices if s.axis == "era" and s.filters]
     scopes = [s for s in cfg.slices if s.axis == "scope"]
+    divisions = [s for s in cfg.slices if s.axis == "division"]
     if eras and rng.random() < P_ERA:
         chosen.append(rng.choice(eras))
+    # One geography axis at most, and they are alternatives, not a chain: a division is a set
+    # of clubs, so ANDing it with a single club is either a no-op or an empty pool.
     # Plain franchises only. `team_slices` also returns pre-crossed era x franchise slices for
     # the enumerated path; taking one here could stack a second era on the one rolled above.
     plain_teams = [t for t in teams if t.axis == "club"]
-    if plain_teams and rng.random() < P_CLUB:
+    if divisions and rng.random() < P_DIVISION:
+        chosen.append(rng.choice(divisions))
+    elif plain_teams and rng.random() < P_CLUB:
         chosen.append(rng.choice(plain_teams))
     elif scopes and rng.random() < P_SCOPE:
         chosen.append(rng.choice(scopes))
 
     usable = [q for q in cfg.quirks if q.applies_to(spec_key)]
-    if not usable:
-        return None
-    quirks: list[curation.Quirk] = [rng.choice(usable)]
-    if len(usable) > 1 and rng.random() < P_SECOND_QUIRK:
-        second = rng.choice([q for q in usable if q.key != quirks[0].key])
-        # Same-axis pairs narrow one dimension twice instead of crossing two — the exact
-        # thing `redundant_pair` exists to skip in the enumerated path.
-        if not curation.redundant_pair(quirks[0], second):
-            quirks.append(second)
+    quirks: list[curation.Quirk] = []
+    # A bare cohort with no hook at all is the single commonest shape in the reference sample
+    # (half of it), and was previously unreachable: the roller always attached a quirk. It
+    # needs a slice to be interesting, though, or every roll of a given position collapses to
+    # one key ("gen-wr-all") and the space is one theme deep.
+    want_quirk = not (chosen and rng.random() < P_NO_QUIRK)
+    if usable and want_quirk:
+        quirks.append(_weighted_quirk(usable, rng))
+        if len(usable) > 1 and rng.random() < P_SECOND_QUIRK:
+            second = _weighted_quirk([q for q in usable if q.key != quirks[0].key], rng)
+            # Same-axis pairs narrow one dimension twice instead of crossing two — the exact
+            # thing `redundant_pair` exists to skip in the enumerated path.
+            if not curation.redundant_pair(quirks[0], second):
+                quirks.append(second)
+    if not quirks and not chosen:
+        return None                 # neither a hook nor a slice: that is just "all WRs"
 
     # Order the axes FIXED, era outermost. `team_slices` builds its era x franchise cross as
     # `combine(era, team)`, so folding the other way would key the identical theme "lad-2020"
@@ -327,14 +390,21 @@ def roll_theme(cfg: curation.SportCuration, rng: random.Random,
         sl = curation.combine(sl, part)
 
     pre = _key_prefix(cfg)
-    if len(quirks) == 1:
+    if not quirks:
+        # The bare cohort: "All-Time RB seasons", "AFC East WR seasons". Half the reference
+        # catalogue is this shape and the roller could not previously produce one at all.
+        key = f"gen-{pre}{spec.pos}-{sl.key}-plain".lower()
+        frag = f"{spec.label} {_grain_noun(spec)}"
+        title = sl.prefix + (frag if sl.prefix else frag[0].upper() + frag[1:]) + sl.suffix
+    elif len(quirks) == 1:
         q = quirks[0]
         key = f"gen-{pre}{spec.pos}-{sl.key}-{q.key}".lower()
         title = sl.prefix + q.title.format(pos=spec.label) + sl.suffix
     else:
         q1, q2 = quirks
         key = f"gen2-{pre}{spec.pos}-{sl.key}-{q1.key}-{q2.key}".lower()
-        title = _combo_title(sl.prefix, q1, q2, spec.label, sl.suffix)
+        title = _combo_title(sl.prefix, q1, q2, spec.label, sl.suffix,
+                             noun=_grain_noun(spec))
     if key in curation.DENYLIST:
         return None
 
@@ -342,6 +412,48 @@ def roll_theme(cfg: curation.SportCuration, rng: random.Random,
     for q in quirks:
         filters += _quirk_filters(q, spec)
     return _theme(key, title, spec, filters, sport=cfg.sport, quirks=tuple(quirks))
+
+
+def theme_family(key: str) -> str:
+    """Which quirk family a composed theme key belongs to. Read off the key's trailing quirk
+    fragment(s), so it works for rolled and enumerated themes alike."""
+    for family, keys in (("draft", curation._DRAFT_KEYS), ("size", curation._SIZE_KEYS),
+                         ("age", curation._AGE_KEYS)):
+        if any(f"-{k}" in key for k in keys):
+            return family
+    return "plain" if key.endswith("-plain") else "other"
+
+
+def _cap_families(themes: list[Theme], wanted: int) -> list[Theme]:
+    """Hold each quirk family to its `QUIRK_GROUP_SHARE` of the SURVIVING set.
+
+    Weighting the roll is not enough on its own, and the gap is not small. Rolls came out at
+    9.5% draft, but a replayed 2024 season still minted draft boards in 5 of 18 weeks, because
+    the viability gate is not family-neutral: at game grain most stat quirks cannot be met at
+    all (nobody takes 300 carries in one game) while a biographical predicate like "went
+    undrafted" is as true of a game as of a season. So draft survives at a far higher rate
+    than it is rolled at, and the share that matters is the share that reaches the picker.
+
+    A soft cap: the leftovers are appended after, so a sport that can only produce one family
+    still fills its quota rather than starving.
+    """
+    if not themes:
+        return themes
+    caps: dict[str, int] = {}
+    for family, share in curation.QUIRK_GROUP_SHARE.items():
+        caps[family] = max(1, round(share * wanted))
+    kept: list[Theme] = []
+    spare: list[Theme] = []
+    used: dict[str, int] = {}
+    for theme in themes:
+        family = theme_family(theme.key)
+        limit = caps.get(family)
+        if limit is not None and used.get(family, 0) >= limit:
+            spare.append(theme)
+            continue
+        used[family] = used.get(family, 0) + 1
+        kept.append(theme)
+    return (kept + spare)[:wanted]
 
 
 def roll_viable_themes(cfg: curation.SportCuration, seasons: list[RawSeason],
@@ -368,6 +480,7 @@ def roll_viable_themes(cfg: curation.SportCuration, seasons: list[RawSeason],
         seen.add(theme.key)
         if _is_viable(theme, seasons):
             found.append(theme)
+    found = _cap_families(found, wanted)
     # `label` is the registry KEY, not `cfg.sport` — baseball has two cohorts (hitters and
     # pitchers) under one sport, and logging both as "baseball" reads like a duplicate run.
     print(f"[roll] {label or cfg.sport}: {len(found)} viable from {rolled} rolls "

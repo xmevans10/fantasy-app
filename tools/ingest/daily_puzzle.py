@@ -32,7 +32,7 @@ import argparse
 import datetime as dt
 import random
 
-from . import assemble, curation, generate
+from . import assemble, curation, generate, shapes
 from . import main as ingest_main
 from .assemble import PuzzleRow
 from .baselines import compute_baselines
@@ -89,26 +89,87 @@ def build_candidates(seasons: list[RawSeason], baselines: BaselineTable,
     pairs: list[tuple[Theme, PuzzleRow]] = []
     themes: list[Theme] = []
     for cohort, cfg in curation.SPORTS.items():
+        if not cfg.daily:
+            # Fresh-drop-only cohorts (the game-grain ones). Rolling them here would double
+            # this job's candidate space as a silent side effect of shipping fresh drops —
+            # see `SportCuration.daily`.
+            continue
         if not any(s.sport == cfg.sport for s in seasons):
             continue          # nothing pulled for this sport this run
         themes += generate.roll_viable_themes(cfg, seasons, rng, ROLL_THEMES, ROLL_ATTEMPTS,
                                               label=cohort)
+    themes += _shape_themes(seasons, rng)
     for theme in [*themes, *KEEP4_THEMES]:
         rows = assemble.build_keep4_rows(theme, seasons, baselines, max_variants=SEARCH_VARIANTS)
         pairs += [(theme, row) for row in rows]
     return pairs
 
 
+# Which cohort each sport's shape boards are built from: (ladder spec, cross-positional spec
+# for the roster board, or None where the sport has no single scale spanning its positions --
+# baseball's hitters and pitchers cannot be ranked against each other, and soccer's attackers
+# and defenders are scored by different formulas).
+SHAPE_COHORTS: dict[str, tuple[str, str, str | None]] = {
+    "nfl":      ("nfl", "RB", "ANY"),
+    "nba":      ("nba", "ALL", "ALL"),
+    "baseball": ("baseball", "H", None),
+    "soccer":   ("soccer", "ATT", None),
+}
+
+
+def _shape_themes(seasons: list[RawSeason], rng: random.Random) -> list[Theme]:
+    """Career ladders, roster boards and franchise ladders for the sports that support them.
+
+    Without this the whole `shapes` module is dead code as far as production is concerned: the
+    mint rolls quirk cohorts and appends the curated list, and would never build one.
+    Club names come from the live `teams` table when it is reachable, so a board reads "The
+    2020 Kansas City Chiefs" rather than "The 2020 KC"; falling back to the abbreviation is
+    fine and must never fail a mint.
+    """
+    try:
+        from .upsert import fetch_teams
+        teams = fetch_teams()
+    except Exception as err:      # noqa: BLE001 -- offline/dry-run/no credentials
+        print(f"[shapes] team names unavailable, boards will use abbreviations: {err}")
+        teams = []
+    out: list[Theme] = []
+    for cohort_key, spec_key, cross_key in SHAPE_COHORTS.values():
+        cfg = curation.SPORTS[cohort_key]
+        if not any(s.sport == cfg.sport for s in seasons):
+            continue
+        spec = cfg.positions.get(spec_key)
+        if spec is None:
+            continue
+        cross = cfg.positions.get(cross_key) if cross_key else None
+        built = shapes.daily_shape_themes(seasons, rng, cfg.sport, spec, cross,
+                                          names=shapes.team_names(teams, cfg.sport))
+        print(f"[shapes] {cfg.sport}: {len(built)} shape theme(s)")
+        out += built
+    return out
+
+
 def pick_novel_puzzle(
     candidates: list[tuple[Theme, PuzzleRow]], served: set[str], today: dt.date,
     recent_themes: set[str] | frozenset[str] = frozenset(),
+    cooldown_key=lambda theme: theme.key,
+    tier_key=lambda theme: 0 if theme.key.startswith("gen") else 1,
 ) -> tuple[Theme, PuzzleRow, str] | None:
     """Shuffle deterministically per-day (varied day to day, reproducible within a day) while
     keeping niche candidates ranked ahead of curated ones, then return the first row whose
     signature was never served. `None` if the entire space is exhausted.
 
+    `tier_key` decides which candidates are preferred, lower first. The default ranks rolled
+    niches ahead of curated ones, which is what the nightly mint wants. The fresh-drop mint
+    flips it on a seeded coin so the plain "Top Performances" board wins its fair share of
+    drops: a period is already the hook, and a second one stacked on top is usually noise.
+
     `recent_themes` are theme *keys* this sport has served inside the cooldown window
-    (`THEME_COOLDOWN_DAYS`). They're sorted to the back rather than filtered out, so the
+    (`THEME_COOLDOWN_DAYS`), matched against `cooldown_key(theme)`. That defaults to the key
+    itself, which is what the nightly mint wants. The fresh-drop mint overrides it with
+    `fresh_drop.theme_kind`, because every period produces a different key and an unmodified
+    cooldown therefore never fires on a period board at all.
+
+    They're sorted to the back rather than filtered out, so the
     cooldown shapes the pick without ever being able to starve a slot: a sport whose whole
     space is inside the window still mints, it just mints last-resort. That soft form matters
     because signature-novelty is the hard guarantee here and must stay the binding one."""
@@ -116,8 +177,8 @@ def pick_novel_puzzle(
     order = list(range(len(candidates)))
     rng.shuffle(order)
     rank = {idx: r for r, idx in enumerate(order)}
-    is_curated = lambda i: 0 if candidates[i][0].key.startswith("gen") else 1
-    is_recent = lambda i: 1 if candidates[i][0].key in recent_themes else 0
+    is_curated = lambda i: tier_key(candidates[i][0])
+    is_recent = lambda i: 1 if cooldown_key(candidates[i][0]) in recent_themes else 0
     ranked = sorted(range(len(candidates)),
                     key=lambda i: (is_recent(i), is_curated(i), rank[i]))
     for i in ranked:

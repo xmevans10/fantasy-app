@@ -460,9 +460,53 @@ def fetch_player_seasons(sport: str, *, career: bool = False, page_size: int = 1
 
 
 def fetch_teams() -> list[dict]:
-    """Every `teams` row (sport, team_abbr, full_name, league). Small table -- 323 rows live
-    across four sports -- so this is a single request with no paging."""
+    """Every `teams` row (sport, team_abbr, full_name, league, colours). Small table -- 323
+    rows live across four sports -- so this is a single request with no paging.
+
+    `primary_color`/`secondary_color` joined the select for the kit-colour shape
+    (shapes.merge_team_colors). They were already populated in the table and simply never
+    requested, which is why generation had no colour to filter on."""
     base, key = _require_env()
-    endpoint = (f"{base}/rest/v1/teams?select=sport,team_abbr,full_name,league&order=sport,team_abbr")
+    endpoint = (f"{base}/rest/v1/teams?select=sport,team_abbr,full_name,league,"
+                "primary_color,secondary_color&order=sport,team_abbr")
     headers = {"apikey": key, "Authorization": f"Bearer {key}"}
     return _get_json(endpoint, headers, what="teams")
+
+
+def delete_daily_keep4(served_date: str, sport: str, *, keep_id: str) -> int:
+    """Remove the evergreen Keep4 daily for (`served_date`, `sport`), so a fresh-drop puzzle
+    can take its slot without violating `puzzle_history`'s unique (served_date, sport, format).
+
+    `keep_id` is the replacement's id and is EXCLUDED from the delete, so a re-run that has
+    already written its own row cannot delete it and leave the day empty. That makes the whole
+    operation idempotent: run it twice and the second run removes nothing.
+
+    Deletes from `puzzle_history` first and `puzzles` second. If the process dies between the
+    two, the surviving state is a puzzle row with no history row, which the next mint simply
+    overwrites; the other order would leave a history row claiming a puzzle that no longer
+    exists, which is the state the unique constraint exists to prevent.
+    """
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}",
+               "Prefer": "return=representation"}
+    removed = 0
+    for table, filters in (
+        ("puzzle_history",
+         f"served_date=eq.{served_date}&sport=eq.{sport}&format=eq.keep4"
+         f"&puzzle_id=neq.{keep_id}"),
+        ("puzzles",
+         f"active_date=eq.{served_date}&sport=eq.{sport}&format=eq.keep4&id=neq.{keep_id}"),
+    ):
+        endpoint = f"{base}/rest/v1/{table}?{filters}"
+        req = urllib.request.Request(endpoint, headers=headers, method="DELETE")
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                body = resp.read().decode("utf-8", "ignore")
+        except urllib.error.HTTPError as err:
+            detail = err.read().decode("utf-8", "ignore")
+            raise RuntimeError(f"{table} delete failed ({err.code}): {detail}") from err
+        gone = json.loads(body) if body.strip() else []
+        for row in gone:
+            print(f"[supersede] removed {table} {row.get('id') or row.get('puzzle_id')}")
+        removed += len(gone)
+    return removed

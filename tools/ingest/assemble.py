@@ -93,10 +93,14 @@ def grade_pool(theme: Theme, seasons: list[RawSeason],
             continue
         g = (grade_era(s.stats, theme.scale, s.sport, s.position, s.season_year, baselines)
              if use_era else grade(s.stats, theme.scale))
-        person = slug(s.name)
-        prev = graded.get(person)
+        # Keyed by PERSON normally (one row per human, their best), but by the row's own id
+        # when a theme is deliberately about one player's several seasons — see
+        # `Theme.dedupe_person`. Keying by person there would collapse a career ladder to a
+        # single card.
+        key = slug(s.name) if theme.dedupe_person else s.player_id
+        prev = graded.get(key)
         if prev is None or g > prev[1]:
-            graded[person] = (s, g)
+            graded[key] = (s, g)
     ranked = sorted(graded.values(), key=lambda t: (-t[1], slug(t[0].name)))
     return ranked[: theme.pool_cap]
 
@@ -120,28 +124,76 @@ def _same_person(a: str, b: str) -> bool:
     return " " in short and long.startswith(short + " ")
 
 
-def _windows(ranked: list[tuple[RawSeason, float]], max_variants: int) -> list[list[tuple[RawSeason, float]]]:
-    """Contiguous 8-season windows clustered in grade, with an unambiguous
-    top-4/bottom-4 split (grade[3] != grade[4]). Evenly sampled for variety."""
+Window = list[tuple[RawSeason, float]]
+
+
+def _is_valid_window(win: Window, *, allow_same_person: bool) -> bool:
+    """The two rules every window must satisfy regardless of how it was chosen: an
+    unambiguous keep/cut split, and no human appearing twice."""
+    if win[3][1] == win[4][1]:                # no clean keep/cut boundary
+        return False
+    if allow_same_person:
+        return True
+    names = [season.name for season, _ in win]
+    return not any(_same_person(names[x], names[y])
+                   for x in range(len(names)) for y in range(x + 1, len(names)))
+
+
+def _sample(items: list, count: int) -> list:
+    """`count` items spread evenly across `items`, endpoints included."""
+    if count <= 0:
+        return []
+    if len(items) <= count:
+        return list(items)
+    if count == 1:                        # a single pick is the first, not a div-by-zero
+        return [items[0]]
+    step = (len(items) - 1) / (count - 1)
+    return [items[round(k * step)] for k in range(count)]
+
+
+def _windows(ranked: Window, max_variants: int, *, mode: str = "close",
+             allow_same_person: bool = False) -> list[Window]:
+    """Eight-row windows out of a grade-ranked pool. See `Theme.window_mode` for the modes.
+
+    'close' is the original behaviour and stays the default: contiguous windows clustered in
+    grade, evenly sampled for variety. 'top' returns exactly one window (the actual best
+    eight) — a period theme called "Top Performances" that quietly served the 9th-to-16th
+    best would be lying in its title. 'spread' samples across the YEAR range so a franchise
+    or career ladder covers its history instead of one peak cluster.
+    """
     n = len(ranked)
     if n < KEEP_COUNT:
         return []
-    candidates = []
+
+    if mode == "top":
+        win = ranked[:KEEP_COUNT]
+        return [win] if _is_valid_window(win, allow_same_person=allow_same_person) else []
+
+    if mode == "spread":
+        # Walk the pool oldest-first, sample evenly across it, then re-rank the eight by
+        # grade so the keep/cut boundary is still a grade boundary. Several offsets are
+        # tried so one unlucky sample (a tie on the boundary) doesn't lose the theme.
+        by_year = sorted(ranked, key=lambda t: (t[0].season_year, slug(t[0].name)))
+        out: list[Window] = []
+        seen: set[tuple[str, ...]] = set()
+        for offset in range(min(len(by_year) - KEEP_COUNT + 1, max(max_variants, 1))):
+            win = sorted(_sample(by_year[offset:], KEEP_COUNT), key=lambda t: -t[1])
+            ids = tuple(sorted(s.player_id for s, _ in win))
+            if ids in seen:
+                continue
+            seen.add(ids)
+            if _is_valid_window(win, allow_same_person=allow_same_person):
+                out.append(win)
+        return out[:max_variants]
+
+    candidates: list[Window] = []
     for i in range(n - KEEP_COUNT + 1):
         win = ranked[i:i + KEEP_COUNT]
-        if win[3][1] == win[4][1]:           # no clean keep/cut boundary
-            continue
-        names = [season.name for season, _ in win]
-        if any(_same_person(names[x], names[y])
-               for x in range(len(names)) for y in range(x + 1, len(names))):
-            continue                          # the same human twice — see `_same_person`
-        candidates.append(win)
+        if _is_valid_window(win, allow_same_person=allow_same_person):
+            candidates.append(win)
     if not candidates:
         return []
-    if len(candidates) <= max_variants:
-        return candidates
-    step = (len(candidates) - 1) / (max_variants - 1) if max_variants > 1 else 0
-    return [candidates[round(k * step)] for k in range(max_variants)]
+    return _sample(candidates, max_variants) if len(candidates) > max_variants else candidates
 
 
 def build_keep4_rows(theme: Theme, seasons: list[RawSeason],
@@ -152,7 +204,9 @@ def build_keep4_rows(theme: Theme, seasons: list[RawSeason],
     than the one variant curated content ships with."""
     ranked = grade_pool(theme, seasons, baselines)
     rows: list[PuzzleRow] = []
-    for variant, window in enumerate(_windows(ranked, max_variants or theme.max_variants)):
+    windows = _windows(ranked, max_variants or theme.max_variants,
+                       mode=theme.window_mode, allow_same_person=not theme.dedupe_person)
+    for variant, window in enumerate(windows):
         # Store players in a stable, non-grade order so the JSON doesn't leak the answer.
         players = sorted(
             (_player_content(theme, s, g) for s, g in window),

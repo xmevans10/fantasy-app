@@ -1,0 +1,124 @@
+name: fresh-drop
+
+# One job per sport, each on its OWN cron, each failing independently. This is the workflow
+# that makes "every sport on its own schedule" real: weekly-refresh.yml deliberately chose a
+# single all-sport slot to avoid maintaining per-sport season gating, and this does not
+# reintroduce that gating anywhere. `periods.closed_period()` returns None out of season, and
+# every job exits 0 on None, so an out-of-season sport costs one cheap schedule fetch and
+# nothing else. There is no season calendar to keep up to date by hand.
+#
+# WHY THE DROP LANDS ON THE DAY AFTER THE RUN
+# The client keys a daily to the DEVICE-LOCAL date, and UTC+14 reaches tomorrow's midnight at
+# 10:00 UTC today. A job running Tuesday morning UTC therefore cannot claim Tuesday without
+# swapping the puzzle out from under everyone already in Tuesday. `fresh_drop.target_date`
+# defaults to tomorrow for exactly that reason, which makes the real NFL cadence "Monday night
+# closes the week, the board lands Wednesday local". `--same-day` exists if that trade is ever
+# worth making deliberately; it is not the default and should not become one casually.
+#
+# STAGGERED, NOT SYNCHRONISED
+# Five fresh boards landing at once followed by six evergreen days is a worse rhythm than
+# fresh content spread through the week, and notify-daily-drop already names the minted theme
+# in the push, so each drop day earns its own notification. Changing the cadence is a cron
+# edit here and nothing else.
+
+on:
+  schedule:
+    # NFL: Monday Night Football ends ~02:30 UTC Tue; nflverse posts the weekly file overnight.
+    - cron: "30 8 * * 2"      # Tue 08:30 UTC  -> board lands Wednesday local
+    # Soccer: Big-5 matchweeks close Sunday/Monday.
+    - cron: "35 8 * * 2"      # Tue 08:35 UTC
+    # NBA + MLB: rolling Mon-Sun window, closed Sunday night.
+    - cron: "30 8 * * 3"      # Wed 08:30 UTC  -> board lands Thursday local
+    # Tennis: tournaments finish Sunday.
+    - cron: "30 8 * * 1"      # Mon 08:30 UTC
+  workflow_dispatch:
+    inputs:
+      sport:
+        description: "Which sport to mint (blank = every wired sport)"
+        required: false
+        default: ""
+      date:
+        description: "Pretend today is this date, YYYY-MM-DD (replay/backfill)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Build and print without writing"
+        type: boolean
+        required: false
+        default: true
+
+jobs:
+  drop:
+    runs-on: ubuntu-latest
+    strategy:
+      # One sport must never take another down: a thin week, an exhausted candidate space or
+      # an upstream outage in one sport is that sport's problem alone.
+      fail-fast: false
+      matrix:
+        include:
+          - sport: nfl
+            cron: "30 8 * * 2"
+          - sport: soccer
+            cron: "35 8 * * 2"
+          - sport: nba
+            cron: "30 8 * * 3"
+          - sport: baseball
+            cron: "30 8 * * 3"
+          - sport: tennis
+            cron: "30 8 * * 1"
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+    steps:
+      # On a schedule trigger, run only the sport whose cron actually fired. On a manual
+      # dispatch, run the requested sport (or all of them when none is named).
+      - id: gate
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            if [ "${{ github.event.schedule }}" = "${{ matrix.cron }}" ]; then
+              echo "run=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "run=false" >> "$GITHUB_OUTPUT"
+            fi
+          elif [ -z "${{ github.event.inputs.sport }}" ] || \
+               [ "${{ github.event.inputs.sport }}" = "${{ matrix.sport }}" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@v4
+      - if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Same shared cache as the other jobs, so the season files this needs are usually warm.
+      - if: steps.gate.outputs.run == 'true'
+        uses: actions/cache@v4
+        with:
+          path: tools/ingest/.cache
+          key: ingest-cache-${{ github.run_id }}
+          restore-keys: |
+            ingest-cache-
+      - if: steps.gate.outputs.run == 'true'
+        run: pip install -r tools/ingest/requirements.txt
+
+      # NON-NEGOTIABLE, and the single most likely way this feature fails silently: the weekly
+      # stats file has a 30-day TTL, so without eviction a "fresh" drop can be minted from a
+      # month-old cache and look completely normal. Current/previous season only, so the
+      # immutable historical files stay warm.
+      - if: steps.gate.outputs.run == 'true'
+        run: python -m tools.ingest.main --evict-current-season --evict-only
+
+      - if: steps.gate.outputs.run == 'true'
+        name: Mint the period board
+        run: |
+          MODE="--upsert --supersede"
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then MODE="--dry-run"; fi
+          DATE=""
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            DATE="--date ${{ github.event.inputs.date }}"
+          fi
+          python -m tools.ingest.fresh_drop --sport ${{ matrix.sport }} $MODE $DATE

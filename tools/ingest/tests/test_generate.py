@@ -134,7 +134,14 @@ def test_nfl_registry_entry_matches_the_legacy_module_level_config():
     # be a pure re-expression of the old POSITIONS/QUIRKS/DECADES globals, not a rewrite.
     nfl = curation.SPORTS["nfl"]
     assert nfl.positions is curation.POSITIONS and nfl.quirks is curation.QUIRKS
-    assert [s.key for s in nfl.slices] == [str(d) if d else "all" for d in curation.DECADES]
+    # The decade slices must survive UNCHANGED and in order, because their keys are half of
+    # every already-served `puzzle_history` signature. New axes (Active, divisions,
+    # conferences, added 2026-08-28) are appended after them and cannot disturb an old key.
+    decade_keys = [str(d) if d else "all" for d in curation.DECADES]
+    assert [s.key for s in nfl.slices][:len(decade_keys)] == decade_keys
+    added = {s.key for s in nfl.slices} - set(decade_keys)
+    assert added == {"active", "afc", "nfc", "afc-east", "afc-north", "afc-south", "afc-west",
+                     "nfc-east", "nfc-north", "nfc-south", "nfc-west"}
     assert all(t.key.startswith(("gen-", "gen2-")) and t.sport == "nfl"
                for t in generate._candidates(nfl))
     # ...and no sport-namespaced prefix, which would change every NFL key.
@@ -239,8 +246,10 @@ def test_team_slices_produce_themes_that_name_the_franchise():
     seasons = [_mlb(f"Yankee {i}", "NYY", 1990 + i) for i in range(30)]
     themes = generate._candidates(cfg, generate.team_slices(cfg, seasons))
     titles = [t.title for t in themes]
-    assert any(t.endswith("— NYY") for t in titles), titles[:3]
-    assert any("1990s" in t and t.endswith("— NYY") for t in titles), "expected an era x franchise cut"
+    # House style: the franchise suffix is a comma, never an em-dash (see curation.py's
+    # period/house-style note and tests/test_no_em_dashes.py).
+    assert any(t.endswith(", NYY") for t in titles), titles[:3]
+    assert any("1990s" in t and t.endswith(", NYY") for t in titles), "expected an era x franchise cut"
 
 
 # ── Rolled themes ────────────────────────────────────────────────────────────────
