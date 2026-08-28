@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import sys
 import json
 import os
 from collections import Counter
@@ -875,6 +876,9 @@ def main() -> int:
                     help="build (and, with --upsert, write) `leagues` identity rows — "
                          "standalone, skips the season gather pull; combine with --teams "
                          "to do both in one run")
+    ap.add_argument("--warm-cdn", action="store_true",
+                    help="after upserting, pre-render every image the new content serves so no "
+                         "player pays for a cold CDN transform (see tools/ingest/warm_cdn.py)")
     ap.add_argument("--evict-current-season", action="store_true",
                     help="delete current/previous-year cache entries (and the live ESPN NBA "
                          "stat files) before fetching, so in-season data is refetched fresh — "
@@ -947,6 +951,17 @@ def main() -> int:
         write_baselines_fallback(seasons)
     elif not args.dry_run and not args.write_fallback:
         print("\n(no action: pass --upsert and/or --write-fallback, or --dry-run)")
+
+    # After the content exists, not before: warming renders the images the *new* rows reference,
+    # so it has to follow the upsert or it warms the previous set.
+    if args.warm_cdn and not args.dry_run:
+        from .warm_cdn import main as warm_cdn_main
+        argv = sys.argv
+        try:
+            sys.argv = ["warm_cdn", "--scope", "puzzles"]
+            warm_cdn_main()
+        finally:
+            sys.argv = argv
 
     return 0
 

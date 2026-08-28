@@ -32,11 +32,17 @@ final class AppImagePipelineTests: XCTestCase {
             .contains("/render/image/public/team-logos/soccer/england/liv.png?"))
     }
 
-    /// ESPN CDN crests and nflverse headshots have no transform endpoint; rewriting them would
-    /// produce a dead URL. They still get downsampled and cached, just not resized server-side.
-    func testLeavesNonStorageURLsUnchanged() {
+    /// Hosts with no transform API at all are left alone; rewriting them would produce a dead
+    /// URL. They still get downsampled and cached, just not resized server-side.
+    ///
+    /// The NFL CDN used to be in this list. It isn't any more: it is Cloudinary, it does take a
+    /// width, and treating it as untransformable is what had the app pulling multi-megabyte
+    /// masters to draw a 48pt circle (2026-08-28). See `ImageURLTransformTests` for that rule —
+    /// the two files are deliberately on opposite sides of the same line.
+    func testLeavesHostsWithoutATransformAPIUnchanged() {
         for raw in ["https://a.espncdn.com/i/teamlogos/nfl/500/kc.png",
-                    "https://static.www.nfl.com/image/private/headshot/player.png"] {
+                    "https://upload.wikimedia.org/wikipedia/commons/1/11/Didier.jpg",
+                    "https://img.a.transfermarkt.technology/portrait/header/104414.jpg?lm=1"] {
             let url = URL(string: raw)!
             XCTAssertEqual(AppImagePipeline.transformed(url, pixels: 96), url)
         }

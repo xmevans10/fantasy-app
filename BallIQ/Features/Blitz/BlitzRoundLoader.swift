@@ -122,8 +122,52 @@ final class BlitzRoundLoader {
             if let pick = await todayKeep4, pick.isCanonicalToday { withheld.insert(pick.content.id) }
             if let pick = await todayWhoAmI, pick.isCanonicalToday { withheld.insert(pick.content.id) }
             if let pick = await todayJourneyman, pick.isCanonicalToday { withheld.insert(pick.content.id) }
+
+            warmImages(for: sport)
         }
         return next() != nil
+    }
+
+    /// How many boards' worth of art to warm per sport. A blitz is a handful of boards (see
+    /// `BlitzConfig.estimatedBoards`), and a Keep4 board is 8 photos, so this covers most of a
+    /// run without pulling a whole pool the player will never reach.
+    private static let prewarmBoardsPerSport = 4
+
+    /// Warm the images a run is *likely* to draw, while the pools are loading and before the
+    /// clock starts.
+    ///
+    /// Blitz was the worst surface in the app for this and had no image warming at all: every
+    /// other format is entered from Home, which has been warming its dailies for a while, but a
+    /// blitz draws random boards from a pool nobody has looked at. So every headshot and crest
+    /// was fetched at the moment its board appeared — against a clock, which is precisely when a
+    /// player cannot afford to wait for one.
+    ///
+    /// Boards are drawn randomly by `next()`, so exactly which ones come up isn't knowable here;
+    /// warming a bounded random sample of each pool covers most of a short run, and anything
+    /// missed still benefits from the per-board warm in `next()`.
+    private func warmImages(for sport: Sport) {
+        var headshots: [String] = []
+        var crestAbbrs: [String] = []
+
+        for puzzle in (keep4[sport] ?? []).shuffled().prefix(Self.prewarmBoardsPerSport) {
+            headshots.append(contentsOf: puzzle.players.compactMap(\.headshot))
+            crestAbbrs.append(contentsOf: puzzle.players.map(\.teamAbbr))
+        }
+        for puzzle in (journeyman[sport] ?? []).shuffled().prefix(Self.prewarmBoardsPerSport) {
+            if let headshot = puzzle.headshot { headshots.append(headshot) }
+            crestAbbrs.append(contentsOf: puzzle.stints.map(\.teamAbbr))
+        }
+        // Over/Under rounds are generated from this pool rather than drawn from it, so the whole
+        // sampled slice is a fair candidate set.
+        for season in (overUnderPool[sport] ?? []).shuffled().prefix(Self.prewarmBoardsPerSport * 3) {
+            if let headshot = season.headshot { headshots.append(headshot) }
+            crestAbbrs.append(season.teamAbbr)
+        }
+        // Who Am I? is absent on purpose, the same reason `PuzzleImageWarmer.warmDailies` skips
+        // it: its photo is the answer, so warming it would be pre-fetching a spoiler.
+
+        PuzzleImageWarmer.warm(urls: headshots, targetSize: AppImagePipeline.cardWarmSize)
+        PuzzleImageWarmer.warmCrests(sport: sport, abbrs: crestAbbrs)
     }
 
     /// The next board, or nil when the chosen mix has nothing left to serve.
@@ -145,11 +189,32 @@ final class BlitzRoundLoader {
         while let format = candidates.randomElement() {
             if let board = draw(format) {
                 served.insert(board.id)
+                // Backstop for anything the sampled pre-warm in `warm()` missed. The board is
+                // about to be built and rendered, so this is a head start of only a frame or two
+                // — worth having, not enough on its own, which is why the pool sample exists.
+                warmImages(for: board)
                 return board
             }
             candidates.removeAll { $0 == format }
         }
         return nil
+    }
+
+    /// The art one specific board will render.
+    private func warmImages(for board: BlitzBoard) {
+        switch board {
+        case .keep4(let puzzle):
+            PuzzleImageWarmer.warm(keep4: puzzle)
+        case .journeyman(let puzzle):
+            PuzzleImageWarmer.warm(journeyman: puzzle)
+            PuzzleImageWarmer.warmCrests(sport: puzzle.sport, abbrs: puzzle.stints.map(\.teamAbbr))
+        case .overunder(let round, let sport):
+            PuzzleImageWarmer.warm(urls: [round.player.headshot].compactMap { $0 },
+                                   targetSize: AppImagePipeline.cardWarmSize)
+            PuzzleImageWarmer.warmCrests(sport: sport, abbrs: [round.player.teamAbbr])
+        case .whoami:
+            break   // the photo is the answer — see `warmImages(for sport:)`
+        }
     }
 
     private func draw(_ format: BlitzFormat) -> BlitzBoard? {

@@ -21,14 +21,26 @@ final class SportLogoTests: XCTestCase {
     // a real fetch, may have populated it with rehosted Storage URLs).
     private let emptyIndex = TeamIdentityIndex()
 
+    /// "HOU" exists in NFL, NBA and MLB — each must resolve within its own league.
+    ///
+    /// Asserted on the resolved *identity* rather than a literal CDN URL since crests are bundled
+    /// (2026-08-28): each sport now answers with its own `crest-<sport>-...` file. The property
+    /// under test was never the hostname, it was that one code doesn't leak across sports.
     func testSharedCityCodeResolvesToTheCorrectLeague() {
-        // "HOU" exists in NFL, NBA and MLB — each must resolve within its own league.
-        XCTAssertEqual(Sport.nfl.teamLogoURL(forAbbr: "HOU", index: emptyIndex)?.absoluteString,
-                       "https://a.espncdn.com/i/teamlogos/nfl/500/hou.png")
-        XCTAssertEqual(Sport.nba.teamLogoURL(forAbbr: "HOU", index: emptyIndex)?.absoluteString,
-                       "https://a.espncdn.com/i/teamlogos/nba/500/hou.png")
-        XCTAssertEqual(Sport.baseball.teamLogoURL(forAbbr: "HOU", index: emptyIndex)?.absoluteString,
-                       "https://a.espncdn.com/i/teamlogos/mlb/500/hou.png")
+        let resolved: [(Sport, String)] = [(.nfl, "nfl"), (.nba, "nba"), (.baseball, "baseball")]
+        var seen: Set<String> = []
+        for (sport, token) in resolved {
+            let url = sport.teamLogoURL(forAbbr: "HOU", index: emptyIndex)?.absoluteString ?? ""
+            XCTAssertTrue(url.contains(token), "\(sport.rawValue) resolved to \(url)")
+            XCTAssertTrue(seen.insert(url).inserted, "two sports share one crest URL: \(url)")
+        }
+    }
+
+    /// A sport with no bundled crest for the code still reaches the ESPN fallback, so the
+    /// legacy path stays exercised rather than silently dead.
+    func testUnbundledCodeStillFallsBackToESPN() {
+        let url = Sport.nfl.teamLogoURL(forAbbr: "ZZZ", index: emptyIndex)?.absoluteString
+        XCTAssertEqual(url, "https://a.espncdn.com/i/teamlogos/nfl/500/zzz.png")
     }
 
     func testSoccerAbbreviationTranslatesToESPNNumericID() {

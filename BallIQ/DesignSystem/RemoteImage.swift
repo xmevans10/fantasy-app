@@ -204,8 +204,24 @@ actor ImageCache {
     /// Returns nil (rather than throwing) on a non-2xx so the caller can fall back to the
     /// untransformed URL — the Supabase render endpoint is a paid feature and a project without
     /// it enabled must still get its logos, just unresized.
+    /// Every image request asks for WebP.
+    ///
+    /// `URLSession` sends `Accept: */*` by default, and both CDNs in front of us content-negotiate
+    /// on that header: Supabase's render endpoint returns PNG unless WebP is requested, and
+    /// Cloudinary's `f_auto` means "whatever the client says it takes". So the default cost us
+    /// roughly 6x on every single image — measured on one 192px crest, 36,915 bytes as PNG against
+    /// 5,958 as WebP. ImageIO has decoded WebP since iOS 14, and `downsample` goes through
+    /// `CGImageSource`, so nothing downstream needs to know.
+    private static let acceptHeader = "image/webp,image/avif,image/*;q=0.8,*/*;q=0.5"
+
     private static func fetch(_ url: URL) async throws -> Data? {
-        let (data, response) = try await URLSession.shared.data(from: url)
+        // Bundled assets (`BundledCrests`) come through here as `file://`, and a file response is
+        // a plain `URLResponse` — the HTTP status guard below rejects it, which silently failed
+        // *every* bundled crest and sent them all back to the network. Read those directly.
+        if url.isFileURL { return try? Data(contentsOf: url) }
+        var request = URLRequest(url: url)
+        request.setValue(acceptHeader, forHTTPHeaderField: "Accept")
+        let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             return nil
         }
@@ -300,15 +316,70 @@ enum AppImagePipeline {
     /// Non-Storage URLs (ESPN CDN crests, nflverse headshots) are returned unchanged — there is
     /// no transform endpoint for those, and they still benefit from downsampling + caching.
     static func transformed(_ url: URL, pixels: CGFloat) -> URL {
+        if let storage = supabaseRender(url, pixels: pixels) { return storage }
+        if let cloudinary = cloudinaryResized(url, pixels: pixels) { return cloudinary }
+        return url
+    }
+
+    private static func supabaseRender(_ url: URL, pixels: CGFloat) -> URL? {
         let marker = "/storage/v1/object/public/"
         let absolute = url.absoluteString
-        guard let range = absolute.range(of: marker) else { return url }
+        guard let range = absolute.range(of: marker) else { return nil }
         let base = absolute[absolute.startIndex..<range.lowerBound]
         let objectPath = absolute[range.upperBound...]
         let size = Int(pixels)
         let rewritten = "\(base)/storage/v1/render/image/public/\(objectPath)"
             + "?width=\(size)&height=\(size)&resize=contain&quality=80"
-        return URL(string: rewritten) ?? url
+        return URL(string: rewritten)
+    }
+
+    /// Constrain a Cloudinary-hosted source to the size we actually draw.
+    ///
+    /// The league CDNs (`static.www.nfl.com`, `img.mlbstatic.com`) are Cloudinary, and their URLs
+    /// carry a transformation segment right after `/image/upload/`. Ours mostly said `f_auto,q_auto`
+    /// — format and quality, **no width** — so the request returned the full-resolution master and
+    /// the phone downsampled it locally. Measured on one NFL headshot: 4.2 MB as PNG, 742 KB once
+    /// `Accept: image/webp` was sent, and 6.9 KB with `w_192` added. Those are not rehosted assets
+    /// and there is no transform endpoint of ours in front of them, so this is the only lever —
+    /// and it is a 100x one.
+    ///
+    /// A URL that already names a width is left alone: `img.mlbstatic.com` ships `w_213`, which is
+    /// already the right order of magnitude (6 KB), and overriding a curated transform is how you
+    /// break someone's carefully-chosen crop.
+    /// Cloudinary serves the same transform grammar under both delivery types, and the league
+    /// CDNs use different ones: `img.mlbstatic.com` is `/image/upload/`, `static.www.nfl.com` is
+    /// `/image/private/`. Matching only the first is why the NFL headshots stayed at 168 KB after
+    /// the WebP change landed — the rewrite silently did nothing for them.
+    private static let cloudinaryMarkers = ["/image/upload/", "/image/private/"]
+
+    private static func cloudinaryResized(_ url: URL, pixels: CGFloat) -> URL? {
+        let absolute = url.absoluteString
+        guard let marker = cloudinaryMarkers.first(where: { absolute.contains($0) }),
+              let range = absolute.range(of: marker) else { return nil }
+        let tail = absolute[range.upperBound...]
+        guard let slash = tail.firstIndex(of: "/") else { return nil }
+        let firstSegment = String(tail[tail.startIndex..<slash])
+        let size = Int(pixels)
+
+        // Cloudinary's transformation segment is comma-separated `key_value` pairs. Anything else
+        // (a version like `v1`, or the asset id itself) means this URL carries no transforms, so
+        // a new segment is inserted instead of edited.
+        let isTransformSegment = firstSegment.contains("_")
+            && firstSegment.split(separator: ",").allSatisfy { $0.contains("_") }
+        guard isTransformSegment else {
+            let rewritten = absolute.replacingOccurrences(
+                of: marker, with: "\(marker)w_\(size),c_limit/", options: [], range: range)
+            return URL(string: rewritten)
+        }
+        guard !firstSegment.split(separator: ",").contains(where: { $0.hasPrefix("w_") }) else {
+            return nil
+        }
+        let rewrittenSegment = "\(firstSegment),w_\(size),c_limit"
+        let start = absolute.index(range.upperBound, offsetBy: 0)
+        let end = absolute.index(start, offsetBy: firstSegment.count)
+        var out = absolute
+        out.replaceSubrange(start..<end, with: rewrittenSegment)
+        return URL(string: out)
     }
 
     /// Decodes straight to `maxPixels` via ImageIO rather than decoding full-size and scaling —

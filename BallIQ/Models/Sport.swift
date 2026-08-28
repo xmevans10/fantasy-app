@@ -108,10 +108,14 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     /// empty. Callers render a neutral fallback on nil rather than a broken image either way.
     func teamLogoURL(forAbbr abbr: String, league: String? = nil,
                      index: TeamIdentityIndex = .shared) -> URL? {
-        if let identity = index.identity(sport: self, abbr: abbr, league: league), let url = identity.logoURL {
-            return url
-        }
-        return legacyTeamLogoURL(forAbbr: abbr)
+        let fetched = index.identity(sport: self, abbr: abbr, league: league)?.logoURL
+        // A fetched crest that is *not* one of our own Storage objects means somebody pointed this
+        // club somewhere deliberately, so it outranks a build-time snapshot. Every production row
+        // is a rehosted Storage URL, so in practice this only fires for a manual override — which
+        // is exactly when live data should win over the bundle.
+        if let fetched, !fetched.absoluteString.contains(BundledCrests.storageMarker) { return fetched }
+        if let bundled = BundledCrests.url(sport: self, abbr: abbr, league: league) { return bundled }
+        return fetched ?? legacyTeamLogoURL(forAbbr: abbr)
     }
 
     /// The original ESPN CDN lookup — kept as the offline/pre-data fallback for `teamLogoURL`
