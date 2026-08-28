@@ -94,6 +94,30 @@ final class OPMSlideGalleryTests: XCTestCase {
         try write(poster, named: "opm-card-redesign")
     }
 
+    /// Slide — Puzzle Blitz, drawn by `BlitzRoundList`, the component the result screen uses.
+    ///
+    /// This one earns its place by showing the thing the mode *is*: four different formats, one
+    /// run, one score. A format tile would only have said the name.
+    func testRenderBlitzSlide() async throws {
+        let rounds: [BlitzRoundResult] = [
+            .init(format: .keep4, sport: .nfl, puzzleID: "opm-1",
+                  performance: 0.875, cleared: true, elapsed: 74),
+            .init(format: .whoami, sport: .nba, puzzleID: "opm-2",
+                  performance: 0.8, cleared: true, elapsed: 31),
+            .init(format: .overunder, sport: .baseball, puzzleID: "opm-3",
+                  performance: 1.0, cleared: true, elapsed: 9),
+            .init(format: .journeyman, sport: .soccer, puzzleID: "opm-4",
+                  performance: 0.6, cleared: true, elapsed: 46),
+        ]
+        let summary = BlitzRunSummary(config: .default, rounds: rounds, elapsed: 180)
+        let poster = ZStack {
+            Color.appBackground
+            BlitzRoundList(summary: summary)
+                .padding(20)
+        }
+        try write(poster, named: "opm-puzzle-blitz")
+    }
+
     /// Slide 2 — Home's formats grid, drawn by the same `FormatGridItem` the page uses, in the
     /// same two-column layout, so the slide matches what the player sees when they close it.
     func testRenderFormatsSlide() async throws {

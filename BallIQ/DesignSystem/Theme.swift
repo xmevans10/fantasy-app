@@ -135,6 +135,11 @@ struct CardSurface: ViewModifier {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(Color.borderStrong, lineWidth: 1)
             )
+            // Flatten before the shadow, or it is applied to every element in the subtree
+            // separately rather than to the card's silhouette — which draws a grey ghost of each
+            // glyph 3pt below it. Invisible against most backgrounds on device, glaring once the
+            // card is rendered through `ImageRenderer` for OPM artwork (2026-08-28).
+            .compositingGroup()
             .shadow(color: Color.black.opacity(0.10), radius: 0, x: 0, y: 3) // hard ledge
     }
 }

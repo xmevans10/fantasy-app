@@ -47,7 +47,14 @@ enum UpdateNotes {
     /// `testCurrentBundleVersionHasNotes` is the guard: bump `MARKETING_VERSION` without adding
     /// an entry and the suite fails.
     static let byVersion: [String: [Slide]] = [
+        // The three biggest player-facing changes of the last month, in the order a player meets
+        // them: a whole new mode, then the format they play most, then where everything lives.
+        // Deliberately *not* the release's largest engineering win — images now download about
+        // 25x smaller — because "it got faster" has no component to show and a player who has to
+        // be told about a speed-up did not feel one.
         "1.8.1": [
+            Slide(artwork: "opm-puzzle-blitz",
+                  message: "Puzzle Blitz: one clock, every format"),
             Slide(artwork: "opm-card-redesign",
                   message: "Player cards, rebuilt as trading cards"),
             Slide(artwork: "opm-formats-first",
