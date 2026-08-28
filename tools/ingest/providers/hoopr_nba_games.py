@@ -47,7 +47,7 @@ DEFAULT_REFRESH_FROM = dt.date.today().year - 10
 
 CSV_FIELDS = ["name", "athlete_id", "team_abbr", "season_year", "position", "opponent_abbr",
               "game_date", "headshot", "points", "rebounds", "assists", "steals", "blocks",
-              "field_goals_made", "week"]
+              "field_goals_made", "week", "event_date"]
 
 # The source data tags the All-Star Game's pseudo-teams `season_type == 2` (regular
 # season) alongside real games — exclude explicitly rather than trust the flag alone.
@@ -86,6 +86,21 @@ def _game_date_label(value: object) -> str:
     return f"{d.strftime('%b')} {d.day}"
 
 
+def _iso_date(value: object) -> str:
+    """The same input `_game_date_label` renders for display, kept as ISO `YYYY-MM-DD`.
+    pyarrow's `to_pylist()` yields real date objects for this column, so this normalizes both
+    those and plain strings; anything unparseable becomes "" rather than a bogus date."""
+    if not value:
+        return ""
+    if isinstance(value, (dt.date, dt.datetime)):
+        return value.strftime("%Y-%m-%d")
+    text = str(value)[:10]
+    try:
+        return dt.date.fromisoformat(text).isoformat()
+    except ValueError:
+        return ""
+
+
 def _pivot_games(long_rows: list[dict]) -> list[dict]:
     """One CSV row per real regular-season player-game, `week` assigned as a 1-based
     sequential index within each player-season (chronological) — the game-grain
@@ -118,6 +133,11 @@ def _pivot_games(long_rows: list[dict]) -> list[dict]:
                 "position": _norm_position(g.get("athlete_position_abbreviation") or ""),
                 "opponent_abbr": g.get("opponent_team_abbreviation") or "",
                 "game_date": _game_date_label(g.get("game_date") or ""),
+                # The ISO date the label above is derived from. The source parquet has it and
+                # this pivot used to throw it away, which is why "games from last week" was
+                # not expressible for NBA at all — `week` here is a per-player sequence index,
+                # not a calendar week.
+                "event_date": _iso_date(g.get("game_date") or ""),
                 "headshot": g.get("athlete_headshot_href") or "",
                 "points": g.get("points") or 0,
                 "rebounds": g.get("rebounds") or 0,
@@ -182,6 +202,7 @@ def load_seasons() -> list[RawSeason]:
                 source="hoopr_games",
                 headshot=row["headshot"] or _HEADSHOT.format(id=row["athlete_id"]),
                 week=int(row["week"]),
+                event_date=row.get("event_date", ""),
                 opponent=row["opponent_abbr"],
                 game_date=row["game_date"],
             ))

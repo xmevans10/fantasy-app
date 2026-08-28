@@ -33,6 +33,17 @@ class RawSeason:
     # game isn't identified by a week number; those providers set this instead so
     # PlayerSeason.swift's subtitle can read "vs OPP · Apr 8 · 2022". "" = use `week`.
     game_date: str = ""
+    # Machine-readable event date for game-grain rows, ISO `YYYY-MM-DD`. Deliberately NOT a
+    # reuse of `game_date`: that one is a pre-formatted DISPLAY label ("Apr 8") with no year,
+    # read by PlayerSeason.swift's subtitle in builds already on the App Store, so its format
+    # is frozen. This one is what a date-window filter can actually compare against
+    # (`themes.field_value` resolves it), and it is what makes "the week that just finished"
+    # expressible at all. "" for season/career rows and for providers that carry no date.
+    event_date: str = ""
+    # Human label of the competitive period this row belongs to ("Week 3", "Matchweek 5",
+    # "Aug 18 to 24"). Set by the period-scoped pulls (see calendar.py) so a title reads it
+    # instead of three call sites rebuilding the same string from filters.
+    period: str = ""
     # Career-grain aggregate (see career.py) — one row per (sport, position, player) summing
     # every real season the pipeline pulled. Mutually exclusive with `week` (a career row is
     # never a single game); `season_year` holds the player's LAST season for sort/recency

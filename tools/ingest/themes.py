@@ -40,6 +40,11 @@ def field_value(season, field_name: str) -> object:
     if field_name == "is_rookie_season":
         rookie_year = season.meta.get("rookie_season")
         return rookie_year is not None and str(season.season_year) == str(rookie_year)
+    if field_name == "name":
+        # The player's own name. Needed by the career-ladder shape, which is a theme ABOUT
+        # one person ("rank eight Brady seasons") and therefore has to be able to select one;
+        # every other field here narrows to a COHORT, so this was simply absent before.
+        return season.name
     if field_name == "position":
         return season.position
     if field_name == "team":
@@ -48,6 +53,18 @@ def field_value(season, field_name: str) -> object:
         return season.sport
     if field_name == "week":
         return season.week
+    if field_name == "event_date":
+        # ISO `YYYY-MM-DD`, so a lexicographic `range` compare IS a chronological one.
+        # "" (season/career rows, dateless providers) resolves to None via the `in (None, "")`
+        # guard in `Filter.matches`, so a period filter can never accidentally admit a row
+        # that carries no date at all.
+        return season.event_date or None
+    if field_name == "period":
+        return season.period or None
+    if field_name == "color_family":
+        # Joined onto `meta` by shapes.merge_team_colors from the `teams` table, not carried
+        # by any provider. Absent when the join never ran, which correctly matches nothing.
+        return season.meta.get("color_family")
     if field_name in season.stats:
         return season.stats.get(field_name)
     derived = _DERIVED.get(field_name)
@@ -89,6 +106,10 @@ _DERIVED: dict[str, object] = {
     "k_per_9": lambda st: _ratio(st.get("strike_outs"), st.get("innings_pitched"), 9.0),
     "bb_per_9": lambda st: _ratio(st.get("base_on_balls"), st.get("innings_pitched"), 9.0),
     "k_bb_ratio": lambda st: _ratio(st.get("strike_outs"), st.get("base_on_balls")),
+    # NFL single-game
+    "scrimmage_yards": lambda st: _sum(st, "rushing_yards", "receiving_yards"),
+    "total_tds": lambda st: _sum(st, "rushing_tds", "receiving_tds"),
+    "total_tds_all": lambda st: _sum(st, "rushing_tds", "receiving_tds", "passing_tds"),
     # NBA
     "stocks": lambda st: _sum(st, "spg", "bpg"),
     "pra": lambda st: _sum(st, "ppg", "rpg", "apg"),
@@ -127,6 +148,16 @@ class Filter:
             return str(v).lower() in opts
         if self.op == "regex":
             return re.search(str(self.value), str(v), re.IGNORECASE) is not None
+        if self.op == "range":
+            # Numeric when everything coerces (age 27-30, season_year 1990-2009); otherwise
+            # an ordered STRING compare, which is what makes `event_date` windows work —
+            # ISO `YYYY-MM-DD` sorts chronologically under a plain lexicographic compare, so
+            # one op covers both without a parallel date-only operator.
+            lo, hi = self.value                  # type: ignore[misc]
+            num, nlo, nhi = _coerce_num(v), _coerce_num(lo), _coerce_num(hi)
+            if num is not None and nlo is not None and nhi is not None:
+                return nlo <= num <= nhi
+            return str(lo) <= str(v) <= str(hi)
         num = _coerce_num(v)
         if num is None:
             return False
@@ -134,9 +165,6 @@ class Filter:
             return num >= float(self.value)      # type: ignore[arg-type]
         if self.op == "lte":
             return num <= float(self.value)      # type: ignore[arg-type]
-        if self.op == "range":
-            lo, hi = self.value                  # type: ignore[misc]
-            return lo <= num <= hi
         raise ValueError(f"unknown filter op {self.op!r}")
 
 
@@ -157,6 +185,20 @@ class Theme:
     # per-(position, year) volume index. Only meaningful for fantasy scales. NFL-only for
     # now — pre-2002 NBA baselines are survivorship-biased (see era_analysis.py findings).
     era_adjusted: bool = False
+    # How `assemble._windows` picks the eight rows out of the graded pool:
+    #   'close'  — contiguous, grade-adjacent window. The default and the only mode before
+    #              fresh drops existed; the blind sort is hard because the eight are close.
+    #   'top'    — literally the top eight. What "Week 3: Top WR Performances" has to mean;
+    #              a close window would quietly hand back the 9th-through-16th best instead.
+    #   'spread' — eight sampled across the pool's YEAR range, so a franchise/career ladder
+    #              spans its whole history instead of clustering in one peak era.
+    # Every mode still requires the clean keep/cut boundary and the same-person check.
+    window_mode: str = "close"
+    # False lets ONE player hold several rows in the same puzzle — the career-ladder shape
+    # ("rank eight Brady seasons"), which the default person-dedupe in `grade_pool` exists
+    # precisely to prevent everywhere else. Only ever set False by a theme that is ABOUT one
+    # player; leaving it on is what stops a star appearing twice on an ordinary card.
+    dedupe_person: bool = True
 
 
 def fmt_value(value: float, fmt: str) -> str:
@@ -341,7 +383,7 @@ KEEP4_THEMES: list[Theme] = [
     ),
     Theme(
         key="nfl-total-fantasy",
-        title="All-time fantasy seasons — any position",
+        title="All-time fantasy seasons, any position",
         sport="nfl",
         scale="nfl_fantasy",
         # Cross-position: one unified PPR formula judges QBs, RBs, WRs and TEs on the
@@ -362,7 +404,7 @@ KEEP4_THEMES: list[Theme] = [
     ),
     Theme(
         key="nfl-total-fantasy-era",
-        title="Best seasons of all time — era-adjusted",
+        title="Best seasons of all time, era-adjusted",
         sport="nfl",
         scale="nfl_fantasy",
         era_adjusted=True,

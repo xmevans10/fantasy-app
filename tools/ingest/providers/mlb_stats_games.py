@@ -75,6 +75,7 @@ def _hitting_game(name: str, split: dict, headshot: str, index: int) -> RawSeaso
         week=index,
         opponent=_opponent_abbr(split),
         game_date=_game_date_label(split.get("date") or ""),
+        event_date=split.get("date") or "",
     )
 
 
@@ -107,6 +108,7 @@ def _pitching_game(name: str, split: dict, headshot: str, index: int) -> RawSeas
         week=index,
         opponent=_opponent_abbr(split),
         game_date=_game_date_label(split.get("date") or ""),
+        event_date=split.get("date") or "",
     )
 
 

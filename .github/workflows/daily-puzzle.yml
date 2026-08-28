@@ -54,6 +54,16 @@ jobs:
           restore-keys: |
             ingest-cache-
       - run: pip install -r tools/ingest/requirements.txt
+      # LIVE DEFECT FIX (Phase 0 of the fresh-drop work): this job restores the shared provider
+      # cache and, until now, never evicted anything from it. The nflverse WEEKLY stats file
+      # caches for 30 days (`nfl_nflverse_games.fetch_year`'s ttl_hours=24*30), and the only
+      # thing that ever cleared it was weekly-refresh.yml's `--evict-current-season`, which
+      # runs once a week. In season that meant the ordinary nightly NFL dailies could be minted
+      # from a weekly file up to a month out of date, and nothing anywhere would have said so.
+      #
+      # Evicting only current/previous-year entries keeps every immutable historical file warm,
+      # so this costs one refetch of the in-progress season rather than a cold cache.
+      - run: python -m tools.ingest.main --evict-current-season --evict-only
       # `|| '2'` covers scheduled runs (no inputs): today + tomorrow — see the cron comment
       # above for why one day of lookahead is both required and (for now) the maximum.
       - run: |

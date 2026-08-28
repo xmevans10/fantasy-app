@@ -14,6 +14,7 @@ import csv
 import io
 
 from ..models import RawSeason
+from . import nfl_nflverse_schedule
 from .http import fetch_text
 from .nfl_nflverse import _num
 
@@ -26,8 +27,15 @@ MIN_YEAR = 1999
 _OFFENSE = {"QB", "RB", "WR", "TE", "FB"}
 
 
-def fetch_year(year: int, *, ttl_hours: float = 24 * 30) -> list[RawSeason]:
-    """All regular-season offensive *games* for one season year."""
+def fetch_year(year: int, *, ttl_hours: float = 24 * 30,
+               gamedays: dict[tuple[str, int], str] | None = None) -> list[RawSeason]:
+    """All regular-season offensive *games* for one season year.
+
+    `gamedays` is an optional `{(team, week): ISO date}` join from
+    `nfl_nflverse_schedule.gameday_index` — the weekly stats file carries no date of its own,
+    so without it these rows have a week but no `event_date`. Optional rather than fetched
+    here so a caller pulling many years pays for the schedule file once, not per year.
+    """
     if year < MIN_YEAR:
         return []
     text = fetch_text(
@@ -79,17 +87,30 @@ def fetch_year(year: int, *, ttl_hours: float = 24 * 30) -> list[RawSeason]:
                 headshot=row.get("headshot_url") or "",
                 week=week or None,
                 opponent=row.get("opponent_team") or "",
+                event_date=(gamedays or {}).get((row.get("team") or "", week), ""),
                 meta={"gsis_id": row.get("player_id") or ""},
             )
         )
     return games
 
 
-def fetch_years(years: list[int]) -> list[RawSeason]:
+def fetch_years(years: list[int], *, with_dates: bool = True) -> list[RawSeason]:
+    """`with_dates=False` skips the schedule fetch entirely — for callers (and tests) that
+    only need stat lines and shouldn't pay for a second network file."""
+    schedule_rows: list[dict] = []
+    if with_dates and years:
+        try:
+            schedule_rows = nfl_nflverse_schedule.fetch_rows()
+        except Exception as err:  # noqa: BLE001
+            # A missing schedule file costs game rows their `event_date` and nothing else;
+            # every season/week-based theme still builds. Never fail the whole pull for it.
+            print(f"[nfl-games] schedule unavailable, rows will carry no event_date: {err}")
     out: list[RawSeason] = []
     for year in years:
         try:
-            out += fetch_year(year)
+            gamedays = (nfl_nflverse_schedule.gameday_index(schedule_rows, year)
+                        if schedule_rows else None)
+            out += fetch_year(year, gamedays=gamedays)
         except Exception as err:  # noqa: BLE001
             print(f"[nfl-games] {year} skipped: {err}")
     return out

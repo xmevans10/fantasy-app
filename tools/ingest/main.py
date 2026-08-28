@@ -879,6 +879,8 @@ def main() -> int:
     ap.add_argument("--warm-cdn", action="store_true",
                     help="after upserting, pre-render every image the new content serves so no "
                          "player pays for a cold CDN transform (see tools/ingest/warm_cdn.py)")
+    ap.add_argument("--evict-only", action="store_true",
+                    help="with --evict-current-season: clear the cache and exit, no ingest")
     ap.add_argument("--evict-current-season", action="store_true",
                     help="delete current/previous-year cache entries (and the live ESPN NBA "
                          "stat files) before fetching, so in-season data is refetched fresh — "
@@ -889,6 +891,12 @@ def main() -> int:
         from .providers.http import evict_current_season
         removed = evict_current_season(dt.date.today().year)
         print(f"[cache] evicted {removed} current-season cache file(s)")
+        if args.evict_only:
+            # Eviction on its own is a cache operation, not an ingest. Without this the
+            # daily-puzzle job's freshness step would fall through into the full ~25-30 min
+            # gather it has no use for, and pay it a second time in the mint that follows.
+            # Same standalone-shortcut posture as `--write-themes` below.
+            return 0
 
     if args.write_themes and not (args.upsert or args.write_fallback or args.dry_run):
         write_themes_fallback()      # standalone: themes are static, skip the data pull
