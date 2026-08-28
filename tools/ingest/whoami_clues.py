@@ -416,7 +416,7 @@ def _best_season(e: WhoAmIEntry, rng: random.Random) -> str | None:
     where = f" with {_article(e)}{team}" if team else ""
     return rng.choice([
         f"Best season came in {year}{where}: {line}",
-        f"Peaked in {year}{where} — {line}",
+        f"Peaked in {year}{where}: {line}",
     ])
 
 

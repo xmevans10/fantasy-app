@@ -425,8 +425,10 @@ def _stints(*spans):
 def test_a_teaser_is_a_fact_plus_a_jab():
     line = journeyman.build_teaser(_facts(), _stints((2010, 2014), (2015, 2018)),
                                    False, seed="test-player")
-    assert " — " in line and line.endswith(".")
-    fact, jab = line.rsplit(" — ", 1)
+    # House style: the fact/jab separator is a comma, never an em-dash. A jab is a
+    # grammatical continuation, so it stays lowercase after the comma.
+    assert ", " in line and line.endswith(".")
+    fact, jab = line.rsplit(", ", 1)
     assert fact and jab[0].islower()
 
 

@@ -264,7 +264,7 @@
   },
   {
     "key": "nfl-total-fantasy",
-    "title": "All-time fantasy seasons — any position",
+    "title": "All-time fantasy seasons, any position",
     "sport": "nfl",
     "scale": "nfl_fantasy",
     "positions": [
@@ -319,7 +319,7 @@
   },
   {
     "key": "nfl-total-fantasy-era",
-    "title": "Best seasons of all time — era-adjusted",
+    "title": "Best seasons of all time, era-adjusted",
     "sport": "nfl",
     "scale": "nfl_fantasy",
     "positions": [

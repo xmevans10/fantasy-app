@@ -389,7 +389,7 @@ def teaser_shape(stints: list["Stint"], truncated: bool) -> str:
 
 
 def build_teaser(entry, stints: list["Stint"], truncated: bool, seed: str) -> str:
-    """`"<low-reveal fact> — <shape jab>."` for one subject, deterministic per `seed`.
+    """`"<low-reveal fact>, <shape jab>."` for one subject, deterministic per `seed`.
 
     Deterministic because an archive card that reworded itself every time the pool was
     regenerated would churn live content for no reason — and because a board a player looked at
@@ -420,13 +420,16 @@ def build_teaser(entry, stints: list["Stint"], truncated: bool, seed: str) -> st
 
 
 def fit(facts: list[str], jabs: list[str], rng) -> str:
-    """The longest `"<fact> — <jab>."` that fits `MAX_TEASER_CHARS`, else the shortest there is.
+    """The longest `"<fact>, <jab>."` that fits `MAX_TEASER_CHARS`, else the shortest there is.
 
     Deterministic: `facts` arrives in dimension order and `jabs` was already shuffled by the
     seeded rng, so the same subject resolves to the same line every run.
     """
     def line(fact: str, jab: str) -> str:
-        return f"{fact} — {jab}."
+        # House style: no em-dash in user-facing copy. A COMMA, not a period: every jab is a
+        # grammatical continuation ("and practically had a mortgage there", "with a couple of
+        # stops you'd blink and miss"), so a period would strand it as a fragment.
+        return f"{fact}, {jab}."
 
     pairs = [(fact, pick_jab(fact, jabs)) for fact in facts]
     fitting = [p for p in pairs if len(line(*p)) <= MAX_TEASER_CHARS]

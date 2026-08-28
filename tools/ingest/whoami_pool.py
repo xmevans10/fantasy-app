@@ -887,7 +887,7 @@ def main() -> int:
         print(f"[whoami-pool] {len(bio_by_name)} unambiguous NFL bio records")
     except Exception as err:                                    # noqa: BLE001
         bio_by_name = {}
-        print(f"[whoami-pool] NFL bio join skipped ({err}) — bio dimensions will be absent")
+        print(f"[whoami-pool] NFL bio join skipped ({err}): bio dimensions will be absent")
 
     # Regenerating one sport must not drop the others' entries from the file.
     existing = {e.canonical: e for e in load_pool(path) if e.sport not in sports}
