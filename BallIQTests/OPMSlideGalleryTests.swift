@@ -31,6 +31,13 @@ final class OPMSlideGalleryTests: XCTestCase {
     /// Hardcoded rather than read from the bundled puzzles: the art has to be reproducible, and
     /// content churn would otherwise silently redraw the slide. The *view* is the shipping one —
     /// that is what the rule is about — while the row it draws is a fixture.
+    ///
+    /// Copied verbatim from `nfl-qb-mvp-00`, five stats and all. The first version of this
+    /// fixture was pulled by a script filtering for a 4-stat line and landed on the one variant
+    /// of this player-season that drops INT (`nfl-total-fantasy-00`) — a real row, but an
+    /// atypical one, and a QB card with no interceptions reads as a bug to anyone who knows the
+    /// sport. Five stats is also the catalog's dominant shape (284 of the 400 bundled cards), so
+    /// this renders the 3+2 layout most players actually see.
     private var sampleCard: PlayerSeason {
         PlayerSeason(
             id: "nfl-lamar-jackson-2024",
@@ -39,6 +46,7 @@ final class OPMSlideGalleryTests: XCTestCase {
             seasonYear: 2024,
             stats: [.init(label: "Pass Yds", value: "4,172"),
                     .init(label: "Pass TD", value: "41"),
+                    .init(label: "INT", value: "4"),
                     .init(label: "Rush Yds", value: "915"),
                     .init(label: "Rush TD", value: "4")],
             grade: 438.4,
@@ -127,15 +135,26 @@ final class OPMSlideGalleryTests: XCTestCase {
     /// Slide 2 — Home's formats grid, drawn by the same `FormatGridItem` the page uses, in the
     /// same two-column layout, so the slide matches what the player sees when they close it.
     func testRenderFormatsSlide() async throws {
+        // **Every** format, not a prefix. The first version took `.prefix(6)`, which dropped
+        // Versus and Puzzle Blitz — so a slide captioned "every way to play" was missing two of
+        // the eight, one of them the new mode slide 1 is about.
         let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
         let poster = ZStack {
             Color.appBackground
+            // Laid out at the height eight tiles actually need, then scaled into the square —
+            // same reasoning as the card slide: squeezing the frame would restyle the tiles
+            // rather than shrink them.
             LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(Array(GameFormat.all.prefix(6))) { format in
+                ForEach(GameFormat.all) { format in
                     FormatGridItem(format: format) {}
                 }
             }
-            .padding(22)
+            .padding(20)
+            .frame(width: 440, height: 540)
+            // Scaled to a little under the square so the top and bottom rows keep a margin —
+            // Notelet clips media into a rounded rect, and a tile flush to the edge loses its
+            // corner to the clip.
+            .scaleEffect((side - 30) / 540)
         }
         try write(poster, named: "opm-formats-first")
     }
