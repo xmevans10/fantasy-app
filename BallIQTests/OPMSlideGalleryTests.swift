@@ -61,8 +61,14 @@ final class OPMSlideGalleryTests: XCTestCase {
                 _ = await ImageCache.shared.image(for: url, targetSize: size)
             }
         }
+        // Both buckets here too, for the same reason as the headshot above: the crest is drawn
+        // huge as the card's watermark, and which bucket it *requests* depends on whether the
+        // watermark pins its fetch size. Warming one and rendering the other is why the first
+        // version of this poster shipped with an empty disc where the Ravens shield should be.
         if let crest = Sport.nfl.teamLogoURL(forAbbr: card.teamAbbr) {
-            _ = await ImageCache.shared.image(for: crest, targetSize: AppImagePipeline.crestWarmSize)
+            for size in [AppImagePipeline.crestWarmSize, AppImagePipeline.cardWarmSize] {
+                _ = await ImageCache.shared.image(for: crest, targetSize: size)
+            }
         }
     }
 
