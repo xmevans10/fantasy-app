@@ -108,7 +108,7 @@ struct ScoringBreakdown: Equatable {
     private static func caption(for scale: String) -> String? {
         switch scale {
         case "baseball_hitter_fantasy":
-            return "Extra-base points stack on the hit itself — a home run nets +4 in total."
+            return "Extra-base points stack on the hit itself: a home run nets +4 in total."
         default:
             return nil
         }
@@ -217,14 +217,14 @@ struct ScoringDetailSheet: View {
         case .ppr:
             return puzzle.sport == .tennis
                 ? String(localized: "Every card is scored from its real season results using the table below. The four highest totals are the correct Keeps.")
-                : String(localized: "Every card is worth the fantasy points its real stat line produced. Add up the table below — the four highest totals are the correct Keeps.")
+                : String(localized: "Every card is worth the fantasy points its real stat line produced. Add up the table below, the four highest totals are the correct Keeps.")
         case .era:
-            return String(localized: "Every card starts from its real fantasy points, then gets adjusted for its era — so a monster season from a low-scoring year isn't buried by modern stat inflation.")
+            return String(localized: "Every card starts from its real fantasy points, then gets adjusted for its era, so a monster season from a low-scoring year isn't buried by modern stat inflation.")
         case .vibes:
             // "@handle put these..." vs "The author put these..." — the substituted actor
             // is itself localized so `%@ put these...` isn't stuck mid-sentence in English.
             let whose = author.map { "@\($0)" } ?? String(localized: "The author")
-            return String(localized: "\(whose) put these eight in order by feel — no formula, no stat math. The numbers on the cards are evidence, not the answer key.")
+            return String(localized: "\(whose) put these eight in order by feel, no formula, no stat math. The numbers on the cards are evidence, not the answer key.")
         }
     }
 
@@ -275,7 +275,7 @@ struct ScoringDetailSheet: View {
                 .textCase(.uppercase)
                 .font(.label12)
                 .foregroundStyle(Color.proText)
-            Text("The point total is multiplied by an era index: the position's all-time average total divided by the average from that season's year. Scarce eras multiply up, inflated eras trim down — and everyone from the same position and year gets the same multiplier, so it never reorders peers.")
+            Text("The point total is multiplied by an era index: the position's all-time average total divided by the average from that season's year. Scarce eras multiply up, inflated eras trim down, and everyone from the same position and year gets the same multiplier, so it never reorders peers.")
                 .font(.body14)
                 .foregroundStyle(Color.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -292,7 +292,7 @@ struct ScoringDetailSheet: View {
                 .textCase(.uppercase)
                 .font(.label12)
                 .foregroundStyle(Color.warningText)
-            Text("Vibes puzzles are pure opinion: great seasons, big names, personal bias — whatever moved the author. Your job is to read their mind, not the math, so no point table exists to study.")
+            Text("Vibes puzzles are pure opinion: great seasons, big names, personal bias, whatever moved the author. Your job is to read their mind, not the math, so no point table exists to study.")
                 .font(.body14)
                 .foregroundStyle(Color.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -325,7 +325,7 @@ struct ScoringDetailSheet: View {
             lines.append(String(localized: "The era index is BallIQ's own, built from league-wide averages by position and year."))
         }
         if !breakdown.exact, isCommunity, puzzle.sport == .nfl {
-            lines.append(String(localized: "This community puzzle predates formula tagging — its author may have picked the Half-PPR or Standard variant instead."))
+            lines.append(String(localized: "This community puzzle predates formula tagging, its author may have picked the Half-PPR or Standard variant instead."))
         }
         return lines.joined(separator: " ")
     }
@@ -333,11 +333,11 @@ struct ScoringDetailSheet: View {
     private func provenance(for scale: String) -> String {
         switch scale {
         case "nfl_fantasy", "nfl_skill_ppr", "nfl_qb_fantasy":
-            return String(localized: "This is the industry-standard full-PPR formula — the same default scoring used on ESPN, Yahoo, and Sleeper.")
+            return String(localized: "This is the industry-standard full-PPR formula, the same default scoring used on ESPN, Yahoo, and Sleeper.")
         case "nfl_fantasy_half":
             return String(localized: "Half-PPR: the industry-standard formula with receptions at half a point.")
         case "nfl_fantasy_standard":
-            return String(localized: "Standard (non-PPR) scoring — receptions themselves score nothing.")
+            return String(localized: "Standard (non-PPR) scoring, receptions themselves score nothing.")
         case "nba_fantasy":
             return String(localized: "DraftKings-style per-stat rates, lightly simplified and applied to full-season totals.")
         case "baseball_hitter_fantasy", "baseball_pitcher_fantasy":
@@ -345,7 +345,7 @@ struct ScoringDetailSheet: View {
         case "soccer_attacker_fantasy", "soccer_defender_fantasy":
             return String(localized: "Inspired by Fantasy Premier League scoring, simplified to one shared rate per role.")
         case "tennis_fantasy":
-            return String(localized: "BallIQ's own formula — there's no standard fantasy game for tennis, so seasons are scored as résumés: wins carry the total, Slams tower over everything.")
+            return String(localized: "BallIQ's own formula, there's no standard fantasy game for tennis, so seasons are scored as résumés: wins carry the total, Slams tower over everything.")
         default:
             return String(localized: "BallIQ's own scoring formula.")
         }

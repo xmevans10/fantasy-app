@@ -51,7 +51,7 @@ struct SharablePuzzle: Identifiable, Equatable {
         title = puzzle.theme
         scoring = puzzle.scoringKind()
         grain = puzzle.puzzleGrain()
-        subtitle = "\(puzzle.players.count) \(grain!.countNoun) — can you sort them?"
+        subtitle = "\(puzzle.players.count) \(grain!.countNoun), can you sort them?"
     }
 
     /// Deliberately anonymous — a shared Who Am I? must never leak the answer.
@@ -62,7 +62,7 @@ struct SharablePuzzle: Identifiable, Equatable {
         title = "A mystery player"
         scoring = nil
         grain = nil
-        subtitle = "\(puzzle.clues.count) clues — guess who"
+        subtitle = "\(puzzle.clues.count) clues, guess who"
     }
 
     init(community item: CommunitySummary) {
@@ -72,8 +72,8 @@ struct SharablePuzzle: Identifiable, Equatable {
         title = item.title
         scoring = item.format == "keep4" ? item.scoringKind : nil
         grain = item.format == "keep4" ? item.grainKind : nil
-        subtitle = item.format == "keep4" ? "8 \(item.grainKind.countNoun) — can you sort them?"
-                                          : "6 clues — guess who"
+        subtitle = item.format == "keep4" ? "8 \(item.grainKind.countNoun), can you sort them?"
+                                          : "6 clues, guess who"
     }
 }
 

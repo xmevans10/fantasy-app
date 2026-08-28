@@ -118,7 +118,7 @@ final class RandomGridPuzzleTests: XCTestCase {
         let board = await repo.randomGridPuzzle(for: .all, excludingDate: nil)
 
         XCTAssertNil(board)
-        XCTAssertFalse(called, "`.all` has no sport to randomise within — don't ask the server")
+        XCTAssertFalse(called, "`.all` has no sport to randomise within, don't ask the server")
     }
 
     /// Grid content is server-only (no bundled offline fallback), so every local repo correctly

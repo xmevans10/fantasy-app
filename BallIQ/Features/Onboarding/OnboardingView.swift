@@ -138,7 +138,7 @@ struct OnboardingView: View {
             }
             .heroReveal(1)
 
-            Text("Every sport stays playable — this just picks where you start.")
+            Text("Every sport stays playable, this just picks where you start.")
                 .font(.label12)
                 .foregroundStyle(Color.textMuted)
                 .multilineTextAlignment(.center)

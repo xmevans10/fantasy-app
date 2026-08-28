@@ -131,7 +131,7 @@ struct LeaguesView: View {
     private var signInPrompt: some View {
         EmptyStateView(symbol: "trophy.fill",
                        title: "Leagues",
-                       message: "Sign in to get placed in a weekly league — every game you play earns XP toward the standings.",
+                       message: "Sign in to get placed in a weekly league, every game you play earns XP toward the standings.",
                        actionTitle: "Sign in") { selectedTab.wrappedValue = 4 }
     }
 
@@ -142,7 +142,7 @@ struct LeaguesView: View {
         let n = standings.isEmpty ? 30 : standings.count
         return HowItWorksSheet(
             title: "Weekly Leagues",
-            intro: "A weekly XP race against players at your level. No joining, no invites — placement is automatic.",
+            intro: "A weekly XP race against players at your level. No joining, no invites, placement is automatic.",
             symbol: "trophy.fill",
             tint: Color.accentText,
             tintBackground: Color.accentBg,
@@ -152,7 +152,7 @@ struct LeaguesView: View {
                       detail: "Each Monday, every rated player is grouped into a fresh league of up to 30 by rating."),
                 .init(symbol: "bolt.fill",
                       title: "Every game counts",
-                      detail: "Every game you finish this week earns League XP — any format, ranked or not."),
+                      detail: "Every game you finish this week earns League XP, any format, ranked or not."),
                 .init(symbol: "arrow.up.arrow.down",
                       title: LeagueRules.summaryLine(memberCount: n),
                       detail: "When the week ends, the top of the table is promoted to a tougher league and the bottom is relegated to an easier one."),
@@ -162,7 +162,7 @@ struct LeaguesView: View {
                            text: "Green rows are currently in the promotion zone, red rows in the relegation zone. Nothing is locked until the week's timer hits zero.",
                            tint: Color.successText,
                            background: Color.successBg),
-            footnote: "Leagues never affect your rating — that only moves on ranked daily games.",
+            footnote: "Leagues never affect your rating, that only moves on ranked daily games.",
             startExpanded: DebugLaunch.autoOpenLeaguesInfo)
     }
 
@@ -215,7 +215,7 @@ struct LeaguesView: View {
                         .foregroundStyle(Color.textMuted)
                 }
             }
-            Text("You'll be placed with up to 29 players — every game you finish earns League XP.")
+            Text("You'll be placed with up to 29 players, every game you finish earns League XP.")
                 .font(.body14)
                 .foregroundStyle(Color.textMuted)
                 .multilineTextAlignment(.center)
@@ -299,8 +299,8 @@ struct LeaguesView: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(promoted ? Color.successText : Color.dangerText)
                 Text(promoted
-                     ? "You were promoted last week — welcome to a tougher league."
-                     : "You were relegated last week — win this one and bounce right back.")
+                     ? "You were promoted last week, welcome to a tougher league."
+                     : "You were relegated last week, win this one and bounce right back.")
                     .font(.body14)
                     .foregroundStyle(Color.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -414,7 +414,7 @@ struct LeaguesView: View {
                 }
                 sportChipRow.heroReveal(2)
                 if seasonBoard.isEmpty {
-                    Text("No ranked games yet this season — play a ranked daily to land on the board.")
+                    Text("No ranked games yet this season, play a ranked daily to land on the board.")
                         .font(.body14)
                         .foregroundStyle(Color.textMuted)
                         .multilineTextAlignment(.center)
@@ -511,20 +511,20 @@ struct LeaguesView: View {
     private var seasonInfoSheet: some View {
         HowItWorksSheet(
             title: "Rating Seasons",
-            intro: "An 8-week competitive ladder. Every ranked daily moves your season rating — climb as high as you can before the season ends.",
+            intro: "An 8-week competitive ladder. Every ranked daily moves your season rating, climb as high as you can before the season ends.",
             symbol: "trophy.fill",
             tint: Color.accentText,
             tintBackground: Color.accentBg,
             rules: [
                 .init(symbol: "arrow.triangle.2.circlepath",
                       title: "A fresh ladder every 8 weeks",
-                      detail: "Each season starts you partway back toward the middle, so the ladder is always up for grabs — your all-time rating never resets."),
+                      detail: "Each season starts you partway back toward the middle, so the ladder is always up for grabs, your all-time rating never resets."),
                 .init(symbol: "bolt.fill",
                       title: "Ranked games move you",
                       detail: "Only ranked daily games count toward your season rating. Community and unranked play don't move it."),
                 .init(symbol: "medal.fill",
                       title: "Earn a tier badge",
-                      detail: "When the season closes, the highest tier you reached is minted as a badge on your Profile — Legend badges shimmer."),
+                      detail: "When the season closes, the highest tier you reached is minted as a badge on your Profile, Legend badges shimmer."),
             ],
             footnote: "Season ratings are separate from your permanent all-time rating and from weekly Leagues.",
             startExpanded: false)

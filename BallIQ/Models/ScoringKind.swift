@@ -66,18 +66,18 @@ enum ScoringKind: String, Codable {
         case .ppr:
             switch sport {
             case .nfl:    return String(localized: "Ranked by real PPR fantasy points")
-            case .tennis: return String(localized: "Ranked by real season résumés — wins, titles, Slams")
+            case .tennis: return String(localized: "Ranked by real season résumés: wins, titles, Slams")
             default:      return String(localized: "Ranked by real fantasy points")
             }
         case .era:
-            return String(localized: "Ranked by era-adjusted fantasy points — scarcer eras count for more")
+            return String(localized: "Ranked by era-adjusted fantasy points: scarcer eras count for more")
         case .vibes:
             // Two whole-sentence keys (not a composed "whose" fragment) so the possessive
             // can be rebuilt per-language instead of gluing English grammar into Spanish.
             if let author {
-                return String(localized: "Vibes — @\(author)'s gut call on what makes a great season, no formula")
+                return String(localized: "Vibes: @\(author)'s gut call on what makes a great season, no formula")
             }
-            return String(localized: "Vibes — the author's gut call on what makes a great season, no formula")
+            return String(localized: "Vibes: the author's gut call on what makes a great season, no formula")
         }
     }
 

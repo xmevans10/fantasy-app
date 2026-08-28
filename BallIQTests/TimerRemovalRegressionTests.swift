@@ -27,7 +27,7 @@ final class TimerRemovalRegressionTests: XCTestCase {
             let credited = SpeedMultiplier.points(600, startedAt: started, finishedAt: aDayLate,
                                                   kind: kind)
             XCTAssertEqual(credited, 600, "\(kind) paid less than its raw score for finishing a "
-                           + "day late — that is the zero/downgrade fail-state M25 removed")
+                           + "day late, that is the zero/downgrade fail-state M25 removed")
         }
     }
 
@@ -63,7 +63,7 @@ final class TimerRemovalRegressionTests: XCTestCase {
                     let elapsed = par * fraction
                     let adjusted = SpeedMultiplier.adjusted(score: score, elapsed: elapsed, par: par)
                     XCTAssertGreaterThanOrEqual(adjusted, score - 1e-9,
-                        "score \(score) elapsed \(elapsed) par \(par) paid \(adjusted) — below its "
+                        "score \(score) elapsed \(elapsed) par \(par) paid \(adjusted), below its "
                         + "own raw score")
                 }
             }

@@ -557,7 +557,7 @@ private struct LiveJourneymanBoard: View {
             Text("OUT OF GUESSES")
                 .font(.heading)
                 .foregroundStyle(Color.textPrimary)
-            Text("Still live — they can still lose it.")
+            Text("Still live, they can still lose it.")
                 .font(.body14)
                 .foregroundStyle(Color.textMuted)
                 .multilineTextAlignment(.center)

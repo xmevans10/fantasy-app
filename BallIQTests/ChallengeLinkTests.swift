@@ -126,7 +126,7 @@ final class ChallengeLinkTests: XCTestCase {
         let text = GridResultView.shareText(sport: .nfl, score: 480, solved: solved,
                                             date: now, challenger: "Alex", now: now)
         XCTAssertEqual(text, """
-        I went 4/9 on today's NFL Grid — beat that.
+        I went 4/9 on today's NFL Grid. Beat that.
         🟩🟩⬛
         ⬛🟩⬛
         ⬛⬛🟩
@@ -158,7 +158,9 @@ final class ChallengeLinkTests: XCTestCase {
         let text = GridResultView.shareText(sport: .nfl, score: 300, solved: [0: "A"],
                                             date: now, isDaily: false, now: now)
         XCTAssertTrue(text.hasPrefix("I went 1/9 on a NFL Grid."))
-        XCTAssertFalse(text.contains("beat that"))
+        // Case-insensitive: the dare reads "Beat that." since the copy pass, so a
+        // case-sensitive check would pass here without testing anything.
+        XCTAssertFalse(text.lowercased().contains("beat that"))
         XCTAssertTrue(text.contains("apps.apple.com"))
     }
 
@@ -197,7 +199,7 @@ final class ChallengeLinkTests: XCTestCase {
         let text = Keep4ResultView.shareText(puzzle: puzzle, result: result,
                                              date: now, challenger: "Alex", now: now)
         XCTAssertEqual(text, """
-        I went 6/8 on today's NFL K4C4 — beat that.
+        I went 6/8 on today's NFL K4C4. Beat that.
         ⬛🟩🟩🟩
         ⬛🟩🟩🟩
         6/8 · 1,500 pts
@@ -216,7 +218,9 @@ final class ChallengeLinkTests: XCTestCase {
                                              isDaily: false, now: now)
         XCTAssertTrue(text.hasPrefix("I went 4/8 on a NFL Keep 4."))
         XCTAssertFalse(text.contains("today's"))
-        XCTAssertFalse(text.contains("beat that"))
+        // Case-insensitive: the dare reads "Beat that." since the copy pass, so a
+        // case-sensitive check would pass here without testing anything.
+        XCTAssertFalse(text.lowercased().contains("beat that"))
         XCTAssertTrue(text.contains("apps.apple.com"))
     }
 
@@ -266,7 +270,7 @@ final class ChallengeLinkTests: XCTestCase {
         let text = WhoAmIResultView.shareText(puzzle: puzzle, result: result, date: now,
                                               challenger: "Alex", now: now)
         XCTAssertEqual(text, """
-        I went 5/6 on today's NBA Who Am I? — beat that.
+        I went 5/6 on today's NBA Who Am I?. Beat that.
         ⬛🟩⬜⬜⬜⬜
         5/6 · 800 pts
         https://apps.apple.com/app/id6785275045?ct=chal_whoami_nba
@@ -290,7 +294,9 @@ final class ChallengeLinkTests: XCTestCase {
         let text = WhoAmIResultView.shareText(puzzle: puzzle, result: result, date: now,
                                               isDaily: false, now: now)
         XCTAssertTrue(text.hasPrefix("A NBA Who Am I? beat me."))
-        XCTAssertFalse(text.contains("beat that"))
+        // Case-insensitive: the dare reads "Beat that." since the copy pass, so a
+        // case-sensitive check would pass here without testing anything.
+        XCTAssertFalse(text.lowercased().contains("beat that"))
         XCTAssertTrue(text.contains("no spoilers, go find out who"))
         XCTAssertTrue(text.contains("apps.apple.com"))
     }
@@ -341,7 +347,7 @@ final class ChallengeLinkTests: XCTestCase {
     func testPuzzleInviteCarriesAnInstallableLink() {
         let puzzle = SharablePuzzle(whoAmI: whoAmIPuzzle())
         let text = puzzle.shareText
-        XCTAssertTrue(text.hasPrefix("My Playbook puzzle: A mystery player. 6 clues — guess who"))
+        XCTAssertTrue(text.hasPrefix("My Playbook puzzle: A mystery player. 6 clues, guess who"))
         XCTAssertTrue(text.contains("https://apps.apple.com/app/id6785275045?ct=puzzle_invite"))
         XCTAssertTrue(text.contains("balliq://play/w"), "installed users still get the deep link")
         XCTAssertFalse(text.contains("Allen Iverson"), "a shared Who Am I? must not leak its answer")

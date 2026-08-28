@@ -26,11 +26,11 @@ struct MomentCopy {
             // sentence has to earn the bigger ask — and it earns it with what they'd lose.
             if context.isSignedIn {
                 detail = context.gamesPlayed > 0
-                    ? String(localized: "You've played \(context.gamesPlayed). Time everyone knew who did it — your name shows up on leaderboards, Versus and friend requests.")
+                    ? String(localized: "You've played \(context.gamesPlayed). Time everyone knew who did it, your name shows up on leaderboards, Versus and friend requests.")
                     : String(localized: "Your name shows up on leaderboards, Versus and friend requests.")
                 cta = "CLAIM MY USERNAME"
             } else {
-                detail = String(localized: "Your streak, rating and league spot live on your account — and a username is how anyone finds you.")
+                detail = String(localized: "Your streak, rating and league spot live on your account, and a username is how anyone finds you.")
                 cta = "CREATE MY ACCOUNT"
             }
 

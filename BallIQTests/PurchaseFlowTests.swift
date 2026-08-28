@@ -63,7 +63,7 @@ final class PurchaseFlowTests: XCTestCase {
         let service = StoreService(fetchStub: { ids in try await Product.products(for: ids) })
         await service.loadProducts()
         guard !service.products.isEmpty else {
-            throw XCTSkip("No StoreKit products — SKTestSession config not applied")
+            throw XCTSkip("No StoreKit products, SKTestSession config not applied")
         }
         return service
     }
@@ -80,7 +80,7 @@ final class PurchaseFlowTests: XCTestCase {
 
         let purchased = try await service.purchase(try product(.proMonthly, in: service))
 
-        XCTAssertTrue(purchased, "SKTestSession auto-approves — this should complete")
+        XCTAssertTrue(purchased, "SKTestSession auto-approves, this should complete")
         XCTAssertTrue(service.entitlements.isPro, "a completed subscription purchase must grant Pro")
     }
 
@@ -95,7 +95,7 @@ final class PurchaseFlowTests: XCTestCase {
         XCTAssertFalse(service.entitlements.isPro, "a pack must not confer full Pro")
         XCTAssertTrue(service.entitlements.canPlayGrid(), "the grid pack must unlock the Grid")
         XCTAssertFalse(service.entitlements.canPlayDraftSpin(),
-                       "the grid pack must NOT unlock Draft & Spin — they're sold separately")
+                       "the grid pack must NOT unlock Draft & Spin, they're sold separately")
     }
 
     /// The gate wired this session: the draft-spin pack must actually unlock Draft & Spin.
@@ -119,7 +119,7 @@ final class PurchaseFlowTests: XCTestCase {
         let container = RepositoryContainer.make(client: nil, store: service)
         await container.reloadProducts()
         guard !container.products.isEmpty else {
-            throw XCTSkip("No StoreKit products — SKTestSession config not applied")
+            throw XCTSkip("No StoreKit products, SKTestSession config not applied")
         }
         XCTAssertFalse(container.entitlements.isPro)
 
@@ -127,7 +127,7 @@ final class PurchaseFlowTests: XCTestCase {
         _ = try await container.purchase(monthly)
 
         XCTAssertTrue(container.entitlements.isPro,
-            "the container must republish entitlements after a purchase — otherwise every gated "
+            "the container must republish entitlements after a purchase, otherwise every gated "
             + "surface stays locked behind a subscription the user just paid for")
     }
 

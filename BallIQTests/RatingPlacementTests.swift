@@ -54,7 +54,7 @@ final class RatingPlacementTests: XCTestCase {
 
             if board > RatingPlacement.games {
                 XCTAssertTrue(applies,
-                              "board \(board) is past placement and must be rated — if this "
+                              "board \(board) is past placement and must be rated, if this "
                               + "fails, the counter is reading the field the gate writes")
             }
         }

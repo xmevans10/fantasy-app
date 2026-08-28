@@ -30,7 +30,7 @@ struct BlitzSetupView: View {
         {
             SetupOptionCard(
                 title: "TIMER",
-                caption: "The clock decides how many puzzles you get — never how long you get on one. Time out mid-board and you still finish it; it's just your last.")
+                caption: "The clock decides how many puzzles you get, never how long you get on one. Time out mid-board and you still finish it; it's just your last.")
             {
                 SetupSegmentedControl(
                     options: BlitzDuration.allCases.map { LocalizedStringKey($0.shortLabel) },
@@ -53,7 +53,7 @@ struct BlitzSetupView: View {
 
             SetupOptionCard(
                 title: "SCORING",
-                caption: "No score until the clock stops. Every format pays the same per second at par, minus what a coin flip would have got you — so the mix you pick is taste, not strategy.")
+                caption: "No score until the clock stops. Every format pays the same per second at par, minus what a coin flip would have got you, so the mix you pick is taste, not strategy.")
             { EmptyView() }
         }
     }

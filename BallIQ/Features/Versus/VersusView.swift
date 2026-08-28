@@ -140,7 +140,7 @@ struct VersusView: View {
             VStack(spacing: 16) {
                 ladderHero
                 promptCard(title: "Duel a real person",
-                           message: "Challenge anyone in K4C4, Who am I? or The Grid. Same board, same clock — a tie goes to whoever was faster.",
+                           message: "Challenge anyone in K4C4, Who am I? or The Grid. Same board, same clock, a tie goes to whoever was faster.",
                            actionTitle: "NEW DUEL") { showChallengeSheet = true }
             }
             .padding(16)
@@ -174,7 +174,7 @@ struct VersusView: View {
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("Every rung is a bot that plays the same board you do, on the same clock — and you watch its score climb while you play.")
+            Text("Every rung is a bot that plays the same board you do, on the same clock, and you watch its score climb while you play.")
                 .font(.label12)
                 .foregroundStyle(Color.onAccent.opacity(0.8))
                 .fixedSize(horizontal: false, vertical: true)
@@ -303,20 +303,20 @@ struct VersusView: View {
                 // one: nothing here can end your run before you do.
                 .init(symbol: "bolt.fill",
                       title: "Finish fast for a bonus",
-                      detail: "Play whenever you like, and take as long as you need — nothing forces the run to end. Finish quick and you'll pick up a speed bonus on top of your score."),
+                      detail: "Play whenever you like, and take as long as you need, nothing forces the run to end. Finish quick and you'll pick up a speed bonus on top of your score."),
                 .init(symbol: "hare.fill",
                       title: "A tie goes to the faster run",
                       detail: "Dead-even scores are broken on how long each of you took, not on who sent the duel."),
                 .init(symbol: "trophy.fill",
                       title: "Race to 4",
-                      detail: "Every duel against the same player in the same sport and game stacks into a running series — first to 4 wins takes it."),
+                      detail: "Every duel against the same player in the same sport and game stacks into a running series, first to 4 wins takes it."),
             ],
             callout: .init(symbol: "clock.fill",
                            label: "24 hours to open it",
                            text: "A duel expires a day after it's sent. Don't open it in time and you forfeit the win to your opponent.",
                            tint: Color.warningText,
                            background: Color.warningBg),
-            footnote: "Versus games never affect your rating — they're XP and bragging rights only.",
+            footnote: "Versus games never affect your rating, they're XP and bragging rights only.",
             startExpanded: DebugLaunch.autoOpenVersusInfo)
     }
 
@@ -461,16 +461,16 @@ struct VersusView: View {
         let theirs = c.theirScore(me: me)
         switch c.status {
         case "forfeited":
-            return String(localized: "Expired — neither of you played")
+            return String(localized: "Expired, neither of you played")
         case "completed":
             if let mine, let theirs {
                 return c.isDraw
-                    ? String(localized: "Dead heat — \(Int(mine * 100)) each, to the second")
+                    ? String(localized: "Dead heat, \(Int(mine * 100)) each, to the second")
                     : String(localized: "You \(Int(mine * 100)) – \(Int(theirs * 100)) them")
             }
             return mine != nil
-                ? String(localized: "They didn't play in time — win by forfeit")
-                : String(localized: "Time ran out before you played — forfeit loss")
+                ? String(localized: "They didn't play in time, win by forfeit")
+                : String(localized: "Time ran out before you played, forfeit loss")
         default:
             // "the board" rather than "today's puzzle": a duel board comes from the archive
             // now, so it is very often not today's at all.
@@ -592,7 +592,7 @@ private struct ChallengeSheet: View {
                 // Was "N on the clock, each" pre-M25 — a duel now runs on the same par-time
                 // mechanic as everything else (`SpeedMultiplier`): nothing ends the run, finishing
                 // under par just pays a bonus.
-                Label("Same board for both of you, from the archive — one neither has played. Finish fast for up to a \(Int((SpeedMultiplier.bonus * 100).rounded()))% score bonus.",
+                Label("Same board for both of you, from the archive, one neither has played. Finish fast for up to a \(Int((SpeedMultiplier.bonus * 100).rounded()))% score bonus.",
                       systemImage: "bolt.fill")
                     .font(.label11)
                     .foregroundStyle(Color.textMuted)

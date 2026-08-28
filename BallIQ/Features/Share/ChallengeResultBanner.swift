@@ -151,11 +151,11 @@ struct ChallengeResultBanner: View {
         let name = verdict.opponentName ?? "They"
         switch outcome {
         case .win where verdict.levelOnHits && verdict.tieGoesToPlayer:
-            return "Dead level with \(name) — and a tie goes to you."
+            return "Dead level with \(name), and a tie goes to you."
         case .win where verdict.levelOnHits:
-            return "Same board, same score — you won it on points."
+            return "Same board, same score, you won it on points."
         case .loss where verdict.levelOnHits:
-            return "Same board, same score — \(name) won it on points."
+            return "Same board, same score, \(name) won it on points."
         case .win:  return "You beat \(name) on the same board."
         // Deliberately doesn't open with the name: usernames are lowercase far more often than
         // not, and "alex beat you…" reads as a typo. Mid-sentence (the cases above) it's fine,

@@ -49,9 +49,9 @@ final class ScoringKindTests: XCTestCase {
     }
 
     func testEraThemeTitleResolvesEra() {
-        let themes = [theme(title: "Best seasons of all time — era-adjusted", era: true),
+        let themes = [theme(title: "Best seasons of all time, era-adjusted", era: true),
                       theme(title: "Elite WR receiving seasons", era: false)]
-        XCTAssertEqual(puzzle(theme: "Best seasons of all time — era-adjusted")
+        XCTAssertEqual(puzzle(theme: "Best seasons of all time, era-adjusted")
             .scoringKind(themes: themes), .era)
         XCTAssertEqual(puzzle(theme: "Elite WR receiving seasons").scoringKind(themes: themes), .ppr)
     }

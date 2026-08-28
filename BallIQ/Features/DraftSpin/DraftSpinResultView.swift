@@ -61,8 +61,8 @@ struct DraftSpinResultView: View {
                 Text(sport.displayName.uppercased()).font(.label11).foregroundStyle(Color.onVolt.opacity(0.85))
             }
             Text(isOfficialDailyDraftRun
-                 ? "Everyone starts from today's same spins — this run is your official score."
-                 : "Practice replay — today's official score was already locked in.")
+                 ? "Everyone starts from today's same spins, this run is your official score."
+                 : "Practice replay. Today's official score was already locked in.")
                 .font(.body14).foregroundStyle(Color.onVolt)
             // The payoff for the shared spins: the board is worth showing after a replay too —
             // the day's *official* run is what's ranked there, not this one.

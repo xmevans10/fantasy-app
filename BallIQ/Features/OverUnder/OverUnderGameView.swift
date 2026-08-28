@@ -325,7 +325,7 @@ struct OverUnderGameView: View {
     }
 
     private var footer: some View {
-        Text("Swipe right for Over, left for Under — or tap below.")
+        Text("Swipe right for Over, left for Under, or tap below.")
             .font(.label11)
             .foregroundStyle(Color.textMuted)
             .multilineTextAlignment(.center)

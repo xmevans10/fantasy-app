@@ -150,9 +150,9 @@ struct PaywallView: View {
 
     private var benefits: some View {
         VStack(alignment: .leading, spacing: 12) {
-            benefitRow(symbol: "square.grid.3x3.fill", text: "The Grid — Pro-only format")
+            benefitRow(symbol: "square.grid.3x3.fill", text: "The Grid: Pro-only format")
             benefitRow(symbol: "eye.slash", text: "Hard mode on every Keep4/Cut4")
-            benefitRow(symbol: "square.grid.2x2.fill", text: "Full archive — replay every past daily")
+            benefitRow(symbol: "square.grid.2x2.fill", text: "Full archive: replay every past daily")
             benefitRow(symbol: "sportscourt.fill", text: "All 5 sports on the daily filter")
             benefitRow(symbol: "bolt.fill", text: "No wait between Over/Under runs")
         }
@@ -254,7 +254,7 @@ struct PaywallView: View {
                 .font(.body14)
                 .foregroundStyle(Color.textPrimary)
                 .multilineTextAlignment(.center)
-            Text("Sign in and Pro follows you to any device you play on — and comes straight back if you reinstall.")
+            Text("Sign in and Pro follows you to any device you play on, and comes straight back if you reinstall.")
                 .font(.label12)
                 .foregroundStyle(Color.textMuted)
                 .multilineTextAlignment(.center)

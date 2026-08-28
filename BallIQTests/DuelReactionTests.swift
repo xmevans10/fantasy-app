@@ -12,7 +12,7 @@ final class DuelReactionTests: XCTestCase {
     /// A dead-even start (diff == 0) is not itself a crossing — there is no "ahead" yet.
     func testTieProducesNoReaction() {
         var engine = DuelReactionEngine()
-        XCTAssertNil(engine.reactionLine(diff: 0, ahead: "Wait — am I winning?",
+        XCTAssertNil(engine.reactionLine(diff: 0, ahead: "Wait, am I winning?",
                                          behind: "Okay okay, I know this one.", now: t0))
         XCTAssertEqual(engine.firedCount, 0)
     }
@@ -20,9 +20,9 @@ final class DuelReactionTests: XCTestCase {
     /// The bot pulling ahead from a tie is a genuine first crossing.
     func testBotPullingAheadFires() {
         var engine = DuelReactionEngine()
-        let line = engine.reactionLine(diff: 2, ahead: "Wait — am I winning?",
+        let line = engine.reactionLine(diff: 2, ahead: "Wait, am I winning?",
                                        behind: "Okay okay, I know this one.", now: t0)
-        XCTAssertEqual(line, "Wait — am I winning?")
+        XCTAssertEqual(line, "Wait, am I winning?")
         XCTAssertEqual(engine.firedCount, 1)
     }
 

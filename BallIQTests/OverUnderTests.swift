@@ -147,7 +147,7 @@ final class OverUnderTests: XCTestCase {
         let bank = LivesBank(count: 2, lastLostAt: lost)
         let regened = bank.regenerated(now: lost.addingTimeInterval(10 * 3600))
         XCTAssertEqual(regened.count, LivesBank.maxLives)
-        XCTAssertNil(regened.lastLostAt, "fully regenerated — no more decay to track")
+        XCTAssertNil(regened.lastLostAt, "fully regenerated, no more decay to track")
     }
 
     func testPartialRegenAdvancesTimestampRatherThanResetting() {

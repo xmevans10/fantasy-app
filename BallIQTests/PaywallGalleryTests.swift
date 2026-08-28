@@ -29,7 +29,7 @@ final class PaywallGalleryTests: XCTestCase {
         let container = RepositoryContainer.make()
         await container.store.loadProducts()
         guard !container.products.isEmpty else {
-            throw XCTSkip("No StoreKit products — SKTestSession config not applied")
+            throw XCTSkip("No StoreKit products, SKTestSession config not applied")
         }
 
         // ImageRenderer can't lay out a NavigationStack offscreen ("no interface idiom"),

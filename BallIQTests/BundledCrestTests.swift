@@ -78,6 +78,6 @@ final class BundledCrestTests: XCTestCase {
         let urls = Bundle.main.urls(forResourcesWithExtension: "webp", subdirectory: nil) ?? []
         let crests = urls.filter { $0.lastPathComponent.hasPrefix("crest-") }
         XCTAssertGreaterThanOrEqual(crests.count, 300,
-                                    "only \(crests.count) crests bundled — re-run the download")
+                                    "only \(crests.count) crests bundled, re-run the download")
     }
 }

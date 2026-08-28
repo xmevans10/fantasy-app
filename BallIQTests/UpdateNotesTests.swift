@@ -16,7 +16,7 @@ final class UpdateNotesTests: XCTestCase {
         for (version, slide) in allSlides {
             XCTAssertLessThanOrEqual(
                 slide.message.count, UpdateNotes.messageLimit,
-                "\(version)/\(slide.artwork): \(slide.message.count) chars — the cap is \(UpdateNotes.messageLimit)")
+                "\(version)/\(slide.artwork): \(slide.message.count) chars, the cap is \(UpdateNotes.messageLimit)")
             XCTAssertFalse(slide.message.isEmpty, "\(version)/\(slide.artwork) has no message")
         }
     }
@@ -34,7 +34,7 @@ final class UpdateNotesTests: XCTestCase {
     func testEverySlideResolvesItsArtwork() {
         for (version, slide) in allSlides {
             XCTAssertNotNil(UpdateNotes.artworkURL(slide),
-                            "\(version): \(slide.artwork).png is not in the bundle — regenerate "
+                            "\(version): \(slide.artwork).png is not in the bundle, regenerate "
                             + "with OPMSlideGalleryTests and copy it into BallIQ/Resources/OPM/")
         }
     }
@@ -67,7 +67,7 @@ final class UpdateNotesTests: XCTestCase {
         let current = try XCTUnwrap(
             Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String)
         XCTAssertNotNil(UpdateNotes.byVersion[current],
-                        "no update notes for \(current) — add them to UpdateNotes.byVersion, or "
+                        "no update notes for \(current), add them to UpdateNotes.byVersion, or "
                         + "delete this expectation if the release is deliberately silent")
     }
 }

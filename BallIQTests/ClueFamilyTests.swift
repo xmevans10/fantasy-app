@@ -49,7 +49,7 @@ final class ClueFamilyTests: XCTestCase {
                      clue(5, .fact, dimension: "draftPick"),
                      clue(6, .fact, dimension: "accolades")]
         let byKind = Dictionary(grouping: board, by: { $0.kind }).values.map(\.count).max()
-        XCTAssertEqual(byKind, 5, "fixture drifted — this board is the 5-identical-kinds case")
+        XCTAssertEqual(byKind, 5, "fixture drifted, this board is the 5-identical-kinds case")
 
         let byFamily = Dictionary(grouping: board, by: ClueFamily.of).values.map(\.count).max()
         XCTAssertEqual(byFamily, 2)

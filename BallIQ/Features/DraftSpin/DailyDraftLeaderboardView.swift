@@ -39,7 +39,7 @@ struct DailyDraftLeaderboardView: View {
         EmptyStateView(symbol: "list.number",
                        title: "No scores yet",
                        message: container.isSignedIn
-                           ? "Nobody's official run is in yet — yours can be the one to beat."
+                           ? "Nobody's official run is in yet, yours can be the one to beat."
                            : "Sign in to put your official run on today's board.")
     }
 

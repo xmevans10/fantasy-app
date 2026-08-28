@@ -50,7 +50,7 @@ final class PaywallProductObservationTests: XCTestCase {
 
         XCTAssertEqual(container.productLoadState, .failed)
         XCTAssertGreaterThan(publishes, 0,
-            "the container must republish when the load state changes — otherwise the paywall's "
+            "the container must republish when the load state changes, otherwise the paywall's "
             + "'Try again' button can never redraw and is permanently dead")
     }
 
@@ -147,13 +147,13 @@ final class PaywallProductObservationTests: XCTestCase {
         storeReachable = true
         await container.reloadProducts()
         guard !container.products.isEmpty else {
-            throw XCTSkip("No StoreKit products — SKTestSession config not applied")
+            throw XCTSkip("No StoreKit products, SKTestSession config not applied")
         }
         await settle()
 
         XCTAssertGreaterThan(publishes, 0,
             "the catalog arrived while the paywall was on screen and the container never "
-            + "republished — this is the 1.3 build 17 rejection")
+            + "republished, this is the 1.3 build 17 rejection")
 
         // Assert on pixels, not on text: SwiftUI backs `Text` with neither `UILabel` nor a
         // populated accessibility tree in a hosted unit test, so every string-based check reads
@@ -166,7 +166,7 @@ final class PaywallProductObservationTests: XCTestCase {
         let loadedDrift = difference(snapshot(window), settledEmptyAgain)
         XCTAssertGreaterThan(loadedDrift, max(0.05, idleDrift * 5),
             "the paywall rendered essentially identically before and after the catalog loaded "
-            + "(\(loadedDrift) vs an idle floor of \(idleDrift)) — the plans never appeared on "
+            + "(\(loadedDrift) vs an idle floor of \(idleDrift)), the plans never appeared on "
             + "screen, which is exactly what App Review saw")
     }
 

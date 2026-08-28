@@ -375,7 +375,7 @@ struct ProfileView: View {
             Text("YOUR CAREER STARTS TODAY")
                 .font(.title).foregroundStyle(Color.onAccent)
                 .multilineTextAlignment(.center)
-            Text("Every puzzle you play builds your stats — accuracy, streaks, and the fun facts below.")
+            Text("Every puzzle you play builds your stats, accuracy, streaks, and the fun facts below.")
                 .font(.body14).foregroundStyle(Color.onAccent.opacity(0.85))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
@@ -602,7 +602,7 @@ struct ProfileView: View {
             if auth.isSignedIn {
                 HStack {
                     Image(systemName: "checkmark.seal.fill").foregroundStyle(Color.successText)
-                    Text("Signed in — progress syncs across devices")
+                    Text("Signed in. Progress syncs across devices")
                         .font(.body14).foregroundStyle(Color.textPrimary)
                 }
                 Button(role: .destructive) {
@@ -662,7 +662,7 @@ struct ProfileView: View {
             Button("Delete Account", role: .destructive) { Task { await deleteAccount() } }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("This permanently deletes your account and everything in it — your rating, "
+            Text("This permanently deletes your account and everything in it, your rating, "
                  + "streak, XP, friends, and any puzzles you've created. This can't be undone.")
         }
     }

@@ -63,7 +63,7 @@ final class GridMembershipRequestTests: XCTestCase {
         XCTAssertTrue(sent.contains("\"p_sport\""), "sport must be sent, got: \(sent)")
         XCTAssertTrue(sent.contains("\"p_version\":\(GridMembershipIndex.currentVersion)")
                       || sent.contains("\"p_version\" : \(GridMembershipIndex.currentVersion)"),
-                      "must request v\(GridMembershipIndex.currentVersion) explicitly — the RPC "
+                      "must request v\(GridMembershipIndex.currentVersion) explicitly, the RPC "
                       + "defaults to 1, which carries no axes. Got: \(sent)")
     }
 

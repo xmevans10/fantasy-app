@@ -39,7 +39,7 @@ final class DailyGameCardLayoutTests: XCTestCase {
             let long = try height(of: card(title: "Single-game triple-double explosions"), width: width)
             print("DAILY_CARD: @\(Int(width))pt short-title=\(short) long-title=\(long)")
             XCTAssertGreaterThan(long, short,
-                "cards size to their content — per-card height inflation was removed because it "
+                "cards size to their content, per-card height inflation was removed because it "
                 + "left empty bands inside light cards; the pager's own floor handles stability")
         }
     }
@@ -54,7 +54,7 @@ final class DailyGameCardLayoutTests: XCTestCase {
             let many = try height(of: card(title: "Multi-homer games", chips: .many), width: width)
             print("DAILY_CARD: @\(Int(width))pt few-chips=\(few) many-chips=\(many)")
             XCTAssertGreaterThan(many, few,
-                "six badges must occupy more rows than three at \(Int(width))pt — equal heights "
+                "six badges must occupy more rows than three at \(Int(width))pt, equal heights "
                 + "would mean the overflow is being hidden again rather than wrapped")
         }
     }

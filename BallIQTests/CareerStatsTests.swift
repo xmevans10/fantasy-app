@@ -69,7 +69,7 @@ final class CareerStatsTests: XCTestCase {
     func testCareerSummary_allAttemptedZero_accuracyIsNil() {
         let rows = (0..<5).map { _ in row(format: .draftSpin, attempted: 0, correct: 0) }
         let summary = CareerSummary(rows)
-        XCTAssertNil(summary.accuracy, "a Draft & Spin-only history has no accuracy concept — not 0%")
+        XCTAssertNil(summary.accuracy, "a Draft & Spin-only history has no accuracy concept, not 0%")
         XCTAssertEqual(summary.cardsJudged, 0)
         XCTAssertEqual(summary.games, 5)
     }
@@ -252,7 +252,7 @@ final class CareerStatsTests: XCTestCase {
         let rows = [row(format: .grid, details: d1), row(format: .grid, details: d2)]
         let c = card("deepCutIndex", in: StatCatalog.cards(rows, scope: .all))!
         XCTAssertEqual(c.value, "2.00★")
-        XCTAssertEqual(c.flavor, "You live in the deep cuts — obscure names, no fear.")
+        XCTAssertEqual(c.flavor, "You live in the deep cuts: obscure names, no fear.")
     }
 
     func testOverBiasCards() {

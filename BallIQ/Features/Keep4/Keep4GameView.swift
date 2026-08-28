@@ -115,7 +115,7 @@ struct Keep4GameView: View {
         .alert("Report sent", isPresented: $showReportSent) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Thanks — we'll take a look.")
+            Text("Thanks, we'll take a look.")
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView(trigger: .hardMode).environmentObject(container)
@@ -281,7 +281,7 @@ struct Keep4GameView: View {
             if placement.isEmpty, container.entitlements.isPro || container.completedGames >= 1 {
                 modePicker
             } else if mode == .hard {
-                Label("Hard mode — stats hidden", systemImage: "eye.slash")
+                Label("Hard mode: stats hidden", systemImage: "eye.slash")
                     .font(.label11)
                     .foregroundStyle(Color.warningText)
             }
@@ -298,11 +298,11 @@ struct Keep4GameView: View {
             if let forced = forcedDisabledPile {
                 let full = forced == .keep ? String(localized: "KEEP") : String(localized: "CUT")
                 let rest = forced == .keep ? String(localized: "CUTS") : String(localized: "KEEPS")
-                Label("\(full) PILE FULL — REMAINING ARE \(rest)", systemImage: "lock.fill")
+                Label("\(full) PILE FULL: REMAINING ARE \(rest)", systemImage: "lock.fill")
                     .font(.label12)
                     .foregroundStyle(forced == .keep ? Color.dangerText : Color.successText)
             } else {
-                Text("Blind sort — swipe right to Keep, left to Cut. Decisions are final.")
+                Text("Blind sort: swipe right to Keep, left to Cut. Decisions are final.")
                     .font(.label11)
                     .foregroundStyle(Color.textMuted)
                     .multilineTextAlignment(.center)

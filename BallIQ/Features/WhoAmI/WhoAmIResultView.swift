@@ -171,7 +171,7 @@ struct WhoAmIResultView: View {
                 ? "I got a \(puzzle.sport.displayName) Who Am I? in \(result.cluesUsed) clue\(result.cluesUsed == 1 ? "" : "s")."
                 : "A \(puzzle.sport.displayName) Who Am I? beat me."
             return ShareMessage.compose(headline: headline, board: board,
-                                        detail: "\(link.scoreLine) — no spoilers, go find out who.",
+                                        detail: "\(link.scoreLine), no spoilers, go find out who.",
                                         campaign: link.campaignToken)
         }
         return link.shareText(board: board, now: now)

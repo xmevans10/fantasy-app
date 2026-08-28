@@ -171,14 +171,14 @@ struct ChallengeLink: Equatable, Identifiable {
         return out.string(from: date)
     }
 
-    /// "I went 7/9 on today's NFL Grid — beat that." The line a stranger reads first, so it has
+    /// "I went 7/9 on today's NFL Grid. Beat that." The line a stranger reads first, so it has
     /// to say the sport, the format, and the number, and it has to end in a dare.
     ///
     /// `format.shareName`, not `displayName`: the tile name "The Grid" carries its own article,
     /// and this sentence supplies one of its own ("today's"). See `PuzzleFormat.shareName`.
     func headline(now: Date = Date()) -> String {
         let when = day == PuzzleStore.localDayString(now) ? "today's" : "the \(displayDay)"
-        return "I went \(hits)/\(outOf) on \(when) \(sport.displayName) \(format.shareName) — beat that."
+        return "I went \(hits)/\(outOf) on \(when) \(sport.displayName) \(format.shareName). Beat that."
     }
 
     /// The full share payload: headline, the spoiler-free board picture, the score, the link.

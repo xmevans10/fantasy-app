@@ -54,7 +54,7 @@ final class GoogleSignInTests: XCTestCase {
     func testRedirectSchemeIsRegisteredInInfoPlist() throws {
         try XCTSkipUnless(GoogleSignIn.isConfigured, "no Google iOS client configured yet")
         XCTAssertTrue(declaredSchemes.contains(GoogleSignIn.redirectScheme),
-            "Info.plist must declare \(GoogleSignIn.redirectScheme) — declared: \(declaredSchemes)")
+            "Info.plist must declare \(GoogleSignIn.redirectScheme), declared: \(declaredSchemes)")
     }
 
     /// An iOS OAuth client, not a Web one. A Web client needs a secret this app cannot hold, and

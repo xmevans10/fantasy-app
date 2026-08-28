@@ -133,7 +133,7 @@ final class EntitlementClaimTests: XCTestCase {
         await container.claimEntitlements(reason: "test")
 
         XCTAssertFalse(log.paths.contains("/functions/v1/claim-entitlement"),
-                       "no transactions on this device — the claim must not be sent")
+                       "no transactions on this device, the claim must not be sent")
     }
 
     /// A failed claim is bookkeeping, not something the user did wrong: they already hold the

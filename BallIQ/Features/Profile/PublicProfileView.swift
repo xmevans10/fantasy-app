@@ -96,7 +96,7 @@ struct PublicProfileView: View {
                 Text(errorMessage).font(.label12).foregroundStyle(Color.dangerText)
             }
             if let challengeSentSummary {
-                Text("Challenge sent — \(challengeSentSummary).")
+                Text("Challenge sent, \(challengeSentSummary).")
                     .font(.label12).foregroundStyle(Color.successText)
             }
         }
@@ -324,7 +324,7 @@ struct DuelPickerSheet: View {
         } catch VersusError.cannotChallengeSelf {
             errorMessage = String(localized: "You can't challenge yourself.")
         } catch VersusError.noUnplayedPuzzle {
-            errorMessage = String(localized: "No fresh \(format.displayName) board left for \(sport.displayName) right now — try another format or sport.")
+            errorMessage = String(localized: "No fresh \(format.displayName) board left for \(sport.displayName) right now, try another format or sport.")
         } catch {
             errorMessage = String(localized: "Couldn't send the challenge. Try again.")
         }

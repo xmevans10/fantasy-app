@@ -16,7 +16,7 @@ enum StoreProduct: String, CaseIterable {
     var packBlurb: LocalizedStringResource? {
         switch self {
         case .draftSpinPack:
-            return "Casino-style draft mode — spin, draft, and beat the board."
+            return "Casino-style draft mode: spin, draft, and beat the board."
         case .gridPack:
             return "The 3×3 immortality grid, every day."
         case .proMonthly, .proYearly:

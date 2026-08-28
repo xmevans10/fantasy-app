@@ -255,17 +255,17 @@ struct LadderView: View {
                 // player knows what they beat.
                 .init(symbol: "cpu",
                       title: "They're bots, and we say so",
-                      detail: "Each one is a real solver with a skill level — it makes a genuine call on every card, cell or clue, nails the obvious ones and fumbles the close ones, exactly like a human at that level."),
+                      detail: "Each one is a real solver with a skill level, it makes a genuine call on every card, cell or clue, nails the obvious ones and fumbles the close ones, exactly like a human at that level."),
                 .init(symbol: "bolt.fill",
                       title: "Watch them play, live",
-                      detail: "Your opponent's score climbs in real time while you play the same board. Finish fast and you'll pick up a speed bonus — nothing here can end your run early."),
+                      detail: "Your opponent's score climbs in real time while you play the same board. Finish fast and you'll pick up a speed bonus, nothing here can end your run early."),
                 .init(symbol: "arrow.up.right",
                       title: "One rung at a time",
                       detail: "Beat a rung to unlock the next. Bots get sharper, boards get harder, and the games start mixing."),
             ],
             callout: .init(symbol: "bolt.fill",
                            label: "XP and rank only",
-                           text: "Ladder runs never move your rating — same rule as Versus duels.",
+                           text: "Ladder runs never move your rating, same rule as Versus duels.",
                            tint: Color.accentText,
                            background: Color.accentBg),
             footnote: "A tie goes to you. You matched the machine; take the win.",
@@ -334,8 +334,8 @@ private struct LadderBriefingSheet: View {
                 .disabled(starting)
 
                 Text(signedIn
-                     ? String(localized: "Solve fast for a speed bonus — no deadline, just points on the table.")
-                     : String(localized: "Solve fast for a speed bonus — no deadline, just points on the table. Sign in to bank the result and unlock the next rung."))
+                     ? String(localized: "Solve fast for a speed bonus, no deadline, just points on the table.")
+                     : String(localized: "Solve fast for a speed bonus, no deadline, just points on the table. Sign in to bank the result and unlock the next rung."))
                     .font(.label11)
                     .foregroundStyle(signedIn ? Color.textMuted : Color.warningText)
                     .multilineTextAlignment(.center)

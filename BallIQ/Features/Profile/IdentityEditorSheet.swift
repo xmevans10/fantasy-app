@@ -140,7 +140,7 @@ struct IdentityEditorSheet: View {
                             .background(Color.surfaceMuted)
                             .clipShape(Circle())
                     }
-                    Text(selectedAvatar.hasPrefix("http") ? "Photo selected — tap to change" : "Or choose a photo")
+                    Text(selectedAvatar.hasPrefix("http") ? "Photo selected. Tap to change" : "Or choose a photo")
                         .font(.label12)
                         .foregroundStyle(Color.textPrimary)
                     Spacer()

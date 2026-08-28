@@ -97,7 +97,7 @@ struct CommunityView: View {
             .alert("Report sent", isPresented: $showReportSent) {
                 Button("OK", role: .cancel) {}
             } message: {
-                Text("Thanks — we'll take a look.")
+                Text("Thanks, we'll take a look.")
             }
         }
     }
@@ -257,7 +257,7 @@ struct CommunityView: View {
         Button { Task { await load() } } label: {
             HStack(spacing: 8) {
                 Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 12))
-                Text("Couldn't refresh — tap to retry").font(.label12)
+                Text("Couldn't refresh. Tap to retry").font(.label12)
                 Spacer()
                 Image(systemName: "arrow.clockwise").font(.system(size: 12))
             }
@@ -272,7 +272,7 @@ struct CommunityView: View {
     private var emptyState: some View {
         EmptyStateView(symbol: "square.stack.3d.up.slash",
                        title: "No community puzzles yet",
-                       message: "Be the first — tap ＋ to cook one up.")
+                       message: "Be the first. Tap ＋ to cook one up.")
     }
 
     /// Shown only when we have *no* puzzles to fall back on and the fetch failed.

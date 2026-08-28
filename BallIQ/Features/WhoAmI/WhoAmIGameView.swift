@@ -95,7 +95,7 @@ struct WhoAmIGameView: View {
         .alert("Report sent", isPresented: $showReportSent) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Thanks — we'll take a look.")
+            Text("Thanks, we'll take a look.")
         }
     }
 

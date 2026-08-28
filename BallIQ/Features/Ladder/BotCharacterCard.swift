@@ -232,7 +232,7 @@ extension BotCharacterCard where Footer == EmptyView {
 #Preview {
     let bot = LadderBot(id: "archivist", name: "The Archivist", avatar: "📼", tagline: "Remembers every box score since before you were born.",
                         baseSkill: 0.7, persona: "", style: .slowBurn,
-                        styleLine: "Starts cold, finishes strong — skill ramps across the run.",
+                        styleLine: "Starts cold, finishes strong, skill ramps across the run.",
                         backstory: "Nobody knows how long The Archivist has been running the ladder. Longer than the ladder has existed, some say.",
                         palette: .plum,
                         voice: BotVoice(intro: "I've seen this board before. Somewhere."),

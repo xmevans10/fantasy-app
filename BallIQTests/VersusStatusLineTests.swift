@@ -33,19 +33,19 @@ final class VersusStatusLineTests: XCTestCase {
     func testOpponentForfeitReadsAsWinByForfeit() {
         let c = challenge(status: "completed", myScore: 0.7, theirScore: nil, winner: me)
         XCTAssertEqual(VersusView.statusLine(c, me: me, now: now),
-                       "They didn't play in time — win by forfeit")
+                       "They didn't play in time, win by forfeit")
     }
 
     func testMyForfeitReadsAsForfeitLoss() {
         let c = challenge(status: "completed", myScore: nil, theirScore: 0.7, winner: them)
         XCTAssertEqual(VersusView.statusLine(c, me: me, now: now),
-                       "Time ran out before you played — forfeit loss")
+                       "Time ran out before you played, forfeit loss")
     }
 
     func testDoubleNoShowReadsAsNoContest() {
         let c = challenge(status: "forfeited", myScore: nil, theirScore: nil)
         XCTAssertEqual(VersusView.statusLine(c, me: me, now: now),
-                       "Expired — neither of you played")
+                       "Expired, neither of you played")
     }
 
     /// A settled duel with no winner is a draw, not "still going" and not a forfeit. Reachable
@@ -56,7 +56,7 @@ final class VersusStatusLineTests: XCTestCase {
         XCTAssertTrue(c.isDraw)
         XCTAssertNil(c.won(me: me))
         XCTAssertEqual(VersusView.statusLine(c, me: me, now: now),
-                       "Dead heat — 75 each, to the second")
+                       "Dead heat, 75 each, to the second")
     }
 
     func testForfeitedIsNotADraw() {

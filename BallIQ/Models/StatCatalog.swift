@@ -133,7 +133,7 @@ enum StatCatalog {
         guard let accuracy else { return nil }
         switch accuracy {
         case 0.9...:      return String(localized: "Elite. You're not guessing, you're grading the pros.")
-        case 0.75..<0.9:  return String(localized: "Sharp — most rooms would take this deal.")
+        case 0.75..<0.9:  return String(localized: "Sharp: most rooms would take this deal.")
         case 0.6..<0.75:  return String(localized: "Solid. More right than wrong, every time out.")
         case 0.4..<0.6:   return String(localized: "A coin flip with better vibes.")
         default:          return String(localized: "Rebuilding year. Every dynasty starts somewhere.")
@@ -185,8 +185,8 @@ enum StatCatalog {
     /// 20%–40% gap in between where neither read is strong enough to be worth saying out loud.
     private static func cutInstinctFlavor(_ rate: Double?) -> String? {
         guard let rate else { return nil }
-        if rate >= 0.4 { return String(localized: "Trigger-happy — \(Fmt.percent(rate)) of your misses are good ones you cut loose. Trust the roster.") }
-        if rate < 0.2 { return String(localized: "You're a hoarder — you keep more busts than you cut good ones.") }
+        if rate >= 0.4 { return String(localized: "Trigger-happy: \(Fmt.percent(rate)) of your misses are good ones you cut loose. Trust the roster.") }
+        if rate < 0.2 { return String(localized: "You're a hoarder: you keep more busts than you cut good ones.") }
         return nil
     }
 
@@ -227,8 +227,8 @@ enum StatCatalog {
 
     private static func deepCutFlavor(_ index: Double?) -> String? {
         guard let index else { return nil }
-        if index >= 1.5 { return String(localized: "You live in the deep cuts — obscure names, no fear.") }
-        if index <= 0.5 { return String(localized: "Chalk player — you take the obvious square every time.") }
+        if index >= 1.5 { return String(localized: "You live in the deep cuts: obscure names, no fear.") }
+        if index <= 0.5 { return String(localized: "Chalk player: you take the obvious square every time.") }
         return nil
     }
 

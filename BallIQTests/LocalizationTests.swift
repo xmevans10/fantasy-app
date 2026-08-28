@@ -15,7 +15,7 @@ final class LocalizationTests: XCTestCase {
     private var spanish: Bundle {
         guard let path = Bundle.main.path(forResource: "es", ofType: "lproj"),
               let bundle = Bundle(path: path) else {
-            XCTFail("es.lproj missing from app bundle — Localizable.xcstrings didn't compile")
+            XCTFail("es.lproj missing from app bundle, Localizable.xcstrings didn't compile")
             return .main
         }
         return bundle
@@ -104,9 +104,9 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(es("ADD A FRIEND"), "AGREGAR UN AMIGO")
         XCTAssertEqual(es("CREATE MY ACCOUNT"), "CREAR MI CUENTA")
         XCTAssertEqual(es("My Playbook profile"), "Mi perfil de Playbook")
-        XCTAssertEqual(es("You've played %lld. Time everyone knew who did it — your name shows up on leaderboards, Versus and friend requests."), "Has jugado %lld. Es hora de que todos sepan quién lo hizo — tu nombre aparece en las tablas de posiciones, Versus y solicitudes de amistad.")
+        XCTAssertEqual(es("You've played %lld. Time everyone knew who did it, your name shows up on leaderboards, Versus and friend requests."), "Has jugado %lld. Es hora de que todos sepan quién lo hizo, tu nombre aparece en las tablas de posiciones, Versus y solicitudes de amistad.")
         XCTAssertEqual(es("Your name shows up on leaderboards, Versus and friend requests."), "Tu nombre aparece en las tablas de posiciones, Versus y solicitudes de amistad.")
-        XCTAssertEqual(es("Your streak, rating and league spot live on your account — and a username is how anyone finds you."), "Tu racha, puntaje y puesto en la liga viven en tu cuenta — y un nombre de usuario es como cualquiera te encuentra.")
+        XCTAssertEqual(es("Your streak, rating and league spot live on your account, and a username is how anyone finds you."), "Tu racha, puntaje y puesto en la liga viven en tu cuenta, y un nombre de usuario es como cualquiera te encuentra.")
         XCTAssertEqual(es("%lld %@ rounds in. Pick your team and we'll flag every puzzle that features them."), "Llevas %lld rondas de %@. Elige tu equipo y marcaremos cada acertijo que lo presente.")
         XCTAssertEqual(es("A %lld-day streak and nobody to beat. Add a friend and every daily becomes a head-to-head."), "Una racha de %lld días y nadie a quien vencer. Agrega un amigo y cada diario se convierte en un duelo.")
         XCTAssertEqual(es("You've played %lld and nobody's chasing you. Add a friend and every daily becomes a head-to-head."), "Has jugado %lld y nadie te pisa los talones. Agrega un amigo y cada diario se convierte en un duelo.")

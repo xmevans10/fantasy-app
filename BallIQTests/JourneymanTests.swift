@@ -386,7 +386,7 @@ final class SpeedMultiplierTests: XCTestCase {
         let wayOver = SpeedMultiplier.adjusted(score: 1000, elapsed: 6000, par: 120)
         XCTAssertEqual(atPar, 1000, accuracy: 0.001)
         XCTAssertEqual(wayOver, 1000, accuracy: 0.001,
-                       "there must be no penalty branch — that would re-create the fail-state")
+                       "there must be no penalty branch, that would re-create the fail-state")
     }
 
     /// Inherited from `LadderOutcome.adjusted` and the reason this mechanic is safe to apply

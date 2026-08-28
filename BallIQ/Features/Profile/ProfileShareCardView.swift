@@ -85,7 +85,7 @@ struct ProfileShareCardView: View {
     /// in App Analytics from `chal_<format>_<sport>` Versus-challenge installs.
     var shareText: String {
         ShareMessage.compose(
-            headline: "I'm @\(username) on BallIQ — \(tier.name) tier in \(sport.displayName).",
+            headline: "I'm @\(username) on BallIQ, \(tier.name) tier in \(sport.displayName).",
             detail: "See if you can beat my rating.",
             campaign: "profile_\(username)")
     }

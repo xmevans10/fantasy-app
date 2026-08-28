@@ -40,7 +40,7 @@ struct ArcadeLeaderboardView: View {
         EmptyStateView(symbol: "list.number",
                        title: "No scores yet",
                        message: container.isSignedIn
-                           ? "Nobody's posted a run this week — yours can set the bar."
+                           ? "Nobody's posted a run this week, yours can set the bar."
                            : "Sign in to put your runs on this week's board.")
     }
 

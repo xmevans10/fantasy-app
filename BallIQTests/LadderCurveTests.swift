@@ -91,7 +91,7 @@ final class LadderCurveTests: XCTestCase {
 
     private func rows() throws -> [Row] {
         guard let data = FileManager.default.contents(atPath: Self.fixturePath) else {
-            throw XCTSkip("ladder fixture not present — see tools/ingest/ladder.py")
+            throw XCTSkip("ladder fixture not present, see tools/ingest/ladder.py")
         }
         return try JSONDecoder().decode([Row].self, from: data)
     }
@@ -150,7 +150,7 @@ final class LadderCurveTests: XCTestCase {
         var boards = 0
         for row in try rows() {
             guard let target = row.rung.target_win_rate else {
-                XCTFail("rung \(row.rung.rung) has no target_win_rate — reseed with tools/ingest/ladder.py")
+                XCTFail("rung \(row.rung.rung) has no target_win_rate, reseed with tools/ingest/ladder.py")
                 continue
             }
             let measured = try measuredWinRate(row)
@@ -177,7 +177,7 @@ final class LadderCurveTests: XCTestCase {
                 d, 0.18,
                 "rung \(row.rung.rung) board \(row.rung.ordinal ?? 0) (\(row.puzzle.id)) has "
                 + "difficulty \(d). Below the floor both sides score at ceiling and `bot_skill` "
-                + "stops meaning anything — this is how rung 18 ended up harder than rung 30.")
+                + "stops meaning anything, this is how rung 18 ended up harder than rung 30.")
         }
     }
 
@@ -204,7 +204,7 @@ final class LadderCurveTests: XCTestCase {
         let byRung = Dictionary(grouping: try rows(), by: \.rung.rung)
         let thin = byRung.filter { $0.value.count < 2 }.keys.sorted()
         XCTAssertTrue(thin.isEmpty,
-                      "rung(s) \(thin) have a single board — losing and retrying serves the "
+                      "rung(s) \(thin) have a single board, losing and retrying serves the "
                       + "identical board with the answers already known. Deepen the released pool "
                       + "(tools.ingest.main --grid <sport> --grid-days N) and re-run "
                       + "tools.ingest.ladder --upsert.")

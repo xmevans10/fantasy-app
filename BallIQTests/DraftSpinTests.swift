@@ -229,7 +229,7 @@ final class DraftSpinTests: XCTestCase {
     func testCanFillLineupRejectsATooThinRosterAndAcceptsAnExactCover() {
         XCTAssertFalse(DraftSpinConstraint.canFillLineup(
             roster: thinSoccerRoster, sport: .soccer, openRoles: soccerFormationRoles),
-            "4 players can never fill soccer's 8 slots — the live BRO 2006 bug")
+            "4 players can never fill soccer's 8 slots, the live BRO 2006 bug")
         XCTAssertTrue(DraftSpinConstraint.canFillLineup(
             roster: fullSoccerRoster, sport: .soccer, openRoles: soccerFormationRoles),
             "exactly 8 distinct players for 8 open roles is the boundary case, and must pass")

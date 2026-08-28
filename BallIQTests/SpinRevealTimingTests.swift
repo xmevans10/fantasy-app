@@ -78,10 +78,10 @@ final class SpinRevealTimingTests: XCTestCase {
     /// out explicitly so nobody has to multiply in their head to see the cost.
     func testSoccerDraftSpendsAboutThirtyFourSecondsInTheReveal() {
         let rounds = DraftSpinConstraint.lineupSlots(for: .soccer).count
-        XCTAssertEqual(rounds, 8, "soccer formation changed — re-check this budget")
+        XCTAssertEqual(rounds, 8, "soccer formation changed, re-check this budget")
         let total = Double(rounds) * SpinReveal.totalSeconds(abbreviated: false)
         XCTAssertEqual(total, 34.24, accuracy: 0.05,
-                       "full-length every round is a deliberate trade — see the file header")
+                       "full-length every round is a deliberate trade, see the file header")
     }
 
     func testTickDelayDeceleratesMonotonically() {

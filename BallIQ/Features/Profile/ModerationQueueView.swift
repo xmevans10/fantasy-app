@@ -52,7 +52,7 @@ struct ModerationQueueView: View {
             }
             Button("Cancel", role: .cancel) { removeTarget = nil }
         } message: {
-            Text("Deletion can't be undone — restoring or leaving it hidden are reversible.")
+            Text("Deletion can't be undone, restoring or leaving it hidden are reversible.")
         }
     }
 

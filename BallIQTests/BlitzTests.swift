@@ -430,7 +430,7 @@ final class BlitzTests: XCTestCase {
         }
         XCTAssertEqual(Set(BlitzFormat.allCases.compactMap(\.puzzleFormat)),
                        [.keep4, .whoami, .journeyman],
-                       "The Grid stays out of blitz — a nine-cell board is a session, not a round")
+                       "The Grid stays out of blitz, a nine-cell board is a session, not a round")
     }
 
     // MARK: - Per-round breakdown (M31: the result screen's expandable list)

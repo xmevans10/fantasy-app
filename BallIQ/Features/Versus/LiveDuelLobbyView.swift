@@ -49,7 +49,7 @@ struct LiveDuelLobbyView: View {
             } else if session.isResolved && !session.bothReady {
                 // Never got both sides ready: the duel's own 24h expiry (or a same-poll no-show
                 // sweep) closed it before the race could start — not a loss, just a dead link.
-                closedState(message: String(localized: "This duel closed before it could start — likely nobody showed up in time."))
+                closedState(message: String(localized: "This duel closed before it could start, likely nobody showed up in time."))
             } else if session.bothReady {
                 openingBoard
             } else if session.iAmReady {
@@ -123,14 +123,14 @@ struct LiveDuelLobbyView: View {
                      ?? String(localized: "Waiting for your opponent…"))
                     .font(.title)
                     .foregroundStyle(Color.textPrimary)
-                Text("You're in. The board opens the instant they ready up — leave this open, or come back to it from Versus any time before it expires.")
+                Text("You're in. The board opens the instant they ready up, leave this open, or come back to it from Versus any time before it expires.")
                     .font(.label12)
                     .foregroundStyle(Color.textMuted)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 24)
                 if session.pollFailing {
-                    Text("Having trouble reaching the server — retrying…")
+                    Text("Having trouble reaching the server. Retrying…")
                         .font(.label11)
                         .foregroundStyle(Color.warningText)
                 }
@@ -145,7 +145,7 @@ struct LiveDuelLobbyView: View {
         VStack(spacing: 14) {
             Spacer()
             ProgressView().tint(Color.accentText)
-            Text("Both ready — opening the board…")
+            Text("Both ready. Opening the board…")
                 .font(.label12)
                 .foregroundStyle(Color.textMuted)
             Spacer()
@@ -202,7 +202,7 @@ struct LiveDuelLobbyView: View {
         readyError = nil
         defer { readying = false }
         do { try await session.ready() }
-        catch { readyError = String(localized: "Couldn't ready up — check your connection and try again.") }
+        catch { readyError = String(localized: "Couldn't ready up. Check your connection and try again.") }
     }
 
     private func openBoard() async {

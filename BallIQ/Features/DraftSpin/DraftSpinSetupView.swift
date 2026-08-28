@@ -57,8 +57,8 @@ struct DraftSpinSetupView: View {
             SetupOptionCard(
                 title: "MODE",
                 caption: isDailyDraft
-                    ? "Same \(sport.displayName) spins as every other player today. One official run per day — replays after that only earn XP."
-                    : "Fully random spins, any sport, anytime — practice or grind XP.")
+                    ? "Same \(sport.displayName) spins as every other player today. One official run per day, replays after that only earn XP."
+                    : "Fully random spins, any sport, anytime, practice or grind XP.")
             {
                 SetupSegmentedControl(options: ["FREE PLAY", "DAILY DRAFT"],
                                       selectedIndex: isDailyDraft ? 1 : 0)
@@ -104,8 +104,8 @@ struct DraftSpinSetupView: View {
                 SetupOptionCard(
                     title: "ROSTER",
                     caption: settings.includeDefense
-                        ? "Both sides: the six offense slots plus DL, LB and DB — real IDP stats (tackles, sacks, interceptions…)."
-                        : "Offense only — the default. Switch to Both sides to draft real defenders too.")
+                        ? "Both sides: the six offense slots plus DL, LB and DB, real IDP stats (tackles, sacks, interceptions…)."
+                        : "Offense only, the default. Switch to Both sides to draft real defenders too.")
                 {
                     SetupSegmentedControl(options: ["OFFENSE ONLY", "BOTH SIDES"],
                                           selectedIndex: settings.includeDefense ? 1 : 0)
@@ -121,7 +121,7 @@ struct DraftSpinSetupView: View {
                     title: "LEAGUE",
                     caption: settings.clubFilter.isAll
                         ? "Spins draw from every nation, division and club we track."
-                        : "Spins are restricted to \(selectedLeagueName) — if a round can't fill an open slot from just that, it falls back to any league rather than getting stuck.")
+                        : "Spins are restricted to \(selectedLeagueName), if a round can't fill an open slot from just that, it falls back to any league rather than getting stuck.")
                 {
                     LeaguePickerButton(filter: $settings.clubFilter, sport: .soccer,
                                        playableNations: playableSoccerLeagues,
@@ -159,13 +159,13 @@ struct DraftSpinSetupView: View {
         .sheet(isPresented: $showingHowItWorks) {
             HowItWorksSheet(
                 title: "Daily Draft",
-                intro: "Draft & Spin's daily competitive mode — one sport, one shot, everyone drafting from the same spins.",
+                intro: "Draft & Spin's daily competitive mode, one sport, one shot, everyone drafting from the same spins.",
                 symbol: "dice.fill",
                 tint: .accentText,
                 tintBackground: .accentBg,
                 rules: [
                     HowItWorksSheet.Rule(symbol: "calendar", title: "One sport a day",
-                                         detail: "Daily Draft always plays today's featured sport — no picking your own."),
+                                         detail: "Daily Draft always plays today's featured sport, no picking your own."),
                     HowItWorksSheet.Rule(symbol: "person.3.fill", title: "Same spins, no rerolls",
                                          detail: "Every player gets the identical round-by-round spins today, and the reroll option is off."),
                     HowItWorksSheet.Rule(symbol: "checkmark.seal.fill", title: "First run is official",

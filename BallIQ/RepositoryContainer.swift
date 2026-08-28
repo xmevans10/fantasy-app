@@ -295,7 +295,7 @@ final class RepositoryContainer: ObservableObject {
             case .notSignedIn:
                 return "You're not signed in."
             case .serverUnavailable:
-                return "We couldn't reach the server. Your account has not been deleted — "
+                return "We couldn't reach the server. Your account has not been deleted, "
                      + "please check your connection and try again."
             }
         }

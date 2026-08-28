@@ -184,7 +184,7 @@ struct CreateKeep4View: View {
                 sportToggle(selection: scoringSport) { setScoringSport($0) }
                 scoringChips
                 if isVibes {
-                    Text("Vibes — you rank the 8 yourself, no formula, no scores. Players will " +
+                    Text("Vibes: you rank the 8 yourself, no formula, no scores. Players will " +
                          "see this labeled as your call, not a stat line.")
                         .font(.label11).foregroundStyle(Color.textMuted)
                 } else {
@@ -216,7 +216,7 @@ struct CreateKeep4View: View {
             Toggle("Era-adjust scoring", isOn: eraBinding)
                 .font(.bodyStrong)
                 .tint(Color.accentFill)
-            Text("Multiplies each season's points by its era's league volume — a 2002 stat line can outrank a bigger modern one.")
+            Text("Multiplies each season's points by its era's league volume, a 2002 stat line can outrank a bigger modern one.")
                 .font(.label11).foregroundStyle(Color.textMuted)
         }
     }
@@ -278,7 +278,7 @@ struct CreateKeep4View: View {
         sectionCard("Your ranking · \(selected.count)/\(target)", systemImage: "hand.draw") {
             VStack(alignment: .leading, spacing: 10) {
                 Text(selected.count == target
-                     ? "Drag into the order you'd keep them — top 4 are KEEP, bottom 4 are CUT."
+                     ? "Drag into the order you'd keep them, top 4 are KEEP, bottom 4 are CUT."
                      : "Add \(target - selected.count) more, then drag them into your order.")
                     .font(.label11).foregroundStyle(Color.textMuted)
                 List {
@@ -726,7 +726,7 @@ struct PublishedSheet: View {
             Image(systemName: "checkmark.seal.fill").font(.system(size: 48))
                 .foregroundStyle(Color.successFill)
             Text("Published!").font(.display1).foregroundStyle(Color.textPrimary)
-            Text("Share it — friends without the app get a link to install it first.")
+            Text("Share it, friends without the app get a link to install it first.")
                 .font(.body14).foregroundStyle(Color.textMuted).multilineTextAlignment(.center)
             Text(shareURL.absoluteString).font(.bodyStrong).foregroundStyle(Color.accentText)
                 .padding(12).frame(maxWidth: .infinity).background(Color.surfaceMuted)

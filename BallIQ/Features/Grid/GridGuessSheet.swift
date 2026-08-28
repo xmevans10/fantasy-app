@@ -105,7 +105,7 @@ struct GridGuessSheet: View {
                 .onChange(of: text) { duplicateBlocked = false }
 
                 if duplicateBlocked {
-                    Label("Already used in another cell — one player per grid.", systemImage: "exclamationmark.triangle.fill")
+                    Label("Already used in another cell. One player per grid.", systemImage: "exclamationmark.triangle.fill")
                         .font(.label12).foregroundStyle(Color.dangerText)
                         .padding(.horizontal, 16).padding(.top, 10)
                 }
@@ -159,7 +159,7 @@ struct GridGuessSheet: View {
             }
             .padding(.top, 8)
         } else if trimmed.count >= 2 && !names.isEmpty {
-            Text("No player by that name — tap Guess to submit it anyway.")
+            Text("No player by that name. Tap Guess to submit it anyway.")
                 .font(.label12).foregroundStyle(Color.textMuted)
                 .padding(.horizontal, 16).padding(.top, 12)
         }

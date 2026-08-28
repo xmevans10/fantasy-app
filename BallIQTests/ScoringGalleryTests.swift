@@ -12,10 +12,10 @@ final class ScoringGalleryTests: XCTestCase {
     func testRenderGallery() throws {
         let gallery = VStack(alignment: .leading, spacing: 14) {
             DailyGameCard(formatName: "K4C4", symbol: "rectangle.stack.fill", sport: .nfl,
-                          title: "All-time fantasy seasons — any position",
+                          title: "All-time fantasy seasons, any position",
                           subtitle: "8 seasons", scoring: .ppr, completed: false) {}
             DailyGameCard(formatName: "K4C4", symbol: "rectangle.stack.fill", sport: .nfl,
-                          title: "Best seasons of all time — era-adjusted",
+                          title: "Best seasons of all time, era-adjusted",
                           subtitle: "8 seasons · archive", scoring: .era, completed: false) {}
             DailyGameCard(formatName: "K4C4", symbol: "football.fill", sport: .nfl,
                           title: "My sleeper TE hall of fame",

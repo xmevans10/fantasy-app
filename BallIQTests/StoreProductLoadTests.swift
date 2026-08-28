@@ -125,7 +125,7 @@ final class StoreProductLoadTests: XCTestCase {
         await service.loadProducts()
 
         guard !service.products.isEmpty else {
-            throw XCTSkip("No StoreKit products — SKTestSession config not applied")
+            throw XCTSkip("No StoreKit products, SKTestSession config not applied")
         }
         XCTAssertEqual(service.products.count, 4, "all four configured products should resolve")
         XCTAssertEqual(service.productLoadState, .loaded, "a reachable store must settle on loaded")
