@@ -1527,7 +1527,7 @@
   },
   {
     "id": "nfl-total-fantasy-00",
-    "theme": "All-time fantasy seasons — any position",
+    "theme": "All-time fantasy seasons, any position",
     "sport": "nfl",
     "players": [
       {
@@ -1760,7 +1760,7 @@
   },
   {
     "id": "nfl-total-fantasy-era-00",
-    "theme": "Best seasons of all time — era-adjusted",
+    "theme": "Best seasons of all time, era-adjusted",
     "sport": "nfl",
     "players": [
       {
