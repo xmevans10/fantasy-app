@@ -194,11 +194,42 @@ def test_assign_active_dates_never_lands_on_a_day_a_device_could_call_today():
     rows = [PuzzleRow(id=f"r{i}", sport="nfl", format="keep4", content={}) for i in range(90)]
     main.assign_active_dates(rows, backfill_days=30)
     today = dt.date.today()
-    stamped = {row.active_date for row in rows}
+    stamped = {row.active_date for row in rows} - {None}
     assert today.isoformat() not in stamped
     assert (today - dt.timedelta(days=1)).isoformat() not in stamped
-    # Still a contiguous 30-day archive window, just shifted back off the live days.
+    # A contiguous 30-day archive window, shifted back off the live days.
     assert stamped == {(today - dt.timedelta(days=d)).isoformat() for d in range(2, 32)}
+    # ONE row per (date, sport). The client's daily pick is `rows.first(where: activeDate ==
+    # today)`, so a second row for a day is not archival noise, it is a coin flip decided by id
+    # order. 90 rows of one sport cannot each own a day in a 30-day window; the surplus goes
+    # undated, which `RemotePuzzleRepository.released` treats as released, so Browse is
+    # unaffected.
+    dated = [r for r in rows if r.active_date]
+    pairs = [(r.active_date, r.sport) for r in dated]
+    assert len(pairs) == len(set(pairs)), "two rows claimed the same day for one sport"
+    assert len(dated) == 30
+
+
+def test_the_archive_never_claims_a_day_a_daily_mint_already_owns():
+    """The production defect this guards: `main.py` stamped archive dates straight over days
+    daily_puzzle.py had already minted, creating 66 double-claimed (date, sport) pairs."""
+    from tools.ingest.assemble import PuzzleRow
+    today = dt.date.today()
+    owned = {((today - dt.timedelta(days=d)).isoformat(), "nfl") for d in range(2, 20)}
+    rows = [PuzzleRow(id=f"r{i}", sport="nfl", format="keep4", content={}) for i in range(8)]
+    main.assign_active_dates(rows, backfill_days=30, claimed=set(owned))
+    got = {(r.active_date, r.sport) for r in rows if r.active_date}
+    assert got & owned == set(), "archive landed on a day the daily mint owns"
+    assert len(got) == 8
+
+
+def test_a_claimed_day_for_another_sport_does_not_block_this_one():
+    from tools.ingest.assemble import PuzzleRow
+    today = dt.date.today()
+    owned = {((today - dt.timedelta(days=2)).isoformat(), "nba")}
+    rows = [PuzzleRow(id="r0", sport="nfl", format="keep4", content={})]
+    main.assign_active_dates(rows, backfill_days=30, claimed=set(owned))
+    assert rows[0].active_date == (today - dt.timedelta(days=2)).isoformat()
 
 
 # --- headshot ledger ------------------------------------------------------------------

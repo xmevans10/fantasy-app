@@ -395,16 +395,47 @@ def build_rows(seasons: list[RawSeason]) -> tuple[list[PuzzleRow], list[PuzzleRo
 _ARCHIVE_MIN_OFFSET_DAYS = 2
 
 
-def assign_active_dates(rows: list[PuzzleRow], backfill_days: int) -> None:
-    """Spread rows across the trailing `backfill_days` so the archive isn't empty. Deliberately
-    never stamps today *or yesterday* (see `_ARCHIVE_MIN_OFFSET_DAYS`) — those dates are
-    reserved for daily_puzzle.py's guaranteed-novel per-sport picks, which the client
-    (RemotePuzzleRepository) trusts as an exact `active_date` match to mean "the puzzle for
-    today." Every other row's active_date stays archival/informational, same as before."""
+def assign_active_dates(rows: list[PuzzleRow], backfill_days: int,
+                        claimed: set[tuple[str, str]] | None = None) -> None:
+    """Spread rows across the trailing `backfill_days` so the archive isn't empty, skipping any
+    (date, sport) a daily mint already owns.
+
+    Reserving today and yesterday (`_ARCHIVE_MIN_OFFSET_DAYS`) is not enough, and the reason is
+    worth stating plainly because the original design was right when it was written and quietly
+    stopped being right. The old note here, and in `upsert.fetch_served_pairs`, says multiple
+    rows per day are tolerable because "Browse never reads it". That was true until the client's
+    daily pick started keying on an exact `active_date` match. It now does
+    (`RemotePuzzleRepository.pick` takes `rows.first(where: activeDate == today)`), so a second
+    row for a day is not archival noise: it is a coin flip, decided by whichever id sorts first.
+
+    Measured in production 2026-08-30: 66 (date, sport) pairs carried two keep4 rows, and on 38
+    of them the archival pool row won the sort and was served INSTEAD of that day's mint. The
+    daily-drop push names the minted theme, so on those days it announced a puzzle the app never
+    showed (11 of the 12 most recent contested days).
+
+    `claimed` comes from `upsert.fetch_served_pairs` over the same window. Rows are also tracked
+    within this run, because the old `i % backfill_days` could hand two same-sport rows the same
+    date all by itself.
+    """
     today = dt.date.today()
+    claimed = set(claimed or set())
     for i, row in enumerate(rows):
-        offset = (i % max(1, backfill_days)) + _ARCHIVE_MIN_OFFSET_DAYS
-        row.active_date = (today - dt.timedelta(days=offset)).isoformat()
+        span = max(1, backfill_days)
+        start = i % span
+        # Walk forward for a free day, CYCLING INSIDE the window rather than past its end: a
+        # row that spilled beyond `backfill_days` would silently widen the archive every run.
+        # A full lap with nothing free leaves the row undated, which is the safe failure --
+        # `RemotePuzzleRepository.released` treats an undated row as released, so it still
+        # shows in Browse; it just never claims to be a day's canonical puzzle.
+        for step in range(span):
+            offset = ((start + step) % span) + _ARCHIVE_MIN_OFFSET_DAYS
+            day = (today - dt.timedelta(days=offset)).isoformat()
+            if (day, row.sport) not in claimed:
+                row.active_date = day
+                claimed.add((day, row.sport))
+                break
+        else:
+            row.active_date = None
 
 
 def catalog_rows(seasons: list[RawSeason]) -> list[dict]:
@@ -936,7 +967,20 @@ def main() -> int:
         validate(row)
     print(f"[validate] {len(all_rows)} rows OK")
 
-    assign_active_dates(all_rows, args.backfill)
+    # The archive must not land on a day a daily mint already owns. Only reachable with
+    # credentials; a dry run keeps the old unconditional spread, which is harmless because it
+    # writes nothing.
+    claimed: set[tuple[str, str]] = set()
+    if args.upsert:
+        from .upsert import fetch_served_pairs
+        window = [(dt.date.today() - dt.timedelta(days=d)).isoformat()
+                  for d in range(_ARCHIVE_MIN_OFFSET_DAYS, args.backfill + _ARCHIVE_MIN_OFFSET_DAYS + 2)]
+        try:
+            claimed = fetch_served_pairs(window)
+            print(f"[archive] {len(claimed)} (date, sport) slot(s) already owned by a daily mint")
+        except Exception as err:  # noqa: BLE001
+            print(f"[archive] could not read minted slots, spreading without them: {err}")
+    assign_active_dates(all_rows, args.backfill, claimed)
     print_summary(keep4, whoami)
 
     if args.write_fallback:

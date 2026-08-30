@@ -62,4 +62,12 @@ jobs:
       # Grid to the device-LOCAL date, so tomorrow's board must exist before UTC+14 reaches its
       # midnight (10:00 UTC today). Don't raise it — see daily-puzzle.yml's cron comment on why
       # extra lookahead is unreleased content visible to any client without a future-row filter.
-      - run: python -m tools.ingest.main --grid nfl nba baseball soccer tennis --upsert
+      #
+      # `if: always()` because the Grid must not be hostage to the step above. Production
+      # 2026-08-30: `ingest-puzzles` failed three days running on a statement timeout in the
+      # catalog step's missing-headshot scan, this step never ran, and The Grid -- a Pro-only
+      # format -- had no board for two days. Every client fell back to a modulo pick over the
+      # archive with no TODAY badge. daily-puzzle.yml already runs its three format steps this
+      # way, for exactly this reason; this job never got the same treatment.
+      - if: always()
+        run: python -m tools.ingest.main --grid nfl nba baseball soccer tennis --upsert

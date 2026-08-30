@@ -169,8 +169,25 @@ def fetch_catalog_ids_missing(sport: str, column: str, page_size: int = 1000) ->
                  f"&order=id.asc&limit={page_size}")
         if last is not None:
             query += f"&id=gt.{urllib.parse.quote(last)}"
-        page = _get_json(f"{base}/rest/v1/player_seasons?{query}", headers,
-                         what=f"missing-{column} id fetch")
+        try:
+            page = _get_json(f"{base}/rest/v1/player_seasons?{query}", headers,
+                             what=f"missing-{column} id fetch")
+        except Exception as err:  # noqa: BLE001
+            # NEVER fatal. This scan only decides which already-stored rows are worth RESENDING
+            # so a later run can fill a blank column in -- it is an optimization, and failing
+            # the whole ingest over it trades real content for a cosmetic improvement.
+            #
+            # It did exactly that in production. On 2026-08-30 this raised a 500 (Postgres
+            # 57014, statement timeout) three days running, which aborted `main.py` and, because
+            # the grid step shared the job, left The Grid with no board for two days. The scan
+            # is big and getting bigger: 8,289 players (17.9%) carry no photo anywhere, and NFL
+            # alone walks 44,956 ids over 45 pages, ~29s, with single pages measured at 7.2s.
+            #
+            # Degrading to the partial set is correct: fewer rows get resent this run, and the
+            # next run picks up whatever was missed. Nothing is lost but a little latency.
+            print(f"[catalog] missing-{column} scan for {sport} stopped early "
+                  f"({len(ids)} id(s) collected): {err}")
+            break
         if not page:
             break
         ids.update(r["id"] for r in page)

@@ -58,6 +58,26 @@ def _weight(stats: dict[str, float], key: str | tuple[str, ...]) -> float:
     return stats.get(key, 0.0)
 
 
+def _best_headshot(rows_by_year: list[RawSeason]) -> str:
+    """The player's photo, taken from the most recent season that actually HAS one.
+
+    This used to read `latest.headshot`, i.e. the newest season row and nothing else. A player
+    whose final season happens to carry no photo -- a late-career move, or a row from one of the
+    photo-less historical sweeps -- produced a career card with no face, even though several of
+    their own earlier seasons had one sitting right there.
+
+    Measured in production 2026-08-30: 11,193 career rows were photo-less while the player was
+    photographed elsewhere in the catalog. Baseball is the clearest proof that it was never a
+    coverage problem: exactly ONE baseball player has no photo anywhere, yet 4,207 baseball
+    career rows had none. Career-grain themes are real content (`nfl-career-fantasy`,
+    `nba-career-fantasy`), and a card IS its photo.
+    """
+    for row in reversed(rows_by_year):
+        if row.headshot:
+            return row.headshot
+    return ""
+
+
 def _aggregate_stats(sport: str, rows: list[RawSeason]) -> dict[str, float]:
     """Sum counting stats; weighted-average rate stats; recompute derived stats last."""
     rate_weights = _RATE_WEIGHTS.get(sport, {})
@@ -95,7 +115,7 @@ def build_career_rows(seasons: list[RawSeason]) -> list[RawSeason]:
         groups[(s.sport, s.position, slug(s.name))].append(s)
 
     out: list[RawSeason] = []
-    for (sport, position, _person), rows in groups.items():
+    for (sport, position, _person), rows in groups.items():  # noqa: PLR1702
         if len(rows) < 2:   # a "career" of one season isn't a distinct grain
             continue
         rows_by_year = sorted(rows, key=lambda r: r.season_year)
@@ -114,7 +134,7 @@ def build_career_rows(seasons: list[RawSeason]) -> list[RawSeason]:
             position=position,
             stats=stats,
             source="career_aggregate",
-            headshot=latest.headshot,
+            headshot=_best_headshot(rows_by_year),
             career=True,
             meta=meta,
         ))

@@ -121,3 +121,41 @@ def test_career_player_id_is_stable_and_distinct_from_season_ids():
     row = build_career_rows(seasons)[0]
     assert row.player_id == "baseball-test-pitcher-career"
     assert row.player_id not in {s.player_id for s in seasons}
+
+
+# --- career-row photos --------------------------------------------------------------------
+# Regression cover for the 2026-08-30 audit: 11,193 career rows carried no photo while the
+# player WAS photographed on their own season rows. Baseball made it unmistakable -- exactly
+# one baseball player has no photo anywhere, yet 4,207 baseball career rows had none.
+
+def _season_for_photo(name, year, headshot, *, sport="nfl", position="RB"):
+    from tools.ingest.models import RawSeason
+    return RawSeason(name=name, team_abbr="KC", season_year=year, sport=sport,
+                     position=position, stats={"rushing_yards": 900.0, "games": 16.0},
+                     headshot=headshot, source="nflverse")
+
+
+def test_a_career_row_takes_a_photo_from_an_earlier_season_when_the_last_one_has_none():
+    """The exact production shape: a late-career row with no photo used to blank the card."""
+    from tools.ingest import career
+    rows = [_season_for_photo("Star", 2018, "https://img/star.png"),
+            _season_for_photo("Star", 2019, "https://img/star.png"),
+            _season_for_photo("Star", 2020, "")]          # final season, no photo
+    built = career.build_career_rows(rows)
+    assert len(built) == 1
+    assert built[0].headshot == "https://img/star.png"
+
+
+def test_the_most_recent_photo_wins_when_several_seasons_have_one():
+    from tools.ingest import career
+    rows = [_season_for_photo("Star", 2018, "https://img/old.png"),
+            _season_for_photo("Star", 2020, "https://img/new.png")]
+    assert career.build_career_rows(rows)[0].headshot == "https://img/new.png"
+
+
+def test_a_genuinely_photoless_player_still_gets_no_photo():
+    """Inheriting must not invent one: a player with no photo anywhere stays blank, which is
+    what `assemble.DEPTH_ONLY_WITHOUT_PHOTO` relies on to keep them off cards."""
+    from tools.ingest import career
+    rows = [_season_for_photo("Ghost", 1974, ""), _season_for_photo("Ghost", 1975, "")]
+    assert career.build_career_rows(rows)[0].headshot == ""
