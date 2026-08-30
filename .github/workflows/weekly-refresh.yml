@@ -79,7 +79,17 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add tools/ingest/data/nba_hoopr_seasons.csv
             git commit -m "Weekly hoopR NBA sweep refresh (automated)"
-            git push
+            # Rebase-and-retry: these three jobs run concurrently with each other and
+            # with any human push, and a bare `git push` loses the whole sweep to a
+            # non-fast-forward. That is not hypothetical -- on 2026-08-30 the ESPN
+            # soccer job did all its work and then threw the commit away because a
+            # push landed while it ran. The sweeps touch disjoint files, so a rebase
+            # is safe; --autostash covers anything the run left dirty.
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase --autostash origin main && git push && break
+              echo "push attempt $attempt lost a race, retrying"
+              sleep $((attempt * 10))
+            done
           else
             echo "sweep unchanged — nothing to commit"
           fi
@@ -121,7 +131,17 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add tools/ingest/data/soccer_transfermarkt_seasons.csv
             git commit -m "Weekly Transfermarkt soccer sweep refresh (automated)"
-            git push
+            # Rebase-and-retry: these three jobs run concurrently with each other and
+            # with any human push, and a bare `git push` loses the whole sweep to a
+            # non-fast-forward. That is not hypothetical -- on 2026-08-30 the ESPN
+            # soccer job did all its work and then threw the commit away because a
+            # push landed while it ran. The sweeps touch disjoint files, so a rebase
+            # is safe; --autostash covers anything the run left dirty.
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase --autostash origin main && git push && break
+              echo "push attempt $attempt lost a race, retrying"
+              sleep $((attempt * 10))
+            done
           else
             echo "sweep unchanged — nothing to commit"
           fi
@@ -199,7 +219,17 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add tools/ingest/data/soccer_espn_seasons.csv
             git commit -m "Weekly ESPN soccer current-season refresh (automated)"
-            git push
+            # Rebase-and-retry: these three jobs run concurrently with each other and
+            # with any human push, and a bare `git push` loses the whole sweep to a
+            # non-fast-forward. That is not hypothetical -- on 2026-08-30 the ESPN
+            # soccer job did all its work and then threw the commit away because a
+            # push landed while it ran. The sweeps touch disjoint files, so a rebase
+            # is safe; --autostash covers anything the run left dirty.
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase --autostash origin main && git push && break
+              echo "push attempt $attempt lost a race, retrying"
+              sleep $((attempt * 10))
+            done
           else
             echo "current-season sweep unchanged — nothing to commit"
           fi
