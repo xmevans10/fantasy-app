@@ -18,9 +18,20 @@ from . import nfl_nflverse_schedule
 from .http import fetch_text
 from .nfl_nflverse import _num
 
+# The `stats_player` release, NOT the legacy `player_stats` one this used to read.
+#
+# nflverse restructured after the 2024 season and `nfl_nflverse.py` (season grain) already
+# handles that with a 2025+ cutover; the weekly grain never got the same treatment, so every
+# run logged "[nfl-games] 2025 skipped: HTTP Error 404" and moved on. Probing both tags across
+# 1999-2026 showed the fix is simpler than a cutover: `stats_player` serves EVERY year, while
+# `player_stats` is missing 2019 as well as 2025+. One base for all years therefore also closes
+# a silent six-year-old hole in 2019, which nobody had connected to the 2025 problem.
+#
+# Schemas verified identical for 2019, 2024 and 2025: every column this parser reads is
+# present in all three.
 _BASE = (
     "https://github.com/nflverse/nflverse-data/releases/download/"
-    "player_stats/stats_player_week_{year}.csv"
+    "stats_player/stats_player_week_{year}.csv"
 )
 
 MIN_YEAR = 1999
