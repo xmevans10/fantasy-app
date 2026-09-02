@@ -2067,29 +2067,78 @@ $$;
 
 grant execute on function public.random_grid_puzzle(text, text) to anon, authenticated;
 
--- The membership relation — player -> (team, league, year) — for one sport (2026-07-27, applied
--- live as migration `grid_membership_index_rpc`). This is what lets the CLIENT generate its own
--- Grid boards (`GridLocalGenerator.swift`) instead of being capped by the minted pool, which
--- stood at 41 boards across all five sports. Sibling of `grid_player_names` above: same posture,
--- one aggregate so PostgREST's 1000-row cap can't truncate it, cached a week on the device.
---
--- Memberships alone support exactly two board shapes — teams x decades and teams x teams — since
--- both ask only "did this player appear for this team in this year". Stat/position axes need the
--- `stats` jsonb and are deliberately not shipped; the client simply doesn't offer those shapes.
+-- Axis/stat membership for Grid v2 boards (migrations 0012 `grid_axis_membership`, 0013
+-- `grid_axis_membership_team_grain`) — was missing from this file entirely until reconciled here;
+-- prod already had it. One row per (sport, axis, player, team, league, season) a player satisfied
+-- that axis for that team in that season; team/league are carried on the row itself rather than
+-- joined by year, per 0013's header comment on why a year-join answers a different question for
+-- players with a blank-team mid-season-move aggregate row.
+create table if not exists public.grid_axis_membership (
+  sport       text not null,
+  axis_key    text not null,
+  axis_kind   text not null,
+  axis_label  text not null,
+  player_name text not null,
+  team_abbr   text not null default '',
+  league      text not null default '',
+  season_year int not null,
+  primary key (sport, axis_key, player_name, team_abbr, league, season_year)
+);
+
+create index if not exists grid_axis_membership_lookup_idx
+  on public.grid_axis_membership (sport, player_name);
+
+create index if not exists grid_axis_membership_axis_key_idx
+  on public.grid_axis_membership (sport, axis_key);
+
+-- Cache backing `grid_membership_index` below (migration 0014).
+create table if not exists public.grid_membership_index_cache (
+  sport       text not null,
+  version     int  not null,
+  payload     jsonb not null,
+  computed_at timestamptz not null default now(),
+  primary key (sport, version)
+);
+
+alter table public.grid_membership_index_cache enable row level security;
+
+drop policy if exists grid_membership_index_cache_read on public.grid_membership_index_cache;
+create policy grid_membership_index_cache_read
+  on public.grid_membership_index_cache for select
+  to anon, authenticated
+  using (true);
+
+-- The membership relation — player -> (team, league, year), plus (v2) player -> axis/stat
+-- membership — for one sport. Base shipped 2026-07-27 (`grid_membership_index_rpc`); widened to
+-- v2 axis/stat grain by migration 0013 (`grid_axis_membership_team_grain`) so the client
+-- (`GridLocalGenerator.swift`) can also build stat-axis boards, not just teams x decades / teams x
+-- teams. This is what lets the client generate its own boards instead of being capped by the
+-- minted pool. Sibling of `grid_player_names` above: same posture, one aggregate so PostgREST's
+-- 1000-row cap can't truncate it, cached a week on the device.
 --
 -- Wire format v1: `teams` [{abbr, league}] indexed by team id, `players` [name] indexed by player
--- id, and `memberships` parallel to `players`, each `teamIdx:yearOffset[,...][;teamIdx:...]` with
--- offsets relative to `minYear`. Measured gzipped on the wire 2026-07-27: nfl 69 KB, nba 62 KB,
--- baseball 119 KB, soccer 254 KB, tennis 16 KB — about what a *single* NFL board's content costs.
+-- id, `memberships` parallel to `players`, each `teamIdx:yearOffset[,...][;teamIdx:...]` with
+-- offsets relative to `minYear`. v2 adds `axes` [{key, kind, label}], and two more arrays parallel
+-- to `players`: `axisMemberships` (career-grain: every axis ever satisfied, as a CSV of axis
+-- indices) and `axisTeams` (season-grain: axis->team pairs a single row satisfied, as
+-- `axisIdx:teamIdx[,...][;axisIdx:...]`). See 0013's header comment for why axis membership needs
+-- the team carried on the SAME row rather than joined by year — a year-join answers a different,
+-- wrong question for players with mid-season aggregate rows.
 --
 -- League scoping mirrors grid.py's `_team_key`: for soccer the identity is (abbr, league) and
 -- blank-league rows are dropped, because soccer codes collide across countries (MCI is Manchester
 -- City and Melbourne City). Every other sport forces league to '' so a franchise can't split.
 --
--- `set statement_timeout` is load-bearing: the aggregate runs 1.2-7.4s and anon's default is 3s,
--- so without it the RPC would 57014 for signed-out users and look exactly like "no data" to a
--- client wrapping it in `try?` — the same failure mode migration 0007 documents.
-create or replace function public.grid_membership_index(p_sport text)
+-- Cache-or-compute as of migration 0014 (`grid_membership_index_cache`): the live aggregate below
+-- (`grid_membership_index_compute`) measured ~10s for NFL once the v2 axis joins landed on top of
+-- v1's 1.2-7.4s — unacceptable to block "New random grid"'s spinner on, and `set statement_timeout`
+-- alone only kept it from 57014-ing signed-out users under anon's 3s default (the same failure mode
+-- migration 0007 documents), it didn't make it fast. `grid_membership_index` is now a thin wrapper:
+-- serve a cached payload (indexed row lookup, milliseconds) if one exists and is under 36h old,
+-- else fall back to computing live and populate the cache for the next caller.
+-- `refresh_grid_membership_index_cache()` lets CI (`ingest.yml`, right after the daily grid mint)
+-- proactively warm every (sport, version) pair so real users hit the fast path essentially always.
+create or replace function public.grid_membership_index_compute(p_sport text, p_version int default 1)
 returns jsonb
 language sql
 stable
@@ -2134,20 +2183,125 @@ as $$
   lines as (
     select pidx, string_agg(tidx::text || ':' || years, ';' order by tidx) as line
     from runs group by pidx
+  ),
+  axes as (
+    select m.axis_key, m.axis_kind, m.axis_label,
+           (row_number() over (order by m.axis_kind, m.axis_key))::int - 1 as aidx
+    from (select distinct axis_key, axis_kind, axis_label
+          from public.grid_axis_membership where sport = p_sport and p_version >= 2) m
+  ),
+  axis_any_pairs as (
+    select distinct p.pidx, a.aidx
+    from public.grid_axis_membership gam
+    join axes a on a.axis_key = gam.axis_key
+    join players p on p.name = gam.player_name
+    where gam.sport = p_sport and p_version >= 2
+  ),
+  axis_any as (
+    select pidx, string_agg(aidx::text, ',' order by aidx) as line
+    from axis_any_pairs group by pidx
+  ),
+  axis_team as (
+    select distinct p.pidx, a.aidx, t.tidx
+    from public.grid_axis_membership gam
+    join axes a on a.axis_key = gam.axis_key
+    join players p on p.name = gam.player_name
+    join teams t on t.abbr = gam.team_abbr and t.league = gam.league
+    where gam.sport = p_sport and p_version >= 2
+  ),
+  axis_team_lines as (
+    select pidx,
+           string_agg(aidx::text || ':' || teams_csv, ';' order by aidx) as line
+    from (
+      select pidx, aidx, string_agg(tidx::text, ',' order by tidx) as teams_csv
+      from axis_team group by pidx, aidx
+    ) g
+    group by pidx
   )
   select jsonb_build_object(
     'sport', p_sport,
-    'version', 1,
+    'version', case when p_version >= 2 then 2 else 1 end,
     'minYear', coalesce((select min_year from lo), 0),
     'teams', coalesce((select jsonb_agg(jsonb_build_object('abbr', abbr, 'league', league)
                               order by tidx) from teams), '[]'::jsonb),
     'players', coalesce((select jsonb_agg(name order by pidx) from players), '[]'::jsonb),
     'memberships', coalesce((select jsonb_agg(line order by pidx) from lines), '[]'::jsonb)
-  );
+  ) || case when p_version >= 2 then jsonb_build_object(
+    'axes', coalesce((select jsonb_agg(jsonb_build_object('key', axis_key, 'kind', axis_kind,
+                                                          'label', axis_label) order by aidx)
+                      from axes), '[]'::jsonb),
+    'axisMemberships', coalesce((select jsonb_agg(coalesce(aa.line, '') order by p.pidx)
+                                 from players p left join axis_any aa on aa.pidx = p.pidx),
+                                '[]'::jsonb),
+    'axisTeams', coalesce((select jsonb_agg(coalesce(atl.line, '') order by p.pidx)
+                           from players p left join axis_team_lines atl on atl.pidx = p.pidx),
+                          '[]'::jsonb)
+  ) else '{}'::jsonb end;
 $$;
 
-revoke all on function public.grid_membership_index(text) from public;
-grant execute on function public.grid_membership_index(text) to anon, authenticated, service_role;
+revoke all on function public.grid_membership_index_compute(text, int) from public;
+grant execute on function public.grid_membership_index_compute(text, int) to service_role;
+
+create or replace function public.grid_membership_index(p_sport text, p_version int default 1)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+set statement_timeout = '30s'
+as $$
+declare
+  v_version int := case when p_version >= 2 then 2 else 1 end;
+  v_payload jsonb;
+begin
+  select payload into v_payload
+  from public.grid_membership_index_cache
+  where sport = p_sport and version = v_version
+    and computed_at > now() - interval '36 hours';
+
+  if v_payload is not null then
+    return v_payload;
+  end if;
+
+  v_payload := public.grid_membership_index_compute(p_sport, v_version);
+
+  insert into public.grid_membership_index_cache (sport, version, payload, computed_at)
+  values (p_sport, v_version, v_payload, now())
+  on conflict (sport, version) do update
+    set payload = excluded.payload, computed_at = excluded.computed_at;
+
+  return v_payload;
+end;
+$$;
+
+revoke all on function public.grid_membership_index(text, int) from public;
+grant execute on function public.grid_membership_index(text, int) to anon, authenticated, service_role;
+
+create or replace function public.refresh_grid_membership_index_cache()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_sport text;
+begin
+  foreach v_sport in array array['nfl','nba','baseball','soccer','tennis'] loop
+    insert into public.grid_membership_index_cache (sport, version, payload, computed_at)
+    values (v_sport, 1, public.grid_membership_index_compute(v_sport, 1), now())
+    on conflict (sport, version) do update
+      set payload = excluded.payload, computed_at = excluded.computed_at;
+
+    insert into public.grid_membership_index_cache (sport, version, payload, computed_at)
+    values (v_sport, 2, public.grid_membership_index_compute(v_sport, 2), now())
+    on conflict (sport, version) do update
+      set payload = excluded.payload, computed_at = excluded.computed_at;
+  end loop;
+end;
+$$;
+
+revoke all on function public.refresh_grid_membership_index_cache() from public;
+grant execute on function public.refresh_grid_membership_index_cache() to service_role;
 
 -- Crowd-sourced Grid rarity (2026-07-17, applied live as migration `grid_guesses_crowd_rarity`).
 -- Every submitted Grid guess is logged; grid_guess_stats aggregates correct picks per cell to

@@ -1,0 +1,117 @@
+name: headshot-backfill
+
+# Closes the gap the headshot pipeline (tools/ingest/headshots.py, warm_cdn.py) has had since it
+# was built: every stage — the sharded fetch/rehost worker, the ESPN/NBA/Wikimedia backfills,
+# dupe detection, repoint, and transform-warming — was manual-CLI-only. `ingest.yml` only ever
+# *applies* whatever the ledger already resolved (`apply_headshot_ledger`); it never fetches or
+# rehosts anything new. So every day's freshly-discovered player sat on a raw external URL — a
+# real placeholder about half the time for NFL/baseball (52%/63% of distinct sources, measured
+# 2026-09-02) — until someone remembered to run this by hand.
+#
+# Weekly is enough: this chases the steady trickle of newly-discovered players from the daily
+# catalog ingest, not a one-time backlog (that backlog is what the first manual run of this
+# workflow clears). Every step is additive/idempotent — safe to re-run, safe to fail one stage
+# without corrupting another — same posture as `ingest.yml` and `grid-backfill.yml`.
+on:
+  schedule:
+    - cron: "0 11 * * 0"   # weekly, Sunday 11:00 UTC — after discover-players.yml's Sunday run
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: "Parallel shards for the fetch/rehost pass"
+        default: "8"
+
+jobs:
+  # Reset last week's transient failures (Wikimedia/Transfermarkt throttling under load) so this
+  # run retries them instead of leaving them stuck in `error` forever.
+  reset-errors:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt
+      - run: python -m tools.ingest.headshots --reset-errors
+
+  # The bulk-coverage step: claim every `pending` source in `headshot_assets` and try to rehost
+  # it. Sharded and run in parallel — `run()`'s own doc comment says shards never overlap (hash-
+  # bucketed claims), same precedent as `grid-backfill.yml`'s matrix. `shards` is a plain input
+  # rather than a computed matrix since it's just "how many of 0..N-1" — no windowing to plan.
+  fetch:
+    needs: reset-errors
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SHARD_TOTAL: ${{ inputs.shards || '8' }}
+    # Skip shard indices beyond a custom, smaller manual `shards` input rather than trying to
+    # resize the matrix itself (GitHub Actions matrices can't be computed from an expression
+    # without a separate plan job — not worth it for a fixed 0-7 range that covers the schedule).
+    if: ${{ matrix.shard < fromJSON(inputs.shards || '8') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt
+      - run: python -m tools.ingest.headshots --shard ${{ matrix.shard }}/$SHARD_TOTAL
+
+  # Targeted backfills for rows the generic fetch can't reach because they need a different
+  # source entirely (the league CDN never had a real photo, or the row has no id to fetch by).
+  backfill:
+    needs: fetch
+    if: always()
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt
+      # ESPN's archive recovers NFL rows the league CDN drops to a helmet stub on retirement
+      # (2015+ near 100%, 2000-14 ~35%, per headshots.py's own measurement).
+      - run: python -m tools.ingest.headshots --espn-nfl-backfill
+      # MLB/NBA rows with no id bridge — resolves via ESPN search (exact-name-match only, so it
+      # never risks the wrong face).
+      - run: python -m tools.ingest.headshots --espn-search-backfill --sports baseball,nba
+      # NBA rows still photo-less after the ESPN passes, via cdn.nba.com's person-id catalog.
+      - run: python -m tools.ingest.headshots --nba-backfill
+      # Sequential by design inside the script (not thread-pooled) to avoid Wikimedia's 429
+      # throttle — 75% hit rate on baseball players MLB's CDN lacks, plus tennis/soccer/older
+      # NBA-NFL coverage.
+      - run: python -m tools.ingest.headshots --wiki-backfill
+      # Catches stock/stub graphics the byte-floor check alone doesn't (e.g. the NFL helmet is a
+      # normal-sized PNG) by flagging byte-identical sources repeated across many players.
+      - run: python -m tools.ingest.headshots --detect-dupes
+
+  # Apply everything the above resolved: rewrite player_seasons.headshot from the ledger, then
+  # pre-render the 192px transform for every newly-rehosted asset so no real user pays the ~1.9s
+  # cold-transform cost, then warm the render-endpoint edge cache the app actually reads from
+  # (warm_cdn.py: 1.4-1.8s cold -> 0.06-0.18s warm, measured 2026-08-28).
+  finalize:
+    needs: backfill
+    if: always()
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt
+      - run: python -m tools.ingest.headshots --repoint
+      - run: python -m tools.ingest.headshots --warm-transforms
+      - run: python -m tools.ingest.warm_cdn --scope all

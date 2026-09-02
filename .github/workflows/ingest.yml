@@ -71,3 +71,15 @@ jobs:
       # way, for exactly this reason; this job never got the same treatment.
       - if: always()
         run: python -m tools.ingest.main --grid nfl nba baseball soccer tennis --upsert
+      # Re-warm the `grid_membership_index` cache (0014_grid_membership_index_cache.sql) right
+      # after minting, so "New random grid" never pays the ~10s live-aggregate cost this masked
+      # before: the cache is read on a 36h TTL, and a stale/missing row falls back to computing
+      # inline on whichever player's request loses that race. Cheap and idempotent — a no-op
+      # rebuild if nothing changed since yesterday's run.
+      - if: always()
+        run: |
+          curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/refresh_grid_membership_index_cache" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}'
