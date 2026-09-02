@@ -22,6 +22,19 @@ on:
         default: "8"
 
 jobs:
+  # Computed rather than a fixed 0-7 range so a manual `shards` input actually changes the matrix
+  # size (job-level `if:` can't see `matrix`, so gating a fixed matrix by index doesn't work —
+  # same reasoning grid-backfill.yml's `plan` job documents for its own matrix).
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.build.outputs.shards }}
+    steps:
+      - id: build
+        env:
+          SHARDS: ${{ inputs.shards || '8' }}
+        run: python3 -c "import json,os; print('shards=' + json.dumps(list(range(int(os.environ['SHARDS'])))))" >> "$GITHUB_OUTPUT"
+
   # Reset last week's transient failures (Wikimedia/Transfermarkt throttling under load) so this
   # run retries them instead of leaving them stuck in `error` forever.
   reset-errors:
@@ -42,20 +55,16 @@ jobs:
   # bucketed claims), same precedent as `grid-backfill.yml`'s matrix. `shards` is a plain input
   # rather than a computed matrix since it's just "how many of 0..N-1" — no windowing to plan.
   fetch:
-    needs: reset-errors
+    needs: [plan, reset-errors]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       SHARD_TOTAL: ${{ inputs.shards || '8' }}
-    # Skip shard indices beyond a custom, smaller manual `shards` input rather than trying to
-    # resize the matrix itself (GitHub Actions matrices can't be computed from an expression
-    # without a separate plan job — not worth it for a fixed 0-7 range that covers the schedule).
-    if: ${{ matrix.shard < fromJSON(inputs.shards || '8') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
