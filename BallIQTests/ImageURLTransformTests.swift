@@ -76,6 +76,39 @@ final class ImageURLTransformTests: XCTestCase {
         }
     }
 
+    // MARK: - ESPN headshot combiner
+
+    /// Verified live 2026-09-02: 230,577 bytes full-res -> 35,652 through the combiner, a 6.5x
+    /// cut on one of the largest remaining still-external asset classes in the catalog.
+    func testEspnHeadshotGetsRewrittenToTheCombiner() throws {
+        let url = try XCTUnwrap(URL(string:
+            "https://a.espncdn.com/i/headshots/nfl/players/full/3139477.png"))
+        let out = AppImagePipeline.transformed(url, pixels: 192).absoluteString
+        XCTAssertTrue(out.hasPrefix("https://a.espncdn.com/combiner/i?"), out)
+        XCTAssertTrue(out.contains("img=/i/headshots/nfl/players/full/3139477.png"), out)
+        XCTAssertTrue(out.contains("w=192"), out)
+        XCTAssertTrue(out.contains("h=192"), out)
+    }
+
+    /// The requested bucket tracks the combiner's `w`/`h`, both of them.
+    func testEspnHeadshotWidthTracksTheRequestedBucket() throws {
+        let url = try XCTUnwrap(URL(string:
+            "https://a.espncdn.com/i/headshots/nba/players/full/1966.png"))
+        for pixels in AppImagePipeline.buckets {
+            let out = AppImagePipeline.transformed(url, pixels: pixels).absoluteString
+            XCTAssertTrue(out.contains("w=\(Int(pixels))"), "bucket \(pixels) missing: \(out)")
+        }
+    }
+
+    /// ESPN's team-logo path (`/i/teamlogos/`) is a different shape this rewrite hasn't been
+    /// verified against — `AppImagePipelineTests.testLeavesHostsWithoutATransformAPIUnchanged`
+    /// pins it untouched, and this test locks the same boundary from the other file.
+    func testEspnTeamLogoPathIsNotRewritten() throws {
+        let raw = "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png"
+        let url = try XCTUnwrap(URL(string: raw))
+        XCTAssertEqual(AppImagePipeline.transformed(url, pixels: 192).absoluteString, raw)
+    }
+
     // MARK: - Everything else
 
     /// Wikimedia hosts ~24k of our headshots and has no transform API. It must come back

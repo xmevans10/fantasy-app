@@ -318,7 +318,34 @@ enum AppImagePipeline {
     static func transformed(_ url: URL, pixels: CGFloat) -> URL {
         if let storage = supabaseRender(url, pixels: pixels) { return storage }
         if let cloudinary = cloudinaryResized(url, pixels: pixels) { return cloudinary }
+        if let espn = espnHeadshotResized(url, pixels: pixels) { return espn }
         return url
+    }
+
+    /// ESPN's `a.espncdn.com` headshot archive (`espn_nfl_backfill`/`espn_search_backfill`'s
+    /// source, and every un-rehosted row those wrote before a `--repoint` ran) is one of the
+    /// biggest still-external asset classes in the catalog. It has no public transform docs, but
+    /// its own site pages images through an undocumented "combiner" endpoint that does take a
+    /// size — verified live 2026-09-02: one NFL headshot went from 230,577 bytes at full res to
+    /// 35,652 through `/combiner/i?img=<path>&w=192&h=192`, a 6.5x cut, same trick as the
+    /// Cloudinary rewrite above for the league CDNs.
+    ///
+    /// Scoped to `/i/headshots/` specifically — `testLeavesHostsWithoutATransformAPIUnchanged`
+    /// pins `/i/teamlogos/` as untransformed, and this rewrite hasn't been verified against that
+    /// path, so it only touches the shape it was measured against.
+    private static func espnHeadshotResized(_ url: URL, pixels: CGFloat) -> URL? {
+        guard url.host == "a.espncdn.com", url.path.hasPrefix("/i/headshots/") else { return nil }
+        var comps = URLComponents()
+        comps.scheme = url.scheme
+        comps.host = url.host
+        comps.path = "/combiner/i"
+        let size = String(Int(pixels))
+        comps.queryItems = [
+            URLQueryItem(name: "img", value: url.path),
+            URLQueryItem(name: "w", value: size),
+            URLQueryItem(name: "h", value: size),
+        ]
+        return comps.url
     }
 
     private static func supabaseRender(_ url: URL, pixels: CGFloat) -> URL? {
