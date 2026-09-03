@@ -101,10 +101,17 @@ def _rest(base: str, key: str, path: str, *, method: str = "GET", body=None,
                 raw = resp.read()
                 return json.loads(raw) if raw else None
         except urllib.error.HTTPError as err:
-            raise RuntimeError(
-                f"{method} {path} failed ({err.code}): "
-                f"{err.read().decode('utf-8', 'ignore')[:400]}"
-            ) from err
+            body = err.read().decode("utf-8", "ignore")[:400]
+            # A 5xx (a statement timeout under concurrent load is a 500 with code 57014, same
+            # failure `repoint()` already retries around) is transient — every `_rest` caller is
+            # a GET or an idempotent upsert, so retrying costs nothing and fixes what killed
+            # `_photoless_names` mid-run on 2026-09-03: one contended query took down the whole
+            # `backfill` job, skipping wiki-backfill/nba-backfill/detect-dupes right behind it. A
+            # 4xx is the caller's own request being wrong — retrying it changes nothing, raise now.
+            if err.code < 500 or attempt == 3:
+                raise RuntimeError(f"{method} {path} failed ({err.code}): {body}") from err
+            last = RuntimeError(f"{method} {path} failed ({err.code}): {body}")
+            time.sleep(1.5 * (attempt + 1))
         except Exception as exc:  # noqa: BLE001 — transient socket/TLS, GET+upsert are idempotent
             last = exc
             time.sleep(1.5 * (attempt + 1))

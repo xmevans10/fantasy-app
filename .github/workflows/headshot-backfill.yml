@@ -131,21 +131,33 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r tools/ingest/requirements.txt
+      # Each of these five steps is `if: always()` deliberately: they hit independent sources
+      # and are not a pipeline (one's failure carries no information the next needs). Without
+      # this, one step failing hard-stops the job and silently skips everything after it — which
+      # is exactly what happened live 2026-09-03: `--espn-nfl-backfill` hit a transient 500
+      # (fixed separately, `_rest` now retries 5xx) and took wiki-backfill/nba-backfill/
+      # detect-dupes down with it for two convergence-loop iterations in a row.
+      #
       # ESPN's archive recovers NFL rows the league CDN drops to a helmet stub on retirement
       # (2015+ near 100%, 2000-14 ~35%, per headshots.py's own measurement).
-      - run: python -m tools.ingest.headshots --espn-nfl-backfill
+      - if: always()
+        run: python -m tools.ingest.headshots --espn-nfl-backfill
       # MLB/NBA rows with no id bridge — resolves via ESPN search (exact-name-match only, so it
       # never risks the wrong face).
-      - run: python -m tools.ingest.headshots --espn-search-backfill --sports baseball,nba
+      - if: always()
+        run: python -m tools.ingest.headshots --espn-search-backfill --sports baseball,nba
       # NBA rows still photo-less after the ESPN passes, via cdn.nba.com's person-id catalog.
-      - run: python -m tools.ingest.headshots --nba-backfill
+      - if: always()
+        run: python -m tools.ingest.headshots --nba-backfill
       # Sequential by design inside the script (not thread-pooled) to avoid Wikimedia's 429
       # throttle — 75% hit rate on baseball players MLB's CDN lacks, plus tennis/soccer/older
       # NBA-NFL coverage.
-      - run: python -m tools.ingest.headshots --wiki-backfill
+      - if: always()
+        run: python -m tools.ingest.headshots --wiki-backfill
       # Catches stock/stub graphics the byte-floor check alone doesn't (e.g. the NFL helmet is a
       # normal-sized PNG) by flagging byte-identical sources repeated across many players.
-      - run: python -m tools.ingest.headshots --detect-dupes
+      - if: always()
+        run: python -m tools.ingest.headshots --detect-dupes
 
   # Apply everything the above resolved: rewrite player_seasons.headshot from the ledger, then
   # repoint already-minted puzzles (0015_repoint_puzzle_headshots.sql) — `--repoint` alone only
