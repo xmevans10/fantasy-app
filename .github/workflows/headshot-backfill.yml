@@ -8,10 +8,19 @@ name: headshot-backfill
 # real placeholder about half the time for NFL/baseball (52%/63% of distinct sources, measured
 # 2026-09-02) — until someone remembered to run this by hand.
 #
-# Weekly is enough: this chases the steady trickle of newly-discovered players from the daily
-# catalog ingest, not a one-time backlog (that backlog is what the first manual run of this
-# workflow clears). Every step is additive/idempotent — safe to re-run, safe to fail one stage
-# without corrupting another — same posture as `ingest.yml` and `grid-backfill.yml`.
+# Every step here is already TARGETED, not a blind full rescan: `fetch` shards only claim
+# `pending` ledger rows, and every `--*-backfill` flag only looks at `player_seasons.headshot=''`
+# rows in the first place (see `_photoless_names` in headshots.py) — so re-running costs almost
+# nothing once a sport's backlog is actually exhausted, the candidate queries just come back
+# empty. That's what makes the self-chaining loop below viable: it isn't "run everything again,"
+# it's "check what's still missing and go after just that."
+#
+# `converge` (last job) re-runs this whole workflow via workflow_dispatch as long as the last
+# pass made real progress (fewer `pending`+`error` ledger rows than before it started) — so one
+# trigger keeps going, pass after pass, until the pipeline plateaus (an unchanged remaining count
+# means whatever's left needs a source this pipeline doesn't have, not another pass) or
+# `iteration` hits `max_iterations`, whichever comes first. A schedule/manual trigger always
+# starts fresh at iteration 1; only `converge`'s own self-dispatch increments it.
 on:
   schedule:
     - cron: "0 11 * * 0"   # weekly, Sunday 11:00 UTC — after discover-players.yml's Sunday run
@@ -20,20 +29,54 @@ on:
       shards:
         description: "Parallel shards for the fetch/rehost pass"
         default: "8"
+      iteration:
+        description: "Convergence-loop bookkeeping — leave at 1 for a manual run"
+        default: "1"
+      max_iterations:
+        description: "Safety cap on self-chained passes per trigger"
+        default: "20"
+
+permissions:
+  contents: read
+  # `converge` dispatches this same workflow again via the REST API — needs write on Actions,
+  # not just the default read.
+  actions: write
 
 jobs:
   # Computed rather than a fixed 0-7 range so a manual `shards` input actually changes the matrix
   # size (job-level `if:` can't see `matrix`, so gating a fixed matrix by index doesn't work —
-  # same reasoning grid-backfill.yml's `plan` job documents for its own matrix).
+  # same reasoning grid-backfill.yml's `plan` job documents for its own matrix). Also snapshots
+  # the "remaining unresolved" count BEFORE this pass touches anything, so `converge` can tell
+  # whether the pass that just ran actually moved the needle.
   plan:
     runs-on: ubuntu-latest
     outputs:
       shards: ${{ steps.build.outputs.shards }}
+      before_remaining: ${{ steps.before.outputs.remaining }}
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
       - id: build
         env:
           SHARDS: ${{ inputs.shards || '8' }}
         run: python3 -c "import json,os; print('shards=' + json.dumps(list(range(int(os.environ['SHARDS'])))))" >> "$GITHUB_OUTPUT"
+      - id: before
+        run: |
+          summary=$(curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/headshot_coverage_summary" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" -d '{}')
+          echo "### Coverage before this pass" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          echo "$summary" | python3 -m json.tool >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          remaining=$(echo "$summary" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          print(sum(v.get('pending', 0) + v.get('error', 0) for v in data.values()))
+          ")
+          echo "remaining=$remaining" >> "$GITHUB_OUTPUT"
 
   # Reset last week's transient failures (Wikimedia/Transfermarkt throttling under load) so this
   # run retries them instead of leaving them stuck in `error` forever.
@@ -135,3 +178,48 @@ jobs:
             -d '{}'
       - run: python -m tools.ingest.headshots --warm-transforms
       - run: python -m tools.ingest.warm_cdn --scope all
+
+  # The convergence check. Re-scans coverage, compares to `plan`'s before-snapshot, and either
+  # dispatches another full pass of this same workflow or stops and explains why.
+  converge:
+    needs: [plan, finalize]
+    if: always()
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BEFORE: ${{ needs.plan.outputs.before_remaining }}
+      ITERATION: ${{ inputs.iteration || '1' }}
+      MAX_ITERATIONS: ${{ inputs.max_iterations || '20' }}
+      SHARDS: ${{ inputs.shards || '8' }}
+    steps:
+      - name: Count remaining and decide
+        run: |
+          summary=$(curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/headshot_coverage_summary" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" -d '{}')
+          echo "### Coverage after this pass (iteration $ITERATION)" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          echo "$summary" | python3 -m json.tool >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          after=$(echo "$summary" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          print(sum(v.get('pending', 0) + v.get('error', 0) for v in data.values()))
+          ")
+          echo "Remaining unresolved (pending+error): $BEFORE -> $after" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$after" -eq 0 ]; then
+            echo "Nothing left unresolved — coverage is as complete as this pipeline gets. Stopping." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$ITERATION" -ge "$MAX_ITERATIONS" ]; then
+            echo "Hit the $MAX_ITERATIONS-iteration safety cap with $after still unresolved. Stopping — the weekly schedule will pick this up again, or re-dispatch manually to keep going now." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$after" -lt "$BEFORE" ]; then
+            next=$((ITERATION + 1))
+            echo "Made progress ($BEFORE -> $after). Dispatching iteration $next." >> "$GITHUB_STEP_SUMMARY"
+            gh workflow run headshot-backfill.yml --repo "$GITHUB_REPOSITORY" --ref main \
+              -f shards="$SHARDS" -f iteration="$next" -f max_iterations="$MAX_ITERATIONS"
+          else
+            echo "No progress this pass ($BEFORE -> $after) — whatever's left needs a source this pipeline doesn't have (confirmed placeholder/missing/permanent error), not another pass. Stopping." >> "$GITHUB_STEP_SUMMARY"
+          fi
