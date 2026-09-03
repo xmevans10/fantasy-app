@@ -3075,3 +3075,92 @@ grant execute on function public.headshot_repoint(boolean) to service_role;
 -- Without this the join is a seq scan over ~382k rows and the RPC dies with 57014
 -- (statement timeout) before touching a row.
 create index if not exists player_seasons_headshot_idx on public.player_seasons (headshot);
+
+-- `headshot_repoint_batch` (called by `tools/ingest/headshots.py`'s `repoint()`) only ever
+-- writes `player_seasons.headshot`. Every minted Keep4/Journeyman board FREEZES its own copy of
+-- the URL at mint time (`content.players[].headshot` for keep4, top-level `content.headshot`
+-- for journeyman), and nothing ever retroactively fixed an already-minted board when a later
+-- backfill improved the underlying player row — the catalog looked fixed, the app didn't. Found
+-- investigating a live report (xmevans10, 2026-09-03 blitz run): a WR Keep4 board with all 8
+-- players blank. Measured scope same day: NFL keep4 alone was 154 boards, 5 entirely blank and
+-- 110 more partially blank, 390 blank player slots total — themes like "Mr. Irrelevant" (the
+-- draft's literal last pick) select obscure players by construction, exactly the group whose
+-- only source was the league CDN's placeholder.
+--
+-- Joins back to `player_seasons` by id: keep4's `content.players[].id` matches directly;
+-- journeyman's `content.id` is `<player-id>-journeyman`, and the equivalent `player_seasons` row
+-- is `<player-id>-career` (verified live — `nfl-aaron-kampman-journeyman` had a real Storage URL
+-- sitting on `nfl-aaron-kampman-career` that had simply never been propagated). Only overwrites a
+-- blank slot with a non-blank replacement, so a board that already has something can't be
+-- clobbered. Run from `ingest.yml` (daily, after the catalog upsert) and `headshot-backfill.yml`
+-- (weekly, after `--repoint`) — the missing counterpart to `headshot_repoint_batch` above.
+create or replace function public.repoint_puzzle_headshots(batch_size int default 2000)
+returns jsonb
+language plpgsql
+security definer
+set search_path = 'public'
+as $$
+declare
+  keep4_fixed bigint := 0;
+  journeyman_fixed bigint := 0;
+begin
+  with candidates as (
+    select id, content
+    from puzzles
+    where format = 'keep4'
+      and exists (
+        select 1 from jsonb_array_elements(content->'players') elem
+        where coalesce(elem->>'headshot', '') = ''
+      )
+    limit batch_size
+  ),
+  rebuilt as (
+    select c.id,
+      jsonb_set(c.content, '{players}',
+        (select jsonb_agg(
+           case when coalesce(elem->>'headshot', '') = '' and coalesce(ps.headshot, '') <> ''
+                then jsonb_set(elem, '{headshot}', to_jsonb(ps.headshot))
+                else elem end
+           order by ord)
+         from jsonb_array_elements(c.content->'players') with ordinality as t(elem, ord)
+         left join player_seasons ps on ps.id = elem->>'id')
+      ) as new_content
+    from candidates c
+  ),
+  changed as (
+    select r.id, r.new_content
+    from rebuilt r
+    join puzzles p on p.id = r.id
+    where r.new_content is distinct from p.content
+  )
+  update puzzles p set content = c.new_content
+  from changed c
+  where p.id = c.id;
+  get diagnostics keep4_fixed = row_count;
+
+  with candidates as (
+    select id, content
+    from puzzles
+    where format = 'journeyman'
+      and coalesce(content->>'headshot', '') = ''
+    limit batch_size
+  ),
+  matched as (
+    select c.id, ps.headshot
+    from candidates c
+    join player_seasons ps
+      on ps.id = regexp_replace(c.content->>'id', '-journeyman$', '-career')
+    where coalesce(ps.headshot, '') <> ''
+  )
+  update puzzles p
+     set content = jsonb_set(p.content, '{headshot}', to_jsonb(m.headshot))
+    from matched m
+   where p.id = m.id;
+  get diagnostics journeyman_fixed = row_count;
+
+  return jsonb_build_object('keep4_fixed', keep4_fixed, 'journeyman_fixed', journeyman_fixed);
+end;
+$$;
+
+revoke all on function public.repoint_puzzle_headshots(int) from public, anon, authenticated;
+grant execute on function public.repoint_puzzle_headshots(int) to service_role;

@@ -105,9 +105,13 @@ jobs:
       - run: python -m tools.ingest.headshots --detect-dupes
 
   # Apply everything the above resolved: rewrite player_seasons.headshot from the ledger, then
-  # pre-render the 192px transform for every newly-rehosted asset so no real user pays the ~1.9s
-  # cold-transform cost, then warm the render-endpoint edge cache the app actually reads from
-  # (warm_cdn.py: 1.4-1.8s cold -> 0.06-0.18s warm, measured 2026-08-28).
+  # repoint already-minted puzzles (0015_repoint_puzzle_headshots.sql) — `--repoint` alone only
+  # ever touches the catalog; a Keep4/Journeyman board frozen its own copy of the URL at mint
+  # time and stays blank forever otherwise, which is what actually shipped a WR Keep4 board with
+  # zero photos to a real user (2026-09-03). Then pre-render the 192px transform for every
+  # newly-rehosted asset so no real user pays the ~1.9s cold-transform cost, and warm the
+  # render-endpoint edge cache the app actually reads from (warm_cdn.py: 1.4-1.8s cold ->
+  # 0.06-0.18s warm, measured 2026-08-28).
   finalize:
     needs: backfill
     if: always()
@@ -122,5 +126,12 @@ jobs:
           python-version: "3.11"
       - run: pip install -r tools/ingest/requirements.txt
       - run: python -m tools.ingest.headshots --repoint
+      - name: Repoint already-minted puzzle content
+        run: |
+          curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/repoint_puzzle_headshots" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}'
       - run: python -m tools.ingest.headshots --warm-transforms
       - run: python -m tools.ingest.warm_cdn --scope all

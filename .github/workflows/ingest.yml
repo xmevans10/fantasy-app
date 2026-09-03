@@ -83,3 +83,15 @@ jobs:
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
             -d '{}'
+      # Repoint already-minted Keep4/Journeyman boards (0015_repoint_puzzle_headshots.sql)
+      # whenever the catalog step above improved a player's headshot but that player already
+      # sits in a frozen board — the daily `--upsert --catalog` only fixes NEW rows, an existing
+      # board's frozen content never sees it otherwise. Cheap and idempotent: a no-op update on
+      # any day nothing changed.
+      - if: always()
+        run: |
+          curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/repoint_puzzle_headshots" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}'
