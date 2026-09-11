@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import statistics
 from collections import defaultdict
+from typing import Callable
 
 from .grade import grade
 from .models import RawSeason
@@ -30,14 +31,78 @@ from .models import RawSeason
 # the client additionally ignores any below ScoringRule.minBaselineSamples.
 MIN_SAMPLES = 5
 
-# Population gate for the `fantasy_total` pseudo-stat: full-time seasons only, so the
-# era volume index isn't diluted by cameo seasons (mirrors era_analysis.py QUALIFY).
-QUALIFY = {"nfl": ("games", 10.0), "nba": ("games", 40.0)}
-TOTAL_SCALE = {"nfl": "nfl_fantasy", "nba": "nba_fantasy"}
+# Population gate + grading scale for the `fantasy_total` pseudo-stat: full-time seasons
+# only, so the era volume index isn't diluted by cameo seasons (mirrors era_analysis.py
+# QUALIFY). Most sports have ONE fantasy scale, so a bare (stat, floor) / scale-key value
+# applies to every position. A sport whose positions split across genuinely disjoint
+# scales (hockey's skater/goalie, and — not yet enabled, see below — baseball's
+# hitter/pitcher, soccer's attacker/defender) instead maps a ROLE name to its own gate/
+# scale, and `_role()` resolves which role a raw position belongs to via `_POSITION_ROLE`.
+#
+# NFL/NBA are untouched by this: `QUALIFY.get(sport)`/`TOTAL_SCALE.get(sport)` still
+# return the same plain tuple/string they always did, `_role()` is a no-op for them (no
+# entry in `_POSITION_ROLE`), and `_qualify_gate`/`_total_scale` short-circuit on
+# `isinstance(spec, dict)` being False — same lookup, same value, same baseline output.
+QUALIFY: dict[str, tuple[str, float] | dict[str, tuple[str, float]]] = {
+    "nfl": ("games", 10.0),
+    "nba": ("games", 40.0),
+    # NHL skaters: half of an 82-game season — the same bar NBA uses, since both leagues
+    # play 82-game seasons, so a skater who dressed for fewer than half is a cameo/
+    # injury/call-up year, not a full-time one.
+    #
+    # NHL goalies structurally can't clear that bar: even a true #1 splits starts with a
+    # backup all but universally across NHL history, so goalies are gated on a lower,
+    # role-appropriate floor — `games_started` (not `games`, which can include relief
+    # appearances) at 25, which over the full 1917-2025 sweep keeps ~66% of goalie-seasons
+    # (2,394/3,609) versus the skater gate's ~83% (29,999/35,924) of skater-seasons: a
+    # tighter cut, because "primary starter" is a smaller share of a goalie's role than
+    # "everyday player" is of a skater's.
+    "hockey": {
+        "skater": ("games", 40.0),
+        "goalie": ("games_started", 25.0),
+    },
+}
+TOTAL_SCALE: dict[str, str | dict[str, str]] = {
+    "nfl": "nfl_fantasy",
+    "nba": "nba_fantasy",
+    "hockey": {"skater": "hockey_skater_fantasy", "goalie": "hockey_goalie_fantasy"},
+}
+
+# Maps a sport's raw position code to the ROLE bucket its QUALIFY/TOTAL_SCALE entry is
+# keyed by, for sports whose scale is role-split rather than one-per-sport. A sport with a
+# single unified scale (or no entry at all) never consults this — `_role()` just returns
+# the raw position unchanged, which is a no-op lookup for `_qualify_gate`/`_total_scale`.
+_POSITION_ROLE: dict[str, Callable[[str], str]] = {
+    # NHL's goalie endpoint carries no positionCode field and every row from it is a
+    # goalie by construction (see providers/nhl_stats.py); every other code (C/L/R/D) is
+    # a skater.
+    "hockey": lambda pos: "goalie" if pos == "G" else "skater",
+}
 
 # Pseudo-stat key for the per-(sport, position, year) fantasy-total distribution — the
 # single input to the era volume index (grade.era_index / ScoringRule.eraTotalIndex).
 FANTASY_TOTAL = "fantasy_total"
+
+
+def _role(sport: str, position: str) -> str:
+    """The ROLE bucket `position` belongs to, for role-split QUALIFY/TOTAL_SCALE entries.
+    A no-op (`position` itself) for every sport without an entry in `_POSITION_ROLE`."""
+    group = _POSITION_ROLE.get(sport)
+    return group(position) if group else position
+
+
+def _qualify_gate(sport: str, position: str) -> tuple[str, float] | None:
+    spec = QUALIFY.get(sport)
+    if isinstance(spec, dict):
+        return spec.get(_role(sport, position))
+    return spec
+
+
+def _total_scale(sport: str, position: str) -> str | None:
+    spec = TOTAL_SCALE.get(sport)
+    if isinstance(spec, dict):
+        return spec.get(_role(sport, position))
+    return spec
 
 
 def compute_baselines(seasons: list[RawSeason]) -> list[dict]:
@@ -62,10 +127,11 @@ def compute_baselines(seasons: list[RawSeason]) -> list[dict]:
             # a 0 almost always means "not this player's role" (a lineman's receiving_yards).
             if value and value > 0:
                 buckets[(s.sport, s.position, stat, s.season_year)].append(float(value))
-        gate = QUALIFY.get(s.sport)
-        if gate and s.position and s.stats.get(gate[0], 0.0) >= gate[1]:
+        gate = _qualify_gate(s.sport, s.position) if s.position else None
+        scale = _total_scale(s.sport, s.position) if s.position else None
+        if gate and scale and s.stats.get(gate[0], 0.0) >= gate[1]:
             buckets[(s.sport, s.position, FANTASY_TOTAL, s.season_year)].append(
-                grade(s.stats, TOTAL_SCALE[s.sport]))
+                grade(s.stats, scale))
 
     rows: list[dict] = []
     for (sport, position, stat, year), values in buckets.items():

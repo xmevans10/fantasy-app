@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 
 from .assemble import KEEP_COUNT, PuzzleRow
-from .whoami_clues import CLUE_COUNT, DIFFICULTIES
+from .whoami_clues import CLUE_COUNT, DIFFICULTIES, leaked_name_part
 
 # The six `ClueKind` raw values the shipped App Store build can decode. This set is a
 # **wire-compatibility contract, not a list of clue types** — the clue library has ~30
@@ -16,7 +16,48 @@ from .whoami_clues import CLUE_COUNT, DIFFICULTIES
 # kind fails `WhoAmIPuzzle`'s decode on older clients and drops them to the bundled pool.
 # See tools/ingest/whoami_clues.py's module docstring before adding to this set.
 _VALID_KINDS = {"era", "position", "teams", "statLine", "fact", "jersey"}
-_VALID_SPORTS = {"nfl", "nba", "baseball", "soccer", "tennis"}
+_VALID_SPORTS = {"nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"}
+
+# Sports whose PUZZLES may be minted to the live `puzzles` table right now — a RELEASE gate,
+# not a data gate. Everything in `_VALID_SPORTS` is real and fully ingested (catalog, teams,
+# pools, Grid membership); this narrower set is about what shipped CLIENTS can decode.
+#
+# `Sport` on the client is a plain `String` raw-value enum with no unknown-case fallback, and
+# the archive fetch has NO sport predicate when the user is on the "All" filter — it decodes
+# the pool as an ARRAY under `try?`. So a single row carrying a sport an installed build has
+# never heard of throws, the whole array returns nil, and that user's archive silently falls
+# back to stale cache or the bundled JSON. Verified empirically 2026-09-06, and it is the exact
+# hazard `_VALID_KINDS` above documents for `ClueKind` — same mechanism, different column.
+#
+# hockey/f1 (M31) are therefore ingested but NOT minted until a build whose `Sport` knows them
+# is the floor in the wild. **To release them: add them here, then re-mint.** Nothing else
+# needs changing — `daily_puzzle` and `run_grid` both read this.
+WIRE_SAFE_SPORTS = {"nfl", "nba", "baseball", "soccer", "tennis"}
+
+
+# Every headshot frozen into a board must come from OUR store, or be empty. Nothing else is
+# acceptable on the wire, and this is the only place that can enforce it before a row ships.
+#
+# The bug it exists for (user-reported, 2026-09-06): a Journeyman board froze the raw
+# `static.www.nfl.com` URL for Randall Cunningham, which is the league's GENERIC HELMET
+# placeholder — it returns HTTP 200 with a real 382KB image, so no liveness check anywhere ever
+# flagged it, and the reveal card showed a faceless helmet while a real photo of him sat in our
+# Storage bucket the whole time. 247 live boards were in that state.
+#
+# Empty is allowed and is the correct value when we genuinely have no photo: the client draws
+# its own neutral badge, which honestly reads as "no photo". A foreign URL is not allowed even
+# when it resolves, because we cannot vouch for what is behind it.
+HEADSHOT_STORE_MARKER = "/storage/v1/object/public/player-headshots/"
+
+
+def _assert_headshots_are_ours(row_id: str, shots) -> None:
+    for shot in shots:
+        shot = (shot or "").strip()
+        if shot and HEADSHOT_STORE_MARKER not in shot:
+            raise ValueError(
+                f"{row_id}: headshot is not from our store: {shot!r}. Boards must freeze a "
+                f"rehosted URL (or ''), never a provider CDN link — see "
+                f"main.apply_headshot_ledger and the `headshot_assets` ledger.")
 
 
 def validate(row: PuzzleRow) -> None:
@@ -35,6 +76,7 @@ def validate(row: PuzzleRow) -> None:
 def _validate_keep4(row: PuzzleRow) -> None:
     c = row.content
     players = c.get("players", [])
+    _assert_headshots_are_ours(row.id, (p.get("headshot") for p in players))
     if len(players) != KEEP_COUNT:
         raise ValueError(f"{row.id}: expected {KEEP_COUNT} players, got {len(players)}")
     if len({p["id"] for p in players}) != KEEP_COUNT:
@@ -54,6 +96,7 @@ def _validate_journeyman(row: PuzzleRow) -> None:
     from .journeyman import MAX_STINTS, MIN_STINTS
 
     c = row.content
+    _assert_headshots_are_ours(row.id, [c.get("headshot")])
     stints = c.get("stints", [])
     floor = MIN_STINTS.get(row.sport, 2)
     if not floor <= len(stints) <= MAX_STINTS:
@@ -95,14 +138,33 @@ def _validate_journeyman(row: PuzzleRow) -> None:
         leaked = _leaked_name_part(answer["canonical"], teaser)
         if leaked:
             raise ValueError(f"{row.id}: teaser leaks {leaked!r} from the answer: {teaser!r}")
+    # Hints are bought with points, so a broken one costs the player something real. Same leak
+    # rule as the teaser (a nickname or a "known for" line routinely contains the surname), plus
+    # the ordering contract the client indexes into: `hints[i]` is the (i+1)th rung of the
+    # ladder, and its price is positional.
+    hints = c.get("hints")
+    if hints is not None:
+        from .journeyman import HINT_COUNT
+
+        if not 1 <= len(hints) <= HINT_COUNT:
+            raise ValueError(f"{row.id}: expected 1-{HINT_COUNT} hints, got {len(hints)}")
+        if [h["order"] for h in hints] != list(range(1, len(hints) + 1)):
+            raise ValueError(f"{row.id}: hint orders must be 1..{len(hints)}")
+        if len({h["dimension"] for h in hints}) != len(hints):
+            raise ValueError(f"{row.id}: two hints from the same dimension")
+        for h in hints:
+            if not h.get("text", "").strip() or not h.get("label", "").strip():
+                raise ValueError(f"{row.id}: hint {h['order']} is missing text or a label")
+            leaked = _leaked_name_part(answer["canonical"], h["text"])
+            if leaked:
+                raise ValueError(
+                    f"{row.id}: hint {h['order']} leaks {leaked!r} from the answer: {h['text']!r}")
 
 
-def _leaked_name_part(canonical: str, text: str) -> str | None:
-    """The first name part `text` gives away, or None. Whole words only, >=4 characters."""
-    parts = [part.strip(".").lower() for part in canonical.split()]
-    lowered = text.lower()
-    return next((p for p in parts
-                 if len(p) >= 4 and re.search(rf"\b{re.escape(p)}\b", lowered)), None)
+# The generator's own rule, imported rather than restated. These two MUST agree: `validate`
+# rejecting a leak the clue builder is willing to emit doesn't protect anyone, it just kills
+# the run on a row that was already written (see `whoami_clues.leaked_name_part`).
+_leaked_name_part = leaked_name_part
 
 
 def _validate_whoami(row: PuzzleRow) -> None:

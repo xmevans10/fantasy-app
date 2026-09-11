@@ -42,6 +42,8 @@ from .providers import (
     nfl_nflverse_games,
     nfl_players,
     seed,
+    f1_ergast,
+    nhl_stats,
     tennis_atp,
     tennis_recent,
     tennis_wta,
@@ -337,7 +339,22 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
           f"({len(atp_seasons)} ATP sweep + {len(recent_seasons)} ATP recent + "
           f"{len(wta_seasons)} WTA + {len(tennis_seed)} seed)")
 
-    all_seasons = seasons + nba + baseball + soccer + tennis
+    # Hockey (M31): the committed full-history sweep, 1917-18 onward — the deepest history
+    # of any sport in the catalog. Committed-CSV-only on this path, like tennis/hoopR/
+    # transfermarkt: the sweep is a century of immutable finished seasons, and refreshing
+    # the in-progress one costs a portrait lookup per player, which does not belong in a
+    # nightly run. `nhl_stats.load_current_season()` exists for that top-up and is driven by
+    # the weekly refresh workflow, not from here.
+    hockey = nhl_stats.load_seasons()
+    print(f"[hockey] {len(hockey)} player-seasons")
+
+    # F1 (M31): driver-seasons 1950-present from the committed Ergast/Jolpica sweep. No
+    # live layer — a completed race is immutable and the sweep is re-run by the same weekly
+    # workflow that refreshes the other committed CSVs.
+    f1 = f1_ergast.load_seasons()
+    print(f"[f1] {len(f1)} driver-seasons")
+
+    all_seasons = seasons + nba + baseball + soccer + tennis + hockey + f1
     # Bake NBA season totals BEFORE career aggregation so career rows sum real season
     # totals (a counting stat) instead of re-deriving from career-averaged rates.
     derive_nba_totals(all_seasons)
@@ -446,9 +463,27 @@ def catalog_rows(seasons: list[RawSeason]) -> list[dict]:
     draw from just like it needs a career pool. Career rows (M17) are included too: all
     three grains are creatable, and search needs a real pool of each to draw from."""
     by_id: dict[str, dict] = {}
+    career_seasons: dict[str, int] = {}   # id -> seasons_played of the row currently winning it
     for s in seasons:
+        # Career rows are now built per PERSON (see `career.build_career_rows`), but
+        # `player_id` is still per NAME, so two same-name careers still land on one id and one
+        # of them has to win. Longest career wins, deterministically, rather than whichever the
+        # grouping dict happened to yield last: the namesake who played more seasons is both the
+        # more likely puzzle subject and the more stable choice across re-ingests. The loser is
+        # dropped from the career grain entirely, which is the safe direction — it costs a
+        # possible subject, where merging the two costs the truth (the David Johnson board).
+        if s.career:
+            played = int(s.meta.get("seasons_played", 0))
+            if s.player_id in by_id and played <= career_seasons.get(s.player_id, 0):
+                continue
+            career_seasons[s.player_id] = played
         by_id[s.player_id] = {
             "id": s.player_id, "sport": s.sport, "name": s.name,
+            # Who this row is actually about. `id` is name-keyed and therefore ambiguous for
+            # two same-sport players sharing a name; this is not (see `RawSeason.person`).
+            # None rather than "" for the provider sweeps that carry no id, so the column reads
+            # as "unknown person" instead of as a real key every anonymous row shares.
+            "person_id": s.person_id or None,
             "team_abbr": s.team_abbr, "season_year": s.season_year,
             "position": s.position, "stats": s.stats, "headshot": s.headshot,
             "career": s.career,
@@ -468,7 +503,7 @@ def catalog_rows(seasons: list[RawSeason]) -> list[dict]:
 # Columns an "already stored" catalog row can still be improved by — see the resend logic in
 # `filter_new_catalog_rows`. Add a column here when the pipeline gains the ability to fill it
 # in for rows that were written before it existed.
-IMPROVABLE_COLUMNS = ("headshot", "competition")
+IMPROVABLE_COLUMNS = ("headshot", "competition", "person_id")
 
 
 def apply_headshot_ledger(seasons: list[RawSeason],
@@ -707,6 +742,20 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool,
                          upsert_grid, upsert_grid_history)
 
     load_dotenv()
+    # Release gate, applied even when a sport is named EXPLICITLY on the command line: the
+    # workflows pass a literal sport list, so gating only inside `daily_puzzle` would leave the
+    # Grid free to publish rows an installed build cannot decode. See
+    # `validate.WIRE_SAFE_SPORTS` for the failure mode (one unknown sport kills the whole
+    # unfiltered archive fetch for that client).
+    from .validate import WIRE_SAFE_SPORTS
+    gated = [s for s in sports if s not in WIRE_SAFE_SPORTS]
+    if gated:
+        print(f"[grid] skipping {', '.join(sorted(gated))} — ingested but not yet wire-safe "
+              f"for shipped clients (validate.WIRE_SAFE_SPORTS)")
+    sports = [s for s in sports if s in WIRE_SAFE_SPORTS]
+    if not sports:
+        return 0
+
     start = start or dt.date.today()
     dates = grid_dates(start, days)
     # Once a (sport, date) row exists, never re-mint it: generation is deterministic per
@@ -884,7 +933,8 @@ def main() -> int:
     ap.add_argument("--write-themes", action="store_true",
                     help="rewrite BallIQ/Data/keep4_themes.json only (no data pull)")
     ap.add_argument("--dry-run", action="store_true", help="build + validate + print, no writes")
-    ap.add_argument("--grid", nargs="+", choices=["nfl", "nba", "baseball", "soccer", "tennis"],
+    ap.add_argument("--grid", nargs="+",
+                    choices=["nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"],
                     help="generate Grid puzzles for the given sport(s) from the live "
                          "player_seasons catalog (standalone — skips the season gather pull)")
     ap.add_argument("--grid-days", type=int, default=2, metavar="N",
@@ -895,7 +945,7 @@ def main() -> int:
                     help="first day of the --grid-days window (default today, UTC). Backfilling "
                          "into the past deepens the pool without pre-committing future dailies")
     ap.add_argument("--grid-axis-membership", nargs="+", metavar="SPORT",
-                    choices=["nfl", "nba", "baseball", "soccer", "tennis"],
+                    choices=["nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"],
                     help="materialise which (player, season) pairs satisfy each stat/position "
                          "axis into `grid_axis_membership` — the input the CLIENT needs to "
                          "generate mixed practice boards (standalone; reads the live catalog)")
@@ -912,6 +962,12 @@ def main() -> int:
                          "player pays for a cold CDN transform (see tools/ingest/warm_cdn.py)")
     ap.add_argument("--evict-only", action="store_true",
                     help="with --evict-current-season: clear the cache and exit, no ingest")
+    ap.add_argument("--repoint-stats", action="store_true",
+                    help="rebuild already-minted Keep4 cards that show a stat the player's "
+                         "position never records (a WR's Pass Yds, a keeper's Goals) — the "
+                         "stats counterpart of the headshot repoint. Standalone: skips the "
+                         "season gather. Repoints the bundled offline puzzles too when "
+                         "--write-fallback is given, and writes nothing under --dry-run")
     ap.add_argument("--evict-current-season", action="store_true",
                     help="delete current/previous-year cache entries (and the live ESPN NBA "
                          "stat files) before fetching, so in-season data is refetched fresh — "
@@ -928,6 +984,16 @@ def main() -> int:
             # gather it has no use for, and pay it a second time in the mint that follows.
             # Same standalone-shortcut posture as `--write-themes` below.
             return 0
+
+    if args.repoint_stats:
+        # Standalone like --write-themes: this reads frozen rows and the catalog, so the
+        # ~25-30 min provider gather below would be pure cost.
+        from .repoint_stats import repoint_bundle, repoint_live
+        if args.write_fallback:
+            repoint_bundle(FALLBACK_KEEP4, FALLBACK_CATALOG, dry_run=args.dry_run)
+        load_dotenv()
+        repoint_live(dry_run=args.dry_run)
+        return 0
 
     if args.write_themes and not (args.upsert or args.write_fallback or args.dry_run):
         write_themes_fallback()      # standalone: themes are static, skip the data pull

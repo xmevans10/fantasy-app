@@ -246,8 +246,15 @@ struct ChallengeLink: Equatable, Identifiable {
 
     /// Journeyman's equivalent: guesses *not* needed, plus one, so naming the player first time
     /// scores the full five and an unsolved run scores nothing.
+    ///
+    /// **Minus hints bought**, floored at 1 for a solve. A head-to-head is decided on hits, and
+    /// points only break the tie, so without this a player who bought all three hints and then
+    /// named the player first time would beat a cold second-guess solve outright — the one
+    /// place the hint's point cost doesn't reach. The floor keeps the invariant every caller
+    /// relies on: a solve is always worth more than a run that never got there.
     static func journeymanHits(_ result: JourneymanScoring.Result) -> Int {
-        result.solved ? JourneymanScoring.maxGuesses + 1 - result.guessesUsed : 0
+        guard result.solved else { return 0 }
+        return max(1, JourneymanScoring.maxGuesses + 1 - result.guessesUsed - result.hintsUsed)
     }
 
     /// The denominator matching `journeymanHits(_:)` — the format's guess limit.

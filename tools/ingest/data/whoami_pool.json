@@ -4455,6 +4455,6753 @@
     "source": "catalog"
   },
   {
+    "sport": "f1",
+    "canonical": "Lewis Hamilton",
+    "aliases": [
+      "lewis hamilton",
+      "hamilton"
+    ],
+    "position": "",
+    "first_year": 2007,
+    "last_year": 2025,
+    "teams": [
+      "McLaren",
+      "Mercedes",
+      "Ferrari"
+    ],
+    "stat_line": "105 race wins, 202 podiums and 104 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 19,
+    "active": true,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2018,
+      "team": "Mercedes",
+      "line": "11 race wins, 17 podiums and 11 pole positions"
+    },
+    "fame": 0.9842,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Max Verstappen",
+    "aliases": [
+      "max verstappen",
+      "verstappen"
+    ],
+    "position": "",
+    "first_year": 2015,
+    "last_year": 2025,
+    "teams": [
+      "Toro Rosso",
+      "Red Bull"
+    ],
+    "stat_line": "71 race wins, 127 podiums and 48 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2023,
+      "team": "Red Bull",
+      "line": "19 race wins, 21 podiums and 12 pole positions"
+    },
+    "fame": 0.9842,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Michael Schumacher",
+    "aliases": [
+      "michael schumacher",
+      "schumacher"
+    ],
+    "position": "",
+    "first_year": 1991,
+    "last_year": 2012,
+    "teams": [
+      "Benetton",
+      "Ferrari",
+      "Mercedes"
+    ],
+    "stat_line": "91 race wins, 155 podiums and 68 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 19,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2004,
+      "team": "Ferrari",
+      "line": "13 race wins, 15 podiums and 8 pole positions"
+    },
+    "fame": 0.9816,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Sebastian Vettel",
+    "aliases": [
+      "sebastian vettel",
+      "vettel"
+    ],
+    "position": "",
+    "first_year": 2007,
+    "last_year": 2022,
+    "teams": [
+      "Toro Rosso",
+      "Red Bull",
+      "Ferrari",
+      "Aston Martin"
+    ],
+    "stat_line": "53 race wins, 122 podiums and 57 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2013,
+      "team": "Red Bull",
+      "line": "13 race wins, 16 podiums and 9 pole positions"
+    },
+    "fame": 0.9711,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Alain Prost",
+    "aliases": [
+      "alain prost",
+      "prost"
+    ],
+    "position": "",
+    "first_year": 1980,
+    "last_year": 1993,
+    "teams": [
+      "McLaren",
+      "Renault",
+      "Ferrari",
+      "Williams"
+    ],
+    "stat_line": "51 race wins, 106 podiums and 33 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1993,
+      "team": "Williams",
+      "line": "7 race wins, 12 podiums and 13 pole positions"
+    },
+    "fame": 0.9263,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Ayrton Senna",
+    "aliases": [
+      "ayrton senna",
+      "senna"
+    ],
+    "position": "",
+    "first_year": 1984,
+    "last_year": 1994,
+    "teams": [
+      "Toleman",
+      "Team Lotus",
+      "McLaren",
+      "Williams"
+    ],
+    "stat_line": "41 race wins, 80 podiums and 65 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1988,
+      "team": "McLaren",
+      "line": "8 race wins, 11 podiums and 13 pole positions"
+    },
+    "fame": 0.9158,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Nico Rosberg",
+    "aliases": [
+      "nico rosberg",
+      "rosberg"
+    ],
+    "position": "",
+    "first_year": 2006,
+    "last_year": 2016,
+    "teams": [
+      "Williams",
+      "Mercedes"
+    ],
+    "stat_line": "23 race wins, 57 podiums and 30 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2016,
+      "team": "Mercedes",
+      "line": "9 race wins, 16 podiums and 8 pole positions"
+    },
+    "fame": 0.9158,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Fernando Alonso",
+    "aliases": [
+      "fernando alonso",
+      "alonso"
+    ],
+    "position": "",
+    "first_year": 2001,
+    "last_year": 2025,
+    "teams": [
+      "Minardi",
+      "Renault",
+      "McLaren",
+      "Ferrari",
+      "Alpine F1 Team",
+      "Aston Martin"
+    ],
+    "stat_line": "32 race wins, 106 podiums and 22 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 22,
+    "active": true,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 2005,
+      "team": "Renault",
+      "line": "7 race wins, 15 podiums and 6 pole positions"
+    },
+    "fame": 0.9132,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Nigel Mansell",
+    "aliases": [
+      "nigel mansell",
+      "mansell"
+    ],
+    "position": "",
+    "first_year": 1980,
+    "last_year": 1995,
+    "teams": [
+      "Team Lotus",
+      "Williams",
+      "Ferrari",
+      "McLaren"
+    ],
+    "stat_line": "31 race wins, 59 podiums and 32 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1992,
+      "team": "Williams",
+      "line": "9 race wins, 12 podiums and 14 pole positions"
+    },
+    "fame": 0.9026,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Carlos Reutemann",
+    "aliases": [
+      "carlos reutemann",
+      "reutemann"
+    ],
+    "position": "",
+    "first_year": 1972,
+    "last_year": 1982,
+    "teams": [
+      "Brabham",
+      "Brabham-Alfa Romeo",
+      "Ferrari",
+      "Team Lotus",
+      "Williams"
+    ],
+    "stat_line": "12 race wins, 45 podiums and 6 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1978,
+      "team": "Ferrari",
+      "line": "4 race wins, 7 podiums and 2 pole positions"
+    },
+    "fame": 0.5474,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Jody Scheckter",
+    "aliases": [
+      "jody scheckter",
+      "scheckter"
+    ],
+    "position": "",
+    "first_year": 1972,
+    "last_year": 1980,
+    "teams": [
+      "McLaren",
+      "Tyrrell",
+      "Wolf",
+      "Ferrari"
+    ],
+    "stat_line": "10 race wins, 33 podiums and 3 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1979,
+      "team": "Ferrari",
+      "line": "3 race wins, 6 podiums and 1 pole position"
+    },
+    "fame": 0.5368,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Daniel Ricciardo",
+    "aliases": [
+      "daniel ricciardo",
+      "ricciardo"
+    ],
+    "position": "",
+    "first_year": 2011,
+    "last_year": 2024,
+    "teams": [
+      "HRT",
+      "Toro Rosso",
+      "Red Bull",
+      "Renault",
+      "McLaren",
+      "AlphaTauri",
+      "RB F1 Team"
+    ],
+    "stat_line": "8 race wins, 32 podiums and 3 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "active": true,
+    "franchise_count": 7,
+    "best_season": {
+      "year": 2014,
+      "team": "Red Bull",
+      "line": "3 race wins and 8 podiums"
+    },
+    "fame": 0.5237,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Ronnie Peterson",
+    "aliases": [
+      "ronnie peterson",
+      "peterson"
+    ],
+    "position": "",
+    "first_year": 1970,
+    "last_year": 1978,
+    "teams": [
+      "March",
+      "March-Ford",
+      "Team Lotus",
+      "Tyrrell"
+    ],
+    "stat_line": "10 race wins, 26 podiums and 14 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1973,
+      "team": "Team Lotus",
+      "line": "4 race wins, 7 podiums and 9 pole positions"
+    },
+    "fame": 0.5105,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Stirling Moss",
+    "aliases": [
+      "stirling moss",
+      "moss"
+    ],
+    "position": "",
+    "first_year": 1951,
+    "last_year": 1961,
+    "teams": [
+      "HWM",
+      "ERA",
+      "Cooper",
+      "Maserati",
+      "Mercedes",
+      "Vanwall",
+      "Cooper-Climax",
+      "Team Lotus",
+      "Lotus-Climax"
+    ],
+    "stat_line": "16 race wins, 24 podiums and 17 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 9,
+    "best_season": {
+      "year": 1958,
+      "team": "Vanwall",
+      "line": "4 race wins, 5 podiums and 3 pole positions"
+    },
+    "fame": 0.4868,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Riccardo Patrese",
+    "aliases": [
+      "riccardo patrese",
+      "patrese"
+    ],
+    "position": "",
+    "first_year": 1977,
+    "last_year": 1993,
+    "teams": [
+      "Shadow",
+      "Arrows",
+      "Brabham",
+      "Alfa Romeo",
+      "Williams",
+      "Benetton"
+    ],
+    "stat_line": "6 race wins, 37 podiums and 8 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1991,
+      "team": "Williams",
+      "line": "2 race wins, 8 podiums and 4 pole positions"
+    },
+    "fame": 0.4763,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Denny Hulme",
+    "aliases": [
+      "denny hulme",
+      "hulme"
+    ],
+    "position": "",
+    "first_year": 1965,
+    "last_year": 1974,
+    "teams": [
+      "Brabham-Climax",
+      "Brabham-Repco",
+      "McLaren-Ford",
+      "McLaren"
+    ],
+    "stat_line": "8 race wins, 33 podiums and 1 pole position",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1967,
+      "team": "Brabham-Repco",
+      "line": "2 race wins and 8 podiums"
+    },
+    "fame": 0.4658,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Gerhard Berger",
+    "aliases": [
+      "gerhard berger",
+      "berger"
+    ],
+    "position": "",
+    "first_year": 1984,
+    "last_year": 1997,
+    "teams": [
+      "ATS",
+      "Arrows",
+      "Benetton",
+      "Ferrari",
+      "McLaren"
+    ],
+    "stat_line": "10 race wins, 48 podiums and 12 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1992,
+      "team": "McLaren",
+      "line": "2 race wins and 5 podiums"
+    },
+    "fame": 0.45,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "George Russell",
+    "aliases": [
+      "george russell",
+      "russell"
+    ],
+    "position": "",
+    "first_year": 2019,
+    "last_year": 2025,
+    "teams": [
+      "Williams",
+      "Mercedes"
+    ],
+    "stat_line": "5 race wins, 24 podiums and 8 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 7,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2025,
+      "team": "Mercedes",
+      "line": "2 race wins, 9 podiums and 2 pole positions"
+    },
+    "fame": 0.4316,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "René Arnoux",
+    "aliases": [
+      "rené arnoux",
+      "arnoux"
+    ],
+    "position": "",
+    "first_year": 1978,
+    "last_year": 1989,
+    "teams": [
+      "Martini",
+      "Renault",
+      "Ferrari",
+      "Ligier"
+    ],
+    "stat_line": "7 race wins, 22 podiums and 18 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1983,
+      "team": "Ferrari",
+      "line": "3 race wins, 7 podiums and 4 pole positions"
+    },
+    "fame": 0.4079,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Juan Pablo Montoya",
+    "aliases": [
+      "juan pablo montoya",
+      "montoya"
+    ],
+    "position": "",
+    "first_year": 2001,
+    "last_year": 2006,
+    "teams": [
+      "Williams",
+      "McLaren"
+    ],
+    "stat_line": "7 race wins, 30 podiums and 13 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 6,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2003,
+      "team": "Williams",
+      "line": "2 race wins, 9 podiums and 1 pole position"
+    },
+    "fame": 0.4,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Eddie Irvine",
+    "aliases": [
+      "eddie irvine",
+      "irvine"
+    ],
+    "position": "",
+    "first_year": 1993,
+    "last_year": 2002,
+    "teams": [
+      "Jordan",
+      "Ferrari",
+      "Jaguar"
+    ],
+    "stat_line": "4 race wins and 26 podiums",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1999,
+      "team": "Ferrari",
+      "line": "4 race wins and 9 podiums"
+    },
+    "fame": 0.3842,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Ralf Schumacher",
+    "aliases": [
+      "ralf schumacher",
+      "schumacher"
+    ],
+    "position": "",
+    "first_year": 1997,
+    "last_year": 2007,
+    "teams": [
+      "Jordan",
+      "Williams",
+      "Toyota"
+    ],
+    "stat_line": "6 race wins, 27 podiums and 6 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2001,
+      "team": "Williams",
+      "line": "3 race wins, 5 podiums and 1 pole position"
+    },
+    "fame": 0.3658,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "John Surtees",
+    "aliases": [
+      "john surtees",
+      "surtees"
+    ],
+    "position": "",
+    "first_year": 1960,
+    "last_year": 1972,
+    "teams": [
+      "Team Lotus",
+      "Cooper-Climax",
+      "Lola",
+      "Ferrari",
+      "Cooper-Maserati",
+      "Honda",
+      "BRM",
+      "Surtees"
+    ],
+    "stat_line": "6 race wins, 24 podiums and 8 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 8,
+    "best_season": {
+      "year": 1964,
+      "team": "Ferrari",
+      "line": "2 race wins, 6 podiums and 2 pole positions"
+    },
+    "fame": 0.3632,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Jochen Rindt",
+    "aliases": [
+      "jochen rindt",
+      "rindt"
+    ],
+    "position": "",
+    "first_year": 1964,
+    "last_year": 1970,
+    "teams": [
+      "Brabham-BRM",
+      "Cooper-Climax",
+      "Cooper-Maserati",
+      "Brabham-Repco",
+      "Lotus-Ford",
+      "Team Lotus"
+    ],
+    "stat_line": "6 race wins, 13 podiums and 10 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 7,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1970,
+      "team": "Team Lotus",
+      "line": "5 race wins, 5 podiums and 3 pole positions"
+    },
+    "fame": 0.3579,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Jacques Laffite",
+    "aliases": [
+      "jacques laffite",
+      "laffite"
+    ],
+    "position": "",
+    "first_year": 1974,
+    "last_year": 1986,
+    "teams": [
+      "Iso Marlboro",
+      "Williams",
+      "Ligier"
+    ],
+    "stat_line": "6 race wins, 33 podiums and 7 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1979,
+      "team": "Ligier",
+      "line": "2 race wins, 6 podiums and 4 pole positions"
+    },
+    "fame": 0.3553,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Jacky Ickx",
+    "aliases": [
+      "jacky ickx",
+      "ickx"
+    ],
+    "position": "",
+    "first_year": 1967,
+    "last_year": 1979,
+    "teams": [
+      "Cooper-Maserati",
+      "Ferrari",
+      "Brabham-Ford",
+      "Team Lotus",
+      "Wolf",
+      "Ensign",
+      "Ligier"
+    ],
+    "stat_line": "8 race wins, 25 podiums and 13 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 7,
+    "best_season": {
+      "year": 1970,
+      "team": "Ferrari",
+      "line": "3 race wins, 5 podiums and 4 pole positions"
+    },
+    "fame": 0.3474,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Clay Regazzoni",
+    "aliases": [
+      "clay regazzoni",
+      "regazzoni"
+    ],
+    "position": "",
+    "first_year": 1970,
+    "last_year": 1980,
+    "teams": [
+      "Ferrari",
+      "BRM",
+      "Ensign",
+      "Shadow",
+      "Williams"
+    ],
+    "stat_line": "5 race wins, 28 podiums and 5 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1974,
+      "team": "Ferrari",
+      "line": "1 race win, 7 podiums and 1 pole position"
+    },
+    "fame": 0.3026,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Michele Alboreto",
+    "aliases": [
+      "michele alboreto",
+      "alboreto"
+    ],
+    "position": "",
+    "first_year": 1981,
+    "last_year": 1994,
+    "teams": [
+      "Tyrrell",
+      "Ferrari",
+      "Arrows",
+      "Footwork",
+      "Lola",
+      "Minardi"
+    ],
+    "stat_line": "5 race wins, 23 podiums and 2 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1985,
+      "team": "Ferrari",
+      "line": "2 race wins, 8 podiums and 1 pole position"
+    },
+    "fame": 0.2974,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Nino Farina",
+    "aliases": [
+      "nino farina",
+      "farina"
+    ],
+    "position": "",
+    "first_year": 1950,
+    "last_year": 1955,
+    "teams": [
+      "Alfa Romeo",
+      "Ferrari"
+    ],
+    "stat_line": "5 race wins, 20 podiums and 6 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 6,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1950,
+      "team": "Alfa Romeo",
+      "line": "3 race wins, 3 podiums and 2 pole positions"
+    },
+    "fame": 0.2842,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Phil Hill",
+    "aliases": [
+      "phil hill",
+      "hill"
+    ],
+    "position": "",
+    "first_year": 1958,
+    "last_year": 1964,
+    "teams": [
+      "Ferrari",
+      "ATS",
+      "Cooper-Climax"
+    ],
+    "stat_line": "3 race wins, 16 podiums and 6 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 7,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1961,
+      "team": "Ferrari",
+      "line": "2 race wins, 6 podiums and 5 pole positions"
+    },
+    "fame": 0.2842,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Mike Hawthorn",
+    "aliases": [
+      "mike hawthorn",
+      "hawthorn"
+    ],
+    "position": "",
+    "first_year": 1952,
+    "last_year": 1958,
+    "teams": [
+      "Cooper",
+      "Ferrari",
+      "BRM"
+    ],
+    "stat_line": "3 race wins, 18 podiums and 4 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 7,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1958,
+      "team": "Ferrari",
+      "line": "1 race win, 7 podiums and 4 pole positions"
+    },
+    "fame": 0.2737,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Keke Rosberg",
+    "aliases": [
+      "keke rosberg",
+      "rosberg"
+    ],
+    "position": "",
+    "first_year": 1978,
+    "last_year": 1986,
+    "teams": [
+      "ATS",
+      "Wolf",
+      "Fittipaldi",
+      "Williams",
+      "McLaren"
+    ],
+    "stat_line": "5 race wins, 17 podiums and 5 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1982,
+      "team": "Williams",
+      "line": "1 race win, 6 podiums and 1 pole position"
+    },
+    "fame": 0.2711,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Giancarlo Fisichella",
+    "aliases": [
+      "giancarlo fisichella",
+      "fisichella"
+    ],
+    "position": "",
+    "first_year": 1996,
+    "last_year": 2009,
+    "teams": [
+      "Minardi",
+      "Jordan",
+      "Benetton",
+      "Sauber",
+      "Renault",
+      "Force India"
+    ],
+    "stat_line": "3 race wins, 19 podiums and 4 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 2006,
+      "team": "Renault",
+      "line": "1 race win, 5 podiums and 1 pole position"
+    },
+    "fame": 0.2526,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Jean Alesi",
+    "aliases": [
+      "jean alesi",
+      "alesi"
+    ],
+    "position": "",
+    "first_year": 1989,
+    "last_year": 2001,
+    "teams": [
+      "Tyrrell",
+      "Ferrari",
+      "Benetton",
+      "Sauber",
+      "Prost"
+    ],
+    "stat_line": "1 race win, 32 podiums and 2 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1996,
+      "team": "Benetton",
+      "line": "8 podiums"
+    },
+    "fame": 0.2447,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "John Watson",
+    "aliases": [
+      "john watson",
+      "watson"
+    ],
+    "position": "",
+    "first_year": 1973,
+    "last_year": 1985,
+    "teams": [
+      "Brabham",
+      "Surtees",
+      "Penske",
+      "McLaren"
+    ],
+    "stat_line": "5 race wins, 20 podiums and 2 pole positions",
+    "jersey": "",
+    "fact": "",
+    "college": "Oklahoma",
+    "height_in": 76,
+    "weight_lb": 249,
+    "birth_year": 1949,
+    "undrafted": true,
+    "seasons": 12,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1982,
+      "team": "McLaren",
+      "line": "2 race wins and 5 podiums"
+    },
+    "fame": 0.2447,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Heinz-Harald Frentzen",
+    "aliases": [
+      "heinz-harald frentzen",
+      "frentzen"
+    ],
+    "position": "",
+    "first_year": 1994,
+    "last_year": 2003,
+    "teams": [
+      "Sauber",
+      "Williams",
+      "Jordan",
+      "Arrows"
+    ],
+    "stat_line": "3 race wins, 18 podiums and 2 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1999,
+      "team": "Jordan",
+      "line": "2 race wins, 6 podiums and 1 pole position"
+    },
+    "fame": 0.2342,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Gilles Villeneuve",
+    "aliases": [
+      "gilles villeneuve",
+      "villeneuve"
+    ],
+    "position": "",
+    "first_year": 1977,
+    "last_year": 1982,
+    "teams": [
+      "Ferrari"
+    ],
+    "stat_line": "6 race wins, 13 podiums and 2 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 6,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1979,
+      "team": "Ferrari",
+      "line": "3 race wins, 7 podiums and 1 pole position"
+    },
+    "fame": 0.2079,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Bruce McLaren",
+    "aliases": [
+      "bruce mclaren",
+      "mclaren"
+    ],
+    "position": "",
+    "first_year": 1958,
+    "last_year": 1970,
+    "teams": [
+      "Cooper",
+      "Cooper-Climax",
+      "McLaren-Ford",
+      "McLaren-BRM"
+    ],
+    "stat_line": "4 race wins and 27 podiums",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1960,
+      "team": "Cooper-Climax",
+      "line": "1 race win and 6 podiums"
+    },
+    "fame": 0.2,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Thierry Boutsen",
+    "aliases": [
+      "thierry boutsen",
+      "boutsen"
+    ],
+    "position": "",
+    "first_year": 1983,
+    "last_year": 1993,
+    "teams": [
+      "Arrows",
+      "Benetton",
+      "Williams",
+      "Ligier",
+      "Jordan"
+    ],
+    "stat_line": "3 race wins, 15 podiums and 1 pole position",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1989,
+      "team": "Williams",
+      "line": "2 race wins and 5 podiums"
+    },
+    "fame": 0.1658,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Didier Pironi",
+    "aliases": [
+      "didier pironi",
+      "pironi"
+    ],
+    "position": "",
+    "first_year": 1978,
+    "last_year": 1982,
+    "teams": [
+      "Tyrrell",
+      "Ligier",
+      "Ferrari"
+    ],
+    "stat_line": "3 race wins, 13 podiums and 4 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 5,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1982,
+      "team": "Ferrari",
+      "line": "2 race wins, 6 podiums and 2 pole positions"
+    },
+    "fame": 0.15,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Jarno Trulli",
+    "aliases": [
+      "jarno trulli",
+      "trulli"
+    ],
+    "position": "",
+    "first_year": 1997,
+    "last_year": 2011,
+    "teams": [
+      "Minardi",
+      "Prost",
+      "Jordan",
+      "Renault",
+      "Toyota",
+      "Lotus"
+    ],
+    "stat_line": "1 race win, 11 podiums and 4 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 2004,
+      "team": "Renault",
+      "line": "1 race win, 2 podiums and 2 pole positions"
+    },
+    "fame": 0.1342,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Dan Gurney",
+    "aliases": [
+      "dan gurney",
+      "gurney"
+    ],
+    "position": "",
+    "first_year": 1959,
+    "last_year": 1970,
+    "teams": [
+      "Ferrari",
+      "BRM",
+      "Porsche",
+      "Brabham",
+      "Brabham-Climax",
+      "Eagle-Climax",
+      "Eagle-Weslake",
+      "McLaren-Ford"
+    ],
+    "stat_line": "4 race wins, 19 podiums and 3 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 8,
+    "best_season": {
+      "year": 1964,
+      "team": "Brabham-Climax",
+      "line": "2 race wins, 2 podiums and 2 pole positions"
+    },
+    "fame": 0.1237,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Patrick Tambay",
+    "aliases": [
+      "patrick tambay",
+      "tambay"
+    ],
+    "position": "",
+    "first_year": 1977,
+    "last_year": 1986,
+    "teams": [
+      "Ensign",
+      "McLaren",
+      "Ligier",
+      "Ferrari",
+      "Renault",
+      "Lola"
+    ],
+    "stat_line": "2 race wins, 11 podiums and 5 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1983,
+      "team": "Ferrari",
+      "line": "1 race win, 5 podiums and 4 pole positions"
+    },
+    "fame": 0.1158,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Tony Brooks",
+    "aliases": [
+      "tony brooks",
+      "brooks"
+    ],
+    "position": "",
+    "first_year": 1956,
+    "last_year": 1961,
+    "teams": [
+      "BRM",
+      "Vanwall",
+      "Ferrari",
+      "Cooper-Climax"
+    ],
+    "stat_line": "6 race wins, 10 podiums and 4 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 6,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1958,
+      "team": "Vanwall",
+      "line": "3 race wins, 3 podiums and 1 pole position"
+    },
+    "fame": 0.1,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Nick Heidfeld",
+    "aliases": [
+      "nick heidfeld",
+      "heidfeld"
+    ],
+    "position": "",
+    "first_year": 2000,
+    "last_year": 2011,
+    "teams": [
+      "Prost",
+      "Sauber",
+      "Jordan",
+      "Williams",
+      "BMW Sauber",
+      "Renault"
+    ],
+    "stat_line": "13 podiums and 1 pole position",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 2008,
+      "team": "BMW Sauber",
+      "line": "4 podiums"
+    },
+    "fame": 0.0842,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Patrick Depailler",
+    "aliases": [
+      "patrick depailler",
+      "depailler"
+    ],
+    "position": "",
+    "first_year": 1972,
+    "last_year": 1980,
+    "teams": [
+      "Tyrrell",
+      "Ligier",
+      "Alfa Romeo"
+    ],
+    "stat_line": "2 race wins, 19 podiums and 1 pole position",
+    "jersey": "",
+    "fact": "",
+    "seasons": 8,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1976,
+      "team": "Tyrrell",
+      "line": "7 podiums"
+    },
+    "fame": 0.0842,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Johnny Herbert",
+    "aliases": [
+      "johnny herbert",
+      "herbert"
+    ],
+    "position": "",
+    "first_year": 1989,
+    "last_year": 2000,
+    "teams": [
+      "Benetton",
+      "Team Lotus",
+      "Sauber",
+      "Stewart",
+      "Jaguar"
+    ],
+    "stat_line": "3 race wins and 7 podiums",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1995,
+      "team": "Benetton",
+      "line": "2 race wins and 4 podiums"
+    },
+    "fame": 0.0816,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Esteban Ocon",
+    "aliases": [
+      "esteban ocon",
+      "ocon"
+    ],
+    "position": "",
+    "first_year": 2016,
+    "last_year": 2025,
+    "teams": [
+      "Manor Marussia",
+      "Force India",
+      "Renault",
+      "Alpine F1 Team",
+      "Haas F1 Team"
+    ],
+    "stat_line": "1 race win and 4 podiums",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "active": true,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 2021,
+      "team": "Alpine F1 Team",
+      "line": "1 race win and 1 podium"
+    },
+    "fame": 0.0395,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "José Froilán González",
+    "aliases": [
+      "josé froilán gonzález",
+      "gonzález"
+    ],
+    "position": "",
+    "first_year": 1950,
+    "last_year": 1960,
+    "teams": [
+      "Maserati",
+      "Ferrari"
+    ],
+    "stat_line": "2 race wins, 15 podiums and 3 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1954,
+      "team": "Ferrari",
+      "line": "1 race win, 5 podiums and 1 pole position"
+    },
+    "fame": 0.0395,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Elio de Angelis",
+    "aliases": [
+      "elio de angelis",
+      "angelis"
+    ],
+    "position": "",
+    "first_year": 1979,
+    "last_year": 1986,
+    "teams": [
+      "Shadow",
+      "Team Lotus",
+      "Brabham"
+    ],
+    "stat_line": "2 race wins, 9 podiums and 3 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 8,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1985,
+      "team": "Team Lotus",
+      "line": "1 race win, 3 podiums and 1 pole position"
+    },
+    "fame": 0.0263,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Romain Grosjean",
+    "aliases": [
+      "romain grosjean",
+      "grosjean"
+    ],
+    "position": "",
+    "first_year": 2009,
+    "last_year": 2020,
+    "teams": [
+      "Renault",
+      "Lotus F1",
+      "Haas F1 Team"
+    ],
+    "stat_line": "10 podiums",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2013,
+      "team": "Lotus F1",
+      "line": "6 podiums"
+    },
+    "fame": 0.0263,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Kimi Räikkönen",
+    "aliases": [
+      "kimi räikkönen",
+      "räikkönen"
+    ],
+    "position": "",
+    "first_year": 2001,
+    "last_year": 2021,
+    "teams": [
+      "Sauber",
+      "McLaren",
+      "Ferrari",
+      "Lotus F1",
+      "Alfa Romeo"
+    ],
+    "stat_line": "21 race wins, 103 podiums and 18 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 19,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 2005,
+      "team": "McLaren",
+      "line": "7 race wins, 12 podiums and 5 pole positions"
+    },
+    "fame": 0.8711,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Mika Häkkinen",
+    "aliases": [
+      "mika häkkinen",
+      "häkkinen"
+    ],
+    "position": "",
+    "first_year": 1991,
+    "last_year": 2001,
+    "teams": [
+      "Team Lotus",
+      "McLaren"
+    ],
+    "stat_line": "20 race wins, 51 podiums and 26 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1998,
+      "team": "McLaren",
+      "line": "8 race wins, 11 podiums and 9 pole positions"
+    },
+    "fame": 0.8447,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Niki Lauda",
+    "aliases": [
+      "niki lauda",
+      "lauda"
+    ],
+    "position": "",
+    "first_year": 1971,
+    "last_year": 1985,
+    "teams": [
+      "March-Ford",
+      "March",
+      "BRM",
+      "Ferrari",
+      "Brabham",
+      "Brabham-Alfa Romeo",
+      "McLaren"
+    ],
+    "stat_line": "25 race wins, 54 podiums and 24 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 7,
+    "best_season": {
+      "year": 1975,
+      "team": "Ferrari",
+      "line": "5 race wins, 8 podiums and 9 pole positions"
+    },
+    "fame": 0.8132,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Lando Norris",
+    "aliases": [
+      "lando norris",
+      "norris"
+    ],
+    "position": "",
+    "first_year": 2019,
+    "last_year": 2025,
+    "teams": [
+      "McLaren"
+    ],
+    "stat_line": "11 race wins, 44 podiums and 16 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 7,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2025,
+      "team": "McLaren",
+      "line": "7 race wins, 18 podiums and 7 pole positions"
+    },
+    "fame": 0.7868,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Juan Fangio",
+    "aliases": [
+      "juan fangio",
+      "fangio"
+    ],
+    "position": "",
+    "first_year": 1950,
+    "last_year": 1958,
+    "teams": [
+      "Alfa Romeo",
+      "Maserati",
+      "Mercedes",
+      "Ferrari"
+    ],
+    "stat_line": "24 race wins, 35 podiums and 29 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 8,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1954,
+      "team": "Mercedes",
+      "line": "6 race wins, 7 podiums and 5 pole positions"
+    },
+    "fame": 0.7842,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Jenson Button",
+    "aliases": [
+      "jenson button",
+      "button"
+    ],
+    "position": "",
+    "first_year": 2000,
+    "last_year": 2017,
+    "teams": [
+      "Williams",
+      "Benetton",
+      "Renault",
+      "BAR",
+      "Honda",
+      "Brawn",
+      "McLaren"
+    ],
+    "stat_line": "15 race wins, 50 podiums and 8 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "franchise_count": 7,
+    "best_season": {
+      "year": 2009,
+      "team": "Brawn",
+      "line": "6 race wins, 9 podiums and 4 pole positions"
+    },
+    "fame": 0.7816,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Damon Hill",
+    "aliases": [
+      "damon hill",
+      "hill"
+    ],
+    "position": "",
+    "first_year": 1992,
+    "last_year": 1999,
+    "teams": [
+      "Brabham",
+      "Williams",
+      "Arrows",
+      "Jordan"
+    ],
+    "stat_line": "22 race wins, 42 podiums and 20 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 8,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1996,
+      "team": "Williams",
+      "line": "8 race wins, 10 podiums and 9 pole positions"
+    },
+    "fame": 0.7789,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Jim Clark",
+    "aliases": [
+      "jim clark",
+      "clark"
+    ],
+    "position": "",
+    "first_year": 1960,
+    "last_year": 1968,
+    "teams": [
+      "Team Lotus",
+      "Lotus-Climax",
+      "Lotus-Ford"
+    ],
+    "stat_line": "25 race wins, 32 podiums and 34 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1963,
+      "team": "Lotus-Climax",
+      "line": "7 race wins, 9 podiums and 7 pole positions"
+    },
+    "fame": 0.7789,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Valtteri Bottas",
+    "aliases": [
+      "valtteri bottas",
+      "bottas"
+    ],
+    "position": "",
+    "first_year": 2013,
+    "last_year": 2024,
+    "teams": [
+      "Williams",
+      "Mercedes",
+      "Alfa Romeo",
+      "Sauber"
+    ],
+    "stat_line": "10 race wins, 67 podiums and 20 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "active": true,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2019,
+      "team": "Mercedes",
+      "line": "4 race wins, 15 podiums and 5 pole positions"
+    },
+    "fame": 0.7763,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Jackie Stewart",
+    "aliases": [
+      "jackie stewart",
+      "stewart"
+    ],
+    "position": "",
+    "first_year": 1965,
+    "last_year": 1973,
+    "teams": [
+      "BRM",
+      "Matra-Ford",
+      "March",
+      "Tyrrell"
+    ],
+    "stat_line": "27 race wins, 43 podiums and 17 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1971,
+      "team": "Tyrrell",
+      "line": "6 race wins, 7 podiums and 6 pole positions"
+    },
+    "fame": 0.7737,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Nelson Piquet",
+    "aliases": [
+      "nelson piquet",
+      "piquet"
+    ],
+    "position": "",
+    "first_year": 1978,
+    "last_year": 1991,
+    "teams": [
+      "McLaren",
+      "Brabham-Alfa Romeo",
+      "Brabham",
+      "Williams",
+      "Team Lotus",
+      "Benetton"
+    ],
+    "stat_line": "23 race wins, 60 podiums and 24 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1987,
+      "team": "Williams",
+      "line": "3 race wins, 11 podiums and 4 pole positions"
+    },
+    "fame": 0.7737,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Felipe Massa",
+    "aliases": [
+      "felipe massa",
+      "massa"
+    ],
+    "position": "",
+    "first_year": 2002,
+    "last_year": 2017,
+    "teams": [
+      "Sauber",
+      "Ferrari",
+      "Williams"
+    ],
+    "stat_line": "11 race wins, 41 podiums and 16 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2008,
+      "team": "Ferrari",
+      "line": "6 race wins, 10 podiums and 6 pole positions"
+    },
+    "fame": 0.7237,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Rubens Barrichello",
+    "aliases": [
+      "rubens barrichello",
+      "barrichello"
+    ],
+    "position": "",
+    "first_year": 1993,
+    "last_year": 2011,
+    "teams": [
+      "Jordan",
+      "Stewart",
+      "Ferrari",
+      "Honda",
+      "Brawn",
+      "Williams"
+    ],
+    "stat_line": "11 race wins, 68 podiums and 14 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 19,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 2004,
+      "team": "Ferrari",
+      "line": "2 race wins, 14 podiums and 4 pole positions"
+    },
+    "fame": 0.7158,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Charles Leclerc",
+    "aliases": [
+      "charles leclerc",
+      "leclerc"
+    ],
+    "position": "",
+    "first_year": 2018,
+    "last_year": 2025,
+    "teams": [
+      "Sauber",
+      "Ferrari"
+    ],
+    "stat_line": "8 race wins, 50 podiums and 27 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 8,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2022,
+      "team": "Ferrari",
+      "line": "3 race wins, 11 podiums and 9 pole positions"
+    },
+    "fame": 0.6895,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Jacques Villeneuve",
+    "aliases": [
+      "jacques villeneuve",
+      "villeneuve"
+    ],
+    "position": "",
+    "first_year": 1996,
+    "last_year": 2006,
+    "teams": [
+      "Williams",
+      "BAR",
+      "Renault",
+      "Sauber",
+      "BMW Sauber"
+    ],
+    "stat_line": "11 race wins, 23 podiums and 13 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1997,
+      "team": "Williams",
+      "line": "7 race wins, 8 podiums and 10 pole positions"
+    },
+    "fame": 0.6789,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "David Coulthard",
+    "aliases": [
+      "david coulthard",
+      "coulthard"
+    ],
+    "position": "",
+    "first_year": 1994,
+    "last_year": 2008,
+    "teams": [
+      "Williams",
+      "McLaren",
+      "Red Bull"
+    ],
+    "stat_line": "13 race wins, 62 podiums and 12 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2000,
+      "team": "McLaren",
+      "line": "3 race wins, 11 podiums and 2 pole positions"
+    },
+    "fame": 0.6658,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Mark Webber",
+    "aliases": [
+      "mark webber",
+      "webber"
+    ],
+    "position": "",
+    "first_year": 2002,
+    "last_year": 2013,
+    "teams": [
+      "Minardi",
+      "Jaguar",
+      "Williams",
+      "Red Bull"
+    ],
+    "stat_line": "9 race wins, 42 podiums and 13 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2010,
+      "team": "Red Bull",
+      "line": "4 race wins, 10 podiums and 5 pole positions"
+    },
+    "fame": 0.6579,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Emerson Fittipaldi",
+    "aliases": [
+      "emerson fittipaldi",
+      "fittipaldi"
+    ],
+    "position": "",
+    "first_year": 1970,
+    "last_year": 1980,
+    "teams": [
+      "Team Lotus",
+      "Lotus-Ford",
+      "McLaren",
+      "Fittipaldi"
+    ],
+    "stat_line": "14 race wins, 35 podiums and 6 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1972,
+      "team": "Team Lotus",
+      "line": "5 race wins, 8 podiums and 3 pole positions"
+    },
+    "fame": 0.6289,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Graham Hill",
+    "aliases": [
+      "graham hill",
+      "hill"
+    ],
+    "position": "",
+    "first_year": 1958,
+    "last_year": 1975,
+    "teams": [
+      "Team Lotus",
+      "BRM",
+      "Lotus-Ford",
+      "Brabham",
+      "Shadow",
+      "Lola"
+    ],
+    "stat_line": "14 race wins, 36 podiums and 13 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1962,
+      "team": "BRM",
+      "line": "4 race wins, 6 podiums and 1 pole position"
+    },
+    "fame": 0.6237,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Mario Andretti",
+    "aliases": [
+      "mario andretti",
+      "andretti"
+    ],
+    "position": "",
+    "first_year": 1968,
+    "last_year": 1982,
+    "teams": [
+      "Lotus-Ford",
+      "March",
+      "Ferrari",
+      "Parnelli",
+      "Team Lotus",
+      "Alfa Romeo"
+    ],
+    "stat_line": "12 race wins, 19 podiums and 18 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1978,
+      "team": "Team Lotus",
+      "line": "6 race wins, 7 podiums and 8 pole positions"
+    },
+    "fame": 0.6211,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Jack Brabham",
+    "aliases": [
+      "jack brabham",
+      "brabham"
+    ],
+    "position": "",
+    "first_year": 1955,
+    "last_year": 1970,
+    "teams": [
+      "Cooper",
+      "Maserati",
+      "Cooper-Climax",
+      "Lotus-Climax",
+      "Brabham",
+      "Brabham-Climax",
+      "Brabham-Repco",
+      "Brabham-Ford"
+    ],
+    "stat_line": "14 race wins, 31 podiums and 13 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "franchise_count": 8,
+    "best_season": {
+      "year": 1960,
+      "team": "Cooper-Climax",
+      "line": "5 race wins, 5 podiums and 3 pole positions"
+    },
+    "fame": 0.6158,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Oscar Piastri",
+    "aliases": [
+      "oscar piastri",
+      "piastri"
+    ],
+    "position": "",
+    "first_year": 2023,
+    "last_year": 2025,
+    "teams": [
+      "McLaren"
+    ],
+    "stat_line": "9 race wins, 26 podiums and 6 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 3,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2025,
+      "team": "McLaren",
+      "line": "7 race wins, 16 podiums and 6 pole positions"
+    },
+    "fame": 0.5947,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Sergio Pérez",
+    "aliases": [
+      "sergio pérez",
+      "pérez"
+    ],
+    "position": "",
+    "first_year": 2011,
+    "last_year": 2024,
+    "teams": [
+      "Sauber",
+      "McLaren",
+      "Force India",
+      "Racing Point",
+      "Red Bull"
+    ],
+    "stat_line": "6 race wins, 39 podiums and 3 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "active": true,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 2022,
+      "team": "Red Bull",
+      "line": "2 race wins, 11 podiums and 1 pole position"
+    },
+    "fame": 0.5947,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "James Hunt",
+    "aliases": [
+      "james hunt",
+      "hunt"
+    ],
+    "position": "",
+    "first_year": 1973,
+    "last_year": 1979,
+    "teams": [
+      "March",
+      "Hesketh",
+      "McLaren",
+      "Wolf"
+    ],
+    "stat_line": "10 race wins, 23 podiums and 14 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 7,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1976,
+      "team": "McLaren",
+      "line": "6 race wins, 8 podiums and 8 pole positions"
+    },
+    "fame": 0.5868,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Alan Jones",
+    "aliases": [
+      "alan jones",
+      "jones"
+    ],
+    "position": "",
+    "first_year": 1975,
+    "last_year": 1986,
+    "teams": [
+      "Hesketh",
+      "Surtees",
+      "Shadow",
+      "Williams",
+      "Arrows",
+      "Lola"
+    ],
+    "stat_line": "12 race wins, 24 podiums and 6 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1980,
+      "team": "Williams",
+      "line": "5 race wins, 10 podiums and 3 pole positions"
+    },
+    "fame": 0.5816,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "f1",
+    "canonical": "Alberto Ascari",
+    "aliases": [
+      "alberto ascari",
+      "ascari"
+    ],
+    "position": "",
+    "first_year": 1950,
+    "last_year": 1955,
+    "teams": [
+      "Ferrari",
+      "Maserati",
+      "Lancia"
+    ],
+    "stat_line": "13 race wins, 17 podiums and 14 pole positions",
+    "jersey": "",
+    "fact": "",
+    "seasons": 6,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1952,
+      "team": "Ferrari",
+      "line": "6 race wins, 6 podiums and 5 pole positions"
+    },
+    "fame": 0.5684,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Wayne Gretzky",
+    "aliases": [
+      "wayne gretzky",
+      "gretzky"
+    ],
+    "position": "Centre",
+    "first_year": 1979,
+    "last_year": 1998,
+    "teams": [
+      "Oilers",
+      "Kings",
+      "Rangers"
+    ],
+    "stat_line": "894 goals, 1,963 assists and 2,857 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 20,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1981,
+      "team": "Oilers",
+      "line": "92 goals, 120 assists and 212 points"
+    },
+    "fame": 1.0,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Paul Coffey",
+    "aliases": [
+      "paul coffey",
+      "coffey"
+    ],
+    "position": "Defenceman",
+    "first_year": 1980,
+    "last_year": 1999,
+    "teams": [
+      "Oilers",
+      "Penguins",
+      "Kings",
+      "Red Wings",
+      "Whalers",
+      "Flyers",
+      "Blackhawks",
+      "Hurricanes"
+    ],
+    "stat_line": "1,527 points, 1,131 assists and 1,772 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 20,
+    "franchise_count": 8,
+    "best_season": {
+      "year": 1985,
+      "team": "Oilers",
+      "line": "138 points, 90 assists and 120 penalty minutes"
+    },
+    "fame": 0.9978,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Martin Brodeur",
+    "aliases": [
+      "martin brodeur",
+      "brodeur"
+    ],
+    "position": "Goaltender",
+    "first_year": 1993,
+    "last_year": 2013,
+    "teams": [
+      "Devils"
+    ],
+    "stat_line": "686 wins, 124 shutouts and 28,701 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 20,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2006,
+      "team": "Devils",
+      "line": "48 wins, 12 shutouts and 2,011 saves"
+    },
+    "fame": 0.9971,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Ray Bourque",
+    "aliases": [
+      "ray bourque",
+      "bourque"
+    ],
+    "position": "Defenceman",
+    "first_year": 1979,
+    "last_year": 2000,
+    "teams": [
+      "Bruins",
+      "Avalanche"
+    ],
+    "stat_line": "1,579 points, 1,169 assists and 1,141 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 22,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1983,
+      "team": "Bruins",
+      "line": "96 points, 65 assists and 57 penalty minutes"
+    },
+    "fame": 0.9965,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Alex Ovechkin",
+    "aliases": [
+      "alex ovechkin",
+      "ovechkin"
+    ],
+    "position": "Left winger",
+    "first_year": 2005,
+    "last_year": 2025,
+    "teams": [
+      "Capitals"
+    ],
+    "stat_line": "929 goals, 758 assists and 1,687 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 21,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2007,
+      "team": "Capitals",
+      "line": "65 goals, 47 assists and 112 points"
+    },
+    "fame": 0.9959,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Al MacInnis",
+    "aliases": [
+      "al macinnis",
+      "macinnis"
+    ],
+    "position": "Defenceman",
+    "first_year": 1983,
+    "last_year": 2002,
+    "teams": [
+      "Flames",
+      "Blues"
+    ],
+    "stat_line": "1,268 points, 929 assists and 1,496 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 20,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1990,
+      "team": "Flames",
+      "line": "103 points, 75 assists and 90 penalty minutes"
+    },
+    "fame": 0.9956,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Teemu Selanne",
+    "aliases": [
+      "teemu selanne",
+      "selanne"
+    ],
+    "position": "Right winger",
+    "first_year": 1992,
+    "last_year": 2013,
+    "teams": [
+      "Jets",
+      "Ducks",
+      "Sharks",
+      "Avalanche"
+    ],
+    "stat_line": "684 goals, 773 assists and 1,457 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 21,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1992,
+      "team": "Jets",
+      "line": "76 goals, 56 assists and 132 points"
+    },
+    "fame": 0.9944,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Brett Hull",
+    "aliases": [
+      "brett hull",
+      "hull"
+    ],
+    "position": "Right winger",
+    "first_year": 1987,
+    "last_year": 2003,
+    "teams": [
+      "Flames",
+      "Blues",
+      "Stars",
+      "Red Wings"
+    ],
+    "stat_line": "740 goals, 649 assists and 1,389 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1990,
+      "team": "Blues",
+      "line": "86 goals, 45 assists and 131 points"
+    },
+    "fame": 0.993,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Luc Robitaille",
+    "aliases": [
+      "luc robitaille",
+      "robitaille"
+    ],
+    "position": "Left winger",
+    "first_year": 1986,
+    "last_year": 2005,
+    "teams": [
+      "Kings",
+      "Penguins",
+      "Rangers",
+      "Red Wings"
+    ],
+    "stat_line": "668 goals, 726 assists and 1,394 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 19,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1992,
+      "team": "Kings",
+      "line": "63 goals, 62 assists and 125 points"
+    },
+    "fame": 0.9911,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Michel Goulet",
+    "aliases": [
+      "michel goulet",
+      "goulet"
+    ],
+    "position": "Left winger",
+    "first_year": 1979,
+    "last_year": 1993,
+    "teams": [
+      "Nordiques",
+      "Blackhawks"
+    ],
+    "stat_line": "548 goals, 605 assists and 1,153 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1983,
+      "team": "Nordiques",
+      "line": "56 goals, 66 assists and 122 points"
+    },
+    "fame": 0.9898,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Denis Potvin",
+    "aliases": [
+      "denis potvin",
+      "potvin"
+    ],
+    "position": "Defenceman",
+    "first_year": 1973,
+    "last_year": 1987,
+    "teams": [
+      "Islanders"
+    ],
+    "stat_line": "1,052 points, 742 assists and 1,356 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1978,
+      "team": "Islanders",
+      "line": "101 points, 70 assists and 58 penalty minutes"
+    },
+    "fame": 0.9895,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Phil Esposito",
+    "aliases": [
+      "phil esposito",
+      "esposito"
+    ],
+    "position": "Centre",
+    "first_year": 1963,
+    "last_year": 1980,
+    "teams": [
+      "Blackhawks",
+      "Bruins",
+      "Rangers"
+    ],
+    "stat_line": "717 goals, 873 assists and 1,590 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1970,
+      "team": "Bruins",
+      "line": "76 goals, 76 assists and 152 points"
+    },
+    "fame": 0.9883,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Steve Yzerman",
+    "aliases": [
+      "steve yzerman",
+      "yzerman"
+    ],
+    "position": "Centre",
+    "first_year": 1983,
+    "last_year": 2005,
+    "teams": [
+      "Red Wings"
+    ],
+    "stat_line": "690 goals, 1,057 assists and 1,747 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 21,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1988,
+      "team": "Red Wings",
+      "line": "65 goals, 90 assists and 155 points"
+    },
+    "fame": 0.9883,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Jari Kurri",
+    "aliases": [
+      "jari kurri",
+      "kurri"
+    ],
+    "position": "Right winger",
+    "first_year": 1980,
+    "last_year": 1997,
+    "teams": [
+      "Oilers",
+      "Kings",
+      "Ducks",
+      "Avalanche"
+    ],
+    "stat_line": "601 goals, 797 assists and 1,398 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1984,
+      "team": "Oilers",
+      "line": "71 goals, 64 assists and 135 points"
+    },
+    "fame": 0.9881,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Marcel Dionne",
+    "aliases": [
+      "marcel dionne",
+      "dionne"
+    ],
+    "position": "Centre",
+    "first_year": 1971,
+    "last_year": 1988,
+    "teams": [
+      "Red Wings",
+      "Kings",
+      "Rangers"
+    ],
+    "stat_line": "731 goals, 1,040 assists and 1,771 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1980,
+      "team": "Kings",
+      "line": "58 goals, 77 assists and 135 points"
+    },
+    "fame": 0.9877,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Bobby Orr",
+    "aliases": [
+      "bobby orr"
+    ],
+    "position": "Defenceman",
+    "first_year": 1966,
+    "last_year": 1976,
+    "teams": [
+      "Bruins",
+      "Blackhawks"
+    ],
+    "stat_line": "893 points, 630 assists and 927 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1970,
+      "team": "Bruins",
+      "line": "139 points, 102 assists and 91 penalty minutes"
+    },
+    "fame": 0.9869,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Brian Leetch",
+    "aliases": [
+      "brian leetch",
+      "leetch"
+    ],
+    "position": "Defenceman",
+    "first_year": 1988,
+    "last_year": 2005,
+    "teams": [
+      "Rangers",
+      "Bruins"
+    ],
+    "stat_line": "1,014 points, 769 assists and 571 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1991,
+      "team": "Rangers",
+      "line": "102 points, 80 assists and 26 penalty minutes"
+    },
+    "fame": 0.9865,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Mark Recchi",
+    "aliases": [
+      "mark recchi",
+      "recchi"
+    ],
+    "position": "Right winger",
+    "first_year": 1989,
+    "last_year": 2010,
+    "teams": [
+      "Penguins",
+      "Flyers",
+      "Canadiens",
+      "Lightning",
+      "Bruins"
+    ],
+    "stat_line": "576 goals, 955 assists and 1,531 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 21,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1992,
+      "team": "Flyers",
+      "line": "53 goals, 70 assists and 123 points"
+    },
+    "fame": 0.9853,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Larry Robinson",
+    "aliases": [
+      "larry robinson",
+      "robinson"
+    ],
+    "position": "Defenceman",
+    "first_year": 1972,
+    "last_year": 1991,
+    "teams": [
+      "Canadiens",
+      "Kings"
+    ],
+    "stat_line": "958 points, 750 assists and 793 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 20,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1976,
+      "team": "Canadiens",
+      "line": "85 points, 66 assists and 45 penalty minutes"
+    },
+    "fame": 0.9843,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Guy Lafleur",
+    "aliases": [
+      "guy lafleur",
+      "lafleur"
+    ],
+    "position": "Right winger",
+    "first_year": 1971,
+    "last_year": 1990,
+    "teams": [
+      "Canadiens",
+      "Rangers",
+      "Nordiques"
+    ],
+    "stat_line": "558 goals, 790 assists and 1,348 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1976,
+      "team": "Canadiens",
+      "line": "56 goals, 80 assists and 136 points"
+    },
+    "fame": 0.9832,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Johnny Bucyk",
+    "aliases": [
+      "johnny bucyk",
+      "bucyk"
+    ],
+    "position": "Left winger",
+    "first_year": 1955,
+    "last_year": 1977,
+    "teams": [
+      "Red Wings",
+      "Bruins"
+    ],
+    "stat_line": "556 goals, 813 assists and 1,369 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 23,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1970,
+      "team": "Bruins",
+      "line": "51 goals, 65 assists and 116 points"
+    },
+    "fame": 0.9823,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Larry Murphy",
+    "aliases": [
+      "larry murphy",
+      "murphy"
+    ],
+    "position": "Defenceman",
+    "first_year": 1980,
+    "last_year": 2000,
+    "teams": [
+      "Kings",
+      "Capitals",
+      "North Stars",
+      "Penguins",
+      "Maple Leafs",
+      "Red Wings"
+    ],
+    "stat_line": "1,217 points, 929 assists and 1,084 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 21,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1992,
+      "team": "Penguins",
+      "line": "85 points, 63 assists and 73 penalty minutes"
+    },
+    "fame": 0.9821,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Phil Housley",
+    "aliases": [
+      "phil housley",
+      "housley"
+    ],
+    "position": "Defenceman",
+    "first_year": 1982,
+    "last_year": 2002,
+    "teams": [
+      "Sabres",
+      "Jets",
+      "Blues",
+      "Flames",
+      "Capitals",
+      "Blackhawks"
+    ],
+    "stat_line": "1,232 points, 894 assists and 822 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 21,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1992,
+      "team": "Jets",
+      "line": "97 points, 79 assists and 52 penalty minutes"
+    },
+    "fame": 0.9808,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Roberto Luongo",
+    "aliases": [
+      "roberto luongo",
+      "luongo"
+    ],
+    "position": "Goaltender",
+    "first_year": 1999,
+    "last_year": 2018,
+    "teams": [
+      "Islanders",
+      "Panthers",
+      "Canucks"
+    ],
+    "stat_line": "489 wins, 77 shutouts and 28,409 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 19,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2006,
+      "team": "Canucks",
+      "line": "47 wins, 5 shutouts and 1,998 saves"
+    },
+    "fame": 0.9799,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Mike Bossy",
+    "aliases": [
+      "mike bossy",
+      "bossy"
+    ],
+    "position": "Right winger",
+    "first_year": 1977,
+    "last_year": 1986,
+    "teams": [
+      "Islanders"
+    ],
+    "stat_line": "573 goals, 553 assists and 1,126 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1981,
+      "team": "Islanders",
+      "line": "64 goals, 83 assists and 147 points"
+    },
+    "fame": 0.9789,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Dave Andreychuk",
+    "aliases": [
+      "dave andreychuk",
+      "andreychuk"
+    ],
+    "position": "Left winger",
+    "first_year": 1982,
+    "last_year": 2005,
+    "teams": [
+      "Sabres",
+      "Maple Leafs",
+      "Devils",
+      "Bruins",
+      "Lightning"
+    ],
+    "stat_line": "676 goals, 749 assists and 1,425 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 23,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1993,
+      "team": "Maple Leafs",
+      "line": "53 goals, 46 assists and 99 points"
+    },
+    "fame": 0.9788,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Mark Messier",
+    "aliases": [
+      "mark messier",
+      "messier"
+    ],
+    "position": "Centre",
+    "first_year": 1979,
+    "last_year": 2003,
+    "teams": [
+      "Oilers",
+      "Rangers",
+      "Canucks"
+    ],
+    "stat_line": "694 goals, 1,193 assists and 1,887 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 25,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1989,
+      "team": "Oilers",
+      "line": "45 goals, 84 assists and 129 points"
+    },
+    "fame": 0.976,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Gary Suter",
+    "aliases": [
+      "gary suter",
+      "suter"
+    ],
+    "position": "Defenceman",
+    "first_year": 1985,
+    "last_year": 2001,
+    "teams": [
+      "Flames",
+      "Blackhawks",
+      "Sharks"
+    ],
+    "stat_line": "844 points, 641 assists and 1,349 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1987,
+      "team": "Flames",
+      "line": "91 points, 70 assists and 124 penalty minutes"
+    },
+    "fame": 0.9739,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Brendan Shanahan",
+    "aliases": [
+      "brendan shanahan",
+      "shanahan"
+    ],
+    "position": "Left winger",
+    "first_year": 1987,
+    "last_year": 2008,
+    "teams": [
+      "Devils",
+      "Blues",
+      "Whalers",
+      "Red Wings",
+      "Rangers"
+    ],
+    "stat_line": "656 goals, 698 assists and 1,354 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 21,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1993,
+      "team": "Blues",
+      "line": "52 goals, 50 assists and 102 points"
+    },
+    "fame": 0.9727,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Joe Sakic",
+    "aliases": [
+      "joe sakic",
+      "sakic"
+    ],
+    "position": "Centre",
+    "first_year": 1988,
+    "last_year": 2007,
+    "teams": [
+      "Nordiques",
+      "Avalanche"
+    ],
+    "stat_line": "623 goals, 1,006 assists and 1,629 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 19,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2000,
+      "team": "Avalanche",
+      "line": "54 goals, 64 assists and 118 points"
+    },
+    "fame": 0.9725,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Nicklas Lidstrom",
+    "aliases": [
+      "nicklas lidstrom",
+      "lidstrom"
+    ],
+    "position": "Defenceman",
+    "first_year": 1991,
+    "last_year": 2011,
+    "teams": [
+      "Red Wings"
+    ],
+    "stat_line": "1,199 points, 920 assists and 544 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 20,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2005,
+      "team": "Red Wings",
+      "line": "80 points, 64 assists and 50 penalty minutes"
+    },
+    "fame": 0.9725,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Bryan Trottier",
+    "aliases": [
+      "bryan trottier",
+      "trottier"
+    ],
+    "position": "Centre",
+    "first_year": 1975,
+    "last_year": 1993,
+    "teams": [
+      "Islanders",
+      "Penguins"
+    ],
+    "stat_line": "524 goals, 901 assists and 1,425 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1978,
+      "team": "Islanders",
+      "line": "47 goals, 87 assists and 134 points"
+    },
+    "fame": 0.9702,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Brad Park",
+    "aliases": [
+      "brad park",
+      "park"
+    ],
+    "position": "Defenceman",
+    "first_year": 1968,
+    "last_year": 1984,
+    "teams": [
+      "Rangers",
+      "Bruins",
+      "Red Wings"
+    ],
+    "stat_line": "896 points, 683 assists and 1,429 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1977,
+      "team": "Bruins",
+      "line": "79 points, 57 assists and 79 penalty minutes"
+    },
+    "fame": 0.9695,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Doug Wilson",
+    "aliases": [
+      "doug wilson",
+      "wilson"
+    ],
+    "position": "Defenceman",
+    "first_year": 1977,
+    "last_year": 1992,
+    "teams": [
+      "Blackhawks",
+      "Sharks"
+    ],
+    "stat_line": "827 points, 590 assists and 830 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1981,
+      "team": "Blackhawks",
+      "line": "85 points, 46 assists and 54 penalty minutes"
+    },
+    "fame": 0.9686,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Bill Barber",
+    "aliases": [
+      "bill barber",
+      "barber"
+    ],
+    "position": "Left winger",
+    "first_year": 1972,
+    "last_year": 1983,
+    "teams": [
+      "Flyers"
+    ],
+    "stat_line": "420 goals, 463 assists and 883 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1975,
+      "team": "Flyers",
+      "line": "50 goals, 62 assists and 112 points"
+    },
+    "fame": 0.9679,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Erik Karlsson",
+    "aliases": [
+      "erik karlsson",
+      "karlsson"
+    ],
+    "position": "Defenceman",
+    "first_year": 2009,
+    "last_year": 2025,
+    "teams": [
+      "Senators",
+      "Sharks",
+      "Penguins"
+    ],
+    "stat_line": "922 points, 713 assists and 500 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "active": true,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2022,
+      "team": "Sharks",
+      "line": "101 points, 76 assists and 36 penalty minutes"
+    },
+    "fame": 0.9647,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Tony Esposito",
+    "aliases": [
+      "tony esposito",
+      "esposito"
+    ],
+    "position": "Goaltender",
+    "first_year": 1968,
+    "last_year": 1983,
+    "teams": [
+      "Canadiens",
+      "Blackhawks"
+    ],
+    "stat_line": "423 wins, 76 shutouts and 24,761 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1969,
+      "team": "Blackhawks",
+      "line": "38 wins, 15 shutouts and 1,859 saves"
+    },
+    "fame": 0.964,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Scott Stevens",
+    "aliases": [
+      "scott stevens",
+      "stevens"
+    ],
+    "position": "Defenceman",
+    "first_year": 1982,
+    "last_year": 2003,
+    "teams": [
+      "Capitals",
+      "Blues",
+      "Devils"
+    ],
+    "stat_line": "908 points, 712 assists and 2,785 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 22,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1993,
+      "team": "Devils",
+      "line": "78 points, 60 assists and 112 penalty minutes"
+    },
+    "fame": 0.9638,
+    "difficulty": "easy",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Gary Bergman",
+    "aliases": [
+      "gary bergman",
+      "bergman"
+    ],
+    "position": "Defenceman",
+    "first_year": 1964,
+    "last_year": 1975,
+    "teams": [
+      "Red Wings",
+      "Scouts"
+    ],
+    "stat_line": "367 points, 299 assists and 1,251 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1968,
+      "team": "Red Wings",
+      "line": "37 points, 30 assists and 80 penalty minutes"
+    },
+    "fame": 0.5499,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Thomas Gradin",
+    "aliases": [
+      "thomas gradin",
+      "gradin"
+    ],
+    "position": "Centre",
+    "first_year": 1978,
+    "last_year": 1986,
+    "teams": [
+      "Canucks",
+      "Bruins"
+    ],
+    "stat_line": "209 goals, 384 assists and 593 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1981,
+      "team": "Canucks",
+      "line": "37 goals, 49 assists and 86 points"
+    },
+    "fame": 0.5497,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Ed Westfall",
+    "aliases": [
+      "ed westfall",
+      "westfall"
+    ],
+    "position": "Right winger",
+    "first_year": 1961,
+    "last_year": 1978,
+    "teams": [
+      "Bruins",
+      "Islanders"
+    ],
+    "stat_line": "231 goals, 394 assists and 625 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1970,
+      "team": "Bruins",
+      "line": "25 goals, 34 assists and 59 points"
+    },
+    "fame": 0.5495,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Eric Daze",
+    "aliases": [
+      "eric daze",
+      "daze"
+    ],
+    "position": "Left winger",
+    "first_year": 1995,
+    "last_year": 2002,
+    "teams": [
+      "Blackhawks"
+    ],
+    "stat_line": "221 goals, 164 assists and 385 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 8,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2001,
+      "team": "Blackhawks",
+      "line": "38 goals, 32 assists and 70 points"
+    },
+    "fame": 0.5488,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Vincent Trocheck",
+    "aliases": [
+      "vincent trocheck",
+      "trocheck"
+    ],
+    "position": "Centre",
+    "first_year": 2013,
+    "last_year": 2025,
+    "teams": [
+      "Panthers",
+      "Hurricanes",
+      "Rangers"
+    ],
+    "stat_line": "239 goals, 392 assists and 631 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "active": true,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2017,
+      "team": "Panthers",
+      "line": "31 goals, 44 assists and 75 points"
+    },
+    "fame": 0.548,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Jason Zucker",
+    "aliases": [
+      "jason zucker",
+      "zucker"
+    ],
+    "position": "Left winger",
+    "first_year": 2012,
+    "last_year": 2025,
+    "teams": [
+      "Wild",
+      "Penguins",
+      "Coyotes",
+      "Sabres"
+    ],
+    "stat_line": "241 goals, 225 assists and 466 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "active": true,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2017,
+      "team": "Wild",
+      "line": "33 goals, 31 assists and 64 points"
+    },
+    "fame": 0.5474,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Tomas Holmstrom",
+    "aliases": [
+      "tomas holmstrom",
+      "holmstrom"
+    ],
+    "position": "Left winger",
+    "first_year": 1996,
+    "last_year": 2011,
+    "teams": [
+      "Red Wings"
+    ],
+    "stat_line": "243 goals, 287 assists and 530 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2005,
+      "team": "Red Wings",
+      "line": "29 goals, 30 assists and 59 points"
+    },
+    "fame": 0.5454,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Cam Atkinson",
+    "aliases": [
+      "cam atkinson",
+      "atkinson"
+    ],
+    "position": "Right winger",
+    "first_year": 2011,
+    "last_year": 2024,
+    "teams": [
+      "Blue Jackets",
+      "Flyers",
+      "Lightning"
+    ],
+    "stat_line": "253 goals, 236 assists and 489 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "active": true,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2018,
+      "team": "Blue Jackets",
+      "line": "41 goals, 28 assists and 69 points"
+    },
+    "fame": 0.5453,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Darnell Nurse",
+    "aliases": [
+      "darnell nurse",
+      "nurse"
+    ],
+    "position": "Defenceman",
+    "first_year": 2015,
+    "last_year": 2025,
+    "teams": [
+      "Oilers"
+    ],
+    "stat_line": "298 points, 216 assists and 658 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2022,
+      "team": "Oilers",
+      "line": "43 points, 31 assists and 64 penalty minutes"
+    },
+    "fame": 0.5447,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Dave Balon",
+    "aliases": [
+      "dave balon",
+      "balon"
+    ],
+    "position": "Left winger",
+    "first_year": 1961,
+    "last_year": 1972,
+    "teams": [
+      "Rangers",
+      "Canadiens",
+      "North Stars",
+      "Canucks"
+    ],
+    "stat_line": "191 goals, 220 assists and 411 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1969,
+      "team": "Rangers",
+      "line": "33 goals, 37 assists and 70 points"
+    },
+    "fame": 0.5447,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Justin Schultz",
+    "aliases": [
+      "justin schultz",
+      "schultz"
+    ],
+    "position": "Defenceman",
+    "first_year": 2012,
+    "last_year": 2023,
+    "teams": [
+      "Oilers",
+      "Penguins",
+      "Capitals",
+      "Kraken"
+    ],
+    "stat_line": "309 points, 240 assists and 194 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2016,
+      "team": "Penguins",
+      "line": "51 points, 39 assists and 34 penalty minutes"
+    },
+    "fame": 0.5447,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Alexei Zhamnov",
+    "aliases": [
+      "alexei zhamnov",
+      "zhamnov"
+    ],
+    "position": "Centre",
+    "first_year": 1992,
+    "last_year": 2005,
+    "teams": [
+      "Jets",
+      "Blackhawks",
+      "Bruins"
+    ],
+    "stat_line": "249 goals, 470 assists and 719 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1992,
+      "team": "Jets",
+      "line": "25 goals, 47 assists and 72 points"
+    },
+    "fame": 0.5444,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Dave Williams",
+    "aliases": [
+      "dave williams",
+      "williams"
+    ],
+    "position": "Left winger",
+    "first_year": 1974,
+    "last_year": 1987,
+    "teams": [
+      "Maple Leafs",
+      "Canucks",
+      "Red Wings",
+      "Kings"
+    ],
+    "stat_line": "241 goals, 272 assists and 513 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1980,
+      "team": "Canucks",
+      "line": "35 goals, 27 assists and 62 points"
+    },
+    "fame": 0.5433,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Mike Ricci",
+    "aliases": [
+      "mike ricci",
+      "ricci"
+    ],
+    "position": "Centre",
+    "first_year": 1990,
+    "last_year": 2005,
+    "teams": [
+      "Flyers",
+      "Nordiques",
+      "Avalanche",
+      "Sharks",
+      "Coyotes"
+    ],
+    "stat_line": "243 goals, 361 assists and 604 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1992,
+      "team": "Nordiques",
+      "line": "27 goals, 51 assists and 78 points"
+    },
+    "fame": 0.5421,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Keith Primeau",
+    "aliases": [
+      "keith primeau",
+      "primeau"
+    ],
+    "position": "Centre",
+    "first_year": 1990,
+    "last_year": 2003,
+    "teams": [
+      "Red Wings",
+      "Whalers",
+      "Hurricanes",
+      "Flyers"
+    ],
+    "stat_line": "265 goals, 347 assists and 612 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1993,
+      "team": "Red Wings",
+      "line": "31 goals, 42 assists and 73 points"
+    },
+    "fame": 0.5415,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Mikko Koivu",
+    "aliases": [
+      "mikko koivu",
+      "koivu"
+    ],
+    "position": "Centre",
+    "first_year": 2005,
+    "last_year": 2019,
+    "teams": [
+      "Wild"
+    ],
+    "stat_line": "205 goals, 504 assists and 709 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2009,
+      "team": "Wild",
+      "line": "22 goals, 49 assists and 71 points"
+    },
+    "fame": 0.5415,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Joni Pitkanen",
+    "aliases": [
+      "joni pitkanen",
+      "pitkanen"
+    ],
+    "position": "Defenceman",
+    "first_year": 2003,
+    "last_year": 2012,
+    "teams": [
+      "Flyers",
+      "Oilers",
+      "Hurricanes"
+    ],
+    "stat_line": "317 points, 255 assists and 544 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2005,
+      "team": "Flyers",
+      "line": "46 points, 33 assists and 78 penalty minutes"
+    },
+    "fame": 0.5412,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Dirk Graham",
+    "aliases": [
+      "dirk graham",
+      "graham"
+    ],
+    "position": "Right winger",
+    "first_year": 1984,
+    "last_year": 1994,
+    "teams": [
+      "North Stars",
+      "Blackhawks"
+    ],
+    "stat_line": "218 goals, 269 assists and 487 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1988,
+      "team": "Blackhawks",
+      "line": "33 goals, 45 assists and 78 points"
+    },
+    "fame": 0.5411,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Brock Nelson",
+    "aliases": [
+      "brock nelson",
+      "nelson"
+    ],
+    "position": "Centre",
+    "first_year": 2013,
+    "last_year": 2024,
+    "teams": [
+      "Islanders"
+    ],
+    "stat_line": "301 goals, 286 assists and 587 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2022,
+      "team": "Islanders",
+      "line": "36 goals, 39 assists and 75 points"
+    },
+    "fame": 0.5409,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Brady Skjei",
+    "aliases": [
+      "brady skjei",
+      "skjei"
+    ],
+    "position": "Defenceman",
+    "first_year": 2016,
+    "last_year": 2025,
+    "teams": [
+      "Rangers",
+      "Hurricanes",
+      "Predators"
+    ],
+    "stat_line": "306 points, 225 assists and 410 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "active": true,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2023,
+      "team": "Hurricanes",
+      "line": "47 points, 34 assists and 40 penalty minutes"
+    },
+    "fame": 0.5399,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Ross Lonsberry",
+    "aliases": [
+      "ross lonsberry",
+      "lonsberry"
+    ],
+    "position": "Left winger",
+    "first_year": 1969,
+    "last_year": 1980,
+    "teams": [
+      "Kings",
+      "Flyers",
+      "Penguins"
+    ],
+    "stat_line": "254 goals, 307 assists and 561 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1976,
+      "team": "Flyers",
+      "line": "23 goals, 32 assists and 55 points"
+    },
+    "fame": 0.5399,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "MacKenzie Weegar",
+    "aliases": [
+      "mackenzie weegar",
+      "weegar"
+    ],
+    "position": "Defenceman",
+    "first_year": 2017,
+    "last_year": 2025,
+    "teams": [
+      "Panthers",
+      "Flames"
+    ],
+    "stat_line": "279 points, 216 assists and 470 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2023,
+      "team": "Flames",
+      "line": "52 points, 32 assists and 51 penalty minutes"
+    },
+    "fame": 0.539,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Phil Goyette",
+    "aliases": [
+      "phil goyette",
+      "goyette"
+    ],
+    "position": "Centre",
+    "first_year": 1957,
+    "last_year": 1971,
+    "teams": [
+      "Canadiens",
+      "Rangers",
+      "Blues",
+      "Sabres"
+    ],
+    "stat_line": "204 goals, 463 assists and 667 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1969,
+      "team": "Blues",
+      "line": "29 goals, 49 assists and 78 points"
+    },
+    "fame": 0.538,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Milan Michalek",
+    "aliases": [
+      "milan michalek",
+      "michalek"
+    ],
+    "position": "Left winger",
+    "first_year": 2005,
+    "last_year": 2015,
+    "teams": [
+      "Sharks",
+      "Senators"
+    ],
+    "stat_line": "206 goals, 237 assists and 443 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2006,
+      "team": "Sharks",
+      "line": "26 goals, 40 assists and 66 points"
+    },
+    "fame": 0.5372,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Brad Stuart",
+    "aliases": [
+      "brad stuart",
+      "stuart"
+    ],
+    "position": "Defenceman",
+    "first_year": 1999,
+    "last_year": 2014,
+    "teams": [
+      "Sharks",
+      "Bruins",
+      "Kings",
+      "Red Wings",
+      "Avalanche"
+    ],
+    "stat_line": "335 points, 255 assists and 565 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 2005,
+      "team": "Sharks",
+      "line": "43 points, 31 assists and 52 penalty minutes"
+    },
+    "fame": 0.5368,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Ron Ellis",
+    "aliases": [
+      "ron ellis",
+      "ellis"
+    ],
+    "position": "Right winger",
+    "first_year": 1964,
+    "last_year": 1980,
+    "teams": [
+      "Maple Leafs"
+    ],
+    "stat_line": "332 goals, 308 assists and 640 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1974,
+      "team": "Maple Leafs",
+      "line": "32 goals, 29 assists and 61 points"
+    },
+    "fame": 0.5368,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Mike Murphy",
+    "aliases": [
+      "mike murphy",
+      "murphy"
+    ],
+    "position": "Right winger",
+    "first_year": 1971,
+    "last_year": 1982,
+    "teams": [
+      "Blues",
+      "Rangers",
+      "Kings"
+    ],
+    "stat_line": "238 goals, 318 assists and 556 points",
+    "jersey": "",
+    "fact": "",
+    "college": "Texas State-San Marcos",
+    "height_in": 69,
+    "weight_lb": 163,
+    "birth_year": 1967,
+    "undrafted": true,
+    "seasons": 12,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1974,
+      "team": "Kings",
+      "line": "30 goals, 38 assists and 68 points"
+    },
+    "fame": 0.5361,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Tomas Tatar",
+    "aliases": [
+      "tomas tatar",
+      "tatar"
+    ],
+    "position": "Left winger",
+    "first_year": 2013,
+    "last_year": 2024,
+    "teams": [
+      "Red Wings",
+      "Canadiens",
+      "Devils",
+      "Avalanche"
+    ],
+    "stat_line": "244 goals, 305 assists and 549 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "active": true,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2014,
+      "team": "Red Wings",
+      "line": "29 goals, 27 assists and 56 points"
+    },
+    "fame": 0.5358,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Billy Harris",
+    "aliases": [
+      "billy harris",
+      "harris"
+    ],
+    "position": "Right winger",
+    "first_year": 1972,
+    "last_year": 1982,
+    "teams": [
+      "Maple Leafs",
+      "Red Wings",
+      "Seals",
+      "Islanders",
+      "Kings"
+    ],
+    "stat_line": "222 goals, 313 assists and 535 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 24,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1975,
+      "team": "Islanders",
+      "line": "32 goals, 38 assists and 70 points"
+    },
+    "fame": 0.5354,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Bo Horvat",
+    "aliases": [
+      "bo horvat",
+      "horvat"
+    ],
+    "position": "Centre",
+    "first_year": 2014,
+    "last_year": 2025,
+    "teams": [
+      "Canucks",
+      "Islanders"
+    ],
+    "stat_line": "300 goals, 318 assists and 618 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2022,
+      "team": "Canucks",
+      "line": "38 goals, 32 assists and 70 points"
+    },
+    "fame": 0.5351,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Doug Halward",
+    "aliases": [
+      "doug halward",
+      "halward"
+    ],
+    "position": "Defenceman",
+    "first_year": 1975,
+    "last_year": 1988,
+    "teams": [
+      "Bruins",
+      "Kings",
+      "Canucks",
+      "Red Wings"
+    ],
+    "stat_line": "289 points, 222 assists and 768 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1979,
+      "team": "Kings",
+      "line": "56 points, 45 assists and 52 penalty minutes"
+    },
+    "fame": 0.5351,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Bobby Schmautz",
+    "aliases": [
+      "bobby schmautz",
+      "schmautz"
+    ],
+    "position": "Right winger",
+    "first_year": 1968,
+    "last_year": 1980,
+    "teams": [
+      "Blackhawks",
+      "Canucks",
+      "Bruins"
+    ],
+    "stat_line": "268 goals, 284 assists and 552 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1972,
+      "team": "Canucks",
+      "line": "38 goals, 33 assists and 71 points"
+    },
+    "fame": 0.5347,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Sean Couturier",
+    "aliases": [
+      "sean couturier",
+      "couturier"
+    ],
+    "position": "Centre",
+    "first_year": 2011,
+    "last_year": 2025,
+    "teams": [
+      "Flyers"
+    ],
+    "stat_line": "218 goals, 361 assists and 579 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2017,
+      "team": "Flyers",
+      "line": "31 goals, 45 assists and 76 points"
+    },
+    "fame": 0.5339,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Mattias Ohlund",
+    "aliases": [
+      "mattias ohlund",
+      "ohlund"
+    ],
+    "position": "Defenceman",
+    "first_year": 1997,
+    "last_year": 2010,
+    "teams": [
+      "Canucks",
+      "Lightning"
+    ],
+    "stat_line": "343 points, 250 assists and 885 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2001,
+      "team": "Canucks",
+      "line": "36 points, 26 assists and 56 penalty minutes"
+    },
+    "fame": 0.5338,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "T.J. Oshie",
+    "aliases": [
+      "t.j. oshie",
+      "oshie"
+    ],
+    "position": "Right winger",
+    "first_year": 2008,
+    "last_year": 2023,
+    "teams": [
+      "Blues",
+      "Capitals"
+    ],
+    "stat_line": "302 goals, 393 assists and 695 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2016,
+      "team": "Capitals",
+      "line": "33 goals, 23 assists and 56 points"
+    },
+    "fame": 0.5333,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Dave Maloney",
+    "aliases": [
+      "dave maloney",
+      "maloney"
+    ],
+    "position": "Defenceman",
+    "first_year": 1975,
+    "last_year": 1984,
+    "teams": [
+      "Rangers"
+    ],
+    "stat_line": "315 points, 244 assists and 1,154 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1980,
+      "team": "Rangers",
+      "line": "47 points, 36 assists and 132 penalty minutes"
+    },
+    "fame": 0.5325,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Doug Smail",
+    "aliases": [
+      "doug smail",
+      "smail"
+    ],
+    "position": "Left winger",
+    "first_year": 1980,
+    "last_year": 1992,
+    "teams": [
+      "Jets",
+      "Nordiques",
+      "Senators"
+    ],
+    "stat_line": "235 goals, 267 assists and 502 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1984,
+      "team": "Jets",
+      "line": "31 goals, 35 assists and 66 points"
+    },
+    "fame": 0.5324,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Don Marcotte",
+    "aliases": [
+      "don marcotte",
+      "marcotte"
+    ],
+    "position": "Left winger",
+    "first_year": 1969,
+    "last_year": 1981,
+    "teams": [
+      "Bruins"
+    ],
+    "stat_line": "229 goals, 254 assists and 483 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1974,
+      "team": "Bruins",
+      "line": "31 goals, 33 assists and 64 points"
+    },
+    "fame": 0.5317,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Allan Stanley",
+    "aliases": [
+      "allan stanley",
+      "stanley"
+    ],
+    "position": "Defenceman",
+    "first_year": 1948,
+    "last_year": 1968,
+    "teams": [
+      "Rangers",
+      "Blackhawks",
+      "Bruins",
+      "Maple Leafs",
+      "Flyers"
+    ],
+    "stat_line": "431 points, 331 assists and 781 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 20,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1961,
+      "team": "Maple Leafs",
+      "line": "35 points, 26 assists and 24 penalty minutes"
+    },
+    "fame": 0.5316,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Doug Bentley",
+    "aliases": [
+      "doug bentley",
+      "bentley"
+    ],
+    "position": "Left winger",
+    "first_year": 1939,
+    "last_year": 1953,
+    "teams": [
+      "Blackhawks",
+      "Rangers"
+    ],
+    "stat_line": "217 goals, 321 assists and 538 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1943,
+      "team": "Blackhawks",
+      "line": "38 goals, 39 assists and 77 points"
+    },
+    "fame": 0.5311,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Roger Crozier",
+    "aliases": [
+      "roger crozier",
+      "crozier"
+    ],
+    "position": "Goaltender",
+    "first_year": 1963,
+    "last_year": 1975,
+    "teams": [
+      "Red Wings",
+      "Sabres"
+    ],
+    "stat_line": "205 wins, 29 shutouts and 13,364 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1964,
+      "team": "Red Wings",
+      "line": "40 wins, 6 shutouts and 1,763 saves"
+    },
+    "fame": 0.5309,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Rickard Rakell",
+    "aliases": [
+      "rickard rakell",
+      "rakell"
+    ],
+    "position": "Right winger",
+    "first_year": 2014,
+    "last_year": 2025,
+    "teams": [
+      "Ducks",
+      "Penguins"
+    ],
+    "stat_line": "260 goals, 303 assists and 563 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2017,
+      "team": "Ducks",
+      "line": "34 goals, 35 assists and 69 points"
+    },
+    "fame": 0.5291,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Erik Johnson",
+    "aliases": [
+      "erik johnson",
+      "johnson"
+    ],
+    "position": "Defenceman",
+    "first_year": 2007,
+    "last_year": 2024,
+    "teams": [
+      "Blues",
+      "Avalanche",
+      "Sabres",
+      "Flyers"
+    ],
+    "stat_line": "347 points, 252 assists and 553 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "active": true,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2009,
+      "team": "Blues",
+      "line": "39 points, 29 assists and 79 penalty minutes"
+    },
+    "fame": 0.5272,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Timo Meier",
+    "aliases": [
+      "timo meier",
+      "meier"
+    ],
+    "position": "Right winger",
+    "first_year": 2016,
+    "last_year": 2025,
+    "teams": [
+      "Sharks",
+      "Devils"
+    ],
+    "stat_line": "241 goals, 238 assists and 479 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2021,
+      "team": "Sharks",
+      "line": "35 goals, 41 assists and 76 points"
+    },
+    "fame": 0.527,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Brian MacLellan",
+    "aliases": [
+      "brian maclellan",
+      "maclellan"
+    ],
+    "position": "Left winger",
+    "first_year": 1983,
+    "last_year": 1991,
+    "teams": [
+      "Kings",
+      "North Stars",
+      "Flames",
+      "Red Wings"
+    ],
+    "stat_line": "172 goals, 238 assists and 410 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1984,
+      "team": "Kings",
+      "line": "31 goals, 54 assists and 85 points"
+    },
+    "fame": 0.5256,
+    "difficulty": "hard",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Scott Niedermayer",
+    "aliases": [
+      "scott niedermayer",
+      "niedermayer"
+    ],
+    "position": "Defenceman",
+    "first_year": 1992,
+    "last_year": 2009,
+    "teams": [
+      "Devils",
+      "Ducks"
+    ],
+    "stat_line": "739 points, 567 assists and 782 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2006,
+      "team": "Ducks",
+      "line": "69 points, 54 assists and 86 penalty minutes"
+    },
+    "fame": 0.8989,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Cale Makar",
+    "aliases": [
+      "cale makar",
+      "makar"
+    ],
+    "position": "Defenceman",
+    "first_year": 2019,
+    "last_year": 2025,
+    "teams": [
+      "Avalanche"
+    ],
+    "stat_line": "507 points, 371 assists and 134 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 7,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2024,
+      "team": "Avalanche",
+      "line": "92 points, 62 assists and 14 penalty minutes"
+    },
+    "fame": 0.8985,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Jonathan Huberdeau",
+    "aliases": [
+      "jonathan huberdeau",
+      "huberdeau"
+    ],
+    "position": "Left winger",
+    "first_year": 2012,
+    "last_year": 2025,
+    "teams": [
+      "Panthers",
+      "Flames"
+    ],
+    "stat_line": "267 goals, 531 assists and 798 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2021,
+      "team": "Panthers",
+      "line": "30 goals, 85 assists and 115 points"
+    },
+    "fame": 0.8983,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "John Tonelli",
+    "aliases": [
+      "john tonelli",
+      "tonelli"
+    ],
+    "position": "Left winger",
+    "first_year": 1978,
+    "last_year": 1991,
+    "teams": [
+      "Islanders",
+      "Flames",
+      "Kings",
+      "Blackhawks"
+    ],
+    "stat_line": "325 goals, 511 assists and 836 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1984,
+      "team": "Islanders",
+      "line": "42 goals, 58 assists and 100 points"
+    },
+    "fame": 0.8976,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Alex Kovalev",
+    "aliases": [
+      "alex kovalev",
+      "kovalev"
+    ],
+    "position": "Right winger",
+    "first_year": 1992,
+    "last_year": 2010,
+    "teams": [
+      "Rangers",
+      "Penguins",
+      "Canadiens",
+      "Senators"
+    ],
+    "stat_line": "428 goals, 596 assists and 1,024 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2000,
+      "team": "Penguins",
+      "line": "44 goals, 51 assists and 95 points"
+    },
+    "fame": 0.8975,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Andrei Vasilevskiy",
+    "aliases": [
+      "andrei vasilevskiy",
+      "vasilevskiy"
+    ],
+    "position": "Goaltender",
+    "first_year": 2014,
+    "last_year": 2025,
+    "teams": [
+      "Lightning"
+    ],
+    "stat_line": "370 wins, 42 shutouts and 16,126 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2017,
+      "team": "Lightning",
+      "line": "44 wins, 8 shutouts and 1,908 saves"
+    },
+    "fame": 0.8964,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Vic Hadfield",
+    "aliases": [
+      "vic hadfield",
+      "hadfield"
+    ],
+    "position": "Left winger",
+    "first_year": 1961,
+    "last_year": 1975,
+    "teams": [
+      "Rangers",
+      "Penguins"
+    ],
+    "stat_line": "323 goals, 387 assists and 710 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1971,
+      "team": "Rangers",
+      "line": "50 goals, 56 assists and 106 points"
+    },
+    "fame": 0.8949,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Zach Werenski",
+    "aliases": [
+      "zach werenski",
+      "werenski"
+    ],
+    "position": "Defenceman",
+    "first_year": 2016,
+    "last_year": 2025,
+    "teams": [
+      "Blue Jackets"
+    ],
+    "stat_line": "538 points, 384 assists and 182 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2024,
+      "team": "Blue Jackets",
+      "line": "82 points, 59 assists and 31 penalty minutes"
+    },
+    "fame": 0.8937,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Matthew Tkachuk",
+    "aliases": [
+      "matthew tkachuk",
+      "tkachuk"
+    ],
+    "position": "Left winger",
+    "first_year": 2016,
+    "last_year": 2025,
+    "teams": [
+      "Flames",
+      "Panthers"
+    ],
+    "stat_line": "287 goals, 460 assists and 747 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2022,
+      "team": "Panthers",
+      "line": "40 goals, 69 assists and 109 points"
+    },
+    "fame": 0.8935,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Duncan Keith",
+    "aliases": [
+      "duncan keith",
+      "keith"
+    ],
+    "position": "Defenceman",
+    "first_year": 2005,
+    "last_year": 2021,
+    "teams": [
+      "Blackhawks",
+      "Oilers"
+    ],
+    "stat_line": "646 points, 540 assists and 675 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2009,
+      "team": "Blackhawks",
+      "line": "69 points, 55 assists and 51 penalty minutes"
+    },
+    "fame": 0.8932,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Rod Gilbert",
+    "aliases": [
+      "rod gilbert",
+      "gilbert"
+    ],
+    "position": "Right winger",
+    "first_year": 1962,
+    "last_year": 1976,
+    "teams": [
+      "Rangers"
+    ],
+    "stat_line": "404 goals, 607 assists and 1,011 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1971,
+      "team": "Rangers",
+      "line": "43 goals, 54 assists and 97 points"
+    },
+    "fame": 0.8905,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Mike Modano",
+    "aliases": [
+      "mike modano",
+      "modano"
+    ],
+    "position": "Centre",
+    "first_year": 1989,
+    "last_year": 2010,
+    "teams": [
+      "North Stars",
+      "Stars",
+      "Red Wings"
+    ],
+    "stat_line": "561 goals, 813 assists and 1,374 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 21,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1993,
+      "team": "Stars",
+      "line": "50 goals, 43 assists and 93 points"
+    },
+    "fame": 0.8901,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Claude Giroux",
+    "aliases": [
+      "claude giroux",
+      "giroux"
+    ],
+    "position": "Right winger",
+    "first_year": 2008,
+    "last_year": 2025,
+    "teams": [
+      "Flyers",
+      "Senators"
+    ],
+    "stat_line": "357 goals, 723 assists and 1,080 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2017,
+      "team": "Flyers",
+      "line": "34 goals, 68 assists and 102 points"
+    },
+    "fame": 0.8891,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Ron Greschner",
+    "aliases": [
+      "ron greschner",
+      "greschner"
+    ],
+    "position": "Defenceman",
+    "first_year": 1974,
+    "last_year": 1989,
+    "teams": [
+      "Rangers"
+    ],
+    "stat_line": "602 points, 426 assists and 1,226 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1977,
+      "team": "Rangers",
+      "line": "72 points, 48 assists and 100 penalty minutes"
+    },
+    "fame": 0.8858,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Pavel Bure",
+    "aliases": [
+      "pavel bure",
+      "bure"
+    ],
+    "position": "Right winger",
+    "first_year": 1991,
+    "last_year": 2002,
+    "teams": [
+      "Canucks",
+      "Panthers",
+      "Rangers"
+    ],
+    "stat_line": "418 goals, 332 assists and 750 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1992,
+      "team": "Canucks",
+      "line": "60 goals, 50 assists and 110 points"
+    },
+    "fame": 0.8856,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Marc-Andre Fleury",
+    "aliases": [
+      "marc-andre fleury",
+      "fleury"
+    ],
+    "position": "Goaltender",
+    "first_year": 2003,
+    "last_year": 2024,
+    "teams": [
+      "Penguins",
+      "Golden Knights",
+      "Blackhawks",
+      "Wild"
+    ],
+    "stat_line": "575 wins, 76 shutouts and 27,188 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 21,
+    "active": true,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2014,
+      "team": "Penguins",
+      "line": "34 wins, 10 shutouts and 1,685 saves"
+    },
+    "fame": 0.8835,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Mikko Rantanen",
+    "aliases": [
+      "mikko rantanen",
+      "rantanen"
+    ],
+    "position": "Right winger",
+    "first_year": 2016,
+    "last_year": 2025,
+    "teams": [
+      "Avalanche",
+      "Stars"
+    ],
+    "stat_line": "346 goals, 502 assists and 848 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2022,
+      "team": "Avalanche",
+      "line": "55 goals, 50 assists and 105 points"
+    },
+    "fame": 0.8835,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Kevin Stevens",
+    "aliases": [
+      "kevin stevens",
+      "stevens"
+    ],
+    "position": "Left winger",
+    "first_year": 1988,
+    "last_year": 2001,
+    "teams": [
+      "Penguins",
+      "Bruins",
+      "Kings",
+      "Rangers",
+      "Flyers"
+    ],
+    "stat_line": "321 goals, 390 assists and 711 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1991,
+      "team": "Penguins",
+      "line": "54 goals, 69 assists and 123 points"
+    },
+    "fame": 0.8826,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Sandis Ozolinsh",
+    "aliases": [
+      "sandis ozolinsh",
+      "ozolinsh"
+    ],
+    "position": "Defenceman",
+    "first_year": 1992,
+    "last_year": 2007,
+    "teams": [
+      "Sharks",
+      "Avalanche",
+      "Hurricanes",
+      "Panthers",
+      "Ducks",
+      "Rangers"
+    ],
+    "stat_line": "564 points, 397 assists and 638 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1996,
+      "team": "Avalanche",
+      "line": "68 points, 45 assists and 88 penalty minutes"
+    },
+    "fame": 0.8824,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Charlie Simmer",
+    "aliases": [
+      "charlie simmer",
+      "simmer"
+    ],
+    "position": "Left winger",
+    "first_year": 1974,
+    "last_year": 1987,
+    "teams": [
+      "Golden Seals",
+      "Kings",
+      "Bruins",
+      "Penguins"
+    ],
+    "stat_line": "342 goals, 369 assists and 711 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "teams_named": false,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1980,
+      "team": "Kings",
+      "line": "56 goals, 49 assists and 105 points"
+    },
+    "fame": 0.8819,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Clark Gillies",
+    "aliases": [
+      "clark gillies",
+      "gillies"
+    ],
+    "position": "Left winger",
+    "first_year": 1974,
+    "last_year": 1987,
+    "teams": [
+      "Islanders",
+      "Sabres"
+    ],
+    "stat_line": "340 goals, 398 assists and 738 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1978,
+      "team": "Islanders",
+      "line": "35 goals, 56 assists and 91 points"
+    },
+    "fame": 0.8812,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Connor Hellebuyck",
+    "aliases": [
+      "connor hellebuyck",
+      "hellebuyck"
+    ],
+    "position": "Goaltender",
+    "first_year": 2015,
+    "last_year": 2025,
+    "teams": [
+      "Jets"
+    ],
+    "stat_line": "345 wins, 45 shutouts and 17,045 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2017,
+      "team": "Jets",
+      "line": "44 wins, 6 shutouts and 1,892 saves"
+    },
+    "fame": 0.8806,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Johnny Gaudreau",
+    "aliases": [
+      "johnny gaudreau",
+      "gaudreau"
+    ],
+    "position": "Left winger",
+    "first_year": 2014,
+    "last_year": 2023,
+    "teams": [
+      "Flames",
+      "Blue Jackets"
+    ],
+    "stat_line": "242 goals, 500 assists and 742 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2021,
+      "team": "Flames",
+      "line": "40 goals, 75 assists and 115 points"
+    },
+    "fame": 0.8805,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Joe Nieuwendyk",
+    "aliases": [
+      "joe nieuwendyk",
+      "nieuwendyk"
+    ],
+    "position": "Centre",
+    "first_year": 1987,
+    "last_year": 2005,
+    "teams": [
+      "Flames",
+      "Stars",
+      "Devils",
+      "Maple Leafs",
+      "Panthers"
+    ],
+    "stat_line": "554 goals, 558 assists and 1,112 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1987,
+      "team": "Flames",
+      "line": "51 goals, 41 assists and 92 points"
+    },
+    "fame": 0.8784,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Zdeno Chara",
+    "aliases": [
+      "zdeno chara",
+      "chara"
+    ],
+    "position": "Defenceman",
+    "first_year": 1997,
+    "last_year": 2021,
+    "teams": [
+      "Islanders",
+      "Senators",
+      "Bruins",
+      "Capitals"
+    ],
+    "stat_line": "724 points, 508 assists and 2,172 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 24,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2008,
+      "team": "Bruins",
+      "line": "50 points, 31 assists and 95 penalty minutes"
+    },
+    "fame": 0.8776,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Taylor Hall",
+    "aliases": [
+      "taylor hall",
+      "hall"
+    ],
+    "position": "Left winger",
+    "first_year": 2010,
+    "last_year": 2025,
+    "teams": [
+      "Oilers",
+      "Devils",
+      "Sabres",
+      "Bruins",
+      "Blackhawks",
+      "Hurricanes"
+    ],
+    "stat_line": "300 goals, 483 assists and 783 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "active": true,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 2017,
+      "team": "Devils",
+      "line": "39 goals, 54 assists and 93 points"
+    },
+    "fame": 0.8765,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Thomas Vanek",
+    "aliases": [
+      "thomas vanek",
+      "vanek"
+    ],
+    "position": "Left winger",
+    "first_year": 2005,
+    "last_year": 2018,
+    "teams": [
+      "Sabres",
+      "Wild",
+      "Red Wings",
+      "Canucks"
+    ],
+    "stat_line": "373 goals, 416 assists and 789 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2006,
+      "team": "Sabres",
+      "line": "43 goals, 41 assists and 84 points"
+    },
+    "fame": 0.8765,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Roman Hamrlik",
+    "aliases": [
+      "roman hamrlik",
+      "hamrlik"
+    ],
+    "position": "Defenceman",
+    "first_year": 1992,
+    "last_year": 2011,
+    "teams": [
+      "Lightning",
+      "Oilers",
+      "Islanders",
+      "Flames",
+      "Canadiens",
+      "Capitals"
+    ],
+    "stat_line": "637 points, 482 assists and 1,400 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 19,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1995,
+      "team": "Lightning",
+      "line": "65 points, 49 assists and 103 penalty minutes"
+    },
+    "fame": 0.8763,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Bryan McCabe",
+    "aliases": [
+      "bryan mccabe",
+      "mccabe"
+    ],
+    "position": "Defenceman",
+    "first_year": 1995,
+    "last_year": 2010,
+    "teams": [
+      "Islanders",
+      "Canucks",
+      "Blackhawks",
+      "Maple Leafs",
+      "Panthers"
+    ],
+    "stat_line": "528 points, 383 assists and 1,732 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 2005,
+      "team": "Maple Leafs",
+      "line": "68 points, 49 assists and 116 penalty minutes"
+    },
+    "fame": 0.8758,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Drew Doughty",
+    "aliases": [
+      "drew doughty",
+      "doughty"
+    ],
+    "position": "Defenceman",
+    "first_year": 2008,
+    "last_year": 2025,
+    "teams": [
+      "Kings"
+    ],
+    "stat_line": "709 points, 544 assists and 829 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2009,
+      "team": "Kings",
+      "line": "59 points, 43 assists and 54 penalty minutes"
+    },
+    "fame": 0.8754,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Bobby Smith",
+    "aliases": [
+      "bobby smith",
+      "smith"
+    ],
+    "position": "Centre",
+    "first_year": 1978,
+    "last_year": 1992,
+    "teams": [
+      "North Stars",
+      "Canadiens"
+    ],
+    "stat_line": "357 goals, 679 assists and 1,036 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1981,
+      "team": "North Stars",
+      "line": "43 goals, 71 assists and 114 points"
+    },
+    "fame": 0.8731,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Morgan Rielly",
+    "aliases": [
+      "morgan rielly",
+      "rielly"
+    ],
+    "position": "Defenceman",
+    "first_year": 2013,
+    "last_year": 2025,
+    "teams": [
+      "Maple Leafs"
+    ],
+    "stat_line": "549 points, 451 assists and 279 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2018,
+      "team": "Maple Leafs",
+      "line": "72 points, 52 assists and 14 penalty minutes"
+    },
+    "fame": 0.8688,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Dan Boyle",
+    "aliases": [
+      "dan boyle",
+      "boyle"
+    ],
+    "position": "Defenceman",
+    "first_year": 1998,
+    "last_year": 2015,
+    "teams": [
+      "Panthers",
+      "Lightning",
+      "Sharks",
+      "Rangers"
+    ],
+    "stat_line": "602 points, 439 assists and 689 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2006,
+      "team": "Lightning",
+      "line": "63 points, 43 assists and 62 penalty minutes"
+    },
+    "fame": 0.8684,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Ken Hodge",
+    "aliases": [
+      "ken hodge",
+      "hodge"
+    ],
+    "position": "Right winger",
+    "first_year": 1965,
+    "last_year": 1976,
+    "teams": [
+      "Blackhawks",
+      "Bruins",
+      "Rangers"
+    ],
+    "stat_line": "326 goals, 468 assists and 794 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 12,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1973,
+      "team": "Bruins",
+      "line": "50 goals, 55 assists and 105 points"
+    },
+    "fame": 0.8674,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Pat Verbeek",
+    "aliases": [
+      "pat verbeek",
+      "verbeek"
+    ],
+    "position": "Right winger",
+    "first_year": 1983,
+    "last_year": 2001,
+    "teams": [
+      "Devils",
+      "Whalers",
+      "Rangers",
+      "Stars",
+      "Red Wings"
+    ],
+    "stat_line": "519 goals, 538 assists and 1,057 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 19,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 1995,
+      "team": "Rangers",
+      "line": "41 goals, 41 assists and 82 points"
+    },
+    "fame": 0.8674,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Ray Whitney",
+    "aliases": [
+      "ray whitney",
+      "whitney"
+    ],
+    "position": "Left winger",
+    "first_year": 1992,
+    "last_year": 2013,
+    "teams": [
+      "Sharks",
+      "Oilers",
+      "Panthers",
+      "Blue Jackets",
+      "Red Wings",
+      "Hurricanes",
+      "Coyotes",
+      "Stars"
+    ],
+    "stat_line": "385 goals, 674 assists and 1,059 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 20,
+    "franchise_count": 8,
+    "best_season": {
+      "year": 2006,
+      "team": "Hurricanes",
+      "line": "32 goals, 51 assists and 83 points"
+    },
+    "fame": 0.8669,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Rick Nash",
+    "aliases": [
+      "rick nash",
+      "nash"
+    ],
+    "position": "Left winger",
+    "first_year": 2002,
+    "last_year": 2017,
+    "teams": [
+      "Blue Jackets",
+      "Rangers"
+    ],
+    "stat_line": "437 goals, 368 assists and 805 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2008,
+      "team": "Blue Jackets",
+      "line": "40 goals, 39 assists and 79 points"
+    },
+    "fame": 0.8669,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Paul Reinhart",
+    "aliases": [
+      "paul reinhart",
+      "reinhart"
+    ],
+    "position": "Defenceman",
+    "first_year": 1979,
+    "last_year": 1989,
+    "teams": [
+      "Flames",
+      "Canucks"
+    ],
+    "stat_line": "555 points, 422 assists and 267 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 10,
+    "teams_named": false,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1984,
+      "team": "Flames",
+      "line": "69 points, 46 assists and 18 penalty minutes"
+    },
+    "fame": 0.8667,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Ed Belfour",
+    "aliases": [
+      "ed belfour",
+      "belfour"
+    ],
+    "position": "Goaltender",
+    "first_year": 1988,
+    "last_year": 2006,
+    "teams": [
+      "Blackhawks",
+      "Stars",
+      "Maple Leafs",
+      "Panthers"
+    ],
+    "stat_line": "484 wins, 76 shutouts and 22,433 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2002,
+      "team": "Maple Leafs",
+      "line": "37 wins, 7 shutouts and 1,675 saves"
+    },
+    "fame": 0.8647,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Vincent Damphousse",
+    "aliases": [
+      "vincent damphousse",
+      "damphousse"
+    ],
+    "position": "Centre",
+    "first_year": 1986,
+    "last_year": 2003,
+    "teams": [
+      "Maple Leafs",
+      "Oilers",
+      "Canadiens",
+      "Sharks"
+    ],
+    "stat_line": "432 goals, 773 assists and 1,205 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1992,
+      "team": "Canadiens",
+      "line": "39 goals, 58 assists and 97 points"
+    },
+    "fame": 0.8643,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Geoff Courtnall",
+    "aliases": [
+      "geoff courtnall",
+      "courtnall"
+    ],
+    "position": "Left winger",
+    "first_year": 1984,
+    "last_year": 1998,
+    "teams": [
+      "Bruins",
+      "Capitals",
+      "Blues",
+      "Canucks"
+    ],
+    "stat_line": "365 goals, 430 assists and 795 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1988,
+      "team": "Capitals",
+      "line": "42 goals, 38 assists and 80 points"
+    },
+    "fame": 0.8642,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Vincent Lecavalier",
+    "aliases": [
+      "vincent lecavalier",
+      "lecavalier"
+    ],
+    "position": "Centre",
+    "first_year": 1998,
+    "last_year": 2015,
+    "teams": [
+      "Lightning",
+      "Flyers"
+    ],
+    "stat_line": "421 goals, 528 assists and 949 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2006,
+      "team": "Lightning",
+      "line": "52 goals, 56 assists and 108 points"
+    },
+    "fame": 0.8637,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Jonathan Quick",
+    "aliases": [
+      "jonathan quick",
+      "quick"
+    ],
+    "position": "Goaltender",
+    "first_year": 2008,
+    "last_year": 2025,
+    "teams": [
+      "Kings",
+      "Rangers"
+    ],
+    "stat_line": "409 wins, 65 shutouts and 20,276 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2011,
+      "team": "Kings",
+      "line": "35 wins, 10 shutouts and 1,730 saves"
+    },
+    "fame": 0.8633,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Serge Savard",
+    "aliases": [
+      "serge savard",
+      "savard"
+    ],
+    "position": "Defenceman",
+    "first_year": 1967,
+    "last_year": 1982,
+    "teams": [
+      "Canadiens",
+      "Jets"
+    ],
+    "stat_line": "456 points, 346 assists and 620 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1974,
+      "team": "Canadiens",
+      "line": "60 points, 40 assists and 64 penalty minutes"
+    },
+    "fame": 0.8619,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Anze Kopitar",
+    "aliases": [
+      "anze kopitar",
+      "kopitar"
+    ],
+    "position": "Centre",
+    "first_year": 2006,
+    "last_year": 2025,
+    "teams": [
+      "Kings"
+    ],
+    "stat_line": "452 goals, 864 assists and 1,316 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 20,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2017,
+      "team": "Kings",
+      "line": "35 goals, 57 assists and 92 points"
+    },
+    "fame": 0.8614,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Milan Hejduk",
+    "aliases": [
+      "milan hejduk",
+      "hejduk"
+    ],
+    "position": "Right winger",
+    "first_year": 1998,
+    "last_year": 2012,
+    "teams": [
+      "Avalanche"
+    ],
+    "stat_line": "375 goals, 430 assists and 805 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2002,
+      "team": "Avalanche",
+      "line": "50 goals, 48 assists and 98 points"
+    },
+    "fame": 0.8604,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Garry Galley",
+    "aliases": [
+      "garry galley",
+      "galley"
+    ],
+    "position": "Defenceman",
+    "first_year": 1984,
+    "last_year": 2000,
+    "teams": [
+      "Kings",
+      "Capitals",
+      "Bruins",
+      "Flyers",
+      "Sabres",
+      "Islanders"
+    ],
+    "stat_line": "600 points, 475 assists and 1,218 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 6,
+    "best_season": {
+      "year": 1992,
+      "team": "Flyers",
+      "line": "62 points, 49 assists and 115 penalty minutes"
+    },
+    "fame": 0.8588,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Patrik Elias",
+    "aliases": [
+      "patrik elias",
+      "elias"
+    ],
+    "position": "Centre",
+    "first_year": 1997,
+    "last_year": 2014,
+    "teams": [
+      "Devils"
+    ],
+    "stat_line": "404 goals, 608 assists and 1,012 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2000,
+      "team": "Devils",
+      "line": "40 goals, 56 assists and 96 points"
+    },
+    "fame": 0.8585,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Rob Ramage",
+    "aliases": [
+      "rob ramage",
+      "ramage"
+    ],
+    "position": "Defenceman",
+    "first_year": 1979,
+    "last_year": 1993,
+    "teams": [
+      "Rockies",
+      "Blues",
+      "Flames",
+      "Maple Leafs",
+      "North Stars",
+      "Lightning",
+      "Canadiens"
+    ],
+    "stat_line": "564 points, 425 assists and 2,226 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 7,
+    "best_season": {
+      "year": 1985,
+      "team": "Blues",
+      "line": "66 points, 56 assists and 171 penalty minutes"
+    },
+    "fame": 0.858,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Jean Pronovost",
+    "aliases": [
+      "jean pronovost",
+      "pronovost"
+    ],
+    "position": "Right winger",
+    "first_year": 1968,
+    "last_year": 1980,
+    "teams": [
+      "Penguins",
+      "Capitals"
+    ],
+    "stat_line": "390 goals, 381 assists and 771 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "teams_named": false,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1975,
+      "team": "Penguins",
+      "line": "52 goals, 52 assists and 104 points"
+    },
+    "fame": 0.8568,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Evgeni Nabokov",
+    "aliases": [
+      "evgeni nabokov",
+      "nabokov"
+    ],
+    "position": "Goaltender",
+    "first_year": 1999,
+    "last_year": 2014,
+    "teams": [
+      "Sharks",
+      "Islanders",
+      "Lightning"
+    ],
+    "stat_line": "353 wins, 59 shutouts and 16,768 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2009,
+      "team": "Sharks",
+      "line": "44 wins, 3 shutouts and 1,998 saves"
+    },
+    "fame": 0.8561,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Henrik Zetterberg",
+    "aliases": [
+      "henrik zetterberg",
+      "zetterberg"
+    ],
+    "position": "Centre",
+    "first_year": 2002,
+    "last_year": 2017,
+    "teams": [
+      "Red Wings"
+    ],
+    "stat_line": "337 goals, 623 assists and 960 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 15,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2007,
+      "team": "Red Wings",
+      "line": "43 goals, 49 assists and 92 points"
+    },
+    "fame": 0.8561,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "John Tavares",
+    "aliases": [
+      "john tavares",
+      "tavares"
+    ],
+    "position": "Centre",
+    "first_year": 2009,
+    "last_year": 2025,
+    "teams": [
+      "Islanders",
+      "Maple Leafs"
+    ],
+    "stat_line": "525 goals, 660 assists and 1,185 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "active": true,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2018,
+      "team": "Maple Leafs",
+      "line": "47 goals, 41 assists and 88 points"
+    },
+    "fame": 0.8561,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Eric Lindros",
+    "aliases": [
+      "eric lindros",
+      "lindros"
+    ],
+    "position": "Centre",
+    "first_year": 1992,
+    "last_year": 2006,
+    "teams": [
+      "Flyers",
+      "Rangers",
+      "Maple Leafs",
+      "Stars"
+    ],
+    "stat_line": "372 goals, 493 assists and 865 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1995,
+      "team": "Flyers",
+      "line": "47 goals, 68 assists and 115 points"
+    },
+    "fame": 0.8556,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Filip Forsberg",
+    "aliases": [
+      "filip forsberg",
+      "forsberg"
+    ],
+    "position": "Left winger",
+    "first_year": 2014,
+    "last_year": 2024,
+    "teams": [
+      "Predators"
+    ],
+    "stat_line": "317 goals, 358 assists and 675 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 11,
+    "active": true,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2023,
+      "team": "Predators",
+      "line": "48 goals, 46 assists and 94 points"
+    },
+    "fame": 0.8553,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Craig Anderson",
+    "aliases": [
+      "craig anderson",
+      "anderson"
+    ],
+    "position": "Goaltender",
+    "first_year": 2003,
+    "last_year": 2022,
+    "teams": [
+      "Blackhawks",
+      "Panthers",
+      "Avalanche",
+      "Senators",
+      "Sabres"
+    ],
+    "stat_line": "316 wins, 43 shutouts and 19,566 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 2009,
+      "team": "Avalanche",
+      "line": "38 wins, 7 shutouts and 2,047 saves"
+    },
+    "fame": 0.8547,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Gump Worsley",
+    "aliases": [
+      "gump worsley",
+      "worsley"
+    ],
+    "position": "Goaltender",
+    "first_year": 1952,
+    "last_year": 1973,
+    "teams": [
+      "Rangers",
+      "Canadiens",
+      "North Stars"
+    ],
+    "stat_line": "330 wins, 42 shutouts and 21,619 saves",
+    "jersey": "",
+    "fact": "",
+    "seasons": 20,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1955,
+      "team": "Rangers",
+      "line": "32 wins, 4 shutouts and 2,376 saves"
+    },
+    "fame": 0.8547,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Henrik Sedin",
+    "aliases": [
+      "henrik sedin",
+      "sedin"
+    ],
+    "position": "Centre",
+    "first_year": 2000,
+    "last_year": 2017,
+    "teams": [
+      "Canucks"
+    ],
+    "stat_line": "240 goals, 830 assists and 1,070 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 2009,
+      "team": "Canucks",
+      "line": "29 goals, 83 assists and 112 points"
+    },
+    "fame": 0.8538,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Peter Bondra",
+    "aliases": [
+      "peter bondra",
+      "bondra"
+    ],
+    "position": "Right winger",
+    "first_year": 1990,
+    "last_year": 2006,
+    "teams": [
+      "Capitals",
+      "Thrashers",
+      "Blackhawks"
+    ],
+    "stat_line": "503 goals, 389 assists and 892 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 1995,
+      "team": "Capitals",
+      "line": "52 goals, 28 assists and 80 points"
+    },
+    "fame": 0.8533,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Eric Staal",
+    "aliases": [
+      "eric staal",
+      "staal"
+    ],
+    "position": "Centre",
+    "first_year": 2003,
+    "last_year": 2022,
+    "teams": [
+      "Hurricanes",
+      "Wild",
+      "Sabres",
+      "Panthers"
+    ],
+    "stat_line": "455 goals, 608 assists and 1,063 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 2005,
+      "team": "Hurricanes",
+      "line": "45 goals, 55 assists and 100 points"
+    },
+    "fame": 0.8532,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Dustin Byfuglien",
+    "aliases": [
+      "dustin byfuglien",
+      "byfuglien"
+    ],
+    "position": "Defenceman",
+    "first_year": 2005,
+    "last_year": 2018,
+    "teams": [
+      "Blackhawks",
+      "Thrashers",
+      "Jets"
+    ],
+    "stat_line": "556 points, 363 assists and 1,178 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2010,
+      "team": "Thrashers",
+      "line": "53 points, 33 assists and 93 penalty minutes"
+    },
+    "fame": 0.851,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Jean Beliveau",
+    "aliases": [
+      "jean beliveau",
+      "beliveau"
+    ],
+    "position": "Centre",
+    "first_year": 1953,
+    "last_year": 1970,
+    "teams": [
+      "Canadiens"
+    ],
+    "stat_line": "501 goals, 711 assists and 1,212 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 18,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1960,
+      "team": "Canadiens",
+      "line": "32 goals, 58 assists and 90 points"
+    },
+    "fame": 0.8497,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Dennis Maruk",
+    "aliases": [
+      "dennis maruk",
+      "maruk"
+    ],
+    "position": "Centre",
+    "first_year": 1975,
+    "last_year": 1987,
+    "teams": [
+      "Golden Seals",
+      "North Stars",
+      "Capitals"
+    ],
+    "stat_line": "356 goals, 521 assists and 877 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 13,
+    "teams_named": false,
+    "franchise_count": 4,
+    "best_season": {
+      "year": 1981,
+      "team": "Capitals",
+      "line": "60 goals, 76 assists and 136 points"
+    },
+    "fame": 0.8491,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Patrick Marleau",
+    "aliases": [
+      "patrick marleau",
+      "marleau"
+    ],
+    "position": "Centre",
+    "first_year": 1997,
+    "last_year": 2020,
+    "teams": [
+      "Sharks",
+      "Maple Leafs"
+    ],
+    "stat_line": "566 goals, 631 assists and 1,197 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 23,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 2009,
+      "team": "Sharks",
+      "line": "44 goals, 39 assists and 83 points"
+    },
+    "fame": 0.8485,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Ian Turnbull",
+    "aliases": [
+      "ian turnbull",
+      "turnbull"
+    ],
+    "position": "Defenceman",
+    "first_year": 1973,
+    "last_year": 1981,
+    "teams": [
+      "Maple Leafs"
+    ],
+    "stat_line": "440 points, 317 assists and 732 penalty minutes",
+    "jersey": "",
+    "fact": "",
+    "seasons": 9,
+    "franchise_count": 1,
+    "best_season": {
+      "year": 1976,
+      "team": "Maple Leafs",
+      "line": "79 points, 57 assists and 84 penalty minutes"
+    },
+    "fame": 0.8475,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Vyacheslav Kozlov",
+    "aliases": [
+      "vyacheslav kozlov",
+      "kozlov"
+    ],
+    "position": "Left winger",
+    "first_year": 1993,
+    "last_year": 2009,
+    "teams": [
+      "Red Wings",
+      "Sabres",
+      "Thrashers"
+    ],
+    "stat_line": "352 goals, 494 assists and 846 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 16,
+    "franchise_count": 3,
+    "best_season": {
+      "year": 2006,
+      "team": "Thrashers",
+      "line": "28 goals, 52 assists and 80 points"
+    },
+    "fame": 0.8464,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Phil Kessel",
+    "aliases": [
+      "phil kessel",
+      "kessel"
+    ],
+    "position": "Right winger",
+    "first_year": 2006,
+    "last_year": 2022,
+    "teams": [
+      "Bruins",
+      "Maple Leafs",
+      "Penguins",
+      "Coyotes",
+      "Golden Knights"
+    ],
+    "stat_line": "413 goals, 579 assists and 992 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 17,
+    "franchise_count": 5,
+    "best_season": {
+      "year": 2017,
+      "team": "Penguins",
+      "line": "34 goals, 58 assists and 92 points"
+    },
+    "fame": 0.8456,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
+    "sport": "hockey",
+    "canonical": "Bernie Federko",
+    "aliases": [
+      "bernie federko",
+      "federko"
+    ],
+    "position": "Centre",
+    "first_year": 1976,
+    "last_year": 1989,
+    "teams": [
+      "Blues",
+      "Red Wings"
+    ],
+    "stat_line": "369 goals, 761 assists and 1,130 points",
+    "jersey": "",
+    "fact": "",
+    "seasons": 14,
+    "franchise_count": 2,
+    "best_season": {
+      "year": 1983,
+      "team": "Blues",
+      "line": "41 goals, 66 assists and 107 points"
+    },
+    "fame": 0.845,
+    "difficulty": "medium",
+    "source": "catalog"
+  },
+  {
     "sport": "nba",
     "canonical": "Russell Westbrook",
     "aliases": [

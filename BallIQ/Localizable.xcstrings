@@ -6926,6 +6926,56 @@
           }
         }
       }
+    },
+    "WON THE CUP" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GANÓ LA COPA"
+          }
+        }
+      }
+    },
+    "WORLD CHAMPION" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CAMPEÓN DEL MUNDO"
+          }
+        }
+      }
+    },
+    "PODIUM REGULAR" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HABITUAL DEL PODIO"
+          }
+        }
+      }
+    },
+    "MIDFIELD SEASON" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TEMPORADA DE MEDIA TABLA"
+          }
+        }
+      }
+    },
+    "Ranked by real season résumés: wins, podiums, poles" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clasificado por palmarés reales de la temporada: victorias, podios, poles"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

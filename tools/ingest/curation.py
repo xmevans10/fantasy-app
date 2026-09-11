@@ -754,6 +754,215 @@ _TENNIS_SLICES: tuple[Slice, ...] = decade_slices(
 )
 
 
+# ── Hockey ───────────────────────────────────────────────────────────────────────
+# Skaters and goalies share NO stat key (see providers/nhl_stats.py's two-endpoint split),
+# so hockey is two COHORTS with two quirk lists, exactly the shape baseball's hitter/pitcher
+# split already established -- registered as separate `SPORTS` entries below, both keyed to
+# sport="hockey" so their generated themes land in the same puzzle pool.
+#
+# Forwards and defensemen stay ONE cohort (both graded on `hockey_skater_fantasy`, and the
+# NBA guard/big-man precedent is exactly this shape), but several quirks are position-scoped
+# via `only=` because a defenseman's point totals run at roughly half a forward's (measured:
+# forward points p50/p90 = 28/67, defenseman = 15/41) -- an unscoped "50-point seasons"
+# quirk would starve the D pool while barely touching the forward one.
+#
+# `plus_minus` and `shots` are OMITTED (not zeroed) on old rows -- verified against the
+# committed CSV itself, where both stats' first season with real values is 1959-60. An
+# earlier revision of `providers/nhl_stats.py`'s docstring claimed plus-minus started in
+# 1967-68 (the year the NHL made it an OFFICIAL stat, which the API back-fills past); that
+# docstring has since been corrected to match the data, and the two now agree on 1959.
+# Every quirk built on either stat carries an explicit `season_year >= 1959` filter, so a
+# bare "all-time" board (no era prefix) can't quietly become a modern-only one just because
+# the older rows silently fail the stat filter -- `Filter.matches` already excludes a row
+# missing the field, but the explicit filter documents the boundary and keeps the
+# 1920s-1950s decade crosses from ever being tried in the first place, rather than being
+# built and discarded at the viability gate. `toi_per_game` was declared in the provider's
+# `CSV_FIELDS` but never populated (`_SKATER_MAP` had no source field for it) when these
+# quirks were written. That bug is fixed and the column now carries data from 1997-98 on, so
+# a TOI quirk is buildable as a follow-up; none is built here yet -- every threshold on it would fail for every row, not just
+# old ones.
+#
+# NHL scoring level swings enormously across eras (forward points p90 by decade: 1980s 80,
+# 1990s 69, 2000s 66, 2010s 60 -- see the module's own history for why), which is why counting
+# thresholds below are pitched at a level that clears comfortably from the 1960s onward
+# rather than at the 1980s' own inflated bar; a decade cross that a given threshold doesn't
+# fit (the 1920s-40s' shorter, lower-scoring seasons; a too-strict threshold against a
+# dead-puck decade) simply fails the viability gate and is dropped, the same as everywhere
+# else in this file.
+_HOCKEY_SKATER_COLS = [
+    StatColumn("points", "PTS", "int"),
+    StatColumn("goals", "G", "int"),
+    StatColumn("assists", "A", "int"),
+    StatColumn("plus_minus", "+/-", "int"),
+    StatColumn("shots", "SOG", "int"),
+]
+_HOCKEY_FWD = PositionSpec("FWD", "forward", "hockey_skater_fantasy", {"games": 40},
+                           _HOCKEY_SKATER_COLS, members=("C", "L", "R"))
+_HOCKEY_D = PositionSpec("D", "defenseman", "hockey_skater_fantasy", {"games": 40}, [
+    StatColumn("points", "PTS", "int"),
+    StatColumn("goals", "G", "int"),
+    StatColumn("assists", "A", "int"),
+    StatColumn("plus_minus", "+/-", "int"),
+    StatColumn("penalty_minutes", "PIM", "int"),
+])
+_HOCKEY_ALL = PositionSpec("ALL", "skater", "hockey_skater_fantasy", {"games": 40},
+                           _HOCKEY_SKATER_COLS, members=("C", "L", "R", "D"))
+
+_PIM_COL = StatColumn("penalty_minutes", "PIM", "int")
+_SOG_COL = StatColumn("shots", "SOG", "int")
+_SPCT_COL = StatColumn("shooting_pct", "S%", "pct1")
+_PPP_COL = StatColumn("pp_points", "PPP", "int")
+_SHP_COL = StatColumn("sh_points", "SHP", "int")
+_GWG_COL = StatColumn("game_winning_goals", "GWG", "int")
+_SKATER_GAMES_COL = StatColumn("games", "GP", "int")
+
+_HOCKEY_SKATER_QUIRKS: list[Quirk] = [
+    Quirk("fifty-point", (Filter("points", "gte", 50),), "50-point {pos} seasons",
+          adjective="50-point", axis="production", only=("FWD", "ALL")),
+    Quirk("thirty-point-dman", (Filter("points", "gte", 30),), "30-point {pos} seasons",
+          adjective="30-point", axis="production", only=("D",)),
+    Quirk("goal-scorer", (Filter("goals", "gte", 25),), "25-goal {pos} seasons",
+          adjective="25-goal", axis="scoring", only=("FWD", "ALL")),
+    Quirk("sniper", (Filter("season_year", "gte", 1959), Filter("shots", "gte", 100),
+                     Filter("shooting_pct", "gte", 0.16)),
+          "Sharpshooting {pos} seasons", adjective="sharpshooting", axis="efficiency",
+          columns=(_SPCT_COL,)),
+    Quirk("playmaker", (Filter("assists", "gte", 35),), "35-assist {pos} seasons",
+          adjective="35-assist", axis="playmaking"),
+    Quirk("plus-machine", (Filter("season_year", "gte", 1959), Filter("plus_minus", "gte", 25)),
+          "Plus-25 {pos} seasons", adjective="plus-25", axis="two-way"),
+    Quirk("enforcer", (Filter("penalty_minutes", "gte", 150),), "Penalty-box {pos} seasons",
+          adjective="penalty-box", axis="physicality", columns=(_PIM_COL,)),
+    Quirk("trigger-happy", (Filter("season_year", "gte", 1959), Filter("shots", "gte", 220)),
+          "High-volume-shooting {pos} seasons", adjective="high-volume-shooting",
+          axis="volume", columns=(_SOG_COL,)),
+    Quirk("point-a-game", (Filter("points_per_game", "gte", 1.0),), "Point-a-game {pos} seasons",
+          adjective="point-a-game", axis="rate"),
+    Quirk("power-play-weapon", (Filter("pp_points", "gte", 20),),
+          "20-power-play-point {pos} seasons", adjective="power-play", axis="specialty",
+          columns=(_PPP_COL,)),
+    Quirk("shorthanded-menace", (Filter("sh_points", "gte", 3),),
+          "Shorthanded-scoring {pos} seasons", adjective="shorthanded", axis="specialty",
+          columns=(_SHP_COL,)),
+    Quirk("clutch", (Filter("game_winning_goals", "gte", 6),),
+          "Six-game-winning-goal {pos} seasons", adjective="clutch", axis="clutch",
+          columns=(_GWG_COL,)),
+    Quirk("iron-man-skater", (Filter("games", "gte", 78),), "Never-missed-a-game {pos} seasons",
+          adjective="never-missed-a-game", axis="availability", columns=(_SKATER_GAMES_COL,)),
+    Quirk("two-way-star", (Filter("season_year", "gte", 1959), Filter("points", "gte", 45),
+                           Filter("plus_minus", "gte", 15)),
+          "Two-way {pos} seasons", adjective="two-way", axis="profile", only=("FWD", "ALL")),
+    Quirk("power-forward", (Filter("goals", "gte", 20), Filter("penalty_minutes", "gte", 100)),
+          "Power-forward {pos} seasons", adjective="power-forward", axis="profile",
+          only=("FWD", "ALL")),
+    Quirk("offensive-dman", (Filter("season_year", "gte", 1959), Filter("points", "gte", 45),
+                             Filter("plus_minus", "gte", 5)),
+          "Elite offensive-defenseman seasons", adjective="elite-offensive", axis="profile",
+          only=("D",)),
+]
+
+_HOCKEY_SLICES = decade_slices(
+    [None, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020])
+
+# ── Hockey goalies ───────────────────────────────────────────────────────────────
+# GAA swings just as hard by era as skater scoring (median GAA by decade: 1980s 3.7, 1920s
+# 2.2, modern ~2.6-2.9 -- the same shape as forward points, driven by the same league-wide
+# offense levels), so the "quality" gate below leans on save percentage, which is far more
+# stable across the eras it's recorded for (p75 by decade sits in a tight 0.90-0.92 band
+# from the 1950s on, only dipping in the highest-scoring 1970s/1980s). GAA still gets one
+# lenient quirk, pitched low enough to clear most decades rather than tuned to the 1980s.
+_HOCKEY_GOALIE = PositionSpec("G", "goaltending", "hockey_goalie_fantasy", {"games": 25}, [
+    StatColumn("wins", "W", "int"),
+    StatColumn("save_pct", "SV%", "dec3"),
+    StatColumn("gaa", "GAA", "dec2"),
+    StatColumn("shutouts", "SO", "int"),
+    StatColumn("saves", "SV", "comma_int"),
+])
+
+_STARTS_COL = StatColumn("games_started", "GS", "int")
+_HOCKEY_LOSSES_COL = StatColumn("losses", "L", "int")
+
+_HOCKEY_GOALIE_QUIRKS: list[Quirk] = [
+    Quirk("winner", (Filter("wins", "gte", 25),), "25-win {pos} seasons",
+          adjective="25-win", axis="wins"),
+    Quirk("elite-winner", (Filter("wins", "gte", 35),), "35-win {pos} seasons",
+          adjective="35-win", axis="wins"),
+    Quirk("wall", (Filter("save_pct", "gte", 0.915),), "Elite save-percentage {pos} seasons",
+          adjective="elite-save-percentage", axis="efficiency"),
+    Quirk("stingy", (Filter("gaa", "lte", 2.40),), "Sub-2.40-GAA {pos} seasons",
+          adjective="sub-2.40-GAA", axis="run-prevention"),
+    Quirk("shutout-artist", (Filter("shutouts", "gte", 5),), "Five-shutout {pos} seasons",
+          adjective="five-shutout", axis="shutouts"),
+    Quirk("busy-netminder", (Filter("saves", "gte", 1500),), "1500-save {pos} seasons",
+          adjective="1500-save", axis="volume"),
+    Quirk("iron-man-goalie", (Filter("games", "gte", 60),), "60-game {pos} seasons",
+          adjective="60-game", axis="availability"),
+    Quirk("workhorse-starter", (Filter("games_started", "gte", 55),), "55-start {pos} seasons",
+          adjective="55-start", axis="volume", columns=(_STARTS_COL,)),
+    Quirk("efficient-workload", (Filter("games_started", "gte", 45),
+                                 Filter("save_pct", "gte", 0.905)),
+          "Busy-and-brilliant {pos} seasons", adjective="busy-and-brilliant", axis="profile"),
+    Quirk("rarely-beaten", (Filter("wins", "gte", 20), Filter("losses", "lte", 12)),
+          "Rarely-beaten {pos} seasons", adjective="rarely-beaten", axis="wins",
+          columns=(_HOCKEY_LOSSES_COL,)),
+]
+
+
+# ── F1 ───────────────────────────────────────────────────────────────────────────
+# One position, like tennis, so the cohort is modeled on `_TENNIS` rather than any
+# multi-position spec. Championship `points` is deliberately absent from the stat
+# vocabulary here too (see grade.py's `f1_driver_fantasy`) -- every quirk is instead built
+# from era-invariant race-result counts.
+#
+# `fastest_laps` is the one F1 field Ergast omits outright before a fixed year (2004, no
+# `FastestLap` block at all before then, confirmed empirically: 512 of 2557 rows carry it,
+# earliest 2004) -- its one quirk carries an explicit `season_year >= 2004` filter for the
+# same reason the hockey quirks above do: a bare "fastest-lap seasons" board would otherwise
+# be secretly modern-only, and the title says so explicitly rather than implying otherwise.
+_F1_COLS = [
+    StatColumn("wins", "Wins", "int"),
+    StatColumn("podiums", "Podiums", "int"),
+    StatColumn("poles", "Poles", "int"),
+    StatColumn("top_tens", "Top 10s", "int"),
+]
+_F1_DRIVER = PositionSpec("Driver", "driver", "f1_driver_fantasy", {"races": 6}, _F1_COLS)
+
+_F1_RACES_COL = StatColumn("races", "Starts", "int")
+_F1_DNF_COL = StatColumn("dnfs", "DNFs", "int")
+_F1_FL_COL = StatColumn("fastest_laps", "FL", "int")
+_F1_CHAMP_COL = StatColumn("championships", "Titles", "int")
+
+_F1_QUIRKS: list[Quirk] = [
+    Quirk("champion", (Filter("championships", "gte", 1),), "World championship seasons",
+          adjective="championship", axis="titles", columns=(_F1_CHAMP_COL,)),
+    Quirk("race-winner", (Filter("wins", "gte", 1),), "Race-winning {pos} seasons",
+          adjective="race-winning", axis="wins"),
+    Quirk("multi-winner", (Filter("wins", "gte", 3),), "Three-win {pos} seasons",
+          adjective="three-win", axis="wins"),
+    Quirk("podium-regular", (Filter("podiums", "gte", 8),), "Eight-podium {pos} seasons",
+          adjective="eight-podium", axis="podiums"),
+    Quirk("pole-sitter", (Filter("poles", "gte", 3),), "Three-pole {pos} seasons",
+          adjective="three-pole", axis="qualifying"),
+    Quirk("consistent-scorer", (Filter("top_tens", "gte", 10),), "Ten-top-10 {pos} seasons",
+          adjective="ten-top-10", axis="consistency"),
+    Quirk("bulletproof", (Filter("races", "gte", 8), Filter("dnfs", "lte", 2)),
+          "Bulletproof-reliability {pos} seasons", adjective="bulletproof", axis="reliability",
+          columns=(_F1_DNF_COL,)),
+    Quirk("fastest-hand", (Filter("season_year", "gte", 2004), Filter("fastest_laps", "gte", 3)),
+          "Fastest-lap {pos} seasons (2004+)", adjective="fastest-lap", axis="pace",
+          columns=(_F1_FL_COL,)),
+    Quirk("dominant-season", (Filter("wins", "gte", 5), Filter("podiums", "gte", 10)),
+          "Dominant {pos} seasons", adjective="dominant", axis="dominance"),
+    Quirk("fast-but-fragile", (Filter("poles", "gte", 2), Filter("dnfs", "gte", 4)),
+          "Fast-but-fragile {pos} seasons", adjective="fast-but-fragile", axis="profile",
+          columns=(_F1_DNF_COL,)),
+    Quirk("full-grid", (Filter("races", "gte", 10),), "Full-season {pos} seasons",
+          adjective="full-season", axis="availability", columns=(_F1_RACES_COL,)),
+]
+
+_F1_SLICES = decade_slices([None, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020])
+
+
 # NFL's slice vocabulary: decades, plus "Active", plus the eight divisions and two
 # conferences. The division axis is the biggest single gap the reference catalogue exposed
 # (21% of its titles) and it cost nothing to add: `teams` already carries the mapping.
@@ -799,6 +1008,10 @@ SOCCER_SLICES_FULL: tuple[Slice, ...] = (
     _SOCCER_SLICES + (active_slice(_dt.date.today().year),))
 TENNIS_SLICES_FULL: tuple[Slice, ...] = (
     _TENNIS_SLICES + (active_slice(_dt.date.today().year),))
+HOCKEY_SLICES_FULL: tuple[Slice, ...] = (
+    _HOCKEY_SLICES + (active_slice(_dt.date.today().year),))
+F1_SLICES_FULL: tuple[Slice, ...] = (
+    _F1_SLICES + (active_slice(_dt.date.today().year),))
 
 SPORTS: dict[str, SportCuration] = {
     "nfl": SportCuration("nfl", POSITIONS, QUIRKS, NFL_SLICES,
@@ -817,6 +1030,11 @@ SPORTS: dict[str, SportCuration] = {
                             _SOCCER_QUIRKS, SOCCER_SLICES_FULL,
                             team_slices=40, team_era_slices=0),
     "tennis": SportCuration("tennis", {"Player": _TENNIS}, _TENNIS_QUIRKS, TENNIS_SLICES_FULL),
+    "hockey": SportCuration("hockey", {"FWD": _HOCKEY_FWD, "D": _HOCKEY_D, "ALL": _HOCKEY_ALL},
+                            _HOCKEY_SKATER_QUIRKS, HOCKEY_SLICES_FULL,
+                            team_slices=24, team_era_slices=0),
+    "f1": SportCuration("f1", {"Driver": _F1_DRIVER}, _F1_QUIRKS, F1_SLICES_FULL,
+                        team_slices=16, team_era_slices=0),
 }
 
 # Baseball's pitchers are a second cohort of the same sport with a disjoint stat vocabulary
@@ -827,6 +1045,12 @@ SPORTS["baseball-pitchers"] = SportCuration(
     "baseball", {"P": _MLB_PITCHER}, _MLB_PITCHER_QUIRKS, MLB_SLICES_FULL,
     team_slices=30, team_era_slices=16,
     team_era_decades=(1950, 1970, 1990, 2010))
+
+# Hockey goalies are the same split, one stat vocabulary that shares no key with the skater
+# cohort above (see providers/nhl_stats.py's two-endpoint split).
+SPORTS["hockey-goalies"] = SportCuration(
+    "hockey", {"G": _HOCKEY_GOALIE}, _HOCKEY_GOALIE_QUIRKS, HOCKEY_SLICES_FULL,
+    team_slices=24, team_era_slices=0)
 
 
 # ── Periods: the recency axis ─────────────────────────────────────────────────────

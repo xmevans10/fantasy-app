@@ -27,6 +27,11 @@ struct JourneymanGameView: View {
     /// Wrong guesses so far. The *next* guess is number `wrongGuesses + 1`.
     @State private var wrongGuesses = 0
     @State private var wrongShake = false
+    /// How many of `puzzle.hints` have been bought. They are bought in order, cheapest angle
+    /// first, so this count IS which hints are on screen — the same "the first N" contract
+    /// `WhoAmIGameView.revealedCount` documents, and for the same reason: every price derived
+    /// from it assumes exactly that.
+    @State private var hintsUsed = 0
     @State private var result: JourneymanScoring.Result?
     @State private var rewards: RepositoryContainer.SessionRewards?
     /// Sport-wide player names powering the guess autocomplete. Empty offline, where the field
@@ -42,11 +47,30 @@ struct JourneymanGameView: View {
     private var guessesLeft: Int { JourneymanScoring.maxGuesses - wrongGuesses }
     /// What naming the player right now would pay.
     private var currentValue: Int {
-        JourneymanScoring.value(guess: currentGuess, difficulty: puzzle.difficulty)
+        JourneymanScoring.value(guess: currentGuess, difficulty: puzzle.difficulty,
+                                hints: hintsUsed)
     }
     /// What being wrong would cost. Zero on the last guess, where a miss ends the run instead.
     private var nextGuessCost: Int {
-        JourneymanScoring.nextGuessCost(guess: currentGuess, difficulty: puzzle.difficulty)
+        JourneymanScoring.nextGuessCost(guess: currentGuess, difficulty: puzzle.difficulty,
+                                        hints: hintsUsed)
+    }
+
+    /// The hints this board actually carries, capped by the client's own limit — content does
+    /// not get to price itself (`JourneymanScoring.maxHints`).
+    private var hints: [JourneymanPuzzle.Hint] {
+        Array((puzzle.hints ?? []).prefix(JourneymanScoring.maxHints))
+    }
+    private var hintsLeft: Int { max(0, hints.count - hintsUsed) }
+    /// What the next hint would take off this board right now.
+    private var nextHintCost: Int {
+        JourneymanScoring.nextHintCost(guess: currentGuess, hintsUsed: hintsUsed,
+                                       difficulty: puzzle.difficulty)
+    }
+    /// The blitz-safe form of `nextHintCost` — a share of the board rather than points.
+    private var nextHintCostShare: String {
+        BlitzBoardValue.cost(nextHintCost,
+                             of: JourneymanScoring.maxScore(difficulty: puzzle.difficulty))
     }
 
     /// A wrong guess's price as a share of this board's own maximum — the blitz-safe form of
@@ -113,6 +137,7 @@ struct JourneymanGameView: View {
                                                "clubs": "\(puzzle.stints.count)",
                                                "duel": "\(duel != nil)"])
             }
+            hintsUsed = min(DebugLaunch.journeymanHintsBought, hints.count)
             if DebugLaunch.autoSubmitResult { autoSolveForScreenshot() }
         }
     }
@@ -131,11 +156,14 @@ struct JourneymanGameView: View {
             // has, while an eight-club board still scrolls normally.
             GeometryReader { proxy in
                 ScrollView {
-                    CareerPathTimeline(sport: puzzle.sport, stints: puzzle.stints,
-                                       truncated: puzzle.truncated ?? false)
-                        .padding(16)
-                        .frame(maxWidth: .infinity, minHeight: proxy.size.height,
-                               alignment: .center)
+                    VStack(spacing: 16) {
+                        CareerPathTimeline(sport: puzzle.sport, stints: puzzle.stints,
+                                           truncated: puzzle.truncated ?? false)
+                        boughtHints
+                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, minHeight: proxy.size.height,
+                           alignment: .center)
                 }
             }
             guessBar
@@ -207,6 +235,53 @@ struct JourneymanGameView: View {
         }
     }
 
+    // MARK: - Hints
+
+    /// The hints bought so far, under the path rather than over it: the career is the question
+    /// and stays the top of the screen, and a bought hint is an annotation on it. Unbought
+    /// slots are deliberately **not** rendered — unlike Who Am I?, whose locked rows fill a page
+    /// that would otherwise be empty, this board is already full, and an empty slot carrying a
+    /// dimension label ("Résumé") would answer the hint it is advertising.
+    @ViewBuilder
+    private var boughtHints: some View {
+        if hintsUsed > 0 {
+            VStack(spacing: 10) {
+                ForEach(hints.prefix(hintsUsed)) { hint in
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: "lightbulb.fill")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(Color.onVolt)
+                            .frame(width: 26, height: 26)
+                            .background(Color.voltFill)
+                            .clipShape(Circle())
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(hint.label)
+                                .font(.label11)
+                                .foregroundStyle(Color.textMuted)
+                            Text(hint.text)
+                                .font(.body14)
+                                .foregroundStyle(Color.textPrimary)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .cardSurface()
+                    .accessibilityElement(children: .combine)
+                }
+            }
+            .transition(.opacity)
+        }
+    }
+
+    /// Buys the next hint. Priced off the board's value *at this moment* — see
+    /// `JourneymanScoring`'s doc comment for why a hint is a percentage and not a fixed price.
+    private func buyHint() {
+        guard result == nil, hintsLeft > 0 else { return }
+        Haptics.tap()
+        withAnimation(Motion.easeOut) { hintsUsed += 1 }
+    }
+
     // MARK: - Guessing
 
     private var guessBar: some View {
@@ -240,10 +315,10 @@ struct JourneymanGameView: View {
                     .accessibilityHint("Submits the name you entered")
                 }
 
-                HStack {
+                HStack(spacing: 12) {
                     // The price of being wrong, stated before the guess rather than after it —
-                    // it's the only cost in this format, so hiding it until it's charged would
-                    // make the score move for reasons the player never saw coming.
+                    // hiding a cost until it's charged would make the score move for reasons
+                    // the player never saw coming. Same rule for the hint button's price.
                     Text(guessesLeft > 1
                          ? (blitz == nil
                             ? String(localized: "A wrong guess costs \(nextGuessCost) pts")
@@ -251,7 +326,8 @@ struct JourneymanGameView: View {
                          : String(localized: "Last guess"))
                         .font(.label12)
                         .foregroundStyle(guessesLeft > 1 ? Color.textMuted : Color.dangerText)
-                    Spacer()
+                    Spacer(minLength: 0)
+                    hintButton
                     Button("Give up", action: giveUp)
                         .font(.body14)
                         .foregroundStyle(Color.textMuted)
@@ -259,6 +335,31 @@ struct JourneymanGameView: View {
             }
             .padding(16)
             .background(Color.surface)
+        }
+    }
+
+    /// The hint button, priced in the same breath as it is offered. Absent — not disabled —
+    /// on a board with no hints left to sell (including content minted before hints existed):
+    /// a permanently dead control invites a tap that can never do anything.
+    @ViewBuilder
+    private var hintButton: some View {
+        if hintsLeft > 0 {
+            Button(action: buyHint) {
+                HStack(spacing: 5) {
+                    Image(systemName: "lightbulb.fill").font(.system(size: 11, weight: .bold))
+                    Text(blitz == nil
+                         ? String(localized: "Hint · \(nextHintCost) pts")
+                         : String(localized: "Hint · \(nextHintCostShare)"))
+                        .font(.label12)
+                }
+                .foregroundStyle(Color.accentText)
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background(Color.surfaceMuted)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(String(localized: "Buy a hint"))
+            .accessibilityHint(String(localized: "Costs \(nextHintCost) points, \(hintsLeft) left"))
         }
     }
 
@@ -316,9 +417,12 @@ struct JourneymanGameView: View {
         guard result == nil else { return }
         fieldFocused = false
         let r = JourneymanScoring.score(guessesUsed: solved ? currentGuess : wrongGuesses,
-                                        solved: solved, difficulty: puzzle.difficulty)
+                                        solved: solved, difficulty: puzzle.difficulty,
+                                        hintsUsed: hintsUsed)
         if solved { Haptics.success() }
-        let perfect = solved && wrongGuesses == 0
+        // A hint bought is help taken, so a hinted solve is not the clean run `perfect` means
+        // anywhere else in the app (it drives the streak flourish and the perfect-run rewards).
+        let perfect = solved && wrongGuesses == 0 && hintsUsed == 0
         // Blitz: report up, no result screen, no `complete` — see `BlitzSession`. `cleared` is
         // simply "solved", same as Who Am I?: a career path has no chance floor.
         if let blitz {
@@ -330,6 +434,7 @@ struct JourneymanGameView: View {
         var details = GameResultDetails()
         details.cluesUsed = r.guessesUsed
         details.wrongGuesses = r.wrongGuesses
+        details.hintsUsed = r.hintsUsed
         details.solved = solved
         details.answerName = puzzle.answer.canonical
         details.opponentUserID = duel?.opponentUserID
@@ -377,6 +482,12 @@ struct JourneymanGameView: View {
 /// `submit`/`finish` — is what makes "solo is untouched" checkable by reading the diff instead
 /// of by trusting it, at the cost of some duplicated guess-bar markup that isn't worth the risk
 /// of factoring out of a shipped, working screen mid-milestone.
+///
+/// **No hints here, deliberately.** A live race is won by whoever names the player first; points
+/// decide nothing. A hint costs only points, so in this mode it would be free — and a free hint
+/// is not a decision, it is a button both players must mash before typing. The paid version
+/// works everywhere the score is the outcome (solo, async duel, blitz) and is switched off in the
+/// one mode where its price doesn't exist.
 ///
 /// Polling lifecycle (start/stop, the ready handshake) is entirely `LiveDuelLobbyView`'s job —
 /// it stays mounted underneath `DuelBoard.journeyman(duel, puzzle).view` for the whole race and

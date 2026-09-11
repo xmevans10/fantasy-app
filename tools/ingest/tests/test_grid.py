@@ -821,3 +821,32 @@ def test_a_deep_backfill_chunks_the_upsert_so_no_request_carries_the_whole_pool(
     sizes = [len(batch) for batch in stub_supabase["upserts"]]
     assert sum(sizes) == 60
     assert max(sizes) <= ingest_main.GRID_UPSERT_CHUNK
+
+
+def test_a_board_never_puts_one_franchise_on_two_axes():
+    """Two different codes for the same franchise make a degenerate board — "played for both
+    ARI and PHX" is either trivially true or meaningless, and it renders as two crest chips
+    for one club. The existing guard only compares axis KEYS, which cannot see this.
+
+    Hit live 2026-09-05: a hockey board drew rows ['ARI','PHX','2020s']. Hockey surfaces it
+    first because the NHL feed emits the historical code for old seasons, but the shape is
+    general — NFL's OAK/LV is the same thing.
+    """
+    from tools.ingest.grid import _franchises_distinct
+    from tools.ingest.grid_axes import GridAxis
+
+    def team(abbr):
+        return GridAxis(kind="team", label=abbr, filters=(), key=f"team:{abbr}", abbr=abbr)
+
+    # Pure renames: one franchise, one name, two codes -> rejected.
+    assert not _franchises_distinct("hockey", [team("ARI"), team("PHX")])
+    assert not _franchises_distinct("nfl", [team("OAK"), team("LV")])
+    # Genuinely different clubs -> allowed.
+    assert _franchises_distinct("hockey", [team("ARI"), team("WSH")])
+    # A relocation that also RENAMED is two clubs to a fan (Whalers vs Hurricanes), and is
+    # allowed for the same reason Journeyman shows Thrashers -> Jets as two stints.
+    assert _franchises_distinct("hockey", [team("HFD"), team("CAR")])
+    # Non-team axes are not franchises and must not be compared as such.
+    stat = GridAxis(kind="stat", label="30+ Goals", filters=(), key="stat:g30")
+    other = GridAxis(kind="stat", label="40+ Goals", filters=(), key="stat:g40")
+    assert _franchises_distinct("hockey", [stat, other])

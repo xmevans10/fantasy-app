@@ -25,6 +25,16 @@ class RawSeason:
     stats: dict[str, float]  # raw numeric stats, e.g. {'rushing_yards': 2027, ...}
     source: str = "seed"     # provenance: 'nflverse' | 'espn' | 'balldontlie' | 'seed'
     headshot: str = ""       # player headshot URL (provider-supplied); "" when unavailable
+    # The provider's own id for the PERSON — nflverse `gsis_id`, MLB `person.id`, ESPN/hoopR
+    # `athlete_id`, NHL `playerId`, Transfermarkt `player_id`. "" when the provider has none
+    # (the tennis/bref/nfl_history/F1 sweeps), which is what `person` falls back for.
+    #
+    # **This exists because a NAME is not a person**, and treating it as one shipped a lie: the
+    # 2026-08-29 Journeyman daily welded NFL TE David Johnson (PIT/SD, 2009-2016) onto RB David
+    # Johnson (ARI/HOU/NO, 2015-2022) and printed a seven-club career path no one ever had.
+    # Every pool that groups seasons into a career must key on `person`, never on `name` — see
+    # `career.build_career_rows`, `whoami_pool.build_candidates` and `journeyman.build_entries`.
+    person_id: str = ""
     # Single-game grain (None/"" = season aggregate). A row with `week` set is one game.
     week: int | None = None
     opponent: str = ""       # opponent team abbr for game-grain rows, e.g. "DEN"
@@ -57,6 +67,19 @@ class RawSeason:
     meta: dict[str, str] = field(default_factory=dict)
 
     @property
+    def person(self) -> str:
+        """Stable identity of the HUMAN, sport-scoped: `'nfl:00-0031687'`.
+
+        Falls back to `'{sport}:name:{slug}'` when the provider gave no id, so this is always
+        usable as a grouping key and never silently empty — but a fallback key is exactly as
+        wrong as a bare name for two people who share one, which is why the fallback is spelled
+        `name:` and is easy to spot in a pool dump. Providers that can supply a real id must:
+        see `person_id`.
+        """
+        return (f"{self.sport}:{self.person_id}" if self.person_id
+                else f"{self.sport}:name:{slug(self.name)}")
+
+    @property
     def player_id(self) -> str:
         """Stable id for this entity inside a puzzle, e.g. 'nfl-derrick-henry-2020' (season),
         'nfl-derrick-henry-2020-wk12' (single game), or 'nfl-derrick-henry-career' (career
@@ -70,7 +93,15 @@ class RawSeason:
         live: NFL Chris Johnson's actual 2009 season (2,006 rushing yards) was missing from the
         catalog, clobbered by MLB Chris Johnson's 2009 Astros season under the same id. A full
         re-ingest across every sport is required after this change to recover any seasons a past
-        collision silently dropped — a bare format-string fix here only stops *future* collisions."""
+        collision silently dropped — a bare format-string fix here only stops *future* collisions.
+
+        **Still name-keyed, and therefore still lossy WITHIN a sport.** Two same-sport players
+        sharing a name collide here for every overlapping year: the catalog holds one
+        `nfl-david-johnson-2016`, not the RB's Cardinals season *and* the TE's Steelers season.
+        Fixing that means putting `person` into this key, which re-ids the whole catalog and
+        orphans the ids frozen inside already-minted `puzzles.content` — deliberately deferred.
+        What *is* fixed is every pool that groups seasons into a career: those key on `person`,
+        so a shared name can no longer fabricate a career path out of two people."""
         if self.career:
             return f"{self.sport}-{slug(self.name)}-career"
         base = f"{self.sport}-{slug(self.name)}-{self.season_year}"

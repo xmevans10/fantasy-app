@@ -221,6 +221,29 @@ _STATS: dict[str, tuple[StatAxisSpec, ...]] = {
         StatAxisSpec("Won a Major", "grand_slams", "gte", 1),
         StatAxisSpec("50+ Match Wins", "matches_won", "gte", 50),
     ),
+    "hockey": (
+        StatAxisSpec("30+ Goals", "goals", "gte", 30),
+        StatAxisSpec("40+ Goals", "goals", "gte", 40),
+        StatAxisSpec("50+ Assists", "assists", "gte", 50),
+        StatAxisSpec("80+ Points", "points", "gte", 80),
+        StatAxisSpec("100+ Points", "points", "gte", 100),
+        StatAxisSpec("100+ PIM", "penalty_minutes", "gte", 100),
+        StatAxisSpec("250+ Shots", "shots", "gte", 250),
+        # Goalie rate axes gated on playing time, the same treatment baseball's AVG/ERA get:
+        # a .920 save percentage over six starts is not the same claim as one over sixty.
+        StatAxisSpec("30+ Wins", "wins", "gte", 30, (Filter("games", "gte", 40),)),
+        StatAxisSpec(".920+ SV%", "save_pct", "gte", 0.920, (Filter("games", "gte", 30),)),
+        StatAxisSpec("Sub-2.50 GAA", "gaa", "lte", 2.50, (Filter("games", "gte", 30),)),
+        StatAxisSpec("5+ Shutouts", "shutouts", "gte", 5),
+    ),
+    "f1": (
+        StatAxisSpec("Won a Race", "wins", "gte", 1),
+        StatAxisSpec("3+ Wins", "wins", "gte", 3),
+        StatAxisSpec("Took a Pole", "poles", "gte", 1),
+        StatAxisSpec("5+ Podiums", "podiums", "gte", 5),
+        StatAxisSpec("World Champion", "championships", "gte", 1),
+        StatAxisSpec("10+ Top-10 Finishes", "top_tens", "gte", 10),
+    ),
 }
 
 # Display names for the raw position codes the catalog stores. Sports whose position column is a
@@ -231,6 +254,9 @@ _POSITIONS: dict[str, dict[str, str]] = {
     "nba": {"G": "Guards", "F": "Forwards", "C": "Centers"},
     "baseball": {"H": "Hitters", "P": "Pitchers"},
     "soccer": {"GK": "Keepers", "DF": "Defenders", "MF": "Midfielders", "FW": "Forwards"},
+    # F1 is absent for the same reason tennis is: every row's position is "Driver".
+    "hockey": {"C": "Centres", "L": "Left Wings", "R": "Right Wings",
+               "D": "Defencemen", "G": "Goalies"},
 }
 
 # Multi-code position groups, for the (currently NFL-only) case where the catalog's raw
@@ -250,7 +276,11 @@ _POSITION_GROUPS: dict[str, tuple[tuple[str, tuple[str, ...], str], ...]] = {
 # Sports where `team_abbr` is a franchise a player can actually move between. Tennis is excluded
 # on purpose: there `team_abbr` is the player's COUNTRY, which is fixed for a career, so a
 # team x team board ("played for both USA and CRO") would be unviable for every player alive.
-TEAM_MOBILE_SPORTS = frozenset({"nfl", "nba", "baseball", "soccer"})
+# Hockey and F1 both qualify (M31): an NHL player is traded between real franchises, and an F1
+# driver changes constructor — which is the whole premise of an F1 career. That is the specific
+# way F1 differs from tennis, the other single-position sport, and why it gets team boards and
+# Journeyman while tennis gets neither.
+TEAM_MOBILE_SPORTS = frozenset({"nfl", "nba", "baseball", "soccer", "hockey", "f1"})
 
 
 def position_family(sport: str, code: str) -> str:

@@ -186,6 +186,62 @@ _FANTASY: dict[str, list[tuple[str, float]]] = {
         ("grand_slams", 30.0),
         ("matches_lost", -0.5),
     ],
+    # Hockey skaters (M31) — the classic points-league convention every major platform
+    # ships as its default: goal 3, assist 2, with the secondary categories that separate
+    # two players at the same point total. Plus-minus is deliberately included and is the
+    # only *signed* term here, so a high-volume scorer on a bad team does not outrank a
+    # two-way player by counting stats alone.
+    #
+    # Penalty minutes are NOT scored, though they ARE displayed. Some real leagues award
+    # points for PIM as a toughness category; paying a player for taking penalties inverts
+    # what the stat means, and this scale has to be defensible to a fan reading it off
+    # hockey-reference (the §4 invariant), not merely conventional.
+    "hockey_skater_fantasy": [
+        ("goals", 3.0),
+        ("assists", 2.0),
+        ("plus_minus", 0.5),
+        ("shots", 0.1),
+        ("pp_points", 0.5),
+        ("sh_points", 1.0),
+        ("game_winning_goals", 1.0),
+    ],
+    # Hockey goalies (M31) — a goalie and a skater share no stat key at all, so hockey
+    # splits by role exactly the way baseball's hitter/pitcher scales do.
+    #
+    # The coefficients are chosen so the two hockey scales land in the SAME magnitude band,
+    # which matters because Draft & Spin lineups and cross-position pools sum both: an
+    # all-time skater season (McDavid 2022-23, 64G/89A) scores ~449 and an all-time goalie
+    # season (Hasek 1998-99, 30W/9SO/1877 saves) ~451. Without that, one role would
+    # mechanically dominate every mixed board.
+    "hockey_goalie_fantasy": [
+        ("wins", 5.0),
+        ("shutouts", 5.0),
+        ("saves", 0.2),
+        ("goals_against", -1.0),
+    ],
+    # F1 drivers (M31) — deliberately NOT built on the championship `points` column.
+    #
+    # F1's own points system has been rewritten repeatedly (8-6-4-3-2 in 1950; 9 for a win
+    # from 1961; 10 from 1991; 25 from 2010), so a raw points total is not comparable across
+    # eras — Fangio's 1954 title season scored 42 and a modern midfielder outscores it while
+    # never seeing a podium. Every term below is instead an era-invariant *achievement*
+    # counted from race results, which is what makes a 1950s season and a 2020s season
+    # rankable on one axis at all.
+    #
+    # `podiums` includes wins and `top_tens` includes podiums, so the terms stack: a win is
+    # worth 25 + 10 + 2. That is intentional — it keeps the formula monotonic in finishing
+    # position. `top_tens` is a fixed top-10 definition rather than "points finishes", which
+    # would drift with the same rule changes this scale exists to avoid.
+    "f1_driver_fantasy": [
+        ("wins", 25.0),
+        ("podiums", 10.0),
+        ("poles", 8.0),
+        ("fastest_laps", 3.0),
+        ("top_tens", 2.0),
+        ("races", 0.5),
+        ("championships", 50.0),
+        ("dnfs", -1.0),
+    ],
 }
 
 # Single-game grain reuses the season coefficients (same PPR math) under their own keys —

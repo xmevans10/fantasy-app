@@ -15,6 +15,7 @@ to write to Storage; anon can only read a public bucket).
 from __future__ import annotations
 
 import os
+import time
 import urllib.error
 import urllib.request
 
@@ -51,19 +52,37 @@ def _object_exists(base: str, service_key: str, key: str) -> bool:
         return False
 
 
+# Wikimedia throttles bulk image fetches with HTTP 429. `_download` used to swallow that as
+# "no logo" like any other error, which made a large rehost lose images NON-DETERMINISTICALLY:
+# measured 2026-09-06, an F1 run resolved 138 crest sources but only rehosted 124, and a
+# different subset failed on each attempt. A 429 is the one failure here that is purely a
+# function of how fast we asked, so it is the one worth retrying.
+_RETRY_STATUSES = frozenset({429, 503})
+_DOWNLOAD_ATTEMPTS = 3
+
+
 def _download(source_url: str) -> tuple[bytes, str] | None:
     """Fetch the source image. Returns (bytes, content_type) or None on any failure — a missing
-    source logo must degrade to "no logo" (null column), never abort the whole --teams build."""
-    try:
-        req = urllib.request.Request(source_url, headers={"User-Agent": "balliq-ingest/1.0"})
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            data = resp.read()
-            ctype = resp.headers.get("Content-Type", "image/png")
-        if not data:
+    source logo must degrade to "no logo" (null column), never abort the whole --teams build.
+
+    Retries on 429/503 with backoff (see `_RETRY_STATUSES`): everything else — a 404, a bad
+    host, a timeout — is a real absence and returns None on the first try, because retrying it
+    would just slow a large build down for no gain.
+    """
+    for attempt in range(_DOWNLOAD_ATTEMPTS):
+        try:
+            req = urllib.request.Request(source_url, headers={"User-Agent": "balliq-ingest/1.0"})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = resp.read()
+                ctype = resp.headers.get("Content-Type", "image/png")
+            return (data, ctype) if data else None
+        except urllib.error.HTTPError as err:
+            if err.code not in _RETRY_STATUSES or attempt == _DOWNLOAD_ATTEMPTS - 1:
+                return None
+            time.sleep(1.5 * 2 ** attempt)
+        except Exception:  # noqa: BLE001
             return None
-        return data, ctype
-    except Exception:  # noqa: BLE001
-        return None
+    return None
 
 
 def _upload(base: str, service_key: str, key: str, data: bytes, content_type: str) -> None:

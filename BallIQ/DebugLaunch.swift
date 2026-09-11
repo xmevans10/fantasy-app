@@ -201,6 +201,18 @@ enum DebugLaunch {
         guard let i = args.firstIndex(of: "-screenshotOnboardingStep"), i + 1 < args.count else { return nil }
         return args[i + 1]
     }
+    /// Open a Journeyman board with the first N hints already bought:
+    /// `-screenshotJourneymanHints 2` (pairs with `-screenshotJourneyman`). Buying one is a tap
+    /// on a control `simctl` cannot drive, and the bought state is the whole feature — the hint
+    /// cards under the path, the header's value dropping, the button re-pricing itself. Clamped
+    /// to whatever the board actually carries, so a board with fewer hints than asked for simply
+    /// shows all of them.
+    static var journeymanHintsBought: Int {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-screenshotJourneymanHints"), i + 1 < args.count,
+              let n = Int(args[i + 1]) else { return 0 }
+        return max(0, n)
+    }
     /// Force Home's streak-reminder primer card visible regardless of streak or notification
     /// status: `-screenshotPushPrimer`. Real state needs a completed game *and* an untouched
     /// system prompt, which can't both be arranged from a launch argument.
@@ -303,6 +315,7 @@ enum DebugLaunch {
     static let browseSport: String? = nil
     static let createTemplateKey: String? = nil
     static let onboardingStep: String? = nil
+    static let journeymanHintsBought = 0
     static let forcePushPrimer = false
     static let forcedMoment: Moment? = nil
     static let openURL: URL? = nil

@@ -61,7 +61,8 @@ POOL_FILE = "whoami_pool.json"
 # Seasons played, per sport. Four is "a career a fan could have watched" everywhere except
 # tennis, where the catalog's season grain is thinner and a four-year pro tour player is
 # already a fairly deep cut.
-MIN_SEASONS: dict[str, int] = {"nfl": 4, "nba": 4, "baseball": 4, "soccer": 5, "tennis": 4}
+MIN_SEASONS: dict[str, int] = {"nfl": 4, "nba": 4, "baseball": 4, "soccer": 5, "tennis": 4,
+                               "hockey": 4, "f1": 3}
 
 # Career-production percentile a subject must clear within their (sport, position) cohort to
 # be considered nameable at all. Tuned to what it buys, not to a round number: see
@@ -70,19 +71,26 @@ PRODUCTION_FLOOR = 0.55
 
 # ── Merged-career rejection ───────────────────────────────────────────────────
 #
-# `career.py` aggregates by NAME, so two different real players who share one collapse into a
-# single career row with both careers' stats summed. This is invisible in the catalog (there
-# is exactly one row, and it looks fine) and it is fatal here: the live pool's first draft
+# `career.py` used to aggregate by NAME, so two different real players who share one collapsed
+# into a single career row with both careers' stats summed. This was invisible in the catalog
+# (there is exactly one row, and it looks fine) and fatal here: the live pool's first draft
 # offered "Frank Thomas (Position player, 1951-2008) — 4,139 hits, 807 home runs", which is
 # the 1950s outfielder and the 1990s White Sox slugger welded together, with a hit total that
-# would beat Pete Rose's record. Baseball alone has 23 career rows spanning 40+ years,
+# would beat Pete Rose's record. Baseball alone had 23 career rows spanning 40+ years,
 # topping out at a 134-year "career" (Billy Hamilton, 1890-2023).
 #
 # The tell is the span: no real career reaches 28 years, and a genuine one is nearly
-# contiguous, so a long span with holes in it is two careers. Both bounds are needed —
-# adjacent same-name careers (say 1990-2000 and 2001-2010) produce a plausible span and slip
-# through, which is a known and accepted residual: the fix for those lives upstream in
-# career.py's grouping key, not in a content filter.
+# contiguous, so a long span with holes in it is two careers.
+#
+# **The root cause is now fixed upstream** (2026-09-06): `career.build_career_rows` and
+# `build_candidates` both key on `person_key` — the provider's own id for the human — so a
+# shared name no longer merges two careers at all. This heuristic stays as the backstop for
+# the rows that still have no `person_id`: the tennis/bref/nfl_history/F1 sweeps carry none,
+# and any catalog row written before the column existed is NULL until it is re-ingested.
+# What it never caught, and the person key does, is the *adjacent* case — this comment used to
+# concede it ("1990-2000 and 2001-2010 produce a plausible span and slip through") and that
+# residual is exactly what shipped the David Johnson board (2009-2016 + 2015-2022, span 14,
+# fully dense, sailed straight through both bounds).
 MAX_CAREER_SPAN = 27          # Nolan Ryan and Cap Anson, the joint MLB record, are 27
 MIN_SEASON_DENSITY = 0.75     # seasons played / calendar span
 
@@ -227,6 +235,33 @@ COHORTS: dict[tuple[str, str], Cohort] = {
         Headline("titles", "tour titles", _INT),
         Headline("grand_slams", "major titles", _INT),
         Headline("matches_won", "match wins", _YDS, one="match win"))),
+    # Hockey (M31). The four skater codes share one cohort scale but keep their own display
+    # labels, because "centre" and "defenceman" are how a fan would describe the player and
+    # a clue reading "This winger…" is worth more than one reading "This skater…".
+    ("hockey", "C"): Cohort("hockey_skater_fantasy", "Centre", (
+        Headline("goals", "goals", _INT),
+        Headline("assists", "assists", _YDS),
+        Headline("points", "points", _YDS))),
+    ("hockey", "L"): Cohort("hockey_skater_fantasy", "Left winger", (
+        Headline("goals", "goals", _INT),
+        Headline("assists", "assists", _YDS),
+        Headline("points", "points", _YDS))),
+    ("hockey", "R"): Cohort("hockey_skater_fantasy", "Right winger", (
+        Headline("goals", "goals", _INT),
+        Headline("assists", "assists", _YDS),
+        Headline("points", "points", _YDS))),
+    ("hockey", "D"): Cohort("hockey_skater_fantasy", "Defenceman", (
+        Headline("points", "points", _YDS),
+        Headline("assists", "assists", _YDS),
+        Headline("penalty_minutes", "penalty minutes", _YDS))),
+    ("hockey", "G"): Cohort("hockey_goalie_fantasy", "Goaltender", (
+        Headline("wins", "wins", _INT),
+        Headline("shutouts", "shutouts", _INT),
+        Headline("saves", "saves", _YDS))),
+    ("f1", "Driver"): Cohort("f1_driver_fantasy", "Formula 1 driver", (
+        Headline("wins", "race wins", _INT, one="race win"),
+        Headline("podiums", "podiums", _INT),
+        Headline("poles", "pole positions", _INT, one="pole position"))),
 }
 
 
@@ -311,6 +346,10 @@ class Candidate:
     """A career row plus everything derived from that player's season rows."""
     name: str
     sport: str
+    # `person_key` of the career row this was built from — the join key back to the season rows
+    # it was derived from, so a consumer that needs the raw seasons again (journeyman's path
+    # builder) re-groups by person rather than re-introducing the name join this fixed.
+    person: str
     position: str
     cohort_key: str
     first_year: int
@@ -390,18 +429,36 @@ def _best_season(sport: str, rows: list[dict], cohort: Cohort,
             "line": line}, best_score
 
 
+def person_key(row: dict) -> str:
+    """`RawSeason.person`, for a catalog row read back out of `player_seasons`.
+
+    Kept as one function next to its callers rather than imported from `models`, because the
+    two sides are different shapes (a dataclass on the way in, a dict on the way out) and the
+    fallback has to agree exactly or the career and season grains stop joining. `person_id` is
+    NULL for the sweeps that carry no upstream id, which is why the `or` is on the value and
+    not on the key lookup.
+    """
+    return (f"{row['sport']}:{row['person_id']}" if row.get("person_id")
+            else f"{row['sport']}:name:{slug(row['name'])}")
+
+
 def build_candidates(career_rows: list[dict], season_rows: list[dict],
                      soccer_names: dict[str, str]) -> list[Candidate]:
     """Fold the two catalog grains into one candidate per player.
 
-    Joined by name within a sport, which is exactly why `qualify` drops shared names: the
-    catalog's own ids are per-season, so there is no id that identifies a *person* across
-    both grains, and a name join on a shared name would silently blend two careers into one
-    unanswerable puzzle.
+    Joined on `person_id` — the provider's own id for the human — because a name join blends
+    two careers into one. It did exactly that in production: NFL TE David Johnson (2009-2016)
+    and RB David Johnson (2015-2022) came back as a single fourteen-season candidate, and the
+    Journeyman board minted off it printed a seven-club path neither man had. `qualify` still
+    drops shared names on top of this, for the *other* reason a shared name is fatal here: even
+    a perfectly-assembled board is unanswerable when the answer names two people.
+
+    Rows the provider sweeps left without a `person_id` fall back to a name key (see
+    `RawSeason.person`), so they are exactly as merged as they were before and no worse.
     """
-    by_name: dict[str, list[dict]] = collections.defaultdict(list)
+    by_person: dict[str, list[dict]] = collections.defaultdict(list)
     for row in season_rows:
-        by_name[row["name"]].append(row)
+        by_person[person_key(row)].append(row)
 
     # "Active" is relative to the catalog, not the calendar: soccer labels a season by its END
     # year (so the newest rows read 2027 in mid-2026) and the NFL's current-season aggregate
@@ -415,7 +472,7 @@ def build_candidates(career_rows: list[dict], season_rows: list[dict],
         cohort = cohort_for(row["sport"], row["position"])
         if cohort is None:
             continue
-        seasons = by_name.get(row["name"], [])
+        seasons = by_person.get(person_key(row), [])
         if not seasons:
             continue
         career_stats = row.get("stats") or {}
@@ -426,6 +483,7 @@ def build_candidates(career_rows: list[dict], season_rows: list[dict],
         out.append(Candidate(
             name=row["name"],
             sport=row["sport"],
+            person=person_key(row),
             position=row["position"],
             cohort_key=f"{row['sport']}|{grid_axes.position_family(row['sport'], row['position'])}",
             first_year=int(row.get("first_year") or row["season_year"]),
@@ -739,6 +797,31 @@ def load_nfl_bio_by_name() -> dict[str, dict[str, str]]:
 # to exactly one franchise**. Codes that a fan would read differently depending on era are
 # deliberately absent (see `_AMBIGUOUS_TEAM_CODES`) — an unnamed team costs a player three
 # clue dimensions, and a wrongly-named one costs them the puzzle.
+# Hockey (M31). Nicknames, matching the NFL/NBA/MLB convention above — a club is named the
+# way a fan names it. Relocated/renamed franchises resolve through `TeamColors`-style aliases
+# on the app side; here the historical codes the NHL feed still emits map to the nickname the
+# franchise carries TODAY, with `ERA_FRANCHISES` handling the ones that need a period name.
+_NHL_FRANCHISES: dict[tuple[str, str], str] = {
+    ("hockey", "ANA"): "Ducks", ("hockey", "ARI"): "Coyotes", ("hockey", "BOS"): "Bruins",
+    ("hockey", "BUF"): "Sabres", ("hockey", "CGY"): "Flames", ("hockey", "CAR"): "Hurricanes",
+    ("hockey", "CHI"): "Blackhawks", ("hockey", "COL"): "Avalanche",
+    ("hockey", "CBJ"): "Blue Jackets", ("hockey", "DAL"): "Stars",
+    ("hockey", "DET"): "Red Wings", ("hockey", "EDM"): "Oilers", ("hockey", "FLA"): "Panthers",
+    ("hockey", "LAK"): "Kings", ("hockey", "MIN"): "Wild", ("hockey", "MTL"): "Canadiens",
+    ("hockey", "NSH"): "Predators", ("hockey", "NJD"): "Devils", ("hockey", "NYI"): "Islanders",
+    ("hockey", "NYR"): "Rangers", ("hockey", "OTT"): "Senators", ("hockey", "PHI"): "Flyers",
+    ("hockey", "PIT"): "Penguins", ("hockey", "SJS"): "Sharks", ("hockey", "SEA"): "Kraken",
+    ("hockey", "STL"): "Blues", ("hockey", "TBL"): "Lightning",
+    ("hockey", "TOR"): "Maple Leafs", ("hockey", "UTA"): "Mammoth", ("hockey", "VAN"): "Canucks",
+    ("hockey", "VGK"): "Golden Knights", ("hockey", "WSH"): "Capitals", ("hockey", "WPG"): "Jets",
+    # Defunct/relocated codes the historical sweep still carries.
+    ("hockey", "ATL"): "Thrashers", ("hockey", "PHX"): "Coyotes", ("hockey", "WIN"): "Jets",
+    ("hockey", "HFD"): "Whalers", ("hockey", "QUE"): "Nordiques",
+    ("hockey", "MNS"): "North Stars", ("hockey", "CLR"): "Rockies", ("hockey", "KCS"): "Scouts",
+    ("hockey", "CGS"): "Golden Seals", ("hockey", "OAK"): "Seals",
+}
+
+
 FRANCHISES: dict[tuple[str, str], str] = {
     ("nfl", "ARI"): "Cardinals", ("nfl", "ATL"): "Falcons", ("nfl", "BAL"): "Ravens",
     ("nfl", "BUF"): "Bills", ("nfl", "CAR"): "Panthers", ("nfl", "CHI"): "Bears",
@@ -783,6 +866,10 @@ FRANCHISES: dict[tuple[str, str], str] = {
     ("baseball", "TEX"): "Rangers", ("baseball", "TOR"): "Blue Jays",
 }
 
+# Hockey joins the same table the other franchise sports use (defined above so the
+# literal stays readable next to its own comment).
+FRANCHISES.update(_NHL_FRANCHISES)
+
 # Codes that named two different franchises depending on the year, so no single nickname is
 # correct for every player who wore one. Listed explicitly (rather than merely omitted from
 # `FRANCHISES`) so the next person to "fill in the missing teams" sees why these are missing:
@@ -821,7 +908,25 @@ def team_display(sport: str, abbr: str, soccer_names: dict[str, str]) -> str:
         return ""
     if sport == "soccer":
         return soccer_names.get(abbr, "")
+    # F1 constructor names are read from the provider's own committed sweep rather than a
+    # hand-maintained table: there are ~170 constructors across 1950-present, the CSV already
+    # carries the real display name on every row, and a table copied out of it would drift.
+    if sport == "f1":
+        return _f1_constructor_names().get(abbr, "")
     return FRANCHISES.get((sport, abbr), "")
+
+
+_F1_NAMES: dict[str, str] | None = None
+
+
+def _f1_constructor_names() -> dict[str, str]:
+    """`{constructor code: display name}` from the committed F1 sweep, cached per process."""
+    global _F1_NAMES
+    if _F1_NAMES is None:
+        from .providers import f1_ergast
+        _F1_NAMES = {s.team_abbr: s.meta.get("team_name", "")
+                     for s in f1_ergast.load_seasons() if s.meta.get("team_name")}
+    return _F1_NAMES
 
 
 def _soccer_team_names() -> dict[str, str]:

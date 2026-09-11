@@ -59,8 +59,12 @@ struct JourneymanResultView: View {
     @State private var confetti = 0
     @State private var rematching = false
 
-    /// Named on the first guess — the rare one, and the only result that earns the volt hero.
-    private var firstGuess: Bool { result.solved && result.guessesUsed == 1 }
+    /// Named on the first guess, unaided — the rare one, and the only result that earns the
+    /// volt hero. A first-guess solve off three bought hints is a good result; it is not
+    /// "FIRST-GUESS GENIUS", and saying so would cheapen the badge for the runs that are.
+    private var firstGuess: Bool {
+        result.solved && result.guessesUsed == 1 && result.hintsUsed == 0
+    }
     private var heroFill: Color { result.solved ? (firstGuess ? .voltFill : .accentFill) : .surface1 }
     private var heroInk: Color { result.solved ? (firstGuess ? .onVolt : .onAccent) : .textPrimary }
 
@@ -86,15 +90,25 @@ struct JourneymanResultView: View {
         }
     }
 
+    /// "NAMED ON GUESS 2 OF 5" — plus the hints bought, when any were. Stated on the result
+    /// rather than left implicit in a smaller number: a player who spent 40% of the board on
+    /// help should see that in the sentence explaining their score, not have to infer it.
+    private var namedLine: String {
+        let base = String(localized: "NAMED ON GUESS \(result.guessesUsed) OF \(JourneymanScoring.maxGuesses)")
+        guard result.hintsUsed > 0 else { return base }
+        let hints = result.hintsUsed == 1
+            ? String(localized: "1 HINT")
+            : String(localized: "\(result.hintsUsed) HINTS")
+        return "\(base) · \(hints)"
+    }
+
     private var headlineDetail: String {
         guard let liveOutcome else {
-            return result.solved
-                ? String(localized: "NAMED ON GUESS \(result.guessesUsed) OF \(JourneymanScoring.maxGuesses)")
-                : String(localized: "BETTER LUCK TOMORROW")
+            return result.solved ? namedLine : String(localized: "BETTER LUCK TOMORROW")
         }
         switch liveOutcome {
         case .wonBySolvingFirst, .wonAfterOpponentExhausted:
-            return String(localized: "NAMED ON GUESS \(result.guessesUsed) OF \(JourneymanScoring.maxGuesses)")
+            return namedLine
         case .lostToOpponentSolve: return String(localized: "BEATEN TO THE ANSWER")
         case .draw: return String(localized: "CLOCK RAN OUT ON BOTH OF YOU")
         }
@@ -227,16 +241,21 @@ struct JourneymanResultView: View {
     }
 
     /// Emoji row = guesses spent: ⬛ per wrong name, 🟩 on the one that landed (nothing green
-    /// means it was never solved). Says how close someone came while leaking nothing about which
-    /// player — the same spoiler rule `WhoAmIResultView.emojiClues` follows, and the reason
-    /// neither this nor `shareText` ever touches `puzzle.answer` or a club name.
+    /// means it was never solved), then 💡 per hint bought. Says how close someone came while
+    /// leaking nothing about which player — the same spoiler rule `WhoAmIResultView.emojiClues`
+    /// follows, and the reason neither this nor `shareText` ever touches `puzzle.answer` or a
+    /// club name. (A hint's *text* would leak; its existence can't.)
+    ///
+    /// The hints are on the row rather than left out of it because the row is the claim: "🟩 on
+    /// guess one" reads as knowing the player cold, and off three hints it wasn't.
     static func emojiPath(result: JourneymanScoring.Result) -> String {
         let total = JourneymanScoring.maxGuesses
         let used = max(1, min(result.guessesUsed, total))
-        return (1...total).map { i -> String in
+        let guesses = (1...total).map { i -> String in
             if result.solved && i == used { return "🟩" }
             return i <= used ? "⬛" : "⬜"
         }.joined()
+        return guesses + String(repeating: "💡", count: result.hintsUsed)
     }
 
     /// `hits` is guess efficiency — guesses *not* needed, plus one — so naming it sooner wins,

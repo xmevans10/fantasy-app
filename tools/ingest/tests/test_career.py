@@ -159,3 +159,63 @@ def test_a_genuinely_photoless_player_still_gets_no_photo():
     from tools.ingest import career
     rows = [_season_for_photo("Ghost", 1974, ""), _season_for_photo("Ghost", 1975, "")]
     assert career.build_career_rows(rows)[0].headshot == ""
+
+
+# ── Two people, one name ──────────────────────────────────────────────────────
+#
+# The defect these pin shipped: the 2026-08-29 NFL Journeyman daily welded TE David Johnson
+# (PIT/SD, 2009-2016) onto RB David Johnson (ARI/HOU/NO, 2015-2022) and printed "Steelers,
+# Cardinals, Chargers, Steelers, Cardinals, Texans, Saints" as one man's career path.
+
+def _johnson(year, abbr, position, person_id):
+    return RawSeason(name="David Johnson", team_abbr=abbr, season_year=year, sport="nfl",
+                     position=position, stats={"carries": 100.0}, source="nflverse",
+                     person_id=person_id)
+
+
+_TE_ID, _RB_ID = "00-0027265", "00-0032187"
+_TE_SEASONS = [_johnson(y, "PIT", "TE", _TE_ID) for y in (2009, 2010, 2011, 2012, 2013)] + [
+    _johnson(2014, "LAC", "TE", _TE_ID), _johnson(2016, "PIT", "TE", _TE_ID)]
+_RB_SEASONS = [_johnson(y, t, "RB", _RB_ID) for y, t in
+               [(2015, "ARI"), (2016, "ARI"), (2017, "ARI"), (2018, "ARI"), (2019, "ARI"),
+                (2020, "HOU"), (2021, "HOU"), (2022, "NO")]]
+
+
+def test_two_same_name_players_produce_two_careers_not_one():
+    rows = build_career_rows(_TE_SEASONS + _RB_SEASONS)
+    assert len(rows) == 2
+    by_position = {r.position: r for r in rows}
+    assert by_position["TE"].meta["first_year"] == "2009"
+    assert by_position["TE"].meta["last_year"] == "2016"
+    assert by_position["RB"].meta["first_year"] == "2015"
+    assert by_position["RB"].meta["last_year"] == "2022"
+    # The merged row this replaced spanned 2009-2022 and would have summed both men's carries.
+    assert all(r.meta["last_year"] != "2022" or r.position == "RB" for r in rows)
+
+
+def test_a_career_row_carries_the_person_it_was_built_from():
+    # Without this the career grain is person-keyed on the way in and name-keyed on the way
+    # out, and `whoami_pool.build_candidates` silently re-merges what this just split.
+    rows = build_career_rows(_TE_SEASONS + _RB_SEASONS)
+    assert {r.person_id for r in rows} == {_TE_ID, _RB_ID}
+    assert len({r.person for r in rows}) == 2
+
+
+def test_one_person_who_changed_position_is_not_split_by_person_id():
+    # The person key must not *over*-split: position is still part of the grouping key (a
+    # two-way player needs one career per cohort), but a single position's rows stay together
+    # no matter how many teams they span.
+    rows = build_career_rows(_RB_SEASONS)
+    assert len(rows) == 1
+    assert rows[0].meta["seasons_played"] == "8"
+
+
+def test_seasons_without_a_provider_id_still_group_by_name():
+    # The tennis/bref/nfl_history sweeps carry no upstream id. They must keep working exactly
+    # as before rather than every row becoming its own "person".
+    anonymous = [RawSeason(name="Old Timer", team_abbr="CHI", season_year=y, sport="nfl",
+                           position="RB", stats={"carries": 50.0}, source="nfl_history")
+                 for y in (1972, 1973, 1974)]
+    rows = build_career_rows(anonymous)
+    assert len(rows) == 1
+    assert rows[0].meta["seasons_played"] == "3"

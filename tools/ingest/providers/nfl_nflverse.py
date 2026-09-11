@@ -107,6 +107,11 @@ def fetch_year(year: int, *, ttl_hours: float = 24 * 30) -> list[RawSeason]:
                 headshot=row.get("headshot_url") or "",
                 # gsis id (= players.csv key) so the bio join in main.py is collision-free.
                 meta={"gsis_id": row.get("player_id") or ""},
+                # The same gsis id as the PERSON key, which is what keeps two same-name NFL
+                # players from being folded into one career (see `RawSeason.person`). It is
+                # duplicated into `meta` above rather than read from here because `meta` is the
+                # bio join's own contract and predates this field.
+                person_id=row.get("player_id") or "",
             )
         )
     return seasons

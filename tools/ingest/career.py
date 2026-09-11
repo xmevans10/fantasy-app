@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from .models import RawSeason, slug
+from .models import RawSeason
 
 # stat_key -> weighting denominator stat_key(s). Anything absent from this dict for a
 # sport defaults to a plain sum (the common case: yards, TDs, goals, wins, ...).
@@ -44,6 +44,19 @@ _RATE_WEIGHTS: dict[str, dict[str, str | tuple[str, ...]]] = {
     },
     "soccer": {},
     "tennis": {},
+    # Hockey (M31). Everything not listed sums correctly (goals, assists, points, wins,
+    # saves, shutouts, PIM); these four are rates and summing them would produce a career
+    # save percentage above 1.0 and a career GAA in the double digits.
+    "hockey": {
+        "save_pct": "shots_against",
+        "gaa": "games",
+        "points_per_game": "games",
+        "shooting_pct": "shots",
+        "toi_per_game": "games",
+    },
+    # F1 has no rate stats at all — every column is a count of things that happened (wins,
+    # podiums, poles, starts), which is exactly what a career total should be.
+    "f1": {},
 }
 
 # Stats derived AFTER the weighted-average pass rather than averaged directly, because
@@ -105,14 +118,22 @@ def _aggregate_stats(sport: str, rows: list[RawSeason]) -> dict[str, float]:
 
 
 def build_career_rows(seasons: list[RawSeason]) -> list[RawSeason]:
-    """One aggregate row per (sport, position, player) summing every real season-grain
+    """One aggregate row per (sport, position, person) summing every real season-grain
     row the pipeline pulled for them. Excludes single-game rows (`week` set) and any
-    row that's already a career aggregate (idempotent if called twice)."""
+    row that's already a career aggregate (idempotent if called twice).
+
+    **Keyed on `RawSeason.person`, not on the name.** Grouping by name summed two different
+    people who happened to share one into a single "career" — the defect `whoami_pool`'s
+    MAX_CAREER_SPAN heuristic was built to *detect* downstream, and which its own comment named
+    this function as the real home of the fix ("the fix for those lives upstream in career.py's
+    grouping key, not in a content filter"). Position stays in the key so a genuine position
+    switch still reads as one career per cohort, which is what the grader expects.
+    """
     groups: dict[tuple[str, str, str], list[RawSeason]] = defaultdict(list)
     for s in seasons:
         if s.week is not None or s.career:
             continue
-        groups[(s.sport, s.position, slug(s.name))].append(s)
+        groups[(s.sport, s.position, s.person)].append(s)
 
     out: list[RawSeason] = []
     for (sport, position, _person), rows in groups.items():  # noqa: PLR1702
@@ -136,6 +157,10 @@ def build_career_rows(seasons: list[RawSeason]) -> list[RawSeason]:
             source="career_aggregate",
             headshot=_best_headshot(rows_by_year),
             career=True,
+            # Carried through so the career grain is joinable back to its own season rows by
+            # person. Without it `whoami_pool.build_candidates` would have a person-keyed
+            # season side and a name-keyed career side, which is the same join it has today.
+            person_id=latest.person_id,
             meta=meta,
         ))
     return out

@@ -100,6 +100,8 @@ def fetch_year(year: int, *, ttl_hours: float = 24 * 30,
                 opponent=row.get("opponent_team") or "",
                 event_date=(gamedays or {}).get((row.get("team") or "", week), ""),
                 meta={"gsis_id": row.get("player_id") or ""},
+                # Person key, same id — see providers/nfl_nflverse.py.
+                person_id=row.get("player_id") or "",
             )
         )
     return games

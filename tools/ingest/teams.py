@@ -23,17 +23,30 @@ import csv
 from pathlib import Path
 
 from . import logos, soccer_leagues
-from .providers import espn_soccer
+from .providers import espn_soccer, f1_constructors
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 US_COLORS_PATH = DATA_DIR / "us_team_colors.csv"
 
-US_SPORTS = ("nfl", "nba", "baseball")
+# "US" here means "single-competition league whose crests ESPN keys by lowercase
+# abbreviation" — hockey (M31) fits that exactly, verified against
+# a.espncdn.com/i/teamlogos/nhl/500/pit.png. F1 does NOT and is deliberately absent:
+# ESPN's /racing/f1/teams payload carries no logos array and no stable abbreviation, and
+# historic constructors were never there at all, so constructor crests need their own
+# source (Wikimedia + rehost) rather than this loop.
+US_SPORTS = ("nfl", "nba", "baseball", "hockey")
 
 # Pipeline-wide sport name -> ESPN's team-logo CDN path segment. `baseball` is this
 # pipeline's sport name throughout (see models.py/main.py); ESPN's own CDN slug for it is
 # `mlb`, not `baseball` — kept as an explicit mapping rather than a guess.
-_ESPN_LOGO_SLUG = {"nfl": "nfl", "nba": "nba", "baseball": "mlb"}
+_ESPN_LOGO_SLUG = {"nfl": "nfl", "nba": "nba", "baseball": "mlb", "hockey": "nhl"}
+
+# ESPN keys three NHL crests by a SHORTER code than the league's own three-letter one, and
+# answers the canonical form with a 404 rather than a redirect: `nhl/500/lak.png` is a 404
+# while `nhl/500/la.png` is the Kings. Verified 2026-09-03 — these were the only three of 33
+# hockey teams whose crest failed to rehost, which is exactly how a silent per-team gap looks.
+_ESPN_ABBR_OVERRIDES = {("hockey", "LAK"): "la", ("hockey", "SJS"): "sj",
+                        ("hockey", "TBL"): "tb"}
 
 
 
@@ -101,7 +114,8 @@ def build_teams() -> list[dict]:
         logo_count = 0
         for r in sport_rows:
             abbr = r["team_abbr"]
-            source_url = f"https://a.espncdn.com/i/teamlogos/{slug}/500/{abbr.lower()}.png"
+            espn_abbr = _ESPN_ABBR_OVERRIDES.get((sport, abbr), abbr.lower())
+            source_url = f"https://a.espncdn.com/i/teamlogos/{slug}/500/{espn_abbr}.png"
             logo_url = logos.rehost(source_url, logos.logo_key(sport, "", abbr))
             if logo_url:
                 logo_count += 1
@@ -119,6 +133,16 @@ def build_teams() -> list[dict]:
         print(f"[teams] {sport}: {len(sport_rows)} teams, {logo_count} logo(s) rehosted")
 
     # Tennis: no clubs — no rows.
+
+    # F1 constructors get their own source, not the ESPN loop above: ESPN carries no logos
+    # and no stable abbreviation for F1, and lists only the current grid, so historic
+    # constructors would have no crest at all. See providers/f1_constructors.py.
+    f1_rows = f1_constructors.build_identity()
+    for r in f1_rows:
+        r.setdefault("espn_id", None)
+        r.setdefault("competition", None)
+    rows.extend(f1_rows)
+
     return rows
 
 
@@ -148,7 +172,8 @@ def build_leagues() -> list[dict]:
     # and the `espn_slug`/`tier` columns are what a future per-competition key will switch to.
     print(f"[leagues] soccer: {len(rows)} competition(s), {soccer_logo_count} logo(s) rehosted")
 
-    us_league_rows = [("nfl", "NFL", "nfl"), ("nba", "NBA", "nba"), ("baseball", "MLB", "mlb")]
+    us_league_rows = [("nfl", "NFL", "nfl"), ("nba", "NBA", "nba"), ("baseball", "MLB", "mlb"),
+                      ("hockey", "NHL", "nhl")]
     for sport, display_name, slug in us_league_rows:
         source_url = f"https://a.espncdn.com/i/teamlogos/leagues/500/{slug}.png"
         logo_url = logos.rehost(source_url, logos.league_logo_key(sport, ""))

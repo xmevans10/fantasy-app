@@ -159,4 +159,36 @@ final class OPMSlideGalleryTests: XCTestCase {
         try write(poster, named: "opm-formats-first")
     }
 
+    /// 1.8.4's slide — the two sports `Sport` gained (M31), shown among the five it already had.
+    ///
+    /// The changed code IS `Sport`: `allCases` grew, and `hockey`/`f1` brought their own
+    /// `symbol` and `fill`. So every chip here draws its glyph and its colour from `Sport`
+    /// itself, which is what makes this a component slide rather than an illustration — the
+    /// checkered flag appears because `Sport.f1.symbol` says so, and if that changes, so does
+    /// the art. `PrimeChip` is the shipping chip `SportFilterBar` uses.
+    ///
+    /// The two new sports render `active` and the incumbents don't: the release is "these two
+    /// arrived", not "here are seven sports", and a uniform grid would say the second thing.
+    func testRenderSportsSlide() async throws {
+        let columns = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
+        let arrived: Set<Sport> = [.hockey, .f1]
+        let poster = ZStack {
+            Color.appBackground
+            LazyVGrid(columns: columns, spacing: 10) {
+                ForEach(Sport.allCases) { sport in
+                    PrimeChip(label: sport.displayName, active: arrived.contains(sport),
+                              systemImage: sport.symbol) {}
+                }
+            }
+            .padding(20)
+            // Width-driven, with NO forced height: seven chips are a short block, and pinning
+            // a tall frame just centred them in a sea of background (the first render put the
+            // content in the middle 40% of the square). Laying out narrow and scaling up by
+            // width fills the poster with the chips themselves.
+            .frame(width: 340)
+            .scaleEffect((side - 30) / 340)
+        }
+        try write(poster, named: "opm-new-sports")
+    }
+
 }

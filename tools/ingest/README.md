@@ -63,12 +63,19 @@ providers ─▶ grade ─▶ baselines ─▶ themes (+ generate) ─▶ assemb
 - **`assemble.py`** — grades the pool, dedupes by person, slices 8 seasons *clustered in
   grade* (so the blind sort is hard) with an unambiguous top-4/bottom-4 split, and builds
   the camelCase `content` JSON the Swift `Keep4Puzzle`/`WhoAmIPuzzle` models decode.
-  Cross-position NFL themes slice card columns per position (`columns_for`) so a WR card
-  never shows "Pass Yds 0". Who Am I? clues come from `data/whoami_facts.json` (real
+  Cross-position themes (every sport with a position split, not just NFL) build each card
+  from that position's *canonical stat card* — `columns_for` / `POSITION_CARD` in themes.py
+  — so a TE card carries the receiving line instead of "Pass Yds 0", and a keeper card the
+  keeper line instead of "Goals 0". A theme whose every column the position does produce is
+  left alone, keeping its own emphasis. Who Am I? clues come from `data/whoami_facts.json` (real
   era/teams/stat line/jersey + a curated "known-for" fact).
 - **`era_analysis.py`** — a standalone validation script (not part of the normal pipeline
   run) that computed and sanity-checked the era-index table in spec §4. Run it directly if
   you're touching era-adjustment math; it's not invoked by `main.py`.
+- **`repoint_stats.py`** — `--repoint-stats`: retroactively rebuilds already-minted cards
+  that show a stat their position never records. A frozen board never re-renders, so a
+  `columns_for` fix alone only reaches boards minted after it (same gap the headshot repoint
+  closes for photos). Standalone — no season gather — and wired into `ingest.yml`.
 - **`upsert.py`** — PostgREST upsert with `on_conflict=id` + `merge-duplicates` →
   deterministic, no dupes on re-run. Requires the Supabase **service_role** key.
 

@@ -38,8 +38,9 @@ enum ScoringKind: String, Codable {
         }
     }
 
-    /// Short ALL-CAPS badge text for puzzle cards. PPR is an NFL term; tennis has no fantasy
-    /// game (its scale is a points résumé — see `explainer`), so it gets the neutral POINTS;
+    /// Short ALL-CAPS badge text for puzzle cards. PPR is an NFL term; tennis and F1 have no
+    /// fantasy game behind their scale (both are points résumés — see `explainer`), so they
+    /// get the neutral POINTS;
     /// other sports use the generic fantasy label. All kept to one word so the card header's
     /// format name doesn't truncate next to the grain + sport chips (the explainer chip
     /// carries the full copy).
@@ -48,7 +49,10 @@ enum ScoringKind: String, Codable {
         case .ppr:
             switch sport {
             case .nfl:    return "PPR"                          // brand acronym, every locale
-            case .tennis: return String(localized: "POINTS")
+            // Tennis and F1 both rank a season *résumé*, not a fantasy total — see
+            // `explainer` below and `grade.py`'s `f1_driver_fantasy` note. Hockey is a real
+            // fantasy sport with a real points-league convention, so it takes the default.
+            case .tennis, .f1: return String(localized: "POINTS")
             default:      return "FANTASY"                      // "fantasy" is the loanword in es too
             }
         case .era:    return String(localized: "ERA-ADJUSTED")
@@ -58,8 +62,9 @@ enum ScoringKind: String, Codable {
 
     /// 1–2 line scoring-method explainer shown above the first card in the play flow.
     /// `author` (community username) personalizes the vibes copy when available.
-    /// Copy is per-sport where "fantasy points" would ring false: tennis has no fantasy
-    /// game — its scale is a résumé formula (wins + titles + Slams, see grade.py) — so it
+    /// Copy is per-sport where "fantasy points" would ring false: tennis and F1 have no
+    /// fantasy game — their scales are résumé formulas (wins + titles + Slams; wins +
+    /// podiums + poles, see grade.py) — so each
     /// says what's actually counted. Soccer's scale IS FPL-style, so "fantasy points" stands.
     func explainer(sport: Sport, author: String? = nil) -> String {
         switch self {
@@ -67,6 +72,10 @@ enum ScoringKind: String, Codable {
             switch sport {
             case .nfl:    return String(localized: "Ranked by real PPR fantasy points")
             case .tennis: return String(localized: "Ranked by real season résumés: wins, titles, Slams")
+            // F1 says what it actually counts, for the same reason tennis does: the scale is
+            // an achievements résumé, and it pointedly is NOT the championship points column,
+            // which has been rewritten three times and does not compare across eras.
+            case .f1:     return String(localized: "Ranked by real season résumés: wins, podiums, poles")
             default:      return String(localized: "Ranked by real fantasy points")
             }
         case .era:

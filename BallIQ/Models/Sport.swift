@@ -6,8 +6,29 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     case baseball
     case soccer
     case tennis
+    case hockey
+    case f1
 
     var id: String { rawValue }
+
+    /// A PostgREST `in.(…)` value naming every sport THIS BUILD can decode.
+    ///
+    /// The archive fetch used to send no sport predicate at all on the "All" filter, and that is
+    /// the whole mechanism behind the release problem `validate.WIRE_SAFE_SPORTS` exists to hold
+    /// back: `Sport` is a plain `String` raw-value enum with no unknown case, the pool is decoded
+    /// as one ARRAY under `try?`, and a single row naming a sport this build has never heard of
+    /// throws and nils the entire array. Not that row — all of them. The player's archive then
+    /// silently falls back to stale cache or the bundled JSON, with nothing logged anywhere they
+    /// or we can see it.
+    ///
+    /// Sending this instead makes a client **self-protecting**: it asks for the sports it knows,
+    /// so publishing a new one cannot reach it at all, and the ingest gate stops being the only
+    /// thing standing between a new sport and every installed build. What it cannot do is repair
+    /// builds already in the wild — they still send no predicate — so opening the gate remains a
+    /// support-floor decision, and this is the version that floor has to name.
+    static var decodableFilterValue: String {
+        "in.(\(allCases.map(\.rawValue).joined(separator: ",")))"
+    }
 
     var displayName: String {
         switch self {
@@ -16,6 +37,8 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         case .baseball: return "MLB"
         case .soccer: return "Soccer"
         case .tennis: return "Tennis"
+        case .hockey: return "NHL"
+        case .f1: return "F1"
         }
     }
 
@@ -44,6 +67,10 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         case .baseball: return "baseball.fill"
         case .soccer: return "soccerball"
         case .tennis: return "tennisball.fill"
+        case .hockey: return "hockey.puck.fill"
+        // F1 has no car/circuit symbol in SF Symbols; the checkered flag is the sport's
+        // most-recognized mark and is the same visual family (a filled glyph) as the balls.
+        case .f1: return "flag.checkered"
         }
     }
 
@@ -57,6 +84,8 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         case .baseball: return .sportMLBFill
         case .soccer: return .sportSoccerFill
         case .tennis: return .sportTennisFill
+        case .hockey: return .sportHockeyFill
+        case .f1: return .sportF1Fill
         }
     }
 
@@ -68,6 +97,8 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         case .baseball: return .onSportMLB
         case .soccer: return .onSportSoccer
         case .tennis: return .onSportTennis
+        case .hockey: return .onSportHockey
+        case .f1: return .onSportF1
         }
     }
 
@@ -88,6 +119,13 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         case .baseball: return "mlb"
         case .soccer: return "soccer"
         case .tennis: return nil
+        case .hockey: return "nhl"
+        // F1 constructor crests are NOT on the ESPN CDN — ESPN's own `/racing/f1/teams`
+        // payload carries no `logos` array and no stable abbreviation (verified 2026-09-03),
+        // and historic constructors (Brabham, Tyrrell, Lotus) were never there at all. They
+        // come through the `teams` table / Storage rehost instead, so this returns nil and
+        // `teamLogoURL` falls through to the fetched identity or a neutral placeholder.
+        case .f1: return nil
         }
     }
 
@@ -145,16 +183,23 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     /// mirror — the groups exist so Draft & Spin's Both-sides rosters and any future
     /// cross-position pool can never show a cornerback a sack line. Position codes match
     /// `nfl_nflverse_defense.py`'s granular values (see that provider's docstring — the
-    /// three groups collapse ~13 raw codes). NBA and tennis are omitted: their stats
-    /// (PPG/RPG/APG/…, Wins/Titles/…) apply broadly regardless of position, so there's
-    /// nothing to slice.
+    /// three groups collapse ~13 raw codes). NBA, tennis and F1 are omitted: their
+    /// stats (PPG/RPG/APG/…, Wins/Titles/…, Points/Wins/Podiums/Poles) apply broadly
+    /// regardless of position, so there is nothing to slice — F1 in particular has exactly
+    /// one position ("Driver"), the same shape as tennis's "Player".
     static let positionStatFamilies: [Sport: [String: [String]]] = [
         .nfl: [
-            "QB": ["passing_", "rushing_", "interceptions", "completions", "attempts", "completion_pct"],
-            "RB": ["rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr"],
-            "FB": ["rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr"],
-            "WR": ["receiving_", "receptions", "targets", "ypr"],
-            "TE": ["receiving_", "receptions", "targets", "ypr"],
+            // `games` is on every one of these because every position plays them; `carries`/
+            // `ypc` are on QB because a QB's rushing line is his, not a borrowed one. WR/TE
+            // deliberately stay receiving-only even though 44% of WR seasons carry a non-zero
+            // rushing line (measured over the bundled catalog): an end-around is incidental,
+            // and admitting it would put a dead "Rush Yds 0" tile on the other 56%.
+            "QB": ["passing_", "rushing_", "interceptions", "completions", "attempts",
+                   "completion_pct", "carries", "ypc", "games"],
+            "RB": ["rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr", "games"],
+            "FB": ["rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr", "games"],
+            "WR": ["receiving_", "receptions", "targets", "ypr", "games"],
+            "TE": ["receiving_", "receptions", "targets", "ypr", "games"],
             "DE": ["tackles_", "tackles_for_loss", "sacks", "qb_hits", "forced_fumbles",
                    "fumble_recoveries", "def_interceptions", "passes_defended",
                    "defensive_tds", "safeties", "games"],
@@ -194,8 +239,12 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         ],
         .baseball: [
             "H": ["hits", "doubles", "triples", "home_runs", "runs", "rbi", "base_on_balls",
-                  "stolen_bases", "avg", "obp", "slg", "ops"],
-            "P": ["innings_pitched", "wins", "saves", "strike_outs", "earned_runs", "era", "whip"],
+                  "stolen_bases", "avg", "obp", "slg", "ops", "at_bats", "plate_appearances"],
+            // A pitcher's walks ALLOWED are `base_on_balls`, the same key a hitter's walks
+            // drawn use. Its absence here read a "Walk-prone pitching seasons" card as showing
+            // a stat pitchers don't record — the reverse of the truth.
+            "P": ["innings_pitched", "wins", "losses", "saves", "strike_outs", "earned_runs",
+                  "era", "whip", "base_on_balls"],
         ],
         .soccer: [
             "GK": ["clean_sheets", "appearances"],
@@ -203,6 +252,29 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
             "FW": ["appearances", "goals", "assists"],
             "MF": ["appearances", "goals", "assists"],
         ],
+        // Hockey splits exactly like baseball's H/P: skaters and goalies are scored from two
+        // disjoint stat vocabularies pulled from two different NHL endpoints
+        // (`skater/summary` vs `goalie/summary` — see `providers/nhl_stats.py`), so a goalie
+        // card must never read "Goals 0" and a winger's must never read "SV% 0.000".
+        // Position codes are the API's own `positionCode` values.
+        .hockey: [
+            "C": _hockeySkaterStats, "L": _hockeySkaterStats,
+            "R": _hockeySkaterStats, "D": _hockeySkaterStats,
+            "G": _hockeyGoalieStats,
+        ],
+    ]
+
+    /// Shared so the four skater codes can't drift apart — a centre and a winger record the
+    /// same things, and the only real split in hockey is skater vs goalie.
+    private static let _hockeySkaterStats = [
+        "goals", "assists", "points", "plus_minus", "penalty_minutes", "shots",
+        "shooting_pct", "points_per_game", "pp_points", "sh_points",
+        "game_winning_goals", "toi_per_game", "games",
+    ]
+
+    private static let _hockeyGoalieStats = [
+        "wins", "losses", "ot_losses", "gaa", "save_pct", "shutouts", "saves",
+        "shots_against", "goals_against", "games", "games_started",
     ]
 
     /// Explicit default stat sheet per position — the obvious, prominent counting stats a
@@ -217,8 +289,8 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     /// that overcomplicate a default card. Soccer GK gets its own narrower list than DF
     /// (clean sheets + appearances only) since goals/assists aren't an obvious keeper stat
     /// even though the daily pipeline's `soccer-defenders` theme shows all 4 to both.
-    /// NBA/tennis omitted for the same reason as `positionStatFamilies` — their stats apply
-    /// broadly regardless of position. Defensive groups follow the same app-first note as
+    /// NBA/tennis/F1 omitted for the same reason as `positionStatFamilies` — their stats
+    /// apply broadly regardless of position. Defensive groups follow the same app-first note as
     /// `positionStatFamilies`: each reads like a real IDP stat line — the sack line for a
     /// rusher (DL), the tackle line for a run-stopper (LB), the coverage line for a DB.
     static let positionStatTemplates: [Sport: [String: [String]]] = [
@@ -253,6 +325,16 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
             "DF": ["clean_sheets", "appearances", "goals", "assists"],
             "FW": ["goals", "assists", "appearances"],
             "MF": ["goals", "assists", "appearances"],
+        ],
+        // The real hockey stat line: G-A-P for forwards (the way every scoreboard prints it),
+        // and the same three plus plus-minus for defencemen, whose value a bare goal total
+        // misrepresents. Goalies get the goalie line: record, GAA, SV%, shutouts.
+        .hockey: [
+            "C": ["goals", "assists", "points"],
+            "L": ["goals", "assists", "points"],
+            "R": ["goals", "assists", "points"],
+            "D": ["goals", "assists", "points", "plus_minus"],
+            "G": ["wins", "gaa", "save_pct", "shutouts"],
         ],
     ]
 
@@ -291,6 +373,27 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         let sliced = columns.filter { col in prefixes.contains { statKey(col).hasPrefix($0) } }
         return sliced.count >= minimum ? sliced : columns
     }
+
+    /// Whether `position` records `stat` at all in this sport — the single-stat form of
+    /// `sliceForPosition`'s membership test, and the predicate `Keep4Theme.columns(for:)`
+    /// composes a card from. `true` when the sport/position has no family entry: absence
+    /// means "no split to draw here" (NBA, tennis, F1), not "unknown". Mirrors
+    /// `tools/ingest/themes.py`'s `produces`.
+    func produces(position: String?, stat: String) -> Bool {
+        guard let position, let prefixes = Sport.positionStatFamilies[self]?[position] else { return true }
+        return prefixes.contains { stat.hasPrefix($0) }
+    }
+
+    /// `position`'s canonical stat-card keys at `grain` — the game override where one exists
+    /// (`positionStatTemplatesGame`), else the season template, else empty for a sport with
+    /// no position split. Mirrors themes.py's `POSITION_CARD` / `POSITION_CARD_GAME` lookup.
+    func canonicalCard(position: String?, grain: PuzzleGrain = .season) -> [String] {
+        guard let position else { return [] }
+        if grain == .singleGame, let game = Sport.positionStatTemplatesGame[self]?[position] {
+            return game
+        }
+        return Sport.positionStatTemplates[self]?[position] ?? []
+    }
 }
 
 /// Home-screen sport filter — "All" plus each concrete sport.
@@ -301,6 +404,8 @@ enum SportFilter: String, CaseIterable, Identifiable {
     case baseball
     case soccer
     case tennis
+    case hockey
+    case f1
 
     var id: String { rawValue }
 
@@ -312,6 +417,8 @@ enum SportFilter: String, CaseIterable, Identifiable {
         case .baseball: return "MLB"
         case .soccer: return "Soccer"
         case .tennis: return "Tennis"
+        case .hockey: return "NHL"
+        case .f1: return "F1"
         }
     }
 
@@ -324,6 +431,8 @@ enum SportFilter: String, CaseIterable, Identifiable {
         case .baseball: return sport == .baseball
         case .soccer: return sport == .soccer
         case .tennis: return sport == .tennis
+        case .hockey: return sport == .hockey
+        case .f1: return sport == .f1
         }
     }
 
@@ -336,6 +445,8 @@ enum SportFilter: String, CaseIterable, Identifiable {
         case .baseball: return .baseball
         case .soccer: return .soccer
         case .tennis: return .tennis
+        case .hockey: return .hockey
+        case .f1: return .f1
         }
     }
 }

@@ -126,3 +126,27 @@ def test_fetch_by_ids_still_delays_on_a_real_fetch(monkeypatch):
     fetch_by_ids({"592450": "Aaron Judge"})
 
     assert len(slept) == 2   # one per group (hitting, pitching)
+
+
+# 2026-09-05 stall regression — see espn_nba.py's identical breaker for the full story.
+# mlb_stats.fetch_by_ids has the same shape (hundreds-of-ids pool, one call per group per
+# id) and the same exposure, so it gets the same guard.
+def test_fetch_by_ids_stops_after_consecutive_failures_instead_of_exhausting_the_pool(
+    monkeypatch,
+):
+    monkeypatch.setattr(mlb_stats, "is_cached", lambda *a, **k: False)
+    monkeypatch.setattr(mlb_stats.time, "sleep", lambda *_: None)
+
+    calls = []
+
+    def flaky_fetch_json(url, *a, **k):
+        calls.append(url)
+        raise RuntimeError("simulated network failure")
+
+    monkeypatch.setattr(mlb_stats, "fetch_json", flaky_fetch_json)
+
+    pool = {str(i): f"Player {i}" for i in range(50)}
+    out = fetch_by_ids(pool)
+
+    assert out == []
+    assert len(calls) == mlb_stats._MAX_CONSECUTIVE_FAILURES

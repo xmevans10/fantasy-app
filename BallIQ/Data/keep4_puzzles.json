@@ -32,7 +32,7 @@
             "value": "193"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ecxsx9t7bfg42bgfwj3v"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f89e287b6a209aa59de3.png"
       },
       {
         "id": "nfl-ceedee-lamb-2023",
@@ -62,7 +62,7 @@
             "value": "181"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/tfuj9njqdw2dovkwhryc"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/9e6afe50866bcda2484e.png"
       },
       {
         "id": "nfl-cooper-kupp-2021",
@@ -92,7 +92,7 @@
             "value": "191"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bkahtsjkvnom1sbnb6xm"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/32656710a3d3817bd099.png"
       },
       {
         "id": "nfl-ja-marr-chase-2024",
@@ -122,7 +122,7 @@
             "value": "175"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/qkcb3qt2fhasfgtfuprd"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/060ec66beb7217265af4.png"
       },
       {
         "id": "nfl-jerry-rice-1995",
@@ -152,7 +152,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg/330px-Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/e671925e08401d6e17ec.jpg"
       },
       {
         "id": "nfl-marvin-harrison-2002",
@@ -182,7 +182,7 @@
             "value": "205"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fni7z2tqhhaq5kbe5a0s"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/e7b1df518281e97a057f.png"
       },
       {
         "id": "nfl-randy-moss-2007",
@@ -212,7 +212,7 @@
             "value": "98"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/udotyrimbuirasxxkd8p"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d5a3cc67a74b3d302c26.png"
       },
       {
         "id": "nfl-tyreek-hill-2023",
@@ -242,7 +242,7 @@
             "value": "171"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/gdwjlpbkenmnsibawkht"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/85b87cf1f837f048ac75.png"
       }
     ],
     "grain": "season",
@@ -285,7 +285,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryf9nc84eovvdbf0cz79"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ff59f325625698ef6cd3.png"
       },
       {
         "id": "nfl-christian-mccaffrey-2019",
@@ -319,7 +319,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/umiv5sn2xxrjdjwjtkqm"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/409d52c80c52fecba0e5.png"
       },
       {
         "id": "nfl-david-johnson-2016",
@@ -353,7 +353,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/y7dtsyyjnoafefkbylbb"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/6a7e11ce748ca0d58865.png"
       },
       {
         "id": "nfl-emmitt-smith-1995",
@@ -387,7 +387,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg/330px-Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/21d3e8ea558bd65012b6.jpg"
       },
       {
         "id": "nfl-ladainian-tomlinson-2006",
@@ -421,7 +421,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/933c195c1089b80fd729.png"
       },
       {
         "id": "nfl-marshall-faulk-2000",
@@ -455,7 +455,7 @@
             "value": "8"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7a12b1423db092e7b487.png"
       },
       {
         "id": "nfl-priest-holmes-2003",
@@ -489,7 +489,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
+        "headshot": ""
       },
       {
         "id": "nfl-steven-jackson-2006",
@@ -523,7 +523,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/abl5wejuf448xw3jtphm"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/123fbcdedae156ae5dbb.png"
       }
     ],
     "grain": "season",
@@ -562,7 +562,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/jdcb4nomlc4rd6k5l6to"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d18365752c2e28dc35db.png"
       },
       {
         "id": "nfl-cam-newton-2015",
@@ -592,7 +592,7 @@
             "value": "10"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zwmgw2gmnn2kch4nquft"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/193113b1108a3eeef544.png"
       },
       {
         "id": "nfl-drew-brees-2011",
@@ -622,7 +622,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i20xlpzdmn7xubotijjd"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png"
       },
       {
         "id": "nfl-josh-allen-2021",
@@ -652,7 +652,7 @@
             "value": "6"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ghmmndgjefpxziks7ntf"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f3c5b8eb84eb54aecc44.png"
       },
       {
         "id": "nfl-lamar-jackson-2024",
@@ -682,7 +682,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/2044377e50e8936ee7aa.png"
       },
       {
         "id": "nfl-patrick-mahomes-2018",
@@ -712,7 +712,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/oagzjdsdoezmp6frggrn"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/92a0ca236e4187691641.png"
       },
       {
         "id": "nfl-peyton-manning-2013",
@@ -742,7 +742,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xpcd6auodk3w0vda6jal"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f612f44e585a6892aa58.png"
       },
       {
         "id": "nfl-tom-brady-2007",
@@ -772,7 +772,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q7dpdlxyu5rs05rgh1le"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/650ffc29ee304f11beee.png"
       }
     ],
     "grain": "season",
@@ -811,7 +811,7 @@
             "value": "10"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zwmgw2gmnn2kch4nquft"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/193113b1108a3eeef544.png"
       },
       {
         "id": "nfl-daunte-culpepper-2004",
@@ -841,7 +841,7 @@
             "value": "11"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vmvl5xojgtwm6jadhy7l"
+        "headshot": ""
       },
       {
         "id": "nfl-deshaun-watson-2020",
@@ -871,7 +871,7 @@
             "value": "7"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/otfs2docj6eahaebo5xn"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/49b44e0892acc50eee9b.png"
       },
       {
         "id": "nfl-jalen-hurts-2022",
@@ -901,7 +901,7 @@
             "value": "6"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/aityegmlyh53aifbssbp"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/18f664243f863754780b.png"
       },
       {
         "id": "nfl-josh-allen-2021",
@@ -931,7 +931,7 @@
             "value": "15"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ghmmndgjefpxziks7ntf"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f3c5b8eb84eb54aecc44.png"
       },
       {
         "id": "nfl-kyler-murray-2020",
@@ -961,7 +961,7 @@
             "value": "12"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ad68dbv2eqakttaqwppv"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7f0bcb9d298fad7a1986.png"
       },
       {
         "id": "nfl-lamar-jackson-2024",
@@ -991,7 +991,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/2044377e50e8936ee7aa.png"
       },
       {
         "id": "nfl-steve-young-1998",
@@ -1021,7 +1021,7 @@
             "value": "12"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Steve_Young_%286837509849%29_%28cropped%29.jpg/330px-Steve_Young_%286837509849%29_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/705e0442cde5bc3e5c9d.jpg"
       }
     ],
     "grain": "season",
@@ -1060,7 +1060,7 @@
             "value": "16"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/b7zvp5go7e86i7wd1qyh"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/c69d29e601885ef0764b.png"
       },
       {
         "id": "nfl-christian-mccaffrey-2019",
@@ -1090,7 +1090,7 @@
             "value": "15"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/umiv5sn2xxrjdjwjtkqm"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/409d52c80c52fecba0e5.png"
       },
       {
         "id": "nfl-david-johnson-2016",
@@ -1120,7 +1120,7 @@
             "value": "16"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/y7dtsyyjnoafefkbylbb"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/6a7e11ce748ca0d58865.png"
       },
       {
         "id": "nfl-edgerrin-james-2000",
@@ -1150,7 +1150,7 @@
             "value": "13"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g7i6v01dasbvebawxwdm"
+        "headshot": ""
       },
       {
         "id": "nfl-ladainian-tomlinson-2006",
@@ -1180,7 +1180,7 @@
             "value": "28"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/933c195c1089b80fd729.png"
       },
       {
         "id": "nfl-marshall-faulk-2000",
@@ -1210,7 +1210,7 @@
             "value": "18"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7a12b1423db092e7b487.png"
       },
       {
         "id": "nfl-priest-holmes-2003",
@@ -1240,7 +1240,7 @@
             "value": "27"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
+        "headshot": ""
       },
       {
         "id": "nfl-steven-jackson-2006",
@@ -1270,7 +1270,7 @@
             "value": "13"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/abl5wejuf448xw3jtphm"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/123fbcdedae156ae5dbb.png"
       }
     ],
     "grain": "season",
@@ -1309,7 +1309,7 @@
             "value": "161"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/z6dxib9sientn4m9cljh"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7cd42df31f12fd32a44a.png"
       },
       {
         "id": "nfl-deebo-samuel-2021",
@@ -1339,7 +1339,7 @@
             "value": "121"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ciwaktyqewczcquks4wy"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d898ff2f1bbefe8994f3.png"
       },
       {
         "id": "nfl-demaryius-thomas-2013",
@@ -1369,7 +1369,7 @@
             "value": "142"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/p1yjsqtqimjd6iazu3h9"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/4fe8ca1919e624ad8eb6.png"
       },
       {
         "id": "nfl-jerry-rice-1986",
@@ -1399,7 +1399,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg/330px-Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/e671925e08401d6e17ec.jpg"
       },
       {
         "id": "nfl-jordy-nelson-2014",
@@ -1429,7 +1429,7 @@
             "value": "151"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bde2n4ozsakatgs4yyp2"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/540679ce210fe0815923.png"
       },
       {
         "id": "nfl-josh-gordon-2013",
@@ -1459,7 +1459,7 @@
             "value": "159"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wwqz2ujrj7wp86tyaxof"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/6ec356028721aa24be62.png"
       },
       {
         "id": "nfl-rod-smith-2000",
@@ -1489,7 +1489,7 @@
             "value": "171"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/yc387fqxeouidqr4yyvn"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/714d33b8371594d1c913.png"
       },
       {
         "id": "nfl-tyreek-hill-2018",
@@ -1519,7 +1519,7 @@
             "value": "137"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lsszbdnkusxc7mduw5be"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7279ab0807ba5ccd1eaf.png"
       }
     ],
     "grain": "season",
@@ -1558,7 +1558,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/umiv5sn2xxrjdjwjtkqm"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/409d52c80c52fecba0e5.png"
       },
       {
         "id": "nfl-cooper-kupp-2021",
@@ -1580,7 +1580,7 @@
             "value": "16"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bkahtsjkvnom1sbnb6xm"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/32656710a3d3817bd099.png"
       },
       {
         "id": "nfl-emmitt-smith-1995",
@@ -1610,7 +1610,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg/330px-Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/21d3e8ea558bd65012b6.jpg"
       },
       {
         "id": "nfl-ladainian-tomlinson-2006",
@@ -1640,7 +1640,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/933c195c1089b80fd729.png"
       },
       {
         "id": "nfl-lamar-jackson-2024",
@@ -1666,7 +1666,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/2044377e50e8936ee7aa.png"
       },
       {
         "id": "nfl-marshall-faulk-2000",
@@ -1696,7 +1696,7 @@
             "value": "8"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7a12b1423db092e7b487.png"
       },
       {
         "id": "nfl-peyton-manning-2013",
@@ -1722,7 +1722,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xpcd6auodk3w0vda6jal"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f612f44e585a6892aa58.png"
       },
       {
         "id": "nfl-priest-holmes-2003",
@@ -1752,7 +1752,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
+        "headshot": ""
       }
     ],
     "grain": "season",
@@ -1791,7 +1791,7 @@
             "value": "9"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/6/6c/Chuck_Foreman%2C_1972.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/027103535fdefffc287a.png"
       },
       {
         "id": "nfl-dan-marino-1986",
@@ -1817,7 +1817,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Danmarino.jpg/330px-Danmarino.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/50082589fca0041ec928.jpg"
       },
       {
         "id": "nfl-emmitt-smith-1995",
@@ -1847,7 +1847,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg/330px-Super_Bowl_44_Emmitt_Smith_%284344089199%29_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/21d3e8ea558bd65012b6.jpg"
       },
       {
         "id": "nfl-eric-dickerson-1983",
@@ -1877,7 +1877,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Eric_Dickerson.jpg/330px-Eric_Dickerson.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/1dcbdce18e213d7139e3.jpg"
       },
       {
         "id": "nfl-marshall-faulk-1998",
@@ -1907,7 +1907,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Marshall_Faulk_by_Gage_Skidmore.jpg/330px-Marshall_Faulk_by_Gage_Skidmore.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/678c11ad2e44ae80c7c6.jpg"
       },
       {
         "id": "nfl-o-j-simpson-1975",
@@ -1937,7 +1937,7 @@
             "value": "7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/O.J._Simpson_1990_%C2%B7_DN-ST-91-03444_crop.JPEG/330px-O.J._Simpson_1990_%C2%B7_DN-ST-91-03444_crop.JPEG"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/46fb21ac5870554e6e93.jpg"
       },
       {
         "id": "nfl-terrell-davis-1998",
@@ -1967,7 +1967,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Terrell_Davis_1-31-05_050131-N-8102J-020.jpg/330px-Terrell_Davis_1-31-05_050131-N-8102J-020.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0ad3abce73f7d7c797cc.jpg"
       },
       {
         "id": "nfl-walter-payton-1977",
@@ -1997,7 +1997,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/6/62/1986_Jeno%27s_Pizza_-_12_-_Walter_Payton_%28Walter_Payton_crop%29_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/3c3a4c647679392e2a2e.jpg"
       }
     ],
     "grain": "season",
@@ -2036,7 +2036,7 @@
             "value": "145"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/qqzht46a66zbi9xyylf4"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/caeebeef551b2cfd40b3.png"
       },
       {
         "id": "nfl-jimmy-graham-2013",
@@ -2066,7 +2066,7 @@
             "value": "143"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/h7xs06oj6g03mippwtse"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/52f4b2af3ad16d68e44e.png"
       },
       {
         "id": "nfl-kellen-winslow-1980",
@@ -2096,7 +2096,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/4/47/Kellen_Winslow_Sr_cropped.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d7e6110ce3a73bb2807c.jpg"
       },
       {
         "id": "nfl-mark-andrews-2021",
@@ -2126,7 +2126,7 @@
             "value": "153"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/cv7h66mkpoalli9wfdqp"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/60cd256cc559219e4d78.png"
       },
       {
         "id": "nfl-rob-gronkowski-2011",
@@ -2156,7 +2156,7 @@
             "value": "124"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/svpo7chliiymc0r7hegp"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/bff0c7c61bd37af8980a.png"
       },
       {
         "id": "nfl-todd-christensen-1983",
@@ -2186,7 +2186,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/en/a/ac/Todd_Christensen.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/76e3779e877f3fdfab7f.jpg"
       },
       {
         "id": "nfl-travis-kelce-2022",
@@ -2216,7 +2216,7 @@
             "value": "152"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryzr3vbragwe50vtj9af"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/81dc46bc1281bcf3ad1d.png"
       },
       {
         "id": "nfl-zach-ertz-2018",
@@ -2246,7 +2246,7 @@
             "value": "156"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/t7my0kesdhb2iefvempm"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ca9ab51771161cb86cee.png"
       }
     ],
     "grain": "season",
@@ -2285,7 +2285,7 @@
             "value": "56.9"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/a315abdc0b08c4fd37ab.jpg"
       },
       {
         "id": "nba-david-robinson-1994",
@@ -2315,7 +2315,7 @@
             "value": "57.7"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/90ac41af3014bfe7be3f.png"
       },
       {
         "id": "nba-hakeem-olajuwon-1993",
@@ -2345,7 +2345,7 @@
             "value": "57.7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/6e057e58b68c72a59783.jpg"
       },
       {
         "id": "nba-james-harden-2017",
@@ -2375,7 +2375,7 @@
             "value": "61.4"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/30b8e8d4df004492cc38.png"
       },
       {
         "id": "nba-kareem-abdul-jabbar-1976",
@@ -2405,7 +2405,7 @@
             "value": "56.7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/e3a44920424efe704fab.jpg"
       },
       {
         "id": "nba-michael-jordan-1988",
@@ -2435,7 +2435,7 @@
             "value": "60.3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/a18808a025c7ce5124db.png"
       },
       {
         "id": "nba-russell-westbrook-2017",
@@ -2465,7 +2465,7 @@
             "value": "55.3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/ba7826cebd689586d4ad.png"
       },
       {
         "id": "nba-wilt-chamberlain-1962",
@@ -2495,7 +2495,7 @@
             "value": "53.6"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg/330px-Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/8231ac48c18990df32be.jpg"
       }
     ],
     "grain": "season",
@@ -2534,7 +2534,7 @@
             "value": "56.9"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/a315abdc0b08c4fd37ab.jpg"
       },
       {
         "id": "nba-david-robinson-1994",
@@ -2564,7 +2564,7 @@
             "value": "57.7"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/90ac41af3014bfe7be3f.png"
       },
       {
         "id": "nba-hakeem-olajuwon-1990",
@@ -2594,7 +2594,7 @@
             "value": "54.1"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/6e057e58b68c72a59783.jpg"
       },
       {
         "id": "nba-kareem-abdul-jabbar-1976",
@@ -2624,7 +2624,7 @@
             "value": "56.7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/e3a44920424efe704fab.jpg"
       },
       {
         "id": "nba-kevin-garnett-2004",
@@ -2654,7 +2654,7 @@
             "value": "54.7"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/a41ba0f6334747635dcd.png"
       },
       {
         "id": "nba-patrick-ewing-1990",
@@ -2684,7 +2684,7 @@
             "value": "59.9"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Patrick_Ewing_2021_%28cropped%29.jpg/330px-Patrick_Ewing_2021_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/04c6d0a790710118d580.jpg"
       },
       {
         "id": "nba-shaquille-o-neal-2000",
@@ -2714,7 +2714,7 @@
             "value": "57.8"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/33d23106e2649a3bac1f.png"
       },
       {
         "id": "nba-wilt-chamberlain-1962",
@@ -2744,7 +2744,7 @@
             "value": "53.6"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg/330px-Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/8231ac48c18990df32be.jpg"
       }
     ],
     "grain": "season",
@@ -2783,7 +2783,7 @@
             "value": "57.4"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1987.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/299e033bb66eb560a3bb.png"
       },
       {
         "id": "nba-james-harden-2017",
@@ -2813,7 +2813,7 @@
             "value": "61.4"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/30b8e8d4df004492cc38.png"
       },
       {
         "id": "nba-lebron-james-2018",
@@ -2843,7 +2843,7 @@
             "value": "62.0"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1966.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/cee3c66b55d7e99636dd.png"
       },
       {
         "id": "nba-michael-jordan-1989",
@@ -2873,7 +2873,7 @@
             "value": "61.3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/a18808a025c7ce5124db.png"
       },
       {
         "id": "nba-nikola-jokic-2024",
@@ -2903,7 +2903,7 @@
             "value": "65.0"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/9cb2424ab649224c6509.png"
       },
       {
         "id": "nba-oscar-robertson-1962",
@@ -2933,7 +2933,7 @@
             "value": "55.4"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Oscar_Robertson_2024.jpg/330px-Oscar_Robertson_2024.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/34a51ec7f85d642f90f5.jpg"
       },
       {
         "id": "nba-russell-westbrook-2017",
@@ -2963,7 +2963,7 @@
             "value": "55.3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/ba7826cebd689586d4ad.png"
       },
       {
         "id": "nba-wilt-chamberlain-1968",
@@ -2993,7 +2993,7 @@
             "value": "55.7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg/330px-Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/8231ac48c18990df32be.jpg"
       }
     ],
     "grain": "season",
@@ -3032,7 +3032,7 @@
             "value": "56.9"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/a315abdc0b08c4fd37ab.jpg"
       },
       {
         "id": "nba-david-robinson-1994",
@@ -3062,7 +3062,7 @@
             "value": "57.7"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/90ac41af3014bfe7be3f.png"
       },
       {
         "id": "nba-elvin-hayes-1974",
@@ -3092,7 +3092,7 @@
             "value": "47.0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Elvin_Hayes_1975.jpeg/330px-Elvin_Hayes_1975.jpeg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/0afa25d1e3518ad8dd69.jpg"
       },
       {
         "id": "nba-hakeem-olajuwon-1990",
@@ -3122,7 +3122,7 @@
             "value": "54.1"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/6e057e58b68c72a59783.jpg"
       },
       {
         "id": "nba-kareem-abdul-jabbar-1976",
@@ -3152,7 +3152,7 @@
             "value": "56.7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/e3a44920424efe704fab.jpg"
       },
       {
         "id": "nba-kevin-garnett-2004",
@@ -3182,7 +3182,7 @@
             "value": "54.7"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/a41ba0f6334747635dcd.png"
       },
       {
         "id": "nba-patrick-ewing-1990",
@@ -3212,7 +3212,7 @@
             "value": "59.9"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Patrick_Ewing_2021_%28cropped%29.jpg/330px-Patrick_Ewing_2021_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/04c6d0a790710118d580.jpg"
       },
       {
         "id": "nba-shaquille-o-neal-2000",
@@ -3242,7 +3242,7 @@
             "value": "57.8"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/33d23106e2649a3bac1f.png"
       }
     ],
     "grain": "season",
@@ -3281,7 +3281,7 @@
             "value": "59.8"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/2779.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/5422a117bc551dc9505e.png"
       },
       {
         "id": "nba-clyde-drexler-1989",
@@ -3311,7 +3311,7 @@
             "value": "55.5"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Clyde_Drexler_01.jpg/330px-Clyde_Drexler_01.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/da68ddb0830e40be9d4d.jpg"
       },
       {
         "id": "nba-dwyane-wade-2009",
@@ -3341,7 +3341,7 @@
             "value": "57.4"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1987.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/299e033bb66eb560a3bb.png"
       },
       {
         "id": "nba-isiah-thomas-1985",
@@ -3371,7 +3371,7 @@
             "value": "52.9"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Isiah_Thomas_2007_%28cropped%29.jpg/330px-Isiah_Thomas_2007_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/43c8151aa0c950b084cc.jpg"
       },
       {
         "id": "nba-james-harden-2019",
@@ -3401,7 +3401,7 @@
             "value": "61.5"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/30b8e8d4df004492cc38.png"
       },
       {
         "id": "nba-magic-johnson-1989",
@@ -3431,7 +3431,7 @@
             "value": "62.5"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg/330px-Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/841a9d3e10ff5f465599.jpg"
       },
       {
         "id": "nba-michael-jordan-1988",
@@ -3461,7 +3461,7 @@
             "value": "60.3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1035.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/a18808a025c7ce5124db.png"
       },
       {
         "id": "nba-russell-westbrook-2018",
@@ -3491,7 +3491,7 @@
             "value": "52.4"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/ba7826cebd689586d4ad.png"
       }
     ],
     "grain": "season",
@@ -3530,7 +3530,7 @@
             "value": "56.9"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/330px-Mcadoo_1973.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/a315abdc0b08c4fd37ab.jpg"
       },
       {
         "id": "nba-david-robinson-1994",
@@ -3560,7 +3560,7 @@
             "value": "57.7"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/715.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/90ac41af3014bfe7be3f.png"
       },
       {
         "id": "nba-hakeem-olajuwon-1990",
@@ -3590,7 +3590,7 @@
             "value": "54.1"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/330px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/6e057e58b68c72a59783.jpg"
       },
       {
         "id": "nba-kareem-abdul-jabbar-1976",
@@ -3620,7 +3620,7 @@
             "value": "56.7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/e3a44920424efe704fab.jpg"
       },
       {
         "id": "nba-kevin-garnett-2004",
@@ -3650,7 +3650,7 @@
             "value": "54.7"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/a41ba0f6334747635dcd.png"
       },
       {
         "id": "nba-patrick-ewing-1990",
@@ -3680,7 +3680,7 @@
             "value": "59.9"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Patrick_Ewing_2021_%28cropped%29.jpg/330px-Patrick_Ewing_2021_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/04c6d0a790710118d580.jpg"
       },
       {
         "id": "nba-shaquille-o-neal-2000",
@@ -3710,7 +3710,7 @@
             "value": "57.8"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/614.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/33d23106e2649a3bac1f.png"
       },
       {
         "id": "nba-wilt-chamberlain-1962",
@@ -3740,7 +3740,7 @@
             "value": "53.6"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg/330px-Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/8231ac48c18990df32be.jpg"
       }
     ],
     "grain": "season",
@@ -3775,7 +3775,7 @@
             "value": "5"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/6583.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/d8633c1d651f79724377.png",
         "week": 1,
         "opponent": "DEN",
         "gameDate": "Oct 26"
@@ -3804,7 +3804,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4066261.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/45f48b20be869105b196.png",
         "week": 16,
         "opponent": "WSH",
         "gameDate": "Mar 10"
@@ -3833,7 +3833,7 @@
             "value": "10"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4258.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/c0b104038d043cf166e9.png",
         "week": 32,
         "opponent": "CHI",
         "gameDate": "Jan 22"
@@ -3862,7 +3862,7 @@
             "value": "7"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3032977.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/efe004bb311b5a852260.png",
         "week": 8,
         "opponent": "DET",
         "gameDate": "Nov 13"
@@ -3891,7 +3891,7 @@
             "value": "11"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/30b8e8d4df004492cc38.png",
         "week": 34,
         "opponent": "ORL",
         "gameDate": "Jan 30"
@@ -3920,7 +3920,7 @@
             "value": "8"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3059318.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/20e5656b0dd28ff32690.png",
         "week": 9,
         "opponent": "UTAH",
         "gameDate": "Nov 13"
@@ -3949,7 +3949,7 @@
             "value": "10"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3945274.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/3f4f0735a91bd29bff44.png",
         "week": 27,
         "opponent": "NY",
         "gameDate": "Dec 27"
@@ -3978,7 +3978,7 @@
             "value": "15"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/9cb2424ab649224c6509.png",
         "week": 28,
         "opponent": "MIN",
         "gameDate": "Dec 25"
@@ -4016,7 +4016,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/6580.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/3879418f2ce72fc1aef3.png",
         "week": 23,
         "opponent": "TOR",
         "gameDate": "Jan 13"
@@ -4045,7 +4045,7 @@
             "value": "5"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4432166.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/8a90ce66d51ba981a3c5.png",
         "week": 8,
         "opponent": "WSH",
         "gameDate": "Nov 10"
@@ -4074,7 +4074,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4258.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/c0b104038d043cf166e9.png",
         "week": 32,
         "opponent": "CHI",
         "gameDate": "Jan 22"
@@ -4103,7 +4103,7 @@
             "value": "7"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/4701230.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/dea7a7ee93bef446a8bf.png",
         "week": 2,
         "opponent": "UTAH",
         "gameDate": "Nov 13"
@@ -4132,7 +4132,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3992.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/30b8e8d4df004492cc38.png",
         "week": 34,
         "opponent": "ORL",
         "gameDate": "Jan 30"
@@ -4161,7 +4161,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3945274.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/3f4f0735a91bd29bff44.png",
         "week": 27,
         "opponent": "NY",
         "gameDate": "Dec 27"
@@ -4190,7 +4190,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3112335.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/9cb2424ab649224c6509.png",
         "week": 28,
         "opponent": "MIN",
         "gameDate": "Dec 25"
@@ -4219,7 +4219,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/ba7826cebd689586d4ad.png",
         "week": 67,
         "opponent": "ORL",
         "gameDate": "Mar 29"
@@ -4261,7 +4261,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/tl9enad6kiwv6cukf4vt",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c24458fb34212c951a0.png",
         "week": 16,
         "opponent": "MIN"
       },
@@ -4293,7 +4293,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/uurolop9ktcloxqh4fid",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/074c0bc75834d5de9262.png",
         "week": 8,
         "opponent": "GB"
       },
@@ -4325,7 +4325,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/zqfkz3hbyurjcwhw7xoi",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ecd6260fd8f91cfbb310.png",
         "week": 3,
         "opponent": "DEN"
       },
@@ -4357,7 +4357,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lhazttk4tjpi7ggf7du4",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/93ec97b21fa0491d5ff1.png",
         "week": 9,
         "opponent": "LV"
       },
@@ -4389,7 +4389,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/gwyhozfhjgedwdmmjjcf",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/873ee86ddfc02f1eb2bd.png",
         "week": 9,
         "opponent": "CAR"
       },
@@ -4421,7 +4421,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/ye4runp84oku1vnodsa7",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/17f8f3bc823e15564ee2.png",
         "week": 11,
         "opponent": "BUF"
       },
@@ -4453,7 +4453,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/ksdusqxnwqtnph0htcfx",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/8322854d7849767f11b7.png",
         "week": 12,
         "opponent": "SEA"
       },
@@ -4485,7 +4485,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/sm3ij3pcby5ciqwaaqa1",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/052f3580fa0729f0eb07.png",
         "week": 14,
         "opponent": "BUF"
       }
@@ -4522,7 +4522,7 @@
             "value": "21.7"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/zmtzqznqui37unmo5xv9",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7acdba72ab30e81cdaf8.png",
         "week": 14,
         "opponent": "PHI"
       },
@@ -4550,7 +4550,7 @@
             "value": "25.4"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iavrftkbpw4bekzl7zfv",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/4df7443b510bd24c4931.png",
         "week": 9,
         "opponent": "IND"
       },
@@ -4578,7 +4578,7 @@
             "value": "23.5"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/z6dxib9sientn4m9cljh",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7cd42df31f12fd32a44a.png",
         "week": 8,
         "opponent": "DAL"
       },
@@ -4606,7 +4606,7 @@
             "value": "24.2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/qkcb3qt2fhasfgtfuprd",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/060ec66beb7217265af4.png",
         "week": 17,
         "opponent": "KC"
       },
@@ -4634,7 +4634,7 @@
             "value": "21.1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/omrddf2phtyztzx2nup1",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/585e57e51009cde8b472.png",
         "week": 12,
         "opponent": "TB"
       },
@@ -4662,7 +4662,7 @@
             "value": "13.3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/yz9p4pfwr0iyakhnwj4z",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f5c0ce6cb1c872a2ba41.png",
         "week": 7,
         "opponent": "ARI"
       },
@@ -4690,7 +4690,7 @@
             "value": "20.7"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/gdwjlpbkenmnsibawkht",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/85b87cf1f837f048ac75.png",
         "week": 12,
         "opponent": "TB"
       },
@@ -4718,7 +4718,7 @@
             "value": "13.6"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/rgjwexzif36vncjfdwap",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/63025b505f6f14030213.png",
         "week": 3,
         "opponent": "BUF"
       }
@@ -4755,7 +4755,7 @@
             "value": "36"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/jdcb4nomlc4rd6k5l6to",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d18365752c2e28dc35db.png",
         "week": 4,
         "opponent": "DEN"
       },
@@ -4783,7 +4783,7 @@
             "value": "-1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vziogpnyp9d0xtpiuqhr",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a6e72ab481117cbd441.png",
         "week": 8,
         "opponent": "IND"
       },
@@ -4811,7 +4811,7 @@
             "value": "100"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zwmgw2gmnn2kch4nquft",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/193113b1108a3eeef544.png",
         "week": 15,
         "opponent": "NYG"
       },
@@ -4839,7 +4839,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i20xlpzdmn7xubotijjd",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png",
         "week": 8,
         "opponent": "NYG"
       },
@@ -4867,7 +4867,7 @@
             "value": "82"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/lq4ezafbszwwt2qsvhqv",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/032cfa4ff01d4d4ffc4b.png",
         "week": 14,
         "opponent": "LA"
       },
@@ -4895,7 +4895,7 @@
             "value": "53"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/jetjlsljpb3shogn5grq",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/2c7228b7bf2e3034f953.png",
         "week": 4,
         "opponent": "TB"
       },
@@ -4923,7 +4923,7 @@
             "value": "10"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dxuz2ir773wylutxo7zs",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/a6b6e3535359493f0be7.png",
         "week": 9,
         "opponent": "LV"
       },
@@ -4951,7 +4951,7 @@
             "value": "-2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xpcd6auodk3w0vda6jal",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f612f44e585a6892aa58.png",
         "week": 1,
         "opponent": "BAL"
       }
@@ -4988,7 +4988,7 @@
             "value": "15.4"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/qqzht46a66zbi9xyylf4",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/caeebeef551b2cfd40b3.png",
         "week": 13,
         "opponent": "NYJ"
       },
@@ -5016,7 +5016,7 @@
             "value": "14.7"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/sea0atk2feif4n75dvq8",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/e23276efbcf61cb07193.png",
         "week": 14,
         "opponent": "TEN"
       },
@@ -5044,7 +5044,7 @@
             "value": "12.2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/ivkrikewqqdllzvano8h",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/4ea3ce723f30c9b9bf54.png",
         "week": 4,
         "opponent": "PHI"
       },
@@ -5072,7 +5072,7 @@
             "value": "16.6"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/svpo7chliiymc0r7hegp",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/bff0c7c61bd37af8980a.png",
         "week": 8,
         "opponent": "CHI"
       },
@@ -5100,7 +5100,7 @@
             "value": "12.4"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/enbspvy0ahsyznomitre",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f8c16eae474ce03ed1c2.png",
         "week": 4,
         "opponent": "NE"
       },
@@ -5128,7 +5128,7 @@
             "value": "19.1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/ilk4qbxxs6mt3v9zfvtg",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/9ba238143bc9b8cd2fff.png",
         "week": 15,
         "opponent": "LAC"
       },
@@ -5156,7 +5156,7 @@
             "value": "22.5"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/so5ywayfeeu4zeijln5m",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/287a6f5a46339b498eac.png",
         "week": 6,
         "opponent": "ARI"
       },
@@ -5184,7 +5184,7 @@
             "value": "10.4"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/xktmmeumuoglbuam75iz",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/fee2ab545ab16b33d9ed.png",
         "week": 10,
         "opponent": "DAL"
       }
@@ -5221,7 +5221,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dpa5d1a8jj6jdymocjkx",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/908aa0002373a1619c74.png",
         "week": 13,
         "opponent": "NYJ"
       },
@@ -5249,7 +5249,7 @@
             "value": "5"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zwmgw2gmnn2kch4nquft",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/193113b1108a3eeef544.png",
         "week": 15,
         "opponent": "NYG"
       },
@@ -5277,7 +5277,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/lq4ezafbszwwt2qsvhqv",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/032cfa4ff01d4d4ffc4b.png",
         "week": 14,
         "opponent": "LA"
       },
@@ -5305,7 +5305,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/vqcvybvs1vlqhkjvujbg",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/6bc223a8a713fdb7f51e.png",
         "week": 9,
         "opponent": "MIA"
       },
@@ -5333,7 +5333,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/lsladvvsaptc29bbcah2",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7861d607b8e9660dff3d.png",
         "week": 9,
         "opponent": "MIA"
       },
@@ -5361,7 +5361,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/cruqs6qpbykh7a2whd7p",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/2044377e50e8936ee7aa.png",
         "week": 2,
         "opponent": "MIA"
       },
@@ -5389,7 +5389,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/b9ribxqudeehvmjlw0va",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/fe7a2310bbe95d940724.png",
         "week": 13,
         "opponent": "JAX"
       },
@@ -5417,7 +5417,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/u36rhg0md8ey3b4khbre",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/786d9a063f50b06f9d3e.png",
         "week": 15,
         "opponent": "BUF"
       }
@@ -5458,7 +5458,7 @@
             "value": "129"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/111188/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/1e0ce154adb65e2caec4.jpg"
       },
       {
         "id": "baseball-billy-hamilton-1894",
@@ -5488,7 +5488,7 @@
             "value": "192"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/115386/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/a60fa536d2c4fd4babb2.jpg"
       },
       {
         "id": "baseball-hack-wilson-1930",
@@ -5518,7 +5518,7 @@
             "value": "146"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/124412/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/751a0218a7dac89ba3b0.jpg"
       },
       {
         "id": "baseball-jimmie-foxx-1932",
@@ -5548,7 +5548,7 @@
             "value": "151"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/114367/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/eca1531f9c7046ebc49d.jpg"
       },
       {
         "id": "baseball-lou-gehrig-1931",
@@ -5578,7 +5578,7 @@
             "value": "163"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/114680/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/3483f468ef6b8dfa51bf.jpg"
       },
       {
         "id": "baseball-ronald-acuna-jr-2023",
@@ -5608,7 +5608,7 @@
             "value": "149"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/660670/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/0a4c573e91495d5f8e0c.jpg"
       },
       {
         "id": "baseball-shohei-ohtani-2024",
@@ -5638,7 +5638,7 @@
             "value": "134"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/660271/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/99d9139d7fa70d8046f7.jpg"
       },
       {
         "id": "baseball-ty-cobb-1911",
@@ -5668,7 +5668,7 @@
             "value": "147"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112431/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/a012f493915f26caa4de.jpg"
       }
     ],
     "grain": "season",
@@ -5707,7 +5707,7 @@
             "value": "587.0"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/111672/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/a11fd72b1bc044ed07b3.jpg"
       },
       {
         "id": "baseball-ed-morris-1886",
@@ -5737,7 +5737,7 @@
             "value": "555.3"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/119397/headshot/67/current"
+        "headshot": ""
       },
       {
         "id": "baseball-ed-walsh-1908",
@@ -5767,7 +5767,7 @@
             "value": "464.0"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/123878/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/a4f59d1fa7d09d104668.jpg"
       },
       {
         "id": "baseball-jim-whitney-1883",
@@ -5797,7 +5797,7 @@
             "value": "514.0"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/124221/headshot/67/current"
+        "headshot": ""
       },
       {
         "id": "baseball-john-clarkson-1885",
@@ -5827,7 +5827,7 @@
             "value": "623.0"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112369/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/e017910ee6b028fbbc2a.jpg"
       },
       {
         "id": "baseball-larry-corcoran-1880",
@@ -5857,7 +5857,7 @@
             "value": "536.3"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112675/headshot/67/current"
+        "headshot": ""
       },
       {
         "id": "baseball-mickey-welch-1884",
@@ -5887,7 +5887,7 @@
             "value": "557.3"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/124062/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/9e8b10640db384ac9ec3.jpg"
       },
       {
         "id": "baseball-tim-keefe-1886",
@@ -5917,7 +5917,7 @@
             "value": "535.0"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/116888/headshot/67/current"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/e4800465a1926c688777.jpg"
       }
     ],
     "grain": "season",
@@ -5952,7 +5952,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/592450/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/aa36c1133f57e9ae4b8b.jpg",
         "week": 2,
         "opponent": "MIL",
         "gameDate": "Mar 29"
@@ -5981,7 +5981,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/677951/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/f3c8f692aed7a409bed7.jpg",
         "week": 51,
         "opponent": "WSH",
         "gameDate": "May 26"
@@ -6010,7 +6010,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/608070/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/c75c5e1d9b701f69d665.jpg",
         "week": 11,
         "opponent": "DET",
         "gameDate": "Apr 15"
@@ -6039,7 +6039,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/665742/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/676b009c016b1d0564ae.jpg",
         "week": 117,
         "opponent": "CWS",
         "gameDate": "Aug 13"
@@ -6068,7 +6068,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/621566/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/8224ff90f64bd7a8ac84.jpg",
         "week": 81,
         "opponent": "MIA",
         "gameDate": "Jun 30"
@@ -6097,7 +6097,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/605141/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/26d7ae0361e77d23a1ff.jpg",
         "week": 113,
         "opponent": "AZ",
         "gameDate": "Aug 14"
@@ -6126,7 +6126,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/660271/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/99d9139d7fa70d8046f7.jpg",
         "week": 150,
         "opponent": "MIA",
         "gameDate": "Sep 19"
@@ -6155,7 +6155,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/670541/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/71ab2643de5a361f9cd1.jpg",
         "week": 45,
         "opponent": "BAL",
         "gameDate": "Aug 10"
@@ -6193,7 +6193,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/477132/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/5280ff9a076594de2c50.jpg",
         "week": 10,
         "opponent": "COL",
         "gameDate": "Jun 18"
@@ -6222,7 +6222,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/669203/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/4c9c2146b391883030e0.jpg",
         "week": 20,
         "opponent": "CHC",
         "gameDate": "Aug 11"
@@ -6251,7 +6251,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/543037/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/0a66b1e31324bf8d862b.jpg",
         "week": 7,
         "opponent": "AZ",
         "gameDate": "May 4"
@@ -6280,7 +6280,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/594798/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/e7f44cd250e201931f88.jpg",
         "week": 4,
         "opponent": "WSH",
         "gameDate": "Apr 23"
@@ -6309,7 +6309,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/434378/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/0bb68247808a02ea3583.jpg",
         "week": 29,
         "opponent": "TOR",
         "gameDate": "Sep 1"
@@ -6338,7 +6338,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/645261/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/4cd50a21b8faa4cf72db.jpg",
         "week": 10,
         "opponent": "ATL",
         "gameDate": "May 28"
@@ -6367,7 +6367,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/660271/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/99d9139d7fa70d8046f7.jpg",
         "week": 12,
         "opponent": "KC",
         "gameDate": "Jun 22"
@@ -6396,7 +6396,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/675911/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/e0293c8b768f9a3e3eae.jpg",
         "week": 28,
         "opponent": "COL",
         "gameDate": "Sep 1"
@@ -6430,7 +6430,7 @@
             "value": "37"
           }
         ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/105521-1770718860.jpg?lm=1"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/066ce9631c7a70ac5383.jpg"
       },
       {
         "id": "soccer-cristiano-ronaldo-2015",
@@ -6452,7 +6452,7 @@
             "value": "35"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Cristiano_Ronaldo_2275_%28cropped%29.jpg/330px-Cristiano_Ronaldo_2275_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/25ebd98953ba4600b84d.jpg"
       },
       {
         "id": "soccer-lionel-messi-2012",
@@ -6474,7 +6474,7 @@
             "value": "37"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-055.jpg/330px-Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-055.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/dba59852e26ecc1ef620.jpg"
       },
       {
         "id": "soccer-luis-suarez-2016",
@@ -6496,7 +6496,7 @@
             "value": "35"
           }
         ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/44352-1771695059.jpg?lm=1"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/ddc50257088305b5c945.jpg"
       },
       {
         "id": "soccer-robert-lewandowski-2021",
@@ -6518,7 +6518,7 @@
             "value": "29"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg/330px-2019147183134_2019-05-27_Fussball_1.FC_Kaiserslautern_vs_FC_Bayern_M%C3%BCnchen_-_Sven_-_1D_X_MK_II_-_0228_-_B70I8527_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/edad5d0ef563881e933f.jpg"
       },
       {
         "id": "soccer-viktor-einar-gyokeres-2024",
@@ -6540,7 +6540,7 @@
             "value": "33"
           }
         ],
-        "headshot": "https://media.api-sports.io/football/players/18979.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/719e874272e5e0a836ae.png"
       },
       {
         "id": "soccer-viktor-gyokeres-2025",
@@ -6562,7 +6562,7 @@
             "value": "33"
           }
         ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/325443-1737581896.jpg?lm=1"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/360fb033af097d62cbaa.jpg"
       },
       {
         "id": "soccer-zlatan-ibrahimovic-2016",
@@ -6584,7 +6584,7 @@
             "value": "31"
           }
         ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/3455-1579506060.jpg?lm=1"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/f5e267fc14d29632180f.jpg"
       }
     ],
     "grain": "season",
@@ -6619,7 +6619,7 @@
             "value": "15"
           }
         ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/193082-1689710805.jpg?lm=1"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/a962b7e137727aaad81a.jpg"
       },
       {
         "id": "soccer-edgar-castillo-2009",
@@ -6645,7 +6645,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Edgar_Castillo.jpg/330px-Edgar_Castillo.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/96358d713e9439e33b34.jpg"
       },
       {
         "id": "soccer-federico-dimarco-2026",
@@ -6671,7 +6671,7 @@
             "value": "18"
           }
         ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/198116-1725531769.jpg?lm=1"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/2e07f4d0c47941ebaad4.jpg"
       },
       {
         "id": "soccer-graham-zusi-2012",
@@ -6697,7 +6697,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Graham_Zusi_2022.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/8c000e90c1d0816352a7.png"
       },
       {
         "id": "soccer-israel-jimenez-2012",
@@ -6723,7 +6723,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Israel_Jimenez.jpg/330px-Israel_Jimenez.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/da235538e683d5e50839.jpg"
       },
       {
         "id": "soccer-james-tavernier-2024",
@@ -6749,7 +6749,7 @@
             "value": "8"
           }
         ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/62094-1663162918.jpg?lm=1"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/52d7a0d7f8ac33d21f47.jpg"
       },
       {
         "id": "soccer-marcos-llorente-2021",
@@ -6775,7 +6775,7 @@
             "value": "11"
           }
         ],
-        "headshot": "https://img.a.transfermarkt.technology/portrait/header/282411-1773182531.jpg?lm=1"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/95172b341e8003318b51.jpg"
       },
       {
         "id": "soccer-matt-besler-2012",
@@ -6801,7 +6801,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Matt_Besler_%28cropped%29.jpg/330px-Matt_Besler_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/soccer/92f4cbd9663e9159c206.jpg"
       }
     ],
     "grain": "season",
@@ -6836,7 +6836,7 @@
             "value": "15"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Billie_Jean_King_at_the_2026_Sundance_Film_Festival_02_%28crop_2%29.jpg/330px-Billie_Jean_King_at_the_2026_Sundance_Film_Festival_02_%28crop_2%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/c2e1ae08a4021e355a89.jpg"
       },
       {
         "id": "tennis-chris-evert-1975",
@@ -6862,7 +6862,7 @@
             "value": "7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Chris_Evert.jpg/330px-Chris_Evert.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/de4145f28e752961a82a.jpg"
       },
       {
         "id": "tennis-guillermo-vilas-1977",
@@ -6888,7 +6888,7 @@
             "value": "14"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Vilas-1975.jpg/330px-Vilas-1975.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/e4373985a2aa403431ac.jpg"
       },
       {
         "id": "tennis-jimmy-connors-1974",
@@ -6914,7 +6914,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Jimmy_Conners_1994.jpg/330px-Jimmy_Conners_1994.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/d8a3ea8ce4d440dc5451.jpg"
       },
       {
         "id": "tennis-margaret-court-1970",
@@ -6940,7 +6940,7 @@
             "value": "6"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Margaret_Court.png/330px-Margaret_Court.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/658d8bb2aafceead5e9e.png"
       },
       {
         "id": "tennis-martina-navratilova-1983",
@@ -6966,7 +6966,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Martina_Navratilova_Eastbourne_2011.jpg/330px-Martina_Navratilova_Eastbourne_2011.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/cc1d0268fea5578a2b96.jpg"
       },
       {
         "id": "tennis-roger-federer-2006",
@@ -6992,7 +6992,7 @@
             "value": "5"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/330px-Roger_Federer_2015_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/c2e3091d1a944163ea11.jpg"
       },
       {
         "id": "tennis-steffi-graf-1989",
@@ -7018,7 +7018,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg/330px-Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/0ba0e487ee158cbb70dc.jpg"
       }
     ],
     "grain": "season",
@@ -7053,7 +7053,7 @@
             "value": "7"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Chris_Evert.jpg/330px-Chris_Evert.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/de4145f28e752961a82a.jpg"
       },
       {
         "id": "tennis-guillermo-vilas-1977",
@@ -7079,7 +7079,7 @@
             "value": "14"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Vilas-1975.jpg/330px-Vilas-1975.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/e4373985a2aa403431ac.jpg"
       },
       {
         "id": "tennis-jimmy-connors-1974",
@@ -7105,7 +7105,7 @@
             "value": "4"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Jimmy_Conners_1994.jpg/330px-Jimmy_Conners_1994.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/d8a3ea8ce4d440dc5451.jpg"
       },
       {
         "id": "tennis-margaret-court-1970",
@@ -7131,7 +7131,7 @@
             "value": "6"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Margaret_Court.png/330px-Margaret_Court.png"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/658d8bb2aafceead5e9e.png"
       },
       {
         "id": "tennis-martina-hingis-1997",
@@ -7157,7 +7157,7 @@
             "value": "5"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Hingis_RG16_%2810%29_%2827331857371%29.jpg/330px-Hingis_RG16_%2810%29_%2827331857371%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/cd00088eb92190c6a285.jpg"
       },
       {
         "id": "tennis-martina-navratilova-1983",
@@ -7183,7 +7183,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Martina_Navratilova_Eastbourne_2011.jpg/330px-Martina_Navratilova_Eastbourne_2011.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/cc1d0268fea5578a2b96.jpg"
       },
       {
         "id": "tennis-roger-federer-2006",
@@ -7209,7 +7209,7 @@
             "value": "5"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/330px-Roger_Federer_2015_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/c2e3091d1a944163ea11.jpg"
       },
       {
         "id": "tennis-steffi-graf-1989",
@@ -7235,7 +7235,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg/330px-Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/tennis/0ba0e487ee158cbb70dc.jpg"
       }
     ],
     "grain": "season",
@@ -7270,7 +7270,7 @@
             "value": "35"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/jdcb4nomlc4rd6k5l6to",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d18365752c2e28dc35db.png",
         "firstYear": 2005,
         "lastYear": 2024
       },
@@ -7298,7 +7298,7 @@
             "value": "20"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vziogpnyp9d0xtpiuqhr",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a6e72ab481117cbd441.png",
         "firstYear": 2004,
         "lastYear": 2021
       },
@@ -7326,7 +7326,7 @@
             "value": "14"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/m3sggjgdqlp4jqpxktvr",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f4c5dfd3e78b0098527d.png",
         "firstYear": 1991,
         "lastYear": 2010
       },
@@ -7354,7 +7354,7 @@
             "value": "25"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i20xlpzdmn7xubotijjd",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png",
         "firstYear": 2001,
         "lastYear": 2020
       },
@@ -7378,7 +7378,7 @@
             "value": "197"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g1vjcnbryx3nmg0ppsnl",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/468b840cf6aa01a8a419.png",
         "firstYear": 1985,
         "lastYear": 2004
       },
@@ -7402,7 +7402,7 @@
             "value": "121"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ycgjjaad5un42gy4pnga",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/6654dc17fd4287432f6f.png",
         "firstYear": 2004,
         "lastYear": 2020
       },
@@ -7430,7 +7430,7 @@
             "value": "18"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xpcd6auodk3w0vda6jal",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f612f44e585a6892aa58.png",
         "firstYear": 1998,
         "lastYear": 2015
       },
@@ -7458,7 +7458,7 @@
             "value": "28"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q7dpdlxyu5rs05rgh1le",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/650ffc29ee304f11beee.png",
         "firstYear": 2000,
         "lastYear": 2022
       }
@@ -7499,7 +7499,7 @@
             "value": "3.1"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/619.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/7750cb8f148c59a16070.png",
         "firstYear": 1985,
         "lastYear": 2002
       },
@@ -7531,7 +7531,7 @@
             "value": "2.0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/e3a44920424efe704fab.jpg",
         "firstYear": 1970,
         "lastYear": 1989
       },
@@ -7563,7 +7563,7 @@
             "value": "0.8"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/501.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/4a0b9ba2c5ad49c71576.png",
         "firstYear": 1986,
         "lastYear": 2004
       },
@@ -7595,7 +7595,7 @@
             "value": "1.4"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/261.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/a41ba0f6334747635dcd.png",
         "firstYear": 1996,
         "lastYear": 2016
       },
@@ -7627,7 +7627,7 @@
             "value": "0.7"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/1966.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/cee3c66b55d7e99636dd.png",
         "firstYear": 2004,
         "lastYear": 2026
       },
@@ -7659,7 +7659,7 @@
             "value": "0.3"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/3468.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/ba7826cebd689586d4ad.png",
         "firstYear": 2009,
         "lastYear": 2026
       },
@@ -7691,7 +7691,7 @@
             "value": "2.2"
           }
         ],
-        "headshot": "https://a.espncdn.com/i/headshots/nba/players/full/215.png",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/84582968a581d0b5b494.png",
         "firstYear": 1998,
         "lastYear": 2016
       },
@@ -7723,7 +7723,7 @@
             "value": "0.0"
           }
         ],
-        "headshot": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg/330px-Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nba/8231ac48c18990df32be.jpg",
         "firstYear": 1960,
         "lastYear": 1973
       }
@@ -7764,7 +7764,7 @@
             "value": "1,914"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/405395/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/ef9898f4d7e2c0cf196b.jpg",
         "firstYear": 2001,
         "lastYear": 2022
       },
@@ -7796,7 +7796,7 @@
             "value": "2,174"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121578/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/d07bb7ee1687d62bc909.jpg",
         "firstYear": 1914,
         "lastYear": 1935
       },
@@ -7828,7 +7828,7 @@
             "value": "2,227"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/111188/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/1e0ce154adb65e2caec4.jpg",
         "firstYear": 1986,
         "lastYear": 2007
       },
@@ -7860,7 +7860,7 @@
             "value": "2,286"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/123245/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/f1cba117545183a3785c.jpg",
         "firstYear": 1951,
         "lastYear": 2008
       },
@@ -7892,7 +7892,7 @@
             "value": "2,174"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/110001/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/279401fbf362c871f5dd.jpg",
         "firstYear": 1954,
         "lastYear": 1976
       },
@@ -7924,7 +7924,7 @@
             "value": "2,295"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/115749/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/49726f773633bbbc3323.jpg",
         "firstYear": 1979,
         "lastYear": 2003
       },
@@ -7956,7 +7956,7 @@
             "value": "2,246"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112431/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/a012f493915f26caa4de.jpg",
         "firstYear": 1905,
         "lastYear": 1928
       },
@@ -7988,7 +7988,7 @@
             "value": "2,062"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/118495/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/04ca1b5cbfaa70820f55.jpg",
         "firstYear": 1951,
         "lastYear": 1973
       }
@@ -8029,7 +8029,7 @@
             "value": "5,282"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/123006/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/049c8de6e9f949c7f8c2.jpg",
         "firstYear": 1966,
         "lastYear": 1988
       },
@@ -8061,7 +8061,7 @@
             "value": "5,350"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/120438/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/37cd73d5319067ce32fa.jpg",
         "firstYear": 1962,
         "lastYear": 1983
       },
@@ -8093,7 +8093,7 @@
             "value": "5,008"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/118120/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/0a5a23925b3de9c26458.jpg",
         "firstYear": 1986,
         "lastYear": 2008
       },
@@ -8125,7 +8125,7 @@
             "value": "5,386"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/121597/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/81ccbd696a849635034b.jpg",
         "firstYear": 1966,
         "lastYear": 1993
       },
@@ -8157,7 +8157,7 @@
             "value": "4,135"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/116615/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/52487c1e82e44512e89b.jpg",
         "firstYear": 1988,
         "lastYear": 2009
       },
@@ -8189,7 +8189,7 @@
             "value": "4,917"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112388/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/7467d91800a8f62a5ef8.jpg",
         "firstYear": 1984,
         "lastYear": 2007
       },
@@ -8221,7 +8221,7 @@
             "value": "5,217"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/112008/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/a9bb4a4d5b9ba491b5ca.jpg",
         "firstYear": 1965,
         "lastYear": 1988
       },
@@ -8253,7 +8253,7 @@
             "value": "5,914"
           }
         ],
-        "headshot": "https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/116635/headshot/67/current",
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/baseball/8f8cdfd5c9b9459045bc.jpg",
         "firstYear": 1907,
         "lastYear": 1927
       }
@@ -8294,7 +8294,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/m3sggjgdqlp4jqpxktvr"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f4c5dfd3e78b0098527d.png"
       },
       {
         "id": "nfl-chris-chandler-2001",
@@ -8324,7 +8324,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/yrkv7xnpwcfljbhpgz6w"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/324f96a5369dd3084dcf.png"
       },
       {
         "id": "nfl-doug-flutie-2001",
@@ -8354,7 +8354,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/unmsud4qh5emea93d31q"
+        "headshot": ""
       },
       {
         "id": "nfl-jeff-garcia-2008",
@@ -8384,7 +8384,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/bysr1fkpqdhljtvlkcrm"
+        "headshot": ""
       },
       {
         "id": "nfl-kerry-collins-2008",
@@ -8414,7 +8414,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jse9o88qf7weuicc1wwz"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/4d538de305c90a6d6729.png"
       },
       {
         "id": "nfl-kurt-warner-2008",
@@ -8444,7 +8444,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xlgzhoozvi1agd8hn4kk"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/39f2e7ef2d10a746bcc5.png"
       },
       {
         "id": "nfl-rich-gannon-2002",
@@ -8474,7 +8474,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wy2haknzelfdpaxh0pig"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d6925b85c126e8dceb21.png"
       },
       {
         "id": "nfl-vinny-testaverde-2000",
@@ -8504,7 +8504,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/yebpzovaiscoksnjnq6x"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/e2a8838d80a09694d123.jpg"
       }
     ],
     "grain": "season",
@@ -8543,7 +8543,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/hmlvskmkxcrzwzxker5b"
+        "headshot": ""
       },
       {
         "id": "nfl-brett-favre-2009",
@@ -8573,7 +8573,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/m3sggjgdqlp4jqpxktvr"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f4c5dfd3e78b0098527d.png"
       },
       {
         "id": "nfl-david-garrard-2009",
@@ -8603,7 +8603,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ogcdepv291fwwguy3zho"
+        "headshot": ""
       },
       {
         "id": "nfl-drew-brees-2009",
@@ -8633,7 +8633,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i20xlpzdmn7xubotijjd"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png"
       },
       {
         "id": "nfl-jake-plummer-2004",
@@ -8663,7 +8663,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iurwxdpuwvijm50vhwt9"
+        "headshot": ""
       },
       {
         "id": "nfl-kordell-stewart-2001",
@@ -8693,7 +8693,7 @@
             "value": "5"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wyel70n1iopggkgtup2x"
+        "headshot": ""
       },
       {
         "id": "nfl-matt-schaub-2009",
@@ -8723,7 +8723,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mj2kh2nddxnw04ludcx0"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ef892d6b4db889babe16.png"
       },
       {
         "id": "nfl-rich-gannon-2002",
@@ -8753,7 +8753,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wy2haknzelfdpaxh0pig"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d6925b85c126e8dceb21.png"
       }
     ],
     "grain": "season",
@@ -8792,7 +8792,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/w191gsxivnqgdwgydka6"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/19561de96cee511a754a.png"
       },
       {
         "id": "nfl-elvis-grbac-2000",
@@ -8822,7 +8822,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/s4ry52iclpzzgg1aave6"
+        "headshot": ""
       },
       {
         "id": "nfl-marc-bulger-2006",
@@ -8852,7 +8852,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vww6hwhkqzevfn6nsnhw"
+        "headshot": ""
       },
       {
         "id": "nfl-mark-brunell-2000",
@@ -8882,7 +8882,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/p91vbvdb7ik4fcjuo7ym"
+        "headshot": ""
       },
       {
         "id": "nfl-matt-cassel-2008",
@@ -8912,7 +8912,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/n1ucqggyu5hlsqzuv5gj"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/af48f700dda8b3c231e5.png"
       },
       {
         "id": "nfl-matt-hasselbeck-2007",
@@ -8942,7 +8942,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/t1nf9avoy2kauqwrvzza"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f3c2ee8d889b2b94c0b5.png"
       },
       {
         "id": "nfl-tom-brady-2007",
@@ -8972,7 +8972,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q7dpdlxyu5rs05rgh1le"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/650ffc29ee304f11beee.png"
       },
       {
         "id": "nfl-trent-green-2004",
@@ -9002,7 +9002,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pwsxlc2rah1aqy1tnbsb"
+        "headshot": ""
       }
     ],
     "grain": "season",
@@ -9041,7 +9041,7 @@
             "value": "5"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/jdcb4nomlc4rd6k5l6to"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d18365752c2e28dc35db.png"
       },
       {
         "id": "nfl-ben-roethlisberger-2009",
@@ -9071,7 +9071,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vziogpnyp9d0xtpiuqhr"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a6e72ab481117cbd441.png"
       },
       {
         "id": "nfl-daunte-culpepper-2004",
@@ -9101,7 +9101,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vmvl5xojgtwm6jadhy7l"
+        "headshot": ""
       },
       {
         "id": "nfl-donovan-mcnabb-2004",
@@ -9131,7 +9131,7 @@
             "value": "3"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wd6jjtwdweq7v3ya2pet"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/cfb352714751eb125c37.png"
       },
       {
         "id": "nfl-jay-cutler-2008",
@@ -9161,7 +9161,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ks6n7gvw4vccihlse6bn"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/c776e20a25328e733b98.png"
       },
       {
         "id": "nfl-mike-vick-2002",
@@ -9191,7 +9191,7 @@
             "value": "8"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/hrg4riwhpjbijfovsjrk"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0f025ef6dc6b7c02ab46.png"
       },
       {
         "id": "nfl-peyton-manning-2004",
@@ -9221,7 +9221,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xpcd6auodk3w0vda6jal"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f612f44e585a6892aa58.png"
       },
       {
         "id": "nfl-philip-rivers-2008",
@@ -9251,7 +9251,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/voakyrtj34sghkwxaxxf"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/8bc61cfaa82cb6870980.png"
       }
     ],
     "grain": "season",
@@ -9290,7 +9290,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zmv2cxypb5s0nhtpq3nq"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/440489c4e8f3ac918d85.png"
       },
       {
         "id": "nfl-cam-newton-2015",
@@ -9320,7 +9320,7 @@
             "value": "10"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zwmgw2gmnn2kch4nquft"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/193113b1108a3eeef544.png"
       },
       {
         "id": "nfl-daunte-culpepper-2004",
@@ -9350,7 +9350,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vmvl5xojgtwm6jadhy7l"
+        "headshot": ""
       },
       {
         "id": "nfl-jamarcus-russell-2008",
@@ -9380,7 +9380,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/j9utxwp9846osapesksk"
+        "headshot": ""
       },
       {
         "id": "nfl-joe-flacco-2014",
@@ -9410,7 +9410,7 @@
             "value": "2"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/upload/f_auto,q_auto/league/dwsbpmlhoqud0puidizt"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/4c96f3505a043decad67.png"
       },
       {
         "id": "nfl-kerry-collins-2000",
@@ -9440,7 +9440,7 @@
             "value": "1"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jse9o88qf7weuicc1wwz"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/4d538de305c90a6d6729.png"
       },
       {
         "id": "nfl-matt-schaub-2009",
@@ -9470,7 +9470,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mj2kh2nddxnw04ludcx0"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ef892d6b4db889babe16.png"
       },
       {
         "id": "nfl-trent-dilfer-2005",
@@ -9500,7 +9500,7 @@
             "value": "0"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ssbi0ektdltubjtxsbvv"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/05aefbedf30babb4bfe4.png"
       }
     ],
     "grain": "season",
@@ -9539,7 +9539,7 @@
             "value": "395"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/seb6k3tjdcgi8tqmzt2z"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/4ab46a2996858b81e176.png"
       },
       {
         "id": "nfl-c-j-spiller-2012",
@@ -9569,7 +9569,7 @@
             "value": "459"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jqbnrdpq9c2nbchzntxt"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/9a3af9a2ddb265239361.png"
       },
       {
         "id": "nfl-darren-sproles-2011",
@@ -9599,7 +9599,7 @@
             "value": "710"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/gvj5ng27blmwuz170aeo"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ff16d5df0f0809ae5a6d.png"
       },
       {
         "id": "nfl-dion-lewis-2017",
@@ -9629,7 +9629,7 @@
             "value": "214"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/erzmtaaz3eimbg998hyq"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ecc4c5f21b0f496aac38.png"
       },
       {
         "id": "nfl-jamaal-charles-2013",
@@ -9659,7 +9659,7 @@
             "value": "693"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mdrlzgankwwjldxllgcx"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5e000e50e9f4215e8372.png"
       },
       {
         "id": "nfl-justin-forsett-2014",
@@ -9689,7 +9689,7 @@
             "value": "263"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/o86dvbcs8dcubcpj6fnu"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/9ab8c62138cc550ae244.png"
       },
       {
         "id": "nfl-matt-breida-2018",
@@ -9719,7 +9719,7 @@
             "value": "261"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/rc4m1xw0xmtsrxswd0bg"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/8cb47fbfd6fc67f71258.png"
       },
       {
         "id": "nfl-phillip-lindsay-2018",
@@ -9749,7 +9749,7 @@
             "value": "241"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/soywd4cnq19pigrwabb5"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/bfbd8dfef245c2f374eb.png"
       }
     ],
     "grain": "season",
@@ -9788,7 +9788,7 @@
             "value": "314"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vlgcz2so2urjgowxz3tz"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/3d3a42d3728231bfb9a2.png"
       },
       {
         "id": "nfl-chester-taylor-2006",
@@ -9818,7 +9818,7 @@
             "value": "288"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ay2c42ghmrgmxqcdsmdi"
+        "headshot": ""
       },
       {
         "id": "nfl-chris-carson-2019",
@@ -9848,7 +9848,7 @@
             "value": "266"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zxjqunrgf4j8p2eg4xyl"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/da7d6b4a34e2beca065e.png"
       },
       {
         "id": "nfl-derrick-ward-2008",
@@ -9878,7 +9878,7 @@
             "value": "384"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/alp1lllkthvns8nnaul0"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d96fe60e87188a705208.png"
       },
       {
         "id": "nfl-isiah-pacheco-2023",
@@ -9908,7 +9908,7 @@
             "value": "244"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/rzr8nxjunjeiv8bjir59"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/9366d134b04017a3f642.png"
       },
       {
         "id": "nfl-jamal-anderson-2000",
@@ -9938,7 +9938,7 @@
             "value": "375"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/faws2enuknhawnowkns0"
+        "headshot": ""
       },
       {
         "id": "nfl-justin-forsett-2014",
@@ -9968,7 +9968,7 @@
             "value": "263"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/o86dvbcs8dcubcpj6fnu"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/9ab8c62138cc550ae244.png"
       },
       {
         "id": "nfl-peyton-hillis-2010",
@@ -9998,7 +9998,7 @@
             "value": "477"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/uy3jtiwamtomkrodvnl9"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/dad006fdb4ce5931b5fe.png"
       }
     ],
     "grain": "season",
@@ -10037,7 +10037,7 @@
             "value": "771"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xerjzdet52uvvhqovape"
+        "headshot": ""
       },
       {
         "id": "nfl-charlie-garner-2002",
@@ -10067,7 +10067,7 @@
             "value": "941"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i6vgoizxzlnf1ecxnzbq"
+        "headshot": ""
       },
       {
         "id": "nfl-ladainian-tomlinson-2006",
@@ -10097,7 +10097,7 @@
             "value": "508"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/933c195c1089b80fd729.png"
       },
       {
         "id": "nfl-larry-johnson-2006",
@@ -10127,7 +10127,7 @@
             "value": "410"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/mzwxygpnqm65aj1w1qyr"
+        "headshot": ""
       },
       {
         "id": "nfl-marshall-faulk-2000",
@@ -10157,7 +10157,7 @@
             "value": "804"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7a12b1423db092e7b487.png"
       },
       {
         "id": "nfl-priest-holmes-2003",
@@ -10187,7 +10187,7 @@
             "value": "690"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
+        "headshot": ""
       },
       {
         "id": "nfl-shaun-alexander-2005",
@@ -10217,7 +10217,7 @@
             "value": "78"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q6aogsngaiaq2yr1sgyv"
+        "headshot": ""
       },
       {
         "id": "nfl-tiki-barber-2005",
@@ -10247,7 +10247,7 @@
             "value": "530"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/envscajcftvy5low6aod"
+        "headshot": ""
       }
     ],
     "grain": "season",
@@ -10286,7 +10286,7 @@
             "value": "268"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ug2ua3skqc9f6vkbowxc"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/e0c494b72efcd83d05a9.png"
       },
       {
         "id": "nfl-chris-johnson-2008",
@@ -10316,7 +10316,7 @@
             "value": "260"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryf9nc84eovvdbf0cz79"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ff59f325625698ef6cd3.png"
       },
       {
         "id": "nfl-clinton-portis-2002",
@@ -10346,7 +10346,7 @@
             "value": "364"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/nuj4tdazwyxp6cfhac7h"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/362c361a8de18372c7d6.png"
       },
       {
         "id": "nfl-ladainian-tomlinson-2001",
@@ -10376,7 +10376,7 @@
             "value": "367"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/933c195c1089b80fd729.png"
       },
       {
         "id": "nfl-matt-forte-2008",
@@ -10406,7 +10406,7 @@
             "value": "484"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/olqssssjykcx7tx7xsy3"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/6310ec8bca28ffe71844.png"
       },
       {
         "id": "nfl-maurice-jones-drew-2006",
@@ -10436,7 +10436,7 @@
             "value": "436"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/imza3kc0cmkjaym7sjsn"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/40afe325ef47559edb99.png"
       },
       {
         "id": "nfl-mike-anderson-2000",
@@ -10466,7 +10466,7 @@
             "value": "169"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/u233mhiu14upds1god2j"
+        "headshot": ""
       },
       {
         "id": "nfl-steve-slaton-2008",
@@ -10496,7 +10496,7 @@
             "value": "377"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/o7d06in3cz3cm51iivg0"
+        "headshot": ""
       }
     ],
     "grain": "season",
@@ -10535,7 +10535,7 @@
             "value": "771"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/xerjzdet52uvvhqovape"
+        "headshot": ""
       },
       {
         "id": "nfl-charlie-garner-2002",
@@ -10565,7 +10565,7 @@
             "value": "941"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/i6vgoizxzlnf1ecxnzbq"
+        "headshot": ""
       },
       {
         "id": "nfl-chris-johnson-2009",
@@ -10595,7 +10595,7 @@
             "value": "503"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryf9nc84eovvdbf0cz79"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ff59f325625698ef6cd3.png"
       },
       {
         "id": "nfl-ladainian-tomlinson-2006",
@@ -10625,7 +10625,7 @@
             "value": "508"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fdraejwoowicuevalpne"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/933c195c1089b80fd729.png"
       },
       {
         "id": "nfl-marshall-faulk-2000",
@@ -10655,7 +10655,7 @@
             "value": "804"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ker7p0exticomqhcbtjt"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7a12b1423db092e7b487.png"
       },
       {
         "id": "nfl-priest-holmes-2003",
@@ -10685,7 +10685,7 @@
             "value": "690"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dzul271lozkuowxqh9r7"
+        "headshot": ""
       },
       {
         "id": "nfl-shaun-alexander-2005",
@@ -10715,7 +10715,7 @@
             "value": "78"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/q6aogsngaiaq2yr1sgyv"
+        "headshot": ""
       },
       {
         "id": "nfl-tiki-barber-2005",
@@ -10745,7 +10745,7 @@
             "value": "530"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/envscajcftvy5low6aod"
+        "headshot": ""
       }
     ],
     "grain": "season",
@@ -10784,7 +10784,7 @@
             "value": "115"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iavrftkbpw4bekzl7zfv"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/4df7443b510bd24c4931.png"
       },
       {
         "id": "nfl-braylon-edwards-2007",
@@ -10814,7 +10814,7 @@
             "value": "80"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ryuel7mxiqtyhyqn4lyn"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/1bc77914d232fce0fec7.png"
       },
       {
         "id": "nfl-calvin-johnson-2008",
@@ -10844,7 +10844,7 @@
             "value": "78"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/z6dxib9sientn4m9cljh"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7cd42df31f12fd32a44a.png"
       },
       {
         "id": "nfl-cris-carter-2000",
@@ -10874,7 +10874,7 @@
             "value": "158"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/tb52fk83tmdpmbzwliuk"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/6a2ace96531184858c05.png"
       },
       {
         "id": "nfl-david-boston-2001",
@@ -10904,7 +10904,7 @@
             "value": "175"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/efvdgyy0lnmdok7k2us0"
+        "headshot": ""
       },
       {
         "id": "nfl-joey-galloway-2005",
@@ -10934,7 +10934,7 @@
             "value": "83"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pfioccpzeifhnunjtdy2"
+        "headshot": ""
       },
       {
         "id": "nfl-larry-fitzgerald-2008",
@@ -10964,7 +10964,7 @@
             "value": "96"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ycgjjaad5un42gy4pnga"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/6654dc17fd4287432f6f.png"
       },
       {
         "id": "nfl-torry-holt-2003",
@@ -10994,7 +10994,7 @@
             "value": "117"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/y7nfvf7fw2xznh3e1rbt"
+        "headshot": ""
       }
     ],
     "grain": "season",
@@ -11033,7 +11033,7 @@
             "value": "110"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ypchowfddyjthk70ldcx"
+        "headshot": ""
       },
       {
         "id": "nfl-greg-olsen-2009",
@@ -11063,7 +11063,7 @@
             "value": "108"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jevf1bubmrv2vvmiwq3r"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/40557a0f7c9a6179d9c8.png"
       },
       {
         "id": "nfl-heath-miller-2009",
@@ -11093,7 +11093,7 @@
             "value": "98"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iqw8fry4hgfvegs9nfuf"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/90147f8a89e433c0f0c6.png"
       },
       {
         "id": "nfl-jason-witten-2007",
@@ -11123,7 +11123,7 @@
             "value": "96"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/r7uafhtwuexuaty0nhsc"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/9cac36f13a5061029787.png"
       },
       {
         "id": "nfl-jeremy-shockey-2005",
@@ -11153,7 +11153,7 @@
             "value": "65"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/oe4d8uw9nbhjtivrsmgu"
+        "headshot": ""
       },
       {
         "id": "nfl-kyle-brady-2000",
@@ -11183,7 +11183,7 @@
             "value": "94"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/cbfkt8kpdkyq9yikpooi"
+        "headshot": ""
       },
       {
         "id": "nfl-todd-heap-2005",
@@ -11213,7 +11213,7 @@
             "value": "75"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lfwhp1fevjrx1puoon94"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f09174ff770c2aba840a.png"
       },
       {
         "id": "nfl-tony-gonzalez-2004",
@@ -11243,7 +11243,7 @@
             "value": "102"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/enbspvy0ahsyznomitre"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f8c16eae474ce03ed1c2.png"
       }
     ],
     "grain": "season",
@@ -11282,7 +11282,7 @@
             "value": "98"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/kndulvysinvn4tpvt0bc"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/9c79f864c06ab0a87c52.png"
       },
       {
         "id": "nfl-cameron-brate-2016",
@@ -11312,7 +11312,7 @@
             "value": "81"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jhioqec65qy4z7s6w9a6"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/14e1ed9bfa797fa7f530.png"
       },
       {
         "id": "nfl-jack-doyle-2017",
@@ -11342,7 +11342,7 @@
             "value": "108"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/h6abyvmg2g93llboizi6"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7a236f74c623df2a46fc.png"
       },
       {
         "id": "nfl-jake-ballard-2011",
@@ -11372,7 +11372,7 @@
             "value": "61"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pqwrskwkqbzzkf33gxvr"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/4c179dbb24b4df44aba9.png"
       },
       {
         "id": "nfl-larry-donnell-2014",
@@ -11402,7 +11402,7 @@
             "value": "92"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/beuv1dnhzlntfnnvh2zv"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/dfeb74c036e18b68f80c.png"
       },
       {
         "id": "nfl-timothy-wright-2013",
@@ -11432,7 +11432,7 @@
             "value": "75"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/wydzzhwo9is11uqaeffj"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f311b009cc5c6247504c.png"
       },
       {
         "id": "nfl-trey-burton-2018",
@@ -11462,7 +11462,7 @@
             "value": "76"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/vt2ce0szit4ozyh5s5iw"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/aed208505f2b7145c4fb.png"
       },
       {
         "id": "nfl-will-tye-2015",
@@ -11492,7 +11492,7 @@
             "value": "62"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dv5nojtrswp6cprkwn2y"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d8ac325629ffc4c7e5ad.png"
       }
     ],
     "grain": "season",
@@ -11531,7 +11531,7 @@
             "value": "98"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/kndulvysinvn4tpvt0bc"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/9c79f864c06ab0a87c52.png"
       },
       {
         "id": "nfl-benjamin-watson-2015",
@@ -11561,7 +11561,7 @@
             "value": "110"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/dorymozpdnrllkqlfzpu"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/074de3a885f28561d900.png"
       },
       {
         "id": "nfl-delanie-walker-2017",
@@ -11591,7 +11591,7 @@
             "value": "111"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/diknegkpqy0qnri7877z"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/79f919ec4a5abd945833.png"
       },
       {
         "id": "nfl-greg-olsen-2019",
@@ -11621,7 +11621,7 @@
             "value": "82"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jevf1bubmrv2vvmiwq3r"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/40557a0f7c9a6179d9c8.png"
       },
       {
         "id": "nfl-heath-miller-2015",
@@ -11651,7 +11651,7 @@
             "value": "81"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/iqw8fry4hgfvegs9nfuf"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/90147f8a89e433c0f0c6.png"
       },
       {
         "id": "nfl-jason-witten-2015",
@@ -11681,7 +11681,7 @@
             "value": "104"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/r7uafhtwuexuaty0nhsc"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/9cac36f13a5061029787.png"
       },
       {
         "id": "nfl-tony-gonzalez-2012",
@@ -11711,7 +11711,7 @@
             "value": "124"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/enbspvy0ahsyznomitre"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f8c16eae474ce03ed1c2.png"
       },
       {
         "id": "nfl-vernon-davis-2017",
@@ -11741,7 +11741,7 @@
             "value": "69"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/so5ywayfeeu4zeijln5m"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/287a6f5a46339b498eac.png"
       }
     ],
     "grain": "season",
@@ -11780,7 +11780,7 @@
             "value": "71"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fvuuyskqr5koylr0ebcc"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/fdcc8420d3c14f798e05.png"
       },
       {
         "id": "nfl-greg-olsen-2008",
@@ -11810,7 +11810,7 @@
             "value": "54"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/jevf1bubmrv2vvmiwq3r"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/40557a0f7c9a6179d9c8.png"
       },
       {
         "id": "nfl-jason-witten-2004",
@@ -11840,7 +11840,7 @@
             "value": "87"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/r7uafhtwuexuaty0nhsc"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/9cac36f13a5061029787.png"
       },
       {
         "id": "nfl-jeremy-shockey-2002",
@@ -11870,7 +11870,7 @@
             "value": "127"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/oe4d8uw9nbhjtivrsmgu"
+        "headshot": ""
       },
       {
         "id": "nfl-jermichael-finley-2009",
@@ -11900,7 +11900,7 @@
             "value": "71"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/s1hfogrew6ypcgdklquv"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/e1cf881f85fb7617b27a.png"
       },
       {
         "id": "nfl-kellen-winslow-2006",
@@ -11930,7 +11930,7 @@
             "value": "89"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pw3hoatll5kkuc9v2gva"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/1a6d53a2303bff6629ca.png"
       },
       {
         "id": "nfl-todd-heap-2002",
@@ -11960,7 +11960,7 @@
             "value": "122"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/lfwhp1fevjrx1puoon94"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/f09174ff770c2aba840a.png"
       },
       {
         "id": "nfl-zach-miller-2008",
@@ -11990,7 +11990,7 @@
             "value": "56"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zzyshc4yuvfrkkbacm07"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/e611145e6fda180e8fd2.png"
       }
     ],
     "grain": "season",
@@ -12029,7 +12029,7 @@
             "value": "130"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/tb52fk83tmdpmbzwliuk"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/6a2ace96531184858c05.png"
       },
       {
         "id": "nfl-isaac-bruce-2008",
@@ -12059,7 +12059,7 @@
             "value": "60"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/txgl2lvmyu3m28cltnib"
+        "headshot": ""
       },
       {
         "id": "nfl-jerry-rice-2002",
@@ -12089,7 +12089,7 @@
             "value": "150"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/g1vjcnbryx3nmg0ppsnl"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/468b840cf6aa01a8a419.png"
       },
       {
         "id": "nfl-jimmy-smith-2005",
@@ -12119,7 +12119,7 @@
             "value": "70"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/zgvlthadzlf0q6thnktj"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7b9eefa712b9667508e3.png"
       },
       {
         "id": "nfl-joey-galloway-2007",
@@ -12149,7 +12149,7 @@
             "value": "57"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/pfioccpzeifhnunjtdy2"
+        "headshot": ""
       },
       {
         "id": "nfl-marvin-harrison-2008",
@@ -12179,7 +12179,7 @@
             "value": "60"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/fni7z2tqhhaq5kbe5a0s"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/e7b1df518281e97a057f.png"
       },
       {
         "id": "nfl-terrell-owens-2009",
@@ -12209,7 +12209,7 @@
             "value": "109"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/c41avnwoegxy9nnwmgbo"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/8b2cfb81b816a0887ca8.png"
       },
       {
         "id": "nfl-tim-brown-2002",
@@ -12239,7 +12239,7 @@
             "value": "127"
           }
         ],
-        "headshot": "https://static.www.nfl.com/image/private/f_auto,q_auto/league/ra9kiq4ocliinelsnhlw"
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/987c281e72c7fa98e083.png"
       }
     ],
     "grain": "season",

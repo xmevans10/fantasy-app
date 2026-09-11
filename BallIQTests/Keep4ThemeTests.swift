@@ -9,7 +9,7 @@ final class Keep4ThemeTests: XCTestCase {
     private let themes = Keep4Theme.loadBundled()
 
     func testBundleDecodesAllThemes() {
-        XCTAssertEqual(themes.count, 42, "bundled keep4_themes.json out of sync with themes.py")
+        XCTAssertEqual(themes.count, 51, "bundled keep4_themes.json out of sync with themes.py")
         XCTAssertEqual(Set(themes.map(\.key)).count, themes.count, "duplicate theme keys")
     }
 
@@ -18,8 +18,13 @@ final class Keep4ThemeTests: XCTestCase {
         XCTAssertTrue(era.eraAdjusted)
         XCTAssertTrue(era.isCreatable)
         XCTAssertEqual(era.scale, "nfl_fantasy")
-        // Every other theme is raw points.
-        XCTAssertTrue(themes.filter(\.eraAdjusted).count == 1)
+        // Era-adjustment is deliberately rare — every other theme grades on raw points — so
+        // assert the exact SET rather than a count. A bare count told you something had
+        // changed but not what, and it silently encoded "NFL is the only sport that can do
+        // this", which stopped being true when M31 made `baselines.TOTAL_SCALE` role-aware and
+        // hockey became era-adjustable. Adding a key here should be a deliberate act.
+        XCTAssertEqual(Set(themes.filter(\.eraAdjusted).map(\.key)),
+                       ["nfl-total-fantasy-era", "hockey-scoring-forwards-era"])
     }
 
     /// Locked-value mirror of test_export_themes.py::test_export_shape_locked_value.
@@ -82,20 +87,71 @@ final class Keep4ThemeTests: XCTestCase {
         XCTAssertEqual(t.cardStats(for: [:]).map(\.value), ["0", "0", "0", "0.0", "0"])
     }
 
-    /// Cross-position column slicing parity with themes.py `columns_for`
-    /// (locked by test_export_themes.py::test_cross_position_column_slicing).
-    func testCrossPositionColumnSlicing() throws {
+    /// Cross-position card composition parity with themes.py `columns_for`
+    /// (locked by test_export_themes.py::test_cross_position_card_composition).
+    func testCrossPositionCardComposition() throws {
         let total = try XCTUnwrap(themes.first { $0.key == "nfl-total-fantasy" })
         XCTAssertEqual(total.columns(for: "WR").map(\.stat),
-                       ["receptions", "receiving_yards", "receiving_tds"])
+                       ["receiving_yards", "receptions", "receiving_tds"])
+        XCTAssertEqual(total.columns(for: "TE").map(\.stat),
+                       ["receiving_yards", "receptions", "receiving_tds"])
+        // INT is a scored term of `nfl_fantasy` (-2/pick) that the theme's columns omit; the
+        // canonical QB card puts it back, so the number can be reasoned about on the card.
         XCTAssertEqual(total.columns(for: "QB").map(\.stat),
-                       ["passing_yards", "passing_tds", "rushing_yards", "rushing_tds"])
+                       ["passing_yards", "passing_tds", "interceptions", "rushing_yards", "rushing_tds"])
         XCTAssertEqual(total.columns(for: "RB").map(\.stat),
-                       ["rushing_yards", "rushing_tds", "receptions", "receiving_yards", "receiving_tds"])
+                       ["rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds", "receptions"])
+
         let wr = try XCTUnwrap(themes.first { $0.key == "nfl-wr-receiving" })
         XCTAssertEqual(wr.columns(for: "WR"), wr.columns)     // single-position: unchanged
         let nba = try XCTUnwrap(themes.first { $0.key == "nba-scorers" })
-        XCTAssertEqual(nba.columns(for: "G"), nba.columns)    // NBA: unchanged
+        XCTAssertEqual(nba.columns(for: "G"), nba.columns)    // NBA: no position split
+        // C/L/R record the same things, so a skater theme keeps its own emphasis rather than
+        // being rewritten to canonical G-A-P.
+        let snipers = try XCTUnwrap(themes.first { $0.key == "hockey-modern-snipers" })
+        XCTAssertEqual(snipers.columns(for: "C"), snipers.columns)
+    }
+
+    /// A keeper in a DF/GK theme gets the two keeper numbers, not "Goals 0 · Assists 0".
+    /// Soccer's whole vocabulary is four keys, so this card is honestly two tiles wide.
+    func testKeeperCardDropsOutfieldStats() throws {
+        let backs = try XCTUnwrap(themes.first { $0.key == "soccer-defenders" })
+        XCTAssertEqual(backs.columns(for: "GK").map(\.stat), ["clean_sheets", "appearances"])
+        XCTAssertEqual(backs.columns(for: "DF"), backs.columns)   // a DF produces all four
+    }
+
+    /// The guarantee itself, over every bundled theme: no card column names a stat the
+    /// position never records. Python's `test_no_theme_can_show_a_stat_its_position_never_records`
+    /// covers the generated themes too (they aren't exported to the bundle).
+    func testNoThemeShowsAStatItsPositionNeverRecords() {
+        var offenders: [String] = []
+        for theme in themes where theme.positions.count > 1 {
+            for position in theme.positions {
+                for column in theme.columns(for: position)
+                where !theme.sport.produces(position: position, stat: column.stat) {
+                    offenders.append("\(theme.key)/\(position): \(column.label)")
+                }
+            }
+        }
+        XCTAssertEqual(offenders, [], "card columns a position never records")
+    }
+
+    /// `columns(for:)` can only fill a canonical key it has a label/format for — a key in
+    /// `Sport.positionStatTemplates` missing from `fillColumns` would silently shorten a card.
+    /// Mirrors test_export_themes.py::test_every_canonical_card_key_can_be_rendered.
+    func testEveryCanonicalCardKeyCanBeRendered() {
+        for (sport, byPosition) in Sport.positionStatTemplates.merging(
+            Sport.positionStatTemplatesGame, uniquingKeysWith: { season, game in
+                season.merging(game, uniquingKeysWith: { _, g in g })
+            }) {
+            // NBA has game templates but no card fill table — `columns(for:)` returns the
+            // theme's own columns there (no position split), so nothing is ever filled.
+            guard let fill = Keep4Theme.fillColumns[sport] else { continue }
+            for (position, keys) in byPosition {
+                let missing = keys.filter { fill[$0] == nil }
+                XCTAssertEqual(missing, [], "\(sport.rawValue)/\(position) unrenderable keys")
+            }
+        }
     }
 
     /// Grading a season through a theme's rule equals grade.py for that scale — the existing

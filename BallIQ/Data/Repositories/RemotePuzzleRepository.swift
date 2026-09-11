@@ -351,6 +351,14 @@ final class RemotePuzzleRepository: PuzzleRepository {
                      URLQueryItem(name: "order", value: "id")]
         if let sport = filter.sport {
             query.append(URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)"))
+        } else {
+            // "All" is not "everything the table happens to hold" — it is everything THIS BUILD
+            // can decode. Without this predicate the fetch asks for rows it may be unable to
+            // parse, and because the response is decoded as one array under `try?`, a single
+            // unknown sport takes the whole archive down rather than just its own row (see
+            // `Sport.decodableFilterValue`). Naming the sports explicitly is what lets a new
+            // sport be published without breaking the clients that predate it.
+            query.append(URLQueryItem(name: "sport", value: Sport.decodableFilterValue))
         }
         if let remote: [PuzzleContentRow<T>] = try? await client.select("puzzles", query: query, decoder: contentDecoder),
            !remote.isEmpty {

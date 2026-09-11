@@ -25,6 +25,19 @@ _HEADSHOT = "https://a.espncdn.com/i/headshots/nba/players/full/{id}.png"
 # ESPN is keyless and generous; a small pause between players is courtesy, not necessity.
 _RATE_DELAY = 0.3
 
+# Circuit breaker for `fetch_by_ids`/`fetch_targets`: if this many *consecutive* players
+# raise (network error, not a clean "no match"/"no season" miss), stop and return whatever
+# was already fetched instead of ploughing through the rest of a pool that's clearly
+# talking to a source gone unreachable. Each failure can still cost tens of seconds even
+# after http.py's own retry/timeout tightening (2026-09-05) — a broad pool (NBA's is
+# ~900 ids) hitting a run of bad ones back-to-back with no breaker is what stalled a
+# nightly run for 24 minutes with zero new cache writes in the last 10. This does NOT
+# silently drop the sport: it's a partial-pool return with a loud log line, the same
+# contract `nhl_stats.load_current_season`/`f1_ergast.refresh` already give their callers,
+# just applied per-item instead of per-season since this loop has hundreds of items where
+# theirs has a handful.
+_MAX_CONSECUTIVE_FAILURES = 15
+
 
 def _search_athlete_id(name: str) -> str | None:
     """Resolve a player name to an ESPN athlete id (the `a:<id>` part of its uid)."""
@@ -79,7 +92,8 @@ def parse_seasons(name: str, data: dict, athlete_id: str = "") -> dict[int, RawS
 
     Pure (no network) so it's unit-testable. When a season appears more than once
     (traded mid-year), the row with the most games played wins. `athlete_id` (when
-    given) builds the ESPN headshot URL — one current headshot per player.
+    given) builds the ESPN headshot URL — one current headshot per player, and is also the
+    person key that keeps two same-name players from merging into one career.
     """
     headshot = _HEADSHOT.format(id=athlete_id) if athlete_id else ""
     teams = data.get("teams", {})  # keyed by team slug
@@ -116,6 +130,7 @@ def parse_seasons(name: str, data: dict, athlete_id: str = "") -> dict[int, RawS
             team_abbr=abbr,
             season_year=int(year),
             sport="nba",
+            person_id=athlete_id,
             position=_norm_position(row.get("position", "")),
             stats={
                 "games": games,
@@ -150,6 +165,7 @@ def fetch_targets(targets: list[tuple[str, int]]) -> list[RawSeason]:
         by_name.setdefault(name, []).append(year)
 
     out: list[RawSeason] = []
+    consecutive_failures = 0
     for name, years in by_name.items():
         # Two calls per player (search, then stats) — the delay after this iteration
         # only needs to fire if at least one of them actually hit the network.
@@ -158,6 +174,7 @@ def fetch_targets(targets: list[tuple[str, int]]) -> list[RawSeason]:
             aid = _search_athlete_id(name)
             if not aid:
                 print(f"[espn] no athlete match: {name}")
+                consecutive_failures = 0  # a clean miss, not a broken source
                 continue
             stats_cache_key = f"espn_nba_stats_{aid}.json"
             stats_cached = is_cached(stats_cache_key)
@@ -171,8 +188,14 @@ def fetch_targets(targets: list[tuple[str, int]]) -> list[RawSeason]:
                     print(f"[espn] no {year} season for {name}")
             if not (search_cached and stats_cached):
                 time.sleep(_RATE_DELAY)
+            consecutive_failures = 0
         except Exception as err:  # noqa: BLE001
             print(f"[espn] skipping {name}: {err}")
+            consecutive_failures += 1
+            if consecutive_failures >= _MAX_CONSECUTIVE_FAILURES:
+                print(f"[espn] {consecutive_failures} consecutive failures — ESPN looks "
+                      f"unreachable, stopping early with {len(out)} seasons fetched so far")
+                break
     return out
 
 
@@ -184,6 +207,7 @@ def fetch_by_ids(id_to_name: dict[str, str]) -> list[RawSeason]:
     one). Goes through the shared on-disk cache so re-runs don't refetch.
     """
     out: list[RawSeason] = []
+    consecutive_failures = 0
     for aid, name in id_to_name.items():
         cache_key = f"espn_nba_stats_{aid}.json"
         was_cached = is_cached(cache_key)
@@ -192,6 +216,13 @@ def fetch_by_ids(id_to_name: dict[str, str]) -> list[RawSeason]:
             out += parse_seasons(name, data, athlete_id=aid).values()
             if not was_cached:
                 time.sleep(_RATE_DELAY)
+            consecutive_failures = 0
         except Exception as err:  # noqa: BLE001
             print(f"[espn] skipping id {aid} ({name}): {err}")
+            consecutive_failures += 1
+            if consecutive_failures >= _MAX_CONSECUTIVE_FAILURES:
+                print(f"[espn] {consecutive_failures} consecutive failures — ESPN looks "
+                      f"unreachable, stopping early with {len(out)} seasons fetched so far "
+                      f"({len(id_to_name)} ids in the pool)")
+                break
     return out

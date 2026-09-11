@@ -29,7 +29,18 @@ what changed most recently (DB hand-offs, TestFlight, App Store submission), see
   1000 / 800 / 600 / 400 / 200. The path is fully visible from the first second — an earlier
   build revealed it a club at a time and was corrected mid-build, because the drip-feed made the
   game about when to spend a reveal rather than who the player is. Same obscurity tiers as Who Am
-  I? (`SubjectDifficulty`, now shared), same guess typeahead as The Grid. Archive cards are
+  I? (`SubjectDifficulty`, now shared), same guess typeahead as The Grid. **Up to 3 hints per
+  board** are on sale mid-run — facts the board deliberately does *not* show (position, peak
+  year, career line, draft class, jersey, initials …), minted from the same clue dimensions and
+  ordered vague → specific. A hint keeps 80% of what the board is worth *at that moment*, so the
+  first costs exactly what a wrong guess costs and the third still costs something a
+  fifth-guess player can afford; all three plus a first-guess solve pays 512, between a cold
+  third and fourth guess. Hints move `performance` (and the duel hit count) as well as points,
+  or "buy everything, then guess" would be a rating farm — and they are switched **off in live
+  duels**, where the winner is whoever solves first and a points-only cost would make a hint
+  free. `_HINT_EXCLUDED_DIMENSIONS` is what keeps a hint worth buying: nothing derivable from
+  the timeline — not the club list, not the career span — can ever be minted as one. Archive
+  cards are
   titled with a minted **teaser** — a low-reveal fact about the subject plus a jab about the
   career's shape ("Part of the 2003 draft class — and no forwarding address"), generated from the
   Who Am I? clue dimensions under a reveal cap and leak-checked against the answer.
@@ -211,10 +222,35 @@ python3 -m tools.ingest.main [--dry-run] [--write-fallback] [--write-themes]
   achievable for NFL/NBA/MLB but **not** for soccer/tennis without a paid/different
   source; Draft & Spin's soccer formation and tennis 3-round shape are sized to this
   ceiling by design (see §8 M5 Phase D notes).
+- **Hockey and F1** (M31, added 2026-09-03) are the *opposite* of the soccer/tennis ceiling —
+  both have complete, keyless, full-history sources, verified live before a line was written:
+  `nhl_stats.py` sweeps `api.nhle.com/stats/rest/en/{skater,goalie}/summary` for every
+  league-wide season back to **1917-18** (deeper than any other sport here — nflverse starts
+  at 1999, the MLB sweep at 1955), and `f1_ergast.py` reads driver-seasons 1950-present from
+  `api.jolpi.ca/ergast` (the maintained Ergast mirror; **`ergast.com` itself is dead and 404s
+  on every path**). Both follow the committed-CSV + stdlib-loader split
+  (`data/nhl_seasons.csv`, `data/f1_seasons.csv`). Three source quirks are load-bearing and
+  documented in each provider's docstring: the NHL API caps `limit` at 100 regardless of what
+  you ask for; old NHL seasons return real **nulls** for stats that did not exist yet
+  (plus-minus pre-1968, shots pre-1960, TOI pre-1998) which are OMITTED rather than zeroed;
+  and a wrong team in an NHL headshot URL **302s to the silo placeholder** instead of 404ing,
+  so `_resolve_mug` disables redirects and tries every club a traded player dressed for.
+  F1 deliberately does **not** ingest championship points — F1 rewrote its points system in
+  1961, 1991 and 2010, so a raw total is not comparable across eras; every F1 stat is an
+  era-invariant achievement counted from race results instead, and `fastest_laps` is omitted
+  (not zeroed) before 2004, which is where Ergast's data starts.
+- **Rugby was investigated for M31 and rejected on evidence** (2026-09-03): ESPN's rugby API
+  serves teams, crests and hex colors but **no player statistics at all** (`.../teams/{id}/roster`
+  returns `athletes: []`, `.../statistics` returns empty categories, the core API's season
+  athletes endpoint returns `count: 0`), and Wikidata's matches-played property is unpopulated
+  for rugby union players (0 rows for `P1350` over `Q14089670`). It would land in the
+  hand-curated seed tier alongside tennis, not as a first-class sport. Do not re-investigate
+  without a genuinely new candidate source.
 - **Themes** (`themes.py` `KEEP4_THEMES`): the ONE template shape — sport, grade `scale`,
   positions, `min_stats` floors, on-card `columns` (stat/label/fmt), `pool_cap`, `grain`
-  (season|game), `era_adjusted`. 24 curated themes today (18 NFL/NBA + 2 each for baseball,
-  soccer, tennis, added 2026-07-03). `columns[].fmt` now also includes `dec3`/`dec2`
+  (season|game), `era_adjusted`. 24 curated themes at the 2026-07-03 cut (18 NFL/NBA + 2 each
+  for baseball, soccer, tennis); **50 in the bundle today**, the most recent 8 being M31's
+  hockey (5) and F1 (3). `columns[].fmt` now also includes `dec3`/`dec2`
   (3/2-decimal rate stats like baseball AVG/OPS/ERA — `pct1`/`dec1` alone read wrong for
   those), mirrored in `Keep4Theme.format` and `ScoringStat.Fmt` on the Swift side.
 - **Niche-theme generator** (`generate.py` + `curation.py`): auto-generates additional
@@ -230,6 +266,14 @@ python3 -m tools.ingest.main [--dry-run] [--write-fallback] [--write-themes]
   qualified seasons, incl. the `fantasy_total` pseudo-stat era-adjustment depends on (§4).
   `era_analysis.py` is a standalone validation script (not part of the pipeline run) that
   produced the era-index sanity checks in §4.
+- **A corrected STAT column cannot land through the normal upsert path.**
+  `main.filter_new_catalog_rows` deliberately skips already-stored closed-season rows unless
+  one of a small set of *fillable* columns (headshot, and the bio columns) is blank — that is
+  what keeps a daily run from resending the whole ~180k-row catalog. `stats` is not in that
+  set, so fixing a provider's stat mapping and re-running `--catalog` upserts **nothing**:
+  every row already exists and looks complete. Hit for real on 2026-09-03, when hockey's
+  `toi_per_game` was fixed and the re-push reported success while the column stayed empty in
+  production. A stat backfill has to bypass that filter explicitly.
 - **Artifacts baked into the app bundle** (regenerated by `--write-fallback`):
   `keep4_puzzles.json`, `whoami_puzzles.json` (offline daily fallback),
   `player_seasons.json` (creation catalog fallback), `stat_baselines.json` (era baselines),
@@ -428,12 +472,21 @@ generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
 ## 7. Verification playbook
 
 - Swift: `xcodebuild -scheme BallIQ -project BallIQ.xcodeproj -destination
-  'platform=iOS Simulator,name=iPhone 15,OS=17.5' -derivedDataPath build test`
+  'platform=iOS Simulator,id=<UDID>' -derivedDataPath build test`.
+  **Resolve the UDID first — do not copy a device NAME out of this doc.** This machine's
+  simulator pool is shared and reshaped by concurrent agent sessions (see the
+  `audit-session-gotchas` note), and the name this line used to hardcode, "iPhone 15", does
+  not exist on it at all: the iOS 17.5 device is named `BallIQ-RosterTest` and the 18.3 one
+  `BallIQ-18-3`. Two separate sessions lost time to that on 2026-09-03/05. Get the current
+  list with `xcrun simctl list devices available`, then pass the UDID.
+  Runtime matters for one suite: `PurchaseFlowTests` fails wholesale on **iOS 26.5** for
+  environmental reasons (§7.1) and passes on **18.3**, so prefer an 18.3 device for a full run.
 - Python: `python3 -m venv /tmp/balliq-venv && /tmp/balliq-venv/bin/pip install pytest &&
   /tmp/balliq-venv/bin/python -m pytest tools/ingest/tests/ -q`
 - Screenshots: `xcrun simctl install/launch booted com.balliqfantasy.app
   [-screenshotGame|-screenshotResult|-screenshotWhoAmI[Result]|
-  -screenshotJourneyman[Result]|-screenshotCreate|-screenshotStats|-screenshotLeagues|
+  -screenshotJourneyman[Result] [-screenshotJourneymanHints <n>]|-screenshotCreate|
+  -screenshotStats|-screenshotLeagues|
   -screenshotVersus|-screenshotCommunity|-screenshotBrowse]` then `xcrun simctl io booted screenshot out.png`
   ([DebugLaunch.swift](../BallIQ/DebugLaunch.swift)). Quit Xcode before driving the
   simulator (its auto-reinstall kills the app mid-session). For view states a single
@@ -467,6 +520,7 @@ generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
 | M25 no timers, universal speed multiplier | ✅ shipped 2026-08-23 — **every countdown removed app-wide.** A clock may GRADE a run, never end one. `SpeedMultiplier` (`score × (1 + 0.20 × fractionOfParRemaining)`, par 120/90/120/180s) applied once in `recordGameResult`. **Points only, never `performance`** — that feeds the rating engine and is `0...1`-checked in Postgres. Server-side: no submission is zeroed or downgraded for lateness; the live-duel expiry became a narrow abandonment sweep (fires only when I finished and they never did, after 15 min). `DuelTimerBar` → `DuelStatusBar`, keeping the opponent and dropping the clock. See `prompts/M25-no-timers.md` and `M25b-timer-removal-completion.md` |
 | M26 headshots rehosted + prefetched | ✅ shipped 2026-08-24 — **headshots are ours now.** `player_seasons.headshot` was 100% non-null the whole time, which is exactly why the gap never showed up as a metric: the column was full, the images were not. All 90,092 baseball rows carried MLB's Cloudinary `d_people:generic:headshot:silo` fallback, so a missing photo returned **200 OK with a grey silhouette** (35% real, 6% for pre-1970 players); ESPN 404s retired NBA players (**Michael Jordan was a 404**; 1990–2009 sat at 7.8%); Wikimedia 429-throttled us and tennis is 100% Wikimedia. `tools/ingest/headshots.py` rehosts every source into the public `player-headshots` bucket in parallel shards, with `headshot_assets` as both ledger and work queue. Placeholders are **detected and deliberately not rehosted** — cleared to `''` so `PlayerHeadshotBadge`'s initials monogram takes over, since a designed fallback beats a silo and clearing is the only way to reach it. Two backfills recover what the leagues lost: `--nba-backfill` bridges our ESPN ids to NBA person ids by name against nba_api's historical roster (Jordan, Iverson, Ewing, Miller, Pippen all restored), and `--wiki-backfill` reuses `providers/wikimedia.py` for the rest (**77% hit rate** on the baseball players MLB's CDN lacks, 10/10 of the 1940–69 era). **Latency, measured on a real 8-card board: 7,030 KB / 1.30s → 194 KB / 0.10–0.27s** — 36× fewer bytes, ~5–8× faster, because `AppImagePipeline.transformed()` only rewrites Storage URLs to the render endpoint and hotlinked photos could never be resized server-side. `--warm-transforms` pre-generates the 192px rendition so no real user is ever the first requester. Client side, `PuzzleImageWarmer` warms a sport's daily headshots while the player sits on Home (which draws none of its own), bounded to 3 in flight at `.utility` |
 | M27 Puzzle Blitz (timed multi-format run) | ✅ shipped 2026-08-25 — one button, a fixed clock, and **real boards of four formats back to back**, score withheld until the end (user directive). Setup picks sports (the app's first multi-select, added to the shared `GameSetupScreen` rather than a second screen), 1/3/5 minutes, and which formats may be drawn. Boards are the *existing* game views with a `blitz: BlitzSession` attached — the same seam `DuelSession` already established — so best-surface parity (§1 theme 1) is inherited rather than re-implemented four times. **The clock gates whether a NEW board is served and never touches the one on screen**, which is how a timed mode coexists with M25: running out means you played fewer puzzles, never that a puzzle you'd solved was taken away, and there is deliberately no `SpeedMultiplier` bonus on top (finishing sooner already buys you another board — pricing that second twice). Cross-format fairness is *enforced*, not asserted: every format pays `10 pts × its par seconds × surplus`, so at par all four pay the same per second (`BlitzScoringTests`). `surplus` rebases each board's own `performance` so **chance is worth exactly zero** — including the negative half, which a failing test forced: the first version clamped at zero, which nets out on Keep4 (eight decisions averaged) but not on a binary Over/Under call, making guess-only Over/Under the most efficient way to play badly. Run headline is floored at 0; the per-format breakdown still shows real losses. One `game_results` row per *run* (`GameFormatKind.blitz`, `mode: .practice`, unranked — a run spans sports, so there is no single rating to move), XP once. **Excluded on purpose:** The Grid (nine free-text answers at 180s par is a session, not a round — it would eat a whole 3-minute blitz) and Draft & Spin (no per-decision right answer, so no `performance` to pay on). **All five sports, with one structural exception.** Blitz draws for whatever sports are ticked, and live pool counts (2026-08-25) back all of them: K4C4 114/39/36/36/36 and Who Am I? 187/182/183/184/170 across NFL/NBA/MLB/soccer/tennis, Over/Under generated from a 9.6k–134k-row catalog per sport. **Journeyman is impossible for tennis and always will be** — its board is a club history and a tour player has a nationality instead; `tools/ingest/journeyman.py`'s `MIN_STINTS` is keyed `{nfl, nba, baseball, soccer}` and the live pool reads 158/150/158/87 boards and 0 tennis. `Sport.hasClubCareers` is the shared client-side statement of that (a category fact, deliberately declared rather than inferred from an empty fetch, since "never" and "nothing right now" warrant different UI), and `BlitzConfig.servableFormats` routes it: the tennis picker dims Journeyman with an explanatory caption, the estimate stops counting it, `isPlayable` rejects a tennis+Journeyman-only config instead of dead-ending at Start, and the loader never fetches that pool. Caught by actually playing a tennis blitz, not by reading the table. **Known ceiling:** no weekly server board — `arcade_scores` is keyed `(game, sport)` with a `check (game in ('over_under','grid'))` and a blitz spans sports, so bests are per-duration and on-device until a sportless `blitz_scores` table exists |
+| M31 hockey + F1 (2 new sports) | ✅ data + backend shipped 2026-09-03 — the app goes 5 sports to 7. **Both were verified as first-class sources before a line was written, which is what separates them from the soccer/tennis ceiling in §3:** `nhl_stats.py` sweeps the NHL's own keyless stats API for every league-wide season back to **1917-18** (39,533 rows; deeper history than any other sport here) with 6,213/6,218 players carrying a real portrait, and `f1_ergast.py` reads 1950-present driver-seasons from the maintained Ergast mirror (2,557 rows; `ergast.com` itself is dead). Live: 47,317 catalog rows, **zero** photo-less or team-less; 33/33 hockey crests and 86/164 F1 constructor crests rehosted; Who Am I? pools (151 hockey / 77 F1), Journeyman pools (150 / 65), Grid axis membership + cached index for both. **F1 earns Journeyman where tennis never could** — the constructor IS the club, so Prost's real McLaren→Renault→McLaren→Ferrari→Williams path is a board. **Three defects caught and fixed in build, all of the fail-silently class:** a duplicate `"saves"` key in `ScoringDetailSheet`'s label map (a Swift dictionary literal with duplicate keys is a *runtime* crash, not a compile error — it built clean and killed several test hosts); Ergast's mid-season standings minting the 2026 points leader a world championship he had not won (fixed by judging completeness against the season SCHEDULE — both cheaper checks give the wrong answer, see `_season_is_complete`); and `_SKATER_MAP` never carrying `timeOnIcePerGame`, so TOI was empty in all 39,533 rows while `ScoringStat` advertised it — the original test hid this by patching in the very mapping whose absence was the bug. **Rugby was investigated and cut on evidence** (§3): ESPN serves rugby crests but literally no player statistics, and Wikidata's matches-played property is unpopulated for rugby union. **Remaining:** Keep4 daily mint, `--write-fallback` bundle regen, and app-surface screenshots |
 
 **Release status (updated 2026-08-25):** **1.7.0 (build 40) is `WAITING_FOR_REVIEW`** as of
 16:50 UTC, carrying M23 live duels, M25 no-timers and M27 Puzzle Blitz together.

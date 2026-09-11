@@ -1,8 +1,14 @@
 // Which sport the daily-drop push features.
 //
 // One notification for everyone, rotating a sport per day: NFL, then NBA, then MLB, then
-// soccer, then tennis, then back to NFL. Not personalised — every recipient on a given
-// calendar day gets the same push, and the featured sport is a function of the day alone.
+// soccer, tennis, hockey, F1, then back to NFL. Not personalised — every recipient on a
+// given calendar day gets the same push, and the featured sport is a function of the day
+// alone.
+//
+// M31 widened this from 5 to 7. That is a real product trade, not just a list edit: each
+// sport's push now comes round every 7 days instead of every 5. Taken deliberately — a
+// sport absent from the rotation is invisible in push entirely, which is a worse outcome
+// for two brand-new sports than a slower cycle is for the existing five.
 //
 // Pure, and in `_shared` rather than beside the notifier, because the notifier calls
 // `Deno.serve` at module load — importing it from a test would boot a server.
@@ -17,7 +23,8 @@
 /** The rotation, in order. Fixed rather than derived from whatever minted that day, so the
  * cycle stays stable and predictable even when one sport's mint is missing — a gap is skipped
  * for that day, it does not shift everyone else's turn. */
-export const SPORT_ROTATION = ["nfl", "nba", "baseball", "soccer", "tennis"] as const;
+export const SPORT_ROTATION =
+  ["nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"] as const;
 
 /** Whole days since the epoch for a "YYYY-MM-DD" local day.
  *

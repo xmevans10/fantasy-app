@@ -105,7 +105,7 @@ def _country(comp: str) -> str:
 
 
 CSV_FIELDS = ["name", "team_abbr", "season_year", "position", "appearances", "goals",
-              "assists", "clean_sheets", "headshot", "league", "competition"]
+              "assists", "clean_sheets", "headshot", "league", "competition", "player_id"]
 
 
 # ---------------------------------------------------------------------------
@@ -261,6 +261,9 @@ def refresh() -> None:
             "headshot": image,
             "league": _country(comp),
             "competition": _COMPETITION_SLUG.get(comp, ""),
+            # Transfermarkt's own player id, already this loop's grouping key — carried into
+            # the CSV so the catalog can tell two same-name players apart.
+            "player_id": player_id,
             "_club_identity": club_names.get(club_id, club_id),
         })
     rows.sort(key=lambda r: (r["name"], r["season_year"], r["team_abbr"]))
@@ -318,6 +321,11 @@ def load_seasons() -> list[RawSeason]:
                 },
                 source="transfermarkt",
                 headshot=row["headshot"],
+                # `.get`, not `[...]`, for the same reason `league`/`competition` are read
+                # defensively above: a CSV committed before this column existed must still
+                # load. Those rows fall back to a name key (`RawSeason.person`) until the
+                # next full `refresh()` regenerates the sweep.
+                person_id=row.get("player_id") or "",
                 meta=soccer_leagues.season_meta(row),
             ))
     return out

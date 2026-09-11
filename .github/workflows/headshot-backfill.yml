@@ -12,7 +12,15 @@ name: headshot-backfill
 # `pending` ledger rows, and every `--*-backfill` flag only looks at `player_seasons.headshot=''`
 # rows in the first place (see `_photoless_names` in headshots.py) — so re-running costs almost
 # nothing once a sport's backlog is actually exhausted, the candidate queries just come back
-# empty. That's what makes the self-chaining loop below viable: it isn't "run everything again,"
+# empty.
+#
+# That targeting is also why `seed-queue` has to run FIRST, and why it was the hole in this
+# workflow for as long as it existed: every stage below reprocesses sources the ledger already
+# knows, so a player discovered since the queue was last filled was invisible to all of them —
+# not pending, not photo-less, not counted as outstanding by the coverage summary. The queue
+# only ever grew by hand (7,590 sources on 2026-09-07). It now grows on every pass.
+#
+# Targeting is what makes the self-chaining loop below viable: it isn't "run everything again,"
 # it's "check what's still missing and go after just that."
 #
 # `converge` (last job) re-runs this whole workflow via workflow_dispatch as long as the last
@@ -43,12 +51,31 @@ permissions:
   actions: write
 
 jobs:
+  # Enqueue catalog sources the ledger has never seen. Runs BEFORE `plan` on purpose: the
+  # convergence loop compares outstanding work before and after the pass, so newly-enqueued work
+  # has to be inside the "before" snapshot or a pass that seeds 5,000 rows and resolves 4,000 of
+  # them reads as a regression and stops the loop. Idempotent — `on conflict do nothing` — so a
+  # pass with nothing new to enqueue costs one set difference.
+  seed-queue:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r tools/ingest/requirements.txt
+      - run: python -m tools.ingest.headshots --seed-queue
+
   # Computed rather than a fixed 0-7 range so a manual `shards` input actually changes the matrix
   # size (job-level `if:` can't see `matrix`, so gating a fixed matrix by index doesn't work —
   # same reasoning grid-backfill.yml's `plan` job documents for its own matrix). Also snapshots
   # the "remaining unresolved" count BEFORE this pass touches anything, so `converge` can tell
   # whether the pass that just ran actually moved the needle.
   plan:
+    needs: seed-queue
     runs-on: ubuntu-latest
     outputs:
       shards: ${{ steps.build.outputs.shards }}

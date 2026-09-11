@@ -104,6 +104,16 @@ enum DraftSpinConstraint {
         .baseball: [("Hitter", .exact("H")), ("Hitter", .exact("H")), ("Hitter", .exact("H")),
                     ("Hitter", .exact("H")), ("Pitcher", .exact("P")), ("Pitcher", .exact("P"))],
         .tennis: [("Player", .exact("Player")), ("Player", .exact("Player")), ("Player", .exact("Player"))],
+        // Hockey is the one new sport whose real shape maps straight onto a formation: a
+        // forward line (C/LW/RW), a defence pair and a goalie is how the sport itself is
+        // organized, and the NHL feed carries every one of those position codes for every
+        // season, so no slot is aspirational.
+        .hockey: [("C", .exact("C")), ("LW", .exact("L")), ("RW", .exact("R")),
+                  ("D", .exact("D")), ("D", .exact("D")), ("G", .exact("G"))],
+        // F1 has one position, so it takes tennis's shape: N identical slots. Three rather
+        // than the literal two-car grid entry — the same playability call tennis's three
+        // makes, and a fantasy lineup is not a claim about a real entry list.
+        .f1: [("Driver", .exact("Driver")), ("Driver", .exact("Driver")), ("Driver", .exact("Driver"))],
     ]
 
     /// The NFL "Both sides" variant (ROSTER toggle): the six offense slots unchanged, plus
@@ -365,6 +375,18 @@ struct DraftSpinResult: Equatable {
                 case .madePlayoffs: return String(localized: "TOP 10 SEASON")
                 case .missedPlayoffs: return String(localized: "TOUR GRIND")
                 }
+            case .hockey:
+                switch self {
+                case .champion: return String(localized: "WON THE CUP")
+                case .madePlayoffs: return String(localized: "MADE THE PLAYOFFS")
+                case .missedPlayoffs: return String(localized: "MISSED THE PLAYOFFS")
+                }
+            case .f1:
+                switch self {
+                case .champion: return String(localized: "WORLD CHAMPION")
+                case .madePlayoffs: return String(localized: "PODIUM REGULAR")
+                case .missedPlayoffs: return String(localized: "MIDFIELD SEASON")
+                }
             }
         }
     }
@@ -409,6 +431,13 @@ enum DraftSpinSimulator {
         case .nba: return SeasonShape(gameCount: 82, championshipWins: 48, playoffWins: 42)
         case .baseball: return SeasonShape(gameCount: 162, championshipWins: 91, playoffWins: 81)
         case .soccer: return SeasonShape(gameCount: 38, championshipWins: 24, playoffWins: 19)
+        // Hockey's 82-game season is the NBA's exactly, so it reuses the NBA thresholds
+        // rather than re-deriving them — same n, same tier odds (champion 7.5%, playoff 45.6%).
+        case .hockey: return SeasonShape(gameCount: 82, championshipWins: 48, playoffWins: 42)
+        // A modern F1 season is ~22 rounds. Thresholds derived the same way as every other
+        // sport here — matching NFL's tier probabilities under a 50/50 round: P(X>=15) = 6.7%
+        // for the title, P(X>=12) = 41.6% for the podium-regular tier.
+        case .f1: return SeasonShape(gameCount: 22, championshipWins: 15, playoffWins: 12)
         case .tennis: return SeasonShape(gameCount: 70, championshipWins: 42, playoffWins: 35)
         }
     }
@@ -442,6 +471,19 @@ enum DraftSpinSimulator {
         case .baseball: return FantasyAnchors(p50: 1973,  p90: 3005,  p99: 3942)
         case .soccer:   return FantasyAnchors(p50: 368.5, p90: 677,   p99: 1024.25)
         case .tennis:   return FantasyAnchors(p50: 34.5,  p90: 165,   p99: 532.5)
+        // Hockey and F1 (M31), measured 2026-09-03 against the real committed sweeps with the
+        // same methodology as every sport above: per-SLOT fantasy-point percentiles over
+        // qualified seasons (hockey games>=20 over 38,878 qualified seasons; F1 races>=6 over
+        // 1,581 driver-seasons), summed across each formation's slots.
+        //   Hockey C/L/R/D/D/G -> 87+74+82+42+42+170 = 497 at p50, 1,185 at p90, 1,808 at p99.
+        //   F1's three identical Driver slots -> 20.5/182.5/540.6 each.
+        //
+        // F1's spread is genuinely extreme and is not a bug to tune away: p50 to p99 is a 26x
+        // climb, where NFL's is 3.5x. That is the sport — most of the grid never podiums while
+        // a champion banks 600+ — so an F1 lineup's win probability moves far more sharply per
+        // drafted driver than any other sport's. Worth knowing before touching these numbers.
+        case .hockey:   return FantasyAnchors(p50: 497,   p90: 1185,  p99: 1808)
+        case .f1:       return FantasyAnchors(p50: 61.5,  p90: 547.5, p99: 1621.8)
         }
     }
 
@@ -464,6 +506,10 @@ enum DraftSpinSimulator {
         case .soccer: return (season.position == "DF" || season.position == "GK")
             ? "soccer_defender_fantasy" : "soccer_attacker_fantasy"
         case .tennis: return "tennis_fantasy"
+        // Hockey splits by role exactly as baseball does — a goalie and a skater share no
+        // stat key, so one formula cannot grade both.
+        case .hockey: return season.position == "G" ? "hockey_goalie_fantasy" : "hockey_skater_fantasy"
+        case .f1: return "f1_driver_fantasy"
         }
     }
 

@@ -60,14 +60,36 @@ final class UpdateNotesTests: XCTestCase {
         }
     }
 
-    /// The release being shipped has notes. Guards the specific way this surface fails silently:
-    /// everything is wired, the sheet is attached, and nothing appears because nobody added the
-    /// entry for the new version.
-    func testCurrentBundleVersionHasNotes() throws {
+    /// The release being shipped has notes, or has declared that it has none. Guards the
+    /// specific way this surface fails silently: everything is wired, the sheet is attached, and
+    /// nothing appears because nobody added the entry for the new version.
+    func testCurrentBundleVersionHasNotesOrDeclaresSilence() throws {
         let current = try XCTUnwrap(
             Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String)
-        XCTAssertNotNil(UpdateNotes.byVersion[current],
-                        "no update notes for \(current), add them to UpdateNotes.byVersion, or "
-                        + "delete this expectation if the release is deliberately silent")
+        XCTAssertTrue(UpdateNotes.byVersion[current] != nil
+                        || UpdateNotes.deliberatelySilent.contains(current),
+                      "no update notes for \(current), add them to UpdateNotes.byVersion, or "
+                      + "list it in UpdateNotes.deliberatelySilent if the release has nothing to "
+                      + "show a player")
+    }
+
+    /// The two states have to stay distinct: a version that is both listed as silent and given
+    /// slides is a merge artefact, and the slides would ship regardless of the declaration.
+    func testASilentReleaseDeclaresNoSlides() {
+        for version in UpdateNotes.deliberatelySilent {
+            XCTAssertNil(UpdateNotes.byVersion[version],
+                         "\(version) is listed as deliberately silent but also declares slides")
+        }
+    }
+
+    /// The deferred announcement stays out of the shipping set until the sports it names are
+    /// actually published. Pins the mistake this replaced: the slide was keyed to 1.8.4, which
+    /// would have told upgraders about NHL and F1 while the ingest gate still held both back.
+    func testTheNewSportsSlideIsNotKeyedToAnyRelease() {
+        let announced = UpdateNotes.byVersion.values.flatMap { $0 }.map(\.artwork)
+        XCTAssertFalse(announced.contains(UpdateNotes.newSportsSlide.artwork),
+                       "opm-new-sports is keyed into byVersion. It may only go in alongside "
+                       + "hockey and f1 entering validate.WIRE_SAFE_SPORTS, with 1.8.4 as the "
+                       + "support floor")
     }
 }

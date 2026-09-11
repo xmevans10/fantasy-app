@@ -100,3 +100,36 @@ baseball,CWS,#27251F,#C4CED4,Chicago White Sox
 baseball,MIA,#00A3E0,#EF3340,Miami Marlins
 baseball,NYY,#0C2340,#C4CED3,New York Yankees
 baseball,MIL,#0A2351,#B6922E,Milwaukee Brewers
+hockey,ANA,#F47A38,#B9975B,Anaheim Ducks
+hockey,BOS,#FFB81C,#000000,Boston Bruins
+hockey,BUF,#003087,#FFB81C,Buffalo Sabres
+hockey,CGY,#D2001C,#FAAF19,Calgary Flames
+hockey,CAR,#CC0000,#000000,Carolina Hurricanes
+hockey,CHI,#CF0A2C,#000000,Chicago Blackhawks
+hockey,COL,#6F263D,#236192,Colorado Avalanche
+hockey,CBJ,#002654,#CE1126,Columbus Blue Jackets
+hockey,DAL,#006847,#8F8F8C,Dallas Stars
+hockey,DET,#CE1126,#FFFFFF,Detroit Red Wings
+hockey,EDM,#041E42,#FF4C00,Edmonton Oilers
+hockey,FLA,#041E42,#C8102E,Florida Panthers
+hockey,LAK,#111111,#A2AAAD,Los Angeles Kings
+hockey,MIN,#154734,#A6192E,Minnesota Wild
+hockey,MTL,#AF1E2D,#192168,Montreal Canadiens
+hockey,NSH,#FFB81C,#041E42,Nashville Predators
+hockey,NJD,#CE1126,#000000,New Jersey Devils
+hockey,NYI,#00539B,#F47D30,New York Islanders
+hockey,NYR,#0038A8,#CE1126,New York Rangers
+hockey,OTT,#C52032,#000000,Ottawa Senators
+hockey,PHI,#F74902,#000000,Philadelphia Flyers
+hockey,PIT,#000000,#FCB514,Pittsburgh Penguins
+hockey,SJS,#006D75,#EA7200,San Jose Sharks
+hockey,SEA,#001628,#99D9D9,Seattle Kraken
+hockey,STL,#002F87,#FCB514,St. Louis Blues
+hockey,TBL,#002868,#FFFFFF,Tampa Bay Lightning
+hockey,TOR,#00205B,#FFFFFF,Toronto Maple Leafs
+hockey,UTA,#71AFE5,#010101,Utah Mammoth
+hockey,VAN,#00205B,#00843D,Vancouver Canucks
+hockey,VGK,#B4975A,#333F42,Vegas Golden Knights
+hockey,WSH,#041E42,#C8102E,Washington Capitals
+hockey,WPG,#041E42,#004C97,Winnipeg Jets
+hockey,ARI,#8C2633,#E2D6B5,Arizona Coyotes

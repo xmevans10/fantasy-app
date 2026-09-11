@@ -2,6 +2,8 @@
 test_assemble.py's NBA-seed pattern. Baseball also has a live provider (mlb_stats.py,
 see test_mlb_stats.py); this file exercises the guaranteed-real seed path every sport
 falls back to."""
+from dataclasses import replace
+
 from tools.ingest import assemble
 from tools.ingest.providers import seed
 from tools.ingest.themes import KEEP4_THEMES
@@ -25,7 +27,16 @@ _LIVE_CATALOG_ONLY = {
 NEW_SPORT_THEMES = [t for t in KEEP4_THEMES
                     if t.sport in ("baseball", "soccer", "tennis") and t.grain == "season"
                     and t.key not in _LIVE_CATALOG_ONLY]
-ALL_SEASONS = seed.load_baseball() + seed.load_soccer() + seed.load_tennis()
+_RAW_SEASONS = seed.load_baseball() + seed.load_soccer() + seed.load_tennis()
+
+# Seed rows carry PROVIDER headshot URLs (baseball's are synthesised from
+# `mlb_stats.HEADSHOT_URL`), and `validate` now requires a board's headshots to come from our
+# own store. That is not a contradiction: in production `main.apply_headshot_ledger` rewrites
+# every season through the `headshot_assets` ledger BEFORE assembly, so a real mint never sees
+# a provider URL. This test runs offline with no ledger to consult, so it stands in for that
+# step — blanking is the ledger's own answer for a URL it cannot map, and '' is a legal
+# headshot (the client draws its neutral badge).
+ALL_SEASONS = [replace(s, headshot="") for s in _RAW_SEASONS]
 
 
 def test_every_new_theme_produces_a_valid_puzzle():

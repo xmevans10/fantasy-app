@@ -121,8 +121,12 @@ struct GameResultDetails: Codable, Equatable {
     var missedCutCount: Int?
     var theme: String?
 
-    // MARK: Who Am I?
+    // MARK: Who Am I? / Journeyman
     var cluesUsed: Int?
+    /// Journeyman: hints bought during the run (see `JourneymanScoring.hintRetention`). Nil on
+    /// every other format and on runs logged before hints existed — which is exactly the
+    /// distinction "did anyone actually use this feature" needs to be answerable later.
+    var hintsUsed: Int?
     var wrongGuesses: Int?
     var solved: Bool?
     var answerName: String?

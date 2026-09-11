@@ -90,6 +90,80 @@ final class JourneymanScoringTests: XCTestCase {
         XCTAssertEqual(ChallengeLink.journeymanHits(lost), 0)
         XCTAssertEqual(ChallengeLink.journeymanOutOf, 5)
     }
+
+    // MARK: - Hints
+
+    /// The pitch a player is told: one hint costs about what one wrong guess costs. Exactly
+    /// equal off a full board, which is where the header states it.
+    func testTheFirstHintCostsWhatAWrongGuessCosts() {
+        XCTAssertEqual(JourneymanScoring.nextHintCost(guess: 1, hintsUsed: 0, difficulty: nil),
+                       JourneymanScoring.nextGuessCost(guess: 1, difficulty: nil))
+    }
+
+    /// The calibration the whole feature turns on: needing every hint should beat flailing and
+    /// lose to knowing it cold.
+    func testAFullyHintedFirstGuessSolveLandsBetweenAColdThirdAndFourth() {
+        let hinted = JourneymanScoring.score(guessesUsed: 1, solved: true, hintsUsed: 3)
+        XCTAssertEqual(hinted.total, 512)
+        XCTAssertLessThan(hinted.total, JourneymanScoring.value(guess: 3, difficulty: nil))
+        XCTAssertGreaterThan(hinted.total, JourneymanScoring.value(guess: 4, difficulty: nil))
+    }
+
+    /// A percentage, not a fixed price — so the hint that a stuck player most wants is still
+    /// affordable on the last guess, which a flat 200 would make impossible.
+    func testAHintCanNeverCostMoreThanTheBoardIsWorth() {
+        for guess in 1...JourneymanScoring.maxGuesses {
+            for hints in 0..<JourneymanScoring.maxHints {
+                let value = JourneymanScoring.value(guess: guess, difficulty: .easy, hints: hints)
+                let cost = JourneymanScoring.nextHintCost(guess: guess, hintsUsed: hints,
+                                                          difficulty: .easy)
+                XCTAssertGreaterThan(cost, 0)
+                XCTAssertLessThan(cost, value)
+            }
+        }
+    }
+
+    func testBuyingPastTheHintLimitIsFreeBecauseThereIsNothingToBuy() {
+        XCTAssertEqual(JourneymanScoring.nextHintCost(guess: 1, hintsUsed: JourneymanScoring.maxHints,
+                                                      difficulty: nil), 0)
+        // ...and the score clamps rather than compounding a fourth purchase.
+        XCTAssertEqual(JourneymanScoring.score(guessesUsed: 1, solved: true, hintsUsed: 9).total,
+                       JourneymanScoring.score(guessesUsed: 1, solved: true,
+                                               hintsUsed: JourneymanScoring.maxHints).total)
+    }
+
+    /// Hints move the rating, unlike difficulty. Left out, "buy everything, then guess" would be
+    /// a run that costs points and pays a perfect 1.0 rating — a farm, and backwards.
+    func testHintsCostPerformanceAndNotJustPoints() {
+        let cold = JourneymanScoring.score(guessesUsed: 1, solved: true)
+        let hinted = JourneymanScoring.score(guessesUsed: 1, solved: true, hintsUsed: 3)
+        XCTAssertEqual(cold.performance, 1.0, accuracy: 0.0001)
+        XCTAssertLessThan(hinted.performance, cold.performance)
+        XCTAssertEqual(hinted.performance, 0.512, accuracy: 0.0001)
+        XCTAssertEqual(hinted.hintsUsed, 3)
+    }
+
+    /// Hits decide a head-to-head and points only break the tie, so the hint spend has to reach
+    /// the hits too — otherwise buying all three and naming it first time beats a cold
+    /// second-guess solve outright.
+    func testDuelHitsChargeForHintsButASolveAlwaysBeatsAMiss() {
+        let hinted = JourneymanScoring.score(guessesUsed: 1, solved: true, hintsUsed: 3)
+        let cold = JourneymanScoring.score(guessesUsed: 2, solved: true)
+        XCTAssertLessThan(ChallengeLink.journeymanHits(hinted), ChallengeLink.journeymanHits(cold))
+
+        let desperate = JourneymanScoring.score(guessesUsed: 5, solved: true, hintsUsed: 3)
+        let missed = JourneymanScoring.score(guessesUsed: 5, solved: false, hintsUsed: 3)
+        XCTAssertEqual(ChallengeLink.journeymanHits(desperate), 1)
+        XCTAssertGreaterThan(ChallengeLink.journeymanHits(desperate),
+                             ChallengeLink.journeymanHits(missed))
+    }
+
+    /// The shared row is a claim about the run. "🟩 on guess one" reads as knowing the player
+    /// cold, and off two hints it wasn't — so the lightbulbs ride along.
+    func testTheSharedRowCountsHintsWithoutNamingThem() {
+        let result = JourneymanScoring.score(guessesUsed: 1, solved: true, hintsUsed: 2)
+        XCTAssertEqual(JourneymanResultView.emojiPath(result: result), "🟩⬜⬜⬜⬜💡💡")
+    }
 }
 
 // MARK: - Content
@@ -150,6 +224,27 @@ final class JourneymanPuzzleTests: XCTestCase {
         let json = liveContent.replacingOccurrences(of: "\"medium\"", with: "\"legendary\"")
         let puzzle = try JSONDecoder().decode(JourneymanPuzzle.self, from: Data(json.utf8))
         XCTAssertEqual(puzzle.difficulty, .medium)
+    }
+
+    /// Hints arrive as an additive `content` key. Absent on every board minted before they
+    /// existed — which must decode as "this board offers no hints", never as a throw that would
+    /// empty the whole archive fetch.
+    func testHintsDecodeAndTheirAbsenceIsNotAnError() throws {
+        let withHints = liveContent.replacingOccurrences(of: "\"stints\": [", with: """
+        "hints": [
+          {"order": 1, "label": "Position", "text": "Quarterback", "dimension": "position"},
+          {"order": 2, "label": "Country", "text": "Competed for United States",
+           "dimension": "nationality"}
+        ],
+        "stints": [
+        """)
+        let puzzle = try JSONDecoder().decode(JourneymanPuzzle.self, from: Data(withHints.utf8))
+        XCTAssertEqual(puzzle.hints?.count, 2)
+        XCTAssertEqual(puzzle.hints?.first?.label, "Position")
+        XCTAssertEqual(puzzle.hints?.first?.dimension, "position")
+
+        let plain = try JSONDecoder().decode(JourneymanPuzzle.self, from: Data(liveContent.utf8))
+        XCTAssertNil(plain.hints)
     }
 
     func testASingleSeasonStintReadsAsOneYear() {

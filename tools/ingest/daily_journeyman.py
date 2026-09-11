@@ -30,10 +30,14 @@ from . import main as ingest_main
 from .assemble import PuzzleRow
 from .journeyman import JourneymanEntry
 from .whoami_clues import DIFFICULTIES
+from .validate import WIRE_SAFE_SPORTS
 
 # Sports with clubs to move between. Not `daily_puzzle.SPORTS` — tennis has no clubs (its
 # `team_abbr` is a country code), so it can never have a Journeyman daily.
-SPORTS = sorted(journeyman.MIN_STINTS)
+# ...and intersected with the release gate: `MIN_STINTS` says which sports HAVE club careers,
+# which is a data fact, while `WIRE_SAFE_SPORTS` says which may be published to shipped
+# clients. hockey/f1 satisfy the first and not yet the second — see validate.WIRE_SAFE_SPORTS.
+SPORTS = sorted(set(journeyman.MIN_STINTS) & WIRE_SAFE_SPORTS)
 
 # Same shape and rationale as `daily_whoami.TIER_WEIGHTS`: a hard board roughly every fifth
 # day, so the tier is a real part of the game without making most mornings a wall.
@@ -124,6 +128,21 @@ def main() -> int:
     tiers = Counter(e.difficulty for e in entries)
     print(f"[journeyman] {len(entries)} pool entries loaded "
           f"({', '.join(f'{t}: {tiers[t]}' for t in DIFFICULTIES)})")
+
+    # The mint reads the SAVED pool and never rebuilds a career from the catalog, so an identity
+    # fix upstream does not reach this path until the pool file is regenerated — which is how two
+    # merged-person careers stayed one mint away from republication after their live boards had
+    # already been corrected (`journeyman.assert_person_keyed`). Fails closed on `--upsert`;
+    # `--dry-run` only warns, because inspecting a stale pool is exactly how you find out it is
+    # stale, and a dry run publishes nothing.
+    journeyman.report_residual_merge_risk(entries, context="daily mint")
+    stale = journeyman.unverified(entries)
+    if stale and args.upsert:
+        journeyman.assert_person_keyed(entries, context="daily_journeyman --upsert")
+    elif stale:
+        print(f"[journeyman] WARNING: {len(stale)} of {len(entries)} entries carry no `person` "
+              "provenance — this pool predates the person-keyed identity model and cannot be "
+              "upserted. Regenerate with `python -m tools.ingest.journeyman --write`.")
 
     last_served: dict[tuple[str, str], str] = {}
     if args.upsert:

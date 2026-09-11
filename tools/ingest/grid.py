@@ -474,6 +474,19 @@ def generate_grid(seasons: list[RawSeason], sport: str, date: str,
             # degenerate cell (e.g. "KC and KC"), so reject that.
             if {a.key for a in rows} & {a.key for a in cols}:
                 continue
+            # ...and two DIFFERENT codes for one franchise are just as degenerate, which the key
+            # test above cannot see. Hockey made this visible: the NHL feed emits the historical
+            # code for old seasons, so ARI and PHX are both the Coyotes, HFD and CAR are both the
+            # Hurricanes, QUE and COL are both the Avalanche. A board drew rows ['ARI','PHX',...]
+            # on 2026-09-05 — two crest chips for one club, where "played for both" is either
+            # trivially true or meaningless. NFL (OAK/LV) and NBA relocations have the same shape;
+            # hockey just has enough of them to hit it immediately.
+            #
+            # Franchise identity comes from `whoami_pool.team_display`, which is already the
+            # pipeline's single answer to "what club is this code", rather than a second lineage
+            # table that could disagree with the first.
+            if not _franchises_distinct(sport, rows + cols):
+                continue
             # `mixed_any` has to actually be mixed. `rng.sample` draws uniformly from a pool that
             # mixes kinds in whatever proportion the sport happens to offer, so it lands on three
             # teams often enough to matter — and a mixed-x-teams board whose rows came out all-team
@@ -495,6 +508,21 @@ def generate_grid(seasons: list[RawSeason], sport: str, date: str,
                 return GridPuzzle(sport=sport, rows=rows, cols=cols, cells=tuple(cells),
                                   archetype=archetype.key)
     return None
+
+
+def _franchises_distinct(sport: str, axes) -> bool:
+    """False when two TEAM axes on one board are the same franchise under different codes.
+
+    Non-team axes are ignored (two stat axes are meant to differ, and `_is_varied` already
+    polices that). A code the pipeline cannot name falls back to the code itself, so an
+    unnameable team axis is compared on identity rather than silently collapsing with every
+    other unnameable one.
+    """
+    from . import whoami_pool
+
+    names = [whoami_pool.team_display(sport, a.abbr or a.label, {}) or (a.abbr or a.label)
+             for a in axes if a.kind == "team"]
+    return len(names) == len(set(names))
 
 
 def _as_seasons(members: list | None, sport: str) -> list[RawSeason]:

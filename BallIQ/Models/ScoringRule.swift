@@ -249,6 +249,25 @@ extension ScoringRule {
                                               ("assists", 3.0), ("appearances", 0.5)),
         "tennis_fantasy": pointsRule(("matches_won", 1.0), ("titles", 8.0),
                                      ("grand_slams", 30.0), ("matches_lost", -0.5)),
+
+        // Hockey/F1 presets (M31 — mirror grade.py `_FANTASY` byte-for-byte).
+        // Hockey splits skater/goalie the way baseball splits hitter/pitcher: the two roles
+        // share no stat key. The coefficients are set so both land in the same magnitude
+        // band (an all-time skater season ~449, an all-time goalie season ~451), which is
+        // what keeps a mixed Draft & Spin lineup from being decided by role rather than play.
+        "hockey_skater_fantasy": pointsRule(("goals", 3.0), ("assists", 2.0),
+                                            ("plus_minus", 0.5), ("shots", 0.1),
+                                            ("pp_points", 0.5), ("sh_points", 1.0),
+                                            ("game_winning_goals", 1.0)),
+        "hockey_goalie_fantasy": pointsRule(("wins", 5.0), ("shutouts", 5.0),
+                                            ("saves", 0.2), ("goals_against", -1.0)),
+        // F1 scores era-invariant achievements, NOT the championship `points` column — F1
+        // rewrote its points system in 1961, 1991 and 2010, so raw points are not comparable
+        // across eras. See grade.py's note for the full reasoning.
+        "f1_driver_fantasy": pointsRule(("wins", 25.0), ("podiums", 10.0), ("poles", 8.0),
+                                        ("fastest_laps", 3.0), ("top_tens", 2.0),
+                                        ("races", 0.5), ("championships", 50.0),
+                                        ("dnfs", -1.0)),
     ]
 
     /// Single-game grain reuses the season coefficients under their own `_game`-suffixed

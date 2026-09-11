@@ -6,16 +6,22 @@ can't describe truthfully (an unnameable club, a hole where a spell should be, a
 started before the catalog did)?
 """
 import datetime as dt
+import json
 
 import pytest
 
-from tools.ingest import daily_journeyman, journeyman, validate
+from tools.ingest import daily_journeyman, journeyman, validate, whoami_pool
 from tools.ingest.journeyman import ClubNames, JourneymanEntry, Stint
 
 NO_CLUBS = ClubNames({}, {})
 
 
-def _row(name, team, year, sport="nfl", league=None, headshot="http://x/p.png"):
+# Boards may only carry headshots from our own store — `validate` enforces it, so a
+# fixture has to look like a real rehosted URL rather than a placeholder string.
+_STORE_SHOT = "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/test.jpg"
+
+
+def _row(name, team, year, sport="nfl", league=None, headshot=_STORE_SHOT):
     return {"name": name, "team_abbr": team, "season_year": year, "sport": sport,
             "position": "QB", "league": league, "headshot": headshot,
             "stats": {"passing_yards": 4000.0}, "career": False}
@@ -23,7 +29,7 @@ def _row(name, team, year, sport="nfl", league=None, headshot="http://x/p.png"):
 
 def _entry(sport="nfl", canonical="Test Player", difficulty="medium", fame=0.5, stints=None):
     return JourneymanEntry(
-        sport=sport, canonical=canonical, position="QB", headshot="http://x/p.png",
+        sport=sport, canonical=canonical, position="QB", headshot=_STORE_SHOT,
         stints=stints or [Stint("LAC", "Chargers", "", 2001, 2005),
                           Stint("NO", "Saints", "", 2006, 2020)],
         difficulty=difficulty, fame=fame)
@@ -536,3 +542,305 @@ def test_an_unfittable_teaser_falls_back_to_the_shortest_rather_than_nothing():
     facts = ["A" * 200]
     line = journeyman.fit(facts, ["and hardly a nomad"], __import__("random").Random(0))
     assert line.endswith("and hardly a nomad.")
+
+
+# ── Hints ─────────────────────────────────────────────────────────────────────
+
+def _rich_facts(**kw):
+    """A subject with every dimension populated, so the hint draw has the full space."""
+    base = dict(college="Purdue", college_conference="Big Ten Conference", height_in=72,
+                weight_lb=209, birth_year=1979, draft_year=2001, draft_round=2,
+                draft_pick=32, draft_team="Chargers", nickname="Cool Brees",
+                accolades=["Super Bowl MVP"], nationality="United States",
+                best_season={"year": 2011, "team": "Saints", "line": "5,476 yards"},
+                fame=0.9)
+    base.update(kw)
+    return _facts(**base)
+
+
+def test_hints_climb_from_broad_to_specific():
+    hints = journeyman.build_hints(_rich_facts(), seed="drew-brees")
+    assert len(hints) == journeyman.HINT_COUNT
+    assert [h.order for h in hints] == [1, 2, 3]
+    by_dimension = {d.key: d for d in __import__(
+        "tools.ingest.whoami_clues", fromlist=["DIMENSIONS"]).DIMENSIONS}
+    reveals = [by_dimension[h.dimension].reveal for h in hints]
+    assert reveals == sorted(reveals), reveals
+    # A ladder, not three flavors of the same angle. A spread across families is a preference
+    # (a thin subject may have to double up rather than drop a rung), a distinct dimension per
+    # rung is not.
+    assert len({h.dimension for h in hints}) == len(hints)
+    assert len({by_dimension[h.dimension].family for h in hints}) >= 2
+
+
+def test_a_hint_is_never_something_the_board_already_shows():
+    """The career path is on screen the whole time — a hint that restates it takes points for
+    information the player is looking at. Both halves: the club list AND the year span, which
+    is arithmetic on the first and last cards ("debuted in 2010" for a board whose top row
+    reads 2010-2014)."""
+    for seed in [f"subject-{i}" for i in range(40)]:
+        hints = journeyman.build_hints(_rich_facts(), seed=seed)
+        for h in hints:
+            assert h.dimension not in journeyman._HINT_EXCLUDED_DIMENSIONS, h
+    assert {"teams", "firstTeam", "lastTeam", "league", "era", "debut", "finale",
+            "longevity"} <= journeyman._HINT_EXCLUDED_DIMENSIONS
+
+
+def test_the_same_subject_always_gets_the_same_hints():
+    args = (_rich_facts(),)
+    first = journeyman.build_hints(*args, seed="stable")
+    assert all(journeyman.build_hints(*args, seed="stable") == first for _ in range(20))
+
+
+def test_a_hint_never_gives_away_the_name():
+    leaky = _rich_facts(canonical="Drew Brees", nickname="Brees", fact="Brees threw for 5,476")
+    hints = journeyman.build_hints(leaky, seed="drew-brees")
+    assert hints
+    assert all("brees" not in h.text.lower() for h in hints), hints
+
+
+def test_a_hint_never_repeats_the_free_teaser():
+    facts = _rich_facts()
+    teaser = journeyman.build_teaser(facts, _stints((2010, 2014), (2015, 2018)), False,
+                                     seed="drew-brees")
+    hints = journeyman.build_hints(facts, seed="drew-brees", teaser=teaser)
+    assert all(h.text not in teaser for h in hints), (teaser, hints)
+
+
+def test_a_thin_subject_gets_fewer_hints_rather_than_invented_ones():
+    """Only NFL has a bio provider. A soccer or F1 subject draws from the catalog dimensions
+    alone, and the honest answer is a shorter ladder."""
+    thin = _facts(sport="soccer", position="Midfielder", jersey="", fact="", stat_line="")
+    hints = journeyman.build_hints(thin, seed="thin")
+    assert 0 < len(hints) <= journeyman.HINT_COUNT
+    assert [h.order for h in hints] == list(range(1, len(hints) + 1))
+
+
+def test_hints_ride_the_row_and_are_leak_checked_before_upsert():
+    entry = _entry(canonical="Drew Brees")
+    entry.hints = journeyman.build_hints(_rich_facts(), seed="drew-brees")
+    row = journeyman.build_row(entry)
+    assert row.content["hints"][0]["order"] == 1
+    assert set(row.content["hints"][0]) == {"order", "label", "text", "dimension"}
+    validate.validate(row)
+
+    entry.hints = [journeyman.Hint(order=1, label="Nickname", text="Known as Brees",
+                                   dimension="nickname")]
+    with pytest.raises(ValueError, match="leaks"):
+        validate.validate(journeyman.build_row(entry))
+
+
+def test_hints_round_trip_through_the_pool_file(tmp_path):
+    entry = _entry(canonical="Drew Brees")
+    entry.hints = journeyman.build_hints(_rich_facts(), seed="drew-brees")
+    path = tmp_path / journeyman.POOL_FILE
+    path.write_text(__import__("json").dumps([journeyman.entry_to_json(entry)]))
+    assert journeyman.load_pool(path)[0].hints == entry.hints
+
+
+# ── The person join ───────────────────────────────────────────────────────────
+
+def _jrow(team, year, position, person_id):
+    """A catalog row for one of the two real NFL players named David Johnson."""
+    return {"name": "David Johnson", "team_abbr": team, "season_year": year, "sport": "nfl",
+            "position": position, "league": None, "headshot": _STORE_SHOT,
+            "stats": {"carries": 100.0}, "career": False, "person_id": person_id}
+
+
+_TE, _RB = "00-0027265", "00-0032187"
+_BOTH_JOHNSONS = (
+    [_jrow("PIT", y, "TE", _TE) for y in (2009, 2010, 2011, 2012, 2013)]
+    + [_jrow("LAC", 2014, "TE", _TE), _jrow("PIT", 2016, "TE", _TE)]
+    + [_jrow(t, y, "RB", _RB) for y, t in
+       [(2015, "ARI"), (2016, "ARI"), (2017, "ARI"), (2018, "ARI"), (2019, "ARI"),
+        (2020, "HOU"), (2021, "HOU"), (2022, "NO")]]
+)
+
+
+def _path_for(person_id):
+    rows = [r for r in _BOTH_JOHNSONS
+            if whoami_pool.person_key(r) == f"nfl:{person_id}"]
+    stints, _ = journeyman.build_stints("nfl", rows, NO_CLUBS)
+    return [s.team_name for s in stints]
+
+
+def test_a_shared_name_does_not_weld_two_careers_into_one_path():
+    # The exact board that shipped on 2026-08-29: seven clubs, in the order a chronological
+    # merge of two men produces. Neither David Johnson ever had this career.
+    merged, _ = journeyman.build_stints("nfl", _BOTH_JOHNSONS, NO_CLUBS)
+    assert [s.team_name for s in merged] == [
+        "Steelers", "Chargers", "Cardinals", "Steelers", "Cardinals", "Texans", "Saints"]
+
+    # Grouped by person — which is what `build_entries` now does — each path is a real one.
+    assert _path_for(_RB) == ["Cardinals", "Texans", "Saints"]
+    assert _path_for(_TE) == ["Steelers", "Chargers", "Steelers"]
+
+
+def test_person_key_falls_back_to_the_name_for_rows_with_no_provider_id():
+    # Sweeps with no upstream id must still group, and must group the same way the ingest
+    # side does (`RawSeason.person`) or the two grains stop joining entirely.
+    anonymous = {"name": "Old Timer", "sport": "nfl", "person_id": None}
+    assert whoami_pool.person_key(anonymous) == "nfl:name:old-timer"
+    assert whoami_pool.person_key({**anonymous, "person_id": ""}) == "nfl:name:old-timer"
+    assert whoami_pool.person_key({**anonymous, "person_id": "x1"}) == "nfl:x1"
+
+
+def test_person_key_is_sport_scoped():
+    # Two ids could collide across providers; the sport prefix is what keeps NFL gsis ids and
+    # NBA athlete ids in separate namespaces.
+    nfl = {"name": "A B", "sport": "nfl", "person_id": "123"}
+    assert whoami_pool.person_key(nfl) != whoami_pool.person_key({**nfl, "sport": "nba"})
+
+
+# ── The saved pool is what actually publishes ─────────────────────────────────
+#
+# `daily_journeyman` reads `data/journeyman_pool.json` and rotates through it. It does not
+# rebuild a career from the catalog, so an identity fix upstream reaches the wire only when the
+# pool file is regenerated. That gap is why the 2026-09-06 repair — which corrected live puzzle
+# rows and fixed `build_candidates` — left two merged-person careers sitting in the pool, one
+# mint away from being published again.
+
+# The two the repair missed, pinned by the PATH each was minting rather than by name. The name
+# is the wrong key: the live catalog holds one career row per name, keyed to one of the two
+# person ids (verified 2026-09-11 — Derrick Johnson splits into DB `00-0023637` and LB
+# `00-0023449`, C.J. Mosley into DT `00-0023624` and ILB `00-0031296`), so `qualify`'s
+# shared-name rule never sees a duplicate and each name legitimately returns to the pool once
+# the person key has separated the two men. What may never return is the welded path.
+KNOWN_MERGED_PATHS = {
+    # The Chiefs linebacker was drafted by Kansas City and never played for San Francisco or
+    # Atlanta; those two seasons belong to a defensive back of the same name.
+    ("nfl", "Derrick Johnson"): ["SF", "ATL", "KC", "LV"],
+    # A defensive tackle (2005-2013) and a linebacker drafted nine years after him, end to end.
+    ("nfl", "C.J. Mosley"): ["MIN", "NYJ", "CLE", "JAX", "DET", "BAL", "NYJ"],
+}
+
+
+def _saved_pool():
+    from tools.ingest import main as ingest_main
+    return journeyman.load_pool(ingest_main.DATA_DIR / journeyman.POOL_FILE)
+
+
+def test_the_saved_pool_mints_none_of_the_known_merged_paths():
+    """The file, not the generator. Fixing `build_candidates` and correcting the live puzzle rows
+    both left this untouched, and this is the copy the nightly mint actually reads."""
+    for entry in _saved_pool():
+        expected = KNOWN_MERGED_PATHS.get((entry.sport, entry.canonical))
+        if expected is None:
+            continue
+        assert [s.team_abbr for s in entry.stints] != expected, (
+            f"{entry.canonical} is back in data/{journeyman.POOL_FILE} with the merged path "
+            f"{expected}. That is two different players welded into one career — regenerate "
+            "the pool from the person-keyed catalog rather than re-adding it.")
+
+
+def test_a_merged_career_is_invisible_to_the_plausibility_heuristic():
+    """Why provenance, and not another span check: both merges are dense and well inside
+    `MAX_CAREER_SPAN`. This is the adjacent case that comment already concedes it cannot see."""
+    for first, last, seasons in ((2005, 2018, 14), (2005, 2024, 20)):
+        c = whoami_pool.Candidate(
+            name="x", sport="nfl", person="nfl:1", position="LB", cohort_key="nfl|lb",
+            first_year=first, last_year=last, seasons=seasons, teams=[], unnamed_teams=0,
+            nationality="", leagues=set(), career_stats={}, best={}, active=False,
+            score=0.0, peak_score=0.0, has_headshot=True)
+        assert c.plausible_career, "the span/density gate would have caught this one"
+
+
+def test_an_entry_carries_the_person_key_it_was_built_from():
+    """Provenance has to come off the candidate the entry was assembled from, not be stamped on
+    afterwards — otherwise it records nothing about how the career was actually joined."""
+    subject = "00-0000001"
+    # A second player at the same position, starting earlier: `coverage_floors` needs a covered
+    # year before the subject's debut, or the subject is rejected as a career that began before
+    # the catalog can describe it.
+    seasons = [_row("Filler Guy", "SEA", y) for y in range(2000, 2021)]
+    seasons += [{**_row("Real Subject", "LAC", y), "person_id": subject}
+                for y in range(2005, 2011)]
+    seasons += [{**_row("Real Subject", "NO", y), "person_id": subject}
+                for y in range(2011, 2016)]
+    career = [{"name": "Real Subject", "sport": "nfl", "position": "QB", "person_id": subject,
+               "season_year": 2005, "first_year": 2005, "last_year": 2015, "career": True,
+               "headshot": _STORE_SHOT, "stats": {"passing_yards": 40000.0}}]
+
+    entries = journeyman.build_entries(career, seasons, NO_CLUBS, sport="nfl")
+    assert [e.canonical for e in entries] == ["Real Subject"]
+    assert entries[0].person == f"nfl:{subject}"
+    journeyman.assert_person_keyed(entries, context="test")
+
+
+def test_the_person_key_survives_the_pool_file(tmp_path):
+    """Provenance is only worth anything if it is what gets written and read back."""
+    path = tmp_path / journeyman.POOL_FILE
+    entry = _entry()
+    entry.person = "nfl:00-0032187"
+    path.write_text(json.dumps([journeyman.entry_to_json(entry)]), encoding="utf-8")
+    assert journeyman.load_pool(path)[0].person == "nfl:00-0032187"
+
+
+def test_an_older_pool_file_still_loads_but_cannot_be_published():
+    """Loading and publishing are deliberately different answers: you have to be able to read a
+    stale pool to find out that it is stale."""
+    stale = _entry(canonical="No Provenance")
+    assert stale.person == ""
+    assert journeyman.unverified([stale]) == [stale]
+    with pytest.raises(journeyman.StalePoolError) as err:
+        journeyman.assert_person_keyed([stale], context="test")
+    assert "No Provenance" in str(err.value)
+    assert "--write" in str(err.value), "the error has to say how to fix it"
+
+
+def test_a_provenanced_pool_publishes():
+    ok = _entry()
+    ok.person = "nfl:00-0032187"
+    journeyman.assert_person_keyed([ok], context="test")
+
+
+def test_the_bundle_refuses_a_stale_pool():
+    """The bundle is the publish a later regeneration can never correct — it is frozen into a
+    shipped binary."""
+    with pytest.raises(journeyman.StalePoolError):
+        journeyman._write_bundle([_entry()])
+
+
+def test_the_daily_mint_refuses_to_upsert_a_stale_pool(monkeypatch, capsys):
+    monkeypatch.setattr(journeyman, "all_entries", lambda _: [_entry()])
+    monkeypatch.setattr(daily_journeyman.ingest_main, "load_dotenv", lambda: None)
+    monkeypatch.setattr("sys.argv", ["daily_journeyman", "--upsert"])
+    with pytest.raises(journeyman.StalePoolError):
+        daily_journeyman.main()
+
+
+def test_a_dry_run_warns_about_a_stale_pool_rather_than_failing(monkeypatch, capsys):
+    """A dry run publishes nothing, and refusing to print the pool would hide the very thing an
+    operator is looking at it to check."""
+    monkeypatch.setattr(journeyman, "all_entries", lambda _: [_entry()])
+    monkeypatch.setattr(daily_journeyman.ingest_main, "load_dotenv", lambda: None)
+    monkeypatch.setattr("sys.argv", ["daily_journeyman", "--dry-run"])
+    daily_journeyman.main()
+    assert "WARNING" in capsys.readouterr().out
+
+
+def test_the_saved_pool_is_person_keyed_and_therefore_publishable():
+    """The other half of the guard: it is not enough that the two bad boards are gone, the pool
+    has to carry the provenance that proves how every career in it was assembled — otherwise the
+    mint refuses it and there is no daily at all."""
+    journeyman.assert_person_keyed(_saved_pool(), context="the checked-in pool")
+
+
+def test_a_name_fallback_entry_is_reported_as_residual_risk(capsys):
+    """Provenance is not a clean bill of health. Sweeps with no upstream id fall back to a name
+    key, which groups careers exactly the way the merged ones were grouped, so a publish has to
+    say how much of the pool is in that state rather than implying none of it is."""
+    risky = _entry(sport="soccer", canonical="No Provider Id")
+    risky.person = "soccer:name:no-provider-id"
+    assert journeyman.name_keyed([risky]) == [risky]
+    journeyman.report_residual_merge_risk([risky], context="test")
+    out = capsys.readouterr().out
+    assert "grouped by NAME" in out and "soccer" in out
+
+
+def test_an_entry_keyed_on_a_provider_id_is_not_reported(capsys):
+    solid = _entry()
+    solid.person = "nfl:00-0032187"
+    assert journeyman.name_keyed([solid]) == []
+    journeyman.report_residual_merge_risk([solid], context="test")
+    assert capsys.readouterr().out == ""

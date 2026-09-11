@@ -182,8 +182,11 @@ class Theme:
     filters: tuple[Filter, ...] = () # extra niche predicates (bio/era/name); ANDed
     grain: str = "season"            # 'season' | 'game' (single-game rows) | 'career' (aggregate)
     # Grade with the era-adjusted fantasy total (grade.py grade_era): raw points × the
-    # per-(position, year) volume index. Only meaningful for fantasy scales. NFL-only for
-    # now — pre-2002 NBA baselines are survivorship-biased (see era_analysis.py findings).
+    # per-(position, year) volume index. Only meaningful for fantasy scales, and only for
+    # sports baselines.py emits a `fantasy_total` pseudo-stat for (NFL, NBA, hockey as of
+    # M31 — see baselines.py's QUALIFY/TOTAL_SCALE). Pre-2002 NBA baselines are
+    # survivorship-biased (see era_analysis.py findings), so no shipped NBA theme uses this
+    # yet even though the machinery supports it.
     era_adjusted: bool = False
     # How `assemble._windows` picks the eight rows out of the graded pool:
     #   'close'  — contiguous, grade-adjacent window. The default and the only mode before
@@ -220,32 +223,246 @@ def fmt_value(value: float, fmt: str) -> str:
     raise ValueError(f"unknown fmt {fmt!r}")
 
 
-# Stat families an NFL position actually produces — drives per-position column selection
-# for cross-position themes so a WR card never reads "Pass Yds 0".
-_NFL_POSITION_STATS: dict[str, tuple[str, ...]] = {
-    "QB": ("passing_", "rushing_", "interceptions", "completions", "attempts", "completion_pct"),
-    "RB": ("rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr"),
-    "FB": ("rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr"),
-    "WR": ("receiving_", "receptions", "targets", "ypr"),
-    "TE": ("receiving_", "receptions", "targets", "ypr"),
+# ── Per-position card composition (cross-position themes) ─────────────────────
+#
+# A cross-position pool mixes players whose stat vocabularies barely overlap, so ONE column
+# list can't serve every card in it. Two tables drive the fix, both mirrored on the app side
+# (`Sport.positionStatFamilies` / `Sport.positionStatTemplates` in BallIQ/Models/Sport.swift):
+#
+#   POSITION_STAT_FAMILIES — a *membership test*: the stat-key prefixes a position actually
+#       records. Used to throw away a theme column the position can never produce.
+#   POSITION_CARD — the *canonical stat card*: the ordered stat line a fan expects for that
+#       position (the passing line for a QB, the receiving line for a WR/TE, G-A-P for a
+#       hockey forward, the triple-crown categories for a hitter). This is what a card is
+#       BUILT FROM, not merely filtered to.
+#
+# Why both, and why the canonical card leads: filtering alone can leave nothing to show. The
+# generated NFL "ANY" themes cap at five columns (generate._MAX_COLUMNS), which truncates
+# `receiving_yards`/`receiving_tds` off the seven-stat spec — so a TE's filter left exactly
+# one surviving column (`receptions`), the old min-3 guard tripped, and the card fell back to
+# the *unfiltered* set. That is how the live daily `gen-any-all-towering-09-daily-20260906`
+# shipped Travis Kelce as "Pass Yds 0 · Pass TD 0 · Rush Yds 5 · Rush TD 0 · Rec 110" — four
+# meaningless zeros, and neither of the two numbers that define his season. Building from the
+# canonical card instead means a position's own stat line is always available to fill with,
+# so there is no shape of theme for which the honest columns run out and junk gets served.
+_NFL_DL_STATS = ("tackles_", "tackles_for_loss", "sacks", "qb_hits", "forced_fumbles",
+                 "fumble_recoveries", "def_interceptions", "passes_defended",
+                 "defensive_tds", "safeties", "games")
+_NFL_LB_STATS = _NFL_DL_STATS
+_NFL_DB_STATS = ("tackles_", "def_interceptions", "passes_defended", "forced_fumbles",
+                 "fumble_recoveries", "defensive_tds", "safeties", "games")
+_NHL_SKATER_STATS = ("goals", "assists", "points", "plus_minus", "penalty_minutes", "shots",
+                     "shooting_pct", "points_per_game", "pp_points", "sh_points",
+                     "game_winning_goals", "toi_per_game", "games")
+_NHL_GOALIE_STATS = ("wins", "losses", "ot_losses", "gaa", "save_pct", "shutouts", "saves",
+                     "shots_against", "goals_against", "games", "games_started")
+
+POSITION_STAT_FAMILIES: dict[str, dict[str, tuple[str, ...]]] = {
+    "nfl": {
+        # `games` is on every one of these because every position plays them; `carries`/`ypc`
+        # are on QB because a QB's rushing line is his, not a borrowed one. WR/TE deliberately
+        # stay receiving-only even though 44% of WR seasons carry a non-zero rushing line
+        # (measured over the bundled catalog): an end-around is incidental, and admitting it
+        # would put a dead "Rush Yds 0" tile on the other 56%.
+        "QB": ("passing_", "rushing_", "interceptions", "completions", "attempts",
+               "completion_pct", "carries", "ypc", "games"),
+        "RB": ("rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr", "games"),
+        "FB": ("rushing_", "receiving_", "receptions", "targets", "carries", "ypc", "ypr", "games"),
+        "WR": ("receiving_", "receptions", "targets", "ypr", "games"),
+        "TE": ("receiving_", "receptions", "targets", "ypr", "games"),
+        # Defensive groups collapse the ~13 granular codes nfl_nflverse_defense.py emits. No
+        # shipped theme mixes defenders yet; they are here so the tables stay a true mirror of
+        # Sport.swift's, which Draft & Spin's both-sides rosters already rely on.
+        "DE": _NFL_DL_STATS, "DT": _NFL_DL_STATS, "NT": _NFL_DL_STATS, "DL": _NFL_DL_STATS,
+        "OLB": _NFL_LB_STATS, "MLB": _NFL_LB_STATS, "ILB": _NFL_LB_STATS, "LB": _NFL_LB_STATS,
+        "CB": _NFL_DB_STATS, "FS": _NFL_DB_STATS, "SS": _NFL_DB_STATS, "S": _NFL_DB_STATS,
+        "SAF": _NFL_DB_STATS, "DB": _NFL_DB_STATS,
+    },
+    # Skaters and goalies are two disjoint vocabularies from two NHL endpoints
+    # (see providers/nhl_stats.py) — a goalie card must never read "Goals 0".
+    "hockey": {
+        "C": _NHL_SKATER_STATS, "L": _NHL_SKATER_STATS,
+        "R": _NHL_SKATER_STATS, "D": _NHL_SKATER_STATS,
+        "G": _NHL_GOALIE_STATS,
+    },
+    "baseball": {
+        "H": ("hits", "doubles", "triples", "home_runs", "runs", "rbi", "base_on_balls",
+              "stolen_bases", "avg", "obp", "slg", "ops", "at_bats", "plate_appearances"),
+        # A pitcher's walks ALLOWED are `base_on_balls`, the same key a hitter's walks drawn
+        # use. Its absence here read "Walk-prone pitching seasons" cards as showing a stat
+        # pitchers don't record, which is the reverse of the truth — it is the stat the theme
+        # is named after.
+        "P": ("innings_pitched", "wins", "losses", "saves", "strike_outs", "earned_runs",
+              "era", "whip", "base_on_balls"),
+    },
+    "soccer": {
+        "GK": ("clean_sheets", "appearances"),
+        "DF": ("clean_sheets", "appearances", "goals", "assists"),
+        "FW": ("appearances", "goals", "assists"),
+        "MF": ("appearances", "goals", "assists"),
+    },
+    # NBA, tennis and F1 are deliberately absent: their stats (PPG/RPG/APG, Wins/Titles,
+    # Points/Poles) apply regardless of position, so there is nothing to slice and no
+    # canonical split to draw. Absent = "every column is relevant here", not "unhandled".
 }
+
+_NFL_DL_CARD = ("sacks", "tackles_combined", "tackles_for_loss", "qb_hits")
+_NFL_LB_CARD = ("tackles_combined", "sacks", "tackles_for_loss", "def_interceptions")
+_NFL_DB_CARD = ("tackles_combined", "def_interceptions", "passes_defended", "forced_fumbles")
+
+POSITION_CARD: dict[str, dict[str, tuple[str, ...]]] = {
+    "nfl": {
+        "QB": ("passing_yards", "passing_tds", "interceptions", "rushing_yards", "rushing_tds",
+               "completions", "attempts", "completion_pct"),
+        "RB": ("rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds",
+               "receptions", "ypc"),
+        "FB": ("rushing_yards", "rushing_tds", "receiving_yards", "receiving_tds",
+               "receptions", "ypc"),
+        "WR": ("receiving_yards", "receptions", "receiving_tds"),
+        "TE": ("receiving_yards", "receptions", "receiving_tds"),
+        "DE": _NFL_DL_CARD, "DT": _NFL_DL_CARD, "NT": _NFL_DL_CARD, "DL": _NFL_DL_CARD,
+        "OLB": _NFL_LB_CARD, "MLB": _NFL_LB_CARD, "ILB": _NFL_LB_CARD, "LB": _NFL_LB_CARD,
+        "CB": _NFL_DB_CARD, "FS": _NFL_DB_CARD, "SS": _NFL_DB_CARD, "S": _NFL_DB_CARD,
+        "SAF": _NFL_DB_CARD, "DB": _NFL_DB_CARD,
+    },
+    # The real hockey stat line: G-A-P as every scoreboard prints it, plus plus-minus for
+    # defencemen, whose value a bare goal total misrepresents. Goalies get the goalie line.
+    "hockey": {
+        "C": ("goals", "assists", "points"),
+        "L": ("goals", "assists", "points"),
+        "R": ("goals", "assists", "points"),
+        "D": ("goals", "assists", "points", "plus_minus"),
+        "G": ("wins", "gaa", "save_pct", "shutouts"),
+    },
+    "baseball": {"H": ("home_runs", "rbi", "avg"), "P": ("wins", "era", "strike_outs")},
+    # Soccer's whole vocabulary is four keys (appearances/goals/assists/clean_sheets), so a
+    # keeper's honest card is two tiles. Two real numbers beat four with "Goals 0 · Assists 0"
+    # padding them out.
+    "soccer": {
+        "GK": ("clean_sheets", "appearances"),
+        "DF": ("clean_sheets", "appearances", "goals", "assists"),
+        "FW": ("goals", "assists", "appearances"),
+        "MF": ("goals", "assists", "appearances"),
+    },
+}
+
+# Single-game overrides for POSITION_CARD, mirroring `Sport.positionStatTemplatesGame`. NFL
+# and soccer game rows carry the same stat KEYS as their season rows (a game's
+# `rushing_yards` is the season field with a smaller number) so they need no entry. NBA and
+# baseball differ: NBA season rows carry per-game rates (`ppg`) where game rows carry raw
+# totals (`points`), and baseball game rows omit the season-only rate stats `avg`/`era`.
+POSITION_CARD_GAME: dict[str, dict[str, tuple[str, ...]]] = {
+    "baseball": {"H": ("home_runs", "rbi", "hits"),
+                 "P": ("strike_outs", "earned_runs", "innings_pitched")},
+}
+
+# Label + format for a canonical-card stat the theme itself doesn't declare — needed only
+# for FILLED-IN columns, since a stat the theme names keeps that theme's own label/fmt (and
+# so its grain-correct formatting: `nfl-career-fantasy` prints career yards `comma_int`).
+# `comma_int` wherever a career total can pass four digits; it renders identically to `int`
+# below 1,000, so a season card is unaffected. Mirrors `ScoringStat.catalog`'s labels.
+_FILL_COLUMNS: dict[str, dict[str, StatColumn]] = {
+    "nfl": {c.stat: c for c in (
+        StatColumn("passing_yards", "Pass Yds", "comma_int"),
+        StatColumn("passing_tds", "Pass TD", "int"),
+        StatColumn("interceptions", "INT", "int"),
+        StatColumn("rushing_yards", "Rush Yds", "comma_int"),
+        StatColumn("rushing_tds", "Rush TD", "int"),
+        StatColumn("receiving_yards", "Rec Yds", "comma_int"),
+        StatColumn("receiving_tds", "Rec TD", "int"),
+        StatColumn("receptions", "Rec", "comma_int"),
+        StatColumn("completions", "Cmp", "comma_int"),
+        StatColumn("attempts", "Att", "comma_int"),
+        StatColumn("completion_pct", "Cmp%", "dec1"),
+        StatColumn("ypc", "Yds/Carry", "dec1"),
+        # Defensive keys match nfl_nflverse_defense.py's vocabulary — `def_interceptions`,
+        # never `interceptions`, which on an offensive row means "thrown by a QB".
+        StatColumn("sacks", "Sacks", "int"),
+        StatColumn("tackles_combined", "Tackles", "comma_int"),
+        StatColumn("tackles_for_loss", "TFL", "int"),
+        StatColumn("qb_hits", "QB Hits", "int"),
+        StatColumn("def_interceptions", "Def INT", "int"),
+        StatColumn("passes_defended", "PD", "int"),
+        StatColumn("forced_fumbles", "FF", "int"),
+    )},
+    "hockey": {c.stat: c for c in (
+        StatColumn("goals", "G", "int"), StatColumn("assists", "A", "int"),
+        StatColumn("points", "PTS", "int"), StatColumn("plus_minus", "+/-", "int"),
+        StatColumn("wins", "W", "int"), StatColumn("gaa", "GAA", "dec2"),
+        StatColumn("save_pct", "SV%", "dec3"), StatColumn("shutouts", "SO", "int"),
+    )},
+    "baseball": {c.stat: c for c in (
+        StatColumn("home_runs", "HR", "comma_int"), StatColumn("rbi", "RBI", "comma_int"),
+        StatColumn("avg", "AVG", "dec3"), StatColumn("hits", "Hits", "comma_int"),
+        StatColumn("wins", "W", "int"), StatColumn("era", "ERA", "dec2"),
+        StatColumn("strike_outs", "K", "comma_int"),
+        StatColumn("earned_runs", "ER", "int"),
+        StatColumn("innings_pitched", "IP", "dec1"),
+    )},
+    "soccer": {c.stat: c for c in (
+        StatColumn("goals", "Goals", "int"), StatColumn("assists", "Assists", "int"),
+        StatColumn("appearances", "Apps", "int"),
+        StatColumn("clean_sheets", "Clean Sheets", "int"),
+    )},
+}
+
+# The card layout is built for four or five tiles (see Keep4CardView.statRows, which balances
+# 5 → 3+2 and 4 → 2+2); past that the numbers shrink and the sheet reads as a table.
+_MAX_CARD_COLUMNS = 5
+
+
+def produces(sport: str, position: str | None, stat: str) -> bool:
+    """Whether `position` in `sport` records `stat` at all. True when the sport/position has
+    no family entry — absence means "no split to draw here", not "unknown"."""
+    families = POSITION_STAT_FAMILIES.get(sport, {}).get(position or "")
+    return True if families is None else stat.startswith(families)
 
 
 def columns_for(theme: Theme, position: str | None = None) -> list[StatColumn]:
     """The card columns for a season at `position`.
 
-    Single-position(-family) themes always use the theme's columns as-is. For a
-    cross-position NFL theme (e.g. nfl-total-fantasy), slice the columns to the stat
-    families the position produces, so mixed pools read sensibly per card. Falls back
-    to the full set if the slice would leave fewer than 3 columns.
+    Single-position(-family) themes use the theme's columns as-is — they were curated for
+    exactly one stat vocabulary, and a WR theme showing Yds/Rec and Targets is the point. So
+    does a cross-position theme whose every column this position DOES produce: a hockey board
+    mixing C/L/R is nominally cross-position but the three skater codes record the same
+    things, and "Modern snipers" showing G/SOG/S%/PTS instead of the canonical G-A-P is that
+    theme choosing its own emphasis, not a defect to correct.
+
+    Otherwise — the theme names a stat this position cannot produce — the card is composed
+    from the position's canonical stat card (POSITION_CARD) and filled in, so every tile is a
+    stat that position actually records:
+
+      1. the canonical keys, in canonical order, each rendered with the theme's own column
+         when the theme declares it (keeping that theme's label/fmt) and `_FILL_COLUMNS`
+         otherwise — this is the "fill in the canonical card" step;
+      2. then any *other* theme column the position does produce, so a theme still shows the
+         stat it is named after (a generated "20-20 club" board promotes SB to its columns,
+         and that promotion survives).
+
+    The whole thing is capped at `_MAX_CARD_COLUMNS`, which the canonical card takes first:
+    a position whose canonical card is already that long (NFL QB) has no room for the tail.
+    That is the right precedence — the canonical line is what the player reads the card by —
+    but it does mean a promoted column can be crowded out on those positions.
+
+    There is deliberately no fall-back-to-everything branch. The old one existed because
+    filtering could leave too few columns; composing from the canonical card cannot, and the
+    fallback is what put four zeroed passing/rushing tiles on a Travis Kelce card.
     """
-    if position is None or theme.sport != "nfl" or len(theme.positions) <= 1:
+    if position is None or len(theme.positions) <= 1:
         return theme.columns
-    prefixes = _NFL_POSITION_STATS.get(position)
-    if not prefixes:
+    if all(produces(theme.sport, position, c.stat) for c in theme.columns):
         return theme.columns
-    sliced = [c for c in theme.columns if c.stat.startswith(prefixes)]
-    return sliced if len(sliced) >= 3 else theme.columns
+    game = POSITION_CARD_GAME.get(theme.sport, {}).get(position) if theme.grain == "game" else None
+    canonical = game or POSITION_CARD.get(theme.sport, {}).get(position)
+    if canonical is None:                     # NBA/tennis/F1, or a position with no card
+        return theme.columns
+    declared = {c.stat: c for c in theme.columns}
+    fill = _FILL_COLUMNS.get(theme.sport, {})
+    out = [declared.get(k) or fill[k] for k in canonical if k in declared or k in fill]
+    seen = {c.stat for c in out}
+    out += [c for c in theme.columns
+            if c.stat not in seen and produces(theme.sport, position, c.stat)]
+    return out[:_MAX_CARD_COLUMNS] if out else theme.columns
 
 
 def format_columns(theme: Theme, stats: dict[str, float],
@@ -284,6 +501,24 @@ def export_themes(themes: list[Theme] | None = None) -> list[dict]:
     """All themes in bundle-export order (catalog order, stable)."""
     return [export_theme(t) for t in (KEEP4_THEMES if themes is None else themes)]
 
+
+# ── Adding or removing a theme? Four things mirror this list, and only one is automatic ──
+#
+# A theme edit is a cross-language change. Python-only verification passes while the Swift
+# side goes red, which is exactly what happened on 2026-09-05 when `hockey-scoring-forwards-era`
+# was added: `pytest` stayed green and two Swift tests broke.
+#
+#   1. `BallIQ/Data/keep4_themes.json` — REGENERATE with
+#      `python -m tools.ingest.main --write-themes`. Do not hand-edit. A pure function of this
+#      list, and `test_bundled_themes_match_catalog` fails if it drifts.
+#   2. `BallIQTests/Keep4ThemeTests.swift` — hardcodes the total theme COUNT, and asserts the
+#      exact set of `eraAdjusted` theme keys.
+#   3. `tools/ingest/tests/test_export_themes.py` — `app_presets` lists every scale the Swift
+#      `ScoringRule.presets` mirrors; a theme on a NEW scale needs the scale added there AND
+#      a matching preset in `BallIQ/Models/ScoringRule.swift`.
+#   4. `tools/ingest/tests/test_no_em_dashes.py` — theme TITLES may not contain em/en dashes.
+#
+# So: run BOTH suites after a theme change, not just pytest.
 
 KEEP4_THEMES: list[Theme] = [
     # ── NFL (live nflverse) ────────────────────────────────────────────
@@ -952,6 +1187,165 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("era", "ERA", "dec2"),
             StatColumn("whip", "WHIP", "dec2"),
             StatColumn("innings_pitched", "IP", "comma_int"),
+        ],
+    ),
+
+    # -- Hockey (M31, live via providers/nhl_stats.py: full-league seasons 1917-18 onward,
+    # the deepest history in the catalog). Skaters and goalies are graded by two different
+    # scales because they share no stat key, exactly like baseball's hitter/pitcher split,
+    # and every theme is single-role for that reason -- a mixed board would have to show one
+    # of them a stat family it does not record. Era slices use `decade`/`season_year` rather
+    # than raw totals because scoring levels swing enormously across NHL history (a 100-point
+    # season in the clutch-and-grab late 90s is not a 100-point season in 1985). --
+    Theme(
+        key="hockey-scoring-forwards",
+        title="Elite forward scoring seasons",
+        sport="hockey",
+        scale="hockey_skater_fantasy",
+        positions=frozenset({"C", "L", "R"}),
+        min_stats={"points": 70, "games": 60},
+        columns=[
+            StatColumn("goals", "G", "int"),
+            StatColumn("assists", "A", "int"),
+            StatColumn("points", "PTS", "int"),
+            StatColumn("plus_minus", "+/-", "int"),
+            StatColumn("shots", "SOG", "int"),
+        ],
+    ),
+    Theme(
+        key="hockey-blueliners",
+        title="Big offensive seasons from the blue line",
+        sport="hockey",
+        scale="hockey_skater_fantasy",
+        positions=frozenset({"D"}),
+        min_stats={"points": 40, "games": 60},
+        columns=[
+            StatColumn("points", "PTS", "int"),
+            StatColumn("goals", "G", "int"),
+            StatColumn("assists", "A", "int"),
+            StatColumn("plus_minus", "+/-", "int"),
+            StatColumn("penalty_minutes", "PIM", "int"),
+        ],
+    ),
+    Theme(
+        key="hockey-goalies",
+        title="Great goaltending seasons",
+        sport="hockey",
+        scale="hockey_goalie_fantasy",
+        positions=frozenset({"G"}),
+        # A save-percentage floor rather than a wins floor: wins are a team stat, and a
+        # wins-only gate would fill the board with average goalies on great teams.
+        min_stats={"wins": 20, "save_pct": 0.900, "games": 30},
+        columns=[
+            StatColumn("wins", "W", "int"),
+            StatColumn("save_pct", "SV%", "dec3"),
+            StatColumn("gaa", "GAA", "dec2"),
+            StatColumn("shutouts", "SO", "int"),
+            StatColumn("saves", "SV", "comma_int"),
+        ],
+    ),
+    Theme(
+        key="hockey-eighties-offense",
+        title="Run-and-gun 80s scoring seasons",
+        sport="hockey",
+        scale="hockey_skater_fantasy",
+        positions=frozenset({"C", "L", "R"}),
+        min_stats={"points": 80, "games": 60},
+        filters=(Filter(field="decade", op="in", value=(1980,)),),
+        columns=[
+            StatColumn("goals", "G", "int"),
+            StatColumn("assists", "A", "int"),
+            StatColumn("points", "PTS", "int"),
+            StatColumn("pp_points", "PPP", "int"),
+        ],
+    ),
+    Theme(
+        key="hockey-modern-snipers",
+        title="Modern-era goal scorers (2010s+)",
+        sport="hockey",
+        scale="hockey_skater_fantasy",
+        positions=frozenset({"C", "L", "R"}),
+        min_stats={"goals": 25, "games": 60},
+        filters=(Filter(field="season_year", op="gte", value=2010),),
+        columns=[
+            StatColumn("goals", "G", "int"),
+            StatColumn("shots", "SOG", "int"),
+            StatColumn("shooting_pct", "S%", "pct1"),
+            StatColumn("points", "PTS", "int"),
+        ],
+    ),
+    Theme(
+        key="hockey-scoring-forwards-era",
+        title="Elite forward scoring seasons, era-adjusted",
+        sport="hockey",
+        scale="hockey_skater_fantasy",
+        era_adjusted=True,
+        # Same pool as hockey-scoring-forwards, but graded by raw PPR-style points × the
+        # per-(position, year) volume index (baselines.py now emits `fantasy_total` for
+        # hockey — see that module's QUALIFY/TOTAL_SCALE). Without this, the raw-points
+        # version of this theme comes out 5-of-8 from the 1980s (Gretzky '81, Lemieux '88,
+        # Bossy '81, Nicholls '88, Yzerman '88) purely because 1980s scoring totals are
+        # bigger numbers, not because those seasons were more dominant relative to their
+        # own league that year. Era-adjusting spreads the same pool across five different
+        # decades (1970s/80s/90s/2000s/2020s) instead of one, and still surfaces McDavid,
+        # Jagr and MacKinnon alongside Gretzky rather than burying them under raw volume.
+        positions=frozenset({"C", "L", "R"}),
+        min_stats={"points": 70, "games": 60},
+        columns=[
+            StatColumn("goals", "G", "int"),
+            StatColumn("assists", "A", "int"),
+            StatColumn("points", "PTS", "int"),
+            StatColumn("plus_minus", "+/-", "int"),
+            StatColumn("shots", "SOG", "int"),
+        ],
+    ),
+
+    # -- F1 (M31, live via providers/f1_ergast.py: driver-seasons 1950-present). Columns
+    # deliberately never include championship points: F1 rewrote its points system in 1961,
+    # 1991 and 2010, so the column would compare 1954 to 2024 on a scale that changed by 3x
+    # underneath it. See grade.py's `f1_driver_fantasy`. `fastest_laps` is absent from
+    # pre-2004 rows (Ergast has no such data), so it is only a column on the modern theme. --
+    Theme(
+        key="f1-title-fights",
+        title="Championship-contending driver seasons",
+        sport="f1",
+        scale="f1_driver_fantasy",
+        positions=frozenset({"Driver"}),
+        min_stats={"podiums": 4, "races": 8},
+        columns=[
+            StatColumn("wins", "Wins", "int"),
+            StatColumn("podiums", "Podiums", "int"),
+            StatColumn("poles", "Poles", "int"),
+            StatColumn("races", "Starts", "int"),
+        ],
+    ),
+    Theme(
+        key="f1-race-winners",
+        title="Race-winning seasons",
+        sport="f1",
+        scale="f1_driver_fantasy",
+        positions=frozenset({"Driver"}),
+        min_stats={"wins": 1, "races": 6},
+        columns=[
+            StatColumn("wins", "Wins", "int"),
+            StatColumn("podiums", "Podiums", "int"),
+            StatColumn("poles", "Poles", "int"),
+            StatColumn("dnfs", "DNFs", "int"),
+        ],
+    ),
+    Theme(
+        key="f1-modern-era",
+        title="Modern-era driver seasons (2010s+)",
+        sport="f1",
+        scale="f1_driver_fantasy",
+        positions=frozenset({"Driver"}),
+        min_stats={"top_tens": 5, "races": 10},
+        filters=(Filter(field="season_year", op="gte", value=2010),),
+        columns=[
+            StatColumn("podiums", "Podiums", "int"),
+            StatColumn("top_tens", "Top 10s", "int"),
+            StatColumn("poles", "Poles", "int"),
+            StatColumn("fastest_laps", "FL", "int"),
         ],
     ),
 ]

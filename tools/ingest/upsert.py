@@ -432,7 +432,7 @@ GRID_CATALOG_COLUMNS = "name,team_abbr,season_year,sport,position,stats,career,l
 # whoami_pool.py's set -- the Grid columns plus the career-span and photo fields it tiers and
 # qualifies subjects on. A separate constant rather than widening the default, so The Grid's
 # 79k-row soccer pull doesn't start carrying three columns it has no use for.
-WHOAMI_CATALOG_COLUMNS = GRID_CATALOG_COLUMNS + ",first_year,last_year,headshot"
+WHOAMI_CATALOG_COLUMNS = GRID_CATALOG_COLUMNS + ",first_year,last_year,headshot,person_id"
 
 
 def fetch_player_seasons(sport: str, *, career: bool = False, page_size: int = 1000,
@@ -527,3 +527,84 @@ def delete_daily_keep4(served_date: str, sport: str, *, keep_id: str) -> int:
             print(f"[supersede] removed {table} {row.get('id') or row.get('puzzle_id')}")
         removed += len(gone)
     return removed
+
+
+def fetch_rows_keyset(table: str, select: str, *, where: str = "",
+                      page_size: int = 1000) -> list[dict]:
+    """Every row of `table` matching `where`, keyset-paged on `id`.
+
+    Keyset, not Range/offset, for the reason spelled out in `fetch_existing_catalog_ids`:
+    a deep OFFSET walks and discards every earlier row and blows the statement timeout.
+    `select` must include `id` — it's the paging cursor.
+    """
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    rows: list[dict] = []
+    last: str | None = None
+    while True:
+        query = f"select={select}&order=id.asc&limit={page_size}"
+        if where:
+            query += f"&{where}"
+        if last is not None:
+            query += f"&id=gt.{urllib.parse.quote(last)}"
+        page = _get_json(f"{base}/rest/v1/{table}?{query}", headers,
+                         what=f"{table} fetch")
+        if not page:
+            break
+        rows.extend(page)
+        last = page[-1]["id"]
+    return rows
+
+
+def fetch_rows_by_id(table: str, select: str, ids: list[str],
+                     batch_size: int = 300) -> list[dict]:
+    """Rows of `table` whose `id` is in `ids`, batched so the `in.(…)` URL stays under the
+    server's URI limit. Ids are quoted — catalog ids carry no commas today, but a single
+    unquoted one would silently split the filter and drop rows."""
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    rows: list[dict] = []
+    for start in range(0, len(ids), batch_size):
+        batch = ids[start:start + batch_size]
+        joined = ",".join('"' + i.replace('"', '""') + '"' for i in batch)
+        query = f"select={select}&id=in.({urllib.parse.quote(joined)})"
+        rows.extend(_get_json(f"{base}/rest/v1/{table}?{query}", headers,
+                              what=f"{table} id fetch"))
+    return rows
+
+
+def patch_rows(table: str, updates: list[dict], *, id_key: str = "id") -> int:
+    """PATCH each row by primary key, returning the number written.
+
+    A partial upsert can't do this: PostgREST's `merge-duplicates` still runs an INSERT
+    first, so a payload of just `{id, content}` would have to satisfy every NOT NULL column
+    on `puzzles` that has no default. PATCH touches only the columns given.
+    """
+    base, key = _require_env()
+    headers = {
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
+    }
+    written = 0
+    for update in updates:
+        row_id = update[id_key]
+        body = {k: v for k, v in update.items() if k != id_key}
+        url = (f"{base}/rest/v1/{table}"
+               f"?{id_key}=eq.{urllib.parse.quote(str(row_id))}")
+        data = json.dumps(body).encode("utf-8")
+        req = urllib.request.Request(url, data=data, headers=headers, method="PATCH")
+        for attempt in range(4):
+            try:
+                with urllib.request.urlopen(req, timeout=60):
+                    written += 1
+                break
+            except urllib.error.HTTPError as err:
+                detail = err.read().decode("utf-8", "ignore")
+                raise RuntimeError(f"{table} patch {row_id} failed ({err.code}): {detail}") from err
+            except Exception as err:                       # noqa: BLE001 — transient socket/TLS
+                if attempt == 3:
+                    raise RuntimeError(f"{table} patch {row_id} failed after 4 attempts: {err}") from err
+                time.sleep(2 ** attempt)
+    return written

@@ -1,19 +1,29 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { SPORT_ROTATION, sportForDay } from "./sport.ts";
 
-const ALL = ["baseball", "nba", "nfl", "soccer", "tennis"];
+// Every sport in the rotation is "available" here — this fixture stands for the normal
+// case where each sport minted something. Derived from SPORT_ROTATION rather than written
+// out, so adding a sport (M31 added hockey and F1) can't silently leave this list short and
+// turn the walk-the-rotation test below into a test of the skip path instead.
+const ALL: string[] = [...SPORT_ROTATION];
+const N = SPORT_ROTATION.length;
 
 Deno.test("consecutive days walk the rotation in order and then repeat", () => {
-  const week = ["2026-08-19", "2026-08-20", "2026-08-21", "2026-08-22", "2026-08-23",
-                "2026-08-24", "2026-08-25"].map((d) => sportForDay(d, ALL));
-  // Five distinct sports across five days, then the cycle comes back around.
-  assertEquals(new Set(week.slice(0, 5)).size, 5);
-  assertEquals(week[5], week[0]);
-  assertEquals(week[6], week[1]);
+  // One full cycle plus two days, so the wrap-around is actually exercised.
+  const days: string[] = [];
+  for (let i = 0; i < N + 2; i++) {
+    const d = new Date(Date.UTC(2026, 7, 19 + i));
+    days.push(d.toISOString().slice(0, 10));
+  }
+  const run = days.map((d) => sportForDay(d, ALL));
+  // Every sport appears exactly once across one cycle, then it comes back around.
+  assertEquals(new Set(run.slice(0, N)).size, N);
+  assertEquals(run[N], run[0]);
+  assertEquals(run[N + 1], run[1]);
   // ...and it is the declared order, not an arbitrary hash.
-  const start = SPORT_ROTATION.indexOf(week[0] as typeof SPORT_ROTATION[number]);
-  assertEquals(week.slice(0, 5),
-               [0, 1, 2, 3, 4].map((i) => SPORT_ROTATION[(start + i) % SPORT_ROTATION.length]));
+  const start = SPORT_ROTATION.indexOf(run[0] as typeof SPORT_ROTATION[number]);
+  assertEquals(run.slice(0, N),
+               [...Array(N).keys()].map((i) => SPORT_ROTATION[(start + i) % N]));
 });
 
 Deno.test("everyone on the same day gets the same sport", () => {

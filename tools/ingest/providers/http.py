@@ -15,6 +15,19 @@ from pathlib import Path
 CACHE_DIR = Path(__file__).resolve().parent.parent / ".cache"
 _USER_AGENT = "balliq-ingest/1.0 (+https://github.com/balliq)"
 
+# `_get`'s per-attempt socket timeout. Every keyless API this pipeline talks to answers
+# in well under a second in the healthy case (curl round-trips against ESPN/MLB/NHL are
+# consistently <1s) — 20s is generous headroom for a slow-but-real response, not a
+# reflection of expected latency. This used to be 60s, which was cheap for a single call
+# but ruinous multiplied across a per-player loop: measured 2026-09-05, one call against
+# a black-holed host with the *old* 60s/4-retry settings took 202.6s to give up. NBA's
+# ~900-id pool loop (`espn_nba.fetch_by_ids`) hitting even a couple dozen unreachable/
+# stalled ids back-to-back is exactly what stalled a nightly `daily_puzzle` run for 24
+# minutes with zero new cache writes in the last 10 — every one of those minutes was a
+# real socket sitting in a handshake it was allowed to hold for a full minute, four times
+# over, per id. Lower timeout + fewer retries shrinks that same worst case to ~50s/id.
+_TIMEOUT_S = 20
+
 
 def _cache_path(key: str) -> Path:
     return CACHE_DIR / key
@@ -84,7 +97,7 @@ def fetch_json(url: str, *, headers: dict[str, str] | None = None,
     return json.loads(body)
 
 
-def _get(url: str, *, headers: dict[str, str] | None = None, retries: int = 4) -> str:
+def _get(url: str, *, headers: dict[str, str] | None = None, retries: int = 3) -> str:
     req = urllib.request.Request(url)
     req.add_header("User-Agent", _USER_AGENT)
     for name, value in (headers or {}).items():
@@ -93,7 +106,7 @@ def _get(url: str, *, headers: dict[str, str] | None = None, retries: int = 4) -
     last_err: Exception | None = None
     for attempt in range(retries):
         try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
+            with urllib.request.urlopen(req, timeout=_TIMEOUT_S) as resp:
                 return resp.read().decode("utf-8")
         except urllib.error.HTTPError as err:
             # 429 (rate limited) IS retryable with backoff; other 4xx (e.g. balldontlie
@@ -108,5 +121,5 @@ def _get(url: str, *, headers: dict[str, str] | None = None, retries: int = 4) -
                 continue
         except urllib.error.URLError as err:
             last_err = err
-        time.sleep(min(1.5 * 2 ** attempt, 30))  # exponential backoff, capped
+        time.sleep(min(1.5 * 2 ** attempt, 15))  # exponential backoff, capped
     raise RuntimeError(f"GET failed after {retries} attempts: {url}") from last_err

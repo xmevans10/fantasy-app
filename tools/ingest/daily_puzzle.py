@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import os
 import random
 
 from . import assemble, curation, generate, shapes
@@ -39,11 +40,13 @@ from .baselines import compute_baselines
 from .grade import BaselineTable
 from .models import RawSeason
 from .themes import KEEP4_THEMES, Theme
-from .validate import _VALID_SPORTS
+from .validate import WIRE_SAFE_SPORTS
 
 # Stable iteration order for per-sport minting (set iteration order isn't deterministic
 # across processes, and logs/tests want a fixed order).
-SPORTS: tuple[str, ...] = tuple(sorted(_VALID_SPORTS))
+# Release-gated, not just "every sport we have data for" — see `validate.WIRE_SAFE_SPORTS`
+# for why minting a sport an installed build cannot decode breaks that user's whole archive.
+SPORTS: tuple[str, ...] = tuple(sorted(WIRE_SAFE_SPORTS))
 
 # Distinct player-set windows to request per theme when searching for novelty — high enough
 # to expose most of a pool_cap=24 theme's ~17 possible clean-boundary windows.
@@ -276,6 +279,19 @@ def main() -> int:
             return 0
 
     seasons = ingest_main.gather_seasons(ingest_main.DEFAULT_NFL_YEARS, ingest_main.DEFAULT_GAME_YEARS)
+    # Rewrite provider headshot URLs to our own store BEFORE assembly, exactly as the catalog
+    # path does. Without this a board freezes whatever the provider handed back — including
+    # the league CDNs' generic helmet/silo placeholders, which return HTTP 200 with a real
+    # image and so pass every liveness check while rendering a faceless card. `main.main()`
+    # has done this since the ledger existed; the daily mints are a SEPARATE entry point that
+    # never got the same treatment, which is how a user hit a helmet on Randall Cunningham's
+    # Journeyman board. `validate` now rejects a non-store headshot outright, so this also
+    # keeps the mint from failing its own contract.
+    if os.getenv("SUPABASE_URL"):
+        try:
+            ingest_main.apply_headshot_ledger(seasons)
+        except Exception as err:              # noqa: BLE001 - never block a mint on it
+            print(f"[headshots] ledger skipped ({err}) — headshots stay as providers gave them")
     baselines = BaselineTable(compute_baselines(seasons))
 
     # Seeded on the batch's first date, so a re-dispatched run for the same day rolls the same

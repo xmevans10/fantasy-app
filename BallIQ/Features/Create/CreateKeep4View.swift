@@ -552,8 +552,15 @@ struct CreateKeep4View: View {
         case .baseball: return ["H", "P"]
         case .soccer: return ["FW", "MF", "DF", "GK"]
         case .tennis: return ["Player"]
+        // Hockey's codes are the NHL API's own `positionCode` values (see
+        // `providers/nhl_stats.py`); F1 has a single position, the same shape as tennis.
+        case .hockey: return ["C", "L", "R", "D", "G"]
+        case .f1: return ["Driver"]
         case nil:
-            return ["QB", "RB", "WR", "TE", "DL", "LB", "DB", "G", "F", "C", "H", "P", "FW", "MF", "DF", "GK", "Player"]
+            // Deduped: hockey's C/G and F1's single code overlap with NBA's and baseball's,
+            // and a duplicate here renders the same filter chip twice.
+            return ["QB", "RB", "WR", "TE", "DL", "LB", "DB", "G", "F", "C", "H", "P",
+                    "FW", "MF", "DF", "GK", "Player", "L", "R", "D", "Driver"]
         }
     }
 
@@ -690,6 +697,11 @@ private enum ScoringChoice: String, CaseIterable, Identifiable {
         case (_, .baseball):      return "baseball_hitter_fantasy"
         case (_, .soccer):        return "soccer_attacker_fantasy"
         case (_, .tennis):        return "tennis_fantasy"
+        // Hockey follows the baseball precedent above: the *skater* scale is the free-form
+        // default, because a goalie's stat vocabulary shares no key with a skater's and
+        // there is no position to pick from without a template. F1 has one scale, period.
+        case (_, .hockey):        return "hockey_skater_fantasy"
+        case (_, .f1):            return "f1_driver_fantasy"
         case (.ppr, .nfl):        return "nfl_fantasy"
         case (.halfPPR, .nfl):    return "nfl_fantasy_half"
         case (.standard, .nfl):   return "nfl_fantasy_standard"

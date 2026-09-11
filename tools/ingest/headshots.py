@@ -118,6 +118,33 @@ def _rest(base: str, key: str, path: str, *, method: str = "GET", body=None,
     raise RuntimeError(f"{method} {path} failed after retries: {last}")
 
 
+def seed_queue(dry_run: bool) -> int:
+    """Enqueue every catalog headshot source the ledger has never seen.
+
+    `claim_pending` below reads `headshot_assets` and nothing else, which is what made the
+    sharded worker fast — and also what made the queue a closed set. It was filled once, by
+    hand, and no stage of `headshot-backfill.yml` has ever added to it: reset-errors reopens
+    known failures, the shards claim known `pending` rows, and each `--*-backfill` starts from
+    `player_seasons.headshot = ''`, which a never-queued source is not. So a player discovered
+    after the initial seed kept a raw provider URL indefinitely, and did not appear as
+    outstanding work anywhere, because `headshot_coverage_summary` counts ledger rows and this
+    player had none. That is the shape of the 7,590 unqueued sources drained by hand on
+    2026-09-07: a one-off repair of a gap that refills every time `discover-players.yml` runs.
+
+    Idempotent by construction (`on conflict do nothing`), so it is safe to run before every
+    pass, and cheap once the backlog is empty — it is one set difference, server-side.
+    """
+    load_dotenv()
+    base, key = _require_env()
+    stats = _rest(base, key, "rpc/headshot_queue_seed", method="POST",
+                  body={"dry_run": dry_run}, timeout=300) or {}
+    missing = stats.get("candidates", 0)
+    verb = "would enqueue" if dry_run else f"enqueued {stats.get('enqueued', 0)}"
+    print(f"[headshots] seed-queue: {missing} catalog source(s) not in the ledger, {verb}",
+          flush=True)
+    return 0
+
+
 def claim_pending(base: str, key: str, shard: int, shards: int,
                   sports: list[str] | None, limit: int | None) -> list[tuple[str, str]]:
     """Claim this shard's slice of the work queue.
@@ -885,8 +912,13 @@ def main(argv: list[str] | None = None) -> int:
                              "(run AFTER --repoint)")
     parser.add_argument("--repoint", action="store_true",
                         help="after shards finish: rewrite player_seasons.headshot from the ledger")
+    parser.add_argument("--seed-queue", action="store_true",
+                        help="before shards start: enqueue catalog sources the ledger has never "
+                             "seen (idempotent)")
     args = parser.parse_args(argv)
 
+    if args.seed_queue:
+        return seed_queue(args.dry_run)
     if args.reset_errors:
         load_dotenv()
         base, key = _require_env()

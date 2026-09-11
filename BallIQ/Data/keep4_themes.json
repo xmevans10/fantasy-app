@@ -1715,5 +1715,376 @@
     "poolCap": 24,
     "grain": "career",
     "eraAdjusted": false
+  },
+  {
+    "key": "hockey-scoring-forwards",
+    "title": "Elite forward scoring seasons",
+    "sport": "hockey",
+    "scale": "hockey_skater_fantasy",
+    "positions": [
+      "C",
+      "L",
+      "R"
+    ],
+    "minStats": {
+      "games": 60,
+      "points": 70
+    },
+    "columns": [
+      {
+        "stat": "goals",
+        "label": "G",
+        "fmt": "int"
+      },
+      {
+        "stat": "assists",
+        "label": "A",
+        "fmt": "int"
+      },
+      {
+        "stat": "points",
+        "label": "PTS",
+        "fmt": "int"
+      },
+      {
+        "stat": "plus_minus",
+        "label": "+/-",
+        "fmt": "int"
+      },
+      {
+        "stat": "shots",
+        "label": "SOG",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "hockey-blueliners",
+    "title": "Big offensive seasons from the blue line",
+    "sport": "hockey",
+    "scale": "hockey_skater_fantasy",
+    "positions": [
+      "D"
+    ],
+    "minStats": {
+      "games": 60,
+      "points": 40
+    },
+    "columns": [
+      {
+        "stat": "points",
+        "label": "PTS",
+        "fmt": "int"
+      },
+      {
+        "stat": "goals",
+        "label": "G",
+        "fmt": "int"
+      },
+      {
+        "stat": "assists",
+        "label": "A",
+        "fmt": "int"
+      },
+      {
+        "stat": "plus_minus",
+        "label": "+/-",
+        "fmt": "int"
+      },
+      {
+        "stat": "penalty_minutes",
+        "label": "PIM",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "hockey-goalies",
+    "title": "Great goaltending seasons",
+    "sport": "hockey",
+    "scale": "hockey_goalie_fantasy",
+    "positions": [
+      "G"
+    ],
+    "minStats": {
+      "games": 30,
+      "save_pct": 0.9,
+      "wins": 20
+    },
+    "columns": [
+      {
+        "stat": "wins",
+        "label": "W",
+        "fmt": "int"
+      },
+      {
+        "stat": "save_pct",
+        "label": "SV%",
+        "fmt": "dec3"
+      },
+      {
+        "stat": "gaa",
+        "label": "GAA",
+        "fmt": "dec2"
+      },
+      {
+        "stat": "shutouts",
+        "label": "SO",
+        "fmt": "int"
+      },
+      {
+        "stat": "saves",
+        "label": "SV",
+        "fmt": "comma_int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "hockey-eighties-offense",
+    "title": "Run-and-gun 80s scoring seasons",
+    "sport": "hockey",
+    "scale": "hockey_skater_fantasy",
+    "positions": [
+      "C",
+      "L",
+      "R"
+    ],
+    "minStats": {
+      "games": 60,
+      "points": 80
+    },
+    "columns": [
+      {
+        "stat": "goals",
+        "label": "G",
+        "fmt": "int"
+      },
+      {
+        "stat": "assists",
+        "label": "A",
+        "fmt": "int"
+      },
+      {
+        "stat": "points",
+        "label": "PTS",
+        "fmt": "int"
+      },
+      {
+        "stat": "pp_points",
+        "label": "PPP",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "hockey-modern-snipers",
+    "title": "Modern-era goal scorers (2010s+)",
+    "sport": "hockey",
+    "scale": "hockey_skater_fantasy",
+    "positions": [
+      "C",
+      "L",
+      "R"
+    ],
+    "minStats": {
+      "games": 60,
+      "goals": 25
+    },
+    "columns": [
+      {
+        "stat": "goals",
+        "label": "G",
+        "fmt": "int"
+      },
+      {
+        "stat": "shots",
+        "label": "SOG",
+        "fmt": "int"
+      },
+      {
+        "stat": "shooting_pct",
+        "label": "S%",
+        "fmt": "pct1"
+      },
+      {
+        "stat": "points",
+        "label": "PTS",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "hockey-scoring-forwards-era",
+    "title": "Elite forward scoring seasons, era-adjusted",
+    "sport": "hockey",
+    "scale": "hockey_skater_fantasy",
+    "positions": [
+      "C",
+      "L",
+      "R"
+    ],
+    "minStats": {
+      "games": 60,
+      "points": 70
+    },
+    "columns": [
+      {
+        "stat": "goals",
+        "label": "G",
+        "fmt": "int"
+      },
+      {
+        "stat": "assists",
+        "label": "A",
+        "fmt": "int"
+      },
+      {
+        "stat": "points",
+        "label": "PTS",
+        "fmt": "int"
+      },
+      {
+        "stat": "plus_minus",
+        "label": "+/-",
+        "fmt": "int"
+      },
+      {
+        "stat": "shots",
+        "label": "SOG",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": true
+  },
+  {
+    "key": "f1-title-fights",
+    "title": "Championship-contending driver seasons",
+    "sport": "f1",
+    "scale": "f1_driver_fantasy",
+    "positions": [
+      "Driver"
+    ],
+    "minStats": {
+      "podiums": 4,
+      "races": 8
+    },
+    "columns": [
+      {
+        "stat": "wins",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "podiums",
+        "label": "Podiums",
+        "fmt": "int"
+      },
+      {
+        "stat": "poles",
+        "label": "Poles",
+        "fmt": "int"
+      },
+      {
+        "stat": "races",
+        "label": "Starts",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "f1-race-winners",
+    "title": "Race-winning seasons",
+    "sport": "f1",
+    "scale": "f1_driver_fantasy",
+    "positions": [
+      "Driver"
+    ],
+    "minStats": {
+      "races": 6,
+      "wins": 1
+    },
+    "columns": [
+      {
+        "stat": "wins",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "podiums",
+        "label": "Podiums",
+        "fmt": "int"
+      },
+      {
+        "stat": "poles",
+        "label": "Poles",
+        "fmt": "int"
+      },
+      {
+        "stat": "dnfs",
+        "label": "DNFs",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "f1-modern-era",
+    "title": "Modern-era driver seasons (2010s+)",
+    "sport": "f1",
+    "scale": "f1_driver_fantasy",
+    "positions": [
+      "Driver"
+    ],
+    "minStats": {
+      "races": 10,
+      "top_tens": 5
+    },
+    "columns": [
+      {
+        "stat": "podiums",
+        "label": "Podiums",
+        "fmt": "int"
+      },
+      {
+        "stat": "top_tens",
+        "label": "Top 10s",
+        "fmt": "int"
+      },
+      {
+        "stat": "poles",
+        "label": "Poles",
+        "fmt": "int"
+      },
+      {
+        "stat": "fastest_laps",
+        "label": "FL",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
   }
 ]

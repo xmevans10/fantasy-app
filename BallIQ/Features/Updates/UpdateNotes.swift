@@ -61,6 +61,33 @@ enum UpdateNotes {
                   message: "Every way to play, now at the top"),
         ],
     ]
+
+    /// Releases that deliberately say nothing.
+    ///
+    /// `UpdateNotesTests` otherwise requires an entry for the shipping `MARKETING_VERSION`,
+    /// which is the right default: the way this surface fails is silently, by nobody adding the
+    /// entry. Silence still has to be *declared*, so "we decided this release has nothing to
+    /// show" and "we forgot" stay different states.
+    ///
+    /// **1.8.4** is the release that makes a client ask for the sports it can decode
+    /// (`Sport.decodableFilterValue`). That is the prerequisite for NHL and F1, not the arrival
+    /// of them, and it is invisible by construction: what it changes is what a *future* publish
+    /// can safely do to this build. See `newSportsSlide` for the announcement it unblocks.
+    static let deliberatelySilent: Set<String> = ["1.8.4"]
+
+    /// Written, rendered, and **not shipping yet**.
+    ///
+    /// This was keyed to 1.8.4 and would have announced two sports nobody could find. Shipping a
+    /// build does not make NHL and F1 appear: the ingest gates them out of minting
+    /// (`validate.WIRE_SAFE_SPORTS`) and the gate cannot open while clients that predate
+    /// `Sport.decodableFilterValue` are still in the wild, because those clients ask for every
+    /// sport and nil the whole archive on one they do not know.
+    ///
+    /// So the slide waits on a release, not a build. Key it into `byVersion` in the SAME change
+    /// that adds hockey and f1 to `WIRE_SAFE_SPORTS`, once 1.8.4 is the support floor — and
+    /// `tools/ingest/tests/test_wire_safe_sports.py` fails the build if it goes in early.
+    static let newSportsSlide = Slide(artwork: "opm-new-sports",
+                                      message: "NHL and F1 join the lineup")
 }
 
 // MARK: - Notelet bridge

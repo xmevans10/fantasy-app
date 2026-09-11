@@ -124,7 +124,21 @@ enum TeamColors {
                        // `CHA`'s palette already uses (real Hornets teal/purple), so this is a
                        // color match, not just a legal one.
                        "CHH": "CHA"]
-        case .baseball, .soccer, .tennis:
+        case .hockey:
+            // Relocations/renames the NHL's own `teamAbbrevs` still emits for old seasons —
+            // each maps to the franchise that continues its history today. Plus the dotted /
+            // two-letter spellings ("T.B", "L.A") that appear in some NHL feeds alongside the
+            // canonical three-letter codes.
+            aliases = ["ATL": "WPG",   // Atlanta Thrashers → Winnipeg Jets (2011)
+                       "PHX": "ARI",   // Phoenix → Arizona Coyotes (2014 rename)
+                       "WIN": "ARI",   // original Winnipeg Jets → Phoenix Coyotes (1996)
+                       "HFD": "CAR",   // Hartford Whalers → Carolina Hurricanes (1997)
+                       "QUE": "COL",   // Quebec Nordiques → Colorado Avalanche (1995)
+                       "MNS": "DAL",   // Minnesota North Stars → Dallas Stars (1993)
+                       "CLR": "NJD", "KCS": "NJD",  // Colorado Rockies / KC Scouts → Devils
+                       "T.B": "TBL", "TB": "TBL", "L.A": "LAK", "LA": "LAK",
+                       "N.J": "NJD", "NJ": "NJD", "S.J": "SJS", "SJ": "SJS", "VEG": "VGK"]
+        case .baseball, .soccer, .tennis, .f1:
             aliases = [:]   // no historical-franchise collisions to normalize yet
         }
         return aliases[up] ?? up
@@ -139,8 +153,33 @@ enum TeamColors {
         case .baseball: return mlb
         case .soccer: return soccer
         case .tennis: return [:]   // no team/club — every lookup falls through to `fallback`
+        case .hockey: return nhl
+        // F1 deliberately has NO hardcoded table, unlike the four league sports above. There
+        // are ~170 constructors across 1950–present and their liveries are the thing that
+        // changes most often about them, so a frozen table here would be wrong more often
+        // than right. Constructor colors come from the `teams` table via `TeamIdentityIndex`
+        // (the data-driven overload above, which already wins over this table for every
+        // sport) and fall through to the neutral `fallback` until that has warmed.
+        case .f1: return [:]
         }
     }
+
+    /// NHL primary/secondary, current 32 franchises. Offline fallback only — the fetched
+    /// `teams` row wins whenever the identity index has warmed (see the data-driven
+    /// `palette(sport:abbr:league:index:)` overload above).
+    private static let nhl: [String: (UInt32, UInt32)] = [
+        "ANA": (0xF47A38, 0xB9975B), "ARI": (0x8C2633, 0xE2D6B5), "BOS": (0xFFB81C, 0x000000),
+        "BUF": (0x003087, 0xFFB81C), "CGY": (0xD2001C, 0xFAAF19), "CAR": (0xCC0000, 0x000000),
+        "CHI": (0xCF0A2C, 0x000000), "COL": (0x6F263D, 0x236192), "CBJ": (0x002654, 0xCE1126),
+        "DAL": (0x006847, 0x8F8F8C), "DET": (0xCE1126, 0xFFFFFF), "EDM": (0x041E42, 0xFF4C00),
+        "FLA": (0x041E42, 0xC8102E), "LAK": (0x111111, 0xA2AAAD), "MIN": (0x154734, 0xA6192E),
+        "MTL": (0xAF1E2D, 0x192168), "NSH": (0xFFB81C, 0x041E42), "NJD": (0xCE1126, 0x000000),
+        "NYI": (0x00539B, 0xF47D30), "NYR": (0x0038A8, 0xCE1126), "OTT": (0xC52032, 0x000000),
+        "PHI": (0xF74902, 0x000000), "PIT": (0x000000, 0xFCB514), "SJS": (0x006D75, 0xEA7200),
+        "SEA": (0x001628, 0x99D9D9), "STL": (0x002F87, 0xFCB514), "TBL": (0x002868, 0xFFFFFF),
+        "TOR": (0x00205B, 0xFFFFFF), "UTA": (0x71AFE5, 0x010101), "VAN": (0x00205B, 0x00843D),
+        "VGK": (0xB4975A, 0x333F42), "WSH": (0x041E42, 0xC8102E), "WPG": (0x041E42, 0x004C97),
+    ]
 
     private static let nfl: [String: (UInt32, UInt32)] = [
         "ARI": (0x97233F, 0x000000), "ATL": (0xA71930, 0x000000), "BAL": (0x241773, 0x9E7C0C),

@@ -36,6 +36,15 @@ on:
 jobs:
   mint:
     runs-on: ubuntu-latest
+    # Without this the job inherits GitHub's 6-HOUR default, so a single provider hanging on
+    # a socket burns six hours of CI and — because the Who Am I? and Journeyman steps run
+    # after the Keep4 one — delays or loses two mints that had nothing wrong with them.
+    #
+    # Sized from real run history rather than guessed: the last 12 scheduled runs took 2-12
+    # minutes each, with two genuine outliers at 51 and 53 minutes (a cold provider cache
+    # after a weekly refresh). 90 leaves headroom over the worst real run while still
+    # catching a true hang in a useful timeframe.
+    timeout-minutes: 90
     env:
       BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -66,7 +75,11 @@ jobs:
       - run: python -m tools.ingest.main --evict-current-season --evict-only
       # `|| '2'` covers scheduled runs (no inputs): today + tomorrow — see the cron comment
       # above for why one day of lookahead is both required and (for now) the maximum.
-      - run: |
+      # The only step that does a full multi-sport provider pull, so it is the only one that
+      # can hang for a long time. Bounded well above its real cost (see the job note) so the
+      # two seconds-not-minutes mints below still get their turn.
+      - timeout-minutes: 60
+        run: |
           python -m tools.ingest.daily_puzzle --upsert \
             --count "${{ github.event.inputs.count || '2' }}" \
             ${{ github.event.inputs.start_date != '' && format('--date {0}', github.event.inputs.start_date) || '' }}

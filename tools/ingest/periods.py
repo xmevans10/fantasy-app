@@ -113,7 +113,7 @@ def closed_period(sport: str, today: dt.date | None = None,
     today = today or dt.date.today()
     if sport == "nfl":
         return nfl_closed_week(today, nfl_rows)
-    if sport in ("nba", "baseball", "soccer", "tennis"):
+    if sport in ("nba", "baseball", "soccer", "tennis", "hockey", "f1"):
         # Real windows, computed the same way for every remaining sport. They return a Period
         # so the shape is testable and the crons are exercisable now; `Period.wired` is what
         # stops the mint acting on one before its provider exists.

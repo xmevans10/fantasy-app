@@ -65,7 +65,11 @@ POOL_FILE = "journeyman_pool.json"
 # Clubs needed to make a path worth guessing, per sport. Soccer's three is not a stylistic
 # preference: two clubs is an ordinary soccer career, so a two-club soccer board would mostly
 # be "name a striker who was at these two clubs", which the Grid already does better.
-MIN_STINTS: dict[str, int] = {"nfl": 2, "nba": 2, "baseball": 2, "soccer": 3}
+# Hockey takes the same floor as the other North American leagues. F1 takes 2 as well: a
+# driver who raced for two constructors is a real career path, and with only ~10 constructors
+# on a modern grid a 3-stint floor would cut the pool to a handful of veterans.
+MIN_STINTS: dict[str, int] = {"nfl": 2, "nba": 2, "baseball": 2, "soccer": 3,
+                              "hockey": 2, "f1": 2}
 
 # Clubs rendered. Truncation keeps the MOST RECENT clubs (the end of a career is what a fan
 # remembers) and the board says so.
@@ -267,6 +271,21 @@ class Stint:
     historical: bool = False
 
 
+@dataclass(frozen=True)
+class Hint:
+    """One paid hint, in the shape the Swift `JourneymanPuzzle.Hint` decodes.
+
+    Ordered vague -> specific like a Who Am I? card, because it is drawn from the same
+    dimension registry and a player who learned to read that ladder should read this one the
+    same way. `dimension` rides along for the same reason `WhoAmIPuzzle.Clue.dimension` does:
+    it is the fact's real identity, and `label` is only its display name.
+    """
+    order: int
+    label: str
+    text: str
+    dimension: str
+
+
 @dataclass
 class JourneymanEntry:
     sport: str
@@ -281,6 +300,16 @@ class JourneymanEntry:
     # The archive card's one line — see `build_teaser`. Defaults to "" so an older pool file
     # still loads; the client falls back to its own shape-only line when this is absent.
     teaser: str = ""
+    # Up to `HINT_COUNT` paid hints — see `build_hints`. Defaults empty so an older pool file
+    # still loads, and so a board minted before this existed simply offers no hint button.
+    hints: list[Hint] = field(default_factory=list)
+    # `whoami_pool.person_key` of the candidate this was built from — the provider's own id for
+    # the human, not their name. It is the pool file's PROVENANCE MARKER, and that is its whole
+    # job here: an entry carrying one was assembled under the person-keyed identity model, and an
+    # entry carrying "" was assembled by the name join that welds two same-name careers into one
+    # (see `whoami_pool.build_candidates`). Defaults to "" so an older pool file still LOADS —
+    # `assert_person_keyed` is what stops it being PUBLISHED.
+    person: str = ""
 
     @property
     def key(self) -> str:
@@ -464,6 +493,130 @@ def _shared_words(a: str, b: str) -> set[str]:
     return words(a) & words(b)
 
 
+# ── Hints: the paid assist ────────────────────────────────────────────────────
+#
+# A hint is a fact about the subject that is NOT on the board, bought mid-run for points. The
+# format deliberately shows the whole career at once (see `JourneymanPuzzle`'s doc comment and
+# AGENTS.md-era history: an earlier build drip-fed the clubs and was cut because it made the
+# game about when to spend a reveal). Hints do not reopen that: the question — the career path —
+# stays fully visible from the first frame, and what a hint sells is the *surrounding* metadata
+# the pipeline already has and previously threw away. A player who is stuck now has something to
+# spend besides a wrong guess.
+#
+# Drawn from `whoami_clues.DIMENSIONS` for the same reason the teaser is: those ~30 builders are
+# already pronoun-free, already carry a `reveal` score, and already know how to phrase every
+# dimension this catalog supports. Writing a second fact library for this feature would be two
+# opinions about what a "college" clue says.
+HINT_COUNT = 3
+
+# Dimensions the board already answers. A hint the player can read off the screen in front of
+# them is a hint that takes points for nothing, and this is the trap the first draft fell into:
+# it happily sold "Played a first professional season in 2001" for a board whose top row reads
+# "Chargers 2001-2005".
+#
+# Two groups, both derivable from the timeline:
+#   - **the club list** — `teams`/`firstTeam`/`lastTeam`/`franchiseCount`/`oneTeam` are the board
+#     restated in prose; `league` is too (a soccer path names its clubs, and for the US sports
+#     the league is the sport, already printed in the header); and `draftTeam` usually names the
+#     first stint — when it doesn't, the player has no way to tell which case they just bought.
+#   - **the career span** — `era`/`debut`/`finale`/`longevity` are all arithmetic on the year
+#     labels of the first and last cards.
+#
+# `nationality` deliberately stays IN despite sitting in the team family: a passport is not
+# derivable from a club history (see any Premier League squad list). Measured ceiling, stated
+# rather than assumed: it currently fires on **zero** Journeyman boards, because `whoami_pool`
+# only populates it for tennis (whose `team_abbr` IS a country code) and tennis has no club
+# careers. Left allowed because the rule is "not on the board", and the day the catalog carries
+# nationality for team sports it is the best hint soccer and F1 could have.
+#
+# The cost of the span exclusions is a **truncated** board, where the earlier clubs genuinely
+# aren't shown and a debut year would be real information. That case is left on the table on
+# purpose: "a hint is something the board doesn't say" is a rule a player can trust, and making
+# it conditional on a flag they can't see is worth less than the one hint it buys back.
+_HINT_EXCLUDED_DIMENSIONS = frozenset({
+    "teams", "firstTeam", "lastTeam", "franchiseCount", "oneTeam", "league", "draftTeam",
+    "era", "debut", "finale", "longevity",
+})
+
+# The three rungs, by `reveal`. One hint is drawn from each band so the ladder actually climbs:
+# without this, an unbanded "most useful first" draw hands over the college, the jersey and the
+# draft slot, and a board's three hints are three flavors of near-giveaway bought in a row. The
+# bands mirror how `whoami_clues` already talks about reveal — broad openers under ~0.34,
+# identifying dimensions above ~0.55.
+#
+# **Filled sharpest band first**, which is not the order they are shown in. The last rung is the
+# one a player is actually buying the ladder to reach, and `_REDUNDANT` means an earlier pick can
+# delete a later one: filling upward, an NBA board spent its production slot on `peakYear` ("the
+# best statistical season came in 1989") and thereby blocked `bestSeason`, so the sharpest hint
+# every one of those boards could offer was the player's own initials. Filling downward, the
+# strong fact is chosen while it is still available and the vaguer rungs take what is left.
+_HINT_BANDS: tuple[tuple[float, float], ...] = ((0.0, 0.34), (0.34, 0.55), (0.55, 1.01))
+
+
+def build_hints(entry, seed: str, teaser: str = "") -> list[Hint]:
+    """Up to `HINT_COUNT` hints for one subject, vague -> specific, deterministic per `seed`.
+
+    Deterministic for the same reason the teaser is: a board a player looked at yesterday must
+    offer the same hints today, and the pool is regenerated on a schedule.
+
+    Fewer than `HINT_COUNT` is a real outcome and not an error. NFL is the only sport with a bio
+    provider (college, jersey, draft, nickname), so an F1 or soccer subject draws from the
+    catalog dimensions alone and can genuinely support one or two. The honest floor beats
+    padding the ladder with a fact the pipeline had to invent — the client renders whatever
+    arrives, and a subject with none simply shows no hint button.
+    """
+    import random as _random
+
+    from . import whoami_clues
+    from .validate import _leaked_name_part
+
+    rng = _random.Random(f"journeyman-hints-{seed}")
+    pool = [c for c in whoami_clues.available_clues(entry, rng)
+            if c.dimension not in _HINT_EXCLUDED_DIMENSIONS
+            # A clue that says the answer's name is not a hint, it is the answer. Same
+            # word-boundary rule `validate` enforces on the teaser; applied here as a FILTER
+            # rather than a rejection so one leaky nickname drops a hint instead of the board.
+            and not _leaked_name_part(entry.canonical, c.text)
+            # ...and never the fact the archive card already gave away for free.
+            and not (teaser and c.text in teaser)]
+
+    picked: list = []
+    blocked: set[str] = set()
+    families: set[str] = set()
+
+    def take(candidates: list) -> None:
+        available = [c for c in candidates if c.dimension not in blocked]
+        if not available:
+            return
+        # A spread across families is a preference, not a rule. Held as a rule it silently
+        # downgrades the thin sports: with `production` already spent on `peakYear`, an NBA
+        # board could not offer its career line at all and fell through to the initials.
+        fresh = [c for c in available if c.family not in families]
+        chosen = rng.choice(fresh or available)
+        picked.append(chosen)
+        families.add(chosen.family)
+        blocked.add(chosen.dimension)
+        for group in whoami_clues._REDUNDANT:
+            if chosen.dimension in group:
+                # `.update`, not `|=`: an augmented assignment would rebind `blocked` as a
+                # local of this closure and shadow the set it is meant to be mutating.
+                blocked.update(group)
+
+    for low, high in reversed(_HINT_BANDS):
+        take([c for c in pool if low <= c.reveal < high])
+    # Backfill from whatever is left when a band came up empty — a subject with three good
+    # mid-range dimensions and nothing sharp should still get three hints.
+    while len(picked) < HINT_COUNT:
+        before = len(picked)
+        take(pool)
+        if len(picked) == before:
+            break
+
+    ordered = sorted(picked, key=lambda c: (c.reveal, c.dimension))[:HINT_COUNT]
+    return [Hint(order=i + 1, label=c.label, text=c.text, dimension=c.dimension)
+            for i, c in enumerate(ordered)]
+
+
 # ── The career path ───────────────────────────────────────────────────────────
 
 def build_stints(sport: str, rows: list[dict],
@@ -560,10 +713,22 @@ def qualifies(sport: str, stints: list[Stint], unnameable: int, first_year: int,
 
 def _headshot(rows: list[dict]) -> str:
     """The most recent row's photo — the same "latest row wins" rule `WhoAmIAnswerPhoto` uses
-    client-side, so the reveal card shows the player as fans last saw them."""
+    client-side, so the reveal card shows the player as fans last saw them.
+
+    **Only ours, or nothing.** A board freezes this URL forever (`validate` refuses any other
+    kind, for the reasons its `HEADSHOT_STORE_MARKER` note gives), and the catalog still carries
+    raw provider links for sources the rehost sweep has not reached — every hockey and F1 photo
+    today, plus 7 soccer subjects whose photo came in from Wikipedia. Freezing one of those
+    would ship a hotlink we can't vouch for; skipping to an older season that IS rehosted, and
+    falling back to `''` (the client's own neutral badge) when none is, keeps the pool
+    upsertable and self-heals on the next regen after the sweep catches up.
+    """
+    from .validate import HEADSHOT_STORE_MARKER
+
     for row in sorted(rows, key=lambda r: r["season_year"], reverse=True):
-        if (row.get("headshot") or "").strip():
-            return row["headshot"].strip()
+        shot = (row.get("headshot") or "").strip()
+        if shot and HEADSHOT_STORE_MARKER in shot:
+            return shot
     return ""
 
 
@@ -573,13 +738,15 @@ def build_entries(career_rows: list[dict], season_rows: list[dict],
     """Qualified subjects with their career paths attached.
 
     Qualification is `whoami_pool`'s (see the module docstring); this adds the path gates. The
-    season rows are re-grouped by name here because `build_candidates` folds them away, and the
-    join key is a name for the same documented reason it is there — the catalog has no id that
-    identifies a *person* across grains, which is exactly why `qualify` drops shared names.
+    season rows are re-grouped here because `build_candidates` folds them away, and the join key
+    is `person_id` — the provider's id for the human — for the reason this board makes loudest:
+    a name join builds the CAREER PATH out of everyone who shares the name. The 2026-08-29 NFL
+    daily shipped "Steelers, Cardinals, Chargers, Steelers, Cardinals, Texans, Saints" as one
+    man's career; it is two David Johnsons, a TE and a RB, interleaved by year.
     """
-    by_name: dict[str, list[dict]] = collections.defaultdict(list)
+    by_person: dict[str, list[dict]] = collections.defaultdict(list)
     for row in season_rows:
-        by_name[row["name"]].append(row)
+        by_person[whoami_pool.person_key(row)].append(row)
 
     bio_by_name = bio_by_name or {}
     candidates = whoami_pool.build_candidates(career_rows, season_rows, clubs.by_abbr)
@@ -590,7 +757,7 @@ def build_entries(career_rows: list[dict], season_rows: list[dict],
 
     entries: list[JourneymanEntry] = []
     for c in qualified:
-        rows = by_name.get(c.name, [])
+        rows = by_person.get(c.person, [])
         stints, unnameable = build_stints(c.sport, rows, clubs)
         if not qualifies(c.sport, stints, unnameable, c.first_year,
                          floor=floors.get(c.position, 0)):
@@ -599,6 +766,7 @@ def build_entries(career_rows: list[dict], season_rows: list[dict],
         # The same fact bag the Who Am I? clue engine reads, so the teaser draws on every
         # dimension that pipeline already knows how to phrase (see `build_teaser`).
         facts = whoami_pool.to_entry(c, fame[c.key], bio_by_name.get(c.name))
+        teaser = build_teaser(facts, shown, was_truncated, seed=c.key)
         entries.append(JourneymanEntry(
             sport=c.sport,
             canonical=c.name,
@@ -608,7 +776,9 @@ def build_entries(career_rows: list[dict], season_rows: list[dict],
             difficulty=tier_for_fame(fame[c.key]),
             fame=round(fame[c.key], 4),
             truncated=was_truncated,
-            teaser=build_teaser(facts, shown, was_truncated, seed=c.key),
+            teaser=teaser,
+            hints=build_hints(facts, seed=c.key, teaser=teaser),
+            person=c.person,
         ))
     return entries
 
@@ -682,6 +852,8 @@ def build_row(entry: JourneymanEntry, suffix: str = "") -> PuzzleRow:
         content["truncated"] = True
     if entry.teaser:
         content["teaser"] = entry.teaser
+    if entry.hints:
+        content["hints"] = [asdict(h) for h in entry.hints]
     return PuzzleRow(id=puzzle_id, sport=entry.sport, format="journeyman", content=content)
 
 
@@ -690,6 +862,7 @@ def build_row(entry: JourneymanEntry, suffix: str = "") -> PuzzleRow:
 def entry_to_json(entry: JourneymanEntry) -> dict:
     d = asdict(entry)
     d["stints"] = [asdict(s) for s in entry.stints]
+    d["hints"] = [asdict(h) for h in entry.hints]
     return d
 
 
@@ -697,7 +870,10 @@ def load_pool(path) -> list[JourneymanEntry]:
     if not path.exists():
         return []
     raw = json.loads(path.read_text(encoding="utf-8"))
-    return [JourneymanEntry(**{**e, "stints": [Stint(**s) for s in e["stints"]]}) for e in raw]
+    return [JourneymanEntry(**{**e,
+                              "stints": [Stint(**s) for s in e["stints"]],
+                              "hints": [Hint(**h) for h in e.get("hints", [])]})
+            for e in raw]
 
 
 def all_entries(data_dir) -> list[JourneymanEntry]:
@@ -705,6 +881,79 @@ def all_entries(data_dir) -> list[JourneymanEntry]:
     editorial layer like `whoami_facts.json`) — kept as its own function so adding one later
     doesn't change the picker."""
     return load_pool(data_dir / POOL_FILE)
+
+
+class StalePoolError(RuntimeError):
+    """Raised when the saved pool predates the person-keyed identity model."""
+
+
+def unverified(entries: list[JourneymanEntry]) -> list[JourneymanEntry]:
+    """Entries with no `person` provenance — i.e. built by the name join, not the person key."""
+    return [e for e in entries if not e.person]
+
+
+def name_keyed(entries: list[JourneymanEntry]) -> list[JourneymanEntry]:
+    """Entries whose provenance is a NAME fallback rather than a provider id.
+
+    `whoami_pool.person_key` falls back to `{sport}:name:{slug}` for rows the sweep left without
+    a `person_id`, so these entries are grouped exactly the way the merged careers were, and the
+    identity model protects them no more than it protected Derrick Johnson. They are not refused
+    — holding them back would empty hockey, F1 and soccer, whose sweeps carry no upstream id at
+    all — but they are the residual, and a publish should say how much of it there is rather than
+    letting "the pool is person-keyed" imply more than it means. Shrinking this set is an
+    upstream `person_id` backfill, not a change here.
+    """
+    return [e for e in entries if e.person.startswith(f"{e.sport}:name:")]
+
+
+def report_residual_merge_risk(entries: list[JourneymanEntry], *, context: str) -> None:
+    """Print the name-fallback share of what is about to be published, by sport."""
+    risky = name_keyed(entries)
+    if not risky:
+        return
+    by_sport = collections.Counter(e.sport for e in risky)
+    print(f"[journeyman] {context}: {len(risky)} of {len(entries)} entries are grouped by NAME "
+          f"(no provider person_id) and could still merge two same-name careers — "
+          f"{dict(sorted(by_sport.items()))}")
+
+
+def assert_person_keyed(entries: list[JourneymanEntry], *, context: str) -> None:
+    """Refuse to PUBLISH a pool that was not built under the person-keyed identity model.
+
+    The identity repair landed in `whoami_pool.build_candidates` (2026-09-06), and correcting the
+    live puzzle rows it had already minted was a separate, manual pass. Neither touched
+    `data/journeyman_pool.json`, and that file — not the catalog — is what every publish path
+    actually reads: `all_entries` loads the saved JSON, and the nightly mint rotates through it
+    without rebuilding a single career. So the two corrected boards stayed corrected while their
+    source entries sat in the pool, one mint away from being published again:
+
+      - **Derrick Johnson** (49ers 2005 → Falcons 2006 → Chiefs 2007-2017 → Raiders 2018). Two
+        men. The Chiefs linebacker was drafted by Kansas City in 2005 and never played a down
+        for San Francisco or Atlanta.
+      - **C.J. Mosley** (Vikings → Jets → Browns → Jaguars → Lions → Ravens → Jets, 2005-2024).
+        Also two men: the Vikings-to-Lions defensive tackle, and the Ravens-then-Jets linebacker
+        drafted nine years after the other one's first season.
+
+    Neither is catchable after the fact from the saved entry alone. `plausible_career` rejects a
+    career by span and density, and these are 14 and 20 years, fully dense — the *adjacent* merge
+    the `MAX_CAREER_SPAN` comment concedes it cannot see. The only honest signal is upstream
+    provenance: did the person key assemble this, or did a name? So that is what the pool now
+    carries, per entry, and what this asserts before anything reaches the wire.
+
+    Fails closed. A pool without provenance is not "probably fine" — it is a pool whose careers
+    were assembled the way the two above were, and the fix is one command:
+    `python -m tools.ingest.journeyman --write`.
+    """
+    stale = unverified(entries)
+    if not stale:
+        return
+    names = ", ".join(sorted({e.canonical for e in stale})[:5])
+    raise StalePoolError(
+        f"{context}: {len(stale)} of {len(entries)} pool entries carry no `person` provenance "
+        f"({names}{' …' if len(stale) > 5 else ''}). They were built by the NAME join, which "
+        f"welds two same-name careers into one board — see assert_person_keyed's docstring for "
+        f"the two that reached production. Regenerate the pool before publishing: "
+        f"`python -m tools.ingest.journeyman --write`.")
 
 
 def bundle_subset(entries: list[JourneymanEntry], per_sport: int = 30) -> list[JourneymanEntry]:
@@ -720,7 +969,23 @@ def bundle_subset(entries: list[JourneymanEntry], per_sport: int = 30) -> list[J
 
 
 def _write_bundle(entries: list[JourneymanEntry]) -> int:
-    from .validate import validate
+    from .validate import WIRE_SAFE_SPORTS, validate
+
+    # The bundle ships inside the binary and is served whenever Supabase is unreachable, so it
+    # is a publish like any other — and the one publish a later pool regeneration can never
+    # correct, because it is frozen into a build.
+    assert_person_keyed(entries, context="journeyman bundle")
+    report_residual_merge_risk(entries, context="journeyman bundle")
+
+    # The bundle is a CLIENT artifact — it ships inside the binary and is served whenever
+    # Supabase is unreachable — so it obeys the same release gate the dailies do rather than a
+    # looser one of its own. Without this, the first `--write-bundle` after M31 would have put
+    # hockey and F1 boards into a build whose `Sport` enum has no case for them, which is the
+    # decode failure that empties an entire fetch (see `supabase-decode-gotcha`).
+    held = sorted({e.sport for e in entries} - WIRE_SAFE_SPORTS)
+    if held:
+        print(f"[journeyman] bundle: holding back {', '.join(held)} — not in WIRE_SAFE_SPORTS")
+    entries = [e for e in entries if e.sport in WIRE_SAFE_SPORTS]
     subset = bundle_subset(entries)
     rows = [build_row(e) for e in subset]
     for row in rows:
@@ -783,6 +1048,9 @@ def main() -> int:
                         prefix = "… → " if e.truncated else ""
                         print(f"  {sport:8} {tier:6} {e.canonical:26} {prefix}{path_text}")
                         print(f"  {'':8} {'':6} {'':26} \"{e.teaser}\"")
+                        for h in e.hints:
+                            print(f"  {'':8} {'':6} {'':26} hint {h.order}: "
+                                  f"{h.label} — {h.text}")
 
     entries = all_entries(ingest_main.DATA_DIR)
     if args.write_bundle:
@@ -790,6 +1058,16 @@ def main() -> int:
     if args.upsert:
         from .upsert import upsert
         from .validate import validate
+        # `--sport` narrows the upsert too, not just generation. It used to apply to only half
+        # the command, so `--upsert --sport nfl` quietly pushed all six sports — and one sport
+        # whose content can't pass `validate` (hockey and F1 headshots are not rehosted yet)
+        # blocked the upsert of every sport that could.
+        if args.sport:
+            entries = [e for e in entries if e.sport in set(args.sport)]
+            print(f"[journeyman] upsert limited to {', '.join(sorted(set(args.sport)))}: "
+                  f"{len(entries)} entries")
+        assert_person_keyed(entries, context="journeyman --upsert")
+        report_residual_merge_risk(entries, context="journeyman --upsert")
         rows = [build_row(e) for e in entries]
         for row in rows:
             validate(row)

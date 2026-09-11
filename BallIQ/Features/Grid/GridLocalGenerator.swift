@@ -86,7 +86,10 @@ struct GridLocalGenerator {
     /// Sports where `team_abbr` is a franchise a player can actually move between — the same set
     /// as `grid_axes.TEAM_MOBILE_SPORTS`, and excluded for the same reason: tennis stores the
     /// player's *country*, fixed for a career, so "played for both USA and CRO" has no answers.
-    static let teamMobileSports: Set<Sport> = [.nfl, .nba, .baseball, .soccer]
+    /// Hockey and F1 both qualify (M31): an NHL player is traded between real franchises, and an
+    /// F1 driver's `team_abbr` is his CONSTRUCTOR, which changing is the whole shape of an F1
+    /// career. That is precisely how F1 differs from tennis, the other one-position sport.
+    static let teamMobileSports: Set<Sport> = [.nfl, .nba, .baseball, .soccer, .hockey, .f1]
 
     /// How many teams a team × team board may draw from, ranked by distinct player count.
     /// `grid.py`'s `TEAM_X_TEAM_POOL`.

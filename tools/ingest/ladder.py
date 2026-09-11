@@ -106,7 +106,7 @@ BOARD_DIFFICULTY_FLOOR = 0.18
 BOARD_DIFFICULTY_START = 0.25
 BOARD_DIFFICULTY_END = 0.70
 
-SPORTS = ["nfl", "nba", "baseball", "soccer", "tennis"]
+SPORTS = ["nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"]
 BOSS_EVERY = 10
 TRIALS = 600
 

@@ -38,6 +38,13 @@ TEAM_ABBR: dict[int, str] = {
 # Rate-limit courtesy, not necessity — MLB's API is keyless and generous.
 _RATE_DELAY = 0.2
 
+# Circuit breaker for `fetch_by_ids` — same shape and same rationale as
+# `espn_nba._MAX_CONSECUTIVE_FAILURES`: the pool here is hundreds of ids, so a run of
+# consecutive network failures (source down, not just one bad id) needs to give up and
+# return the partial pool already fetched rather than pay http.py's retry/backoff cost
+# per id all the way to the end of the list.
+_MAX_CONSECUTIVE_FAILURES = 15
+
 # Year-by-year career lines are effectively static (a retired player's past seasons
 # never change; an active player's only grow in-season), and the pool is now hundreds of
 # players — so cache each career for a week rather than the default day. Combined with CI
@@ -76,7 +83,8 @@ def _parse_innings_pitched(raw: object) -> float:
     return round(innings + thirds, 3)
 
 
-def _hitting_row(name: str, split: dict, headshot: str = "") -> RawSeason | None:
+def _hitting_row(name: str, split: dict, headshot: str = "",
+                 person_id: str = "") -> RawSeason | None:
     stat = split.get("stat", {})
     year = split.get("season")
     team_id = (split.get("team") or {}).get("id")
@@ -109,10 +117,14 @@ def _hitting_row(name: str, split: dict, headshot: str = "") -> RawSeason | None
         },
         source="mlb_stats",
         headshot=headshot,
+        # MLB Stats API `person.id` — the id these rows were fetched BY, so it is always
+        # available here and always identifies one human.
+        person_id=person_id,
     )
 
 
-def _pitching_row(name: str, split: dict, headshot: str = "") -> RawSeason | None:
+def _pitching_row(name: str, split: dict, headshot: str = "",
+                  person_id: str = "") -> RawSeason | None:
     stat = split.get("stat", {})
     year = split.get("season")
     team_id = (split.get("team") or {}).get("id")
@@ -140,10 +152,14 @@ def _pitching_row(name: str, split: dict, headshot: str = "") -> RawSeason | Non
         },
         source="mlb_stats",
         headshot=headshot,
+        # MLB Stats API `person.id` — the id these rows were fetched BY, so it is always
+        # available here and always identifies one human.
+        person_id=person_id,
     )
 
 
-def parse_seasons(name: str, data: dict, group: str, headshot: str = "") -> list[RawSeason]:
+def parse_seasons(name: str, data: dict, group: str, headshot: str = "",
+                  person_id: str = "") -> list[RawSeason]:
     """Pure (no network) mapper from a `stats=yearByYear` payload to `RawSeason` rows,
     one per season. `group` is 'hitting' or 'pitching' (a two-way player like Ohtani
     needs both, fetched as separate calls — see `fetch_by_ids`). `headshot` is the same
@@ -154,7 +170,7 @@ def parse_seasons(name: str, data: dict, group: str, headshot: str = "") -> list
     for split in splits:
         # Multi-team ("traded") rows have no numeric team id at the top split level in
         # some payload shapes; skip anything we can't attribute to a real team.
-        row = parser(name, split, headshot)
+        row = parser(name, split, headshot, person_id)
         if row:
             out.append(row)
     return out
@@ -164,19 +180,31 @@ def fetch_by_ids(id_to_name: dict[str, str]) -> list[RawSeason]:
     """Fetch every season (hitting AND pitching — a two-way player like Ohtani
     contributes rows to both pools) for each MLB person id."""
     out: list[RawSeason] = []
+    consecutive_failures = 0
     for pid, name in id_to_name.items():
         headshot = HEADSHOT_URL.format(id=pid)
+        stop = False
         for group in ("hitting", "pitching"):
             cache_key = f"mlb_stats_{pid}_{group}.json"
             was_cached = is_cached(cache_key, _CAREER_TTL_HOURS)
             try:
                 data = fetch_json(_STATS.format(id=pid, group=group),
                                   cache_key=cache_key, ttl_hours=_CAREER_TTL_HOURS)
-                out += parse_seasons(name, data, group, headshot)
+                out += parse_seasons(name, data, group, headshot, person_id=pid)
                 # The delay only exists to be polite to the *live* API — paying it on a
                 # cache hit just makes a warm-cache run as slow as a cold one for nothing.
                 if not was_cached:
                     time.sleep(_RATE_DELAY)
+                consecutive_failures = 0
             except Exception as err:  # noqa: BLE001
                 print(f"[mlb] skipping id {pid} ({name}, {group}): {err}")
+                consecutive_failures += 1
+                if consecutive_failures >= _MAX_CONSECUTIVE_FAILURES:
+                    print(f"[mlb] {consecutive_failures} consecutive failures — MLB Stats "
+                          f"API looks unreachable, stopping early with {len(out)} seasons "
+                          f"fetched so far ({len(id_to_name)} ids in the pool)")
+                    stop = True
+                    break
+        if stop:
+            break
     return out

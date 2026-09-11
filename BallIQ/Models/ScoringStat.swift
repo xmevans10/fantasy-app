@@ -15,7 +15,7 @@ struct ScoringStat: Identifiable, Hashable {
 
     var id: String { "\(sport.rawValue):\(key)" }
 
-    enum Fmt { case commaInt, int, dec1, pct, dec3 }
+    enum Fmt { case commaInt, int, dec1, pct, dec3, dec2 }
 
     /// A fixed-scale scoring term seeded from this stat's defaults.
     func term(weight: Double = 1) -> ScoringRule.Term {
@@ -32,6 +32,9 @@ struct ScoringStat: Identifiable, Hashable {
         case .dec1: return String(format: "%.1f", value)
         case .pct:  return "\(Int((value * 100).rounded()))%"
         case .dec3: return String(format: "%.3f", value)
+        // Rate stats conventionally printed to 2 places (hockey GAA). Mirrors the `dec2`
+        // case `Keep4Theme.format` and `themes.py` already carry.
+        case .dec2: return String(format: "%.2f", value)
         }
     }
 }
@@ -124,6 +127,47 @@ extension ScoringStat {
             ScoringStat(key: "matches_lost", label: "Losses", sport: .tennis, lo: 0,  hi: 25,  higherWins: false, fmt: .int),
             ScoringStat(key: "titles",       label: "Titles", sport: .tennis, lo: 0,  hi: 15,  higherWins: true,  fmt: .int),
             ScoringStat(key: "grand_slams",  label: "Slams",  sport: .tennis, lo: 0,  hi: 4,   higherWins: true,  fmt: .int),
+        ],
+        // Hockey (M31). Bounds are a fringe-qualifying season (lo) to an all-time-great one
+        // (hi) for a full-time player at that role, the same convention every sport above
+        // uses. Skater and goalie keys are disjoint — `Sport.positionStatFamilies[.hockey]`
+        // is what stops a goalie card from offering "Goals" and vice versa.
+        .hockey: [
+            ScoringStat(key: "goals",              label: "G",     sport: .hockey, lo: 10,    hi: 70,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "assists",            label: "A",     sport: .hockey, lo: 15,    hi: 110,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "points",             label: "PTS",   sport: .hockey, lo: 25,    hi: 165,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "plus_minus",         label: "+/-",   sport: .hockey, lo: -30,   hi: 60,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "penalty_minutes",    label: "PIM",   sport: .hockey, lo: 0,     hi: 250,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "shots",              label: "SOG",   sport: .hockey, lo: 80,    hi: 400,   higherWins: true,  fmt: .int),
+            ScoringStat(key: "shooting_pct",       label: "S%",    sport: .hockey, lo: 0.050, hi: 0.220, higherWins: true,  fmt: .pct),
+            ScoringStat(key: "points_per_game",    label: "P/GP",  sport: .hockey, lo: 0.30,  hi: 2.00,  higherWins: true,  fmt: .dec1),
+            ScoringStat(key: "pp_points",          label: "PPP",   sport: .hockey, lo: 5,     hi: 60,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "sh_points",          label: "SHP",   sport: .hockey, lo: 0,     hi: 12,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "game_winning_goals", label: "GWG",   sport: .hockey, lo: 0,     hi: 12,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "toi_per_game",       label: "TOI",   sport: .hockey, lo: 10,    hi: 27,    higherWins: true,  fmt: .dec1),
+            ScoringStat(key: "games",              label: "GP",    sport: .hockey, lo: 40,    hi: 82,    higherWins: true,  fmt: .int),
+            // Goalie. GAA and goals-against are the two inverted stats — fewer is better.
+            ScoringStat(key: "wins",               label: "W",     sport: .hockey, lo: 10,    hi: 48,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "losses",             label: "L",     sport: .hockey, lo: 5,     hi: 40,    higherWins: false, fmt: .int),
+            ScoringStat(key: "gaa",                label: "GAA",   sport: .hockey, lo: 1.80,  hi: 3.60,  higherWins: false, fmt: .dec2),
+            ScoringStat(key: "save_pct",           label: "SV%",   sport: .hockey, lo: 0.890, hi: 0.940, higherWins: true,  fmt: .dec3),
+            ScoringStat(key: "shutouts",           label: "SO",    sport: .hockey, lo: 0,     hi: 15,    higherWins: true,  fmt: .int),
+            ScoringStat(key: "saves",              label: "SV",    sport: .hockey, lo: 600,   hi: 2000,  higherWins: true,  fmt: .commaInt),
+            ScoringStat(key: "goals_against",      label: "GA",    sport: .hockey, lo: 60,    hi: 200,   higherWins: false, fmt: .int),
+        ],
+        // F1 (M31). Every stat here is an era-invariant achievement counted from race
+        // results — `points` is deliberately absent, because F1 rewrote its points system in
+        // 1961, 1991 and 2010 and a raw total is not comparable across eras. See
+        // `grade.py`'s `f1_driver_fantasy` note.
+        .f1: [
+            ScoringStat(key: "wins",          label: "Wins",    sport: .f1, lo: 0, hi: 15, higherWins: true,  fmt: .int),
+            ScoringStat(key: "podiums",       label: "Podiums", sport: .f1, lo: 0, hi: 18, higherWins: true,  fmt: .int),
+            ScoringStat(key: "poles",         label: "Poles",   sport: .f1, lo: 0, hi: 14, higherWins: true,  fmt: .int),
+            ScoringStat(key: "fastest_laps",  label: "FL",      sport: .f1, lo: 0, hi: 10, higherWins: true,  fmt: .int),
+            ScoringStat(key: "top_tens",      label: "Top 10s", sport: .f1, lo: 0, hi: 22, higherWins: true,  fmt: .int),
+            ScoringStat(key: "races",         label: "Starts",  sport: .f1, lo: 1, hi: 24, higherWins: true,  fmt: .int),
+            ScoringStat(key: "championships", label: "Titles",  sport: .f1, lo: 0, hi: 1,  higherWins: true,  fmt: .int),
+            ScoringStat(key: "dnfs",          label: "DNFs",    sport: .f1, lo: 0, hi: 12, higherWins: false, fmt: .int),
         ],
     ]
 

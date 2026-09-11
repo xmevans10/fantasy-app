@@ -37,6 +37,7 @@ produces the same puzzle while the same subject served on a different day does n
 from __future__ import annotations
 
 import random
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -333,10 +334,18 @@ def _undrafted(e: WhoAmIEntry, rng: random.Random) -> str | None:
     ])
 
 
+# Sports whose team names are NOT preceded by an article. The rule is about naming
+# convention, not about the team: US franchises are nicknames that take one ("the Packers"),
+# while soccer clubs and F1 constructors are proper nouns that do not. "the Arsenal" and
+# "the McLaren" are wrong in exactly the same way — the latter shipped in a live F1 clue
+# ("Finished up with the McLaren") before this set existed.
+_ARTICLELESS_SPORTS = frozenset({"soccer", "f1"})
+
+
 def _article(e: WhoAmIEntry) -> str:
-    """"the " for US franchises ("the Packers"), "" for soccer clubs ("Arsenal"). Nobody says
-    "the Arsenal", and the naming convention differs by sport, not by team."""
-    return "" if e.sport == "soccer" else "the "
+    """"the " for US franchises ("the Packers"), "" for soccer clubs and F1 constructors
+    ("Arsenal", "McLaren")."""
+    return "" if e.sport in _ARTICLELESS_SPORTS else "the "
 
 
 def _teams(e: WhoAmIEntry, rng: random.Random) -> str | None:
@@ -530,9 +539,30 @@ _REDUNDANT: tuple[frozenset[str], ...] = (
 _REVEAL_BIAS: dict[str, float] = {"easy": 1.0, "medium": 0.0, "hard": -1.0}
 
 
+def leaked_name_part(canonical: str, text: str) -> str | None:
+    """The first part of `canonical` that `text` gives away, or None. Whole words, >=4 chars.
+
+    Lives here, beside the generator, and is imported by `validate` rather than duplicated
+    there — the two have to agree *exactly*, and when they drifted the pipeline died on a row
+    it had just built: F1's `bruce-mclaren` got the clue "Finished up with McLaren-BRM",
+    because a constructor can be named after the driver who founded it. The generator now
+    applies the same rule the validator enforces, so that class of subject loses the offending
+    clue instead of failing the whole run.
+    """
+    parts = [part.strip(".").lower() for part in canonical.split()]
+    lowered = text.lower()
+    return next((p for p in parts
+                 if len(p) >= 4 and re.search(rf"\b{re.escape(p)}\b", lowered)), None)
+
+
 def available_clues(entry: WhoAmIEntry, rng: random.Random) -> list[Clue]:
-    """Every dimension that has data for `entry`, in registry order."""
-    return [c for c in (d.clue(entry, rng) for d in DIMENSIONS) if c is not None]
+    """Every dimension that has data for `entry`, minus any clue that names the subject.
+
+    The leak filter is here rather than at selection time so every consumer of the pool gets
+    it, and so a subject whose team/constructor shares their surname (Bruce McLaren, Jack
+    Brabham) simply has fewer dimensions rather than an unshippable card."""
+    clues = [c for c in (d.clue(entry, rng) for d in DIMENSIONS) if c is not None]
+    return [c for c in clues if not leaked_name_part(entry.canonical, c.text)]
 
 
 def _weight_for(clue: Clue, bias: float) -> float:

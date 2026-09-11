@@ -24,7 +24,9 @@ RICH = WhoAmIEntry(
     college_conference="Sun Belt Conference", height_in=74, weight_lb=210, birth_year=1982,
     draft_year=2004, draft_round=2, draft_pick=33, draft_team="Ravens", seasons=13,
     best_season={"year": 2010, "team": "Packers", "line": "1,400 yards and 12 scores"},
-    nickname="The Test", accolades=["Three Pro Bowls"], fame=0.7,
+    # Deliberately shares no word with `canonical` ("Test Player"): the clue builder now
+    # drops any clue that names the subject, and "The Test" leaked "test".
+    nickname="The Blur", accolades=["Three Pro Bowls"], fame=0.7,
 )
 
 # The opposite: only the fields `WhoAmIEntry` requires, all of them empty where allowed.
@@ -264,3 +266,29 @@ def test_clue_families_match_the_swift_map():
     found = dict(re.findall(r'"(\w+)":\s*\.(\w+)', body.group(1)))
     expected = {d.key: d.family for d in DIMENSIONS}
     assert found == expected
+
+
+def test_a_clue_that_names_the_subject_is_never_offered():
+    """The generator applies the validator's own leak rule, so a subject whose team or
+    constructor carries their surname loses that clue instead of failing the whole run.
+
+    The live case: F1's Bruce McLaren got "Finished up with McLaren-BRM", which sailed out of
+    the builder and then killed `main` on `validate`. A constructor named after the driver who
+    founded it is not an edge case in motorsport — Brabham is the other one.
+    """
+    from tools.ingest.whoami_clues import leaked_name_part
+
+    rng = random.Random(0)
+    founder = _entry(canonical="Bruce McLaren", aliases=["bruce mclaren"],
+                     teams=["McLaren-BRM", "Cooper"], nickname="")
+    for clue in available_clues(founder, rng):
+        assert leaked_name_part("Bruce McLaren", clue.text) is None, (
+            f"{clue.dimension} leaks the answer: {clue.text!r}")
+
+
+def test_the_leak_rule_is_one_definition_shared_with_validate():
+    # These drifting apart is what let the McLaren clue be written and then rejected.
+    from tools.ingest import validate
+    from tools.ingest.whoami_clues import leaked_name_part
+
+    assert validate._leaked_name_part is leaked_name_part

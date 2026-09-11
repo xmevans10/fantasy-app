@@ -73,6 +73,11 @@ struct ScoringBreakdown: Equatable {
         case .soccer:   return [("Attackers & midfielders", "soccer_attacker_fantasy"),
                                 ("Defenders & keepers", "soccer_defender_fantasy")]
         case .tennis:   return [(nil, "tennis_fantasy")]
+        // Hockey grades two ways for the same reason baseball does — a goalie and a skater
+        // share no stat key at all — so it gets the same split heading treatment.
+        case .hockey:   return [("Skaters", "hockey_skater_fantasy"),
+                                ("Goalies", "hockey_goalie_fantasy")]
+        case .f1:       return [(nil, "f1_driver_fantasy")]
         }
     }
 
@@ -85,6 +90,13 @@ struct ScoringBreakdown: Equatable {
         // Same raw key means "walks drawn" for hitters but "walks allowed" for pitchers.
         if stat == "base_on_balls" {
             return scale == "baseball_pitcher_fantasy" ? "Walk allowed" : "Walk"
+        }
+        // ...and `saves` is a closer's save in baseball but a goalie's stop in hockey. Two
+        // unrelated events under one key, so the scale disambiguates them here rather than
+        // in the map below — a duplicate key in a Swift dictionary literal is a *runtime*
+        // crash, not a compile error, which is exactly how this got shipped-shaped once.
+        if stat == "saves" {
+            return scale == "hockey_goalie_fantasy" ? "Save made" : "Save"
         }
         let names: [String: String] = [
             "passing_yards": "Passing yards", "passing_tds": "Passing TD",
@@ -100,6 +112,19 @@ struct ScoringBreakdown: Equatable {
             "clean_sheets": "Clean sheet",
             "matches_won": "Match win", "matches_lost": "Match loss",
             "titles": "Title", "grand_slams": "Grand Slam",
+            // Hockey. `goals`/`assists`/`points`/`wins` are already mapped above and read
+            // correctly here too (a hockey point is a goal or an assist; a goalie win is a
+            // win), so only the keys with no existing entry are listed.
+            "plus_minus": "Plus/minus", "penalty_minutes": "Penalty minute",
+            "shots": "Shot on goal", "shutouts": "Shutout",
+            "save_pct": "Save percentage", "gaa": "Goal against average",
+            "goals_against": "Goal against", "pp_points": "Power-play point",
+            "sh_points": "Short-handed point", "game_winning_goals": "Game-winning goal",
+            // F1. `points` above already reads "Point", which is exactly right for a
+            // championship point.
+            "podiums": "Podium", "poles": "Pole position", "races": "Race start",
+            "fastest_laps": "Fastest lap", "dnfs": "DNF",
+            "championship_position": "Championship finish",
         ]
         return names[stat] ?? ScoringStat.find(stat, sport: sport)?.label
             ?? stat.replacingOccurrences(of: "_", with: " ").capitalized

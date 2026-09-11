@@ -99,6 +99,20 @@ extension Color {
     static let onSportSoccer   = Color.white
     static let sportTennisFill = Color(hex: 0xE8B400)
     static let onSportTennis   = Color(hex: 0x15120B)
+    // Hockey and F1 (M31). Both hues were picked against the *whole* token set, not just the
+    // other sports: the band has to stay distinct from accentFill (0x1E50FF) and voltFill
+    // (0xC2F03A), which are the puzzle-TYPE chip sitting inside it, and from proFill
+    // (0x6D3BF5), which badges these two as Pro-gated right next to the band.
+    //   Hockey — deep steel/ice blue at ~212°. Kept dark and desaturated relative to the vivid
+    //   accent blue so the chip still separates, and 30°+ off soccer's teal (180°), which a
+    //   lighter ice-cyan would have collided with at thumbnail size.
+    //   F1 — magenta at ~308°. The obvious pick (F1/Ferrari red) is 20° from MLB's 0xD62839 and
+    //   was unusable; magenta sits ~47° off MLB and ~46° off proFill, and matches the
+    //   red-to-magenta direction of F1's own modern broadcast identity.
+    static let sportHockeyFill = Color(hex: 0x1C4E80)
+    static let onSportHockey   = Color.white
+    static let sportF1Fill     = Color(hex: 0xB5179E)
+    static let onSportF1       = Color.white
 
     // MARK: aliases kept for source compatibility
     static let brandBlue    = accentFill

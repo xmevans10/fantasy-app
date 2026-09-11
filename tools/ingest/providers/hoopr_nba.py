@@ -205,6 +205,10 @@ def load_seasons() -> list[RawSeason]:
                 },
                 source="hoopr",
                 headshot=_HEADSHOT.format(id=row["athlete_id"]),
+                # ESPN athlete id — already the CSV's identity column (it keys the sweep's own
+                # dedupe and builds the headshot URL above), now also carried through as the
+                # person key so two same-name NBA players don't merge into one career.
+                person_id=row["athlete_id"],
             ))
     return out
 

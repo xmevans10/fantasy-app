@@ -82,3 +82,75 @@ def test_fetch_by_ids_still_delays_on_a_real_fetch(monkeypatch):
     fetch_by_ids({"123": "Some Player"})
 
     assert len(slept) == 1
+
+
+# --- 2026-09-05 stall regression: circuit breaker on a run of consecutive failures ------
+
+def test_fetch_by_ids_stops_after_consecutive_failures_instead_of_exhausting_the_pool(
+    monkeypatch,
+):
+    """A stalled/unreachable source must not cost one slow retry per remaining id in a
+    ~900-id pool — this is exactly what stalled a nightly run for 24 minutes. After
+    `_MAX_CONSECUTIVE_FAILURES` in a row, `fetch_by_ids` must give up on the REST of the
+    pool (not call fetch_json for ids past the breaker) and return whatever it already
+    has, rather than nothing."""
+    monkeypatch.setattr(espn_nba, "is_cached", lambda *a, **k: False)
+    monkeypatch.setattr(espn_nba.time, "sleep", lambda *_: None)
+
+    calls = []
+
+    def flaky_fetch_json(url, *a, **k):
+        calls.append(url)
+        raise RuntimeError("simulated network failure")
+
+    monkeypatch.setattr(espn_nba, "fetch_json", flaky_fetch_json)
+
+    pool = {str(i): f"Player {i}" for i in range(100)}
+    out = espn_nba.fetch_by_ids(pool)
+
+    assert out == []  # every call failed, so no seasons — but that's not the point here
+    assert len(calls) == espn_nba._MAX_CONSECUTIVE_FAILURES  # stopped, didn't try all 100
+
+
+def test_fetch_by_ids_a_success_resets_the_failure_counter(monkeypatch):
+    """One good id in the middle of a bad run must not count toward the breaker — only a
+    genuinely unbroken run of failures should trip it."""
+    monkeypatch.setattr(espn_nba, "is_cached", lambda *a, **k: False)
+    monkeypatch.setattr(espn_nba.time, "sleep", lambda *_: None)
+
+    calls = []
+
+    def mostly_flaky(url, *a, **k):
+        calls.append(url)
+        # Every 5th call (well under the breaker threshold) succeeds with an empty payload.
+        if len(calls) % 5 == 0:
+            return _payload([])
+        raise RuntimeError("simulated network failure")
+
+    monkeypatch.setattr(espn_nba, "fetch_json", mostly_flaky)
+
+    pool = {str(i): f"Player {i}" for i in range(100)}
+    espn_nba.fetch_by_ids(pool)
+
+    # Never a run of `_MAX_CONSECUTIVE_FAILURES` in a row (every 5th call resets it), so
+    # the breaker never trips and the whole pool gets attempted.
+    assert len(calls) == 100
+
+
+def test_fetch_targets_stops_after_consecutive_failures(monkeypatch):
+    monkeypatch.setattr(espn_nba, "is_cached", lambda *a, **k: False)
+    monkeypatch.setattr(espn_nba.time, "sleep", lambda *_: None)
+
+    calls = []
+
+    def flaky_fetch_json(url, *a, **k):
+        calls.append(url)
+        raise RuntimeError("simulated network failure")
+
+    monkeypatch.setattr(espn_nba, "fetch_json", flaky_fetch_json)
+
+    targets = [(f"Player {i}", 2020) for i in range(100)]
+    out = espn_nba.fetch_targets(targets)
+
+    assert out == []
+    assert len(calls) == espn_nba._MAX_CONSECUTIVE_FAILURES

@@ -70,7 +70,7 @@ jobs:
       # archive with no TODAY badge. daily-puzzle.yml already runs its three format steps this
       # way, for exactly this reason; this job never got the same treatment.
       - if: always()
-        run: python -m tools.ingest.main --grid nfl nba baseball soccer tennis --upsert
+        run: python -m tools.ingest.main --grid nfl nba baseball soccer tennis hockey f1 --upsert
       # Re-warm the `grid_membership_index` cache (0014_grid_membership_index_cache.sql) right
       # after minting, so "New random grid" never pays the ~10s live-aggregate cost this masked
       # before: the cache is read on a 36h TTL, and a stale/missing row falls back to computing
@@ -95,3 +95,21 @@ jobs:
             -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/json" \
             -d '{}'
+      # Then blank any slot still pointing at a URL the ledger marks placeholder/missing.
+      # A placeholder is NOT a photo: the league CDNs answer with a generic helmet/silo at
+      # HTTP 200, so it survives every liveness check while rendering a faceless card. '' is
+      # the ledger's own answer for those, and the client draws its neutral badge instead.
+      - if: always()
+        run: |
+          curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/blank_placeholder_puzzle_headshots" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+      # Same idea one field over: rebuild any already-minted Keep4 card that shows a stat the
+      # player's position never records (a TE's "Pass Yds 0", a keeper's "Goals 0"). The
+      # composition fix in themes.py `columns_for` only reaches boards minted after it, and
+      # a frozen board never re-renders — see tools/ingest/repoint_stats.py. Idempotent, and
+      # it declines any card whose catalog row turns out to be a different performance.
+      - if: always()
+        run: python -m tools.ingest.main --repoint-stats

@@ -27,6 +27,10 @@ DRAFT_SPIN_SLOT_POSITIONS: frozenset[tuple[str, str]] = frozenset({
     ("nfl", "QB"), ("nfl", "RB"), ("nfl", "WR"), ("nfl", "TE"),
     ("baseball", "H"), ("baseball", "P"),
     ("soccer", "GK"), ("soccer", "DF"), ("soccer", "FW"), ("soccer", "MF"),
+    # Hockey's formation is a real one — a forward line, a defence pair and a goalie — so
+    # every code is a genuine slot filter. F1 is absent for the same reason tennis is: its
+    # single "Driver" position makes the slot unslotted in practice.
+    ("hockey", "C"), ("hockey", "L"), ("hockey", "R"), ("hockey", "D"), ("hockey", "G"),
 })
 
 # Below this many season-grain rows, a draft slot can't reliably offer 3 *distinct* daily
