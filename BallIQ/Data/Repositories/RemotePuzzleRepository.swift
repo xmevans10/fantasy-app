@@ -56,6 +56,10 @@ final class RemotePuzzleRepository: PuzzleRepository {
     var availableSports: [Sport] { fallback.availableSports }
 
     func keep4Puzzle(for filter: SportFilter, date: Date) async -> DailyPick<Keep4Puzzle>? {
+        if let sport = filter.sport,
+           let board = await dailyBoard(format: "keep4", sport: sport, date: date, as: Keep4Puzzle.self) {
+            return DailyPick(content: board, isCanonicalToday: true)
+        }
         if let rows = await fetch(format: "keep4", filter: filter, as: Keep4Puzzle.self), !rows.isEmpty {
             return pick(rows, date: date)
         }
@@ -63,6 +67,10 @@ final class RemotePuzzleRepository: PuzzleRepository {
     }
 
     func whoAmIPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<WhoAmIPuzzle>? {
+        if let sport = filter.sport,
+           let board = await dailyBoard(format: "whoami", sport: sport, date: date, as: WhoAmIPuzzle.self) {
+            return DailyPick(content: board, isCanonicalToday: true)
+        }
         if let rows = await fetch(format: "whoami", filter: filter, as: WhoAmIPuzzle.self), !rows.isEmpty {
             return pick(rows, date: date)
         }
@@ -70,6 +78,10 @@ final class RemotePuzzleRepository: PuzzleRepository {
     }
 
     func journeymanPuzzle(for filter: SportFilter, date: Date) async -> DailyPick<JourneymanPuzzle>? {
+        if let sport = filter.sport,
+           let board = await dailyBoard(format: "journeyman", sport: sport, date: date, as: JourneymanPuzzle.self) {
+            return DailyPick(content: board, isCanonicalToday: true)
+        }
         if let rows = await fetch(format: "journeyman", filter: filter, as: JourneymanPuzzle.self),
            !rows.isEmpty {
             return pick(rows, date: date)
@@ -303,6 +315,37 @@ final class RemotePuzzleRepository: PuzzleRepository {
             return stale.value
         }
         return nil
+    }
+
+    /// Home needs one dated board, not the archive. Fetch tomorrow in the same small
+    /// response so a warm device can cross local midnight offline. Archive queries and
+    /// the historical modulo fallback remain separate. Concurrent callers share the read.
+    private func dailyBoard<T: Codable>(format: String, sport: Sport, date: Date,
+                                       as type: T.Type) async -> T? {
+        let day = PuzzleStore.localDayString(date)
+        return await coalesced("daily-\(format)-\(sport.rawValue)-\(day)") {
+            let key = "puzzles-\(format)-daily-\(sport.rawValue)"
+            // Honor existing full-pool caches too, including tomorrow's prefetched row
+            // from a previous app version. Only an exact date match is canonical.
+            for cacheKey in [key, "puzzles-\(format)-\(sport.rawValue)"] {
+                if let entry = await DiskCache.read([PuzzleContentRow<T>].self, key: cacheKey),
+                   let hit = entry.value.first(where: { $0.activeDate == day }) {
+                    return hit.content
+                }
+            }
+            let next = Calendar.current.date(byAdding: .day, value: 1, to: date) ?? date
+            let query = [URLQueryItem(name: "select", value: "content,active_date"),
+                         URLQueryItem(name: "format", value: "eq.\(format)"),
+                         URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)"),
+                         URLQueryItem(name: "active_date", value: "gte.\(day)"),
+                         URLQueryItem(name: "active_date", value: "lte.\(PuzzleStore.localDayString(next))"),
+                         URLQueryItem(name: "order", value: "active_date"),
+                         URLQueryItem(name: "limit", value: "2")]
+            guard let rows: [PuzzleContentRow<T>] = try? await self.client.select(
+                "puzzles", query: query, decoder: self.contentDecoder), !rows.isEmpty else { return nil }
+            await DiskCache.write(rows, key: key)
+            return rows.first(where: { $0.activeDate == day })?.content
+        }
     }
 
     /// Prefer the row minted for the device's *local* calendar day (`active_date`, written by

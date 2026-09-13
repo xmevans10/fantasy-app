@@ -469,6 +469,20 @@ generated from the live catalog by `tools/ingest/whoami_pool.py --write`.
 - **Offline:** bundled fallbacks serve when Supabase is unreachable; local-first progress
   always works signed-out.
 
+## September 13 loading and audit delivery
+
+Build 52 keeps version 1.8.4. Returning users enter Home without the one-second splash;
+first-run onboarding retains its introduction. Home's three daily formats now request only
+the selected sport's requested day and next day (two rows maximum), coalescing concurrent
+callers and caching both for offline local-midnight rollover. Full archives and missing-day
+fallbacks remain separate. Each daily publishes and warms its images independently; arcade
+and Grid prefetch starts after the visible daily requests finish.
+
+Audit repairs from 2180df2 were reconciled with the automated upstream data refreshes.
+Headshot queue migration 0026 is now applied live. Its first real call exposed a catalog
+scan timeout; migration 0027 adds a partial covering index for external headshot sources.
+Live verification enqueued 14 sources, then returned zero candidates on the idempotency pass.
+
 ## 7. Verification playbook
 
 - Swift: `xcodebuild -scheme BallIQ -project BallIQ.xcodeproj -destination

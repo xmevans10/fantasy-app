@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var whoAmIBySport: [Sport: DailyPick<WhoAmIPuzzle>] = [:]
     @State private var journeymanBySport: [Sport: DailyPick<JourneymanPuzzle>] = [:]
     @State private var loadedSports: Set<Sport> = []
+    @State private var loadingDailyKeys: Set<String> = []
     /// The local calendar day the maps above were loaded for. iOS keeps the app in memory for
     /// days, so without this the `loadedSports` guard would pin every user to the FIRST day's
     /// puzzles until the process happened to die — the daily loop's cardinal sin (a "daily"
@@ -516,22 +517,8 @@ struct HomeView: View {
     private func loadDaily() async {
         let initial = container.sportFilter.sport ?? .nfl
         dailyPage = initial
-        // Warm the arcade pool for the sport the player is most likely to spin next (their
-        // last-played sport) while they're still looking at Home — Draft & Spin and
-        // Over/Under then open with a hot cache instead of a first-fetch spinner.
-        container.catalog.prefetchDraftSpinSample(for: initial)
-        // Same idea for The Grid, which is the slowest format to open by a wide margin: its
-        // board and its typeahead index are both fetched, not bundled, and both are only
-        // started once the player has already tapped through the setup screen. Warming here
-        // means the tap lands on a disk hit.
-        //
-        // Gated on `canPlayGrid()` rather than fired for everyone: the Grid is paid, so warming
-        // it for a free player spends their bandwidth on a board the paywall will stop them
-        // opening. This is the launch path — it runs for every session, on cellular.
-        if container.entitlements.canPlayGrid() {
-            container.puzzles.prefetchGrid(for: initial)
-        }
         await loadDaily(for: initial)
+        guard !Task.isCancelled else { return }
         if DebugLaunch.autoOpenWhoAmI, activeWhoAmI == nil {
             activeWhoAmI = whoAmIBySport[initial]?.content
         } else if DebugLaunch.autoOpenJourneyman, activeJourneyman == nil {
@@ -557,22 +544,44 @@ struct HomeView: View {
     /// disk-caches per (format, sport) underneath this, so a first-time fetch for a sport the
     /// player swipes to is the only real network hit; every page after that is instant.
     private func loadDaily(for sport: Sport) async {
-        guard !loadedSports.contains(sport) else { return }
+        let day = dailiesDay
+        let key = "\(sport.rawValue)-\(day)"
+        guard !loadedSports.contains(sport), !loadingDailyKeys.contains(key) else { return }
+        loadingDailyKeys.insert(key)
+        defer { loadingDailyKeys.remove(key) }
+        let date = Date()
+        async let keep4: Void = loadKeep4(for: sport, date: date, day: day)
+        async let whoami: Void = loadWhoAmI(for: sport, date: date, day: day)
+        async let journeyman: Void = loadJourneyman(for: sport, date: date, day: day)
+        _ = await (keep4, whoami, journeyman)
+        guard !Task.isCancelled, dailiesDay == day else { return }
         loadedSports.insert(sport)
-        let filter = SportFilter(rawValue: sport.rawValue) ?? .all
-        // Independent reads — starting them together removes an avoidable round trip.
-        async let keep4Task = container.puzzles.keep4Puzzle(for: filter, date: Date())
-        async let whoAmITask = container.puzzles.whoAmIPuzzle(for: filter, date: Date())
-        async let journeymanTask = container.puzzles.journeymanPuzzle(for: filter, date: Date())
-        keep4BySport[sport] = await keep4Task
-        whoAmIBySport[sport] = await whoAmITask
-        journeymanBySport[sport] = await journeymanTask
-        // The player is on Home, which draws no headshots — spend that idle network on the
-        // photos this sport's dailies will need if they open one. Bounded and .utility, so it
-        // yields to anything actually on screen; see PuzzleImageWarmer.
-        PuzzleImageWarmer.warmDailies(
-            keep4: [keep4BySport[sport]?.content].compactMap { $0 },
-            journeyman: [journeymanBySport[sport]?.content].compactMap { $0 })
+        // The pager and root may both ask to load a sport. Only the task that actually
+        // finishes its visible boards starts speculative work, never a duplicate caller.
+        if sport == (container.sportFilter.sport ?? .nfl) {
+            container.catalog.prefetchDraftSpinSample(for: sport)
+            if container.entitlements.canPlayGrid() { container.puzzles.prefetchGrid(for: sport) }
+        }
+    }
+
+    private func loadKeep4(for sport: Sport, date: Date, day: String) async {
+        let pick = await container.puzzles.keep4Puzzle(for: SportFilter(rawValue: sport.rawValue) ?? .all, date: date)
+        guard !Task.isCancelled, dailiesDay == day else { return }
+        keep4BySport[sport] = pick
+        PuzzleImageWarmer.warm(keep4: pick?.content)
+    }
+
+    private func loadWhoAmI(for sport: Sport, date: Date, day: String) async {
+        let pick = await container.puzzles.whoAmIPuzzle(for: SportFilter(rawValue: sport.rawValue) ?? .all, date: date)
+        guard !Task.isCancelled, dailiesDay == day else { return }
+        whoAmIBySport[sport] = pick
+    }
+
+    private func loadJourneyman(for sport: Sport, date: Date, day: String) async {
+        let pick = await container.puzzles.journeymanPuzzle(for: SportFilter(rawValue: sport.rawValue) ?? .all, date: date)
+        guard !Task.isCancelled, dailiesDay == day else { return }
+        journeymanBySport[sport] = pick
+        PuzzleImageWarmer.warm(journeyman: pick?.content)
     }
 
     /// One pager page: that sport's K4C4 + Who Am I? daily cards, stacked exactly like the

@@ -248,7 +248,7 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if showSplash {
+            if showSplash && !hasOnboarded {
                 SplashView { withAnimation(Motion.easeOut) { showSplash = false } }
                     .transition(.opacity)
             } else if hasOnboarded {
