@@ -48,12 +48,21 @@ ROLL_ATTEMPTS = 120
 # Cohort key per sport for the game-grain generator config (see curation.SPORTS).
 GAME_COHORTS: dict[str, tuple[str, ...]] = {
     "nfl": ("nfl-games",),
+    "nba": ("nba-games",),
+    "baseball": ("baseball-games",),
 }
 
 # Division slices available as flagship boards, per sport.
 DIVISIONS: dict[str, tuple[curation.Slice, ...]] = {
     "nfl": curation.division_slices(curation.NFL_DIVISIONS),
+    "nba": curation.division_slices(curation.NBA_DIVISIONS),
+    "baseball": curation.division_slices(curation.MLB_DIVISIONS),
 }
+
+# The cohort that leads a sport's week: its plain "top performances" board, and the one its
+# division boards are cut from. Cross-positional where one scale covers every position; baseball
+# scores hitters and pitchers on different scales, so hitters lead.
+LEAD_SPEC: dict[str, str] = {"nfl": "ANY", "nba": "ANY", "baseball": "H"}
 
 
 def flagship_themes(sport: str, period: Period) -> list[Theme]:
@@ -68,6 +77,7 @@ def flagship_themes(sport: str, period: Period) -> list[Theme]:
     cohorts = [curation.SPORTS[key] for key in GAME_COHORTS.get(sport, ())]
     out: list[Theme] = []
     for cfg in cohorts:
+        lead = LEAD_SPEC.get(cfg.sport, "ANY")
         for spec_key, spec in cfg.positions.items():
             label = "performances" if spec_key == "ANY" else f"{spec.label} performances"
             out.append(_flagship(cfg, spec, spec_key, period,
@@ -78,12 +88,13 @@ def flagship_themes(sport: str, period: Period) -> list[Theme]:
         # drops repeats "top QB performances" every few weeks. Cross-positional only, since a
         # single division in a single week is four clubs and a per-position cut of that is too
         # thin to field eight.
-        any_spec = cfg.positions.get("ANY")
-        if any_spec is not None:
+        lead_spec = cfg.positions.get(lead)
+        if lead_spec is not None:
+            label = "performances" if lead == "ANY" else f"{lead_spec.label} performances"
             for div in DIVISIONS.get(cfg.sport, ()):
                 out.append(_flagship(
-                    cfg, any_spec, f"ANY-{div.key}", period,
-                    f"{period.label}: top performances{div.suffix}", div.key,
+                    cfg, lead_spec, f"{lead}-{div.key}", period,
+                    f"{period.label}: top {label}{div.suffix}", div.key,
                     extra=div.filters))
     return out
 
@@ -167,16 +178,12 @@ def gather_period(sport: str, period: Period) -> list[RawSeason]:
     possible: `main.gather_seasons()` pulls every sport's entire history (25-30 min), and a
     week of one sport is one cached file.
 
-    Returns [] for a sport whose event-grain pull is not wired yet, which the caller treats
-    the same as "nothing to mint".
+    Returns [] for a sport with no full-league weekly source (see `weekly.SOURCES`), which the
+    caller treats the same as "nothing to mint".
     """
-    if sport != "nfl":
-        return []
-    from .providers import nfl_nflverse_games
-    rows = nfl_nflverse_games.fetch_years([period.season_year])
-    window = [r for r in rows if period.start <= (r.event_date or "") <= period.end]
-    ingest_main.merge_nfl_bio(window)     # bio quirks (draft round, height, age) need this
-    return window
+    from . import weekly
+    data = weekly.gather(sport, period)
+    return data.rows if data else []
 
 
 def build_candidates(sport: str, period: Period, seasons: list[RawSeason],

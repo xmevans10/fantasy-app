@@ -54,6 +54,15 @@ struct HomeView: View {
     /// Streak-reminder primer (see `pushPrimerCard`). State rather than a computed property
     /// because deciding it requires an `await` on the system's authorization status.
     @State private var showPushPrimer = false
+    /// Current Week Packs (at most one per sport) and the player's progress through each, keyed
+    /// by pack id. Reloaded per local day, like the dailies above.
+    @State private var weekPacks: [WeekPack] = []
+    @State private var weekPackProgress: [String: WeekPackProgress] = [:]
+    @State private var openWeekPack: WeekPack?
+    /// Packs this device has opened (`WeekPackEngagement`). An unopened pack leads the page; an
+    /// opened one settles below the dailies.
+    @State private var engagedWeekPacks: Set<String> = []
+    @State private var showWeekPack = false
     @State private var streakRowDismissed = false
 
     private let gridColumns = [GridItem(.flexible(), spacing: 12),
@@ -161,6 +170,14 @@ struct HomeView: View {
                     if showPushPrimer { pushPrimerCard.heroReveal(1) }
                     else if let moment = inlineMoment { momentCard(moment).heroReveal(1) }
 
+                    // A pack nobody has opened yet leads the page: it lands once a week and is gone
+                    // in seven days, so it outranks the format menu until the player has seen it.
+                    let unopened = weekPacks.filter { !engagedWeekPacks.contains($0.id) }
+                    if !unopened.isEmpty {
+                        section("This week's pack") { weekPackCards(unopened) }
+                            .heroReveal(1)
+                    }
+
                     // Formats first (2026-08-27): the grid is the page's actual menu — every
                     // way to play, arcade included — and it sat below the rank widget and the
                     // archive row, three scrolls down. The dailies below it are the day's
@@ -202,6 +219,13 @@ struct HomeView: View {
                     }
                     .heroReveal(2)
 
+                    // Once opened, a pack settles here, below the dailies, for the rest of its week.
+                    let opened = weekPacks.filter { engagedWeekPacks.contains($0.id) }
+                    if !opened.isEmpty {
+                        section("This week's pack") { weekPackCards(opened) }
+                            .heroReveal(2)
+                    }
+
                     // Directly beneath the daily cards that feed it — the rank used to sit at
                     // the very bottom of the page, disconnected from the ranked games above
                     // (user feedback 2026-07-17: "ranked puzzles are not intuitively placed").
@@ -233,6 +257,18 @@ struct HomeView: View {
             }
             .background(Color.appBackground)
             .navigationTitle("")
+            .navigationDestination(isPresented: $showWeekPack) {
+                if let openWeekPack {
+                    WeekPackView(pack: openWeekPack).environmentObject(container)
+                }
+            }
+            .onChange(of: showWeekPack) { _, showing in
+                if !showing {
+                    engagedWeekPacks = WeekPackEngagement.engaged()
+                    Task { await refreshWeekPackProgress() }
+                }
+            }
+            .task(id: dailiesDay) { await loadWeekPacks() }
             .navigationDestination(isPresented: $showBrowse) {
                 BrowseView().environmentObject(container)
             }
@@ -460,6 +496,8 @@ struct HomeView: View {
                                                        sport: launched.sport, surface: "home_daily")
         }
         launchedDaily = nil
+        // Board zero of a pack is today's daily, so a daily played from Home moves pack progress.
+        Task { await refreshWeekPackProgress() }
         // A first completion is exactly when the streak becomes worth protecting, so re-evaluate
         // the reminder primer here rather than waiting for the next launch. The moment layer runs
         // *after* it, and only if it declined — `MomentEngine` reads the same `PushPrimer` answer.
@@ -514,6 +552,42 @@ struct HomeView: View {
     /// whatever neighbor pages `DailyGamesPager`'s scroll view keeps warm on its own) —
     /// `loadDaily(for:)` is idempotent via `loadedSports`, so this never double-fetches the
     /// initial sport.
+    private func weekPackCards(_ packs: [WeekPack]) -> some View {
+        VStack(spacing: 12) {
+            ForEach(packs) { pack in
+                WeekPackCard(pack: pack,
+                             progress: weekPackProgress[pack.id] ?? WeekPackProgress(pack: pack, results: []),
+                             isNew: !engagedWeekPacks.contains(pack.id)) {
+                    openWeekPack = pack
+                    showWeekPack = true
+                }
+            }
+        }
+    }
+
+    /// "WEEK 1 PACK" when `puzzleID` is board zero of a current pack for that sport.
+    private func packBadge(for puzzleID: String) -> String? {
+        weekPacks.first { $0.items.first?.id == puzzleID }?.badgeText
+    }
+
+    private func loadWeekPacks() async {
+        engagedWeekPacks = WeekPackEngagement.engaged()
+        weekPacks = await container.weekPacks.currentPacks(today: dailiesDay)
+        await refreshWeekPackProgress()
+        if DebugLaunch.autoOpenWeekPack, let first = weekPacks.first, !showWeekPack {
+            openWeekPack = first
+            showWeekPack = true
+        }
+    }
+
+    private func refreshWeekPackProgress() async {
+        guard !weekPacks.isEmpty else { return }
+        let results = await container.gameLog.all()
+        weekPackProgress = Dictionary(uniqueKeysWithValues: weekPacks.map {
+            ($0.id, WeekPackProgress(pack: $0, results: results))
+        })
+    }
+
     private func loadDaily() async {
         let initial = container.sportFilter.sport ?? .nfl
         dailyPage = initial
@@ -603,7 +677,8 @@ struct HomeView: View {
                               favoriteTeamMatch: container.favoriteTeams.team(for: puzzle.sport)
                                   .map(puzzle.features(teamAbbr:)) ?? false,
                               ranked: true,
-                              dateBadge: pick.isCanonicalToday ? DailyGameCard.todayDateBadge : nil) {
+                              dateBadge: pick.isCanonicalToday ? DailyGameCard.todayDateBadge : nil,
+                              packBadge: packBadge(for: puzzle.id)) {
                     // The daily card IS the puzzle — it opens directly (explicit feedback: no
                     // intermediate setup screen when the puzzle is already loaded and shown on
                     // the card). The formats grid below still routes through setup, where

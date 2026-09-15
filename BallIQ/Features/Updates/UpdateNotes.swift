@@ -73,7 +73,12 @@ enum UpdateNotes {
     /// (`Sport.decodableFilterValue`). That is the prerequisite for NHL and F1, not the arrival
     /// of them, and it is invisible by construction: what it changes is what a *future* publish
     /// can safely do to this build. See `newSportsSlide` for the announcement it unblocks.
-    static let deliberatelySilent: Set<String> = ["1.8.4"]
+    ///
+    /// **1.8.5** ships Week Packs, which stay invisible until the server side is live (the
+    /// `packs` tables and the first weekly build). A slide would announce a card nobody can find
+    /// yet, the same mistake `newSportsSlide` documents below. When a pack does land, its own
+    /// "JUST DROPPED" card at the top of Home is the announcement, plus the pack push.
+    static let deliberatelySilent: Set<String> = ["1.8.4", "1.8.5"]
 
     /// Written, rendered, and **not shipping yet**.
     ///

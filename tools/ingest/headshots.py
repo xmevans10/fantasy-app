@@ -780,6 +780,31 @@ def record(base: str, key: str, rows: list[dict]) -> None:
           extra_headers={"Prefer": "resolution=merge-duplicates,return=minimal"})
 
 
+def rehost_source(base: str, key: str, source_url: str, sport: str, max_px: int) -> dict:
+    """Probe one source, upload it when it is a real photo, and return its ledger row.
+
+    Shared by the sharded queue (`run`) and by callers that need a handful of brand-new photos
+    classified NOW rather than on the next queue pass (a Week Pack whose players debuted this
+    week). Never raises for one bad object."""
+    status, data, ctype, note = fetch_real_image(source_url)
+    # Every row carries the identical key set: PostgREST rejects a bulk insert whose
+    # objects differ in shape ("All object keys must match", PGRST102).
+    row = {"source_url": source_url, "sport": sport, "status": status,
+           "note": note or None, "bytes": len(data) or None,
+           "storage_key": None, "public_url": None}
+    if status != "ok":
+        return row
+    data, ctype = maybe_resize(data, ctype, max_px)
+    okey = object_key(sport, source_url, ctype)
+    try:
+        upload(base, key, okey, data, ctype)
+    except Exception as exc:  # noqa: BLE001 — one bad object must not kill the caller
+        return {**row, "status": "error", "note": str(exc)[:200], "bytes": None}
+    row.update({"storage_key": okey, "public_url": public_url(base, okey),
+                "bytes": len(data)})
+    return row
+
+
 def run(shard: int, shards: int, *, sports: list[str] | None, limit: int | None,
         workers: int, max_px: int, dry_run: bool) -> int:
     load_dotenv()
@@ -797,23 +822,7 @@ def run(shard: int, shards: int, *, sports: list[str] | None, limit: int | None,
 
     def work(item: tuple[str, str]) -> dict:
         source_url, sport = item
-        status, data, ctype, note = fetch_real_image(source_url)
-        # Every row carries the identical key set: PostgREST rejects a bulk insert whose
-        # objects differ in shape ("All object keys must match", PGRST102).
-        row = {"source_url": source_url, "sport": sport, "status": status,
-               "note": note or None, "bytes": len(data) or None,
-               "storage_key": None, "public_url": None}
-        if status != "ok":
-            return row
-        data, ctype = maybe_resize(data, ctype, max_px)
-        okey = object_key(sport, source_url, ctype)
-        try:
-            upload(base, key, okey, data, ctype)
-        except Exception as exc:  # noqa: BLE001 — one bad object must not kill the shard
-            return {**row, "status": "error", "note": str(exc)[:200], "bytes": None}
-        row.update({"storage_key": okey, "public_url": public_url(base, okey),
-                    "bytes": len(data)})
-        return row
+        return rehost_source(base, key, source_url, sport, max_px)
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         for row in pool.map(work, mine):

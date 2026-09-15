@@ -106,6 +106,16 @@ enum DebugLaunch {
         return n
     }
 
+    /// Week Packs: read packs from a local JSON file (the `packs`/`pack_items` wire rows, as
+    /// written by `python -m tools.ingest.pack --write-fixture PATH`) instead of Supabase, so the
+    /// pack UI can be captured before the tables exist live: `-weekPackFixture /abs/path.json`.
+    static var weekPackFixture: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "-weekPackFixture"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+    /// Push the first current pack's screen on launch (simctl can't tap the Home card).
+    static var autoOpenWeekPack: Bool { has("-screenshotWeekPack") }
     static var autoOpenShare: Bool { has("-screenshotShare") }
     /// Keep4 game: auto-open the scoring-formula sheet (simctl can't tap the chip). Same
     /// combination rule as `autoOpenShare`: needs `-screenshotGame -screenshotScoringInfo`.
@@ -300,6 +310,8 @@ enum DebugLaunch {
     static let autoOpenBlitz = false
     static let holdBlitzSetup = false
     static let blitzSeconds: Int? = nil
+    static let weekPackFixture: String? = nil
+    static let autoOpenWeekPack = false
     static let autoOpenShare = false
     static let autoOpenScoringInfo = false
     static let autoOpenLeaguesInfo = false

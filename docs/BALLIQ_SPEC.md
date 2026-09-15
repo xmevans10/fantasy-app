@@ -2305,6 +2305,23 @@ outright bugs (below), not design.
 - Exit: a completed human duel. Nothing here can manufacture one — it needs two real accounts —
   so the ladder is what carries engagement at N=1 in the meantime.
 
+**v1.8.5 "Week Packs" (built 2026-09-15).** When a league's week closes, a batch of up to five
+boards about it drops together, on its own card at the top of Home until opened.
+- **Pipeline:** `tools/ingest/pack.py`, run per sport by `fresh-drop.yml`. `weekly.py` pulls the
+  WHOLE league's week (schedule + every final box score: nflverse, MLB Stats API, ESPN NBA);
+  `readiness.py` is the "appropriate weekly data" contract (SOURCED, SCORABLE, a real week,
+  SETTLED, COMPLETE, FRESH, CLEAN). Every sport runs; SKIP exits 0, BLOCKED exits 1. No source
+  yet for NHL, soccer, tennis or F1, so they SKIP with that reason.
+- **Assembly:** slots headline, game of the week, position, division, niche; a player on at most
+  two boards, no shared keep-set, one board per kind, 14-day kind cooldown. Board zero ships as
+  the sport's keep4 daily (wire-safe sports only). Photos through the headshot ledger, new ones
+  rehosted, a board needs 6/8 faces from our store, rows pass `validate`.
+- **Storage:** `packs` + `pack_items` (migration 0028), never `puzzles`; results `mode = 'pack'`.
+- **Push:** `notify-daily-drop` sends one `week_pack` push on release day instead of the daily
+  drop, only to tokens with `app_build >= 53` (`_shared/week_packs.ts`).
+- **Verified:** replays NFL 2025 18/18 weeks READY (17x5, 1x4 boards), NBA Feb to Mar 2026 8/8
+  (6x5, 2x4), 0 rule violations; live MLB week Sep 7 to 13 91/91 games with box scores.
+
 **v1.7 "Engage" — the candidate pool that's sat unscheduled since 2026-07-17.**
 - [agent] Home-screen widget: streak + daily countdown. Pairs naturally with the push system
   (live since 1.2) and the local-day daily rollover logic (`HomeDailyLoop.nextMidnight`) — the

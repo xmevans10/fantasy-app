@@ -111,7 +111,9 @@ def test_division_membership_is_complete_and_disjoint():
     for label, table, expected in (("NFL", curation.NFL_DIVISIONS, 32),
                                    ("NBA", curation.NBA_DIVISIONS, 30),
                                    ("MLB", curation.MLB_DIVISIONS, 30)):
-        clubs = [c for teams in table.values() for c in teams]
+        # A renamed franchise is listed under both codes so old and new rows both match.
+        clubs = [c for teams in table.values() for c in teams
+                 if c not in curation.MLB_CODE_ALIASES or label != "MLB"]
         assert len(clubs) == expected, f"{label} has {len(clubs)} clubs, expected {expected}"
         assert len(set(clubs)) == len(clubs), f"{label} lists a club in two divisions"
 

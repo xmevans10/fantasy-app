@@ -238,8 +238,16 @@ def test_flagship_count_gives_a_season_enough_plain_shapes():
 
 
 def test_an_unwired_sport_has_no_flagships():
-    period = periods.rolling_week("nba", dt.date(2026, 8, 25))
-    assert fresh_drop.flagship_themes("nba", period) == []
+    period = periods.rolling_week("hockey", dt.date(2026, 8, 25))
+    assert fresh_drop.flagship_themes("hockey", period) == []
+
+
+def test_baseball_leads_with_hitters_and_cuts_divisions_from_them():
+    period = periods.rolling_week("baseball", dt.date(2026, 9, 15))
+    titles = {t.title for t in fresh_drop.flagship_themes("baseball", period)}
+    assert "Sep 7 to 13: top hitting performances" in titles
+    assert "Sep 7 to 13: top pitching performances" in titles
+    assert "Sep 7 to 13: top hitting performances, AL West" in titles
 
 
 # ── Cohort gating ─────────────────────────────────────────────────────────────

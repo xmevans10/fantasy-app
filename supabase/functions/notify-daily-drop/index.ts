@@ -6,10 +6,11 @@
 // Same local-time caveat as notify-streak-risk: `device_tokens.utc_offset_minutes` is the
 // offset at registration, which drifts if the user travels. Good enough for a 9am-ish nudge.
 import { serviceClient } from "../_shared/supabase.ts";
-import { buildDailyDropPayload } from "../_shared/apns.ts";
+import { buildDailyDropPayload, buildWeekPackPayload } from "../_shared/apns.ts";
 import { DEVICE_TOKEN_COLUMNS, pushRecipients, sendOnce } from "../_shared/cadence.ts";
 import { candidateLocalDays, localDayString, localHour } from "../_shared/localtime.ts";
 import { sportForDay } from "../_shared/sport.ts";
+import { packCapable, packForDay, type PackToken, type PublishedPack } from "../_shared/week_packs.ts";
 
 const TARGET_LOCAL_HOUR = 9; // 9am
 
@@ -59,11 +60,39 @@ Deno.serve(async (_req) => {
     themesByDay.get(day)!.set(row.sport as string, theme);
   }
 
+  // Week Packs opening on any candidate day (see _shared/week_packs.ts for the rules). Fails
+  // open: before migration 0028 the tables don't exist, the query errors, and every recipient
+  // simply gets the ordinary daily-drop push.
+  const packs: PublishedPack[] = [];
+  const { data: packRows, error: packError } = await sb
+    .from("packs").select("id, sport, label, release_date")
+    .eq("status", "published").in("release_date", days);
+  if (packError) console.log(`[daily-drop] packs unavailable: ${packError.message}`);
+  if (packRows?.length) {
+    const { data: items } = await sb
+      .from("pack_items").select("pack_id, ordinal, theme:content->>theme")
+      .in("pack_id", packRows.map((p) => p.id as string));
+    for (const p of packRows) {
+      const mine = (items ?? []).filter((i) => i.pack_id === p.id)
+        .sort((a, b) => (a.ordinal as number) - (b.ordinal as number));
+      packs.push({ id: p.id as string, sport: p.sport as string, label: p.label as string,
+                   release_date: p.release_date as string, boards: mine.length,
+                   headline: (mine[0]?.theme as string | undefined) ?? null });
+    }
+  }
+
   // One decision per PERSON, delivered to all of their devices, each on the APNs host its own
-  // token was minted for — see `pushRecipients`.
+  // token was minted for — see `pushRecipients`. `app_build` is read separately so a server
+  // that predates the column still sends the daily drop.
   const { data: rows } = await sb
     .from("device_tokens").select(DEVICE_TOKEN_COLUMNS);
   const tokens = pushRecipients(rows);
+  const buildByToken = new Map<string, number | null>();
+  if (packs.length) {
+    const { data: builds } = await sb.from("device_tokens").select("token, app_build");
+    for (const b of builds ?? []) buildByToken.set(b.token as string, (b.app_build as number) ?? null);
+  }
+  let packsSent = 0;
 
   let sent = 0;
 
@@ -73,6 +102,24 @@ Deno.serve(async (_req) => {
     const { data: settings } = await sb
       .from("notification_settings").select("daily_drop").eq("user_id", t.user_id).maybeSingle();
     if (settings && settings.daily_drop === false) continue;
+
+    // A pack opening today replaces the daily drop for this person, on the devices that can show
+    // it. Deliberately BEFORE the already-played skip: the pack is new content beyond the daily,
+    // so someone who played this morning still has five boards waiting.
+    const localDay = localDayString(t.utc_offset_minutes, nowMs);
+    const todaysPack = packForDay(packs, localDay);
+    if (todaysPack) {
+      const capable = packCapable(t.tokens.map((d): PackToken => ({
+        ...d, app_build: buildByToken.get(d.token) ?? null })));
+      if (capable.length) {
+        const result = await sendOnce(sb, {
+          userId: t.user_id, tokens: capable, utcOffsetMinutes: t.utc_offset_minutes,
+          nowMs, payload: buildWeekPackPayload(todaysPack.pack, todaysPack.others),
+        });
+        if (result.sent) { sent++; packsSent++; }
+        continue;
+      }
+    }
 
     // Skip anyone who already played today (local day, same convention as streak-risk).
     // Unlike streak-risk there's no streak>0 gate — brand-new and lapsed users are exactly
@@ -101,8 +148,8 @@ Deno.serve(async (_req) => {
   }
 
   const themeCount = [...themesByDay.values()].reduce((n, m) => n + m.size, 0);
-  console.log(`[daily-drop] days=${days.join(",")} themes=${themeCount} ` +
-    `checked=${tokens?.length ?? 0} sent=${sent}`);
+  console.log(`[daily-drop] days=${days.join(",")} themes=${themeCount} packs=${packs.length} ` +
+    `checked=${tokens?.length ?? 0} sent=${sent} pack_pushes=${packsSent}`);
   return new Response(JSON.stringify({ checked: tokens?.length ?? 0, sent, themes: themeCount }), {
     headers: { "Content-Type": "application/json" },
   });

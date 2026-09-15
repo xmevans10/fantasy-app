@@ -22,6 +22,9 @@ final class RepositoryContainer: ObservableObject {
     let arcadeBoard: ArcadeLeaderboardRepository?
     /// Friends graph + public profiles (M19). Nil when local-only — social is server-only.
     let social: SocialRepository?
+    /// Week Packs: the batch of boards about the week a league just finished. Not optional:
+    /// with no client it answers empty (or reads the DEBUG `-weekPackFixture`).
+    let weekPacks: WeekPackRepository
     /// Era-adjustment baselines for composable scoring (bundled; empty until the pipeline ships them).
     let baselines: StatBaselines = .loadBundled()
     /// StoreKit 2 product catalog + purchase/restore (M5). `entitlements`, `products` and
@@ -117,6 +120,7 @@ final class RepositoryContainer: ObservableObject {
         self.dailyDraftBoard = client.map { DailyDraftLeaderboardRepository(client: $0) }
         self.arcadeBoard = client.map { ArcadeLeaderboardRepository(client: $0) }
         self.social = client.map { SocialRepository(client: $0) }
+        self.weekPacks = WeekPackRepository(client: client)
         self.analytics = client.map { AnalyticsClient(client: $0) }
         let raw = UserDefaults.standard.string(forKey: "sportFilter") ?? SportFilter.all.rawValue
         self.sportFilter = SportFilter(rawValue: raw) ?? .all
@@ -970,6 +974,16 @@ final class RepositoryContainer: ObservableObject {
             values: Row(userId: uid, token: token, platform: "ios", utcOffsetMinutes: offsetMinutes,
                         apnsEnvironment: Self.apnsEnvironment),
             onConflict: "user_id,token")
+        // Which build this device runs, so the Week Pack push only reaches builds that can show
+        // a pack (notify-daily-drop). A SEPARATE write on purpose: if the server predates the
+        // `app_build` column, this one fails on its own and the token registration above, which
+        // every other push depends on, is untouched.
+        struct BuildRow: Encodable { let userId: String; let token: String; let appBuild: Int }
+        if let build = Int(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "") {
+            try? await client.upsert("device_tokens",
+                values: BuildRow(userId: uid, token: token, appBuild: build),
+                onConflict: "user_id,token")
+        }
     }
 
     func loadNotificationSettings() async -> NotificationSettings {

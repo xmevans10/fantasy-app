@@ -15,7 +15,8 @@ export type NotificationCategory =
   | "season_end"
   | "friend_request"
   | "daily_drop"
-  | "engagement";
+  | "engagement"
+  | "week_pack";
 
 export interface PushPayload {
   category: NotificationCategory;
@@ -67,6 +68,24 @@ export function buildDailyDropPayload(theme: string | null,
     // nothing and is what a deep-link would need. Unknown keys in `data` are ignored by the
     // current app, so this is safe to ship ahead of the client.
     data: sport ? { tab: "home", sport } : { tab: "home" },
+  };
+}
+
+/** The Week Pack push (see week_packs.ts). Names the sport, the week and the lead board, so it
+ * reads as proof of new content rather than a generic nudge. No em dashes: player-facing copy. */
+export function buildWeekPackPayload(pack: {
+  id: string; sport: string; label: string; boards: number; headline: string | null;
+}, others = 0): PushPayload {
+  const sport = SPORT_LABEL[pack.sport] ?? pack.sport.toUpperCase();
+  const week = pack.label.replace(/^\d{4} /, "");
+  const lead = pack.headline ? pack.headline.replace(/^[^:]*: /, "") : null;
+  const leadCopy = lead ? `, led by “${lead.charAt(0).toUpperCase()}${lead.slice(1)}”` : "";
+  const more = others > 0 ? ` Plus ${others} more pack${others === 1 ? "" : "s"} today.` : "";
+  return {
+    category: "week_pack",
+    title: `Your ${sport} ${week} Pack is here`,
+    body: `${pack.boards} boards on the week that just ended${leadCopy}.${more}`,
+    data: { tab: "home", sport: pack.sport, pack: pack.id },
   };
 }
 

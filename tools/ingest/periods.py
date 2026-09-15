@@ -30,7 +30,9 @@ from .curation import Slice
 # the completion oracle. The rest detect their period fine (the probes below are real) but
 # have no game rows to build from until their providers land, so they stay out of this set
 # and no-op rather than minting an empty board.
-WIRED: frozenset[str] = frozenset({"nfl"})
+# Superseded by `weekly.SOURCES` plus the readiness contract (readiness.py). Kept as the list of
+# sports with a weekly source for callers that still import it.
+WIRED: frozenset[str] = frozenset({"nfl", "nba", "baseball"})
 
 
 @dataclasses.dataclass(frozen=True)
@@ -46,7 +48,10 @@ class Period:
 
     @property
     def wired(self) -> bool:
-        return self.sport in WIRED
+        """Whether a full-league weekly source exists for this sport (`weekly.SOURCES`). Read
+        lazily: `weekly` imports this module."""
+        from .weekly import SOURCES
+        return self.sport in SOURCES
 
 
 def _last_sunday(today: dt.date) -> dt.date:

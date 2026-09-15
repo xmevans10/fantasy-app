@@ -27,9 +27,9 @@ on:
     - cron: "30 8 * * 2"      # Tue 08:30 UTC  -> board lands Wednesday local
     # Soccer: Big-5 matchweeks close Sunday/Monday.
     - cron: "35 8 * * 2"      # Tue 08:35 UTC
-    # NBA + MLB: rolling Mon-Sun window, closed Sunday night.
+    # NBA, MLB, NHL: rolling Mon-Sun window, closed Sunday night.
     - cron: "30 8 * * 3"      # Wed 08:30 UTC  -> board lands Thursday local
-    # Tennis: tournaments finish Sunday.
+    # Tennis and F1: tournaments and race weekends finish Sunday.
     - cron: "30 8 * * 1"      # Mon 08:30 UTC
   workflow_dispatch:
     inputs:
@@ -65,6 +65,12 @@ jobs:
           - sport: baseball
             cron: "30 8 * * 3"
           - sport: tennis
+            cron: "30 8 * * 1"
+          # Every sport runs; tools/ingest/readiness.py decides whether its week gets a pack. A
+          # sport with no full-league weekly source logs "SOURCED" and exits 0.
+          - sport: hockey
+            cron: "30 8 * * 3"
+          - sport: f1
             cron: "30 8 * * 1"
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -112,13 +118,18 @@ jobs:
       - if: steps.gate.outputs.run == 'true'
         run: python -m tools.ingest.main --evict-current-season --evict-only
 
+      # The Week Pack builder, which also ships board zero as the sport's daily (the job
+      # `fresh_drop.py` used to do alone). It needs the `packs`/`pack_items` tables from
+      # supabase/migrations/0028_week_packs.sql; on a thin week it still ships the daily.
+      # It exits 1 when the schedule says a team played but the stats file has no rows for it
+      # yet, so a half-posted week fails visibly instead of publishing without that game.
       - if: steps.gate.outputs.run == 'true'
-        name: Mint the period board
+        name: Build the week pack
         run: |
-          MODE="--upsert --supersede"
+          MODE="--upsert"
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then MODE="--dry-run"; fi
           DATE=""
           if [ -n "${{ github.event.inputs.date }}" ]; then
             DATE="--date ${{ github.event.inputs.date }}"
           fi
-          python -m tools.ingest.fresh_drop --sport ${{ matrix.sport }} $MODE $DATE
+          python -m tools.ingest.pack --sport ${{ matrix.sport }} $MODE $DATE

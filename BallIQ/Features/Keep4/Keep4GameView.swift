@@ -26,6 +26,10 @@ struct Keep4GameView: View {
     /// somehow set, for the same reason it wins over `challenge` (it is the one with a server row
     /// behind it and an opponent waiting on a submission).
     var blitz: BlitzSession? = nil
+    /// Set when this board is a Week Pack board played as a pack board rather than as today's
+    /// daily. Callers pass `ranked: false` with it; this only labels the career-log row, so the
+    /// pack screen can read progress back and records don't count it as a daily.
+    var packID: String? = nil
 
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
@@ -432,7 +436,10 @@ struct Keep4GameView: View {
         // Versus and community are both possible on the same session (a community-authored
         // puzzle can't currently be a Versus board, but if that ever changes, Versus should
         // win — it's the more specific mode).
-        let playMode: PlayMode = duel != nil ? .versus : (communityID != nil ? .community : .daily)
+        let playMode: PlayMode = duel != nil ? .versus
+            : communityID != nil ? .community
+            : packID != nil ? .pack
+            : .daily
         let detail = RepositoryContainer.SessionDetail(
             mode: playMode, score: r.total, maxScore: 3000,
             correct: r.correctCount, attempted: puzzle.players.count, startedAt: startedAt,

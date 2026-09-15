@@ -54,9 +54,11 @@ def test_every_sport_has_a_cron_that_actually_fires():
             f"{sport} is gated on {cron!r}, which is not in `on.schedule`, so it never runs")
 
 
-def test_all_five_sports_are_present():
+def test_every_sport_runs():
     sports = {sport for sport, _ in _matrix_rows(_text())}
-    assert sports == {"nfl", "nba", "baseball", "soccer", "tennis"}
+    # Every sport is on; readiness.py, not this list, decides whether a week gets a pack.
+    from tools.ingest.validate import _VALID_SPORTS
+    assert sports == set(_VALID_SPORTS)
 
 
 def test_the_sports_are_staggered_across_more_than_one_day():
@@ -71,7 +73,7 @@ def test_the_cache_eviction_step_runs_before_the_mint():
     mint without eviction can serve month-old data and look completely normal."""
     text = _text()
     evict = text.index("--evict-current-season")
-    mint = text.index("tools.ingest.fresh_drop")
+    mint = text.index("tools.ingest.pack")
     assert evict < mint, "the mint must not run before the current-season cache is evicted"
 
 

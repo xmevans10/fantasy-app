@@ -980,13 +980,19 @@ NBA_DIVISIONS: dict[str, tuple[str, ...]] = {
     "Southwest":  ("DAL", "HOU", "MEM", "NO", "SA"),
 }
 
+# Codes that name the SAME franchise as another code in MLB_DIVISIONS (new code: old code).
+MLB_CODE_ALIASES: dict[str, str] = {"ATH": "OAK", "AZ": "ARI"}
+
 MLB_DIVISIONS: dict[str, tuple[str, ...]] = {
     "AL East":    ("BAL", "BOS", "NYY", "TB", "TOR"),
     "AL Central": ("CWS", "CLE", "DET", "KC", "MIN"),
-    "AL West":    ("HOU", "LAA", "OAK", "SEA", "TEX"),
+    # The Stats API now codes the Athletics `ATH` and Arizona `AZ` (providers/mlb_stats.py
+    # TEAM_ABBR); the old codes stay for rows ingested before the rename. Without both, the
+    # West division boards silently had four clubs.
+    "AL West":    ("HOU", "LAA", "OAK", "ATH", "SEA", "TEX"),
     "NL East":    ("ATL", "MIA", "NYM", "PHI", "WSH"),
     "NL Central": ("CHC", "CIN", "MIL", "PIT", "STL"),
-    "NL West":    ("ARI", "COL", "LAD", "SD", "SF"),
+    "NL West":    ("ARI", "AZ", "COL", "LAD", "SD", "SF"),
 }
 
 
@@ -1211,3 +1217,84 @@ NFL_GAME_QUIRKS: list[Quirk] = [
 SPORTS["nfl-games"] = SportCuration(
     "nfl", NFL_GAME_POSITIONS, game_quirks(QUIRKS) + NFL_GAME_QUIRKS, NFL_SLICES,
     team_slices=32, team_era_slices=0, daily=False)
+
+
+# ── NBA and MLB week cohorts (Week Packs) ───────────────────────────────────────────────
+#
+# Fed by `weekly.py`'s full-league box-score pulls, never by the committed game sweeps: the
+# hoopR CSV keeps only "notable" games and the MLB game logs cover a marquee list, and a board
+# titled "top performances" drawn from either would silently leave most of the league out.
+# Same `daily=False` rule as the NFL cohort above.
+
+_NBA_GAME_COLS = [
+    StatColumn("points", "PTS", "int"),
+    StatColumn("rebounds", "REB", "int"),
+    StatColumn("assists", "AST", "int"),
+    StatColumn("steals", "STL", "int"),
+    StatColumn("blocks", "BLK", "int"),
+]
+
+NBA_GAME_POSITIONS: dict[str, PositionSpec] = {
+    "ANY": PositionSpec("ANY", "player", "nba_fantasy_game", {}, _NBA_GAME_COLS,
+                        members=("G", "F", "C"), grain="game", pool_cap=24),
+    "G": PositionSpec("G", "guard", "nba_fantasy_game", {}, _NBA_GAME_COLS,
+                      grain="game", pool_cap=24),
+    "BIG": PositionSpec("BIG", "big-man", "nba_fantasy_game", {}, _NBA_GAME_COLS,
+                        members=("F", "C"), grain="game", pool_cap=24),
+}
+
+# Week-scale like NFL_GAME_QUIRKS: a week is ~50 games and ~1,300 player-games, so each of
+# these needs to clear roughly a dozen in a normal week. Re-measure with `pack --replay`.
+NBA_GAME_QUIRKS: list[Quirk] = [
+    Quirk("pts30", (Filter("points", "gte", 30),), "Thirty-point games",
+          adjective="thirty-point", axis="scoring"),
+    Quirk("dbl-dbl", (Filter("points", "gte", 10), Filter("rebounds", "gte", 10)),
+          "Double-double games", adjective="double-double", axis="two-way"),
+    Quirk("ast10", (Filter("assists", "gte", 10),), "Ten-assist games",
+          adjective="ten-assist", axis="playmaking"),
+    Quirk("reb14", (Filter("rebounds", "gte", 14),), "Fourteen-rebound games",
+          adjective="fourteen-rebound", axis="glass"),
+]
+
+SPORTS["nba-games"] = SportCuration(
+    "nba", NBA_GAME_POSITIONS, NBA_GAME_QUIRKS, (), team_slices=0, daily=False)
+
+_MLB_HITTER_GAME_COLS = [
+    StatColumn("hits", "Hits", "int"),
+    StatColumn("home_runs", "HR", "int"),
+    StatColumn("rbi", "RBI", "int"),
+    StatColumn("runs", "R", "int"),
+    StatColumn("stolen_bases", "SB", "int"),
+]
+_MLB_PITCHER_GAME_COLS = [
+    StatColumn("innings_pitched", "IP", "dec1"),
+    StatColumn("strike_outs", "K", "int"),
+    StatColumn("earned_runs", "ER", "int"),
+    StatColumn("base_on_balls", "BB", "int"),
+    StatColumn("wins", "W", "int"),
+]
+
+# Hitters and pitchers are scored on different scales, so baseball has no cross-positional
+# "ANY" board; hitters head the pack and pitchers take the position slot.
+MLB_GAME_POSITIONS: dict[str, PositionSpec] = {
+    "H": PositionSpec("H", "hitting", "baseball_hitter_fantasy_game",
+                      {"plate_appearances": 3}, _MLB_HITTER_GAME_COLS, grain="game", pool_cap=24),
+    "P": PositionSpec("P", "pitching", "baseball_pitcher_fantasy_game",
+                      {"innings_pitched": 4}, _MLB_PITCHER_GAME_COLS, grain="game", pool_cap=24),
+}
+
+MLB_GAME_QUIRKS: list[Quirk] = [
+    Quirk("hr2", (Filter("home_runs", "gte", 2),), "Multi-homer games",
+          adjective="multi-homer", axis="power", only=("H",)),
+    Quirk("hits3", (Filter("hits", "gte", 3),), "Three-hit games",
+          adjective="three-hit", axis="contact", only=("H",)),
+    Quirk("rbi4", (Filter("rbi", "gte", 4),), "Four-RBI games",
+          adjective="four-RBI", axis="run-production", only=("H",)),
+    Quirk("k9", (Filter("strike_outs", "gte", 9),), "Nine-strikeout starts",
+          adjective="nine-strikeout", axis="strikeouts", only=("P",)),
+    Quirk("gem", (Filter("innings_pitched", "gte", 7), Filter("earned_runs", "lte", 1)),
+          "Seven-inning gems", adjective="seven-inning-gem", axis="run-prevention", only=("P",)),
+]
+
+SPORTS["baseball-games"] = SportCuration(
+    "baseball", MLB_GAME_POSITIONS, MLB_GAME_QUIRKS, (), team_slices=0, daily=False)

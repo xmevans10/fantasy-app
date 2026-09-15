@@ -608,3 +608,99 @@ def patch_rows(table: str, updates: list[dict], *, id_key: str = "id") -> int:
                     raise RuntimeError(f"{table} patch {row_id} failed after 4 attempts: {err}") from err
                 time.sleep(2 ** attempt)
     return written
+
+
+# ── Week Packs (tools/ingest/pack.py) ─────────────────────────────────────────
+
+def fetch_pack(pack_id: str) -> dict | None:
+    """The `packs` row for `pack_id`, or None. Service role, so drafts are visible too."""
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    query = f"select=id,status,release_date&id=eq.{urllib.parse.quote(pack_id)}"
+    rows = _get_json(f"{base}/rest/v1/packs?{query}", headers, what="packs fetch")
+    return rows[0] if rows else None
+
+
+def fetch_pack_signatures() -> set[str]:
+    """Every signature any pack has ever carried, for cross-pack novelty."""
+    return {r["signature"] for r in fetch_rows_keyset("pack_items", "id,signature")}
+
+
+def fetch_daily_keep4(served_date: str, sport: str) -> dict | None:
+    """The canonical keep4 daily for (`served_date`, `sport`) per `puzzle_history`, or None."""
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    query = (f"select=signature,theme_key,puzzle_id&served_date=eq.{served_date}"
+             f"&sport=eq.{sport}&format=eq.keep4")
+    rows = _get_json(f"{base}/rest/v1/puzzle_history?{query}", headers,
+                     what="daily keep4 fetch")
+    return rows[0] if rows else None
+
+
+def upsert_pack(row: dict) -> int:
+    return _upsert_table("packs", [row])
+
+
+def upsert_pack_items(rows: list[dict]) -> int:
+    return _upsert_table("pack_items", rows)
+
+
+def delete_draft_pack_items(pack_id: str) -> int:
+    """Clear a DRAFT pack's items before a rebuild, so a changed composition can't collide on
+    (pack_id, ordinal). Refuses anything but a draft: once published, players may have played
+    those boards, and a rebuild must never swap them."""
+    pack = fetch_pack(pack_id)
+    if pack is None or pack["status"] != "draft":
+        return 0
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}",
+               "Prefer": "return=representation"}
+    url = f"{base}/rest/v1/pack_items?pack_id=eq.{urllib.parse.quote(pack_id)}"
+    req = urllib.request.Request(url, headers=headers, method="DELETE")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            body = resp.read().decode("utf-8", "ignore")
+    except urllib.error.HTTPError as err:
+        detail = err.read().decode("utf-8", "ignore")
+        raise RuntimeError(f"pack_items delete failed ({err.code}): {detail}") from err
+    return len(json.loads(body)) if body.strip() else 0
+
+
+def publish_pack(pack_id: str) -> int:
+    return patch_rows("packs", [{"id": pack_id, "status": "published"}])
+
+
+def fetch_headshot_ledger_for(sources: list[str], batch_size: int = 100) -> dict[str, str]:
+    """`fetch_headshot_ledger`, restricted to `sources`: a week's few hundred photos instead
+    of paging the whole ledger. Same value contract (public URL, or '' for a placeholder)."""
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    out: dict[str, str] = {}
+    unique = sorted({s for s in sources if s})
+    for start in range(0, len(unique), batch_size):
+        batch = unique[start:start + batch_size]
+        joined = ",".join('"' + u.replace('"', '""') + '"' for u in batch)
+        query = (f"select=source_url,status,public_url&status=in.(ok,placeholder,missing)"
+                 f"&source_url=in.({urllib.parse.quote(joined)})")
+        for r in _get_json(f"{base}/rest/v1/headshot_assets?{query}", headers,
+                           what="headshot ledger fetch"):
+            out[r["source_url"]] = (r.get("public_url") or "") if r["status"] == "ok" else ""
+    return out
+
+
+def record_headshot_assets(rows: list[dict]) -> int:
+    return _upsert_table("headshot_assets", rows, conflict="source_url")
+
+
+def packs_available() -> bool:
+    """Whether the Week Pack tables exist (migration 0028). A deploy that lands before the
+    migration must still ship the week's daily, not crash looking for a table."""
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    try:
+        _get_json(f"{base}/rest/v1/packs?select=id&limit=1", headers, what="packs probe")
+        return True
+    except RuntimeError as err:
+        if any(marker in str(err) for marker in ("(404)", "PGRST205", "42P01")):
+            return False
+        raise

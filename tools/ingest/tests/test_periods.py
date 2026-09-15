@@ -135,9 +135,11 @@ def test_window_labels_read_as_words_across_a_month_boundary():
 
 # ── The wiring gate ───────────────────────────────────────────────────────────
 
-def test_only_nfl_is_wired_today():
-    assert periods.WIRED == frozenset({"nfl"})
-    assert periods.rolling_week("nba", dt.date(2026, 8, 25)).wired is False
+def test_wired_means_a_full_league_weekly_source_exists():
+    from tools.ingest import weekly
+    assert periods.WIRED == frozenset(weekly.SOURCES)
+    assert periods.rolling_week("nba", dt.date(2026, 8, 25)).wired is True
+    assert periods.rolling_week("hockey", dt.date(2026, 8, 25)).wired is False
 
 
 def test_an_unknown_sport_has_no_period():

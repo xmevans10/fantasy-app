@@ -119,7 +119,10 @@ def _get(url: str, *, headers: dict[str, str] | None = None, retries: int = 3) -
             if retry_after and retry_after.strip().isdigit():
                 time.sleep(min(float(retry_after), 30))
                 continue
-        except urllib.error.URLError as err:
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as err:
+            # A read that times out mid-body raises TimeoutError, not URLError, and used to
+            # escape the retry entirely: one slow MLB box score killed a whole week's pull.
+            # Every call here is a GET, so a retry is always safe.
             last_err = err
         time.sleep(min(1.5 * 2 ** attempt, 15))  # exponential backoff, capped
     raise RuntimeError(f"GET failed after {retries} attempts: {url}") from last_err

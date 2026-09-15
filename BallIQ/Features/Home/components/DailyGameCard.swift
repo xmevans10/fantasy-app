@@ -36,6 +36,9 @@ struct DailyGameCard: View {
     /// Optional freshness stamp ("TODAY · SAT, JUL 19") — only the true daily cards pass
     /// `DailyGameCard.todayDateBadge`, so archive/community cards never falsely claim to be new.
     var dateBadge: String? = nil
+    /// "WEEK 1 PACK" when this board is also the first board of a current Week Pack, so the same
+    /// board showing up in the pack and on the daily card reads as one thing, not a duplicate.
+    var packBadge: String? = nil
     let action: () -> Void
     /// Optional secondary action — an explicit overflow icon in the header band, distinct from
     /// the card's primary tap-to-play. nil (default) hides it; only Community cards pass one
@@ -89,6 +92,9 @@ struct DailyGameCard: View {
                         badge(symbol: symbol, text: formatName.uppercased(), fill: typeColor, foreground: onTypeColor)
                         if let dateBadge {
                             badge(symbol: "calendar", text: dateBadge)
+                        }
+                        if let packBadge {
+                            badge(symbol: "square.stack.3d.up.fill", text: packBadge)
                         }
                         if ranked {
                             badge(symbol: "chart.line.uptrend.xyaxis", text: String(localized: "RANKED"))

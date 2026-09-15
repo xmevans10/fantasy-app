@@ -93,7 +93,9 @@ struct GameResult: Codable, Equatable, Identifiable {
 /// practice mode that's re-rollable on demand. Without this, "my best Grid ever" would happily
 /// return a practice board the player re-rolled forty times until it was easy.
 enum PlayMode: String, Codable, CaseIterable {
-    case daily, practice, community, versus, dailyDraft, archive
+    /// `pack` is a Week Pack board other than the one serving as that day's daily. Unranked, and
+    /// a builds-before-this client drops rows carrying it on sync (`GameResultRow.toResult`).
+    case daily, practice, community, versus, dailyDraft, archive, pack
 
     /// Whether a session may set a personal best. Practice is infinitely re-rollable and community
     /// puzzles are user-authored (and can be trivially easy), so both are excluded from records
