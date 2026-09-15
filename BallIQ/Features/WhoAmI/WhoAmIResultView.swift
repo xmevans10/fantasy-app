@@ -16,6 +16,10 @@ struct WhoAmIResultView: View {
     /// bot. Distinct from `challenge`, which is a link someone sent; both render through
     /// `ChallengeResultBanner`, and exactly one of them is ever set.
     var duelVerdict: DuelVerdict? = nil
+    /// The answer's row as `WhoAmIGameView` already resolved it during play, with its photo
+    /// warmed. When present the reveal renders complete on its first frame and the search below
+    /// is skipped; nil (a very fast solve that beat the search) falls back to that search.
+    var resolvedAnswer: CatalogSeason? = nil
     let onDone: () -> Void
 
     @EnvironmentObject private var container: RepositoryContainer
@@ -26,11 +30,12 @@ struct WhoAmIResultView: View {
     /// in which case the card stays on `accentFill` exactly as it shipped.
     @State private var answerRow: CatalogSeason?
 
-    private var answerHeadshot: String? { answerRow?.headshot }
+    private var answerMatch: CatalogSeason? { resolvedAnswer ?? answerRow }
+    private var answerHeadshot: String? { answerMatch?.headshot }
     private var answerPalette: TeamPalette? {
-        guard let answerRow else { return nil }
-        return TeamColors.palette(sport: puzzle.sport, abbr: answerRow.teamAbbr,
-                                  league: answerRow.league)
+        guard let answerMatch else { return nil }
+        return TeamColors.palette(sport: puzzle.sport, abbr: answerMatch.teamAbbr,
+                                  league: answerMatch.league)
     }
     private var answerFill: Color { answerPalette?.primary ?? .accentFill }
     private var onAnswerFill: Color { answerPalette?.onPrimary ?? .onAccent }
@@ -74,6 +79,7 @@ struct WhoAmIResultView: View {
             if result.solved { confetti += 1 }
         }
         .task {
+            guard resolvedAnswer == nil else { return }
             let rows = await container.catalog.search(
                 CatalogQuery(sport: puzzle.sport, name: puzzle.answer.canonical), limit: 30)
             answerRow = WhoAmIAnswerPhoto.match(from: rows, for: puzzle)

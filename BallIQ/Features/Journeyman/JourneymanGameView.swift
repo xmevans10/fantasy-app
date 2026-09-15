@@ -102,6 +102,12 @@ struct JourneymanGameView: View {
     }
 
     var body: some View {
+        // Same gate as `Keep4GameView.body`: the crests on the path are the board, and the reveal
+        // photo is in the bundle too, so the result screen's first frame has it.
+        PuzzleAssetGate(PuzzleAssets(journeyman: puzzle)) { gameBody }
+    }
+
+    private var gameBody: some View {
         Group {
             if let live, let duel {
                 LiveJourneymanBoard(puzzle: puzzle, duel: duel, live: live) { dismiss() }

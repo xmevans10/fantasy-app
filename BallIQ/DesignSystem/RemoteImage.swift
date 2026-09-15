@@ -101,11 +101,13 @@ actor ImageCache {
     static let shared = ImageCache()
 
     /// `NSCache` (not a dictionary) so the system can evict under memory pressure on its own.
-    /// Cost is the decoded byte count, capped well under what 363 downsampled crests need so the
-    /// full set stays resident in practice.
+    /// Cost is the decoded byte count. Sized for puzzle bundles as well as crests: a Keep4 board
+    /// is 8 headshots at the 384 px bucket (~590 KB decoded each) plus its crests, about 6 MB,
+    /// and Home warms one per sport it loads. At the old 48 MB cap a few sports plus a Browse
+    /// scroll pushed today's boards back out before anyone opened them.
     private static let store: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
-        cache.totalCostLimit = 48 * 1024 * 1024
+        cache.totalCostLimit = 96 * 1024 * 1024
         cache.countLimit = 600
         return cache
     }()
@@ -116,20 +118,42 @@ actor ImageCache {
         "\(url.absoluteString)|\(Int(pixelSize))" as NSString
     }
 
+    /// The exact bucket, else any larger one. A bigger decode draws fine in a smaller frame
+    /// (`resizable()` scales it), and without this a warm only counted if it landed in the one
+    /// bucket the view resolved to. The Keep4 card's headshot is 56–140 pt depending on screen
+    /// height, so on some devices the board asked for 192 px while the warm had filled 384 px,
+    /// and every photo fetched on first render despite being warm.
+    private static func hit(_ url: URL, pixelSize: CGFloat) -> UIImage? {
+        for bucket in AppImagePipeline.buckets where bucket >= pixelSize {
+            if let image = store.object(forKey: key(url, pixelSize: bucket)) { return image }
+        }
+        return nil
+    }
+
+    #if DEBUG
+    /// Drops every decoded image, the way `NSCache` does under memory pressure. Tests only.
+    nonisolated static func removeAllForTesting() { store.removeAllObjects() }
+    #endif
+
     /// Synchronous cache probe — safe from any thread/actor (`NSCache` is thread-safe) and
     /// deliberately `nonisolated` so `RemoteImage.init` can seed its state without suspending.
     nonisolated func cached(_ url: URL, pixelSize: CGFloat) -> UIImage? {
-        Self.store.object(forKey: Self.key(url, pixelSize: pixelSize))
+        Self.hit(url, pixelSize: pixelSize)
     }
 
     func image(for url: URL, targetSize: CGSize) async -> UIImage? {
         let pixels = AppImagePipeline.pixelBucket(for: targetSize)
         let cacheKey = Self.key(url, pixelSize: pixels)
-        if let hit = Self.store.object(forKey: cacheKey) { return hit }
+        if let hit = Self.hit(url, pixelSize: pixels) { return hit }
         // Coalesce: Grid's board asks for the same three crests from multiple slots in the same
         // frame, and the pickers ask for dozens at once. Without this each duplicate is its own
-        // request, which is exactly the traffic the cache is meant to remove.
-        if let existing = inFlight[cacheKey as String] { return await existing.value }
+        // request, which is exactly the traffic the cache is meant to remove. A fetch already
+        // running at a larger bucket serves this one too, for the same reason `hit` accepts one.
+        for bucket in AppImagePipeline.buckets where bucket >= pixels {
+            if let existing = inFlight[Self.key(url, pixelSize: bucket) as String] {
+                return await existing.value
+            }
+        }
 
         let task = Task<UIImage?, Never> {
             let transformed = AppImagePipeline.transformed(url, pixels: pixels)
@@ -148,26 +172,79 @@ actor ImageCache {
         inFlight[cacheKey as String] = nil
         if let image {
             Self.store.setObject(image, forKey: cacheKey, cost: image.byteCost)
+            failedAt[cacheKey as String] = nil
+        } else {
+            failedAt[cacheKey as String] = Date()
         }
         return image
     }
 
     // MARK: - Prefetch
 
-    /// Keys already queued for warming, so a repeated prefetch of the same screen's images
-    /// doesn't re-enqueue work already in flight or already failed. Bounded — a warm pass over
-    /// every daily in every sport is a few hundred entries, and this drops the whole set rather
-    /// than growing without limit on a very long session.
-    private var warmed: Set<String> = []
+    /// When a fetch last failed, per key, so a repeated prefetch of the same screen doesn't
+    /// hammer a dead link. It expires, unlike the permanent "already warmed" set it replaces:
+    /// that set also skipped keys `NSCache` had since evicted, so a board opened after memory
+    /// pressure (or after a single failed warm) fetched every photo on first render and no
+    /// later prefetch could fix it.
+    private var failedAt: [String: Date] = [:]
+    private static let failureBackoff: TimeInterval = 30
 
     /// Warm images into the cache *before* anything asks to draw them.
     ///
     /// Fire-and-forget: returns immediately, does its work at `.utility` so it can never
     /// outrank a fetch for something actually on screen. Safe to call repeatedly — anything
-    /// already cached, already warmed, or already in flight is skipped.
+    /// already cached or in flight is coalesced, and a recent failure is skipped.
     nonisolated static func prefetch(_ urls: [URL], targetSize: CGSize) {
         guard !urls.isEmpty else { return }
         Task(priority: .utility) { await shared.warm(urls, targetSize: targetSize) }
+    }
+
+    /// Suspends until every image is decoded in the cache or `timeout` elapses, whichever is
+    /// first, and returns whether all of them made it.
+    ///
+    /// The start gate for a puzzle's asset bundle (`PuzzleAssetGate`). Unlike `prefetch` there is
+    /// no concurrency cap: the player is waiting on exactly these images, so they all go out at
+    /// once, coalescing with any warm already running for the same key. The timeout releases the
+    /// caller without cancelling anything — fetches keep landing in the cache after the gate
+    /// opens, which is what the board wants — so it has to race the fetches with a continuation
+    /// rather than a task group, whose scope would wait for the uncancellable fetches to finish.
+    nonisolated static func ensureCached(_ images: [(url: URL, size: CGSize)],
+                                         timeout: TimeInterval) async -> Bool {
+        let uncached = images.filter {
+            shared.cached($0.url, pixelSize: AppImagePipeline.pixelBucket(for: $0.size)) == nil
+        }
+        guard !uncached.isEmpty else { return true }
+        // A source that just failed (a defunct franchise's 404 crest) is not worth holding the
+        // board for another round trip; the view's own fallback already covers it.
+        let missing = await shared.excludingRecentFailures(uncached)
+        guard !missing.isEmpty else { return false }
+        let fetches = Task {
+            await withTaskGroup(of: Void.self) { group in
+                for image in missing {
+                    group.addTask { _ = await shared.image(for: image.url, targetSize: image.size) }
+                }
+            }
+        }
+        let finished = await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
+            let once = ResumeOnce(continuation)
+            Task { await fetches.value; once.resume(true) }
+            Task {
+                try? await Task.sleep(nanoseconds: UInt64(max(0, timeout) * 1_000_000_000))
+                once.resume(false)
+            }
+        }
+        return finished && missing.allSatisfy {
+            shared.cached($0.url, pixelSize: AppImagePipeline.pixelBucket(for: $0.size)) != nil
+        }
+    }
+
+    private func excludingRecentFailures(_ images: [(url: URL, size: CGSize)]) -> [(url: URL, size: CGSize)] {
+        let now = Date()
+        return images.filter {
+            let key = Self.key($0.url, pixelSize: AppImagePipeline.pixelBucket(for: $0.size)) as String
+            guard let failed = failedAt[key] else { return true }
+            return now.timeIntervalSince(failed) >= Self.failureBackoff
+        }
     }
 
     /// Bounded to `maxConcurrent` in-flight fetches. The cap is the point: a Keep4 daily is 8
@@ -175,15 +252,15 @@ actor ImageCache {
     /// saturate the connection the visible screen is still using.
     private func warm(_ urls: [URL], targetSize: CGSize, maxConcurrent: Int = 3) async {
         let pixels = AppImagePipeline.pixelBucket(for: targetSize)
-        if warmed.count > 2_000 { warmed.removeAll(keepingCapacity: true) }
+        let now = Date()
+        failedAt = failedAt.filter { now.timeIntervalSince($0.value) < Self.failureBackoff }
 
         var queue: [URL] = []
+        var queued: Set<String> = []
         for url in urls {
-            let key = Self.key(url, pixelSize: pixels)
-            if Self.store.object(forKey: key) != nil { continue }   // already decoded
-            let string = key as String
-            if warmed.contains(string) { continue }
-            warmed.insert(string)
+            if Self.hit(url, pixelSize: pixels) != nil { continue }   // already decoded
+            let key = Self.key(url, pixelSize: pixels) as String
+            if failedAt[key] != nil || !queued.insert(key).inserted { continue }
             queue.append(url)
         }
         guard !queue.isEmpty else { return }
@@ -226,6 +303,22 @@ actor ImageCache {
             return nil
         }
         return data
+    }
+}
+
+/// Resumes a continuation exactly once, from whichever of several racing tasks gets there first.
+private final class ResumeOnce<T>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<T, Never>?
+
+    init(_ continuation: CheckedContinuation<T, Never>) { self.continuation = continuation }
+
+    func resume(_ value: T) {
+        lock.lock()
+        let pending = continuation
+        continuation = nil
+        lock.unlock()
+        pending?.resume(returning: value)
     }
 }
 

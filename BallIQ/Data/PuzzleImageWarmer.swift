@@ -31,11 +31,11 @@ import Foundation
 enum PuzzleImageWarmer {
 
     /// Headshots and team crests carried by a Keep4 puzzle — its 8 player cards, the single
-    /// biggest batch in the app and the one most likely to be opened from Home.
+    /// biggest batch in the app and the one most likely to be opened from Home. The bundle
+    /// definition lives in `PuzzleAssets` so this warm and the game view's start gate can never
+    /// disagree about what a board needs.
     static func warm(keep4: Keep4Puzzle?) {
-        guard let keep4 else { return }
-        warm(urls: keep4.players.compactMap(\.headshot), targetSize: AppImagePipeline.cardWarmSize)
-        warmCrests(sport: keep4.sport, abbrs: keep4.players.map(\.teamAbbr))
+        keep4.map(PuzzleAssets.init(keep4:))?.prefetch()
     }
 
     /// Team crests for `abbrs`, deduplicated — a puzzle's 8 cards routinely share franchises,
@@ -48,22 +48,21 @@ enum PuzzleImageWarmer {
         ImageCache.prefetch(urls, targetSize: AppImagePipeline.crestWarmSize)
     }
 
-    /// The Journeyman answer's reveal photo. One URL, but it's the payoff frame of the format —
-    /// a monogram there reads as a missing punchline.
+    /// The Journeyman answer's reveal photo plus the career path's crests. The photo is the
+    /// payoff frame of the format — a monogram there reads as a missing punchline.
     static func warm(journeyman: JourneymanPuzzle?) {
-        guard let journeyman else { return }
-        warm(urls: [journeyman.headshot].compactMap { $0 })
+        journeyman.map(PuzzleAssets.init(journeyman:))?.prefetch()
     }
 
     /// Every daily currently loaded on Home, across whichever sports have landed.
     ///
-    /// WhoAmI is deliberately absent: its content model carries no photo URL and the answer's
-    /// headshot is resolved from catalog rows at reveal time (`WhoAmIPuzzle.headshot(from:for:)`),
-    /// so there is nothing to warm until the player has already finished the puzzle. Warming it
-    /// would mean pre-fetching the answer, which is both wasted work and a spoiler surface.
+    /// WhoAmI is absent: its content model carries no photo URL, and the answer's headshot needs a
+    /// catalog search (`WhoAmIAnswerPhoto`). `WhoAmIGameView` runs that search when the board
+    /// opens, never rendering the row, and warms the photo while the player reads clues. Doing it
+    /// here would add a search per sport to Home's launch traffic for boards mostly never opened.
     static func warmDailies(keep4: [Keep4Puzzle], journeyman: [JourneymanPuzzle]) {
         for puzzle in keep4 { warm(keep4: puzzle) }
-        warm(urls: journeyman.compactMap(\.headshot))
+        for puzzle in journeyman { warm(journeyman: puzzle) }
     }
 
     /// Arbitrary already-resolved headshot strings (Draft & Spin rosters, ladder boards).

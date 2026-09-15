@@ -278,6 +278,15 @@ struct BrowseView: View {
             playArchive { activeKeep4 = p }
         }
         secondaryAction: { shareTarget = SharablePuzzle(keep4: p) }
+        .onAppear { prefetchArchive(PuzzleAssets(keep4: p)) }
+    }
+
+    /// Warms a row's bundle as it scrolls into view, so the board it opens already has its photos.
+    /// Only for players who can open archive rows: a free player's tap goes to the paywall, and
+    /// their data shouldn't pay for boards they can't reach.
+    private func prefetchArchive(_ assets: PuzzleAssets) {
+        guard container.entitlements.canAccessArchive else { return }
+        assets.prefetch()
     }
 
     /// Who Am I? has no title (revealing one would spoil the answer) — show a neutral numbered label.
@@ -305,6 +314,7 @@ struct BrowseView: View {
                       typeColor: .goldFill, onTypeColor: .onGold) {
             playArchive { activeJourneyman = p }
         }
+        .onAppear { prefetchArchive(PuzzleAssets(journeyman: p)) }
     }
 
     private var emptyState: some View {

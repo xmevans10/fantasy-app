@@ -299,6 +299,9 @@ struct OnboardingView: View {
             pick = await container.puzzles.keep4Puzzle(for: .all, date: Date())
         }
         firstPuzzle = pick?.content
+        // A new player's first board is the one that most needs its photos, and they are still
+        // on the sport picker for a few seconds, so warm it now rather than at the gate.
+        PuzzleImageWarmer.warm(keep4: firstPuzzle)
         puzzleLoadFinished = true
         // Combination flag, same idiom as `-screenshotBrowse -screenshotShare`: the guided first
         // game can only be reached through a tap simctl can't perform, so

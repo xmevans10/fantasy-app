@@ -34,6 +34,10 @@ struct WhoAmIGameView: View {
     @State private var showReportSent = false
     @State private var didLogStart = false
     @State private var startedAt: Date?
+    /// The answer's catalog row, resolved while the player is still reading clues so the reveal's
+    /// photo and club colours are on its first frame instead of arriving after a catalog search
+    /// and a download. Only ever handed to `WhoAmIResultView`; the board never reads it.
+    @State private var answerRow: CatalogSeason?
 
     private var allRevealed: Bool { revealedCount >= puzzle.clues.count }
     /// Points on the table right now — the tier-scaled clue value less the wrong-guess
@@ -71,12 +75,22 @@ struct WhoAmIGameView: View {
                 WhoAmIResultView(puzzle: puzzle, result: result, rewards: rewards,
                                  isDaily: isDaily, challenge: effectiveChallenge,
                                  duelVerdict: duel?.ladder?
-                                     .verdict(myHits: ChallengeLink.whoAmIHits(result))) { dismiss() }
+                                     .verdict(myHits: ChallengeLink.whoAmIHits(result)),
+                                 resolvedAnswer: answerRow) { dismiss() }
             } else {
                 playBoard
             }
         }
         .background(Color.appBackground)
+        .task {
+            // A blitz round never shows the reveal, so it would be a search per round for nothing.
+            guard blitz == nil, answerRow == nil else { return }
+            let rows = await container.catalog.search(
+                CatalogQuery(sport: puzzle.sport, name: puzzle.answer.canonical), limit: 30)
+            let row = WhoAmIAnswerPhoto.match(from: rows, for: puzzle)
+            PuzzleAssets(whoAmIAnswer: row).prefetch()
+            answerRow = row
+        }
         .onAppear {
             if !didLogStart {
                 didLogStart = true

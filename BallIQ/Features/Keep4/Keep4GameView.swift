@@ -63,6 +63,12 @@ struct Keep4GameView: View {
     }
 
     var body: some View {
+        // Every entry point (Home, Browse, Community, links, Versus, Blitz, onboarding) comes
+        // through here, so this one gate is what guarantees the board never opens on monograms.
+        PuzzleAssetGate(PuzzleAssets(keep4: puzzle)) { gameBody }
+    }
+
+    private var gameBody: some View {
         Group {
             // `blitz == nil` is the whole "score at the end only" rule at this call site: a blitz
             // round still sets `result` (it's the double-finish guard), but must never render the
