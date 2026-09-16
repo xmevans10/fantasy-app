@@ -18,9 +18,17 @@ Generated from the app's own design system, so it can't drift from the product.
 | `03-headers/` | Cover/banner art per platform, correct pixel dimensions. |
 | `04-post-templates/` | Ready-to-post creative + empty blanks in every aspect ratio. |
 | `05-brand/` | Palette swatch sheet. Full rules in `BRAND.md`. |
+| `06-x-series/` | Evergreen X posts (1600×900): how-to-play per format, Week Packs, one card per sport, App Store ask, streak nudge, a keep-or-cut reply square, and real K4C4 cards rendered by the app itself (`BallIQTests/XCardGalleryTests`). |
 | `_source/` | The generator and the screenshots it composites. Not for upload. |
 | `BRAND.md` | Colors, type, logo rules, do/don't. |
 | `COPY.md` | Bios, taglines, launch posts, hashtags — per platform, within character limits. |
+
+**Daily X posts are not in this folder: they are minted with the puzzles.** Every
+`daily-puzzle` run renders today's K4C4 board per sport plus yesterday's answers, and every
+`fresh-drop` run that publishes a Week Pack renders its drop card and game-of-the-week board
+(`tools/marketing/x_assets.py`). Find them in the run: captions in the step log, images inline
+in the job summary, PNGs in the `x-assets-*` artifact. A comment on the repo's `x-assets` issue
+notifies you when they're ready. Nothing is posted to X automatically.
 
 Regenerate everything after any brand change:
 

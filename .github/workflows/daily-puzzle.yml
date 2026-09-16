@@ -36,6 +36,11 @@ on:
 jobs:
   mint:
     runs-on: ubuntu-latest
+    # `issues: write` is for the X-assets notification comment only; nothing else here writes
+    # to the repo, and listing it explicitly narrows the token to exactly these two scopes.
+    permissions:
+      contents: read
+      issues: write
     # Without this the job inherits GitHub's 6-HOUR default, so a single provider hanging on
     # a socket burns six hours of CI and — because the Who Am I? and Journeyman steps run
     # after the Keep4 one — delays or loses two mints that had nothing wrong with them.
@@ -99,3 +104,28 @@ jobs:
           python -m tools.ingest.daily_journeyman --upsert \
             --count "${{ github.event.inputs.count || '2' }}" \
             ${{ github.event.inputs.start_date != '' && format('--date {0}', github.event.inputs.start_date) || '' }}
+      # X post assets for today's boards and yesterday's answers (tools/marketing/x_assets.py).
+      # Reads only what is already published and never posts anywhere. Find them in this run:
+      # the step log prints every caption, the job summary shows the images inline, and the
+      # `x-assets-daily` artifact holds the PNGs. A comment on the `x-assets` issue notifies the
+      # owner. `continue-on-error` so marketing can never turn a successful mint red.
+      - if: always()
+        name: Render X post assets
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip install pillow
+          TODAY=$(date -u +%F)
+          YESTERDAY=$(date -u -d "yesterday" +%F)
+          python -m tools.marketing.x_assets --daily "$TODAY" --answers "$YESTERDAY" \
+            --out build/x-assets --publish --summary "$GITHUB_STEP_SUMMARY" --notify \
+            --title "X posts for $TODAY"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-assets-daily
+          path: build/x-assets
+          if-no-files-found: ignore
+          retention-days: 30

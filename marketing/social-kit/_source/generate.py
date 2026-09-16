@@ -20,20 +20,15 @@ KIT = ROOT / "marketing" / "social-kit"
 FONTS = ROOT / "BallIQ" / "Resources" / "Fonts"
 APP_ICON = ROOT / "BallIQ" / "Assets.xcassets" / "AppIcon.appiconset" / "Icon-1024.png"
 
-# ---------------------------------------------------------------- palette
-# Verbatim from Theme.swift's light scheme. Hex, not names, because a social kit is handed
-# to people who don't have the Swift file.
-PAPER = "#F4F1E9"
-INK = "#15120B"
-BLUE = "#1E50FF"      # accentFill  — dominant
-VOLT = "#C2F03A"      # voltFill    — accent-accent, spend once
-GOLD = "#E0A92E"      # goldFill    — Journeyman
-RED = "#E63A2E"       # dangerFill  — Over/Under
-GREEN = "#18A957"     # successFill — Puzzle Blitz
-PURPLE = "#6D3BF5"    # proFill     — The Grid
-ON_VOLT = "#15120B"
-WHITE = "#FFFFFF"
-MUTED = "#7B7666"
+# ---------------------------------------------------------------- shared brand
+# Palette, fonts, the wordmark and blockCard live in tools/marketing/brand.py, shared with the
+# per-mint X renderer (tools/marketing/x_assets.py) so the two can never drift apart.
+import sys
+sys.path.insert(0, str(ROOT))
+from tools.marketing.brand import (  # noqa: E402
+    BLUE, GOLD, GREEN, INK, MUTED, ON_VOLT, PAPER, PURPLE, RED, SUBLINE, TAGLINE, VOLT, WHITE,
+    anton, block, cond_black, cond_bold, draw_wordmark, font, saira, saira_semi, text_w,
+    wordmark_width)
 
 FORMATS = [
     ("K4C4", BLUE, WHITE),
@@ -42,20 +37,6 @@ FORMATS = [
     ("OVER / UNDER", RED, WHITE),
     ("PUZZLE BLITZ", GREEN, WHITE),
 ]
-
-TAGLINE = "Prove you know ball."
-SUBLINE = "Daily sports puzzles built from real stat lines."
-
-
-def font(name: str, size: int) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(str(FONTS / name), size)
-
-
-def cond_black(size):  return font("SairaCondensed-Black.ttf", size)
-def cond_bold(size):   return font("SairaCondensed-Bold.ttf", size)
-def saira(size):       return font("Saira-Regular.ttf", size)
-def saira_semi(size):  return font("Saira-SemiBold.ttf", size)
-def anton(size):       return font("Anton-Regular.ttf", size)
 
 
 def out(rel: str) -> pathlib.Path:
@@ -68,33 +49,6 @@ def save(img: Image.Image, rel: str) -> None:
     p = out(rel)
     img.save(p, "PNG", optimize=True)
     print(f"  {rel}  ({img.width}x{img.height})")
-
-
-def text_w(draw, s, f):
-    return draw.textbbox((0, 0), s, font=f)[2]
-
-
-# ---------------------------------------------------------------- wordmark
-def draw_wordmark(draw, x, y, size, play_color, book_color, anchor="ls"):
-    """'play' in condensed bold + 'book' in condensed black — the app's `Wordmark` view,
-    reproduced exactly (same two faces, same two colors, lowercase, zero tracking)."""
-    fb, fk = cond_bold(size), cond_black(size)
-    draw.text((x, y), "play", font=fb, fill=play_color, anchor=anchor)
-    w = draw.textbbox((0, 0), "play", font=fb)[2]
-    draw.text((x + w, y), "book", font=fk, fill=book_color, anchor=anchor)
-    return w + draw.textbbox((0, 0), "book", font=fk)[2]
-
-
-def wordmark_width(draw, size):
-    return (draw.textbbox((0, 0), "play", font=cond_bold(size))[2]
-            + draw.textbbox((0, 0), "book", font=cond_black(size))[2])
-
-
-def block(draw, box, fill, radius=14, lift=7, outline=INK, width=3):
-    """The app's `blockCard()` — hard ink outline on a solid offset shadow."""
-    x0, y0, x1, y1 = box
-    draw.rounded_rectangle((x0 + lift, y0 + lift, x1 + lift, y1 + lift), radius, fill=INK)
-    draw.rounded_rectangle(box, radius, fill=fill, outline=outline, width=width)
 
 
 # ---------------------------------------------------------------- 01 logo
@@ -415,6 +369,9 @@ def main():
     build_banners()
     build_posts()
     build_swatches()
+    print("06-x-series/")
+    from tools.marketing import x_static
+    x_static.build(KIT, save)
     n = sum(1 for _ in KIT.rglob("*") if _.is_file())
     print(f"\nDone. {n} files in {KIT.relative_to(ROOT)}")
 

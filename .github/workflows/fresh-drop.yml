@@ -50,6 +50,10 @@ on:
 jobs:
   drop:
     runs-on: ubuntu-latest
+    # `issues: write` is for the X-assets notification comment only.
+    permissions:
+      contents: read
+      issues: write
     strategy:
       # One sport must never take another down: a thin week, an exhausted candidate space or
       # an upstream outage in one sport is that sport's problem alone.
@@ -133,3 +137,29 @@ jobs:
             DATE="--date ${{ github.event.inputs.date }}"
           fi
           python -m tools.ingest.pack --sport ${{ matrix.sport }} $MODE $DATE
+
+      # X post assets for the pack this job just published (tools/marketing/x_assets.py): the
+      # pack drop card and the game-of-the-week board. Same three places as the nightly mint:
+      # step log, job summary, and the `x-assets-<sport>` artifact, plus a notification comment
+      # on the `x-assets` issue. A sport with no pack this week renders nothing and stays quiet.
+      - if: steps.gate.outputs.run == 'true'
+        name: Render X post assets for the pack
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip install pillow
+          BASE="${{ github.event.inputs.date }}"
+          BASE="${BASE:-$(date -u +%F)}"
+          DROP=$(date -u -d "$BASE +1 day" +%F)
+          python -m tools.marketing.x_assets --packs "$DROP" --sport ${{ matrix.sport }} \
+            --out build/x-assets --publish --summary "$GITHUB_STEP_SUMMARY" --notify \
+            --title "X posts: ${{ matrix.sport }} pack opening $DROP"
+      - if: steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-assets-${{ matrix.sport }}
+          path: build/x-assets
+          if-no-files-found: ignore
+          retention-days: 30
