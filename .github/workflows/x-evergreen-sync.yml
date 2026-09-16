@@ -1,0 +1,30 @@
+name: x-evergreen-sync
+
+# Keeps Google Drive's Evergreen folder in step with marketing/social-kit/06-x-series: whenever
+# those files change on main (or on demand), each one is uploaded under
+# Evergreen/{How to play, Sports, K4C4 cards, Brand} with a readable name, replacing the old copy.
+# See tools/marketing/drive.py for the layout and why uploads go through an Apps Script web app.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "marketing/social-kit/06-x-series/**"
+      - "tools/marketing/drive.py"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      DRIVE_UPLOAD_URL: ${{ secrets.DRIVE_UPLOAD_URL }}
+      DRIVE_UPLOAD_TOKEN: ${{ secrets.DRIVE_UPLOAD_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m tools.marketing.drive --evergreen

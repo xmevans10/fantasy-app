@@ -30,6 +30,33 @@ Generated from the app's own design system, so it can't drift from the product.
 in the job summary, PNGs in the `x-assets-*` artifact. A comment on the repo's `x-assets` issue
 notifies you when they're ready. Nothing is posted to X automatically.
 
+### Google Drive
+
+Every asset is also filed into the shared Drive folder, organized for posting:
+
+```
+Daily posts/2026-09 September/2026-09-16 Wednesday/   NFL - Today's board.png, NFL - Yesterday's answers.png, captions.txt
+Week Packs/NFL/2026 Week 01/                           Pack drop card.png, Game of the week (CAR vs CHI).png, captions.txt
+Evergreen/How to play | Sports | K4C4 cards | Brand/  synced from 06-x-series/ whenever it changes
+```
+
+Uploads go through a tiny Apps Script web app that runs as the folder's owner
+(`tools/marketing/drive_upload.gs`), so no Google credential is stored in GitHub and a leaked
+secret can only add files to that one folder. One-time setup:
+
+1. [script.google.com](https://script.google.com) → **New project**, name it *Playbook X assets*.
+   Replace `Code.gs` with the contents of `tools/marketing/drive_upload.gs`.
+2. **Project Settings → Script properties**: add `ROOT_FOLDER_ID` (the Drive folder's id) and
+   `UPLOAD_TOKEN` (the value of `DRIVE_UPLOAD_TOKEN` in `tools/marketing/.env`).
+3. **Deploy → New deployment → Web app**. Execute as **Me**, Who has access **Anyone**. Authorize,
+   then copy the **Web app URL** (ends in `/exec`).
+4. Add the two GitHub secrets:
+   `gh secret set DRIVE_UPLOAD_URL --repo xmevans10/fantasy-app` (the URL) and
+   `gh secret set DRIVE_UPLOAD_TOKEN --repo xmevans10/fantasy-app` (the token).
+5. Run the **x-evergreen-sync** workflow once to fill `Evergreen/`.
+
+Until the secrets exist the Drive step logs "not configured" and the run carries on.
+
 Regenerate everything after any brand change:
 
 ```bash

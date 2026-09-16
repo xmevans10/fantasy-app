@@ -463,7 +463,7 @@ def build(out: pathlib.Path, *, daily: str | None, answers: str | None, packs: s
             if game:
                 img, a, b = render_game(pack, game)
                 save(img, f"game-{pack['id']}.png", kind="game", sport=pack["sport"], date=packs,
-                     pack_id=pack["id"], caption=caption_game(a, b),
+                     pack_id=pack["id"], matchup=f"{a} vs {b}", caption=caption_game(a, b),
                      alt=f"{a} vs {b}: eight players from one game. "
                          + ", ".join(p.get("name", "") for p in game["content"]["players"]))
     (out / "manifest.json").write_text(json.dumps(assets, indent=1))
@@ -516,8 +516,13 @@ def publish(out: pathlib.Path, assets: list[dict], stamp: str) -> None:
         print(f"[x] prune skipped: {e}")
 
 
-def summary_markdown(assets: list[dict], title: str, run_url: str | None) -> str:
+def summary_markdown(assets: list[dict], title: str, run_url: str | None,
+                     drive_folders: dict[str, str] | None = None) -> str:
     lines = [f"## {title}", ""]
+    for folder, url in (drive_folders or {}).items():
+        lines.append(f"📁 Google Drive: [{folder}]({url})")
+    if drive_folders:
+        lines.append("")
     if run_url:
         lines += [f"Download every file from the run's **x-assets** artifact: {run_url}", ""]
     for a in assets:
@@ -528,7 +533,8 @@ def summary_markdown(assets: list[dict], title: str, run_url: str | None) -> str
     return "\n".join(lines)
 
 
-def notify(assets: list[dict], title: str, run_url: str | None) -> None:
+def notify(assets: list[dict], title: str, run_url: str | None,
+           drive_folders: dict[str, str] | None = None) -> None:
     """Comment on the tracking issue so GitHub pushes the owner a notification with previews."""
     token, repo = os.getenv("GITHUB_TOKEN"), os.getenv("GITHUB_REPOSITORY")
     owner = os.getenv("GITHUB_REPOSITORY_OWNER", "")
@@ -560,7 +566,7 @@ def notify(assets: list[dict], title: str, run_url: str | None) -> None:
             "body": "Every puzzle mint comments here when its X assets are ready. Each comment has "
                     "the images, copy-ready captions and alt text. Nothing is posted automatically."})["number"]
     body = (f"@{owner} " if owner else "") + f"**{len(assets)} X asset(s) ready.**\n\n" \
-        + summary_markdown(assets, title, run_url)
+        + summary_markdown(assets, title, run_url, drive_folders)
     gh("POST", f"issues/{number}/comments", {"body": body[:64000]})
     print(f"[x] notified on issue #{number}")
 
@@ -575,6 +581,8 @@ def main() -> int:
     ap.add_argument("--publish", action="store_true", help="upload to the public marketing bucket")
     ap.add_argument("--summary", metavar="FILE", help="append a markdown summary (e.g. $GITHUB_STEP_SUMMARY)")
     ap.add_argument("--notify", action="store_true", help="comment on the x-assets tracking issue")
+    ap.add_argument("--drive", action="store_true",
+                    help="file the assets into Google Drive (tools/marketing/drive.py)")
     ap.add_argument("--title", default="X post assets")
     args = ap.parse_args()
 
@@ -594,11 +602,18 @@ def main() -> int:
                    f"{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{os.getenv('GITHUB_RUN_ID')}")
     if args.publish:
         publish(out, assets, args.daily or args.packs or args.answers or dt.date.today().isoformat())
+    drive_folders: dict[str, str] = {}
+    if args.drive:
+        from . import drive
+        try:
+            drive_folders = drive.upload_assets(out, assets)
+        except Exception as e:  # noqa: BLE001 — Drive is a convenience; the run keeps its artifact
+            print(f"[drive] upload failed: {e}")
     if args.summary:
         with open(args.summary, "a", encoding="utf-8") as f:
-            f.write(summary_markdown(assets, args.title, run_url) + "\n")
+            f.write(summary_markdown(assets, args.title, run_url, drive_folders) + "\n")
     if args.notify:
-        notify(assets, args.title, run_url)
+        notify(assets, args.title, run_url, drive_folders)
     return 0
 
 
