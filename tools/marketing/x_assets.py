@@ -86,6 +86,10 @@ def caption_answers(sport: str, theme: str, keeps: list[str]) -> str:
 
 def caption_pack(sport: str, label: str, boards: int, headline: str) -> str:
     week = re.sub(r"^\d{4} ", "", label)
+    # Mid-sentence here ("led by top performances"), so the board title loses its capital,
+    # unless it opens with an abbreviation like "CAR vs CHI".
+    if headline[:2] != headline[:2].upper():
+        headline = headline[:1].lower() + headline[1:]
     return _clamp(headline, "The {sport} {week} Pack just dropped: {boards} boards on the week that just ended, led by {text}.\n\n{link}",
                   sport=SPORT_NAME.get(sport, sport), week=week, boards=boards,
                   link=brand.app_link("x_pack"))
