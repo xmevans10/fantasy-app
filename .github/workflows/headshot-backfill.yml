@@ -66,7 +66,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r tools/ingest/requirements.txt
+      # Pillow is what makes `maybe_resize` real: without it every object is stored at full
+      # resolution (see headshots.maybe_resize), which is how the bucket hit 3.6 GB.
+      - run: pip install -r tools/ingest/requirements.txt pillow
       - run: python -m tools.ingest.headshots --seed-queue
 
   # Computed rather than a fixed 0-7 range so a manual `shards` input actually changes the matrix
@@ -117,7 +119,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r tools/ingest/requirements.txt
+      # Pillow is what makes `maybe_resize` real: without it every object is stored at full
+      # resolution (see headshots.maybe_resize), which is how the bucket hit 3.6 GB.
+      - run: pip install -r tools/ingest/requirements.txt pillow
       - run: python -m tools.ingest.headshots --reset-errors
 
   # The bulk-coverage step: claim every `pending` source in `headshot_assets` and try to rehost
@@ -140,7 +144,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r tools/ingest/requirements.txt
+      # Pillow is what makes `maybe_resize` real: without it every object is stored at full
+      # resolution (see headshots.maybe_resize), which is how the bucket hit 3.6 GB.
+      - run: pip install -r tools/ingest/requirements.txt pillow
       - run: python -m tools.ingest.headshots --shard ${{ matrix.shard }}/$SHARD_TOTAL
 
   # Targeted backfills for rows the generic fetch can't reach because they need a different
@@ -157,7 +163,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r tools/ingest/requirements.txt
+      # Pillow is what makes `maybe_resize` real: without it every object is stored at full
+      # resolution (see headshots.maybe_resize), which is how the bucket hit 3.6 GB.
+      - run: pip install -r tools/ingest/requirements.txt pillow
       # Each of these five steps is `if: always()` deliberately: they hit independent sources
       # and are not a pipeline (one's failure carries no information the next needs). Without
       # this, one step failing hard-stops the job and silently skips everything after it — which
@@ -206,7 +214,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r tools/ingest/requirements.txt
+      # Pillow is what makes `maybe_resize` real: without it every object is stored at full
+      # resolution (see headshots.maybe_resize), which is how the bucket hit 3.6 GB.
+      - run: pip install -r tools/ingest/requirements.txt pillow
       - run: python -m tools.ingest.headshots --repoint
       - name: Repoint already-minted puzzle content
         run: |

@@ -220,13 +220,27 @@ def fetch_real_image(source_url: str) -> tuple[str, bytes, str, str]:
     return "ok", data, ctype or "image/png", ""
 
 
+_WARNED_NO_PILLOW = False
+
+
 def maybe_resize(data: bytes, content_type: str, max_px: int) -> tuple[bytes, str]:
     """Downscale to `max_px` on the long edge. Lazy Pillow import per requirements.txt's
-    optional-dependency contract — without Pillow this is a no-op and the Storage transform
-    endpoint still sizes on delivery, just from a larger stored original."""
+    optional-dependency contract.
+
+    🔴 Without Pillow this stores the FULL-RESOLUTION original, and that is not a harmless
+    no-op: the workflow never installed Pillow, so 8,218 objects went up untouched and the
+    bucket reached 3.6 GB against a 1 GB plan limit (fair-use grace period, 2026-09-16). The
+    app never sees the difference — it renders everything through the Storage transform
+    endpoint — so nothing surfaced the waste except the bill. It now says so, loudly, once."""
     try:
         from PIL import Image  # noqa: PLC0415 — deliberately lazy
     except ImportError:
+        global _WARNED_NO_PILLOW
+        if not _WARNED_NO_PILLOW:
+            _WARNED_NO_PILLOW = True
+            print("[headshots] WARNING: Pillow is not installed, so every upload stores the "
+                  "full-resolution original. Install it (pip install pillow) before a backfill "
+                  "or the bucket grows several times larger than it needs to be.", flush=True)
         return data, content_type
     try:
         img = Image.open(io.BytesIO(data))
