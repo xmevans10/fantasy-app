@@ -245,16 +245,23 @@ def maybe_resize(data: bytes, content_type: str, max_px: int) -> tuple[bytes, st
     try:
         img = Image.open(io.BytesIO(data))
         img.load()
-        if max(img.size) <= max_px:
-            return data, content_type
-        img.thumbnail((max_px, max_px), Image.LANCZOS)
+        if max(img.size) > max_px:
+            img.thumbnail((max_px, max_px), Image.LANCZOS)
+        # WebP, not PNG: these are photographs with a cut-out background, and PNG cannot
+        # compress a photograph. Measured across five sports on real stored objects, a 512px
+        # PNG re-encode saved nothing at all (129 kB in, 129 kB out) while WebP at the same
+        # size landed at 12-24 kB — an 85-90% cut with alpha preserved. That difference is the
+        # whole reason the bucket reached 3.6 GB. Alpha is kept because the cards draw these
+        # cut-outs over team colors; flattening to JPEG would put a box behind every player.
         out = io.BytesIO()
-        if img.mode in ("RGBA", "LA", "P"):
-            img = img.convert("RGBA")
-            img.save(out, format="PNG", optimize=True)
-            return out.getvalue(), "image/png"
-        img.convert("RGB").save(out, format="JPEG", quality=88, optimize=True)
-        return out.getvalue(), "image/jpeg"
+        alpha = img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info)
+        img.convert("RGBA" if alpha else "RGB").save(
+            out, format="WEBP", quality=82, method=5)
+        encoded = out.getvalue()
+        # Never make an object bigger: a tiny source can encode larger as WebP than it arrived.
+        if len(encoded) >= len(data):
+            return data, content_type
+        return encoded, "image/webp"
     except Exception:  # noqa: BLE001 — a source we can't decode is uploaded untouched
         return data, content_type
 
@@ -854,6 +861,108 @@ def run(shard: int, shards: int, *, sports: list[str] | None, limit: int | None,
     return 0
 
 
+def oversized(base: str, key: str, min_bytes: int, page: int = 1000) -> list[dict]:
+    """Ledger rows whose stored object is larger than `min_bytes`, keyset-paged on the PK."""
+    out: list[dict] = []
+    last = ""
+    while True:
+        query = (f"headshot_assets?select=source_url,sport,storage_key,bytes"
+                 f"&status=eq.ok&storage_key=not.is.null&bytes=gt.{min_bytes}"
+                 f"&order=source_url.asc&limit={page}")
+        if last:
+            query += f"&source_url=gt.{urllib.parse.quote(last)}"
+        rows = _rest(base, key, query)
+        if not rows:
+            return out
+        out.extend(rows)
+        last = rows[-1]["source_url"]
+
+
+def shrink_one(base: str, key: str, row: dict, max_px: int) -> dict:
+    """Re-encode ONE stored object in place, at its existing storage key.
+
+    The key is deliberately reused rather than recomputed: `object_key` derives the extension
+    from the content type, so a PNG re-encoded as JPEG would land on a NEW key and every URL
+    frozen into a minted board (and into the shipped offline bundles) would still point at the
+    old, large object. Same key, new bytes, no URL churn anywhere.
+
+    Prefers the original provider URL over our own copy: pulling ~2.7 GB back out of Storage
+    would bill as egress against the plan that is already over quota, while uploads are free.
+    Falls back to our copy when the provider has since dropped the photo.
+    """
+    storage_key, source_url = row["storage_key"], row["source_url"]
+    before = int(row.get("bytes") or 0)
+    status, data, ctype, _ = fetch_real_image(source_url)
+    if status != "ok":
+        code, data, ctype = _get(public_url(base, storage_key))
+        if not (200 <= code < 300) or not data:
+            return {"storage_key": storage_key, "skipped": "unfetchable", "before": before}
+    data, ctype = maybe_resize(data, ctype, max_px)
+    after = len(data)
+    if after >= before:
+        return {"storage_key": storage_key, "skipped": "already small", "before": before}
+    try:
+        upload(base, key, storage_key, data, ctype)
+    except Exception as exc:  # noqa: BLE001 — one bad object must not kill the pass
+        return {"storage_key": storage_key, "skipped": str(exc)[:120], "before": before}
+    return {"storage_key": storage_key, "before": before, "after": after}
+
+
+def shrink(min_bytes: int, max_px: int, workers: int, limit: int | None, dry_run: bool) -> int:
+    """Re-encode every stored headshot above `min_bytes` down to `max_px` on the long edge.
+
+    Why this exists: `maybe_resize` silently no-ops without Pillow and the backfill workflow
+    never installed it, so thousands of objects went up at full provider resolution. The app
+    never showed the difference (it renders through the Storage transform endpoint), so the
+    only symptom was the bucket reaching 3.6 GB against a 1 GB plan limit.
+    """
+    load_dotenv()
+    base, key = _require_env()
+    rows = oversized(base, key, min_bytes)
+    if limit:
+        rows = rows[:limit]
+    total_before = sum(int(r.get("bytes") or 0) for r in rows)
+    print(f"[shrink] {len(rows)} object(s) over {min_bytes/1024:.0f} kB, "
+          f"{total_before/1024/1024:.0f} MB stored, target {max_px}px", flush=True)
+    if dry_run or not rows:
+        return 0
+
+    done = saved = skipped = 0
+    ledger: list[dict] = []
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for res in pool.map(lambda r: shrink_one(base, key, r, max_px), rows):
+            done += 1
+            if "after" in res:
+                saved += res["before"] - res["after"]
+                ledger.append({"source_url": next(r["source_url"] for r in rows
+                                                  if r["storage_key"] == res["storage_key"]),
+                               "bytes": res["after"]})
+            else:
+                skipped += 1
+            if len(ledger) >= 200:
+                record(base, key, _merge(base, rows, ledger))
+                ledger = []
+            if done % 500 == 0:
+                print(f"[shrink] {done}/{len(rows)}, {saved/1024/1024:.0f} MB saved, "
+                      f"{skipped} skipped", flush=True)
+    if ledger:
+        record(base, key, _merge(base, rows, ledger))
+    print(f"[shrink] DONE {done} processed, {saved/1024/1024:.0f} MB saved, {skipped} skipped")
+    return 0
+
+
+def _merge(base: str, rows: list[dict], updates: list[dict]) -> list[dict]:
+    """Ledger rows carrying the new byte counts, with every column `record` requires."""
+    by_url = {r["source_url"]: r for r in rows}
+    out = []
+    for u in updates:
+        src = by_url[u["source_url"]]
+        out.append({"source_url": u["source_url"], "sport": src.get("sport"), "status": "ok",
+                    "note": None, "bytes": u["bytes"], "storage_key": src["storage_key"],
+                    "public_url": public_url(base, src["storage_key"])})
+    return out
+
+
 def repoint(dry_run: bool) -> int:
     """Point `player_seasons.headshot` at our rehosted copies, and clear the ones the ledger
     proved are placeholders or dead so the app falls back to its designed treatment rather
@@ -933,6 +1042,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--nba-backfill", action="store_true",
                         help="fill photo-less NBA rows from cdn.nba.com by name->person id "
                              "(run AFTER --repoint)")
+    parser.add_argument("--shrink", action="store_true",
+                        help="re-encode already-stored objects above --shrink-min bytes down to "
+                             "--max-px, in place at their existing keys")
+    parser.add_argument("--shrink-min", type=int, default=100_000,
+                        help="only re-encode objects larger than this many bytes (default 100k)")
     parser.add_argument("--repoint", action="store_true",
                         help="after shards finish: rewrite player_seasons.headshot from the ledger")
     parser.add_argument("--seed-queue", action="store_true",
@@ -949,6 +1063,8 @@ def main(argv: list[str] | None = None) -> int:
               body={"status": "pending"}, extra_headers={"Prefer": "return=minimal"})
         print("[headshots] error rows reset to pending", flush=True)
         return 0
+    if args.shrink:
+        return shrink(args.shrink_min, args.max_px, args.workers, args.limit, args.dry_run)
     if args.repoint:
         return repoint(args.dry_run)
     if args.nba_backfill:
