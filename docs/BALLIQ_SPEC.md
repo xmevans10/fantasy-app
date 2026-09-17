@@ -2306,7 +2306,7 @@ outright bugs (below), not design.
   so the ladder is what carries engagement at N=1 in the meantime.
 
 **v1.8.5 "Week Packs" (built 2026-09-15).** When a league's week closes, a batch of up to five
-boards about it drops together, on its own card at the top of Home until opened.
+boards about it drops together, on its own card at the top of Home until the player finishes it or two days pass (`WeekPackSchedule.leadsHome`), then below the dailies for the rest of its week.
 - **Pipeline:** `tools/ingest/pack.py`, run per sport by `fresh-drop.yml`. `weekly.py` pulls the
   WHOLE league's week (schedule + every final box score: nflverse, MLB Stats API, ESPN NBA);
   `readiness.py` is the "appropriate weekly data" contract (SOURCED, SCORABLE, a real week,

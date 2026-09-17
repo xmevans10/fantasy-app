@@ -59,8 +59,8 @@ struct HomeView: View {
     @State private var weekPacks: [WeekPack] = []
     @State private var weekPackProgress: [String: WeekPackProgress] = [:]
     @State private var openWeekPack: WeekPack?
-    /// Packs this device has opened (`WeekPackEngagement`). An unopened pack leads the page; an
-    /// opened one settles below the dailies.
+    /// Packs this device has opened (`WeekPackEngagement`), for the JUST DROPPED badge. Placement
+    /// is `WeekPackSchedule.leadsHome`.
     @State private var engagedWeekPacks: Set<String> = []
     @State private var showWeekPack = false
     @State private var streakRowDismissed = false
@@ -170,11 +170,11 @@ struct HomeView: View {
                     if showPushPrimer { pushPrimerCard.heroReveal(1) }
                     else if let moment = inlineMoment { momentCard(moment).heroReveal(1) }
 
-                    // A pack nobody has opened yet leads the page: it lands once a week and is gone
-                    // in seven days, so it outranks the format menu until the player has seen it.
-                    let unopened = weekPacks.filter { !engagedWeekPacks.contains($0.id) }
-                    if !unopened.isEmpty {
-                        section("This week's pack") { weekPackCards(unopened) }
+                    // An unfinished pack leads the page for its first two days, then settles below
+                    // the dailies, finished or not (WeekPackSchedule.leadsHome).
+                    let leading = weekPacks.filter(leadsHome)
+                    if !leading.isEmpty {
+                        section("This week's pack") { weekPackCards(leading) }
                             .heroReveal(1)
                     }
 
@@ -219,10 +219,10 @@ struct HomeView: View {
                     }
                     .heroReveal(2)
 
-                    // Once opened, a pack settles here, below the dailies, for the rest of its week.
-                    let opened = weekPacks.filter { engagedWeekPacks.contains($0.id) }
-                    if !opened.isEmpty {
-                        section("This week's pack") { weekPackCards(opened) }
+                    // Finished, or two days old: here, below the dailies, for the rest of its week.
+                    let settled = weekPacks.filter { !leadsHome($0) }
+                    if !settled.isEmpty {
+                        section("This week's pack") { weekPackCards(settled) }
                             .heroReveal(2)
                     }
 
@@ -557,12 +557,18 @@ struct HomeView: View {
             ForEach(packs) { pack in
                 WeekPackCard(pack: pack,
                              progress: weekPackProgress[pack.id] ?? WeekPackProgress(pack: pack, results: []),
-                             isNew: !engagedWeekPacks.contains(pack.id)) {
+                             isNew: leadsHome(pack) && !engagedWeekPacks.contains(pack.id)) {
                     openWeekPack = pack
                     showWeekPack = true
                 }
             }
         }
+    }
+
+    private func leadsHome(_ pack: WeekPack) -> Bool {
+        WeekPackSchedule.leadsHome(pack, progress: weekPackProgress[pack.id]
+                                       ?? WeekPackProgress(pack: pack, results: []),
+                                   today: dailiesDay)
     }
 
     /// "WEEK 1 PACK" when `puzzleID` is board zero of a current pack for that sport.

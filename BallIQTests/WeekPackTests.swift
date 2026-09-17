@@ -121,6 +121,31 @@ final class WeekPackTests: XCTestCase {
         XCTAssertTrue(done.isComplete(p))
     }
 
+    func testAnUnfinishedPackLeadsHomeForTwoDaysThenSettles() {
+        let p = pack("p", release: "2026-09-16", items: 2)
+        let none = WeekPackProgress(pack: p, results: [])
+        XCTAssertTrue(WeekPackSchedule.leadsHome(p, progress: none, today: "2026-09-16"))
+        XCTAssertTrue(WeekPackSchedule.leadsHome(p, progress: none, today: "2026-09-17"))
+        XCTAssertFalse(WeekPackSchedule.leadsHome(p, progress: none, today: "2026-09-18"))
+        XCTAssertFalse(WeekPackSchedule.leadsHome(p, progress: none, today: "2026-09-22"))
+    }
+
+    func testAStartedPackStillLeadsButAFinishedOneSettlesAtOnce() {
+        let p = pack("p", release: "2026-09-16", items: 2)
+        let started = WeekPackProgress(pack: p, results: [result(puzzleID: "p-0", correct: 5)])
+        XCTAssertTrue(WeekPackSchedule.leadsHome(p, progress: started, today: "2026-09-16"))
+        let finished = WeekPackProgress(pack: p, results: [result(puzzleID: "p-0", correct: 5),
+                                                           result(puzzleID: "p-1", correct: 7)])
+        XCTAssertFalse(WeekPackSchedule.leadsHome(p, progress: finished, today: "2026-09-16"))
+    }
+
+    func testLeadingCountsCalendarDaysAcrossAMonthEnd() {
+        let p = pack("p", release: "2026-09-30", items: 1)
+        let none = WeekPackProgress(pack: p, results: [])
+        XCTAssertTrue(WeekPackSchedule.leadsHome(p, progress: none, today: "2026-10-01"))
+        XCTAssertFalse(WeekPackSchedule.leadsHome(p, progress: none, today: "2026-10-02"))
+    }
+
     func testShareTextIsSpoilerFreeAndCountsCards() {
         let p = pack("p", release: "2026-09-16", items: 2)
         let text = WeekPackProgress(pack: p, results: [result(puzzleID: "p-0", correct: 6),

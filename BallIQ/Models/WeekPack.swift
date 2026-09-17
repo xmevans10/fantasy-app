@@ -19,6 +19,11 @@ struct WeekPack: Identifiable, Equatable {
     /// one leaves; a sport that skips a week (bye, international break) simply has no card.
     static let daysCurrent = 7
 
+    /// How long an unfinished pack leads Home: its release day and the day after. Past that it
+    /// settles below the dailies for the rest of its week, finished or not, so a pack the player
+    /// is ignoring doesn't sit above the formats all week.
+    static let daysLeadingHome = 2
+
     /// "2026 Week 1" -> "Week 1". The year is noise on a card about last week.
     var shortLabel: String {
         guard let space = label.firstIndex(of: " "), Int(label[..<space]) != nil else { return label }
@@ -77,9 +82,9 @@ struct WeekPackItem: Identifiable, Equatable {
     }
 }
 
-/// Whether the player has opened a pack yet. Home promotes an unopened pack to the top of the
-/// page and settles it below the dailies once opened. Per device (UserDefaults): a signal about
-/// what this screen has already shown, not account state worth syncing.
+/// Whether the player has opened a pack yet: drives the card's JUST DROPPED badge. Where the card
+/// sits on Home is `WeekPackSchedule.leadsHome`, not this. Per device (UserDefaults): a signal
+/// about what this screen has already shown, not account state worth syncing.
 enum WeekPackEngagement {
     private static let key = "weekPackEngaged"
     /// Enough to cover every sport's current pack with room to spare; older ids age out.
@@ -169,6 +174,18 @@ enum WeekPackSchedule {
     static func isCurrent(_ pack: WeekPack, today: String) -> Bool {
         guard pack.releaseDate <= today else { return false }
         return pack.releaseDate > windowStart(today: today)
+    }
+
+    /// Whether `pack` belongs at the top of Home on `today`: until the player finishes every board,
+    /// and never past `WeekPack.daysLeadingHome` days from release. Opening it doesn't move it; a
+    /// pack you started and walked away from is still the next thing to do.
+    static func leadsHome(_ pack: WeekPack, progress: WeekPackProgress, today: String) -> Bool {
+        guard !progress.isComplete(pack), let released = parse(pack.releaseDate),
+              let now = parse(today),
+              let days = gregorian.dateComponents([.day], from: released, to: now).day else {
+            return false
+        }
+        return days < WeekPack.daysLeadingHome
     }
 
     /// The `release_date` a pack must be AFTER to still be current on `today`.
