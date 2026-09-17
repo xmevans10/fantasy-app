@@ -213,21 +213,3 @@ def test_boards_that_pass_the_photo_gate_pass_the_wire_contract():
     rows = pack.item_rows("nfl-2026-wk01", [out], dt.date(2026, 9, 16), "daily-id")
     pack.validate_items(rows)       # raises on a foreign headshot
 
-
-def test_single_game_rate_hooks_need_volume_and_show_their_stat():
-    """2026 Week 1's "5.5-a-carry" niche board kept Nico Collins for ONE 7-yard carry, and the
-    card showed neither carries nor yards per carry. A per-attempt rate on a single game means
-    nothing without a floor on the attempts, and a hook the card can't show can't be played."""
-    rates = {"ypc": "carries", "ypr": "receptions"}
-    for quirk in curation.NFL_GAME_QUIRKS:
-        fields = {f.field for f in quirk.filters}
-        for rate, volume in rates.items():
-            if rate not in fields:
-                continue
-            assert volume in fields, f"{quirk.key}: {rate} filter without a {volume} floor"
-            assert rate in {c.stat for c in quirk.columns}, f"{quirk.key}: card hides {rate}"
-
-    explosive = next(q for q in curation.NFL_GAME_QUIRKS if q.key == "explosive-game")
-    collins = RawSeason(name="Nico Collins", team_abbr="HOU", season_year=2026, sport="nfl",
-                        position="WR", stats={"carries": 1.0, "ypc": 7.0})
-    assert not all(f.matches(collins) for f in explosive.filters)

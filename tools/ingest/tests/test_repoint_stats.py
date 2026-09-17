@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 
 from tools.ingest import curation, generate, repoint_stats
-from tools.ingest.themes import KEEP4_THEMES, format_columns
+from tools.ingest.themes import KEEP4_THEMES, format_columns, theme_hooks
 
 
 # A stat bag broad enough that every sport's canonical keys resolve to a distinctive number,
@@ -54,7 +54,8 @@ def test_repointed_card_equals_a_fresh_mint():
             frozen = format_columns(theme, RAW)          # what the OLD, unsliced mint wrote
             if not repoint_stats.card_is_broken(theme.sport, position, frozen):
                 continue
-            rebuilt = repoint_stats.rebuild_card(theme.sport, position, theme.grain, frozen, RAW)
+            rebuilt = repoint_stats.rebuild_card(theme.sport, position, theme.grain, frozen, RAW,
+                                                 hooks=theme_hooks(theme))
             assert rebuilt == format_columns(theme, RAW, position), (
                 f"{theme.key}/{position}: repoint disagrees with a fresh mint")
             checked += 1

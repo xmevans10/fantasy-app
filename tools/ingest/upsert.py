@@ -666,6 +666,39 @@ def delete_draft_pack_items(pack_id: str) -> int:
     return len(json.loads(body)) if body.strip() else 0
 
 
+def fetch_pack_items(pack_id: str) -> list[dict]:
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    query = f"select=id,ordinal,role,format,theme_key,signature,content&pack_id=eq.{urllib.parse.quote(pack_id)}&order=ordinal"
+    return _get_json(f"{base}/rest/v1/pack_items?{query}", headers, what="pack_items fetch")
+
+
+def count_results(puzzle_id: str) -> int:
+    """How many recorded plays a board has, across every mode."""
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    query = f"select=id&puzzle_id=eq.{urllib.parse.quote(puzzle_id)}"
+    return len(_get_json(f"{base}/rest/v1/game_results?{query}", headers, what="game_results fetch"))
+
+
+def delete_unplayed_pack_item(item_id: str) -> int:
+    """Remove one board from a published pack, and only if nobody has played it: a board with a
+    recorded result is part of someone's progress, and swapping it would rewrite what they played."""
+    if count_results(item_id):
+        raise RuntimeError(f"{item_id} has recorded results; a played board is never replaced")
+    base, key = _require_env()
+    headers = {"apikey": key, "Authorization": f"Bearer {key}", "Prefer": "return=representation"}
+    url = f"{base}/rest/v1/pack_items?id=eq.{urllib.parse.quote(item_id)}"
+    req = urllib.request.Request(url, headers=headers, method="DELETE")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            body = resp.read().decode("utf-8", "ignore")
+    except urllib.error.HTTPError as err:
+        detail = err.read().decode("utf-8", "ignore")
+        raise RuntimeError(f"pack_items delete failed ({err.code}): {detail}") from err
+    return len(json.loads(body)) if body.strip() else 0
+
+
 def publish_pack(pack_id: str) -> int:
     return patch_rows("packs", [{"id": pack_id, "status": "published"}])
 

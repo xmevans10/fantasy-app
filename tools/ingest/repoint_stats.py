@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .themes import (POSITION_CARD, POSITION_CARD_GAME, _FILL_COLUMNS, _MAX_CARD_COLUMNS,
+from .themes import (HOOK_COLUMNS, POSITION_CARD, POSITION_CARD_GAME, _FILL_COLUMNS, _MAX_CARD_COLUMNS,
                      KEEP4_THEMES, StatColumn, fmt_value, produces)
 from . import curation
 
@@ -49,6 +49,9 @@ def _label_index() -> dict[str, dict[str, str]]:
                 add(cfg.sport, column)
     for sport, columns in _FILL_COLUMNS.items():
         for column in columns.values():
+            add(sport, column)
+    for sport, columns in HOOK_COLUMNS.items():
+        for column in columns:
             add(sport, column)
     return index
 
@@ -106,7 +109,8 @@ def corroborated(sport: str, stats: list[dict], raw: dict[str, float]) -> bool:
 
 
 def rebuild_card(sport: str, position: str, grain: str,
-                 stats: list[dict], raw: dict[str, float]) -> list[dict] | None:
+                 stats: list[dict], raw: dict[str, float],
+                 hooks: tuple[str, ...] | list[str] = ()) -> list[dict] | None:
     """The canonical card for `position`, rendered from `raw`. None when this sport/position
     has no canonical card (NBA/tennis/F1) or none of its keys can be rendered.
 
@@ -124,17 +128,26 @@ def rebuild_card(sport: str, position: str, grain: str,
             declared[key] = entry["label"]
     fill = _FILL_COLUMNS.get(sport, {})
     out: list[dict] = []
-    for key in canonical[:_MAX_CARD_COLUMNS]:
+    # The board's hooks lead, as they do in `columns_for`, verbatim from the frozen card (they
+    # were rendered in the theme's own format). `hooks` comes from `content["hooks"]`; boards
+    # minted before it existed pass none and compose canonical-first as they always did.
+    seen: set[str] = set()
+    for entry in stats:
+        key = LABELS.get(sport, {}).get(entry.get("label", ""))
+        if key in hooks and key not in seen and produces(sport, position, key):
+            seen.add(key)
+            out.append({"label": entry["label"], "value": entry["value"]})
+    for key in canonical:
         column = fill.get(key)
-        if column is None:
+        if column is None or key in seen:
             continue
+        seen.add(key)
         label = declared.get(key, column.label)
         out.append({"label": label, "value": fmt_value(raw.get(key, 0.0), column.fmt)})
     # Then the frozen card's other stats this position records, verbatim and in card order:
     # the tail `columns_for` keeps so a board still shows the stat it is named after (a TE on
     # "Big-play receiving games" keeps Yds/Rec). Verbatim because the theme's own format for a
     # non-canonical stat isn't recoverable here, and the frozen string was rendered with it.
-    seen = {key for key in canonical[:_MAX_CARD_COLUMNS] if key in fill}
     for entry in stats:
         key = LABELS.get(sport, {}).get(entry.get("label", ""))
         if key is not None and key not in seen and produces(sport, position, key):
@@ -175,7 +188,8 @@ def repoint_content(content: dict, catalog: dict[str, dict],
             skipped.append(player.get("id", "?"))
             players.append(player)
             continue
-        rebuilt = rebuild_card(sport, position, grain, player["stats"], raw)
+        rebuilt = rebuild_card(sport, position, grain, player["stats"], raw,
+                               hooks=content.get("hooks", ()))
         if rebuilt is None or rebuilt == player["stats"]:
             players.append(player)
             continue

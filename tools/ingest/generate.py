@@ -17,7 +17,8 @@ import typing
 from . import assemble, curation
 from .models import slug
 from .models import RawSeason
-from .themes import Filter, StatColumn, Theme
+from .themes import (HOOK_COLUMNS, KEEP4_THEMES, NON_STAT_FIELDS, _FILL_COLUMNS, Filter, StatColumn,
+                     Theme, hook_problems, volume_backers)
 
 
 def _quirk_filters(q: curation.Quirk, spec: curation.PositionSpec) -> tuple[Filter, ...]:
@@ -31,14 +32,47 @@ def _quirk_filters(q: curation.Quirk, spec: curation.PositionSpec) -> tuple[Filt
 _MAX_COLUMNS = 5
 
 
-def _columns(spec: curation.PositionSpec, quirks: tuple[curation.Quirk, ...]) -> list[StatColumn]:
+_REGISTRY: dict[str, dict[str, StatColumn]] = {}
+
+
+def _known_columns(sport: str) -> dict[str, StatColumn]:
+    """stat -> the column this sport already renders it with, from every place one is declared,
+    so a promoted hook reads exactly like the same stat on any other card."""
+    if sport not in _REGISTRY:
+        found: dict[str, StatColumn] = {}
+        declared = [c for c in HOOK_COLUMNS.get(sport, [])] + list(_FILL_COLUMNS.get(sport, {}).values())
+        declared += [c for t in KEEP4_THEMES if t.sport == sport for c in t.columns]
+        declared += [c for cfg in curation.SPORTS.values() if cfg.sport == sport
+                     for c in [*(c for s in cfg.positions.values() for c in s.columns),
+                               *(c for q in cfg.quirks for c in q.columns)]]
+        for col in declared:
+            found.setdefault(col.stat, col)
+        _REGISTRY[sport] = found
+    return _REGISTRY[sport]
+
+
+def _hook_columns(spec: curation.PositionSpec, quirks: tuple[curation.Quirk, ...],
+                  sport: str) -> list[StatColumn]:
+    """Columns for every stat the quirks filter on (bio fields and rate-backing volume floors
+    aside), so the card always shows why a player is on the board. See themes.hook_problems."""
+    fields = [f.field for q in quirks for f in _quirk_filters(q, spec)]
+    skip = NON_STAT_FIELDS | volume_backers(fields, spec.grain)
+    known = _known_columns(sport)
+    return [known[f] for f in dict.fromkeys(fields) if f not in skip and f in known]
+
+
+def _columns(spec: curation.PositionSpec, quirks: tuple[curation.Quirk, ...],
+             sport: str | None = None) -> list[StatColumn]:
     """The spec's columns with each quirk's own stat promoted to the front, deduped by stat.
 
     Without this a puzzle titled "20-20 club seasons" would show HR but not SB — the card
     wouldn't display the stat the theme is named after, which is the one thing the player
     needs to reason about. NFL's quirks are all biographical and promote nothing, so its
     generated cards are unchanged."""
-    ordered: list[StatColumn] = [c for q in quirks for c in q.columns] + list(spec.columns)
+    ordered: list[StatColumn] = [c for q in quirks for c in q.columns]
+    if sport:
+        ordered += _hook_columns(spec, quirks, sport)
+    ordered += list(spec.columns)
     seen: set[str] = set()
     out: list[StatColumn] = []
     for col in ordered:
@@ -52,18 +86,24 @@ def _columns(spec: curation.PositionSpec, quirks: tuple[curation.Quirk, ...]) ->
 def _theme(key: str, title: str, spec: curation.PositionSpec,
            filters: tuple[Filter, ...], sport: str = "nfl",
            quirks: tuple[curation.Quirk, ...] = ()) -> Theme:
-    return Theme(
+    theme = Theme(
         key=key,
         title=title,
         sport=sport,
         scale=spec.scale,
         positions=spec.position_set,
         min_stats=dict(spec.min_stats),
-        columns=_columns(spec, quirks),
+        columns=_columns(spec, quirks, sport),
         filters=filters,
         grain=spec.grain,
         pool_cap=spec.pool_cap,
     )
+    # Loud on purpose: a theme that breaks a hook rule is a config bug, and the mint that
+    # builds it must stop rather than publish the board (see themes.hook_problems).
+    problems = hook_problems(theme)
+    if problems:
+        raise ValueError(f"{key}: " + "; ".join(problems))
+    return theme
 
 
 def _grain_noun(spec: curation.PositionSpec) -> str:
@@ -168,7 +208,11 @@ def _pairwise_candidates(cfg: curation.SportCuration | None = None,
                 title = _combo_title(sl.prefix, q1, q2, spec.label, sl.suffix,
                                      noun=_grain_noun(spec))
                 filters = sl.filters + _quirk_filters(q1, spec) + _quirk_filters(q2, spec)
-                out.append(_theme(key, title, spec, filters, sport=cfg.sport, quirks=(q1, q2)))
+                try:
+                    out.append(_theme(key, title, spec, filters, sport=cfg.sport, quirks=(q1, q2)))
+                except ValueError:
+                    # Two quirks whose hooks don't fit on one five-column card: not a board.
+                    continue
     return out
 
 
@@ -411,7 +455,13 @@ def roll_theme(cfg: curation.SportCuration, rng: random.Random,
     filters = sl.filters
     for q in quirks:
         filters += _quirk_filters(q, spec)
-    return _theme(key, title, spec, filters, sport=cfg.sport, quirks=tuple(quirks))
+    try:
+        return _theme(key, title, spec, filters, sport=cfg.sport, quirks=tuple(quirks))
+    except ValueError:
+        if len(quirks) < 2:
+            raise                 # a single quirk that breaks a hook rule is a config bug: stop
+        return None               # a combo whose hooks don't fit one card: roll again
+
 
 
 def theme_family(key: str) -> str:

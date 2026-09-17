@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from . import whoami_clues
 from .grade import BaselineTable, grade, grade_era
 from .models import RawSeason, WhoAmIEntry, slug
-from .themes import Theme, format_columns
+from .themes import Theme, format_columns, theme_hooks
 
 KEEP_COUNT = 8
 
@@ -224,6 +224,10 @@ def build_keep4_rows(theme: Theme, seasons: list[RawSeason],
             # it client-side). Mirrors Keep4Puzzle.scale.
             "scale": theme.scale,
         }
+        # Additive; clients ignore it. See themes.theme_hooks and repoint_stats.rebuild_card.
+        hooks = theme_hooks(theme)
+        if hooks:
+            content["hooks"] = hooks
         rows.append(PuzzleRow(id=row_id, sport=theme.sport, format="keep4", content=content))
     return rows
 

@@ -619,13 +619,17 @@ _NBA_BIG = PositionSpec("BIG", "big-man", "nba_fantasy", {"games": 40}, _NBA_COL
 _NBA_QUIRKS: list[Quirk] = [
     Quirk("bucket", (Filter("ppg", "gte", 25),), "25-a-night {pos} seasons",
           adjective="25-a-night", axis="scoring"),
-    Quirk("efficient", (Filter("ts_pct", "gte", 0.600),), "Hyper-efficient {pos} seasons",
+    # Efficiency and 3P% quirks carry a points floor because no provider gives us attempts,
+    # and without one a 40-game bench season on four shots a night qualifies. Measured on the
+    # catalog (40+ games): 250 of 1,634 40%-from-deep seasons and 152 of 1,524 60%-TS ones
+    # scored under 5 a night. See themes.RATE_FLOORS.
+    Quirk("efficient", (Filter("ts_pct", "gte", 0.600), Filter("ppg", "gte", 8)), "Hyper-efficient {pos} seasons",
           adjective="hyper-efficient", axis="efficiency"),
     # The inverse archetype — high usage, poor efficiency. A genuinely different puzzle from
     # every "who was best" theme, because the cards look good and grade badly.
     Quirk("gunner", (Filter("ppg", "gte", 20), Filter("ts_pct", "lte", 0.520)),
           "High-volume, low-efficiency {pos} seasons", adjective="high-volume", axis="efficiency"),
-    Quirk("sharpshooter", (Filter("fg3_pct", "gte", 0.400),), "40% from deep {pos} seasons",
+    Quirk("sharpshooter", (Filter("fg3_pct", "gte", 0.400), Filter("ppg", "gte", 8)), "40% from deep {pos} seasons",
           adjective="40%-from-deep", axis="shooting", columns=(_FG3,)),
     Quirk("glass", (Filter("rpg", "gte", 12),), "Double-digit-boards {pos} seasons",
           adjective="double-digit-boards", axis="rebounding"),
@@ -649,7 +653,7 @@ _NBA_QUIRKS: list[Quirk] = [
     Quirk("volume-shooter", (Filter("fg3_pct", "gte", 0.380), Filter("ppg", "gte", 20)),
           "20-point, 38%-from-deep {pos} seasons", adjective="20-and-38%", axis="shooting",
           columns=(_FG3,)),
-    Quirk("quiet-efficiency", (Filter("ts_pct", "gte", 0.620), Filter("ppg", "lte", 15)),
+    Quirk("quiet-efficiency", (Filter("ts_pct", "gte", 0.620), Filter("ppg", "range", (5, 15))),
           "Quietly-efficient {pos} seasons", adjective="quietly-efficient", axis="efficiency"),
     Quirk("workhorse-scorer", (Filter("games", "gte", 75), Filter("ppg", "gte", 20)),
           "20-a-night, 75-game {pos} seasons", adjective="20-a-night-75-game",

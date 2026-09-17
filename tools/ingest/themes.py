@@ -458,11 +458,144 @@ def columns_for(theme: Theme, position: str | None = None) -> list[StatColumn]:
         return theme.columns
     declared = {c.stat: c for c in theme.columns}
     fill = _FILL_COLUMNS.get(theme.sport, {})
-    out = [declared.get(k) or fill[k] for k in canonical if k in declared or k in fill]
+    # The board's hooks lead, ahead of the canonical line: on a five-stat canonical card (NFL RB,
+    # QB) a hook appended after it was cut by the cap, which is how 2026 Week 1's "5.5-yards-a-
+    # carry" RBs showed neither carries nor yards per carry. See hook_problems / card_hides_hook.
+    wanted = set(theme_hooks(theme))
+    hooks = [c for c in theme.columns if c.stat in wanted and produces(theme.sport, position, c.stat)]
+    out = list(hooks)
+    seen = {c.stat for c in out}
+    out += [declared.get(k) or fill[k] for k in canonical
+            if (k in declared or k in fill) and k not in seen]
     seen = {c.stat for c in out}
     out += [c for c in theme.columns
             if c.stat not in seen and produces(theme.sport, position, c.stat)]
     return out[:_MAX_CARD_COLUMNS] if out else theme.columns
+
+
+# ── Hook rules: what a stat-filtered board must satisfy ──────────────────────────
+#
+# Written after 2026 Week 1's "5.5-a-carry games" pack board kept Nico Collins for ONE 7-yard
+# carry, on a card that showed neither carries nor yards per carry. Two separate failures,
+# and both were properties of the THEME, not of that week's data, so they are checked where
+# a theme is built (`generate._theme` raises) and across every theme the generator can emit
+# (`tests/test_hook_rules.py`), not patched one quirk at a time.
+#
+#  1. A RATE needs a VOLUME floor. A per-carry, per-game or percentage filter with nothing
+#     under it admits the one-attempt fluke, and on a thin weekly pool the flukes are about
+#     half of what qualifies. Each rate lists the floors that can back it: every group must
+#     be met, by any one stat in the group, at no less than the value given. Floors come from
+#     the quirk's own filters or the position spec's `min_stats`.
+#  2. A filtered STAT must be on the card. A board titled for a stat the reader can't see is a
+#     board nobody can reason about. Bio and period fields (draft round, height, decade, team)
+#     are exempt: they aren't stat lines.
+
+NON_STAT_FIELDS = frozenset({
+    "age", "college", "color_family", "decade", "draft_pick", "draft_round", "event_date",
+    "first_name", "height_in", "is_rookie_season", "last_name", "league", "name", "period",
+    "position", "season_year", "sport", "team", "week", "weight_lb",
+})
+
+_GAMES_30 = ({"games": 30},)
+_PA_200 = ({"plate_appearances": 200, "at_bats": 180},)
+_IP_50 = ({"innings_pitched": 50},)
+
+# rate -> {grain: groups}. "season" also covers career rows, whose volumes only run higher.
+# NBA shooting has no attempts column in any provider we pull, so points per game stands in
+# for usage there: measured on the catalog, 250 of the 1,634 40%-from-deep seasons (40+ games)
+# scored under 5 a night, which is the two-for-four center the rule exists to keep out.
+RATE_FLOORS: dict[str, dict[str, tuple[dict[str, float], ...]]] = {
+    "ypc": {"game": ({"carries": 5},), "season": ({"carries": 100},)},
+    "ypr": {"game": ({"receptions": 3, "targets": 5},),
+            "season": ({"receptions": 30, "targets": 50, "receiving_yards": 600},)},
+    **{r: {"season": _PA_200} for r in ("avg", "obp", "slg", "iso")},
+    **{r: {"season": _IP_50} for r in ("era", "whip", "k_per_9", "bb_per_9", "k_bb_ratio")},
+    **{r: {"season": _GAMES_30} for r in ("ppg", "rpg", "apg", "spg", "bpg", "pra", "stocks",
+                                         "points_per_game")},
+    "fg3_pct": {"season": _GAMES_30 + ({"ppg": 8},)},
+    "ts_pct": {"season": _GAMES_30 + ({"ppg": 5},)},
+    "gaa": {"season": ({"games": 20, "games_started": 20, "saves": 500},)},
+    "save_pct": {"season": ({"games": 20, "games_started": 20, "saves": 500},)},
+    "shooting_pct": {"season": ({"shots": 80},)},
+    "goals_per_app": {"season": ({"appearances": 10},)},
+    "win_pct": {"season": ({"matches_played": 30},)},
+}
+
+
+def volume_backers(fields, grain: str) -> set[str]:
+    """Stats in `fields` that are there to back a rate in `fields`: the innings under a K/9
+    hook, the carries under a yards-per-carry one. They need not be on the card."""
+    grain = "game" if grain == "game" else "season"
+    out: set[str] = set()
+    for rate in set(fields) & RATE_FLOORS.keys():
+        for group in RATE_FLOORS[rate].get(grain, RATE_FLOORS[rate].get("season", ())):
+            out |= set(group)
+    return out & set(fields)
+
+
+# Card columns for hook stats no position spec or curated theme happens to declare, mostly the
+# derived ones (`_DERIVED`). Labels must stay unique per sport (test_repoint_stats).
+HOOK_COLUMNS: dict[str, list[StatColumn]] = {
+    "nfl": [StatColumn("scrimmage_yards", "Scrim Yds", "comma_int")],
+    "nba": [StatColumn("pra", "PRA", "dec1"), StatColumn("stocks", "STK", "dec1")],
+    "baseball": [StatColumn("extra_base_hits", "XBH", "int"), StatColumn("iso", "ISO", "dec3"),
+                 StatColumn("plate_appearances", "PA", "int"), StatColumn("k_per_9", "K/9", "dec1"),
+                 StatColumn("bb_per_9", "BB/9", "dec1"), StatColumn("k_bb_ratio", "K/BB", "dec1")],
+    "hockey": [StatColumn("points_per_game", "P/GP", "dec2")],
+    "soccer": [StatColumn("goal_contributions", "G+A", "int"),
+               StatColumn("goals_per_app", "Goals/App", "dec2")],
+    "tennis": [StatColumn("matches_played", "Matches", "int"), StatColumn("win_pct", "Win%", "pct1")],
+}
+
+
+def hook_problems(theme: "Theme") -> list[str]:
+    """Why `theme` would mint a board that makes no sense; empty when it is fine."""
+    floors: dict[str, float] = dict(theme.min_stats)
+    for f in theme.filters:
+        low = f.value if f.op == "gte" else (f.value[0] if f.op == "range" and f.value else None)
+        if isinstance(low, (int, float)) and not isinstance(low, bool):
+            floors[f.field] = max(floors.get(f.field, float("-inf")), low)
+    grain = "game" if theme.grain == "game" else "season"
+    problems = []
+    rates = {f.field for f in theme.filters} | set(theme.min_stats)
+    for rate in sorted(rates & RATE_FLOORS.keys()):
+        groups = RATE_FLOORS[rate].get(grain, RATE_FLOORS[rate].get("season", ()))
+        for group in groups:
+            if not any(floors.get(stat, float("-inf")) >= need for stat, need in group.items()):
+                need = " or ".join(f"{k} >= {v:g}" for k, v in group.items())
+                problems.append(f"{rate} needs a volume floor ({need})")
+    shown = {c.stat for c in theme.columns}
+    filtered = {f.field for f in theme.filters}
+    for field_name in sorted(filtered - NON_STAT_FIELDS - shown - volume_backers(filtered, theme.grain)):
+        problems.append(f"filters on {field_name} but the card never shows it")
+    return problems
+
+
+def theme_hooks(theme: "Theme") -> list[str]:
+    """The stats a board is ABOUT, in card order: every stat it filters on that it also shows
+    (a rate's volume floor included, so a yards-per-carry card also says how many carries).
+    Minted into `content["hooks"]` so `repoint_stats` can compose a card the way a fresh mint
+    does without reconstructing the theme."""
+    filtered = {f.field for f in theme.filters} - NON_STAT_FIELDS
+    return [c.stat for c in theme.columns if c.stat in filtered]
+
+
+def card_hides_hook(theme: "Theme", position: str) -> list[str]:
+    """Hook stats `position` records that its rendered card on `theme` would not show."""
+    filtered = {f.field for f in theme.filters}
+    hooks = filtered - NON_STAT_FIELDS - volume_backers(filtered, theme.grain)
+    shown = {c.stat for c in columns_for(theme, position)}
+    return sorted(h for h in hooks if h not in shown and produces(theme.sport, position, h))
+
+
+def stat_value(stats: dict[str, float], key: str) -> float:
+    """A stored stat, or one derived from the line (ISO, K/9, win %): a card column for a
+    derived hook would otherwise read 0.0."""
+    if key in stats:
+        return stats[key]
+    derived = _DERIVED.get(key)
+    value = derived(stats) if derived is not None else None
+    return 0.0 if value is None else value
 
 
 def format_columns(theme: Theme, stats: dict[str, float],
@@ -470,7 +603,7 @@ def format_columns(theme: Theme, stats: dict[str, float],
     """Build the camelCase `stats` array for a PlayerSeason card (position-aware for
     cross-position themes — see `columns_for`)."""
     return [
-        {"label": col.label, "value": fmt_value(stats.get(col.stat, 0.0), col.fmt)}
+        {"label": col.label, "value": fmt_value(stat_value(stats, col.stat), col.fmt)}
         for col in columns_for(theme, position)
     ]
 

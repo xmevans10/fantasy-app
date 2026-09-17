@@ -315,6 +315,88 @@ def check_rules(items: list[Candidate]) -> list[str]:
     return problems
 
 
+def pick_replacement(candidates: list[Candidate], kept: list[Candidate], role: str,
+                     served: set[str]) -> Candidate | None:
+    """The first `role` board that fits beside the boards a pack keeps, under the same rules
+    `assemble_pack` holds a whole pack to. Pure."""
+    kinds = {c.kind for c in kept}
+    keepsets = {c.keep_ids for c in kept}
+    appearances = collections.Counter(p for c in kept for p in c.player_ids)
+    for c in sorted((c for c in candidates if c.role == role), key=lambda c: (c.rank, c.tiebreak)):
+        if _fits(c, served, kinds, keepsets, appearances):
+            return c
+    return None
+
+
+def _candidate_from_item(item: dict) -> Candidate:
+    content = item["content"]
+    return Candidate(role=item["role"], theme_key=item["theme_key"], title=content.get("theme", ""),
+                     row=PuzzleRow(id=item["id"], sport=content["sport"], format=item["format"],
+                                   content=content),
+                     signature=item["signature"])
+
+
+def replace_item(sport: str, today: dt.date, ordinal: int, *, upsert: bool) -> int:
+    """Swap one board of an already-published pack for the next board that fits, when nobody has
+    played it. For a board that should never have shipped (the Week 1 "5.5-a-carry" deep cut),
+    once the rule that let it through is fixed: the candidates are rebuilt under today's rules."""
+    from .upsert import (count_results, delete_unplayed_pack_item, fetch_history_signatures,
+                         fetch_pack_items, fetch_pack_signatures, upsert_pack_items)
+    ingest_main.load_dotenv()
+    period = periods.closed_period(sport, today)
+    if period is None:
+        print(f"[pack] {sport}: no closed period as of {today.isoformat()}")
+        return 1
+    pid = pack_id(sport, period)
+    items = fetch_pack_items(pid)
+    old = next((i for i in items if i["ordinal"] == ordinal), None)
+    if old is None:
+        print(f"[pack] {pid} has no board at ordinal {ordinal}")
+        return 1
+    if ordinal == 0:
+        print("[pack] board zero is also a daily; replace it through the daily, not the pack")
+        return 1
+    plays = count_results(old["id"])
+    if plays:
+        print(f"[pack] {old['id']} has {plays} recorded play(s); a played board is never replaced")
+        return 1
+    week = prepare(sport, period)
+    if not week.verdict.ready:
+        print(f"[pack] {week.verdict.summary()}")
+        return 1
+    candidates = apply_photos(week.candidates, resolve_photos(week.candidates, sport, rehost=upsert))
+    kept = [_candidate_from_item(i) for i in items if i["ordinal"] != ordinal]
+    served = fetch_history_signatures() | fetch_pack_signatures()
+    new = pick_replacement(candidates, kept, old["role"], served)
+    if new is None:
+        print(f"[pack] no {old['role']} board fits beside the other {len(kept)}; leaving it")
+        return 1
+    drop = dt.date.fromisoformat(fetch_pack_release(pid))
+    row = item_rows(pid, [new], drop, None)[0]
+    row["ordinal"] = ordinal
+    validate_items([row])
+    problems = check_rules(kept + [new])
+    if problems:
+        print(f"[pack] BUG: replacement breaks a rule: {problems}")
+        return 1
+    print(f"[pack] {pid} #{ordinal}: {old['content'].get('theme')!r} -> {new.title!r}")
+    print("     keep: " + ", ".join(p["name"] for p in sorted(new.row.content["players"],
+                                                               key=lambda p: -p["grade"])[:4]))
+    if not upsert:
+        print("(--dry-run: not written)")
+        return 0
+    delete_unplayed_pack_item(old["id"])
+    upsert_pack_items([row])
+    print(f"[pack] replaced {old['id']} with {row['id']}")
+    return 0
+
+
+def fetch_pack_release(pid: str) -> str:
+    from .upsert import fetch_pack
+    pack = fetch_pack(pid)
+    return pack["release_date"]
+
+
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
 @dataclasses.dataclass
@@ -411,7 +493,12 @@ def main() -> int:
     ap.add_argument("--replay-to", type=str, default=None, metavar="DATE")
     ap.add_argument("--replay-photos", action="store_true",
                     help="apply the (read-only) photo gate during a replay")
+    ap.add_argument("--replace", type=int, default=None, metavar="ORDINAL",
+                    help="swap one unplayed board of the published pack for --date's period")
     args = ap.parse_args()
+    if args.replace is not None:
+        today = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
+        return replace_item(args.sport, today, args.replace, upsert=args.upsert)
     if args.replay is not None or args.replay_from:
         return replay(args.sport, args.replay, args.replay_from, args.replay_to,
                       photos=args.replay_photos)
