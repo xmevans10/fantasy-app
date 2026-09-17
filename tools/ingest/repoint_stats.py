@@ -130,7 +130,17 @@ def rebuild_card(sport: str, position: str, grain: str,
             continue
         label = declared.get(key, column.label)
         out.append({"label": label, "value": fmt_value(raw.get(key, 0.0), column.fmt)})
-    return out or None
+    # Then the frozen card's other stats this position records, verbatim and in card order:
+    # the tail `columns_for` keeps so a board still shows the stat it is named after (a TE on
+    # "Big-play receiving games" keeps Yds/Rec). Verbatim because the theme's own format for a
+    # non-canonical stat isn't recoverable here, and the frozen string was rendered with it.
+    seen = {key for key in canonical[:_MAX_CARD_COLUMNS] if key in fill}
+    for entry in stats:
+        key = LABELS.get(sport, {}).get(entry.get("label", ""))
+        if key is not None and key not in seen and produces(sport, position, key):
+            seen.add(key)
+            out.append({"label": entry["label"], "value": entry["value"]})
+    return out[:_MAX_CARD_COLUMNS] or None
 
 
 def repoint_content(content: dict, catalog: dict[str, dict],

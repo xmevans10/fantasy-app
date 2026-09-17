@@ -1199,14 +1199,24 @@ NFL_GAME_QUIRKS: list[Quirk] = [
           adjective="eighty-yard-receiving", axis="rec-volume", only=("WR", "TE", "ANY")),
     Quirk("catch8", (Filter("receptions", "gte", 8),), "Eight-catch games",
           adjective="eight-catch", axis="rec-usage", only=("WR", "TE", "ANY")),
-    Quirk("bigplay", (Filter("ypr", "gte", 18),), "Big-play receiving games (18+ a catch)",
-          adjective="big-play", axis="rec-efficiency", only=("WR", "TE", "ANY")),
+    # RATE HOOKS NEED A VOLUME FLOOR. Without one, 2026 Week 1's "5.5-a-carry" board kept Nico
+    # Collins for a single 7-yard carry, and across 2025-26 roughly half of each week's
+    # unfloored pool was that kind of fluke. The floors were measured the same way as the
+    # table above (median pool per week, 2025 + 2026 Wk1): 5.5 ypc on 5+ carries -> 14, and
+    # 16 ypr on 3+ catches -> 17 (18 ypr on 3+ catches left 15 of 19 weeks under twelve).
+    # Each also puts its rate and its volume on the card, so the player can see the hook.
+    Quirk("bigplay", (Filter("ypr", "gte", 16), Filter("receptions", "gte", 3)),
+          "Big-play receiving games (16+ yards a catch)", adjective="big-play",
+          axis="rec-efficiency", only=("WR", "TE", "ANY"),
+          columns=(StatColumn("ypr", "Yds/Rec", "dec1"), StatColumn("receptions", "Rec", "int"))),
     Quirk("rush70", (Filter("rushing_yards", "gte", 70),), "Seventy-yard rushing games",
           adjective="seventy-yard-rushing", axis="rush-volume", only=("RB", "QB", "ANY")),
     Quirk("workhorse-game", (Filter("carries", "gte", 15),), "Fifteen-carry games",
           adjective="fifteen-carry", axis="rush-usage", only=("RB", "QB", "ANY")),
-    Quirk("explosive-game", (Filter("ypc", "gte", 5.5),), "Five-and-a-half-a-carry games",
-          adjective="five-and-a-half-a-carry", axis="rush-efficiency", only=("RB", "QB", "ANY")),
+    Quirk("explosive-game", (Filter("ypc", "gte", 5.5), Filter("carries", "gte", 5)),
+          "5.5-yards-a-carry games", adjective="5.5-yards-a-carry", axis="rush-efficiency",
+          only=("RB", "QB", "ANY"),
+          columns=(StatColumn("ypc", "Yds/Carry", "dec1"), StatColumn("carries", "Carries", "int"))),
     Quirk("pass250", (Filter("passing_yards", "gte", 250),), "250-yard passing games",
           adjective="250-yard-passing", axis="pass-volume", only=("QB", "ANY")),
     Quirk("scrim100", (Filter("scrimmage_yards", "gte", 100),), "Hundred-yard scrimmage games",
