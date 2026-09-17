@@ -5,6 +5,7 @@ tests need no Pillow (the ingest runtime is stdlib-only); rendering tests skip w
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -62,20 +63,66 @@ def test_accent_is_picked_by_measured_contrast():
         assert brand.contrast(brand.accent_on(fill), fill) >= 3.0, sport
 
 
-# ── rendering (needs Pillow) ────────────────────────────────────────────────────
+# ── spec (the Swift renderer's input) ──────────────────────────────────────────
 
-def _board(n=8):
-    return {"id": "t", "sport": "nfl", "content": {"theme": "Test board", "players": [
-        {"id": f"p{i}", "name": f"Player Number {i}", "teamAbbr": "KC", "grade": 30.0 - i}
-        for i in range(n)]}}
+def _k4(sport="nfl"):
+    return {"id": f"k-{sport}", "sport": sport, "content": {"id": f"k-{sport}", "sport": sport,
+            "theme": "Test board", "players": [
+                {"id": f"p{i}", "name": f"Player {i}", "teamAbbr": "KC", "grade": 30.0 - i}
+                for i in range(8)]}}
 
 
-def test_renders_are_x_sized_without_network(monkeypatch):
-    pytest.importorskip("PIL")
-    monkeypatch.setattr(x_assets, "team", lambda sport, abbr: {})
-    for render in (x_assets.render_daily, x_assets.render_answers):
-        img = render(_board())
-        assert img.size == (1600, 900)
+def test_daily_posts_cover_every_published_format(monkeypatch, tmp_path):
+    """The old renderer only ever made K4C4 posts, though Journeyman and Who Am I? publish a
+    daily per sport too."""
+    journey = {"id": "j", "sport": "nfl", "content": {"stints": [{"teamName": "Bears"}, {"teamName": "Lions"}],
+                                                      "answer": {"canonical": "X Y"}}}
+    whoami = {"id": "w", "sport": "nfl", "content": {"clues": [{"text": "Drafted in 2010"}] * 6}}
+    monkeypatch.setattr(x_assets, "daily_boards", lambda d: [_k4("nfl"), _k4("nba")])
+    monkeypatch.setattr(x_assets, "dated", lambda d, f: {"nfl": journey if f == "journeyman" else whoami})
+    monkeypatch.setattr(x_assets, "teams_rows", lambda sports: [])
+    assets = x_assets.build(tmp_path, daily="2026-09-17", answers="2026-09-16", packs=None,
+                            sport=None, draw=False)
+    kinds = sorted({a["kind"] for a in assets})
+    assert kinds == ["answers", "daily", "journeyman", "journeyman-answer", "lineup", "whoami"]
+    assert all(x_assets.x_length(a["caption"]) <= x_assets.X_LIMIT for a in assets)
+    # The manifest never carries board content; the spec carries everything the renderer needs.
+    assert not any("content" in a for a in assets)
+    spec = json.loads((tmp_path / "spec.json").read_text())
+    assert {p["kind"] for p in spec["posts"]} == set(kinds)
+    assert all("content" in p for p in spec["posts"] if p["kind"] in ("daily", "whoami", "journeyman"))
+    # Hidden-answer posts never name the player anywhere a reader would see before playing.
+    for a in assets:
+        if a["kind"] == "journeyman":
+            assert "X Y" not in a["caption"] + a["alt"]
+
+
+def test_a_fresh_drop_cron_names_exactly_its_own_sports():
+    """Both Tuesday crons fire five minutes apart; each must post only its own pack."""
+    assert x_assets.cron_sports("30 8 * * 2") == ["nfl"]
+    assert x_assets.cron_sports("35 8 * * 2") == ["soccer"]
+    assert sorted(x_assets.cron_sports("30 8 * * 3")) == ["baseball", "hockey", "nba"]
+    assert x_assets.cron_sports("0 0 * * *") == []
+
+
+def test_lineup_caption_only_promises_boards_that_exist():
+    """Tennis has no Journeyman; its lineup must not advertise one."""
+    tennis = x_assets.caption_lineup("tennis", "Multi-slam tour seasons", whoami=True, journeyman=False)
+    assert "mystery player" in tennis and "career" not in tennis
+    assert x_assets.x_length(tennis) <= x_assets.X_LIMIT
+
+
+def test_one_morning_mixes_layouts():
+    layouts = {x_assets.daily_layout("2026-09-17", s) for s in ("nfl", "nba", "baseball")}
+    assert len(layouts) == 3
+    assert x_assets.daily_layout("2026-09-17", "nfl") != x_assets.daily_layout("2026-09-18", "nfl")
+
+
+def test_every_post_kind_files_into_a_day_or_pack_folder():
+    from tools.marketing import drive
+    for kind in ("daily", "lineup", "journeyman", "whoami", "answers", "journeyman-answer"):
+        folder, _ = drive.place({"kind": kind, "sport": "nfl", "date": "2026-09-16"})
+        assert folder[0] == "Daily posts", kind
 
 
 def test_fit_respects_width_for_a_single_long_word():

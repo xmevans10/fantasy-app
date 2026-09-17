@@ -1,0 +1,110 @@
+name: x-assets
+
+# X post assets for what a mint just published (tools/marketing/x_assets.py). Called by
+# daily-puzzle.yml and fresh-drop.yml once their boards are written; dispatchable on its own to
+# re-render a day.
+#
+# macOS because the posts are drawn by the app's own SwiftUI components
+# (BallIQTests/XPostRenderTests): the K4C4 card, Home's daily card, the Journeyman path, the
+# Who Am I? clue ladder, the Week Pack card. Free for a public repo.
+#
+# Reads only what is already published and never posts anywhere. Find the results in the run:
+# the step log prints every caption, the job summary shows the images inline, the
+# `x-assets-*` artifact holds the PNGs, and a comment on the `x-assets` issue notifies the owner.
+# `continue-on-error` so marketing can never turn a successful mint red.
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: "daily (today's boards + yesterday's answers) or packs"
+        type: string
+        required: true
+      date:
+        description: "Base date, YYYY-MM-DD (blank = today, UTC)"
+        type: string
+        required: false
+        default: ""
+      cron:
+        description: "packs only: the fresh-drop cron that fired, to pick its sports"
+        type: string
+        required: false
+        default: ""
+      sport:
+        description: "packs only: one sport (blank = every sport with a pack that day)"
+        type: string
+        required: false
+        default: ""
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "daily or packs"
+        required: true
+        default: "daily"
+      date:
+        description: "Base date, YYYY-MM-DD (blank = today, UTC)"
+        required: false
+        default: ""
+      sport:
+        description: "packs only: one sport (blank = all)"
+        required: false
+        default: ""
+
+jobs:
+  render:
+    runs-on: macos-26
+    continue-on-error: true
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      issues: write
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Google Drive filing (tools/marketing/drive.py). Unset = skipped, never a failure.
+      DRIVE_UPLOAD_URL: ${{ secrets.DRIVE_UPLOAD_URL }}
+      DRIVE_UPLOAD_TOKEN: ${{ secrets.DRIVE_UPLOAD_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # The newest available iPhone simulator, by id, so an image update that renames devices
+      # can't break the destination.
+      - name: Pick a simulator
+        run: |
+          ID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devs = [d for rt, ds in json.load(sys.stdin)['devices'].items() if 'iOS' in rt
+                  for d in ds if d['name'].startswith('iPhone')]
+          print(devs[-1]['udid'])")
+          echo "X_POST_DESTINATION=id=$ID" >> "$GITHUB_ENV"
+      - name: Render X post assets
+        run: |
+          BASE="${{ inputs.date }}"
+          BASE="${BASE:-$(date -u +%F)}"
+          if [ "${{ inputs.mode }}" = "packs" ]; then
+            # fresh-drop lands a pack the day after its run (see fresh-drop.yml).
+            DROP=$(date -j -v+1d -f %F "$BASE" +%F)
+            ARGS=(--packs "$DROP")
+            if [ -n "${{ inputs.sport }}" ]; then ARGS+=(--sport "${{ inputs.sport }}"); fi
+            if [ -n "${{ inputs.cron }}" ]; then ARGS+=(--pack-cron "${{ inputs.cron }}"); fi
+            TITLE="X posts: packs opening $DROP"
+          else
+            ARGS=(--daily "$BASE" --answers "$(date -j -v-1d -f %F "$BASE" +%F)")
+            TITLE="X posts for $BASE"
+          fi
+          python -m tools.marketing.x_assets "${ARGS[@]}" \
+            --out build/x-assets --publish --drive --summary "$GITHUB_STEP_SUMMARY" --notify \
+            --title "$TITLE"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-assets-${{ inputs.mode }}-${{ github.run_attempt }}
+          path: |
+            build/x-assets/*.png
+            build/x-assets/manifest.json
+            build/x-assets/captions.md
+          if-no-files-found: ignore
+          retention-days: 30

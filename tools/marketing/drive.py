@@ -64,9 +64,16 @@ def place(asset: dict) -> tuple[list[str], str]:
     kind = asset["kind"]
     if kind == "daily":
         return _day_folder(asset["date"]), f"{sport} - Today's board.png"
-    if kind == "answers":
+    if kind == "lineup":
+        return _day_folder(asset["date"]), f"{sport} - Today's lineup.png"
+    if kind == "journeyman":
+        return _day_folder(asset["date"]), f"{sport} - Journeyman.png"
+    if kind == "whoami":
+        return _day_folder(asset["date"]), f"{sport} - Who Am I.png"
+    if kind in ("answers", "journeyman-answer"):
         post_day = (dt.date.fromisoformat(asset["date"]) + dt.timedelta(days=1)).isoformat()
-        return _day_folder(post_day), f"{sport} - Yesterday's answers.png"
+        what = "Yesterday's answers" if kind == "answers" else "Yesterday's Journeyman answer"
+        return _day_folder(post_day), f"{sport} - {what}.png"
     if kind == "pack":
         return _pack_folder(asset["pack_id"], asset["sport"]), "Pack drop card.png"
     if kind == "game":

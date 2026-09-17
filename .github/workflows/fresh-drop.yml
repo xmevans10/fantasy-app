@@ -50,10 +50,8 @@ on:
 jobs:
   drop:
     runs-on: ubuntu-latest
-    # `issues: write` is for the X-assets notification comment only.
     permissions:
       contents: read
-      issues: write
     strategy:
       # One sport must never take another down: a thin week, an exhausted candidate space or
       # an upstream outage in one sport is that sport's problem alone.
@@ -138,31 +136,20 @@ jobs:
           fi
           python -m tools.ingest.pack --sport ${{ matrix.sport }} $MODE $DATE
 
-      # X post assets for the pack this job just published (tools/marketing/x_assets.py): the
-      # pack drop card and the game-of-the-week board. Same three places as the nightly mint:
-      # step log, job summary, and the `x-assets-<sport>` artifact, plus a notification comment
-      # on the `x-assets` issue. A sport with no pack this week renders nothing and stays quiet.
-      - if: steps.gate.outputs.run == 'true'
-        name: Render X post assets for the pack
-        continue-on-error: true
-        timeout-minutes: 15
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Google Drive filing (tools/marketing/drive.py). Unset = skipped, never a failure.
-          DRIVE_UPLOAD_URL: ${{ secrets.DRIVE_UPLOAD_URL }}
-          DRIVE_UPLOAD_TOKEN: ${{ secrets.DRIVE_UPLOAD_TOKEN }}
-        run: |
-          pip install pillow
-          BASE="${{ github.event.inputs.date }}"
-          BASE="${BASE:-$(date -u +%F)}"
-          DROP=$(date -u -d "$BASE +1 day" +%F)
-          python -m tools.marketing.x_assets --packs "$DROP" --sport ${{ matrix.sport }} \
-            --out build/x-assets --publish --drive --summary "$GITHUB_STEP_SUMMARY" --notify \
-            --title "X posts: ${{ matrix.sport }} pack opening $DROP"
-      - if: steps.gate.outputs.run == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: x-assets-${{ matrix.sport }}
-          path: build/x-assets
-          if-no-files-found: ignore
-          retention-days: 30
+  # X post assets for the packs this run published (x-assets.yml, on macOS). A scheduled run
+  # passes the cron that fired, and x_assets.py resolves its sports from the matrix above, so
+  # the Tuesday NFL and soccer runs each post only their own pack. A dry run publishes nothing
+  # and renders nothing.
+  x-assets:
+    needs: drop
+    if: always() && github.event.inputs.dry_run != 'true'
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/x-assets.yml
+    with:
+      mode: packs
+      date: ${{ github.event.inputs.date }}
+      cron: ${{ github.event.schedule }}
+      sport: ${{ github.event.inputs.sport }}
+    secrets: inherit
