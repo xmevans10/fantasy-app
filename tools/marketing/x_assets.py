@@ -42,6 +42,7 @@ import os
 import pathlib
 import re
 import subprocess
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -388,9 +389,17 @@ def _storage(method: str, path: str, *, data: bytes | None = None, ctype: str = 
     base, key = _env()
     headers = {"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": ctype, **(extra or {})}
     req = urllib.request.Request(f"{base}/storage/v1/{path}", data=data, headers=headers, method=method)
-    with urllib.request.urlopen(req, timeout=120) as r:
-        body = r.read()
-        return json.loads(body) if body.strip() else None
+    # Storage answers the odd 502/503 under a burst of uploads (the first run of the SwiftUI
+    # renderer lost its whole notification to one), so gateway errors get three tries.
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                body = r.read()
+                return json.loads(body) if body.strip() else None
+        except urllib.error.HTTPError as e:
+            if e.code not in (502, 503, 504) or attempt == 2:
+                raise
+            time.sleep(2 * (attempt + 1))
 
 
 def publish(out: pathlib.Path, assets: list[dict], stamp: str) -> None:
@@ -405,8 +414,12 @@ def publish(out: pathlib.Path, assets: list[dict], stamp: str) -> None:
             raise
     for a in assets:
         key = f"x/{stamp}/{a['file']}"
-        _storage("POST", f"object/{BUCKET}/{key}", data=(out / a["file"]).read_bytes(), ctype="image/png",
-                 extra={"x-upsert": "true", "Cache-Control": "max-age=300"})
+        try:
+            _storage("POST", f"object/{BUCKET}/{key}", data=(out / a["file"]).read_bytes(),
+                     ctype="image/png", extra={"x-upsert": "true", "Cache-Control": "max-age=300"})
+        except Exception as e:  # noqa: BLE001 — one missing preview must not cost Drive and the notification
+            print(f"[x] upload failed for {a['file']}: {e}; it stays in the artifact and Drive")
+            continue
         a["url"] = f"{base}/storage/v1/object/public/{BUCKET}/{key}"
     (out / "manifest.json").write_text(json.dumps(assets, indent=1))
     cutoff = (dt.date.today() - dt.timedelta(days=KEEP_DAYS)).isoformat()

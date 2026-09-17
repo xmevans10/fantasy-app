@@ -112,6 +112,46 @@ def test_lineup_caption_only_promises_boards_that_exist():
     assert x_assets.x_length(tennis) <= x_assets.X_LIMIT
 
 
+def test_a_failed_upload_skips_that_preview_and_keeps_going(monkeypatch, tmp_path):
+    """A Storage 502 on one PNG used to abort the run before Drive and the notification."""
+    calls = []
+
+    def storage(method, path, **kw):
+        calls.append(path)
+        if path.endswith("a.png"):
+            raise x_assets.urllib.error.HTTPError(path, 502, "Bad Gateway", {}, None)
+        return []
+
+    monkeypatch.setattr(x_assets, "_storage", storage)
+    monkeypatch.setattr(x_assets, "_env", lambda: ("https://example.supabase.co", "k"))
+    for name in ("a.png", "b.png"):
+        (tmp_path / name).write_bytes(b"png")
+    assets = [{"file": "a.png"}, {"file": "b.png"}]
+    x_assets.publish(tmp_path, assets, "2026-09-17")
+    assert "url" not in assets[0] and assets[1]["url"].endswith("/x/2026-09-17/b.png")
+
+
+def test_gateway_errors_are_retried(monkeypatch):
+    attempts = []
+
+    def urlopen(req, timeout):
+        attempts.append(1)
+        if len(attempts) < 3:
+            raise x_assets.urllib.error.HTTPError(req.full_url, 502, "Bad Gateway", {}, None)
+
+        class R:
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def read(self): return b"{}"
+        return R()
+
+    monkeypatch.setattr(x_assets, "_env", lambda: ("https://example.supabase.co", "k"))
+    monkeypatch.setattr(x_assets.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(x_assets.time, "sleep", lambda s: None)
+    assert x_assets._storage("POST", "object/marketing/x.png", data=b"x") == {}
+    assert len(attempts) == 3
+
+
 def test_one_morning_mixes_layouts():
     layouts = {x_assets.daily_layout("2026-09-17", s) for s in ("nfl", "nba", "baseball")}
     assert len(layouts) == 3
