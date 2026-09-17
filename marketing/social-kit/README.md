@@ -23,15 +23,21 @@ Generated from the app's own design system, so it can't drift from the product.
 | `BRAND.md` | Colors, type, logo rules, do/don't. |
 | `COPY.md` | Bios, taglines, launch posts, hashtags — per platform, within character limits. |
 
-**Daily X posts are not in this folder: they are minted with the puzzles.** After every
-`daily-puzzle` run, `x-assets.yml` renders per sport: today's K4C4 (in one of three layouts,
-rotated), today's lineup of all three dailies, the Journeyman career path, the Who Am I? clue
-ladder, and yesterday's K4C4 and Journeyman answers. After a `fresh-drop` run that publishes a
-Week Pack it renders the pack and its game of the week. **Every post is drawn by the app's own
-SwiftUI views** (`BallIQTests/XPostRenderTests`, fed by `tools/marketing/x_assets.py`), so a
-restyled card shows up in tomorrow's posts with nothing else to update. Find them in the run:
-captions in the step log, images inline in the job summary, PNGs in the `x-assets-*` artifact.
-A comment on the repo's `x-assets` issue notifies you when they're ready. Nothing is posted to
+**Daily X posts are not in this folder: they are minted with the puzzles** (`x-assets.yml`
+after every `daily-puzzle` and `fresh-drop` run). Each one is a **thread built to be answered
+in the replies**, in a format sports and fantasy X already plays, not an ad for the app:
+
+| Format | The post | The reveal |
+|---|---|---|
+| Blind résumé | Two stat lines from one published board, names hidden, a star in the pair and the lines close. "Player A or Player B?" | Same panels unmasked, better line marked |
+| Keep 4 | Today's board as a readable table (only when 3+ names are ones people know). "Reply with your four." | The four keeps, next day |
+| Name the player | Today's Journeyman path as big crests (easy/medium only). | The name, next day |
+| Who Am I? | Text only: clue 1 in the post, one clue per reply. | The name after the last clue |
+
+The store link always goes in the **first reply**, never the post (X throttles posts with
+links). No crowd numbers until `game_results` has the volume to back them. Every thread is laid
+out in posting order in `captions.md` (run artifact) and `captions.txt` (Drive). Images are drawn
+by `BallIQTests/XPostRenderTests` from `tools/marketing/x_assets.py`'s spec. Nothing is posted to
 X automatically.
 
 ### Google Drive
@@ -39,9 +45,9 @@ X automatically.
 Every asset is also filed into the shared Drive folder, organized for posting:
 
 ```
-Daily posts/2026-09 September/2026-09-16 Wednesday/   NFL - Today's board.png, NFL - Today's lineup.png, NFL - Journeyman.png,
-                                                      NFL - Who Am I.png, NFL - Yesterday's answers.png, captions.txt
-Week Packs/NFL/2026 Week 01/                           Pack drop card.png, Game of the week (CAR vs CHI).png, captions.txt
+Daily posts/2026-09 September/2026-09-16 Wednesday/   NFL - Blind resume.png, NFL - Blind resume (reveal).png, NFL - Keep 4.png,
+                                                      NFL - Name the player.png, captions.txt (every thread, in posting order)
+Week Packs/NFL/2026 Week 01/                           Keep 4.png, captions.txt
 Evergreen/How to play | Sports | K4C4 cards | Brand/  synced from 06-x-series/ whenever it changes
 ```
 

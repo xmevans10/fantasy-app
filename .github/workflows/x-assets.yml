@@ -17,7 +17,7 @@ on:
   workflow_call:
     inputs:
       mode:
-        description: "daily (today's boards + yesterday's answers) or packs"
+        description: "daily (that day's threads) or packs"
         type: string
         required: true
       date:
@@ -92,7 +92,7 @@ jobs:
             if [ -n "${{ inputs.cron }}" ]; then ARGS+=(--pack-cron "${{ inputs.cron }}"); fi
             TITLE="X posts: packs opening $DROP"
           else
-            ARGS=(--daily "$BASE" --answers "$(date -j -v-1d -f %F "$BASE" +%F)")
+            ARGS=(--daily "$BASE")
             TITLE="X posts for $BASE"
           fi
           python -m tools.marketing.x_assets "${ARGS[@]}" \

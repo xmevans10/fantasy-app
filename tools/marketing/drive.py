@@ -39,6 +39,11 @@ import urllib.request
 
 from .brand import ROOT, SPORT_NAME
 
+
+def thread_markdown(asset: dict) -> str:
+    from .x_assets import thread_markdown as render
+    return render(asset)
+
 EVERGREEN_DIR = ROOT / "marketing" / "social-kit" / "06-x-series"
 
 
@@ -62,24 +67,13 @@ def place(asset: dict) -> tuple[list[str], str]:
     """(folder path, file name) for one manifest entry from `x_assets.build`."""
     sport = SPORT_NAME.get(asset.get("sport", ""), asset.get("sport", ""))
     kind = asset["kind"]
-    if kind == "daily":
-        return _day_folder(asset["date"]), f"{sport} - Today's board.png"
-    if kind == "lineup":
-        return _day_folder(asset["date"]), f"{sport} - Today's lineup.png"
-    if kind == "journeyman":
-        return _day_folder(asset["date"]), f"{sport} - Journeyman.png"
-    if kind == "whoami":
-        return _day_folder(asset["date"]), f"{sport} - Who Am I.png"
-    if kind in ("answers", "journeyman-answer"):
-        post_day = (dt.date.fromisoformat(asset["date"]) + dt.timedelta(days=1)).isoformat()
-        what = "Yesterday's answers" if kind == "answers" else "Yesterday's Journeyman answer"
-        return _day_folder(post_day), f"{sport} - {what}.png"
-    if kind == "pack":
-        return _pack_folder(asset["pack_id"], asset["sport"]), "Pack drop card.png"
-    if kind == "game":
-        matchup = asset.get("matchup") or "game"
-        return _pack_folder(asset["pack_id"], asset["sport"]), f"Game of the week ({matchup}).png"
-    return ["Other"], asset["file"]
+    names = {"resume": "Blind resume", "keep4": "Keep 4", "career": "Name the player",
+             "whoami": "Who Am I thread"}
+    if asset.get("pack_id"):
+        return _pack_folder(asset["pack_id"], asset["sport"]), f"{names.get(kind, kind)}.png"
+    if kind in names:
+        return _day_folder(asset["date"]), f"{sport} - {names[kind]}.png"
+    return ["Other"], asset.get("file") or kind
 
 
 _FORMAT_NAMES = {"k4c4": "K4C4", "who-am-i": "Who Am I", "journeyman": "Journeyman",
@@ -111,10 +105,10 @@ def place_evergreen(filename: str) -> tuple[list[str], str]:
 
 
 def captions_text(entries: list[dict]) -> str:
-    """captions.txt for one folder: every file's caption and alt text, ready to paste."""
+    """captions.txt for one folder: every thread in posting order, ready to paste."""
     blocks = []
     for e in entries:
-        blocks.append(f"{e['name']}\n{'-' * len(e['name'])}\n{e['caption']}\n\nAlt text: {e['alt']}")
+        blocks.append(f"{e['name']}\n{'-' * len(e['name'])}\n{e['thread']}")
     return "\n\n\n".join(blocks) + "\n"
 
 
@@ -158,13 +152,16 @@ def upload_assets(out_dir: pathlib.Path, assets: list[dict]) -> dict[str, str]:
     urls: dict[str, str] = {}
     for a in assets:
         path, name = place(a)
-        res = send(path, name, (out_dir / a["file"]).read_bytes(), "image/png",
-                   f"{a['caption']}\n\nAlt text: {a['alt']}")
-        a["drive_url"] = res.get("fileUrl")
         key = "/".join(path)
-        urls[key] = res.get("folderUrl", "")
-        folders.setdefault(key, []).append({"name": name, "caption": a["caption"], "alt": a["alt"]})
-        print(f"[drive] {key}/{name}")
+        for field, suffix in (("file", ""), ("reveal_file", " (reveal)")):
+            if not a.get(field):
+                continue
+            fname = name.replace(".png", f"{suffix}.png")
+            res = send(path, fname, (out_dir / a[field]).read_bytes(), "image/png", a["caption"])
+            a.setdefault("drive_url", res.get("fileUrl"))
+            urls[key] = res.get("folderUrl", "")
+            print(f"[drive] {key}/{fname}")
+        folders.setdefault(key, []).append({"name": name.replace(".png", ""), "thread": thread_markdown(a)})
     for key, entries in folders.items():
         # Merge with what the folder already holds from THIS run only: the daily run writes a
         # day folder once, so captions.txt describes exactly the files a run put there.

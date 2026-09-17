@@ -14,25 +14,19 @@ import pytest
 from tools.marketing import drive
 
 
-def test_daily_posts_are_filed_by_posting_day():
-    folder, name = drive.place({"kind": "daily", "sport": "nfl", "date": "2026-09-16", "file": "x"})
+def test_daily_threads_are_filed_by_posting_day():
+    folder, name = drive.place({"kind": "keep4", "sport": "nfl", "date": "2026-09-16", "file": "x"})
     assert folder == ["Daily posts", "2026-09 September", "2026-09-16 Wednesday"]
-    assert name == "NFL - Today's board.png"
-
-
-def test_answers_land_on_the_day_they_are_posted_not_the_day_they_describe():
-    folder, name = drive.place({"kind": "answers", "sport": "baseball", "date": "2026-09-15", "file": "x"})
-    assert folder[-1] == "2026-09-16 Wednesday"
-    assert name == "MLB - Yesterday's answers.png"
+    assert name == "NFL - Keep 4.png"
+    assert drive.place({"kind": "resume", "sport": "baseball", "date": "2026-09-16"})[1] == "MLB - Blind resume.png"
 
 
 def test_pack_weeks_are_zero_padded_so_they_sort():
-    folder, _ = drive.place({"kind": "pack", "sport": "nfl", "pack_id": "nfl-2026-wk03", "file": "x"})
+    folder, name = drive.place({"kind": "keep4", "sport": "nfl", "pack_id": "nfl-2026-wk03", "file": "x"})
     assert folder == ["Week Packs", "NFL", "2026 Week 03"]
-    folder, name = drive.place({"kind": "game", "sport": "baseball", "matchup": "NYM vs NYY",
-                                "pack_id": "baseball-2026-09-07-to-2026-09-13", "file": "x"})
+    assert name == "Keep 4.png"
+    folder, _ = drive.place({"kind": "keep4", "sport": "baseball", "pack_id": "baseball-2026-09-07-to-2026-09-13"})
     assert folder == ["Week Packs", "MLB", "2026-09-07 to 2026-09-13"]
-    assert name == "Game of the week (NYM vs NYY).png"
 
 
 @pytest.mark.parametrize("filename,expected", [
@@ -48,9 +42,9 @@ def test_evergreen_groups(filename, expected):
     assert drive.place_evergreen(filename) == expected
 
 
-def test_captions_file_lists_caption_and_alt_for_each_file():
-    text = drive.captions_text([{"name": "NFL - Today's board.png", "caption": "Cap", "alt": "Alt"}])
-    assert "NFL - Today's board.png" in text and "Cap" in text and "Alt text: Alt" in text
+def test_captions_file_lists_each_thread_in_posting_order():
+    text = drive.captions_text([{"name": "NFL - Keep 4", "thread": "POST:\nCap\n\nREPLY 1:\nlink"}])
+    assert "NFL - Keep 4" in text and text.index("POST:") < text.index("REPLY 1:")
 
 
 def test_unconfigured_upload_is_a_quiet_noop(tmp_path, monkeypatch, capsys):
@@ -98,14 +92,16 @@ def apps_script(monkeypatch):
 
 def test_upload_follows_the_apps_script_redirect(apps_script, tmp_path, monkeypatch):
     monkeypatch.setenv("DRIVE_UPLOAD_TOKEN", "secret")
-    (tmp_path / "daily.png").write_bytes(b"\x89PNG fake")
-    asset = {"file": "daily.png", "kind": "daily", "sport": "nfl", "date": "2026-09-16",
-             "caption": "Cap", "alt": "Alt"}
+    (tmp_path / "r.png").write_bytes(b"\x89PNG fake")
+    (tmp_path / "r2.png").write_bytes(b"\x89PNG fake")
+    asset = {"file": "r.png", "reveal_file": "r2.png", "kind": "resume", "sport": "nfl",
+             "date": "2026-09-16", "caption": "Cap", "alt": "Alt", "replies": ["link"],
+             "reveal": {"when": "later", "text": "It was X"}}
     folders = drive.upload_assets(tmp_path, [asset])
     assert folders == {"Daily posts/2026-09 September/2026-09-16 Wednesday": "https://drive/folder"}
     assert asset["drive_url"] == "https://drive/file"
     names = [r["name"] for r in _AppsScript.received]
-    assert names == ["NFL - Today's board.png", "captions.txt"]
+    assert names == ["NFL - Blind resume.png", "NFL - Blind resume (reveal).png", "captions.txt"]
     assert "Cap" in _AppsScript.received[0]["description"]
 
 
