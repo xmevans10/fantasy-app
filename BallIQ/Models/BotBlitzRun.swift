@@ -43,6 +43,62 @@ struct BlitzBotRun: Equatable {
     let elapsed: TimeInterval
 
     var boardsPlayed: Int { rounds.count }
+
+    /// The bot's mean chance-rebased round quality, `0...1` — the same measure
+    /// `BlitzRunSummary.performance` reports for the player, and therefore the value a ladder
+    /// attempt can store in `ladder_attempts.bot_score` (checked `0...1`). The duel itself is
+    /// decided on `points`; this is only what the corpus records about *how well* the bot played.
+    var meanQuality: Double {
+        guard !rounds.isEmpty else { return 0 }
+        let sum = rounds.reduce(0.0) { $0 + BlitzScoring.quality($1.performance, format: $1.format) }
+        return min(1, max(0, sum / Double(rounds.count)))
+    }
+}
+
+/// A ladder blitz rung, resolved into a playable match.
+///
+/// The defining difference from a `LadderRunSession` (a single-board rung) is `sequence`: the ONE
+/// list of boards both sides answer. It is materialised once, from the loader, and handed to the
+/// bot via `BotSolver.playBlitz` and to the player over the same loader — so the duel is a
+/// comparison of how far each got through identical questions, never of two different draws.
+///
+/// The sequence is seeded per ATTEMPT, not from the rung's own `seed` column: a blitz draws fresh
+/// boards every attempt by design (`ladder_blitz.py`), and reusing the rung seed would hand a
+/// retry the exact run whose answers the player just saw. The rung's stored `seed` is unused by a
+/// blitz rung for that reason.
+@MainActor
+struct LadderBlitzMatch: Identifiable {
+    let rung: LadderRung
+    let bot: LadderBot
+    let config: BlitzConfig
+    let loader: BlitzRoundLoader
+    let botRun: BlitzBotRun
+    /// Fresh per attempt so a rematch re-presents rather than reusing the finished cover.
+    let id: String
+
+    init(rung: LadderRung, bot: LadderBot, config: BlitzConfig, loader: BlitzRoundLoader,
+         botRun: BlitzBotRun) {
+        self.rung = rung
+        self.bot = bot
+        self.config = config
+        self.loader = loader
+        self.botRun = botRun
+        self.id = "blitz-\(rung.rung)-\(UUID().uuidString)"
+    }
+
+    /// The row `startLadderBlitz` needs to start this rung again (a rematch, same rung, new run).
+    var row: LadderRungRow { LadderRungRow(rung: rung, bot: bot, state: .open) }
+}
+
+/// What the ladder blitz result screen shows. Deliberately mirrors the single-board ladder's
+/// outcome shape: who won, both sides' comparable, and whether the rung advanced.
+struct LadderBlitzOutcome: Equatable {
+    let botName: String
+    let myPoints: Int
+    let botPoints: Int
+    let won: Bool
+    /// The new high-water rung when the win advanced the player, nil otherwise.
+    let advancedTo: Int?
 }
 
 extension BotSolver {
@@ -155,6 +211,12 @@ enum LadderBlitz {
     /// Rungs at or below this run for one minute — the band whose targets sit above 60s blitz's
     /// measured 0.278 floor, so the short format's own limit never becomes the rung's.
     static let oneMinuteMaxRung = 6
+
+    /// How many boards a ladder duel materialises into its shared sequence. Deliberately more
+    /// than any run can reach, so the clock is the only thing that ends a run — nobody should
+    /// finish the sequence and lose the duel to a short draw. Mirrors `SEQUENCE_LENGTH` in
+    /// `tools/ingest/ladder_blitz.py`; the calibration was measured at this length.
+    static let sequenceLength = 12
 
     static func duration(forRung rung: Int, isBoss: Bool) -> BlitzDuration {
         if isBoss { return .five }

@@ -14,11 +14,17 @@ alter table public.ladder_rungs drop constraint if exists ladder_rungs_mode_chec
 alter table public.ladder_rungs add constraint ladder_rungs_mode_check
   check (mode in ('keep4', 'whoami', 'grid', 'blitz'));
 
--- A blitz rung has no pinned board: the run draws fresh boards every attempt, which is also why
--- it needs no `ladder_rung_boards` pool — the replay bug that table exists to prevent cannot
--- happen when nothing is pinned. `puzzle_id` carries the run's shape ('blitz-180s') so the
--- not-null column stays honest rather than holding a puzzle id that does not exist.
+-- A blitz rung pins no board: a run draws fresh boards every attempt, so `puzzle_id` carries the
+-- run's SHAPE ('blitz-180s'), which is not a `puzzles.id`, and the foreign key from migration
+-- 0016 (`ladder_rungs_puzzle_id_fkey`) would reject every one of them. Dropped here rather than
+-- making the column nullable, and that choice is load-bearing: a shipped client decodes
+-- `puzzle_id` as a non-optional `String`, so a NULL would throw for the whole rung array under
+-- `LadderRepository.rungs()`'s single `try?` — emptying the Ladder tab for every live user. The
+-- column stays `not null` and keeps carrying the run shape for a blitz rung.
+alter table public.ladder_rungs
+  drop constraint if exists ladder_rungs_puzzle_id_fkey;
+
 comment on column public.ladder_rungs.puzzle_id is
-  'The rung''s board, or for mode=blitz the run shape (e.g. blitz-180s) — a blitz draws fresh.';
+  'The rung''s board (a real puzzles.id) for the four board modes, or for mode=blitz the run shape (e.g. blitz-180s) — a blitz draws fresh boards every attempt, so it pins none.';
 comment on column public.ladder_rungs.time_limit_seconds is
   'For mode=blitz this is the RUN LENGTH (60/180/300), the variance dial the curve is built on.';

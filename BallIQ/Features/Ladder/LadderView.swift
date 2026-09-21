@@ -28,9 +28,24 @@ struct LadderView: View {
     @EnvironmentObject private var auth: AuthService
     var selectedTab: Binding<Int> = .constant(0)
 
+    /// What the rung cover is showing — one case per kind of rung. A single enum (and one
+    /// `fullScreenCover`) rather than two sibling covers, because two presentations of the same
+    /// type attached to one view is a known SwiftUI foot-gun.
+    private enum LadderPresented: Identifiable {
+        case duel(DuelBoard)
+        case blitz(LadderBlitzMatch)
+
+        var id: String {
+            switch self {
+            case .duel(let board):  return board.id
+            case .blitz(let match): return match.id
+            }
+        }
+    }
+
     @State private var rows: [LadderRungRow] = []
     @State private var loaded = false
-    @State private var board: DuelBoard?
+    @State private var presented: LadderPresented?
     @State private var startingRung: Int?
     @State private var startError: String?
     @State private var showInfo = false
@@ -84,20 +99,29 @@ struct LadderView: View {
                isPresented: Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: { Text(startError ?? "") }
-        .fullScreenCover(item: $board, onDismiss: { Task { await load() } }) { activeBoard in
-            activeBoard.view
-                .environmentObject(container)
-                // Set only for a ladder duel — a human Versus board never sees this key, so
-                // `duelVerdict == nil` there is belt-and-suspenders, not the only guard.
-                .environment(\.ladderRematch, activeBoard.session.ladder != nil
-                             ? { await rematch(activeBoard.session) } : nil)
-                // The rung number alone doesn't change on a rematch (same rung, new board), so
-                // `DuelBoard.id` — which `fullScreenCover(item:)` presents by — stays identical
-                // and the cover updates in place rather than dismissing and re-presenting. This
-                // forces the *content* to a fresh identity on every distinct board, which is
-                // what resets the game view's `@State` (including its own `result`) instead of
-                // silently reusing the just-finished run's.
-                .id(activeBoard.session.boardID)
+        .fullScreenCover(item: $presented, onDismiss: { Task { await load() } }) { item in
+            switch item {
+            case .duel(let activeBoard):
+                activeBoard.view
+                    .environmentObject(container)
+                    // Set only for a ladder duel — a human Versus board never sees this key, so
+                    // `duelVerdict == nil` there is belt-and-suspenders, not the only guard.
+                    .environment(\.ladderRematch, activeBoard.session.ladder != nil
+                                 ? { await rematch(activeBoard.session) } : nil)
+                    // The rung number alone doesn't change on a rematch (same rung, new board), so
+                    // `DuelBoard.id` — which `fullScreenCover(item:)` presents by — stays identical
+                    // and the cover updates in place rather than dismissing and re-presenting. This
+                    // forces the *content* to a fresh identity on every distinct board, which is
+                    // what resets the game view's `@State` (including its own `result`) instead of
+                    // silently reusing the just-finished run's.
+                    .id(activeBoard.session.boardID)
+            case .blitz(let match):
+                // A blitz run builds its own result screen and owns its rematch (a fresh sequence,
+                // same rung), so it needs no env plumbing from here.
+                BlitzGameView(ladder: match)
+                    .environmentObject(container)
+                    .environmentObject(auth)
+            }
         }
     }
 
@@ -114,7 +138,7 @@ struct LadderView: View {
             startError = String(localized: "That rung's board couldn't be loaded. Check your connection and try again.")
             return false
         }
-        board = started
+        presented = .duel(started)
         return true
     }
 
@@ -245,7 +269,7 @@ struct LadderView: View {
     private var infoSheet: some View {
         HowItWorksSheet(
             title: "The Ladder",
-            intro: "Thirty rungs, thirty opponents. Every one of them is a bot, and every one of them plays the same board you do.",
+            intro: "Thirty rungs, thirty opponents. Every rung is a Puzzle Blitz run, and every one of your opponents plays the same run you do.",
             symbol: "figure.stair.stepper",
             tint: Color.accentText,
             tintBackground: Color.accentBg,
@@ -255,13 +279,15 @@ struct LadderView: View {
                 // player knows what they beat.
                 .init(symbol: "cpu",
                       title: "They're bots, and we say so",
-                      detail: "Each one is a real solver with a skill level, it makes a genuine call on every card, cell or clue, nails the obvious ones and fumbles the close ones, exactly like a human at that level."),
+                      detail: "Each one is a real solver with a skill level, it makes a genuine call on every card or clue, nails the obvious ones and fumbles the close ones, exactly like a human at that level."),
+                // The run, not a single board, since the ladder moved to blitz (migration 0030).
+                // The old copy promised "the same board" and a "speed bonus" — a blitz has neither.
                 .init(symbol: "bolt.fill",
-                      title: "Watch them play, live",
-                      detail: "Your opponent's score climbs in real time while you play the same board. Finish fast and you'll pick up a speed bonus, nothing here can end your run early."),
+                      title: "A run, head to head",
+                      detail: "You and your opponent answer the same puzzles back to back until the clock runs out. Time up is your last puzzle, so the score you bank is how much ball you know, not how fast you read."),
                 .init(symbol: "arrow.up.right",
                       title: "One rung at a time",
-                      detail: "Beat a rung to unlock the next. Bots get sharper, boards get harder, and the games start mixing."),
+                      detail: "Beat a rung to unlock the next. Bots get sharper, and the runs get longer and harder on the way up."),
             ],
             callout: .init(symbol: "bolt.fill",
                            label: "XP and rank only",
@@ -276,12 +302,21 @@ struct LadderView: View {
         guard startingRung == nil else { return }
         startingRung = row.rung.rung
         defer { startingRung = nil }
+        briefing = nil
+        // A blitz rung is a run, not a board — it takes the other start path and the other cover.
+        if row.rung.mode.isBlitz {
+            guard let match = await container.startLadderBlitz(row) else {
+                startError = String(localized: "That rung's puzzles couldn't be loaded. Check your connection and try again.")
+                return
+            }
+            presented = .blitz(match)
+            return
+        }
         guard let started = await container.startLadderRung(row) else {
             startError = String(localized: "That rung's board couldn't be loaded. Check your connection and try again.")
             return
         }
-        briefing = nil
-        board = started
+        presented = .duel(started)
     }
 
     private func load() async {
@@ -307,6 +342,18 @@ private struct LadderBriefingSheet: View {
     let signedIn: Bool
     let onStart: () async -> Void
 
+    /// What the run actually asks of the player. A blitz rung is a timed run — the clock decides
+    /// how many puzzles you get — not a board with a speed bonus, which is what the copy this
+    /// replaced promised (and "no deadline", which is false now the clock is a hard stop).
+    private var footerLine: String {
+        let core = row.rung.mode.isBlitz
+            ? String(localized: "The clock decides how many puzzles you get, not how long you get on one.")
+            : String(localized: "Solve fast for a speed bonus, no deadline, just points on the table.")
+        return signedIn
+            ? core
+            : core + " " + String(localized: "Sign in to bank the result and unlock the next rung.")
+    }
+
     var body: some View {
         BotCharacterCard(
             bot: row.bot,
@@ -314,12 +361,15 @@ private struct LadderBriefingSheet: View {
                 ? String(localized: "BOSS · RUNG \(row.rung.rung)")
                 : String(localized: "RUNG \(row.rung.rung)"),
             stats: [
-                (row.boardLine, String(localized: "BOARD")),
-                // Was "CLOCK" pre-M25 — `rung.timeLimitSeconds` never stopped being real data,
-                // it stopped being a deadline: `LadderOutcome.playerWon` still divides by it
-                // through `SpeedMultiplier`, so it's the target a fast run gets paid for beating,
-                // not a countdown that ends one. Same value, honest label.
-                (DuelSession.clockText(row.rung.timeLimitSeconds), String(localized: "PAR")),
+                // A blitz rung has no single board — its `time_limit_seconds` is the RUN length,
+                // so the labels track the mode rather than asserting a board and a par that a
+                // run does not have.
+                (row.boardLine, row.rung.mode.isBlitz
+                    ? String(localized: "RUN") : String(localized: "BOARD")),
+                // Was "CLOCK" pre-M25. For a board mode `timeLimitSeconds` is a par target; for
+                // blitz it is the run length itself.
+                (DuelSession.clockText(row.rung.timeLimitSeconds),
+                 row.rung.mode.isBlitz ? String(localized: "LENGTH") : String(localized: "PAR")),
                 ("\(Int((row.rung.botSkill * 100).rounded()))%", String(localized: "SKILL")),
             ]
         ) {
@@ -333,9 +383,7 @@ private struct LadderBriefingSheet: View {
                 .buttonStyle(PrimePressStyle())
                 .disabled(starting)
 
-                Text(signedIn
-                     ? String(localized: "Solve fast for a speed bonus, no deadline, just points on the table.")
-                     : String(localized: "Solve fast for a speed bonus, no deadline, just points on the table. Sign in to bank the result and unlock the next rung."))
+                Text(footerLine)
                     .font(.label11)
                     .foregroundStyle(signedIn ? Color.textMuted : Color.warningText)
                     .multilineTextAlignment(.center)

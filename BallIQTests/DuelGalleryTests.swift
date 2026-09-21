@@ -19,7 +19,7 @@ final class DuelGalleryTests: XCTestCase {
                   baseSkill: 0.7, persona: "Talks through every pick.")
     }
 
-    private func rung(_ n: Int, tier: LadderRung.Tier, mode: PuzzleFormat = .grid,
+    private func rung(_ n: Int, tier: LadderRung.Tier, mode: LadderMode = .grid,
                       boss: Bool = false, seconds: Int = 107) -> LadderRung {
         LadderRung(rung: n, tier: tier, mode: mode, sport: .baseball,
                    puzzleId: "grid-baseball-2026-07-08", botId: "b", botSkill: 0.7,
@@ -81,6 +81,9 @@ final class DuelGalleryTests: XCTestCase {
             ("boss (longest name + badge + clock)",
              LadderRungRow(rung: rung(30, tier: .gold, mode: .grid, boss: true, seconds: 99),
                            bot: bot("The Archivist", avatar: "📼"), state: .locked)),
+            // The new blitz rung: its board line now reads "Puzzle Blitz · <sport>".
+            ("blitz rung", LadderRungRow(rung: rung(20, tier: .silver, mode: .blitz, seconds: 180),
+                                         bot: bot("The Archivist", avatar: "📼"), state: .open)),
         ]
         let stack = VStack(spacing: 8) {
             ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
@@ -95,6 +98,39 @@ final class DuelGalleryTests: XCTestCase {
         .background(Color.appBackground)
 
         try render(stack, named: "ladder_rows")
+    }
+
+    /// The ladder's blitz result screen — the surface the whole ladder move exists to produce —
+    /// rendered in both outcomes so it can actually be looked at (AGENTS.md §5).
+    func testRenderLadderBlitzResults() throws {
+        let rounds = [
+            BlitzRoundResult(format: .keep4, sport: .nfl, puzzleID: "k",
+                             answer: BlitzRoundAnswer(headline: "2023 NFL MVP",
+                                                      detail: "6 of 8 calls right", correct: true),
+                             performance: 0.875, cleared: true, elapsed: 42),
+            BlitzRoundResult(format: .whoami, sport: .nba, puzzleID: "w",
+                             answer: BlitzRoundAnswer(headline: "Nikola Jokić",
+                                                      detail: "Solved on clue 2", correct: true),
+                             performance: 0.8, cleared: true, elapsed: 31),
+            BlitzRoundResult(format: .journeyman, sport: .nfl, puzzleID: "j",
+                             answer: BlitzRoundAnswer(headline: "Four cities, one career",
+                                                      detail: "Guessed on try 4", correct: false),
+                             performance: 0.2, cleared: false, elapsed: 55),
+        ]
+        let summary = BlitzRunSummary(config: BlitzConfig.ladder(sports: [.nfl], duration: .three),
+                                      rounds: rounds, elapsed: 180)
+        let states: [(String, LadderBlitzOutcome)] = [
+            ("blitz-ladder-win", LadderBlitzOutcome(botName: "The Archivist", myPoints: 4820,
+                                                     botPoints: 3110, won: true, advancedTo: 18)),
+            ("blitz-ladder-loss", LadderBlitzOutcome(botName: "The Archivist", myPoints: 1240,
+                                                      botPoints: 4020, won: false, advancedTo: nil)),
+        ]
+        for (name, outcome) in states {
+            let view = LadderBlitzResultView(outcome: outcome, summary: summary,
+                                             onRematch: {}, onDone: {})
+                .frame(width: 393)
+            try render(view, named: name)
+        }
     }
 
     private func render<V: View>(_ view: V, named: String) throws {

@@ -13,6 +13,11 @@ import SwiftUI
 /// `BlitzSession` instead of showing its own result screen and banking its own XP. See
 /// `BlitzSession` for that contract, and `BlitzRunSummary` for why no score exists until here.
 struct BlitzGameView: View {
+    /// A ladder blitz rung, when this view is hosting one. Nil is the arcade path — setup screen,
+    /// random draw, local high score, `complete()`. Non-nil skips setup, serves the shared seeded
+    /// sequence, and settles against the bot through `RepositoryContainer.finishLadderBlitz`.
+    var ladder: LadderBlitzMatch? = nil
+
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
 
@@ -26,6 +31,9 @@ struct BlitzGameView: View {
     @State private var board: BlitzBoard?
     @State private var summary: BlitzRunSummary?
     @State private var rewards: RepositoryContainer.SessionRewards?
+    /// The ladder verdict, set only on a blitz rung. Its presence is what makes the result phase
+    /// render the ladder screen instead of the arcade one.
+    @State private var ladderOutcome: LadderBlitzOutcome?
     @State private var beatHighScore = false
     /// Whether the run ended because the player left a board rather than because the clock ran
     /// out — the result screen's headline is the only thing that reads it.
@@ -49,7 +57,12 @@ struct BlitzGameView: View {
             case .empty:
                 emptyBoard
             case .result:
-                if let summary {
+                if let summary, let ladderOutcome {
+                    LadderBlitzResultView(outcome: ladderOutcome, summary: summary,
+                                          endedEarly: endedEarly,
+                                          onRematch: { Task { await rematchLadder() } },
+                                          onDone: { dismiss() })
+                } else if let summary {
                     BlitzResultView(summary: summary,
                                     highScore: store.highScore(for: summary.config.duration),
                                     beatHighScore: beatHighScore, endedEarly: endedEarly,
@@ -61,6 +74,12 @@ struct BlitzGameView: View {
         }
         .background(Color.appBackground)
         .task {
+            // A ladder rung has no setup: its config, duration and boards are all fixed by the
+            // match, so it goes straight onto the first board.
+            if let ladder {
+                await startLadder(ladder)
+                return
+            }
             sport = container.sportFilter.sport ?? .nfl
             if !config.sports.contains(sport) { config.sports = [sport] }
             // Warm the arcade pool for the sport most likely to come up while the player is
@@ -176,6 +195,40 @@ struct BlitzGameView: View {
         await start()
     }
 
+    /// A ladder rung's run. The loader arrives already warm and already holding the shared seeded
+    /// sequence (see `RepositoryContainer.startLadderBlitz`), so this only wires a session to it —
+    /// no setup, no local high score, no arcade XP. The clock runs for the rung's duration.
+    private func startLadder(_ match: LadderBlitzMatch) async {
+        config = match.config
+        self.loader = match.loader
+        let session = BlitzSession(config: match.config)
+        self.session = session
+        self.rewards = nil
+        self.summary = nil
+        self.ladderOutcome = nil
+        self.beatHighScore = false
+        self.endedEarly = false
+        board = match.loader.next()
+        if let board { session.beginRound(format: board.format, sport: board.sport) }
+        container.track(.gameStarted, ["format": "blitz_ladder",
+                                       "seconds": String(match.config.duration.rawValue),
+                                       "rung": String(match.rung.rung)])
+        withAnimation(Motion.easeOut) { phase = board == nil ? .empty : .playing }
+    }
+
+    /// REMATCH on a blitz rung: same rung, a **fresh** sequence — replaying the run whose answers
+    /// were just revealed would be the recall bug `next_ladder_board` exists to prevent.
+    private func rematchLadder() async {
+        guard let ladder else { return }
+        Haptics.tap()
+        withAnimation(Motion.easeOut) { phase = .loading }
+        guard let match = await container.startLadderBlitz(ladder.row) else {
+            withAnimation(Motion.easeOut) { phase = .result }
+            return
+        }
+        await startLadder(match)
+    }
+
     /// One board finished. Serve the next, or end the run if the clock is out (which
     /// `BlitzSession.finishRound` has already decided) or the pools are exhausted.
     private func advance() {
@@ -206,6 +259,14 @@ struct BlitzGameView: View {
         endedEarly = session.acceptsNewRound() && session.cutOff == nil
         let run = session.summary()
         summary = run
+        // A ladder rung settles against the bot and banks no arcade rewards. Everything the result
+        // screen needs is computed in `finishLadderBlitz` (attempt row, ladder advance, career log).
+        if let ladder {
+            Haptics.commit()
+            ladderOutcome = await container.finishLadderBlitz(ladder, summary: run)
+            withAnimation(Motion.easeOut) { phase = .result }
+            return
+        }
         beatHighScore = store.recordScore(run.total, for: run.config.duration)
         Haptics.commit()
         let detail = RepositoryContainer.SessionDetail(

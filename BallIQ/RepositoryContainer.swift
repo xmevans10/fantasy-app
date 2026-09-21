@@ -827,6 +827,9 @@ final class RepositoryContainer: ObservableObject {
     func startLadderRung(_ row: LadderRungRow, board: LadderBoard? = nil) async -> DuelBoard? {
         guard let ladder else { return nil }
         let rung = row.rung
+        // A blitz rung is not a single board, so it has no `DuelBoard`. `startLadderBlitz` builds
+        // the seeded run instead; the ladder list routes on `mode.isBlitz` before calling here.
+        guard !rung.mode.isBlitz else { return nil }
         let limit = TimeInterval(rung.timeLimitSeconds)
         // A rung is a difficulty, not a board: retrying must not hand back the board whose answers
         // the player already knows. The seed travels WITH the board, so the bot doesn't replay an
@@ -835,8 +838,8 @@ final class RepositoryContainer: ObservableObject {
         if let board { served = board } else { served = await ladder.nextBoard(for: rung) }
         let seed = served.generatorSeed
 
-        func session(_ run: BotRun) -> DuelSession {
-            DuelSession(challengeID: rung.rung, format: rung.mode, boardID: served.puzzleId,
+        func session(_ run: BotRun, format: PuzzleFormat) -> DuelSession {
+            DuelSession(challengeID: rung.rung, format: format, boardID: served.puzzleId,
                         opponentUserID: nil, opponentName: row.bot.name,
                         secondsRemaining: rung.timeLimitSeconds,
                         ladder: LadderRunSession(rung: rung, bot: row.bot, run: run))
@@ -846,15 +849,15 @@ final class RepositoryContainer: ObservableObject {
         case .keep4:
             guard let p = await ladder.puzzle(Keep4Puzzle.self, id: served.puzzleId) else { return nil }
             return .keep4(session(BotSolver.playKeep4(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
-                                                 style: row.bot.style, knowledge: row.bot.knowledge)), p)
+                                                 style: row.bot.style, knowledge: row.bot.knowledge), format: .keep4), p)
         case .grid:
             guard let p = await ladder.puzzle(GridPuzzle.self, id: served.puzzleId) else { return nil }
             return .grid(session(BotSolver.playGrid(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
-                                                 style: row.bot.style, knowledge: row.bot.knowledge)), p)
+                                                 style: row.bot.style, knowledge: row.bot.knowledge), format: .grid), p)
         case .whoami:
             guard let p = await ladder.puzzle(WhoAmIPuzzle.self, id: served.puzzleId) else { return nil }
             return .whoami(session(BotSolver.playWhoAmI(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
-                                                 style: row.bot.style, knowledge: row.bot.knowledge)), p)
+                                                 style: row.bot.style, knowledge: row.bot.knowledge), format: .whoami), p)
         // No rung is minted in journeyman mode today (`ladder_rungs.mode` still refuses the
         // value server-side), but the arm is real rather than a `return nil`: the ladder's
         // 30-rung curve is a server-side artifact, and the client should be able to play
@@ -863,8 +866,50 @@ final class RepositoryContainer: ObservableObject {
             guard let p = await ladder.puzzle(JourneymanPuzzle.self, id: served.puzzleId) else { return nil }
             return .journeyman(session(BotSolver.playJourneyman(p, skill: rung.botSkill, seed: seed,
                                                  timeLimit: limit, style: row.bot.style,
-                                                 knowledge: row.bot.knowledge)), p)
+                                                 knowledge: row.bot.knowledge), format: .journeyman), p)
+        // Handled by `startLadderBlitz`, which `LadderView` calls instead of this. Unreachable
+        // here thanks to the `isBlitz` guard above; stated rather than trapped so a future
+        // caller that forgets the guard fails soft.
+        case .blitz:
+            return nil
         }
+    }
+
+    /// Starts a **blitz** rung: materialises one seeded sequence, hands it to the bot and to the
+    /// player, and returns everything the run needs to present and settle.
+    ///
+    /// The two runs are comparable because they answer the same boards — the whole reason the
+    /// sequence is materialised here rather than drawn independently by each side. The bot's run is
+    /// computed up front with `BotSolver.playBlitz`, exactly as a single-board rung's is, so
+    /// nothing about the duel needs a server round trip during play.
+    func startLadderBlitz(_ row: LadderRungRow) async -> LadderBlitzMatch? {
+        guard ladder != nil, row.rung.mode.isBlitz else { return nil }
+        let rung = row.rung
+        let duration = LadderBlitz.duration(forRung: rung.rung, isBoss: rung.isBoss)
+        let config = BlitzConfig.ladder(sports: entitledSports(), duration: duration)
+        let loader = BlitzRoundLoader(container: self, config: config)
+        // Pools must be warm before the clock starts (the same rule arcade blitz follows), and
+        // before the shared sequence can be materialised from them.
+        _ = await loader.warm()
+        // Fresh per attempt: a retry must not replay the run whose answers the player just saw.
+        let seed = UInt64.random(in: UInt64.min...UInt64.max)
+        let sequence = loader.seededSequence(length: LadderBlitz.sequenceLength, seed: seed)
+        guard !sequence.isEmpty else { return nil }
+        loader.useSequence(sequence)
+        let botRun = BotSolver.playBlitz(boards: sequence, skill: rung.botSkill, seed: seed,
+                                         duration: duration.seconds, style: row.bot.style,
+                                         knowledge: row.bot.knowledge)
+        return LadderBlitzMatch(rung: rung, bot: row.bot, config: config, loader: loader,
+                                botRun: botRun)
+    }
+
+    /// The sports this account may play. `BlitzConfig.ladder` draws a rung's boards only from
+    /// these — the same entitlement gate arcade Blitz's setup applies, so a ladder run is not a
+    /// loophole through the sport paywall.
+    private func entitledSports() -> Set<Sport> {
+        Set(Sport.allCases.filter {
+            entitlements.canSelect(SportFilter(rawValue: $0.rawValue) ?? .all)
+        })
     }
 
     /// Starts a **human** duel: starts this player's clock server-side, then fetches the exact
@@ -913,6 +958,47 @@ final class RepositoryContainer: ObservableObject {
                                   "source": "ladder",
                                   "rung": String(run.rung.rung),
                                   "won": String(won)])
+    }
+
+    /// Settles a finished blitz rung: records the attempt, advances the ladder on a win, and banks
+    /// the run in the career log.
+    ///
+    /// `ladder_attempts.score`/`bot_score` are `check (>= 0 and <= 1)` and are the corpus human
+    /// ghost duels will be built from, so blitz's point totals cannot be stored raw. They are
+    /// recorded as each side's **mean chance-rebased round quality** — the same "how well was this
+    /// played" a single-board rung stores, independent of how many boards the clock allowed. The
+    /// duel itself is decided on `points`, and `won` carries that verdict.
+    func finishLadderBlitz(_ match: LadderBlitzMatch,
+                           summary: BlitzRunSummary) async -> LadderBlitzOutcome {
+        let playerScore = summary.performance
+        let botScore = match.botRun.meanQuality
+        // Blitz carries no speed term on purpose (finishing sooner already buys another board —
+        // see `BotBlitzRun`), so the comparable is points and ties go to the player, matching
+        // `LadderOutcome`'s no-timer rule.
+        let won = summary.total >= match.botRun.points
+        var advancedTo: Int?
+        if let ladder, let newHigh = await ladder.submitAttempt(
+            rung: match.rung.rung, puzzleID: nil, score: playerScore, botScore: botScore,
+            won: won, elapsedMs: max(0, Int(summary.elapsed * 1000))) {
+            ladderProgress = LadderProgress(highestRung: newHigh)
+            if won { advancedTo = newHigh }
+        }
+        track(.challengeStarted, ["format": "blitz", "sport": match.rung.sport.rawValue,
+                                  "source": "ladder", "rung": String(match.rung.rung),
+                                  "won": String(won)])
+        // Career log only — no rating, no XP, the same standing promise the single-board ladder
+        // keeps. `puzzleID` is synthetic: a blitz run has no single board to attribute the row to.
+        let detail = SessionDetail(mode: .versus, score: summary.total, maxScore: summary.maxPossible,
+                                   correct: summary.cleared, attempted: summary.played,
+                                   startedAt: nil, details: BlitzGameView.buildDetails(summary))
+        await logSession(format: .blitz,
+                         sport: BlitzGameView.dominantSport(summary) ?? match.rung.sport,
+                         performance: playerScore,
+                         perfect: summary.played > 0 && summary.cleared == summary.played,
+                         puzzleID: "blitz-ladder-\(match.rung.rung)-\(UUID().uuidString.prefix(8))",
+                         detail: detail)
+        return LadderBlitzOutcome(botName: match.bot.name, myPoints: summary.total,
+                                  botPoints: match.botRun.points, won: won, advancedTo: advancedTo)
     }
 
     /// The ladder list: every rung, joined to its bot, with each one's lock state.

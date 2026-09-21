@@ -78,7 +78,16 @@ enum UpdateNotes {
     /// `packs` tables and the first weekly build). A slide would announce a card nobody can find
     /// yet, the same mistake `newSportsSlide` documents below. When a pack does land, its own
     /// "JUST DROPPED" card at the top of Home is the announcement, plus the pack push.
-    static let deliberatelySilent: Set<String> = ["1.8.4", "1.8.5"]
+    ///
+    /// **1.8.7** moves every Ladder rung to Puzzle Blitz. It is a retune of a mode that already
+    /// shipped (and was announced in 1.8.1's "Puzzle Blitz: one clock, every format" slide): the
+    /// Ladder list, briefing and result screens a player already knows, playing boards they
+    /// already know, against the same bots. Saying "the Ladder is now Puzzle Blitz" to an
+    /// upgrader who has never opened the Ladder would announce a mode they may not play; a
+    /// player who *does* play it feels the smoother curve rather than reads about it. Rule 1 also
+    /// has nothing to show here — the one new component, `LadderBlitzResultView`, has no OPM art
+    /// rendered for it, and declaring a slide without that art would ship a silently-dropped one.
+    static let deliberatelySilent: Set<String> = ["1.8.4", "1.8.5", "1.8.7"]
 
     /// Written, rendered, and **not shipping yet**.
     ///

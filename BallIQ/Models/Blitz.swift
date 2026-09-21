@@ -173,6 +173,22 @@ struct BlitzConfig: Codable, Equatable {
     /// A run needs at least one sport and one format that sport can actually serve.
     var isPlayable: Bool { !sports.isEmpty && !servableFormats.isEmpty }
 
+    /// The fixed config a **ladder** blitz rung plays. Not player-choosable: a rung is a
+    /// difficulty, so its mix has to be the one `tools/ingest/ladder_blitz.py` calibrated `bot_skill`
+    /// against.
+    ///
+    /// * Formats are exactly the seeder's `FORMATS` — K4C4, Who Am I?, Journeyman. Over/Under is
+    ///   absent for the reason the seeder states (its rounds are generated on-device and have no
+    ///   stable row to calibrate against); The Grid is absent per `BlitzFormat.excluded`.
+    /// * Sports are the ones the account can select. The seeder calibrates across every sport, but
+    ///   arcade Blitz gates each sport by entitlement (`GameSetupScreen.begin`), and a ladder run
+    ///   is not a loophole through that paywall.
+    /// * The Grid/Journeyman + tennis case is handled by the loader's own `isAvailable(for:)`, so a
+    ///   tennis-entitled account still deals K4C4 and Who Am I?.
+    static func ladder(sports: Set<Sport>, duration: BlitzDuration) -> BlitzConfig {
+        BlitzConfig(sports: sports, formats: [.keep4, .whoami, .journeyman], duration: duration)
+    }
+
     /// Sports in `Sport.allCases` order — a `Set` has none, and every surface that lists the
     /// chosen sports (setup caption, result header) must list them the same way.
     var orderedSports: [Sport] { Sport.allCases.filter(sports.contains) }

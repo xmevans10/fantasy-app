@@ -1,17 +1,66 @@
 import SwiftUI
 
+/// What kind of contest a rung is: one of the four row-backed board formats, or a Puzzle Blitz
+/// run. This is the ladder's own vocabulary, **not** `PuzzleFormat`.
+///
+/// `PuzzleFormat`'s contract (its own doc comment) is "a format whose board is a stable row in
+/// `puzzles`", and it is shared with `versus_challenges.format` and `ChallengeLink`. A blitz rung
+/// is none of those things: a run aggregates several boards across formats and sports, has no
+/// single par, and pins no row. Adding `blitz` to `PuzzleFormat` would force a par, a decision
+/// count and a `GameFormatKind` onto something that has none, and would let `ChallengeLink` mint
+/// a challenge to a board that does not exist.
+///
+/// It is also the forward-compatibility seam. This type decodes an unknown mode to `.keep4` the
+/// same way `PuzzleFormat` and `LadderRung.Tier` do, so a mode added server-side before a shipped
+/// client understands it cannot throw the whole rung array — `LadderRepository.rungs()` decodes
+/// all 30 under one `try?`, and a throw there empties the tab for every user. (In practice a
+/// shipped client already maps `blitz` through `PuzzleFormat`'s identical lenient decoder to
+/// `.keep4`, so the failure is a mislabelled rung that won't start, not a blank ladder — still
+/// the reason the client must ship before the rows do.) Do not "simplify" this back to
+/// `PuzzleFormat`.
+enum LadderMode: String, Codable, CaseIterable {
+    case keep4, whoami, grid, journeyman, blitz
+
+    /// The row-backed board format this mode plays, or nil for `.blitz`, whose round is drawn
+    /// fresh every attempt and has no single `puzzles` row. Mirrors `BlitzFormat.puzzleFormat`.
+    var puzzleFormat: PuzzleFormat? {
+        switch self {
+        case .keep4:      return .keep4
+        case .whoami:     return .whoami
+        case .grid:       return .grid
+        case .journeyman: return .journeyman
+        case .blitz:      return nil
+        }
+    }
+
+    /// Player-facing name. Blitz is its own name — there is no `PuzzleFormat` to borrow one from.
+    var displayName: String { puzzleFormat?.displayName ?? String(localized: "Puzzle Blitz") }
+
+    var isBlitz: Bool { self == .blitz }
+
+    /// Unknown modes decode as `.keep4` rather than throwing — see this type's doc comment.
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = LadderMode(rawValue: raw) ?? .keep4
+    }
+}
+
 /// One rung of the bot ladder. Mirrors `ladder_rungs` — see
 /// `supabase/migrations/0016_bot_ladder.sql`.
 ///
-/// A rung carries only the **inputs** to a bot's run (which board, which bot, how good, how
-/// long, what seed). Nothing about how the bot actually played is stored server-side: the
-/// client feeds these five columns to `BotSolver` and reproduces the identical run on every
-/// device. That is what makes a rung comparable, leaderboard-able and speedrun-able without a
-/// single server round trip during play.
+/// A rung carries only the **inputs** to a bot's run (which board — or, for a blitz rung, which
+/// run length — which bot, how good, how long, what seed). Nothing about how the bot actually
+/// played is stored server-side: the client feeds these columns to `BotSolver` and reproduces the
+/// identical run on every device with no server round trip during play.
+///
+/// A `mode == .blitz` rung is the exception to the "which board" half: it pins no `puzzles` row
+/// (`puzzleId` carries the run shape, e.g. `blitz-180s`) and draws a fresh seeded board sequence
+/// per attempt, so its `seed` column is unused — see `LadderBlitzMatch` and
+/// `supabase/migrations/0030_ladder_blitz_mode.sql`.
 struct LadderRung: Codable, Equatable, Identifiable {
     let rung: Int
     let tier: Tier
-    let mode: PuzzleFormat
+    let mode: LadderMode
     let sport: Sport
     let puzzleId: String
     let botId: String
@@ -152,6 +201,6 @@ struct LadderRungRow: Identifiable, Equatable {
     let state: LadderRungState
     var id: Int { rung.rung }
 
-    /// "K4C4 · NFL", the line under the bot's name.
+    /// "K4C4 · NFL", or "Puzzle Blitz · NFL" for a blitz rung — the line under the bot's name.
     var boardLine: String { "\(rung.mode.displayName) · \(rung.sport.displayName)" }
 }

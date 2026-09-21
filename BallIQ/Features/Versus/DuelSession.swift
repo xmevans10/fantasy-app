@@ -169,10 +169,13 @@ struct LadderRunSession: Equatable {
     /// against 5/6 would be nonsense, so the bot is converted onto the player's scale here —
     /// its `beats` are one per revealed clue, so their count *is* the clues it used.
     var verdictHits: (hits: Int, outOf: Int) {
-        switch rung.mode {
+        // Switched on `puzzleFormat`, not `mode`: a blitz rung has no single-board `BotRun` to
+        // convert (its comparable is points, not hits) and never builds a `LadderRunSession` at
+        // all, so the nil arm is unreachable here and simply rides the generic case.
+        switch rung.mode.puzzleFormat {
         // Journeyman rides with these two: `BotSolver.playJourneyman` already reports guess
         // efficiency out of five, so there is nothing left to convert.
-        case .keep4, .grid, .journeyman:
+        case .keep4, .grid, .journeyman, .none:
             return (run.correct, run.outOf)
         case .whoami:
             let solved = run.correct > 0

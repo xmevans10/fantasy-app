@@ -265,6 +265,21 @@ def build_rungs(pool: dict[str, list[dict]], bots: list[dict]) -> list[dict]:
     return rows
 
 
+def trend_breaks(rows: list[dict]) -> list[tuple[int, int]]:
+    """Rungs five apart in the NON-BOSS sequence whose win rates do not descend.
+
+    **Bosses are excluded, and that is not a fudge.** Every tenth rung takes a deliberate skill
+    bump, so a boss is *supposed* to be harder than the trend line several rungs later — measuring
+    it against the baseline reports a violation on a ladder that is behaving correctly. (The
+    retired `LadderCurveTests` excluded them for the same reason.) What must hold is that the
+    baseline descends, so this compares non-boss rungs five apart in the non-boss sequence.
+    """
+    trend = [r for r in rows if not r["is_boss"]]
+    return [(trend[i]["rung"], trend[i + 5]["rung"])
+            for i in range(max(0, len(trend) - 5))
+            if trend[i]["target_win_rate"] <= trend[i + 5]["target_win_rate"]]
+
+
 def upsert(url: str, key: str, rows: list[dict]) -> None:
     req = urllib.request.Request(
         f"{url}/rest/v1/ladder_rungs?on_conflict=rung", data=json.dumps(rows).encode(),
@@ -303,9 +318,7 @@ def main() -> int:
               f"{r['target_win_rate']:>8.3f} {r['bot_id']:>10}"
               + ("  BOSS" if r["is_boss"] else ""))
 
-    breaks = [(rows[i]["rung"], rows[i + 5]["rung"])
-              for i in range(len(rows) - 5)
-              if rows[i]["target_win_rate"] <= rows[i + 5]["target_win_rate"]]
+    breaks = trend_breaks(rows)
     print(f"\nfive-rung-window violations: {len(breaks)} {breaks}")
 
     if args.upsert:

@@ -2670,7 +2670,11 @@ create table if not exists public.ladder_rungs (
   -- tools/ingest/ladder_blitz.py for why the per-format curve could not descend.
   mode               text not null check (mode in ('keep4', 'whoami', 'grid', 'blitz')),
   sport              text not null,
-  puzzle_id          text not null references public.puzzles(id),
+  -- A real `puzzles.id` for the four board modes; for mode=blitz the run SHAPE ('blitz-180s'),
+  -- which pins no board because a blitz draws fresh ones every attempt. Deliberately NOT a
+  -- foreign key any more (migration 0030) — and NOT nullable, because a shipped client decodes
+  -- this as a non-optional `String` and a NULL would empty the whole rung array under one `try?`.
+  puzzle_id          text not null,
   bot_id             text not null references public.bots(id),
   bot_skill          double precision not null check (bot_skill >= 0 and bot_skill <= 1),
   time_limit_seconds int not null check (time_limit_seconds > 0),
@@ -2679,6 +2683,21 @@ create table if not exists public.ladder_rungs (
   seed               bigint not null,
   is_boss            boolean not null default false
 );
+
+-- Migration 0030 (reconciliation): keep an already-created table on the blitz mode, and drop the
+-- `puzzles` foreign key that a blitz rung's run-shape `puzzle_id` would violate. The column stays
+-- `not null` on purpose — making it nullable would break a shipped client's non-optional decode
+-- and empty the ladder for everyone under `LadderRepository.rungs()`'s single `try?`.
+alter table public.ladder_rungs drop constraint if exists ladder_rungs_mode_check;
+alter table public.ladder_rungs add constraint ladder_rungs_mode_check
+  check (mode in ('keep4', 'whoami', 'grid', 'blitz'));
+alter table public.ladder_rungs
+  drop constraint if exists ladder_rungs_puzzle_id_fkey;
+
+comment on column public.ladder_rungs.puzzle_id is
+  'The rung''s board (a real puzzles.id) for the four board modes, or for mode=blitz the run shape (e.g. blitz-180s) — a blitz draws fresh boards every attempt, so it pins none.';
+comment on column public.ladder_rungs.time_limit_seconds is
+  'For mode=blitz this is the RUN LENGTH (60/180/300), the variance dial the curve is built on.';
 
 -- A rung is a difficulty, not a board — so it needs a pool of them (migration 0020).
 --

@@ -35,7 +35,11 @@ final class LadderRepository {
     /// bot rendered in the default electric/`consistent` colourway because the cached roster
     /// predated `style` and `palette`. Same lever, same reason, as
     /// `RemotePuzzleRepository.playerNameIndex`'s `-v2-` key.
-    private static let rungsKey = "ladder-rungs-v3"
+    /// Bumped to v4 for the ladder's move to blitz: a cached rung array written before `mode` could
+    /// be `blitz` predates the mode entirely, and the ladder is not a shape a stale payload can be
+    /// trusted to survive (a v3 payload would decode fine but mislabel every blitz rung K4C4).
+    /// Same lever, same reason, as the v3 bump for the character columns.
+    private static let rungsKey = "ladder-rungs-v4"
     /// Bumped to v4 for `knowledge` (the same lever `style`/`palette` bumped v3 for): a cached
     /// roster written before the column existed decodes as `.neutral` rather than throwing, so
     /// without a bump every bot would keep playing knowledge-blind for the cache's whole life.
@@ -118,11 +122,11 @@ final class LadderRepository {
     /// Returns nil on failure, which the caller must treat as "the attempt didn't count" rather
     /// than "the player lost" — the local result screen has already told them what happened.
     @discardableResult
-    func submitAttempt(rung: Int, puzzleID: String, score: Double, botScore: Double,
+    func submitAttempt(rung: Int, puzzleID: String?, score: Double, botScore: Double,
                        won: Bool, elapsedMs: Int) async -> Int? {
         struct Args: Encodable {
             let pRung: Int; let pScore: Double; let pBotScore: Double
-            let pWon: Bool; let pElapsedMs: Int; let pPuzzleId: String
+            let pWon: Bool; let pElapsedMs: Int; let pPuzzleId: String?
             enum CodingKeys: String, CodingKey {
                 case pRung = "p_rung", pScore = "p_score", pBotScore = "p_bot_score"
                 case pWon = "p_won", pElapsedMs = "p_elapsed_ms", pPuzzleId = "p_puzzle_id"

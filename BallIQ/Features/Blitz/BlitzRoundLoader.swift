@@ -182,13 +182,62 @@ final class BlitzRoundLoader {
     /// Randomness is real (`randomElement()`, no seed): BALLIQ_SPEC §1 theme 4 reserves
     /// determinism for shared dailies and asks for genuine randomness in arcade formats, and a
     /// blitz is nobody else's board.
+    /// Boards pre-materialised for a ladder duel, served in order by `next()` once set. See
+    /// `seededSequence(length:seed:)` for why a duel is deterministic when arcade blitz is not.
+    private var fixedSequence: [BlitzBoard] = []
+    private var fixedCursor = 0
+
+    /// Hands the run a **fixed** board sequence — the ladder duel's fairness rule. Both sides
+    /// answer this exact list, so only how far each gets and how much of each board they get right
+    /// separates them. Set once, immediately before play.
+    func useSequence(_ boards: [BlitzBoard]) {
+        fixedSequence = boards
+        fixedCursor = 0
+    }
+
+    /// Materialises a deterministic run from the warmed pools, **without touching the live
+    /// `served` set**: the caller uses this to compute the ONE sequence a ladder duel hands both
+    /// sides, so building the bot's copy must not consume the player's draw.
+    ///
+    /// Arcade blitz keeps its genuinely random `next()` — BALLIQ_SPEC §1 theme 4 reserves
+    /// determinism for shared contests and asks for real randomness in arcade formats, and an
+    /// arcade blitz is nobody else's board. A ladder duel is the shared contest, so it is the one
+    /// that gets a seed.
+    func seededSequence(length: Int, seed: UInt64) -> [BlitzBoard] {
+        var gen = SeededGenerator(seed: seed)
+        var localServed: Set<String> = []
+        var out: [BlitzBoard] = []
+        out.reserveCapacity(length)
+        for _ in 0..<length {
+            guard let board = drawNext(using: &gen, served: &localServed) else { break }
+            out.append(board)
+        }
+        return out
+    }
+
     func next() -> BlitzBoard? {
+        // A ladder duel serves its shared, pre-materialised sequence verbatim. Arcade blitz has
+        // none set and falls through to the genuinely random draw below.
+        if !fixedSequence.isEmpty {
+            guard fixedCursor < fixedSequence.count else { return nil }
+            let board = fixedSequence[fixedCursor]
+            fixedCursor += 1
+            served.insert(board.id)
+            warmImages(for: board)
+            return board
+        }
+        var gen = SystemRandomNumberGenerator()
+        return drawNext(using: &gen, served: &served)
+    }
+
+    private func drawNext(using gen: inout some RandomNumberGenerator,
+                          served servedSet: inout Set<String>) -> BlitzBoard? {
         // Draw a format that can actually serve, retrying against a shrinking candidate set so
         // one exhausted format can't end a run the others could still fill.
         var candidates = config.servableFormats
-        while let format = candidates.randomElement() {
-            if let board = draw(format) {
-                served.insert(board.id)
+        while let format = candidates.randomElement(using: &gen) {
+            if let board = draw(format, using: &gen, served: &servedSet) {
+                servedSet.insert(board.id)
                 // Backstop for anything the sampled pre-warm in `warm()` missed. The board is
                 // about to be built and rendered, so this is a head start of only a frame or two
                 // — worth having, not enough on its own, which is why the pool sample exists.
@@ -217,45 +266,54 @@ final class BlitzRoundLoader {
         }
     }
 
-    private func draw(_ format: BlitzFormat) -> BlitzBoard? {
+    private func draw(_ format: BlitzFormat, using gen: inout some RandomNumberGenerator,
+                      served servedSet: inout Set<String>) -> BlitzBoard? {
         // Sports are shuffled rather than iterated so a multi-sport run doesn't systematically
         // favour whichever sport sorts first in `Sport.allCases`.
-        for sport in config.orderedSports.shuffled() where format.isAvailable(for: sport) {
+        for sport in config.orderedSports.shuffled(using: &gen) where format.isAvailable(for: sport) {
             switch format {
             case .keep4:
-                if let p = pick(keep4[sport] ?? [], id: \.id, format: .keep4) { return .keep4(p) }
+                if let p = pick(keep4[sport] ?? [], id: \.id, format: .keep4,
+                                using: &gen, served: &servedSet) { return .keep4(p) }
             case .whoami:
-                if let p = pick(whoami[sport] ?? [], id: \.id, format: .whoami) { return .whoami(p) }
+                if let p = pick(whoami[sport] ?? [], id: \.id, format: .whoami,
+                                using: &gen, served: &servedSet) { return .whoami(p) }
             case .journeyman:
-                if let p = pick(journeyman[sport] ?? [], id: \.id, format: .journeyman) {
+                if let p = pick(journeyman[sport] ?? [], id: \.id, format: .journeyman,
+                                using: &gen, served: &servedSet) {
                     return .journeyman(p)
                 }
             case .overunder:
-                if let round = drawOverUnder(sport) { return .overunder(round, sport) }
+                if let round = drawOverUnder(sport, using: &gen, served: &servedSet) {
+                    return .overunder(round, sport)
+                }
             }
         }
         return nil
     }
 
     /// A pool member that hasn't been served this run and isn't today's withheld daily.
-    private func pick<P>(_ pool: [P], id: KeyPath<P, String>, format: BlitzFormat) -> P? {
+    private func pick<P>(_ pool: [P], id: KeyPath<P, String>, format: BlitzFormat,
+                         using gen: inout some RandomNumberGenerator,
+                         served servedSet: inout Set<String>) -> P? {
         pool.filter { !withheld.contains($0[keyPath: id])
-                   && !served.contains("\(format.rawValue)-\($0[keyPath: id])") }
-            .randomElement()
+                   && !servedSet.contains("\(format.rawValue)-\($0[keyPath: id])") }
+            .randomElement(using: &gen)
     }
 
     /// Over/Under rounds are generated, not drawn from a fixed pool, so "already served" is about
     /// the generator index rather than a row. A random index (not a running counter) keeps the
     /// sequence genuinely random; the bounded retry covers the vanishing chance of a collision or
     /// of an index whose player has no position-scoped stat to build a line from.
-    private func drawOverUnder(_ sport: Sport) -> OverUnderRound? {
+    private func drawOverUnder(_ sport: Sport, using gen: inout some RandomNumberGenerator,
+                               served servedSet: inout Set<String>) -> OverUnderRound? {
         let pool = overUnderPool[sport] ?? []
         guard !pool.isEmpty else { return nil }
         for _ in 0..<8 {
-            let index = Int.random(in: 0..<1_000_000)
+            let index = Int.random(in: 0..<1_000_000, using: &gen)
             guard let round = OverUnderRoundGenerator.round(from: pool, sport: sport,
                                                             date: Date(), index: index) else { continue }
-            if !served.contains("\(BlitzFormat.overunder.rawValue)-\(round.id)") { return round }
+            if !servedSet.contains("\(BlitzFormat.overunder.rawValue)-\(round.id)") { return round }
         }
         return nil
     }
