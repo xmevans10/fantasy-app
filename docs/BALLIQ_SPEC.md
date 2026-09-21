@@ -2256,6 +2256,44 @@ work**, which move to an opportunistic bucket instead of their own version. Same
   building anything new.
 - Exit: `>10` share-grid posts/week from accounts that aren't the official one (MARKETING.md's
   own KPI), and at least one App Store promo-text rotation shipped for the kickoff window.
+- **Status 2026-09-21 (Phase 0 shipped):** store-page work in `prompts/HANDOFF-growth-agent.md`
+  §4 is done for the kickoff window. New **App Store promotional text is live on 1.8.6**
+  (`Football season is here. Nine cells, five sports, one fresh board every day - how many can
+  you get before kickoff?`) and **1.8.7** (in review) replaces the head-term keywords
+  (`nfl,nba,mlb,…`) with the long-tail set the brief asked for
+  (`daily sports trivia,guess the player,nfl quiz,football trivia,sports wordle,mlb,nba,streak`);
+  live-version keywords are locked until 1.8.7 ships, so both land together. The **X asset
+  pipeline is healthy**: `daily-puzzle.yml` calls `x-assets.yml` daily, which mints the captioned
+  board images, publishes them to the marketing bucket, and comments copy-ready captions + alt
+  text on tracking issue #2 (verified in the 2026-09-21 run log — `[x] notified on issue #2`).
+- **The automated growth engine (built 2026-09-21).** `tools/marketing/x_engine.py` +
+  `.github/workflows/x-post.yml` post Playbook's daily content to X unattended — the "build it as a
+  scheduled workflow, not a manual habit" half of the growth brief. Design points worth not
+  rediscovering:
+  - **Credentials live in Supabase, not repo secrets.** X rotates the OAuth2 refresh token on
+    every use, and an Actions runner cannot persist a modified secret. `public.marketing_secrets`
+    (migration 0031, RLS on, no policies → service-role only) holds `x_client_id`,
+    `x_client_secret` and the rotating `x_refresh_token`; the engine reads and rewrites it, so the
+    workflow needs only `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`, which already exist. Seeded
+    live 2026-09-21.
+  - **Idempotent by ledger.** `public.marketing_posts` records every tweet under a stable key
+    (`{date}:{kind}:{sport}:main|reply:{n}|reveal`), so a cron that fires twice or a dispatch for
+    an already-posted date is a no-op rather than a duplicate.
+  - **It posts `whoami` only, on purpose.** The board kinds (`keep4`, `resume`, `career`) carry
+    their answer in the *image*, so a caption alone is unanswerable — the engine refuses to post
+    one without its image, and image upload needs the `media.write` scope the current grant lacks
+    (`POST /2/media/upload` → **403**, verified 2026-09-21). Add the scope, re-consent, and pass
+    `--media`; the upload path is already implemented and falls back gracefully.
+  - **Dark by default.** Scheduled runs fire only when repo variable `X_AUTOPOST == 'true'`
+    (created `false`); `workflow_dispatch` defaults to `--dry-run`, which prints exactly what
+    would post without consuming the refresh token or writing the ledger.
+- **Still open, user-gated:** (1) **enabling `X_AUTOPOST`** — flip the variable once the first
+  post is approved (the growth brief requires that); (2) **the `media.write` scope** — the unlock
+  for the board posts, which are the stronger hook than a text clue thread; (3) **Google Drive
+  filing is inert in CI** — `DRIVE_UPLOAD_URL` / `DRIVE_UPLOAD_TOKEN` are unset repo secrets, so
+  `x_assets --drive` and `x-evergreen-sync.yml` both log `[drive] not configured` and skip.
+- The remaining `[product]` candidate (creator attribution + community puzzle of the week,
+  MARKETING.md §5) is still unconfirmed.
 
 **v1.5.0 "Duel" — the multiplayer overhaul (shipped 2026-08-13, `prompts/HANDOFF-multiplayer.md`).**
 

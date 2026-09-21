@@ -3370,3 +3370,30 @@ create policy "published pack items readable" on public.pack_items
 -- Which build registered each device token (migration 0028): the Week Pack push only targets
 -- builds that can show a pack. NULL = a build that predates the column.
 alter table public.device_tokens add column if not exists app_build int;
+
+-- ── Automated growth engine (migration 0031) ────────────────────────────────────
+-- Server-side state for tools/marketing/x_engine.py: the rotating X credentials (Supabase is a
+-- CI secret, so this is the one store a scheduled runner can both read and rewrite) and the
+-- posting ledger that makes a re-run idempotent. RLS on, no policies: service role only.
+
+create table if not exists public.marketing_secrets (
+  key        text primary key,
+  value      text not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.marketing_secrets enable row level security;
+
+create table if not exists public.marketing_posts (
+  id         text primary key,
+  platform   text not null default 'x',
+  posted_at  timestamptz not null default now(),
+  tweet_id   text,
+  date       date,
+  kind       text,
+  sport      text
+);
+
+create index if not exists marketing_posts_date_idx on public.marketing_posts (date);
+
+alter table public.marketing_posts enable row level security;

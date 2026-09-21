@@ -1,0 +1,70 @@
+name: x-post
+
+# Posts Playbook's daily content to X, unattended — the "post the daily board every day,
+# automatically, as a scheduled workflow" half of prompts/HANDOFF-growth-agent.md. The captions
+# and images are minted by x-assets.yml (called from daily-puzzle.yml after the mint); this job
+# is only the posting half. See tools/marketing/x_engine.py for the full design, including why
+# the rotating X credentials live in Supabase rather than in repository secrets.
+#
+# SHIPS DARK. A scheduled run only posts when the repository variable X_AUTOPOST is the string
+# `true`; until then it is skipped entirely. Use workflow_dispatch (dry-run defaults ON) to see
+# exactly what a given day would post without sending anything.
+
+on:
+  schedule:
+    # 13:00 UTC. The 00:00 UTC daily mint finishes ~03:00-04:00 and its x-assets render follows;
+    # posting 9am US-Eastern is the audience this app has. No dependency on x-assets here — the
+    # engine reads the published boards itself, so a slow or failed render never blocks posting.
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "YYYY-MM-DD (blank = today, UTC)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Print what would post; send nothing"
+        type: boolean
+        default: true
+      media:
+        description: "Also post board kinds — requires the media.write OAuth scope"
+        type: boolean
+        default: false
+      reveals:
+        description: "Post yesterday's reveals for this date instead"
+        type: boolean
+        default: false
+      cap:
+        description: "Max threads per run"
+        required: false
+        default: "2"
+
+jobs:
+  post:
+    # Scheduled runs are gated on the variable; a manual dispatch is always allowed.
+    if: github.event_name == 'workflow_dispatch' || vars.X_AUTOPOST == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Post to X
+        run: |
+          set -euo pipefail
+          ARGS=(--cap "${{ github.event.inputs.cap || '2' }}")
+          if [ -n "${{ github.event.inputs.date }}" ]; then ARGS+=(--date "${{ github.event.inputs.date }}"); fi
+          if [ "${{ github.event.inputs.media }}" = "true" ]; then ARGS+=(--media); fi
+          if [ "${{ github.event.inputs.reveals }}" = "true" ]; then ARGS+=(--reveals); fi
+          # A dispatch dry-runs unless it was explicitly turned off; a scheduled run really posts.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.dry_run }}" != "false" ]; then
+            ARGS+=(--dry-run)
+          fi
+          echo "python -m tools.marketing.x_engine ${ARGS[*]}"
+          python -m tools.marketing.x_engine "${ARGS[@]}"
