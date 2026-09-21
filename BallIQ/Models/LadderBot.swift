@@ -23,13 +23,23 @@ struct LadderBot: Codable, Equatable, Identifiable {
     var palette: BotPalette = .electric
     /// What they say, keyed by the moment. Every field optional — silence beats a filler line.
     var voice: BotVoice = .empty
+    /// What they KNOW, as distinct from how well they play — eras, sports, and which end of
+    /// the fame range they are better at. See `BotKnowledge`; `.neutral` is the identity, so a
+    /// bot without a profile plays exactly as it did before knowledge existed.
+    var knowledge: BotKnowledge = .neutral
+    /// `knowledge` stated to the player before the duel — the same contract `styleLine` has.
+    /// A blind spot the player cannot anticipate isn't a character trait, it's an unexplained
+    /// loss, and the one thing that separates this from a random difficulty wobble is that the
+    /// player was told first and can pick their board.
+    var knowledgeLine: String = ""
     /// Who they support, in order. Rendered as real crests by `TeamAbbrChip` — in a sports app
     /// this is characterisation, not data: three logos say more about someone than a paragraph.
     /// Empty is meaningful rather than missing (Nova has no allegiances, and the card says so).
     var favoriteTeams: [BotTeam] = []
 
     enum CodingKeys: String, CodingKey {
-        case id, name, avatar, tagline, persona, style, backstory, palette, voice
+        case id, name, avatar, tagline, persona, style, backstory, palette, voice, knowledge
+        case knowledgeLine = "knowledge_line"
         case baseSkill = "base_skill"
         case styleLine = "style_line"
         case favoriteTeams = "favorite_teams"
@@ -52,17 +62,22 @@ struct LadderBot: Codable, Equatable, Identifiable {
         palette = try c.decodeIfPresent(BotPalette.self, forKey: .palette) ?? .electric
         voice = try c.decodeIfPresent(BotVoice.self, forKey: .voice) ?? .empty
         favoriteTeams = try c.decodeIfPresent([BotTeam].self, forKey: .favoriteTeams) ?? []
+        knowledge = try c.decodeIfPresent(BotKnowledge.self, forKey: .knowledge) ?? .neutral
+        knowledgeLine = try c.decodeIfPresent(String.self, forKey: .knowledgeLine) ?? ""
     }
 
     init(id: String, name: String, avatar: String, tagline: String, baseSkill: Double,
          persona: String, style: BotStyle = .consistent, styleLine: String = "",
          backstory: String = "", palette: BotPalette = .electric, voice: BotVoice = .empty,
-         favoriteTeams: [BotTeam] = []) {
+         favoriteTeams: [BotTeam] = [], knowledge: BotKnowledge = .neutral,
+         knowledgeLine: String = "") {
         self.id = id; self.name = name; self.avatar = avatar; self.tagline = tagline
         self.baseSkill = baseSkill; self.persona = persona; self.style = style
         self.styleLine = styleLine; self.backstory = backstory; self.palette = palette
         self.voice = voice
         self.favoriteTeams = favoriteTeams
+        self.knowledge = knowledge
+        self.knowledgeLine = knowledgeLine
     }
 }
 

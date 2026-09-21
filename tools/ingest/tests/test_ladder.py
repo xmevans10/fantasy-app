@@ -114,3 +114,35 @@ def test_the_ladder_comparable_no_longer_includes_speed():
     body = "".join(line.split("#", 1)[0]
                    for line in inspect.getsource(ladder.win_rate).splitlines(keepends=True))
     assert "speed_adjusted(" not in body, "speed is back in the ladder comparable"
+
+
+# ── Format placement follows each format's reachable floor ────────────────────
+
+def test_each_format_only_guards_rungs_its_floor_can_serve():
+    """A format placed below its reachable win-rate floor produces a flat spot, not a step.
+
+    Measured floors (skill 1.0 against the reference player): whoami 0.75, keep4 0.27, grid
+    0.18. So the formats have to appear in that order along the curve — whoami where it is
+    still high, grid alone at the bottom. This pins the ordering rather than the specific
+    cutoffs, which are expected to move as the curve is retuned.
+    """
+    from tools.ingest.ladder import (BOSS_EVERY, KEEP4_MAX_RUNG, RUNG_COUNT, WHOAMI_MAX_RUNG,
+                                     mode_for)
+    rungs = {r: mode_for(r) for r in range(1, RUNG_COUNT + 1)}
+
+    # K4C4 is the app's best surface, so it is what a player meets first (BALLIQ_SPEC §1).
+    assert rungs[1] == "keep4"
+
+    whoami = [r for r, m in rungs.items() if m == "whoami"]
+    keep4 = [r for r, m in rungs.items() if m == "keep4"]
+    grid = [r for r, m in rungs.items() if m == "grid"]
+    assert whoami and keep4 and grid, "every format should still appear somewhere"
+    assert max(whoami) <= WHOAMI_MAX_RUNG
+    assert max(keep4) <= KEEP4_MAX_RUNG
+    assert max(whoami) < max(keep4) < max(grid), "formats must run in reachable-floor order"
+
+    # Below the deepest format's stretch, only the format that reaches the bottom is left.
+    assert all(m == "grid" for r, m in rungs.items() if r > KEEP4_MAX_RUNG)
+
+    # A boss has to be a step up, and Who Am I? has no step left at that height.
+    assert all(rungs[r] != "whoami" for r in range(BOSS_EVERY, RUNG_COUNT + 1, BOSS_EVERY))

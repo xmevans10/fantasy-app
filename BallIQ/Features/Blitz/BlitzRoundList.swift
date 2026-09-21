@@ -1,31 +1,28 @@
 import SwiftUI
 
-/// Every board of a finished run, in play order, each one openable to show how it was scored.
+/// Every board of a finished run, in play order — **what it asked, and whether you got it**.
 ///
-/// **Why this exists alongside the per-format breakdown.** "Where it came from" answers *which
-/// format* paid, which is the right first question but the wrong last one: a run of eleven boards
-/// collapses into four rows there, and the board a player actually wants to argue with — the one
-/// they thought they nailed and got 40 points for — is invisible. This lists all of them and,
-/// on tap, shows the arithmetic that produced the number.
+/// This used to be a list of scoring arithmetic: tap a row and it unfolded quality-vs-chance,
+/// board value, base and combo, four lines explaining how a number was reached. That answers a
+/// question nobody has. Coming off a blitz you want to know *what the answer was* — the name you
+/// couldn't place, the line you called wrong — and whether you got it. The points are already on
+/// the row; the derivation behind them was noise wearing the clothes of transparency.
 ///
-/// **Every figure is read off `BlitzScoring.RoundBreakdown`, never recomputed here.** A round's
-/// points depend on the combo it landed on, which is a property of the sequence, so a view that
-/// derived its own would be re-implementing a fold it cannot see the whole of. That is also why
-/// the rows sum to the headline: they are the same fold.
+/// So the answer is the row now, there is nothing to expand, and the arithmetic is gone. What
+/// each board can say about itself comes from `BlitzRoundAnswer`, supplied by that format's own
+/// game view at `finishRound` — only the board knows its answer, since `performance` is a number
+/// and cannot be turned back into a player's name.
+///
+/// The one figure kept from the old detail is the combo marker, because it is the only thing on
+/// this screen a player could have acted on during the run. Points still come off
+/// `BlitzScoring.RoundBreakdown` rather than being recomputed, so the rows still sum to the
+/// headline by construction.
 struct BlitzRoundList: View {
     let summary: BlitzRunSummary
 
-    /// Which round is open. One at a time — this sits inside the result screen's scroll view, and
-    /// letting several expand turns a scannable list into a page of arithmetic nobody asked for.
-    @State private var expanded: UUID?
-
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Text("EVERY PUZZLE").font(.label12).foregroundStyle(Color.accentText)
-                Spacer(minLength: 8)
-                Text("TAP FOR DETAIL").font(.label11).foregroundStyle(Color.textMuted)
-            }
+            Text("EVERY PUZZLE").font(.label12).foregroundStyle(Color.accentText)
 
             VStack(spacing: 0) {
                 ForEach(Array(summary.breakdown.enumerated()), id: \.element.id) { index, row in
@@ -44,59 +41,45 @@ struct BlitzRoundList: View {
     // MARK: - Rows
 
     private func roundRow(index: Int, row: BlitzScoring.RoundBreakdown) -> some View {
-        let isOpen = expanded == row.id
-        return VStack(spacing: 0) {
-            Button {
-                Haptics.tap()
-                withAnimation(Motion.easeOut) { expanded = isOpen ? nil : row.id }
-            } label: {
-                HStack(spacing: 10) {
-                    formatBadge(row.round.format)
+        HStack(spacing: 10) {
+            formatBadge(row.round.format)
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(row.round.format.displayName)
-                            .font(.bodyStrong).foregroundStyle(Color.textPrimary)
-                            .lineLimit(1)
-                        HStack(spacing: 6) {
-                            Text(row.round.sport.displayName.uppercased())
-                            Text("·")
-                            Text(String(format: "%.0fs", row.round.elapsed))
-                            if row.comboApplied {
-                                Text("·")
-                                // The combo is the one thing a player can act on mid-run, so it
-                                // gets a marker in the collapsed row rather than only inside.
-                                Text(String(format: "×%.1f", row.combo))
-                                    .foregroundStyle(Color.accentText)
-                            }
-                        }
-                        .font(.label11)
-                        .foregroundStyle(Color.textMuted)
+            VStack(alignment: .leading, spacing: 2) {
+                // The answer leads. Falling back to the format's name keeps a round recorded
+                // before answers existed — or replayed from a bot, which has none — readable
+                // rather than blank.
+                Text(row.round.answer?.headline ?? row.round.format.displayName)
+                    .font(.bodyStrong).foregroundStyle(Color.textPrimary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 6) {
+                    if let detail = row.round.answer?.detail {
+                        Text(detail)
+                    } else {
+                        Text(row.round.sport.displayName.uppercased())
                     }
-
-                    Spacer(minLength: 8)
-                    outcomePill(row)
-                    Text(signed(row.points))
-                        .font(.custom(FontName.condBlack, size: 17))
-                        .monospacedDigit()
-                        .foregroundStyle(row.points < 0 ? Color.dangerText : Color.textPrimary)
-                        .frame(minWidth: 46, alignment: .trailing)
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Color.textMuted)
-                        .rotationEffect(.degrees(isOpen ? 180 : 0))
+                    if row.comboApplied {
+                        Text("·")
+                        Text(String(format: "×%.1f", row.combo))
+                            .foregroundStyle(Color.accentText)
+                    }
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 11)
-                .contentShape(Rectangle())
+                .font(.label11)
+                .foregroundStyle(Color.textMuted)
             }
-            .buttonStyle(.plain)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(Text(accessibilityLabel(index: index, row: row)))
-            .accessibilityHint(Text(isOpen ? String(localized: "Hides the scoring detail")
-                                           : String(localized: "Shows how this puzzle was scored")))
 
-            if isOpen { detail(row) }
+            Spacer(minLength: 8)
+            outcomePill(row)
+            Text(signed(row.points))
+                .font(.custom(FontName.condBlack, size: 17))
+                .monospacedDigit()
+                .foregroundStyle(row.points < 0 ? Color.dangerText : Color.textPrimary)
+                .frame(minWidth: 46, alignment: .trailing)
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(accessibilityLabel(index: index, row: row)))
     }
 
     /// The board the clock caught. Deliberately styled as an absence — no points column, muted
@@ -125,57 +108,6 @@ struct BlitzRoundList: View {
             "Puzzle \(index + 1), \(cutOff.format.displayName), cut off by the clock, not scored")))
     }
 
-    // MARK: - Expanded detail
-
-    /// The arithmetic, in the order it happens: quality, then what that is worth, then the combo.
-    private func detail(_ row: BlitzScoring.RoundBreakdown) -> some View {
-        VStack(spacing: 8) {
-            Rectangle().fill(Color.hairline).frame(height: Hairline.width)
-
-            VStack(spacing: 7) {
-                detailLine(String(localized: "Quality vs chance"), percent(row.surplus),
-                           note: qualityNote(row))
-                detailLine(String(localized: "Board value"),
-                           "\(BlitzScoring.maxRoundPoints(row.round.format))",
-                           note: String(localized: "\(Int(row.round.format.parSeconds))s par at \(Int(BlitzScoring.pointsPerParSecond))/s"))
-                detailLine(String(localized: "Base"), signed(Int(row.base.rounded())),
-                           note: String(localized: "Value × quality"))
-                if row.comboApplied {
-                    detailLine(String(localized: "Combo"), String(format: "×%.1f", row.combo),
-                               note: row.consecutiveCleared == 1
-                                   ? String(localized: "1 clean board before this")
-                                   : String(localized: "\(row.consecutiveCleared) clean boards before this"),
-                               highlight: true)
-                }
-                Rectangle().fill(Color.hairline).frame(height: Hairline.width)
-                detailLine(String(localized: "Scored"), signed(row.points), note: nil, bold: true)
-            }
-            .padding(.horizontal, 14)
-            .padding(.bottom, 12)
-            .padding(.top, 2)
-        }
-        .transition(.opacity)
-    }
-
-    private func detailLine(_ label: String, _ value: String, note: String?,
-                            highlight: Bool = false, bold: Bool = false) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(label)
-                    .font(bold ? .bodyStrong : .label12)
-                    .foregroundStyle(bold ? Color.textPrimary : Color.textMuted)
-                if let note {
-                    Text(note).font(.label11).foregroundStyle(Color.textMuted.opacity(0.8))
-                }
-            }
-            Spacer(minLength: 8)
-            Text(value)
-                .font(.custom(FontName.condBlack, size: bold ? 17 : 14))
-                .monospacedDigit()
-                .foregroundStyle(highlight ? Color.accentText : Color.textPrimary)
-        }
-    }
-
     // MARK: - Pieces
 
     private func formatBadge(_ format: BlitzFormat) -> some View {
@@ -187,7 +119,7 @@ struct BlitzRoundList: View {
             .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 
-    /// Cleared / missed, as a shape as well as a colour — the two states have to survive a
+    /// Right / wrong, as a shape as well as a colour — the two states have to survive a
     /// colour-blind reader and a greyscale screenshot.
     private func outcomePill(_ row: BlitzScoring.RoundBreakdown) -> some View {
         Image(systemName: row.round.cleared ? "checkmark.circle.fill" : "xmark.circle.fill")
@@ -202,19 +134,12 @@ struct BlitzRoundList: View {
     /// "-120" reading as "120" would make the list fail to reconcile against the total.
     private func signed(_ value: Int) -> String { value > 0 ? "+\(value)" : "\(value)" }
 
-    private func percent(_ surplus: Double) -> String {
-        "\(Int((surplus * 100).rounded()))%"
-    }
-
-    private func qualityNote(_ row: BlitzScoring.RoundBreakdown) -> String {
-        if row.surplus > 0 { return String(localized: "Better than a guess") }
-        if row.surplus < 0 { return String(localized: "Worse than a guess") }
-        return String(localized: "Level with a guess")
-    }
-
+    /// Reads the row the way the screen does — the answer first, then right or wrong.
     private func accessibilityLabel(index: Int, row: BlitzScoring.RoundBreakdown) -> String {
-        let outcome = row.round.cleared ? String(localized: "cleared") : String(localized: "missed")
+        let outcome = row.round.cleared ? String(localized: "correct") : String(localized: "wrong")
+        let headline = row.round.answer?.headline ?? row.round.format.displayName
+        let detail = row.round.answer?.detail.map { ", \($0)" } ?? ""
         return String(localized:
-            "Puzzle \(index + 1), \(row.round.format.displayName), \(outcome), \(row.points) points")
+            "Puzzle \(index + 1), \(headline)\(detail), \(outcome), \(row.points) points")
     }
 }

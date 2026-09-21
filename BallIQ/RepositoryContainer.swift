@@ -846,15 +846,15 @@ final class RepositoryContainer: ObservableObject {
         case .keep4:
             guard let p = await ladder.puzzle(Keep4Puzzle.self, id: served.puzzleId) else { return nil }
             return .keep4(session(BotSolver.playKeep4(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
-                                                 style: row.bot.style)), p)
+                                                 style: row.bot.style, knowledge: row.bot.knowledge)), p)
         case .grid:
             guard let p = await ladder.puzzle(GridPuzzle.self, id: served.puzzleId) else { return nil }
             return .grid(session(BotSolver.playGrid(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
-                                                 style: row.bot.style)), p)
+                                                 style: row.bot.style, knowledge: row.bot.knowledge)), p)
         case .whoami:
             guard let p = await ladder.puzzle(WhoAmIPuzzle.self, id: served.puzzleId) else { return nil }
             return .whoami(session(BotSolver.playWhoAmI(p, skill: rung.botSkill, seed: seed, timeLimit: limit,
-                                                 style: row.bot.style)), p)
+                                                 style: row.bot.style, knowledge: row.bot.knowledge)), p)
         // No rung is minted in journeyman mode today (`ladder_rungs.mode` still refuses the
         // value server-side), but the arm is real rather than a `return nil`: the ladder's
         // 30-rung curve is a server-side artifact, and the client should be able to play
@@ -862,7 +862,8 @@ final class RepositoryContainer: ObservableObject {
         case .journeyman:
             guard let p = await ladder.puzzle(JourneymanPuzzle.self, id: served.puzzleId) else { return nil }
             return .journeyman(session(BotSolver.playJourneyman(p, skill: rung.botSkill, seed: seed,
-                                                 timeLimit: limit, style: row.bot.style)), p)
+                                                 timeLimit: limit, style: row.bot.style,
+                                                 knowledge: row.bot.knowledge)), p)
         }
     }
 

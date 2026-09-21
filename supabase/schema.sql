@@ -2645,6 +2645,15 @@ alter table public.bots drop constraint if exists bots_style_domain;
 alter table public.bots add constraint bots_style_domain check (style in
   ('overeager', 'methodical', 'consistent', 'deepCuts', 'slowBurn', 'prescient'));
 
+-- What a bot KNOWS, as opposed to how well it plays (migration 0029). Same posture as `style`:
+-- a gameplay property `BotSolver` reads on every decision and `tools/ingest/ladder.py` calibrates
+-- against, not copy. An empty object is the identity, so a bot without a profile plays exactly as
+-- it did before the column existed. Written by `tools/roster/sync.py`; see BotKnowledge.swift for
+-- the shape and the reason each term is there.
+alter table public.bots
+  add column if not exists knowledge      jsonb not null default '{}'::jsonb,
+  add column if not exists knowledge_line text  not null default '';
+
 -- The two numbers that make a rung's difficulty inspectable (migration 0015 of the ladder work):
 -- `board_difficulty` from each format's own scoring metric, and `target_win_rate`, the simulated
 -- P(reference player wins) that `bot_skill` is now solved backwards from.
@@ -2657,7 +2666,9 @@ alter table public.ladder_rungs
 create table if not exists public.ladder_rungs (
   rung               int primary key,
   tier               text not null,        -- 'bronze' | 'silver' | 'gold', matching Home's tiers
-  mode               text not null check (mode in ('keep4', 'whoami', 'grid')),
+  -- 'blitz' added in migration 0030: the ladder's rungs are Puzzle Blitz runs now. See
+  -- tools/ingest/ladder_blitz.py for why the per-format curve could not descend.
+  mode               text not null check (mode in ('keep4', 'whoami', 'grid', 'blitz')),
   sport              text not null,
   puzzle_id          text not null references public.puzzles(id),
   bot_id             text not null references public.bots(id),

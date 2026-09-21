@@ -34,10 +34,10 @@ struct BlitzResultView: View {
                     scoreHeader.heroReveal(0)
                     statRow.heroReveal(1)
                     if !summary.rounds.isEmpty { formatBreakdown.heroReveal(2) }
-                    // Per-board detail sits *below* the per-format roll-up on purpose: "which
-                    // format paid" is the first question, "what did that board score" is the
-                    // follow-up, and a run of a dozen boards would otherwise push the rewards
-                    // and share rows off the first screen.
+                    // The per-board list sits *below* the per-format roll-up on purpose: the
+                    // roll-up is four rows and answers "where did that come from", while this
+                    // is one row per board and answers "what were the answers, and did I get
+                    // them" — the follow-up question, and the longer list.
                     if !summary.breakdown.isEmpty || summary.cutOff != nil {
                         BlitzRoundList(summary: summary).heroReveal(3)
                     }

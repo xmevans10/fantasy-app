@@ -100,8 +100,10 @@ final class BlitzSession: ObservableObject {
     /// format's own notion of "got it" (solved, or beat the chance floor), used for the combo and
     /// the end-of-run tally.
     func finishRound(format: BlitzFormat, sport: Sport, puzzleID: String,
-                     performance: Double, cleared: Bool, now: Date = Date()) {
+                     performance: Double, cleared: Bool,
+                     answer: BlitzRoundAnswer? = nil, now: Date = Date()) {
         rounds.append(BlitzRoundResult(format: format, sport: sport, puzzleID: puzzleID,
+                                       answer: answer,
                                        performance: performance, cleared: cleared,
                                        elapsed: max(0, now.timeIntervalSince(roundStartedAt))))
         // A board finished exactly as the clock ran out counts — it was completed, so there is

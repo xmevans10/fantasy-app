@@ -46,6 +46,12 @@ final class LadderCurveTests: XCTestCase {
             /// The guarding character's playing style. Load-bearing for this pin: style changes
             /// the solver's policy, so measuring a rung with the wrong one measures nothing.
             let style: String?
+            /// The guarding character's knowledge profile — load-bearing for the same reason,
+            /// and for a sharper one: `bot_skill` was SOLVED against this profile on this board,
+            /// so replaying without it re-measures a different opponent and the pin passes or
+            /// fails on the wrong question. Optional so a fixture dumped before knowledge
+            /// existed still decodes, as neutral.
+            let knowledge: BotKnowledge?
         }
         struct Puzzle: Decodable { let id: String; let content: RawJSON }
     }
@@ -114,19 +120,25 @@ final class LadderCurveTests: XCTestCase {
             // yardstick, not a character, and giving it a style would make the curve a claim
             // about one imagined personality rather than about the rung.
             let style = BotStyle(rawValue: row.rung.style ?? "consistent") ?? .consistent
+            // The reference player stays knowledge-free for the same reason it stays
+            // `.consistent`: it is a yardstick, not a character.
+            let knowledge = row.rung.knowledge ?? .neutral
             switch mode {
             case "keep4":
                 let p = try plain.decode(Keep4Puzzle.self, from: row.puzzle.content.data)
                 player = BotSolver.playKeep4(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: limit)
-                bot = BotSolver.playKeep4(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: limit, style: style)
+                bot = BotSolver.playKeep4(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: limit,
+                                          style: style, knowledge: knowledge)
             case "grid":
                 let p = try plain.decode(GridPuzzle.self, from: row.puzzle.content.data)
                 player = BotSolver.playGrid(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: limit)
-                bot = BotSolver.playGrid(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: limit, style: style)
+                bot = BotSolver.playGrid(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: limit,
+                                         style: style, knowledge: knowledge)
             case "whoami":
                 let p = try plain.decode(WhoAmIPuzzle.self, from: row.puzzle.content.data)
                 player = BotSolver.playWhoAmI(p, skill: referencePlayerSkill, seed: playerSeed, timeLimit: limit)
-                bot = BotSolver.playWhoAmI(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: limit, style: style)
+                bot = BotSolver.playWhoAmI(p, skill: row.rung.bot_skill, seed: botSeed, timeLimit: limit,
+                                           style: style, knowledge: knowledge)
             default:
                 continue
             }
