@@ -9,10 +9,9 @@ one is process. **§9.1's version roadmap (1.2 push → 1.3 monetization → 1.4
 BALLIQ_SPEC.md §9.3's post-1.5 roadmap instead** (growth/marketing + new engagement features
 prioritized ahead of further Grid-depth/monetization-funnel work; §9.0's tier rule still
 governs anything outside that roadmap). The app is LIVE on the App Store, monetization
-switched on: v1.3 build 21 is `READY_FOR_SALE` as of 2026-07-31 (confirmed via the ASC API —
-see BALLIQ_SPEC.md §8 Release status for what shipped in the builds since 1.3's double
-rejection, including native Sign in with Google and an account-switch data-isolation fix) —
-treat `main` as production.
+switched on: **v1.8.6 (build 54) is the current `READY_FOR_SALE` version, and v1.8.7 (build 55)
+is `WAITING_FOR_REVIEW` as of 2026-09-21** (both confirmed via the ASC API — see BALLIQ_SPEC.md
+§8 Release status for what shipped in each build) — treat `main` as production.
 
 ## Supabase DB operations — execute directly, don't ask first
 
