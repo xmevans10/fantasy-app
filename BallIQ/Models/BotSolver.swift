@@ -42,12 +42,21 @@ enum BotSolver {
     /// `d/d(skill) skill^difficulty > 0`), decreasing in difficulty (since `ln(skill) < 0`).
     /// `skill` is floored above 0 so `pow` never has to evaluate `0^0`.
     static func hitProbability(skill: Double, difficulty: Double,
-                               style: BotStyle = .consistent, progress: Double = 0) -> Double {
+                               style: BotStyle = .consistent, progress: Double = 0,
+                               knowledge: BotKnowledge = .neutral,
+                               context: DecisionContext = .none) -> Double {
+        // Knowledge first, style second, and the order is load-bearing rather than arbitrary.
+        // Knowledge answers "how hard is this call FOR THIS BOT" — a 1978 card is a different
+        // question for Ray than for Toby — and style answers "how does this bot handle a call
+        // of that hardness". Applying style first would have `deepCuts` inverting a difficulty
+        // that had not yet been told what the decision was about, so a scout's specialism would
+        // be measured against the wrong number. `tools/ingest/ladder.py` mirrors this order.
+        let known = min(max(difficulty + knowledge.delta(for: context), 0), 1)
         // Style reshapes both inputs before the base curve, so a style is a *policy* change
         // rather than a cosmetic label — see `BotStyle`. `.consistent` is the identity
         // transform, which keeps it the baseline every other style reads against.
         let s = min(max(style.skill(skill, progress: progress), 0.0001), 1.0)
-        let d = style.difficulty(difficulty, progress: progress)
+        let d = style.difficulty(known, progress: progress)
         let base = pow(s, d)
         // The blink is applied last and multiplicatively, so it caps an otherwise flawless
         // opponent without distorting the shape of the curve underneath it.
@@ -70,10 +79,11 @@ enum BotSolver {
     /// place to spend the "give up a decision" budget: a bot forced to change its mind should
     /// give up the calls it was least sure of, not an arbitrary one.
     static func playKeep4(_ puzzle: Keep4Puzzle, skill: Double, seed: UInt64,
-                         timeLimit: TimeInterval, style: BotStyle = .consistent) -> BotRun {
+                         timeLimit: TimeInterval, style: BotStyle = .consistent,
+                         knowledge: BotKnowledge = .neutral) -> BotRun {
         guard !puzzle.players.isEmpty else { return BotRun(performance: 0, correct: 0, outOf: 0, beats: []) }
         var gen = SeededGenerator(seed: seed)
-        let cards = keep4Decisions(puzzle, skill: skill, style: style, gen: &gen)
+        let cards = keep4Decisions(puzzle, skill: skill, style: style, knowledge: knowledge, gen: &gen)
         let outcomes = cards.map { $0.decision == $0.correctVerdict }
         let beats = paceBeats(outcomes: outcomes, skill: skill, style: style,
                               timeLimit: timeLimit, gen: &gen)
@@ -128,10 +138,11 @@ enum BotSolver {
     /// skill and seed — `BotRun` itself only ever reports correctness, never which pile a
     /// decision landed in, because no real caller needs that.
     static func keep4PileCounts(_ puzzle: Keep4Puzzle, skill: Double, seed: UInt64,
-                                style: BotStyle = .consistent) -> (keep: Int, cut: Int) {
+                                style: BotStyle = .consistent,
+                                knowledge: BotKnowledge = .neutral) -> (keep: Int, cut: Int) {
         guard !puzzle.players.isEmpty else { return (0, 0) }
         var gen = SeededGenerator(seed: seed)
-        let cards = keep4Decisions(puzzle, skill: skill, style: style, gen: &gen)
+        let cards = keep4Decisions(puzzle, skill: skill, style: style, knowledge: knowledge, gen: &gen)
         return (cards.filter { $0.decision == .keep }.count, cards.filter { $0.decision == .cut }.count)
     }
 
@@ -145,6 +156,7 @@ enum BotSolver {
     /// Difficulty per card comes from `keep4Difficulty(of:in:)` — see that method for why the
     /// puzzle's *scoring metric* is the ground truth and how it is scaled.
     private static func keep4Decisions(_ puzzle: Keep4Puzzle, skill: Double, style: BotStyle,
+                                       knowledge: BotKnowledge,
                                        gen: inout SeededGenerator) -> [BotSolverKeep4Card] {
         // The puzzle's own card order, NOT `Keep4GameView.blindOrder`.
         //
@@ -167,8 +179,14 @@ enum BotSolver {
         var cards: [BotSolverKeep4Card] = order.enumerated().map { index, player in
             let difficulty = Self.keep4Difficulty(of: player, in: puzzle)
             let progress = order.count > 1 ? Double(index) / Double(order.count - 1) : 0
+            // The card's own season is the knowledge context. A Keep4 card carries no fame
+            // number — the catalog has production percentiles, not recognition — so that term
+            // stays absent here rather than being faked from `grade`, which would make a
+            // knowledge profile read the same signal `difficulty` already read.
             let p = hitProbability(skill: skill, difficulty: difficulty,
-                                   style: style, progress: progress)
+                                   style: style, progress: progress, knowledge: knowledge,
+                                   context: DecisionContext(sport: puzzle.sport,
+                                                            year: player.seasonYear))
             let correctVerdict: Pile = correctKeepIDs.contains(player.id) ? .keep : .cut
             let hit = Double.random(in: 0..<1, using: &gen) < p
             return BotSolverKeep4Card(p: p, decision: hit ? correctVerdict : correctVerdict.flipped,
@@ -200,15 +218,22 @@ enum BotSolver {
     /// One independent decision per cell (no pile cap, unlike Keep4) — difficulty comes straight
     /// from the board's own `rarityStars`, already the difficulty signal the generator baked in.
     static func playGrid(_ puzzle: GridPuzzle, skill: Double, seed: UInt64,
-                        timeLimit: TimeInterval, style: BotStyle = .consistent) -> BotRun {
+                        timeLimit: TimeInterval, style: BotStyle = .consistent,
+                        knowledge: BotKnowledge = .neutral) -> BotRun {
         guard !puzzle.cells.isEmpty else { return BotRun(performance: 0, correct: 0, outOf: 0, beats: []) }
         var gen = SeededGenerator(seed: seed)
+        // Sport only. A Grid cell is a (team x stat) intersection with no season attached, and
+        // its `rarityStars` is ALREADY the obscurity signal `difficulty` is built from — so
+        // reading it a second time as fame would count one fact twice and double a deep-cuts
+        // bot's specialism on the one format where it is least earned.
+        let context = DecisionContext(sport: puzzle.sport)
         let outcomes: [Bool] = puzzle.cells.enumerated().map { index, cell in
             let difficulty = min(max(Double(cell.rarityStars - 1) / 4.0, 0), 1)
             let progress = puzzle.cells.count > 1
                 ? Double(index) / Double(puzzle.cells.count - 1) : 0
             let p = hitProbability(skill: skill, difficulty: difficulty,
-                                   style: style, progress: progress)
+                                   style: style, progress: progress, knowledge: knowledge,
+                                   context: context)
             return Double.random(in: 0..<1, using: &gen) < p
         }
         let beats = paceBeats(outcomes: outcomes, skill: skill, style: style,
@@ -230,10 +255,18 @@ enum BotSolver {
     /// which clue you solved on, not how many free-text guesses you burned getting there, and
     /// `WhoAmIScoring.score` already handles a `wrongGuesses: 0` result correctly.
     static func playWhoAmI(_ puzzle: WhoAmIPuzzle, skill: Double, seed: UInt64,
-                          timeLimit: TimeInterval, style: BotStyle = .consistent) -> BotRun {
+                          timeLimit: TimeInterval, style: BotStyle = .consistent,
+                          knowledge: BotKnowledge = .neutral) -> BotRun {
         let clueCount = puzzle.clues.count
         guard clueCount > 0 else { return BotRun(performance: 0, correct: 0, outOf: 1, beats: []) }
         var gen = SeededGenerator(seed: seed)
+        // This is the format with the richest knowledge context: the era clue carries a real
+        // career span (parsed by the helper the reveal photo already trusts) and the obscurity
+        // tier is a genuine fame signal. Both are optional and nil is honest — an unrated
+        // puzzle or an unparseable era simply drops that term.
+        let context = DecisionContext(sport: puzzle.sport,
+                                      year: WhoAmIAnswerPhoto.eraSpan(of: puzzle).map(midpoint),
+                                      fame: DecisionContext.fame(for: puzzle.difficulty))
 
         var solved = false
         var cluesUsed = clueCount
@@ -241,7 +274,8 @@ enum BotSolver {
             let difficulty = clueCount > 1 ? 1 - Double(i) / Double(clueCount - 1) : 0
             let progress = clueCount > 1 ? Double(i) / Double(clueCount - 1) : 0
             let p = hitProbability(skill: skill, difficulty: difficulty,
-                                   style: style, progress: progress)
+                                   style: style, progress: progress, knowledge: knowledge,
+                                   context: context)
             if Double.random(in: 0..<1, using: &gen) < p {
                 solved = true
                 cluesUsed = i + 1
@@ -268,9 +302,16 @@ enum BotSolver {
     /// (the caller can't accidentally run a bot against nothing) and leaves the door open for a
     /// board-aware curve — a two-club path is a harder ask than an eight-club one.
     static func playJourneyman(_ puzzle: JourneymanPuzzle, skill: Double, seed: UInt64,
-                               timeLimit: TimeInterval, style: BotStyle = .consistent) -> BotRun {
+                               timeLimit: TimeInterval, style: BotStyle = .consistent,
+                               knowledge: BotKnowledge = .neutral) -> BotRun {
         let limit = JourneymanScoring.maxGuesses
         var gen = SeededGenerator(seed: seed)
+        // The career span is the board itself, so the era context is exact here rather than
+        // parsed out of a sentence — the one place a knowledge profile gets a free, precise read.
+        let span = puzzle.stints.isEmpty ? nil
+            : (puzzle.stints.map(\.firstYear).min() ?? 0)...(puzzle.stints.map(\.lastYear).max() ?? 0)
+        let context = DecisionContext(sport: puzzle.sport, year: span.map(midpoint),
+                                      fame: DecisionContext.fame(for: puzzle.difficulty))
 
         var solved = false
         var used = limit
@@ -278,7 +319,8 @@ enum BotSolver {
             let difficulty = 1 - Double(i) / Double(limit - 1)
             let progress = Double(i) / Double(limit - 1)
             let p = hitProbability(skill: skill, difficulty: difficulty,
-                                   style: style, progress: progress)
+                                   style: style, progress: progress, knowledge: knowledge,
+                                   context: context)
             if Double.random(in: 0..<1, using: &gen) < p {
                 solved = true
                 used = i + 1
@@ -298,6 +340,15 @@ enum BotSolver {
         return BotRun(performance: result.performance,
                       correct: ChallengeLink.journeymanHits(result),
                       outOf: ChallengeLink.journeymanOutOf, beats: beats)
+    }
+
+    /// The middle year of a career span — what a knowledge profile judges an era question by.
+    ///
+    /// The midpoint rather than the first or last year: a profile asks "was this bot watching
+    /// when this player was around", and a nineteen-year career overlaps an era window from its
+    /// middle outward. Taking `firstYear` would make every long career read as its debut decade.
+    static func midpoint(_ span: ClosedRange<Int>) -> Int {
+        (span.lowerBound + span.upperBound) / 2
     }
 
     // MARK: - Pacing
@@ -342,7 +393,9 @@ enum BotSolver {
     /// was never in danger, while a 0.35 bot grinding to the buzzer reads as exactly the beatable
     /// opponent it is. Clamped well short of `[0, 1]` at both ends so no bot ever looks
     /// instantaneous or ever blows through the buzzer.
-    private static func pacingFraction(skill: Double) -> Double {
+    /// Internal rather than private: `playBlitz` prices each board at `par * pacingFraction`,
+    /// so a blitz run is paced by the same model a single board is and the two cannot drift.
+    static func pacingFraction(skill: Double) -> Double {
         max(0.35, min(0.97, 1.05 - skill * 0.65))
     }
 

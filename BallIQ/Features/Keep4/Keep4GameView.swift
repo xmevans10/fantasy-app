@@ -430,7 +430,12 @@ struct Keep4GameView: View {
             result = r
             blitz.finishRound(format: .keep4, sport: puzzle.sport, puzzleID: puzzle.id,
                               performance: performance,
-                              cleared: r.correctCount > puzzle.players.count / 2)
+                              cleared: r.correctCount > puzzle.players.count / 2,
+                              answer: BlitzRoundAnswer(
+                                  headline: puzzle.theme,
+                                  detail: String(localized:
+                                      "\(r.correctCount) of \(puzzle.players.count) calls right"),
+                                  correct: r.correctCount > puzzle.players.count / 2))
             return
         }
         // Versus and community are both possible on the same session (a community-authored

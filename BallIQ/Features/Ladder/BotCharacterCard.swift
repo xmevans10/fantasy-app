@@ -48,6 +48,7 @@ struct BotCharacterCard<Footer: View>: View {
                         if !stats.isEmpty { statsRow }
                         if let record { recordBlock(record) }
                         if !bot.styleLine.isEmpty { howTheyPlayBlock }
+                        if !bot.knowledgeLine.isEmpty { whatTheyKnowBlock }
                         if !bot.backstory.isEmpty { whoTheyAreBlock }
                     }
                     .padding(.horizontal, 20)
@@ -170,6 +171,18 @@ struct BotCharacterCard<Footer: View>: View {
     private var howTheyPlayBlock: some View {
         cardBlock(label: String(localized: "HOW THEY PLAY")) {
             Text(bot.styleLine)
+                .font(.body14).foregroundStyle(Color.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // What they know, stated before the run for exactly the reason `howTheyPlayBlock` is.
+    // This one has a second job: knowledge moves per BOARD, and a rung serves from a pool of
+    // them, so a player who reads this can go looking for the opponent's blind spot instead of
+    // wondering why the same rung felt different today.
+    private var whatTheyKnowBlock: some View {
+        cardBlock(label: String(localized: "WHAT THEY KNOW")) {
+            Text(bot.knowledgeLine)
                 .font(.body14).foregroundStyle(Color.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         }

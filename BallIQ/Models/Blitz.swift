@@ -230,11 +230,37 @@ struct BlitzConfig: Codable, Equatable {
 /// One finished board inside a run. Deliberately carries the format's **own** `performance`
 /// rather than a pre-scored number, so `BlitzScoring` stays a pure function of the run and the
 /// whole ladder of points can be recomputed (and tested) without replaying any game view.
+/// What a board actually asked, and how the player did on it.
+///
+/// This exists because the result screen was showing the wrong thing. A finished run listed every
+/// board with the arithmetic that produced its points — quality vs chance, board value, base,
+/// combo — which answers a question nobody has. What a player wants off that screen is **what the
+/// answer was and whether they got it**: the name they couldn't place, the line they called
+/// wrong. The points are already on the row; the reasoning behind them is not the story.
+///
+/// Supplied by each game view at `finishRound`, because only the board knows its own answer —
+/// `BlitzRoundResult.performance` is a number and cannot be turned back into a player's name.
+struct BlitzRoundAnswer: Equatable {
+    /// The answer, in the player's words: the mystery player, the season and line an over/under
+    /// asked about, the theme a sort was judged on.
+    let headline: String
+    /// How they did, in the format's own terms — "Solved on clue 2", "6 of 8 right", "You said
+    /// UNDER". Nil when the headline already says everything.
+    let detail: String?
+    /// Whether this board counts as got-it, for the check or cross. Same judgement as
+    /// `BlitzRoundResult.cleared`, carried here so the row can render without re-deriving it.
+    let correct: Bool
+}
+
 struct BlitzRoundResult: Equatable, Identifiable {
     let id = UUID()
     let format: BlitzFormat
     let sport: Sport
     let puzzleID: String
+    /// What the board asked and how it went. Optional because a round recorded before this
+    /// existed — or by a bot, which has no answer to show anyone — simply has none, and the row
+    /// falls back to naming the format.
+    var answer: BlitzRoundAnswer? = nil
     /// 0...1, the format's own rating-engine input — the one quality measure every format in the
     /// app already agrees on (see `GameResult.performance`), and therefore the only sane basis
     /// for paying four different formats out of one purse.

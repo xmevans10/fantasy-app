@@ -36,7 +36,10 @@ final class LadderRepository {
     /// predated `style` and `palette`. Same lever, same reason, as
     /// `RemotePuzzleRepository.playerNameIndex`'s `-v2-` key.
     private static let rungsKey = "ladder-rungs-v3"
-    private static let botsKey = "ladder-bots-v3"
+    /// Bumped to v4 for `knowledge` (the same lever `style`/`palette` bumped v3 for): a cached
+    /// roster written before the column existed decodes as `.neutral` rather than throwing, so
+    /// without a bump every bot would keep playing knowledge-blind for the cache's whole life.
+    private static let botsKey = "ladder-bots-v4"
 
     init(client: SupabaseClient) { self.client = client }
 
