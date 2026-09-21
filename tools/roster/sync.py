@@ -61,7 +61,58 @@ def load() -> list[dict]:
         raise SystemExit("two bots share a `skill`; rung assignment would be ambiguous")
     if skills != sorted(skills):
         raise SystemExit("roster.json must be ordered by ascending `skill` — it reads as the ladder")
+    for b in bots:
+        check_knowledge(b)
     return bots
+
+
+# Mirrors `BotKnowledge`'s own cap. A profile that sums past this is not more characterful, it is
+# just clipped — and clipped silently, which hides the fact that the author asked for something
+# the model refuses to give.
+KNOWLEDGE_MAX_DELTA = 0.45
+KNOWLEDGE_KEYS = {"era_from", "era_to", "era_fade", "sports", "other_sports", "fame_bias"}
+SPORTS = {"nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"}
+
+
+def check_knowledge(bot: dict) -> None:
+    """Validate one character's knowledge profile before it can reach the table.
+
+    The profile is a GAMEPLAY property — `BotSolver` reads it on every decision and
+    `tools/ingest/ladder.py` solves each rung's `bot_skill` against it — so a typo'd key is not a
+    cosmetic problem, it is a bot that quietly plays neutral while its card claims otherwise.
+    Everything here is a shape or a promise the model cannot enforce for itself.
+    """
+    k = bot.get("knowledge") or {}
+    bot_id = bot["id"]
+    unknown = set(k) - KNOWLEDGE_KEYS
+    if unknown:
+        raise SystemExit(f"{bot_id}: unknown knowledge key(s) {sorted(unknown)} — "
+                         f"a key BotKnowledge does not decode is silently ignored")
+    bad_sports = set(k.get("sports", {})) - SPORTS
+    if bad_sports:
+        raise SystemExit(f"{bot_id}: unknown sport(s) in knowledge.sports {sorted(bad_sports)}")
+    lo, hi = k.get("era_from"), k.get("era_to")
+    if lo is not None and hi is not None and lo > hi:
+        raise SystemExit(f"{bot_id}: era_from {lo} is after era_to {hi}")
+
+    # A profile the player is never told about is not a personality, it is an unexplained loss —
+    # the rule `style_line` exists to enforce, applied to the axis that now also moves.
+    line = (bot.get("knowledge_line") or "").strip()
+    if k and not line:
+        raise SystemExit(f"{bot_id}: has a knowledge profile but no `knowledge_line` to explain it")
+    # The reverse is NOT an error: Nova's line explains an empty profile ("no blind spot anyone
+    # has found"), and a stated absence is characterisation rather than a missing value.
+
+    # Worst case over the sports listed and one decade outside the era window. Not a proof — the
+    # real cap lives in `BotKnowledge.delta` — but it catches a profile authored well past the
+    # point where the clamp starts eating the difference.
+    fade = k.get("era_fade", 0) or 0
+    worst = fade + max([k.get("other_sports", 0) or 0] + list(k.get("sports", {}).values() or [0]))
+    worst += abs(k.get("fame_bias", 0) or 0)
+    if worst > KNOWLEDGE_MAX_DELTA:
+        raise SystemExit(
+            f"{bot_id}: knowledge sums to {worst:.2f} one decade out, past the "
+            f"{KNOWLEDGE_MAX_DELTA} clamp — the excess would be silently discarded")
 
 
 def rows(bots: list[dict]) -> list[dict]:
@@ -79,6 +130,8 @@ def rows(bots: list[dict]) -> list[dict]:
         "palette": b["palette"],
         "voice": b["voice"],
         "favorite_teams": b.get("teams", []),
+        "knowledge": b.get("knowledge", {}),
+        "knowledge_line": b.get("knowledge_line", ""),
     } for b in bots]
 
 
@@ -181,8 +234,12 @@ def main() -> int:
         by_palette[b["palette"]] = by_palette.get(b["palette"], 0) + 1
     print("  styles:   " + ", ".join(f"{k} {v}" for k, v in sorted(by_style.items())))
     print("  palettes: " + ", ".join(f"{k} {v}" for k, v in sorted(by_palette.items())))
-    heads = {b["head"] for b in bots}
-    print(f"  portraits: {len(heads)} distinct head shapes across {len(bots)} characters")
+    # Reads the traits roster.json actually carries. It used to count `b["head"]`, a key from an
+    # earlier portrait trait set, so every run — `--dry-run` included — died with a KeyError
+    # before it reached the upsert. `portraits()` still reads that older set and is broken the
+    # same way; it needs the DiceBear argument mapping reworked, which is its own change.
+    looks = {(b["skinTone"], b["hair"], b["hairColor"]) for b in bots}
+    print(f"  portraits: {len(looks)} distinct looks across {len(bots)} characters")
 
     if args.dry_run:
         for i, b in enumerate(bots, 1):

@@ -434,7 +434,13 @@ struct JourneymanGameView: View {
         if let blitz {
             result = r
             blitz.finishRound(format: .journeyman, sport: puzzle.sport, puzzleID: puzzle.id,
-                              performance: r.performance, cleared: solved)
+                              performance: r.performance, cleared: solved,
+                              answer: BlitzRoundAnswer(
+                                  headline: puzzle.answer.canonical,
+                                  detail: solved
+                                      ? String(localized: "Guess \(r.guessesUsed) of \(JourneymanScoring.maxGuesses)")
+                                      : String(localized: "Not solved"),
+                                  correct: solved))
             return
         }
         var details = GameResultDetails()

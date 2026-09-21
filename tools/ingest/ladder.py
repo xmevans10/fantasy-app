@@ -55,6 +55,7 @@ import argparse
 import json
 import os
 import random
+import re
 import urllib.request
 from dataclasses import dataclass
 
@@ -80,8 +81,26 @@ REFERENCE_PLAYER_SKILL = 0.75
 #
 # A score target is legible: "Bronze bots get 4 or 5 of 8, Gold bots get 7 of 8" is a sentence
 # you can check by playing. It is also the unit the ask arrived in.
-TARGET_SCORE_START = 0.52      # rung 1, as a fraction of the board
-TARGET_SCORE_END = 0.90        # rung 30
+# Read off a measured skill -> (score, win rate) sweep over real boards at each rung's designed
+# board difficulty (2026-09-21), because the previous pair never was. At 0.52 the rung-1 target
+# sat BELOW what a keep4 bot can physically score on an easy board — the worst possible bot
+# (skill 0.05) still scores 0.63 there, since the 4/4 cap means it cannot do worse than chance
+# on cards whose calls are obvious. So the bisection pinned at `lo` on rungs 1-9, every early bot
+# shipped at minimum skill, and the reference player won 99.8% of the bottom third. The old
+# 0.90 end had the same problem from the other side: it implies skill ~0.87 and a 0.57 win rate
+# where the curve asks for 0.21.
+#
+# The numbers below are the scores that land the designed win-rate curve (0.90 -> ~0.27) on the
+# measured mapping:
+#
+#     keep4 board_d 0.24: skill 0.05 -> score 0.63 / wr 0.99   skill 0.45 -> 0.82 / 0.90
+#     keep4 board_d 0.70: skill 0.55 -> score 0.65 / wr 0.90   skill 1.00 -> 1.00 / 0.27
+#
+# Note what the second line says: keep4's win rate bottoms out near 0.27 even at skill 1.0, so
+# the ladder's designed 0.21 floor is not reachable in that format and the end target is set to
+# the best it can honestly do rather than to a number that would just pin the bisection at `hi`.
+TARGET_SCORE_START = 0.82      # rung 1, as a fraction of the board
+TARGET_SCORE_END = 0.99        # rung 30
 
 # The lowest score a format's bot can reach WITHOUT playing worse than chance.
 #
@@ -243,6 +262,126 @@ def whoami_clue_difficulties(content: dict) -> list[float]:
     return [1 - i / (n - 1) for i in range(n)]
 
 
+# ── Knowledge: what a bot knows, as opposed to how well it plays ─────────────
+#
+# Mirrors `BallIQ/Models/BotKnowledge.swift` exactly, and has to: `solve_bot_skill` tunes each
+# rung against the bot's real policy, so a knowledge term this file cannot see would mis-solve
+# every rung its owner guards — the same failure `style` caused before it was modelled here.
+# `BallIQTests/LadderCurveTests` re-measures with the real Swift solver and fails on drift.
+
+KNOWLEDGE_MAX_DELTA = 0.45        # mirrors `BotKnowledge.maxDelta`
+
+# What a Who Am I? / Journeyman obscurity tier implies about fame. Mirrors
+# `DecisionContext.fame(for:)`; an unrated subject stays None rather than becoming medium.
+TIER_FAME = {"easy": 0.85, "medium": 0.5, "hard": 0.15}
+
+
+def knowledge_delta(profile: dict | None, ctx: dict | None) -> float:
+    """The difficulty delta one bot's knowledge applies to one decision. Positive is harder."""
+    if not profile or not ctx:
+        return 0.0
+    total = 0.0
+
+    fade = profile.get("era_fade", 0.0) or 0.0
+    year = ctx.get("year")
+    if fade and year is not None:
+        lo = profile.get("era_from")
+        hi = profile.get("era_to")
+        lo = -10**9 if lo is None else lo
+        hi = 10**9 if hi is None else hi
+        if lo <= hi:
+            if lo <= year <= hi:
+                total += -fade / 2
+            else:
+                distance = lo - year if year < lo else year - hi
+                total += fade * (distance / 10)
+
+    sport = ctx.get("sport")
+    if sport is not None:
+        sports = profile.get("sports") or {}
+        total += sports.get(sport, profile.get("other_sports", 0.0) or 0.0)
+
+    bias = profile.get("fame_bias", 0.0) or 0.0
+    fame = ctx.get("fame")
+    if bias and fame is not None:
+        total += -bias * (2 * min(max(fame, 0.0), 1.0) - 1)
+
+    return min(max(total, -KNOWLEDGE_MAX_DELTA), KNOWLEDGE_MAX_DELTA)
+
+
+def sport_term(profile: dict | None, sport: str | None) -> float:
+    """Just the sport half of `knowledge_delta`. Mirrors `BotKnowledge.sportDelta`.
+
+    Pulled out because two boards are only interchangeable FOR A GIVEN BOT if its knowledge
+    treats their sports the same way — see `poolable` in `build_rungs`.
+    """
+    if not profile or sport is None:
+        return 0.0
+    return (profile.get("sports") or {}).get(sport, profile.get("other_sports", 0.0) or 0.0)
+
+
+def home_sports(profile: dict | None) -> set[str]:
+    """The sports a knowledge profile is genuinely BETTER at than its own fallback.
+
+    "Listed in `sports`" is not the test — a profile may name a sport it is merely less bad at,
+    and `other_sports` is what the rest of the world costs it. Only a strictly lower delta is a
+    specialism, so a bot with no opinion (Nova) or a flat one returns nothing and the ladder
+    picks its board exactly as it did before.
+    """
+    if not profile:
+        return set()
+    other = profile.get("other_sports", 0.0) or 0.0
+    sports = profile.get("sports") or {}
+    if not sports:
+        return set()
+    best = min(sports.values())
+    if best >= other:
+        return set()
+    return {s for s, v in sports.items() if v == best}
+
+
+def decision_contexts(fmt: str, sport: str, content: dict) -> list[dict]:
+    """One knowledge context per decision, in the same order as the difficulties.
+
+    Each format gives up what it honestly has and no more — mirroring `BotSolver`'s per-format
+    `DecisionContext` construction:
+
+    * **keep4** — the card's own `seasonYear`. No fame: the catalog holds production
+      percentiles, not recognition, so faking one from `grade` would just re-read the signal
+      `difficulty` already read.
+    * **grid** — sport only. A cell's `rarityStars` IS the obscurity signal behind its
+      difficulty, so spending it again as fame would count one fact twice.
+    * **whoami** — the era clue's span (same shape `WhoAmIAnswerPhoto.eraSpan` parses) and the
+      obscurity tier. Same context on every clue: the subject does not change mid-run.
+    """
+    if fmt == "keep4":
+        return [{"sport": sport, "year": pl.get("seasonYear")}
+                for pl in content.get("players", [])]
+    if fmt == "grid":
+        return [{"sport": sport} for _ in content.get("cells", [])]
+    if fmt == "whoami":
+        ctx = {"sport": sport, "year": whoami_era_midpoint(content),
+               "fame": TIER_FAME.get(content.get("difficulty"))}
+        return [dict(ctx) for _ in content.get("clues", [])]
+    return []
+
+
+def whoami_era_midpoint(content: dict) -> int | None:
+    """Middle year of the era clue's span. Mirrors `WhoAmIAnswerPhoto.eraSpan` + `midpoint`.
+
+    The midpoint, not the debut: a profile is asking whether the bot was watching while this
+    player was around, and taking the first year would file every long career under its debut
+    decade.
+    """
+    for clue in content.get("clues", []):
+        if clue.get("kind") != "era":
+            continue
+        years = [int(t) for t in re.findall(r"\d{4}", clue.get("text", ""))]
+        if years and years[0] <= years[-1]:
+            return (years[0] + years[-1]) // 2
+    return None
+
+
 def board_difficulty(fmt: str, content: dict) -> float:
     """One 0..1 number for the whole board — the mean of its per-decision difficulties.
 
@@ -291,9 +430,14 @@ def style_skill(style: str, s: float, progress: float) -> float:
 
 
 def hit_probability(skill: float, difficulty: float,
-                    style: str = "consistent", progress: float = 0.0) -> float:
+                    style: str = "consistent", progress: float = 0.0,
+                    knowledge: dict | None = None, context: dict | None = None) -> float:
+    # Knowledge first, style second — the order `BotSolver.hitProbability` documents. Style has
+    # to reshape a difficulty that already knows what the decision was ABOUT, or `deepCuts`
+    # inverts the wrong number.
+    known = min(max(difficulty + knowledge_delta(knowledge, context), 0.0), 1.0)
     s = min(max(style_skill(style, skill, progress), 1e-4), 1.0)
-    d = style_difficulty(style, difficulty, progress)
+    d = style_difficulty(style, known, progress)
     return (s ** d) * (1 - BLINK_CHANCE.get(style, 0.0))
 
 
@@ -340,14 +484,26 @@ def speed_adjusted(score: float, elapsed_frac: float) -> float:
 
 def simulate_performance(fmt: str, diffs: list[float], skill: float, rng: random.Random,
                          true_keeps: list[bool] | None = None,
-                         style: str = "consistent") -> float:
-    """One run's `performance`, 0..1 — the comparable both sides are scored on."""
+                         style: str = "consistent",
+                         knowledge: dict | None = None,
+                         contexts: list[dict] | None = None) -> float:
+    """One run's `performance`, 0..1 — the comparable both sides are scored on.
+
+    `knowledge`/`contexts` are the bot's profile and the per-decision facts it judges. The
+    REFERENCE PLAYER is always simulated without them, and deliberately: the player side is an
+    abstraction standing in for "someone of skill 0.75", not a character with eras and blind
+    spots, and giving it a profile would tune the ladder against a person who does not exist.
+    """
+    def ctx(i: int) -> dict | None:
+        return contexts[i] if contexts and i < len(contexts) else None
+
     if fmt == "keep4":
         # Per-card roll, then the 4/4 cap flips the least-confident calls until the piles land
         # right. Mirrors `BotSolver.keep4Decisions`, and the cap matters: it systematically
         # costs whoever hits it their *closest* calls.
         n = len(diffs)
-        probs = [hit_probability(skill, d, style, i / (n - 1) if n > 1 else 0.0)
+        probs = [hit_probability(skill, d, style, i / (n - 1) if n > 1 else 0.0,
+                                 knowledge, ctx(i))
                  for i, d in enumerate(diffs)]
         # decision[i] is the pile this card was put in; true_keeps[i] is where it belongs.
         decisions = [(tk if rng.random() < p else not tk) for tk, p in zip(true_keeps, probs)]
@@ -365,11 +521,13 @@ def simulate_performance(fmt: str, diffs: list[float], skill: float, rng: random
         n = len(diffs)
         return sum(1 for i, d in enumerate(diffs)
                    if rng.random() < hit_probability(skill, d, style,
-                                                     i / (n - 1) if n > 1 else 0.0)) / n
+                                                     i / (n - 1) if n > 1 else 0.0,
+                                                     knowledge, ctx(i))) / n
     if fmt == "whoami":
         n = len(diffs)
         for i, d in enumerate(diffs):
-            if rng.random() < hit_probability(skill, d, style, i / (n - 1) if n > 1 else 0.0):
+            if rng.random() < hit_probability(skill, d, style, i / (n - 1) if n > 1 else 0.0,
+                                              knowledge, ctx(i)):
                 return WHOAMI_PER_CLUE[min(i, len(WHOAMI_PER_CLUE) - 1)] / WHOAMI_PER_CLUE[0]
         return 0.0
     return 0.0
@@ -378,14 +536,16 @@ def simulate_performance(fmt: str, diffs: list[float], skill: float, rng: random
 def win_rate(fmt: str, diffs: list[float], bot_skill: float,
              player_skill: float = REFERENCE_PLAYER_SKILL, trials: int = TRIALS,
              seed: int = 12345, true_keeps: list[bool] | None = None,
-             bot_style: str = "consistent") -> float:
+             bot_style: str = "consistent", bot_knowledge: dict | None = None,
+             contexts: list[dict] | None = None) -> float:
     """P(reference player beats this bot on this board). Ties count as player wins, matching
     `LadderOutcome.playerWon`."""
     rng = random.Random(seed)
     wins = 0
     for _ in range(trials):
         p = simulate_performance(fmt, diffs, player_skill, rng, true_keeps)
-        b = simulate_performance(fmt, diffs, bot_skill, rng, true_keeps, bot_style)
+        b = simulate_performance(fmt, diffs, bot_skill, rng, true_keeps, bot_style,
+                                 bot_knowledge, contexts)
         # Speed used to be folded in here via `speed_adjusted`. It is gone with the bot clock
         # (M24): a ladder duel is no longer raced, so pace cannot decide it. What remains is a
         # pure accuracy comparison — which is what a knowledge game should be measuring, and what
@@ -397,18 +557,23 @@ def win_rate(fmt: str, diffs: list[float], bot_skill: float,
 
 def mean_score(fmt: str, diffs: list[float], bot_skill: float,
                true_keeps: list[bool] | None = None, bot_style: str = "consistent",
-               trials: int = TRIALS, seed: int = 12345) -> float:
+               trials: int = TRIALS, seed: int = 12345,
+               bot_knowledge: dict | None = None,
+               contexts: list[dict] | None = None) -> float:
     """The bot's mean `performance` on this board, 0..1 — the objective `bot_skill` is solved
     against since M24. Same simulator the client's `BotSolver` mirrors, so a number here is a
     prediction about the real game rather than about this file."""
     rng = random.Random(seed)
-    return sum(simulate_performance(fmt, diffs, bot_skill, rng, true_keeps, bot_style)
+    return sum(simulate_performance(fmt, diffs, bot_skill, rng, true_keeps, bot_style,
+                                    bot_knowledge, contexts)
                for _ in range(trials)) / trials
 
 
 def solve_bot_skill(fmt: str, diffs: list[float], target_score: float,
                     true_keeps: list[bool] | None = None,
-                    bot_style: str = "consistent") -> tuple[float, float]:
+                    bot_style: str = "consistent",
+                    bot_knowledge: dict | None = None,
+                    contexts: list[dict] | None = None) -> tuple[float, float]:
     """Binary-search the `bot_skill` that SCORES `target_score` on this board.
 
     Mean score is monotonically increasing in skill, so a bisection is sound. Returns the skill
@@ -417,10 +582,12 @@ def solve_bot_skill(fmt: str, diffs: list[float], target_score: float,
     rather than hidden, because it is the honest ceiling, not a solver failure.
     """
     lo, hi = 0.05, 1.0
-    best = (0.5, mean_score(fmt, diffs, 0.5, true_keeps, bot_style))
+    best = (0.5, mean_score(fmt, diffs, 0.5, true_keeps, bot_style,
+                            bot_knowledge=bot_knowledge, contexts=contexts))
     for _ in range(18):
         mid = (lo + hi) / 2
-        m = mean_score(fmt, diffs, mid, true_keeps, bot_style)
+        m = mean_score(fmt, diffs, mid, true_keeps, bot_style,
+                       bot_knowledge=bot_knowledge, contexts=contexts)
         if abs(m - target_score) < abs(best[1] - target_score):
             best = (mid, m)
         if m < target_score:    # bot scores too low -> it must get better
@@ -446,6 +613,8 @@ class Candidate:
     # exclusivity check in this module keys on this rather than `puzzle_id`, because one board
     # legitimately exists under several ids.
     signature: str = ""
+    # One knowledge context per decision, parallel to `diffs` — see `decision_contexts`.
+    contexts: list[dict] | None = None
 
 
 def content_signature(fmt: str, puzzle_id: str, content: dict) -> str:
@@ -486,31 +655,61 @@ def lerp(a: float, b: float, t: float) -> float:
 #
 # Held at 18 rather than 30 because bosses still should not be Who Am I?: a single binary guess
 # is a thin thing to lose a boss rung to, however well calibrated it now is.
-WHOAMI_MAX_RUNG = 18
+# A format may only guard rungs whose designed win rate sits ABOVE that format's reachable
+# floor. Measured 2026-09-21 by sweeping skill 0.05 -> 1.0 against the reference player on real
+# boards at each rung's designed board difficulty:
+#
+#     format   best a PERFECT bot can do (skill 1.0)
+#     whoami   0.75   — `performance` is a 7-value clue ladder and ties go to the player
+#     keep4    0.27   — the forced 4/4 split caps how wrong a bot can be
+#     grid     0.18   — independent per-cell calls, no cap
+#
+# Put a format below its floor and the rung is not a step, it is a flat spot wearing a number.
+# That was invisible while the score targets were mis-set (every rung sat at 0.98-0.99, where
+# anything trivially "descends"); with the curve spanning its real range it shows up directly as
+# five-rung windows that stop descending, all of them at a format boundary.
+WHOAMI_MAX_RUNG = 7
+
+# Keep4 has the same problem at the other end. Measured on the retuned curve it lands 0.08-0.13
+# ABOVE the designed win rate from rung 25 up (rung 25 came back 0.467 against a designed ~0.35),
+# because 0.27 is as low as the format goes. Grid is the only format that reaches the bottom of
+# the ladder, so it takes the last stretch alone.
+KEEP4_MAX_RUNG = 24
 
 
 def mode_for(rung: int) -> str:
-    """All Keep4 early (one game to learn), Who Am I? through the mid band, The Grid from 13.
+    """Formats are ordered by the win rate each can actually reach: Who Am I? at the top of the
+    curve, Keep4 through the middle, The Grid alone at the bottom.
 
-    **Who Am I? is capped, and the cap is measured.** Its `performance` is a 7-value ladder that
-    saturates at 1.0 for a clue-1 solve, and a tie goes to the player (`LadderOutcome`). At the
-    reference skill the player solves on clue 1 about 75% of the time, so a *perfect* bot still
-    loses ~73% of duels — the format's win rate floors at 0.733 no matter what `bot_skill` is
-    set to. Every whoami rung above that floor was a flat spot in the curve pretending to be a
-    step. Two levers could lift the ceiling later (breaking whoami ties on elapsed time, or
-    scoring the duel on points rather than clue efficiency so the difficulty multiplier
-    separates); until one of them exists, whoami belongs below rung 15.
+    This used to read the other way round — Keep4 early, Who Am I? across rungs 8-18, Grid from
+    13 — and that ordering cannot produce a descending ladder. Who Am I?'s win rate floors at
+    0.75 (its `performance` is a 7-value clue ladder that saturates at a clue-1 solve, and ties
+    go to the player), so a whoami rung at 16 was measurably EASIER than the Keep4 rung at 11:
+    0.823 against 0.708. Not a tuning miss — no value of `bot_skill` closes it. The format was
+    being asked for a step it does not have.
 
-    Bosses are never Who Am I? for the same reason: a boss has to be a step up, and this format
-    has no step left at that height.
+    So each format now guards the stretch its floor can serve (`WHOAMI_MAX_RUNG`,
+    `KEEP4_MAX_RUNG`), and the two levers that could lift Who Am I?'s ceiling are unchanged:
+    break whoami ties on elapsed time, or score the duel on points rather than clue efficiency
+    so the difficulty multiplier separates. Until one exists, the format belongs where the curve
+    is still high.
+
+    **Rung 1 stays Keep4 regardless**, and that is a product call rather than a calibration one:
+    K4C4 is the app's best surface and the shape every other format's card is measured against
+    (BALLIQ_SPEC §1, theme 1), so it is what a player should meet first. Who Am I? starts at 2.
+
+    Bosses are never Who Am I?, unchanged: a boss has to be a step up, and this format has no
+    step left at that height.
     """
     if rung % BOSS_EVERY == 0:
         return "grid" if rung >= 20 else "keep4"
-    if rung <= 6:
+    if rung == 1:
         return "keep4"
     if rung <= WHOAMI_MAX_RUNG:
         return "whoami" if rung % 2 == 0 else "keep4"
-    return "grid" if rung % 2 == 0 else "keep4"
+    if rung <= KEEP4_MAX_RUNG:
+        return "grid" if rung % 2 == 0 else "keep4"
+    return "grid"
 
 
 def board_seed(rung: int, ordinal: int) -> int:
@@ -526,7 +725,7 @@ def board_seed(rung: int, ordinal: int) -> int:
 
 def build_pool(fmt: str, primary: Candidate, candidates: list[Candidate],
                bot_skill: float, bot_style: str, target_score: float,
-               rung: int) -> tuple[list[dict], list[str]]:
+               rung: int, bot_knowledge: dict | None = None) -> tuple[list[dict], list[str]]:
     """The rung's ordered pool, `primary` first, and the content SIGNATURES it consumed.
 
     Signatures, not ids: one board is live under several ids (a stable pool row and its
@@ -551,16 +750,26 @@ def build_pool(fmt: str, primary: Candidate, candidates: list[Candidate],
     # that much is two different rungs wearing one number. A short pool is reported instead — and
     # the real fix is upstream, in `build_rungs`, which now prefers primaries that HAVE neighbours
     # (see `poolable`). Fixing the choice of board beats loosening what the choice promises.
+    # Same knowledge treatment first, then nearest difficulty. Only the first POOL_MAX_CHECKS
+    # candidates are ever measured, so on a rung whose difficulty window is dominated by a sport
+    # the bot does not know, the checks were being spent entirely on certain rejections before
+    # the handful of viable boards were ever reached.
+    here = sport_term(bot_knowledge, primary.sport)
     near = sorted((c for c in candidates
                    if c.signature != primary.signature
                    and abs(c.difficulty - primary.difficulty) <= POOL_DIFFICULTY_TOLERANCE),
-                  key=lambda c: abs(c.difficulty - primary.difficulty))
+                  key=lambda c: (sport_term(bot_knowledge, c.sport) != here,
+                                 abs(c.difficulty - primary.difficulty)))
     measured: list[tuple[float, Candidate]] = []
     for c in near[:POOL_MAX_CHECKS]:
         if len(boards) >= POOL_SIZE:
             break
+        # Each candidate is screened with its OWN contexts, never the primary's. That is the
+        # whole point of a knowledge-shaped bot: two boards at identical intrinsic difficulty
+        # are not the same rung for Marisol if one is her club and the other is the NBA, and
+        # screening both against the primary's context would let exactly that board in.
         m = mean_score(fmt, c.diffs, bot_skill, true_keeps=c.true_keeps, bot_style=bot_style,
-                       trials=POOL_TRIALS)
+                       trials=POOL_TRIALS, bot_knowledge=bot_knowledge, contexts=c.contexts)
         measured.append((abs(m - target_score), c))
         if abs(m - target_score) > tolerance:
             continue
@@ -653,18 +862,52 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
         # difficulty promise instead, and the homogeneity test rightly refused it.
         pool_by_id = by_mode.get(fmt, [])
 
+        # The rung's character, known BEFORE the board is chosen — the ladder is 1:1 on
+        # `base_skill`, so rung N's opponent was never in doubt. It used to be looked up after
+        # the pick, which is how Kyle (eleven months of NBA and NFL) ended up guarding a tennis
+        # board: his profile was real, the board simply wasn't anywhere he knew, and the
+        # calibrator quietly paid for the difference in raw skill (0.057 -> 0.400 measured).
+        # A knowledge profile that is always absorbed is a number, not a character.
+        bot = ordered_bots[rung - 1]
+        knowledge = bot.get("knowledge") or None
+        home = home_sports(knowledge)
+
         def poolable(c: Candidate) -> int:
+            """How many unused boards could actually JOIN this board's pool, for this bot.
+
+            Difficulty alone is not the test any more. `build_pool` re-measures each candidate
+            against the rung's target score, and a knowledge profile moves that score by sport —
+            so for a specialist, a neighbour in the wrong sport is not a near-miss, it is a
+            certain rejection. Measured on rung 9 (Priya, baseball): 27 boards sat within the
+            difficulty window and 15 of them were NFL, so all 25 checked failed the screen and
+            the rung shipped a pool of two. Counting them as poolable is what let the seeder
+            choose that primary in the first place.
+
+            Same-treatment, not same-sport: what matters is that the bot's knowledge scores the
+            two sports alike. A neutral profile treats every sport as 0, so this collapses to
+            the difficulty-only count it used to be and neutral rungs pick exactly as before.
+            """
+            here = sport_term(knowledge, c.sport)
             return sum(1 for o in pool_by_id
                        if o.signature != c.signature and o.signature not in used
-                       and abs(o.difficulty - c.difficulty) <= POOL_DIFFICULTY_TOLERANCE)
+                       and abs(o.difficulty - c.difficulty) <= POOL_DIFFICULTY_TOLERANCE
+                       and sport_term(knowledge, o.sport) == here)
 
         def rank(c: Candidate) -> tuple:
-            # Enough-for-a-pool first, then unused-recently, then nearest within the band.
-            # Capped at POOL_SIZE so a board with thirty neighbours doesn't outrank a better-fitting
-            # one with a comfortable six — past the target, extra depth is worth nothing.
+            # Enough-for-a-pool first, then unused-recently, then the character's own sport,
+            # then nearest within the band. Capped at POOL_SIZE so a board with thirty
+            # neighbours doesn't outrank a better-fitting one with a comfortable six — past the
+            # target, extra depth is worth nothing.
+            #
+            # Home sport sits BELOW recency on purpose. Variety is the stronger constraint: five
+            # consecutive rungs of one sport reads as a content bug (it is why the tolerance
+            # window exists at all), and several characters share a home sport. Since every
+            # sport absent from `recent_sports` ties at -1, this only breaks ties between
+            # equally-fresh sports — which is exactly where the preference belongs.
             depth = min(poolable(c), POOL_SIZE - 1)
             recency = recent_sports.index(c.sport) if c.sport in recent_sports else -1
-            return (-depth, recency, abs(c.difficulty - want_difficulty))
+            at_home = 0 if c.sport in home else 1
+            return (-depth, recency, at_home, abs(c.difficulty - want_difficulty))
 
         pick = min(band, key=rank)
         used.add(pick.signature)
@@ -678,13 +921,24 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
         # The character is chosen FIRST and the skill solved **against that character's style**,
         # because style moves the win rate a given skill produces. Solving first and assigning
         # after would miscalibrate every non-baseline bot.
-        bot = ordered_bots[rung - 1]
+        # Solved against this character's STYLE **and** their KNOWLEDGE, for the same reason
+        # style had to be modelled here at all: both change the score a given `bot_skill`
+        # produces on this specific board, and a rung tuned against a policy the bot does not
+        # actually run is a rung tuned against nobody.
         skill, achieved_score = solve_bot_skill(fmt, pick.diffs, want_score, pick.true_keeps,
-                                                bot.get("style", "consistent"))
+                                                bot.get("style", "consistent"),
+                                                bot_knowledge=knowledge,
+                                                contexts=pick.contexts)
         is_boss = rung % BOSS_EVERY == 0
         if is_boss:
             # A boss is a step up on the same board, not a different kind of thing.
-            skill = min(0.98, skill + 0.04)
+            #
+            # Capped at the SOLVER's own ceiling (`solve_bot_skill`'s `hi`), not below it. At
+            # 0.98 the cap sat under the 1.0 an ordinary rung can reach, so once the top of the
+            # ladder started saturating — rung 29 solved to 1.000 — the final boss came back
+            # *weaker* than the rung before it (0.247 win rate at 29 against 0.290 at 30).
+            # That is the rung-18 bug in a different costume: a lever pointing the wrong way.
+            skill = min(1.0, skill + 0.04)
 
         # Re-measure the settled skill at high precision before storing it.
         #
@@ -697,14 +951,17 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
         # measured against — as a diagnostic. It is how a flat or inverted curve gets caught, and
         # dropping it would trade a legible objective for a blind one.
         achieved = win_rate(fmt, pick.diffs, skill, true_keeps=pick.true_keeps,
-                            bot_style=bot.get("style", "consistent"), trials=POOL_TRIALS)
+                            bot_style=bot.get("style", "consistent"), trials=POOL_TRIALS,
+                            bot_knowledge=knowledge, contexts=pick.contexts)
         achieved_score = mean_score(fmt, pick.diffs, skill, true_keeps=pick.true_keeps,
-                                    bot_style=bot.get("style", "consistent"), trials=POOL_TRIALS)
+                                    bot_style=bot.get("style", "consistent"), trials=POOL_TRIALS,
+                                    bot_knowledge=knowledge, contexts=pick.contexts)
 
         # `achieved_score`, not `achieved` (the win rate): the pool screen downstream asks
         # "does this board play at the rung's SCORE", which is the objective now. Passing the win
         # rate here compiled fine and silently screened every pool against the wrong number.
-        plan.append((rung, fmt, pick, bot.get("style", "consistent"), skill, achieved_score))
+        plan.append((rung, fmt, pick, bot.get("style", "consistent"), skill, achieved_score,
+                     knowledge))
 
         # The clock is no longer a difficulty lever (M24): a ladder duel is not a race, so a
         # tightening clock only measured how fast the player could read. The column is `not null
@@ -754,11 +1011,11 @@ def build_rungs(pool: list[Candidate], bots: list[dict]) -> tuple[list[dict], li
                    if c.signature not in used and c.signature != pick.signature
                    and abs(c.difficulty - pick.difficulty) <= POOL_DIFFICULTY_TOLERANCE)
 
-    for rung, fmt, pick, style, skill, target_score in sorted(
+    for rung, fmt, pick, style, skill, target_score, knowledge in sorted(
             plan, key=lambda p: available(p[1], p[2])):
         rung_boards, consumed = build_pool(
             fmt, pick, [c for c in by_mode.get(fmt, []) if c.signature not in used],
-            skill, style, target_score, rung)
+            skill, style, target_score, rung, bot_knowledge=knowledge)
         used.update(consumed)
         boards.extend(rung_boards)
     boards.sort(key=lambda b: (b["rung"], b["ordinal"]))
@@ -789,7 +1046,8 @@ def fetch_pool(url: str, key: str) -> list[Candidate]:
                 continue
             out.append(Candidate(r["id"], fmt, r["sport"],
                                  board_difficulty(fmt, content), diffs, keeps,
-                                 content_signature(fmt, r["id"], content)))
+                                 content_signature(fmt, r["id"], content),
+                                 decision_contexts(fmt, r["sport"], content)))
     return out
 
 
@@ -814,6 +1072,9 @@ def write_fixture(path: str, url: str, key: str, rows: list[dict], boards: list[
     was verified, so the Swift pin has to replay all of them.
     """
     style_of = {b["id"]: b.get("style", "consistent") for b in bots}
+    # Knowledge rides along for exactly the reason style does: it changes the solver's policy,
+    # so a pin that replayed the rung without it would measure a bot nobody ever faces.
+    knowledge_of = {b["id"]: (b.get("knowledge") or {}) for b in bots}
     rung_of = {r["rung"]: r for r in rows}
     wanted = sorted({b["puzzle_id"] for b in boards})
 
@@ -836,7 +1097,8 @@ def write_fixture(path: str, url: str, key: str, rows: list[dict], boards: list[
                      "sport": r["sport"], "bot_skill": r["bot_skill"], "is_boss": r["is_boss"],
                      "board_difficulty": b["board_difficulty"],
                      "target_win_rate": r["target_win_rate"],
-                     "style": style_of.get(r["bot_id"], "consistent")},
+                     "style": style_of.get(r["bot_id"], "consistent"),
+                     "knowledge": knowledge_of.get(r["bot_id"], {})},
             "puzzle": {"id": b["puzzle_id"], "content": content[b["puzzle_id"]]},
         })
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -861,7 +1123,7 @@ def main() -> int:
         raise SystemExit("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY required (tools/ingest/.env)")
 
     def get_bots():
-        req = urllib.request.Request(f"{url}/rest/v1/bots?select=id,base_skill,style",
+        req = urllib.request.Request(f"{url}/rest/v1/bots?select=id,base_skill,style,knowledge",
                                      headers={"apikey": key, "Authorization": f"Bearer {key}"})
         return json.load(urllib.request.urlopen(req))
 

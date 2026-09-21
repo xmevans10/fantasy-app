@@ -356,7 +356,13 @@ struct OverUnderGameView: View {
             blitzDecided = true
             Haptics.tap()
             blitz.finishRound(format: .overunder, sport: sport, puzzleID: round.id,
-                              performance: correct ? 1 : 0, cleared: correct)
+                              performance: correct ? 1 : 0, cleared: correct,
+                              answer: BlitzRoundAnswer(
+                                  headline: String(localized:
+                                      "\(round.player.name) — \(round.stat.label) \(round.actualValue.formatted(.number.precision(.fractionLength(0..<1))))"),
+                                  detail: String(localized:
+                                      "\(round.isOver ? "OVER" : "UNDER") \(round.threshold.formatted(.number.precision(.fractionLength(0..<1)))) · you said \(guessOver ? "OVER" : "UNDER")"),
+                                  correct: correct))
             return
         }
         if guessOver { overPicks += 1 } else { underPicks += 1 }
