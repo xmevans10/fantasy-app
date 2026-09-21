@@ -156,7 +156,7 @@ def thread_whoami(sport: str, content: dict) -> dict:
     name = content.get("answer", {}).get("canonical", "")
     return dict(
         caption=_clamp(clues[0]["text"] if clues else "",
-                       f"Who am I? ({SPORT_NAME.get(sport, sport)})\n\nClue 1: {{text}}\n\nOne more clue in the replies every hour."),
+                       f"Who am I? ({SPORT_NAME.get(sport, sport)})\n\nClue 1: {{text}}\n\nMore clues in the replies."),
         replies=[f"Clue {c['order']}: {c['text']}" for c in clues[1:]],
         reveal=dict(when="after the last clue", text=f"It was {name}.\n\n{_link_reply('x_whoami')}" if name else ""),
         alt="")
