@@ -15,7 +15,7 @@ import argparse
 import datetime as dt
 import json
 
-from . import x_algo, x_oauth1
+from . import x_algo, x_engine, x_oauth1
 
 # X metric field -> our weight key. Unmapped metrics (bookmark_count, etc.) carry no published
 # weight, so including them would be inventing signal.
@@ -45,7 +45,8 @@ def weighted_score(metrics: dict, *, out_of_network: bool = True) -> float:
 def fetch_posts(user_id: str, *, days: int = 7, creds: dict | None = None,
                 max_results: int = 100) -> list[dict]:
     """Our own recent posts with organic + non-public metrics (user context required)."""
-    creds = creds or x_oauth1.credentials()
+    # KV-aware: reads .env locally and the Supabase store in CI (see x_engine.oauth1_creds).
+    creds = creds or x_engine.oauth1_creds()
     if not creds:
         raise SystemExit("[metrics] OAuth1 credentials required (run x_engine --oauth1-begin/pin)")
     out: list[dict] = []

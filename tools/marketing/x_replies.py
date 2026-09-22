@@ -35,7 +35,7 @@ VOICE = ("first person, confident, lowercase-leaning, <=140 chars, no hashtags, 
 def _auth():
     """Prefer OAuth1 (non-rotating, and present in CI via Supabase); fall back to the app-only
     bearer from the local file for laptop use."""
-    creds = x_oauth1.credentials()
+    creds = x_engine.oauth1_creds()          # KV-aware: works in CI, not just from .env
     if creds:
         return ("oauth1", creds)
     from . import x_client
@@ -103,7 +103,7 @@ def brief(c: dict) -> str:
 
 def post_reply(tweet_id: str, text: str) -> str:
     """Reply with the OAuth1 user token; recorded in the ledger so a re-run cannot double-post."""
-    creds = x_oauth1.credentials()
+    creds = x_engine.oauth1_creds()
     if not creds:
         raise SystemExit("[replies] OAuth1 credentials required")
     tid = x_oauth1.post_tweet(text, creds, reply_to=tweet_id)
