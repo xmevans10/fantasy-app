@@ -2284,14 +2284,30 @@ work**, which move to an opportunistic bucket instead of their own version. Same
     one without its image, and image upload needs the `media.write` scope the current grant lacks
     (`POST /2/media/upload` → **403**, verified 2026-09-21). Add the scope, re-consent, and pass
     `--media`; the upload path is already implemented and falls back gracefully.
+  - **Only trustworthy assets post.** `trust_reason()` gates every candidate through the *same*
+    bar the content pipeline already holds boards to — `validate.validate()` (shape, ambiguous
+    keep/cut boundary, headshots frozen from our store, a whoami clue that doesn't leak the
+    answer) plus `pack.MIN_PHOTOS` (6 of 8 real faces) — and refuses an unreleased sport. Board
+    kinds also require the rendered PNG to actually be in the bucket (`image_ready`, a 200 with
+    real bytes). A failed check is a skip with a printed reason, never a publish.
   - **Dark by default.** Scheduled runs fire only when repo variable `X_AUTOPOST == 'true'`
-    (created `false`); `workflow_dispatch` defaults to `--dry-run`, which prints exactly what
-    would post without consuming the refresh token or writing the ledger.
-- **Still open, user-gated:** (1) **enabling `X_AUTOPOST`** — flip the variable once the first
-  post is approved (the growth brief requires that); (2) **the `media.write` scope** — the unlock
-  for the board posts, which are the stronger hook than a text clue thread; (3) **Google Drive
-  filing is inert in CI** — `DRIVE_UPLOAD_URL` / `DRIVE_UPLOAD_TOKEN` are unset repo secrets, so
-  `x_assets --drive` and `x-evergreen-sync.yml` both log `[drive] not configured` and skip.
+    (created `false`); board kinds additionally need `X_MEDIA == 'true'` — another variable flip,
+    no code change. `workflow_dispatch` defaults to `--dry-run`, which prints exactly what would
+    post (and why anything was skipped) without consuming the refresh token or writing the ledger.
+    Verified 2026-09-21: a dry run selected and trust-checked 6 real board assets — every one
+    validated with ≥6 faces and its image already in the bucket — so `--media` posts them the day
+    the scope is granted.
+- **Still open, user-gated, in order of payoff:** (1) **the `media.write` OAuth2 scope** — the
+  unlock for the board posts, which are the stronger hook than a text clue thread. In the X
+  developer portal (the app behind `X_CLIENT_ID`): User authentication settings → OAuth 2.0 scopes
+  → add `media.write`, save, then re-run the authorization URL and paste the new
+  `X_REFRESH_TOKEN` into `tools/marketing/.env` and `python -m tools.marketing.x_engine --seed`.
+  Media upload is 403 today on all three endpoints (v2 `api.x.com`, v2 `api.twitter.com`, v1.1),
+  which is consistent with a missing scope rather than an endpoint. (2) **enabling `X_AUTOPOST`**
+  — flip the variable once the first post is approved (the growth brief requires that). (3)
+  **Google Drive filing is inert in CI** — `DRIVE_UPLOAD_URL` / `DRIVE_UPLOAD_TOKEN` are unset
+  repo secrets, so `x_assets --drive` and `x-evergreen-sync.yml` both log `[drive] not configured`
+  and skip.
 - The remaining `[product]` candidate (creator attribution + community puzzle of the week,
   MARKETING.md §5) is still unconfirmed.
 

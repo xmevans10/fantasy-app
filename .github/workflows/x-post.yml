@@ -60,7 +60,9 @@ jobs:
           set -euo pipefail
           ARGS=(--cap "${{ github.event.inputs.cap || '2' }}")
           if [ -n "${{ github.event.inputs.date }}" ]; then ARGS+=(--date "${{ github.event.inputs.date }}"); fi
-          if [ "${{ github.event.inputs.media }}" = "true" ]; then ARGS+=(--media); fi
+          # Board kinds (keep4/resume/career) need the media.write scope. Flip the repo variable
+          # X_MEDIA to 'true' once the X app grant carries it — no code change.
+          if [ "${{ github.event.inputs.media }}" = "true" ] || [ "${{ vars.X_MEDIA }}" = "true" ]; then ARGS+=(--media); fi
           if [ "${{ github.event.inputs.reveals }}" = "true" ]; then ARGS+=(--reveals); fi
           # A dispatch dry-runs unless it was explicitly turned off; a scheduled run really posts.
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.dry_run }}" != "false" ]; then

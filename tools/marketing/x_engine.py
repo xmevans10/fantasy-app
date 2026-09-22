@@ -52,6 +52,9 @@ import urllib.parse
 import urllib.request
 
 from . import x_assets, x_client
+from tools.ingest import validate as _validate
+from tools.ingest.assemble import PuzzleRow
+from tools.ingest.pack import MIN_PHOTOS
 
 DEFAULT_CAP = 2
 
@@ -249,11 +252,62 @@ def select_assets(assets: list[dict], *, cap: int, sports: set[str] | None,
     return chosen
 
 
+# ── trust (what may be posted) ───────────────────────────────────────────────────
+#
+# The engine posts unattended, so "is this asset good enough to publish under the brand" has to
+# be a check, not a judgement made each morning. It is deliberately the SAME bar the content
+# pipeline already holds boards to — `validate.validate()` (shape, ambiguous keep/cut boundary,
+# headshots frozen from our store, a clue that does not leak the answer) plus `pack.MIN_PHOTOS`
+# (six of eight real faces) — rather than a second, weaker gate that would drift from the first.
+
+def fetch_rows(puzzle_ids: list[str]) -> dict[str, dict]:
+    """The live `puzzles` rows for these ids, keyed by id (PostgREST `in.()`)."""
+    ids = [i for i in puzzle_ids if i]
+    if not ids:
+        return {}
+    query = "puzzles?select=id,sport,format,content&id=" + urllib.parse.quote(x_assets._in(ids))
+    rows = _rest("GET", query)
+    return {r["id"]: r for r in rows}
+
+
+def _faces(content: dict) -> int:
+    return sum(1 for p in content.get("players", []) if p.get("headshot"))
+
+
+def trust_reason(asset: dict, row: dict | None) -> str | None:
+    """None when the asset is safe to post, else a short reason it is not. Pure given its row."""
+    if row is None:
+        return "no live row for this board"
+    if row.get("sport") not in _validate.WIRE_SAFE_SPORTS:
+        return f"unreleased sport {row.get('sport')!r}"
+    try:
+        _validate.validate(PuzzleRow(id=row["id"], sport=row["sport"],
+                                     format=row.get("format", asset.get("kind", "")),
+                                     content=row["content"]))
+    except ValueError as e:
+        return f"failed validation: {e}"
+    if row.get("format") == "keep4":
+        faces = _faces(row["content"])
+        if faces < MIN_PHOTOS:
+            return f"only {faces} real faces (need {MIN_PHOTOS})"
+    return None
+
+
+def image_ready(url: str) -> bool:
+    """The rendered PNG actually exists in the bucket — never attach a 404 to a post."""
+    try:
+        req = urllib.request.Request(url, method="HEAD")
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return r.status == 200 and int(r.headers.get("Content-Length", "0")) > 1_000
+    except Exception:  # noqa: BLE001 — any failure means "not ready"
+        return False
+
+
 # ── posting ──────────────────────────────────────────────────────────────────────
 
 def post_assets(assets: list[dict], access: str | None, *, date: str, cap: int,
                 sports: set[str] | None, kinds: tuple[str, ...], use_media: bool,
-                dry_run: bool, force: bool) -> int:
+                dry_run: bool, force: bool, rows: dict[str, dict]) -> int:
     posted = 0
     for a in select_assets(assets, cap=cap, sports=sports, kinds=kinds):
         main = post_id(date, a["kind"], a["sport"], "main")
@@ -261,22 +315,34 @@ def post_assets(assets: list[dict], access: str | None, *, date: str, cap: int,
             print(f"[growth] skip {main} (already posted)")
             continue
 
+        reason = trust_reason(a, rows.get(a.get("puzzle_id")))
+        if reason:
+            print(f"[growth] skip {main}: {reason}")
+            continue
+
+        needs_media = a["kind"] in MEDIA_KINDS
+        if needs_media and not use_media:
+            continue                                       # only reachable if caller overrode kinds
+        if needs_media and not a.get("file"):
+            continue
+        image_url = a.get("url") or (bucket_url(date, a["file"]) if a.get("file") else "")
+        if needs_media and not image_ready(image_url):
+            print(f"[growth] skip {main}: rendered image is not in the bucket yet")
+            continue
+
+        if dry_run:
+            with_image = " (with image)" if needs_media else ""
+            print(f"[growth] DRY RUN {main}{with_image}:\n{a['caption']}\n")
+            posted += 1
+            continue
+
         media_ids = None
-        if a["kind"] in MEDIA_KINDS:
-            if not use_media:
-                continue                                   # only reachable if caller overrode kinds
-            if not a.get("file"):
-                continue
+        if needs_media:
             assert access is not None
-            media_id = upload_media(access, download(bucket_url(date, a["file"])))
+            media_id = upload_media(access, download(image_url))
             if not media_id:
                 continue                                   # never post a board without its image
             media_ids = [media_id]
-
-        if dry_run:
-            print(f"[growth] DRY RUN {main}:\n{a['caption']}\n")
-            posted += 1
-            continue
 
         assert access is not None
         tid = _tweet(access, a["caption"], media_ids=media_ids)
@@ -355,6 +421,7 @@ def main() -> int:
     for a in assets:                                        # board posts fetch the rendered PNG
         if a.get("file"):
             a["url"] = bucket_url(date, a["file"])
+    rows = fetch_rows([a.get("puzzle_id") for a in assets])  # the trust gate's source of truth
 
     # A dry run must not consume (rotate) the refresh token, so only fetch one when actually posting.
     access = None if args.dry_run else access_token()
@@ -364,7 +431,7 @@ def main() -> int:
                          dry_run=args.dry_run, force=args.force)
     else:
         n = post_assets(assets, access, date=date, cap=args.cap, sports=sports, kinds=kinds,
-                        use_media=args.media, dry_run=args.dry_run, force=args.force)
+                        use_media=args.media, dry_run=args.dry_run, force=args.force, rows=rows)
     print(f"[growth] {n} post(s) {'would be ' if args.dry_run else ''}made for {date}")
     return 0
 
