@@ -2279,11 +2279,16 @@ work**, which move to an opportunistic bucket instead of their own version. Same
   - **Idempotent by ledger.** `public.marketing_posts` records every tweet under a stable key
     (`{date}:{kind}:{sport}:main|reply:{n}|reveal`), so a cron that fires twice or a dispatch for
     an already-posted date is a no-op rather than a duplicate.
-  - **It posts `whoami` only, on purpose.** The board kinds (`keep4`, `resume`, `career`) carry
-    their answer in the *image*, so a caption alone is unanswerable — the engine refuses to post
-    one without its image, and image upload needs the `media.write` scope the current grant lacks
-    (`POST /2/media/upload` → **403**, verified 2026-09-21). Add the scope, re-consent, and pass
-    `--media`; the upload path is already implemented and falls back gracefully.
+  - **Media works via OAuth 1.0a (resolved 2026-09-22).** The board kinds (`keep4`, `resume`,
+    `career`) carry their answer in the *image*, so a caption alone is unanswerable. `POST
+    /2/media/upload` refused both grants (OAuth2 user context → 403, no `media.write`; app-only
+    Bearer → "Application-Only is forbidden"), so the engine uploads through **v1.1 with OAuth
+    1.0a User Context** (`tools/marketing/x_oauth1.py`). The account's Access Token/Secret were
+    minted with `--oauth1-begin` / `--oauth1-pin` and are **non-rotating**, which also means the
+    whole engine can post on OAuth1 and stop depending on the rotating OAuth2 refresh token.
+    First live post 2026-09-22: a trust-checked `keep4` board with its image attached, as
+    **@_Playbook_** (the OAuth2 token had been a different, personal account — the engine posts as
+    whichever account authorized the OAuth1 token).
   - **Only trustworthy assets post.** `trust_reason()` gates every candidate through the *same*
     bar the content pipeline already holds boards to — `validate.validate()` (shape, ambiguous
     keep/cut boundary, headshots frozen from our store, a whoami clue that doesn't leak the

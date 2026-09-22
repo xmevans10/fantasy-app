@@ -383,13 +383,11 @@ def post_assets(assets: list[dict], access: str | None, *, date: str, cap: int,
 
         media_ids = None
         if needs_media:
-            assert access is not None
             media_id = upload_media(access, download(image_url))
             if not media_id:
                 continue                                   # never post a board without its image
             media_ids = [media_id]
 
-        assert access is not None
         tid = _tweet(access, a["caption"], media_ids=media_ids, oauth1=oauth1)
         ledger_record(main, tid, date, a["kind"], a["sport"])
         parent = tid
