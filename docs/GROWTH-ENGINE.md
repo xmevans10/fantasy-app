@@ -79,6 +79,36 @@ until it appears in `param.rs` or an announcement.
 
 ---
 
+## 3.1 What wins — reverse-engineered from real replies (2026-09-22)
+
+Studied the top replies across `@PFTCommenter`, `@BallsackSports`, `@NBAMemes`, `@statmuse`,
+`@BarstoolSports`, `@OldTakesExposed` (root posts excluded; 27 replies).
+
+- **Specificity wins.** The single biggest non-root reply in the sample was a pure fact the post
+  omitted: *"JSN 337 yards, 3 TD performance vs Utah in the Rose Bowl…"* — **138 likes, 16,244
+  impressions**. Numbers appear in ~42% of replies with ≥25 likes.
+- **Confident takes, not questions.** *"Too bad Klay is washed and is more like 2014 Ray Allen, not
+  D Wade"* (115 likes); *"Those Rams jerseys are atrocious"* (80). Questions are a minority
+  (~20–25%) and rarely the winner.
+- **Voice, measured:** median ~90 characters; **normal capitalization** (0% all-caps); emoji ~15%.
+- **The conversation is the product.** Many winners reply to *other repliers*, escalating an
+  argument — that is the reply weight compounding.
+- **Insider references** signal tribe (PFT/PMT in-jokes).
+- **Reach is still concentrated:** most replies in a 100+ reply thread stay under ~2K impressions.
+  Targeting (fresh + low-competition) and volume still govern; content only decides who breaks out.
+
+**What this means for us — our unique edge.** A catalog of verified player/season stats *is* the
+winning pattern. The highest-value Playbook reply: match a player or team named in the post, pull
+one specific, surprising stat we can vouch for, and state it with a take. Deterministic and honest
+(we never invent numbers); the LLM only shapes the phrasing. This should be Phase 1.5, before wiring
+auto-replies.
+
+**Cost note (2026-09-22):** the study and the workflows consumed the account's $5 of X API credits;
+reads now return **402** until topped up. Budget the loop — reply-targeting reads are the expensive
+part, so run them on a cadence, not continuously.
+
+---
+
 ## 4. Architecture
 
 ```
@@ -137,7 +167,12 @@ python -m tools.marketing.x_metrics  --days 7          # calibration report
   calibration report; plan doc. *Exit:* `x_metrics` prints a real report on our posts; tests green.
 - **P1 — Reply sweep.** `x_replies` scoring + briefs + `x-reply.yml` dark. *Exit:* a dry-run picks
   5 fresh, low-competition, non-risky posts and shows a grounded draft for each.
-- **P2 — LLM voice.** Wire an LLM key to turn briefs into genuinely hip copy (templates can't).
+- **P1.5 — Stat-context replies (our edge).** Match entities in the target post against the catalog
+  (`player_seasons`) and emit the one specific stat the post lacked (§3.1). Deterministic facts,
+  LLM only for phrasing. *Exit:* on a sample of 20 target posts, ≥ half match an entity and produce
+  a factually-correct, specific line.
+- **P2 — LLM voice.** Wire an LLM key (`x_voice`, done 2026-09-22: nano model, key in Supabase; the
+  prompt is tuned to the §3.1 findings — statements, specificity, normal case) to polish the copy.
   *Exit:* drafted replies pass a human "would I post this?" gate ≥ 8/10.
 - **P3 — Enable + calibrate.** Flip `X_AUTOPOST`/`X_MEDIA`/`X_REPLIES`; weekly report drives the
   mix. *Exit:* weighted-engagement/post trends up two weeks running; `ct=x_*` clicks appear.

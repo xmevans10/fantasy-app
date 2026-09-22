@@ -42,7 +42,8 @@ jobs:
             echo "# Reply targets"
             echo
             echo '```'
-            python -m tools.marketing.x_replies --minutes "${{ github.event.inputs.minutes || '30' }}" \
+            python -m tools.marketing.x_replies --draft \
+              --minutes "${{ github.event.inputs.minutes || '30' }}" \
               --cap "${{ github.event.inputs.cap || '5' }}"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

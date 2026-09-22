@@ -19,7 +19,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from . import x_algo, x_engine, x_oauth1
+from . import x_algo, x_engine, x_oauth1, x_voice
 
 # Accounts whose posts move sports Twitter. Reply here, early.
 ACCOUNTS = (
@@ -89,16 +89,20 @@ def rank(candidates: list[dict]) -> list[dict]:
     return ranked
 
 
-def brief(c: dict) -> str:
-    """A writing brief: the target, its numbers, and the angles that fit the algo."""
-    return (f'@ {c["acct"]}  ·  {c["age"]}m old  ·  {c["likes"]} likes / {c["replies"]} replies  '
-            f'·  opportunity {c["opportunity"]}\n'
-            f'   post : {c["text"].strip()[:280]}\n'
-            f'   chose: reach per sibling × freshness (reply is weight {x_algo.WEIGHTS["reply"]}; '
-            f'+{x_algo.WEIGHTS["reply_mutual_original_boost"]} if you mutually follow)\n'
-            f'   angle: add one true stat, or ask one sharp question\n'
-            f'   voice: {VOICE}\n'
-            f'   post a reply with: x_replies --post-id {c["id"]} --text "..."')
+def brief(c: dict, draft: str | None = None) -> str:
+    """A writing brief: the target, its numbers, and (with --draft) a proposed reply."""
+    lines = [f'@ {c["acct"]}  ·  {c["age"]}m old  ·  {c["likes"]} likes / {c["replies"]} replies  '
+             f'·  opportunity {c["opportunity"]}',
+             f'   post : {c["text"].strip()[:280]}',
+             f'   why  : reach per sibling × freshness (reply is weight '
+             f'{x_algo.WEIGHTS["reply"]}; +{x_algo.WEIGHTS["reply_mutual_original_boost"]} if mutual)']
+    if draft:
+        lines.append(f'   draft: {draft}')
+        lines.append(f'   post : x_replies --post-id {c["id"]} --text {json.dumps(draft)}')
+    else:
+        lines.append(f'   voice: {VOICE}')
+        lines.append(f'   post : x_replies --post-id {c["id"]} --text "..."')
+    return "\n".join(lines)
 
 
 def post_reply(tweet_id: str, text: str) -> str:
@@ -117,6 +121,7 @@ def main() -> int:
     ap.add_argument("--cap", type=int, default=5)
     ap.add_argument("--accounts", default=None, help="comma list; default the watchlist")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--draft", action="store_true", help="write a reply with the LLM voice")
     ap.add_argument("--post-id", default=None, help="reply to this tweet id")
     ap.add_argument("--text", default=None, help="the reply text (with --post-id)")
     args = ap.parse_args()
@@ -139,7 +144,8 @@ def main() -> int:
         return 0
     print(f"# Reply targets ({len(ranked)})\n")
     for c in ranked:
-        print(brief(c), "\n")
+        draft = x_voice.draft_reply(c["text"]) if args.draft else None
+        print(brief(c, draft), "\n")
     return 0
 
 

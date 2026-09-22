@@ -133,7 +133,8 @@ def seed() -> None:
     `tools/marketing/.env` into Supabase, so a runner that has only the Supabase secret can post."""
     env = _file_env()
     pairs = [("X_CLIENT_ID", "x_client_id"), ("X_CLIENT_SECRET", "x_client_secret"),
-             ("X_REFRESH_TOKEN", "x_refresh_token"), *_OAUTH1_KV.items()]
+             ("X_REFRESH_TOKEN", "x_refresh_token"), *_OAUTH1_KV.items(),
+             ("OPENAI_API_KEY", "openai_api_key"), ("OPENAI_MODEL", "openai_model")]
     for env_key, kv_key in pairs:
         value = env.get(env_key)
         if value:
