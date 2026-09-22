@@ -58,6 +58,12 @@ from tools.ingest.pack import MIN_PHOTOS
 
 DEFAULT_CAP = 2
 
+# A whoami thread posts the caption's clue plus this many replies, then stops. The clue ladder is
+# six deep and its tail is a giveaway ("Peaked in 1999 with the Browns: 107 tackles" names the
+# answer to anyone who knows the team-year), so a timeline post must not dump all six — the app
+# is where you spend for clue 6. Three clues is a teaser people can actually reply to.
+WHOAMI_REPLY_CAP = 2
+
 # Which asset kinds carry their answer in the image (media required) versus in the text.
 MEDIA_KINDS = ("keep4", "resume", "career")
 TEXT_KINDS = ("whoami",)
@@ -126,9 +132,9 @@ def seed() -> None:
     """One-time bootstrap: copy the static client id/secret and the current refresh token from
     `tools/marketing/.env` into Supabase, so a runner that has only the Supabase secret can post."""
     env = _file_env()
-    for env_key, kv_key in (("X_CLIENT_ID", "x_client_id"),
-                            ("X_CLIENT_SECRET", "x_client_secret"),
-                            ("X_REFRESH_TOKEN", "x_refresh_token")):
+    pairs = [("X_CLIENT_ID", "x_client_id"), ("X_CLIENT_SECRET", "x_client_secret"),
+             ("X_REFRESH_TOKEN", "x_refresh_token"), *_OAUTH1_KV.items()]
+    for env_key, kv_key in pairs:
         value = env.get(env_key)
         if value:
             kv_set(kv_key, value)
@@ -199,9 +205,30 @@ def _tweet(access: str, text: str, *, reply_to: str | None = None,
         raise RuntimeError(f"post failed: {e.code} {e.read().decode()[:300]}") from e
 
 
+_OAUTH1_KV = {"X_CONSUMER_KEY": "x_consumer_key",
+              "X_CONSUMER_SECRET": "x_consumer_secret",
+              "X_OAUTH1_ACCESS_TOKEN": "x_oauth1_access_token",
+              "X_OAUTH1_ACCESS_TOKEN_SECRET": "x_oauth1_access_token_secret"}
+
+
+def oauth1_creds() -> dict | None:
+    """The four OAuth 1.0a values from the process env, `tools/marketing/.env`, or Supabase — in
+    that order — or None when the account's Access Token pair has not been provided yet."""
+    env = {**_file_env(), **os.environ}
+    out = {k: env.get(k) or kv_get(kv) for k, kv in _OAUTH1_KV.items()}
+    return out if all(out.values()) else None
+
+
 def upload_media(access: str, png: bytes) -> str | None:
-    """Attach an image. Returns None (and says so) when the grant lacks `media.write` — the
+    """Attach an image, preferring the OAuth 1.0a v1.1 endpoint (non-rotating app + access tokens)
+    and falling back to the OAuth2 v2 endpoint. Returns None when neither grant can upload — the
     caller then skips the board rather than posting an unanswerable caption."""
+    from . import x_oauth1
+    creds = oauth1_creds()
+    if creds:
+        media_id = x_oauth1.upload_media(png, creds)
+        if media_id:
+            return media_id
     boundary = "----playbook" + base64.urlsafe_b64encode(os.urandom(9)).decode().rstrip("=")
     body = (f"--{boundary}\r\n"
             f'Content-Disposition: form-data; name="media"; filename="board.png"\r\n'
@@ -330,9 +357,23 @@ def post_assets(assets: list[dict], access: str | None, *, date: str, cap: int,
             print(f"[growth] skip {main}: rendered image is not in the bucket yet")
             continue
 
+        replies = list(a.get("replies") or ())
+        if a["kind"] == "whoami":
+            replies = replies[:WHOAMI_REPLY_CAP]
+
         if dry_run:
-            with_image = " (with image)" if needs_media else ""
-            print(f"[growth] DRY RUN {main}{with_image}:\n{a['caption']}\n")
+            kind = "with image" if needs_media else "text only"
+            lines = [f"[growth] DRY RUN {main}  ·  {kind}  ·  {a['sport']}"]
+            if needs_media:
+                lines.append(f"    image : {image_url}")
+            lines.append("    post  : " + a["caption"].replace("\n", "\n            "))
+            for i, rep in enumerate(replies, 1):
+                lines.append(f"    reply {i}: {rep}")
+            reveal = (a.get("reveal") or {}).get("text")
+            if reveal:
+                when = (a.get("reveal") or {}).get("when", "later")
+                lines.append(f"    reveal ({when}): {reveal.replace(chr(10), ' / ')}")
+            print("\n".join(lines) + "\n")
             posted += 1
             continue
 
@@ -348,7 +389,7 @@ def post_assets(assets: list[dict], access: str | None, *, date: str, cap: int,
         tid = _tweet(access, a["caption"], media_ids=media_ids)
         ledger_record(main, tid, date, a["kind"], a["sport"])
         parent = tid
-        for i, reply in enumerate(a.get("replies") or (), 1):
+        for i, reply in enumerate(replies, 1):
             slot = post_id(date, a["kind"], a["sport"], f"reply:{i}")
             if not force and ledger_has(slot):
                 parent = ledger_get(slot) or parent
