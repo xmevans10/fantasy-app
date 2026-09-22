@@ -46,10 +46,16 @@ def sign(method: str, url: str, params: dict[str, str],
 
 def auth_header(method: str, url: str, consumer_key: str, consumer_secret: str,
                 token: str, token_secret: str, *, nonce: str | None = None,
-                timestamp: str | None = None, extra: dict[str, str] | None = None) -> str:
-    """Build the `Authorization: OAuth …` header. `token`/`token_secret` are empty for the
-    two-legged `oauth/request_token` call; `extra` adds params that must be signed (e.g.
-    `oauth_callback`) and is included in the header, which X accepts for those."""
+                timestamp: str | None = None, extra: dict[str, str] | None = None,
+                sign_extra: dict[str, str] | None = None) -> str:
+    """Build the `Authorization: OAuth …` header.
+
+    * `token`/`token_secret` are empty for the two-legged `oauth/request_token` call.
+    * `extra` params are signed **and** go in the header (X accepts `oauth_callback` this way).
+    * `sign_extra` params are signed only — this is how QUERY STRING params on a GET are covered,
+      which is mandatory: X recomputes the signature over the query string and a 401 is the
+      symptom of omitting them.
+    """
     oauth = {
         "oauth_consumer_key": consumer_key,
         "oauth_nonce": nonce or uuid.uuid4().hex,
@@ -60,8 +66,21 @@ def auth_header(method: str, url: str, consumer_key: str, consumer_secret: str,
     if token:
         oauth["oauth_token"] = token
     oauth.update(extra or {})
-    oauth["oauth_signature"] = sign(method, url, oauth, consumer_secret, token_secret)
+    oauth["oauth_signature"] = sign(method, url, {**oauth, **(sign_extra or {})},
+                                    consumer_secret, token_secret)
     return "OAuth " + ", ".join(f'{_enc(k)}="{_enc(v)}"' for k, v in sorted(oauth.items()))
+
+
+def get_json(url: str, creds: dict, query: dict | None = None):
+    """Signed GET (OAuth1 user context). Any query params are folded into the signature."""
+    params = {k: str(v) for k, v in (query or {}).items()}
+    full = url + ("?" + urllib.parse.urlencode(params) if params else "")
+    header = auth_header("GET", url, creds["X_CONSUMER_KEY"], creds["X_CONSUMER_SECRET"],
+                         creds["X_OAUTH1_ACCESS_TOKEN"], creds["X_OAUTH1_ACCESS_TOKEN_SECRET"],
+                         sign_extra=params)
+    req = urllib.request.Request(full, headers={"Authorization": header})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.loads(r.read())
 
 
 # ── live path ────────────────────────────────────────────────────────────────────

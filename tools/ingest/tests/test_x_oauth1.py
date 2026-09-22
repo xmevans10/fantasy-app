@@ -62,3 +62,15 @@ def test_header_includes_the_token_for_user_context():
     header = x_oauth1.auth_header("POST", x_oauth1.UPLOAD_URL, "ck", "cs", "tok", "ts",
                                   nonce="n", timestamp="1")
     assert 'oauth_token="tok"' in header and 'oauth_nonce="n"' in header
+
+
+def test_query_params_are_signed_but_not_placed_in_the_header():
+    """A GET's query string must be in the signature (omitting it is the 401 we hit) but must not
+    leak into the Authorization header."""
+    base = x_oauth1.auth_header("GET", "https://api.x.com/2/tweets/1", "ck", "cs", "tok", "ts",
+                                nonce="n", timestamp="1")
+    with_query = x_oauth1.auth_header("GET", "https://api.x.com/2/tweets/1", "ck", "cs", "tok",
+                                      "ts", nonce="n", timestamp="1",
+                                      sign_extra={"tweet.fields": "public_metrics"})
+    assert base != with_query                       # the query changed the signature
+    assert "public_metrics" not in with_query       # but is not in the header

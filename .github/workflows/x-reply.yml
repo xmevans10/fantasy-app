@@ -1,0 +1,48 @@
+name: x-reply
+
+# Reply targeting: every 15 minutes, find *rising* posts worth replying to and write briefs
+# (tools/marketing/x_replies.py). Ranks by reach-per-sibling × freshness, skips anything that
+# risks the algorithm's heavy negative weights, and produces briefs — not posts — because
+# deterministic copy is not hip. This job posts nothing; a human or an LLM drafts from the briefs.
+#
+# Dark by default: scheduled runs only fire when repo variable X_REPLIES is 'true'.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Only posts younger than this many minutes"
+        required: false
+        default: "30"
+      cap:
+        description: "Max targets per run"
+        required: false
+        default: "5"
+
+jobs:
+  briefs:
+    if: github.event_name == 'workflow_dispatch' || vars.X_REPLIES == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Find reply targets
+        run: |
+          {
+            echo "# Reply targets"
+            echo
+            echo '```'
+            python -m tools.marketing.x_replies --minutes "${{ github.event.inputs.minutes || '30' }}" \
+              --cap "${{ github.event.inputs.cap || '5' }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

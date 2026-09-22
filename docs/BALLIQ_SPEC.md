@@ -2302,6 +2302,20 @@ work**, which move to an opportunistic bucket instead of their own version. Same
     Verified 2026-09-21: a dry run selected and trust-checked 6 real board assets — every one
     validated with ≥6 faces and its image already in the bucket — so `--media` posts them the day
     the scope is granted.
+- **Algo-aligned growth engine ([docs/GROWTH-ENGINE.md](GROWTH-ENGINE.md), 2026-09-22).** X
+  open-sourced the For You feed (`github.com/xai-org/x-algorithm`); `tools/marketing/x_algo.py`
+  encodes the published production weights and the two actions worth farming (share-via-copy-link
+  **20**, reply **5**, +15 for mutual-follow originals), plus the negatives that end reach (mute
+  −58.8, report −234) and the structural facts (out-of-network discount 0.75, new-author boost to
+  slot ~15–16, 48h age filter, author-diversity decay). Consequences baked into the plan: **originals
+  over replies** (the cold-start lift is for originals; non-mutual replies are discounted), **space
+  posts** (diversity decay), **farm shares and replies**, **never bait** the negative weights.
+  - `x_metrics.py` + `x-metrics.yml` — daily calibration: pull our posts' organic/non-public
+    metrics, score each by the real weights, report to the run summary.
+  - `x_replies.py` + `x-reply.yml` — every-15-min reply targeting: rank rising posts by
+    reach-per-sibling × freshness (`reply_opportunity`), hard-skip injuries/tragedy/politics
+    (`is_risky`), emit **writing briefs** (deterministic copy is not hip; Phase 2 is an LLM).
+  - `x_oauth1.get_json` signs GET query params (the earlier 401). Ships dark behind `X_REPLIES`.
 - **Still open, user-gated, in order of payoff:** (1) **the `media.write` OAuth2 scope** — the
   unlock for the board posts, which are the stronger hook than a text clue thread. In the X
   developer portal (the app behind `X_CLIENT_ID`): User authentication settings → OAuth 2.0 scopes

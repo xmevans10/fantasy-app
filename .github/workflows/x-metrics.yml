@@ -1,0 +1,38 @@
+name: x-metrics
+
+# Daily calibration: score our own posts by the published X ranking weights (tools/marketing/
+# x_metrics.py, x_algo.py) and write the report to the run summary. This is the feedback half of
+# the growth loop — it turns "is this good?" into a number per post, so the content mix can be
+# tuned against the algorithm's actual objective rather than a vibe. Reads only; posts nothing.
+
+on:
+  schedule:
+    - cron: "0 14 * * *"   # an hour after the 13:00 UTC post run, so today's posts are included
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Lookback window in days"
+        required: false
+        default: "7"
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Score our posts against the ranking weights
+        run: |
+          {
+            echo "# X calibration report"
+            echo
+            python -m tools.marketing.x_metrics --days "${{ github.event.inputs.days || '7' }}"
+          } >> "$GITHUB_STEP_SUMMARY"
