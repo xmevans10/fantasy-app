@@ -45,7 +45,7 @@ def test_post_assets_threads_replies_and_is_idempotent(monkeypatch):
     monkeypatch.setattr(x_engine, "ledger_record",
                         lambda pid, tid, date, kind, sport: recorded.__setitem__(pid, tid))
     monkeypatch.setattr(x_engine, "_tweet",
-                        lambda access, text, reply_to=None, media_ids=None: sent.append((text, reply_to)) or f"t{len(sent)}")
+                        lambda access, text, reply_to=None, media_ids=None, **k: sent.append((text, reply_to)) or f"t{len(sent)}")
 
     a = _asset("whoami", "nfl", "Clue 1", replies=["Clue 2", "Clue 3"])
     kwargs = dict(date="2026-09-21", cap=2, sports=None, kinds=("whoami",),
@@ -169,7 +169,7 @@ def test_reveal_replies_only_to_a_post_we_actually_made(monkeypatch):
     monkeypatch.setattr(x_engine, "ledger_record",
                         lambda pid, tid, date, kind, sport: ledger.__setitem__(pid, tid))
     monkeypatch.setattr(x_engine, "_tweet",
-                        lambda access, text, reply_to=None, media_ids=None: sent.append((text, reply_to)) or "t2")
+                        lambda access, text, reply_to=None, media_ids=None, **k: sent.append((text, reply_to)) or "t2")
     a = _asset("whoami", "nfl", "Clue 1", reveal="It was X.")
     assert x_engine.post_reveals([a], "tok", date="2026-09-21", sports=None,
                                  kinds=("whoami",), dry_run=False, force=False) == 1

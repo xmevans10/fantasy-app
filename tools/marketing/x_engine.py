@@ -187,8 +187,11 @@ def access_token() -> str:
 
 # ── X API ────────────────────────────────────────────────────────────────────────
 
-def _tweet(access: str, text: str, *, reply_to: str | None = None,
-           media_ids: list[str] | None = None) -> str:
+def _tweet(access: str | None, text: str, *, reply_to: str | None = None,
+           media_ids: list[str] | None = None, oauth1: dict | None = None) -> str:
+    if oauth1:
+        from . import x_oauth1
+        return x_oauth1.post_tweet(text, oauth1, reply_to=reply_to, media_ids=media_ids)
     payload: dict = {"text": text}
     if reply_to:
         payload["reply"] = {"in_reply_to_tweet_id": reply_to}
@@ -334,7 +337,8 @@ def image_ready(url: str) -> bool:
 
 def post_assets(assets: list[dict], access: str | None, *, date: str, cap: int,
                 sports: set[str] | None, kinds: tuple[str, ...], use_media: bool,
-                dry_run: bool, force: bool, rows: dict[str, dict]) -> int:
+                dry_run: bool, force: bool, rows: dict[str, dict],
+                oauth1: dict | None = None) -> int:
     posted = 0
     for a in select_assets(assets, cap=cap, sports=sports, kinds=kinds):
         main = post_id(date, a["kind"], a["sport"], "main")
@@ -386,7 +390,7 @@ def post_assets(assets: list[dict], access: str | None, *, date: str, cap: int,
             media_ids = [media_id]
 
         assert access is not None
-        tid = _tweet(access, a["caption"], media_ids=media_ids)
+        tid = _tweet(access, a["caption"], media_ids=media_ids, oauth1=oauth1)
         ledger_record(main, tid, date, a["kind"], a["sport"])
         parent = tid
         for i, reply in enumerate(replies, 1):
@@ -394,7 +398,7 @@ def post_assets(assets: list[dict], access: str | None, *, date: str, cap: int,
             if not force and ledger_has(slot):
                 parent = ledger_get(slot) or parent
                 continue
-            parent = _tweet(access, reply, reply_to=parent)
+            parent = _tweet(access, reply, reply_to=parent, oauth1=oauth1)
             ledger_record(slot, parent, date, a["kind"], a["sport"])
         print(f"[growth] posted {main} -> {tid}")
         posted += 1
@@ -402,7 +406,8 @@ def post_assets(assets: list[dict], access: str | None, *, date: str, cap: int,
 
 
 def post_reveals(assets: list[dict], access: str | None, *, date: str, sports: set[str] | None,
-                 kinds: tuple[str, ...], dry_run: bool, force: bool) -> int:
+                 kinds: tuple[str, ...], dry_run: bool, force: bool,
+                 oauth1: dict | None = None) -> int:
     """Reply each board's answer to the main tweet it belongs to, the next day. A no-op for any
     main the ledger has never seen (so this is safe to schedule before the poster has run)."""
     posted = 0
@@ -425,11 +430,44 @@ def post_reveals(assets: list[dict], access: str | None, *, date: str, sports: s
         parent = ledger_get(main)
         if not parent:
             continue
-        tid = _tweet(access, reveal, reply_to=parent)
+        tid = _tweet(access, reveal, reply_to=parent, oauth1=oauth1)
         ledger_record(slot, tid, date, a["kind"], a["sport"])
         print(f"[growth] revealed {slot} -> {tid}")
         posted += 1
     return posted
+
+
+# ── OAuth 1.0a login (mint the account's non-rotating token pair) ─────────────────
+#
+# Preferred over the rotating OAuth2 refresh token for exactly the reason the Supabase store
+# exists: these tokens do not expire or rotate, so a scheduled run cannot lose the account by
+# missing a persist step, and the same pair posts AND uploads media (v1.1).
+
+REQUEST_TOKEN_FILE = x_assets.brand.ROOT / "build" / "x-oauth1-request.json"
+
+
+def oauth1_begin() -> str:
+    """Request a token and return the URL the account owner approves."""
+    from . import x_oauth1
+    env = _file_env()
+    rt = x_oauth1.request_token(env["X_CONSUMER_KEY"], env["X_CONSUMER_SECRET"])
+    REQUEST_TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+    REQUEST_TOKEN_FILE.write_text(json.dumps(rt))
+    return x_oauth1.authorize_url(rt["oauth_token"])
+
+
+def oauth1_login(pin: str) -> int:
+    from . import x_oauth1
+    env = _file_env()
+    rt = json.loads(REQUEST_TOKEN_FILE.read_text())
+    out = x_oauth1.exchange_access_token(env["X_CONSUMER_KEY"], env["X_CONSUMER_SECRET"],
+                                         rt["oauth_token"], rt["oauth_token_secret"], pin)
+    env["X_OAUTH1_ACCESS_TOKEN"] = out["oauth_token"]
+    env["X_OAUTH1_ACCESS_TOKEN_SECRET"] = out["oauth_token_secret"]
+    x_client.save_env(env)
+    seed()
+    print(f"[growth] OAuth1 access token for @{out.get('screen_name', '?')} stored")
+    return 0
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────────
@@ -445,11 +483,21 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true", help="print what would post; send nothing")
     ap.add_argument("--force", action="store_true", help="repost even if the ledger has it")
     ap.add_argument("--seed", action="store_true", help="seed Supabase secrets from marketing/.env")
+    ap.add_argument("--oauth1-pin", metavar="PIN", default=None,
+                    help="exchange the 3-legged verifier for the account's OAuth1 access token")
+    ap.add_argument("--oauth1-begin", action="store_true", help="start OAuth1 login; prints the URL")
     args = ap.parse_args()
 
     if args.seed:
         seed()
         return 0
+
+    if args.oauth1_begin:
+        print("[growth] approve at:", oauth1_begin())
+        return 0
+
+    if args.oauth1_pin:
+        return oauth1_login(args.oauth1_pin)
 
     date = args.date or dt.date.today().isoformat()
     sports = {s for s in (args.sport.split(",") if args.sport else []) if s} or None
@@ -464,15 +512,19 @@ def main() -> int:
             a["url"] = bucket_url(date, a["file"])
     rows = fetch_rows([a.get("puzzle_id") for a in assets])  # the trust gate's source of truth
 
-    # A dry run must not consume (rotate) the refresh token, so only fetch one when actually posting.
-    access = None if args.dry_run else access_token()
+    # Prefer the OAuth 1.0a user context: non-rotating, and the same pair also uploads media.
+    # Only fall back to the rotating OAuth2 token when it is absent, and never fetch it for a
+    # dry run (a dry run must not rotate anything).
+    oauth1 = oauth1_creds()
+    access = None if (args.dry_run or oauth1) else access_token()
 
     if args.reveals:
         n = post_reveals(assets, access, date=date, sports=sports, kinds=kinds,
-                         dry_run=args.dry_run, force=args.force)
+                         dry_run=args.dry_run, force=args.force, oauth1=oauth1)
     else:
         n = post_assets(assets, access, date=date, cap=args.cap, sports=sports, kinds=kinds,
-                        use_media=args.media, dry_run=args.dry_run, force=args.force, rows=rows)
+                        use_media=args.media, dry_run=args.dry_run, force=args.force, rows=rows,
+                        oauth1=oauth1)
     print(f"[growth] {n} post(s) {'would be ' if args.dry_run else ''}made for {date}")
     return 0
 

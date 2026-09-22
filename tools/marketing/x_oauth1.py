@@ -16,6 +16,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import json
 import os
 import time
 import urllib.parse
@@ -66,6 +67,7 @@ def auth_header(method: str, url: str, consumer_key: str, consumer_secret: str,
 # ── live path ────────────────────────────────────────────────────────────────────
 
 UPLOAD_URL = "https://upload.twitter.com/1.1/media/upload.json"
+TWEET_URL = "https://api.x.com/2/tweets"
 
 
 def credentials() -> dict | None:
@@ -108,6 +110,23 @@ def exchange_access_token(consumer_key: str, consumer_secret: str, request_token
     header = auth_header("POST", url, consumer_key, consumer_secret, request_token_value,
                          request_token_secret, extra={"oauth_verifier": verifier})
     return _post_form(url, {}, header)
+
+
+def post_tweet(text: str, creds: dict, *, reply_to: str | None = None,
+               media_ids: list[str] | None = None) -> str:
+    """Create a post with OAuth 1.0a user context. The JSON body is NOT part of the signature
+    (only form-encoded bodies are), so only the oauth_* params are signed."""
+    payload: dict = {"text": text}
+    if reply_to:
+        payload["reply"] = {"in_reply_to_tweet_id": reply_to}
+    if media_ids:
+        payload["media"] = {"media_ids": media_ids}
+    header = auth_header("POST", TWEET_URL, creds["X_CONSUMER_KEY"], creds["X_CONSUMER_SECRET"],
+                         creds["X_OAUTH1_ACCESS_TOKEN"], creds["X_OAUTH1_ACCESS_TOKEN_SECRET"])
+    req = urllib.request.Request(TWEET_URL, data=json.dumps(payload).encode(), method="POST",
+                                 headers={"Authorization": header, "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.loads(r.read())["data"]["id"]
 
 
 def upload_media(png: bytes, creds: dict | None = None) -> str | None:
