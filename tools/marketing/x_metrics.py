@@ -14,6 +14,8 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import urllib.parse
+import urllib.request
 
 from . import x_algo, x_engine, x_oauth1
 
@@ -40,6 +42,16 @@ def weighted_score(metrics: dict, *, out_of_network: bool = True) -> float:
     """The algorithm's objective, as a per-post proxy. OON is the honest default: most viewers of
     a small account's post do not follow it."""
     return x_algo.score(action_rates(metrics), out_of_network=out_of_network)
+
+
+def usage() -> dict:
+    """The X post-read meter (last 24h). X bills per read, so watch this before/after a run."""
+    from . import x_client
+    bearer = urllib.parse.unquote(x_client.load_env()["X_BEARER_TOKEN"])
+    req = urllib.request.Request("https://api.x.com/2/usage/tweets",
+                                 headers={"Authorization": f"Bearer {bearer}"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.loads(r.read())["data"]
 
 
 def fetch_posts(user_id: str, *, days: int = 7, creds: dict | None = None,
@@ -106,7 +118,11 @@ def main() -> int:
     ap.add_argument("--user-id", default="1903083286047387648", help="@_Playbook_ (default)")
     ap.add_argument("--days", type=int, default=7)
     ap.add_argument("--json", action="store_true", help="raw JSON instead of the markdown report")
+    ap.add_argument("--usage", action="store_true", help="show the X post-read meter and exit")
     args = ap.parse_args()
+    if args.usage:
+        print(json.dumps(usage(), indent=1))
+        return 0
     posts = fetch_posts(args.user_id, days=args.days)
     if args.json:
         print(json.dumps(posts, indent=1))

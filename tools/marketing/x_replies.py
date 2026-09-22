@@ -19,7 +19,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from . import x_algo, x_engine, x_oauth1, x_voice
+from . import x_algo, x_cache, x_engine, x_oauth1, x_voice
+
+# X bills per post read (~$0.0052, measured 2026-09-22). Cache ids for a week, timelines briefly,
+# and hard-stop a run once it has read `max_reads` posts.
+UID_TTL = 7 * 24 * 3600
+TIMELINE_TTL = 180
+DEFAULT_MAX_READS = 250
 
 # Curated account list. Categories have different jobs:
 #
@@ -75,19 +81,43 @@ def _get(path: str, auth) -> dict:
         return json.loads(r.read())
 
 
-def fetch_candidates(*, minutes: int = 30, accounts=ACCOUNTS, auth=None) -> list[dict]:
-    """Recent original posts from the watchlist, still young enough to reply into."""
+def _uid(acct: str, auth) -> str:
+    key = f"uid:{acct}"
+    cached = x_cache.get(key, UID_TTL)
+    if cached:
+        return cached
+    uid = _get(f"/users/by/username/{urllib.parse.quote(acct)}", auth)["data"]["id"]
+    x_cache.put(key, uid)
+    return uid
+
+
+def fetch_candidates(*, minutes: int = 30, accounts=ACCOUNTS, auth=None,
+                     max_results: int = 5, max_reads: int = DEFAULT_MAX_READS) -> list[dict]:
+    """Recent original posts from the watchlist, still young enough to reply into. Cached and
+    budgeted: X bills per post read, so an unbounded poll is an unbounded bill."""
     auth = auth or _auth()
     now = dt.datetime.now(dt.timezone.utc)
     out: list[dict] = []
+    reads = 0
     for acct in accounts:
+        if reads >= max_reads:
+            print(f"[replies] read budget ({max_reads}) reached; stopping. X bills per post read.")
+            break
         try:
-            uid = _get(f"/users/by/username/{urllib.parse.quote(acct)}", auth)["data"]["id"]
-            data = _get(f"/users/{uid}/tweets?max_results=10&exclude=retweets,replies"
-                        f"&tweet.fields=created_at,public_metrics", auth)
+            uid = _uid(acct, auth)
         except (urllib.error.HTTPError, KeyError):
             continue
+        key = f"tl:{uid}:{max_results}"
+        data = x_cache.get(key, TIMELINE_TTL)
+        if data is None:
+            try:
+                data = _get(f"/users/{uid}/tweets?max_results={max_results}"
+                            f"&exclude=retweets,replies&tweet.fields=created_at,public_metrics", auth)
+            except (urllib.error.HTTPError, KeyError):
+                continue
+            x_cache.put(key, data)
         for tw in data.get("data", []):
+            reads += 1
             age = (now - dt.datetime.fromisoformat(tw["created_at"].replace("Z", "+00:00"))
                    ).total_seconds() / 60
             if age > minutes:
@@ -188,6 +218,9 @@ def main() -> int:
     ap.add_argument("--follow-category", default="follow_candidates", choices=sorted(CURATED))
     ap.add_argument("--follow-limit", type=int, default=5)
     ap.add_argument("--dry-run", action="store_true", help="preview --follow without acting")
+    ap.add_argument("--max-reads", type=int, default=DEFAULT_MAX_READS,
+                    help="hard stop after N posts read (X bills per read)")
+    ap.add_argument("--max-results", type=int, default=5, help="posts per account per read")
     args = ap.parse_args()
 
     if args.list_accounts:
@@ -209,7 +242,9 @@ def main() -> int:
         return 0
 
     accounts = tuple(a.strip() for a in args.accounts.split(",")) if args.accounts else ACCOUNTS
-    ranked = rank(fetch_candidates(minutes=args.minutes, accounts=accounts))[:args.cap]
+    ranked = rank(fetch_candidates(minutes=args.minutes, accounts=accounts,
+                                   max_results=args.max_results,
+                                   max_reads=args.max_reads))[:args.cap]
     if args.json:
         print(json.dumps(ranked, indent=1))
         return 0

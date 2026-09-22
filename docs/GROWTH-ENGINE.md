@@ -103,9 +103,27 @@ one specific, surprising stat we can vouch for, and state it with a take. Determ
 (we never invent numbers); the LLM only shapes the phrasing. This should be Phase 1.5, before wiring
 auto-replies.
 
-**Cost note (2026-09-22):** the study and the workflows consumed the account's $5 of X API credits;
-reads now return **402** until topped up. Budget the loop — reply-targeting reads are the expensive
-part, so run them on a cadence, not continuously.
+## 3.3 Cost — measured, and the controls
+
+**X bills per post read: ~$0.0052.** Measured 2026-09-22 from `GET /2/usage/tweets`
+(`project_usage: 962`) against the $5 that vanished — and the 962 was this study, whose
+conversation-thread pulls (50–80 posts each) are the expensive operation. Lesson, written down so
+it does not recur: **a reply-target poll is a metered read, and thread-pulls are the worst kind.**
+
+What would have happened without controls: the original `x-reply.yml` cadence (16 accounts × 10
+posts, every 15 min) is **~15,360 reads/day ≈ $80/day**. The controls now in place:
+
+| control | value |
+|---|---|
+| `x_cache.py` | ids cached 7 days; timelines 180s; a repeat run is (nearly) free |
+| `x_replies --max-reads` | hard stop after N posts read (workflow default 120) |
+| `x_replies --max-results` | posts per account per read (default 5, not 10) |
+| `x-reply.yml` cadence | **every 2 hours**, 3 targets — ~120 reads/run, ~$1.5/day if enabled |
+| `x_metrics --usage` | prints the read meter; check before/after a run |
+| the whole loop | **ships dark**; nothing bills until a variable is flipped |
+
+Rule of thumb: at $0.0052/read, **1,000 reads ≈ $5**. Reads that pull whole conversations are
+banned. Our own catalog (Supabase) is free — prefer it to any X read.
 
 ---
 
