@@ -21,12 +21,34 @@ import urllib.request
 
 from . import x_algo, x_engine, x_oauth1, x_voice
 
-# Accounts whose posts move sports Twitter. Reply here, early.
-ACCOUNTS = (
-    "ShamsCharania", "AdamSchefter", "NFL", "NBA", "MLB", "ESPN", "SportsCenter",
-    "BleacherReport", "statmuse", "HoopCentral", "ClutchPoints", "TheNBACentral",
-    "overtime", "PFTCommenter", "BarstoolSports", "DovKleiman",
-)
+# Curated account list. Categories have different jobs:
+#
+# * reply_*      — sources of posts to reply to (news = fast/comps-heavy; banter = where wit
+#                  lands; stats = our own register). Sorted in `rank()` by reach-per-sibling.
+# * follow_candidates — mid-tier, in-niche accounts we FOLLOW to seek the mutual-follow reply
+#                  boost (+15, i.e. reply weight 20). Big accounts never follow back; these might.
+#                  Building mutuals is the single most algo-aligned reason to follow.
+# * niche        — hockey/F1/soccer/tennis, where the app is differentiated and the giants are not.
+# * competitors  — study only; never reply-spam them.
+#
+# Handles verified by resolution at runtime (`--list-accounts` resolves; failures are skipped).
+# Some are best-effort and may 404 once credits return.
+ME = "1903083286047387648"                     # @_Playbook_, never follow ourselves
+
+CURATED: dict[str, list[str]] = {
+    "reply_news": ["AdamSchefter", "ShamsCharania", "TomPelissero", "RapSheet", "NFL", "NBA",
+                   "MLB", "ESPN", "SportsCenter", "BleacherReport"],
+    "reply_banter": ["PFTCommenter", "BallsackSports", "NBAMemes", "BarstoolSports",
+                     "OldTakesExposed", "SportsMemes", "TimelessSports"],
+    "reply_stats": ["statmuse", "OptaSTATS", "ESPNStatsInfo", "ClutchPoints", "HoopCentral",
+                    "TheNBACentral", "DovKleiman"],
+    "follow_candidates": ["SharpFootball", "PFF", "FantasyLife", "UnderdogNFL", "SleeperHQ",
+                          "FieldYates", "minakimes", "TheCheckdown", "Nate_Tice"],
+    "niche": ["NHL", "ESPNFC", "F1", "ATPTour", "OptaJoe", "TSN_Sports", "Sportsnet"],
+    "competitors": ["immaculategrid", "Sporcle", "SleeperHQ", "UnderdogFantasy", "PuzzGrid"],
+}
+ACCOUNTS = tuple(dict.fromkeys(
+    CURATED["reply_news"] + CURATED["reply_banter"] + CURATED["reply_stats"]))
 
 VOICE = ("first person, confident, lowercase-leaning, <=140 chars, no hashtags, no links; "
          "add one true thing or ask one sharp question; never an ad")
@@ -89,16 +111,17 @@ def rank(candidates: list[dict]) -> list[dict]:
     return ranked
 
 
-def brief(c: dict, draft: str | None = None) -> str:
-    """A writing brief: the target, its numbers, and (with --draft) a proposed reply."""
+def brief(c: dict, drafts: dict[str, str] | None = None) -> str:
+    """A writing brief: the target, its numbers, and (with --draft) one reply per archetype."""
     lines = [f'@ {c["acct"]}  ·  {c["age"]}m old  ·  {c["likes"]} likes / {c["replies"]} replies  '
              f'·  opportunity {c["opportunity"]}',
              f'   post : {c["text"].strip()[:280]}',
              f'   why  : reach per sibling × freshness (reply is weight '
              f'{x_algo.WEIGHTS["reply"]}; +{x_algo.WEIGHTS["reply_mutual_original_boost"]} if mutual)']
-    if draft:
-        lines.append(f'   draft: {draft}')
-        lines.append(f'   post : x_replies --post-id {c["id"]} --text {json.dumps(draft)}')
+    if drafts:
+        for aid, text in drafts.items():
+            lines.append(f'   [{aid}] {text}')
+        lines.append(f'   post : x_replies --post-id {c["id"]} --text "..."')
     else:
         lines.append(f'   voice: {VOICE}')
         lines.append(f'   post : x_replies --post-id {c["id"]} --text "..."')
@@ -115,6 +138,42 @@ def post_reply(tweet_id: str, text: str) -> str:
     return tid
 
 
+def follow_accounts(accounts, *, limit: int, dry_run: bool) -> int:
+    """Follow a curated category, capped and ledger-deduped. Small by design: mass following is an
+    inauthentic-behaviour signal, and X caps new accounts near 400 follows/day anyway."""
+    creds = x_engine.oauth1_creds()
+    auth = _auth()
+    followed = 0
+    for acct in accounts:
+        if followed >= limit:
+            break
+        try:
+            uid = _get(f"/users/by/username/{urllib.parse.quote(acct)}", auth)["data"]["id"]
+        except Exception:  # noqa: BLE001 — a bad handle is skipped, not fatal
+            print(f"  {acct}: could not resolve")
+            continue
+        if uid == ME:
+            continue
+        key = f"follow:{uid}"
+        if x_engine.ledger_has(key):
+            continue
+        if dry_run:
+            print(f"  would follow @{acct} ({uid})")
+            followed += 1
+            continue
+        if not creds:
+            raise SystemExit("[replies] OAuth1 credentials required to follow")
+        try:
+            x_oauth1.follow(ME, uid, creds)
+            x_engine.ledger_record(key, "", dt.date.today().isoformat(), "follow", acct)
+            print(f"  followed @{acct}")
+        except RuntimeError as e:
+            x_engine.ledger_record(key, "", dt.date.today().isoformat(), "follow", acct)
+            print(f"  {acct}: {e}")
+        followed += 1
+    return followed
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Reply targeting / drafting for X.")
     ap.add_argument("--minutes", type=int, default=30, help="only posts younger than this")
@@ -124,7 +183,22 @@ def main() -> int:
     ap.add_argument("--draft", action="store_true", help="write a reply with the LLM voice")
     ap.add_argument("--post-id", default=None, help="reply to this tweet id")
     ap.add_argument("--text", default=None, help="the reply text (with --post-id)")
+    ap.add_argument("--list-accounts", action="store_true", help="print the curated lists")
+    ap.add_argument("--follow", action="store_true", help="follow a curated category via API")
+    ap.add_argument("--follow-category", default="follow_candidates", choices=sorted(CURATED))
+    ap.add_argument("--follow-limit", type=int, default=5)
+    ap.add_argument("--dry-run", action="store_true", help="preview --follow without acting")
     args = ap.parse_args()
+
+    if args.list_accounts:
+        for category, accounts in CURATED.items():
+            print(f"{category}: {', '.join(accounts)}")
+        return 0
+    if args.follow:
+        n = follow_accounts(CURATED.get(args.follow_category, []),
+                            limit=args.follow_limit, dry_run=args.dry_run)
+        print(f"[replies] {n} follow(s) {'would be ' if args.dry_run else ''}made")
+        return 0
 
     if args.post_id:
         if not args.text:
@@ -144,8 +218,8 @@ def main() -> int:
         return 0
     print(f"# Reply targets ({len(ranked)})\n")
     for c in ranked:
-        draft = x_voice.draft_reply(c["text"]) if args.draft else None
-        print(brief(c, draft), "\n")
+        drafts = x_voice.draft_variants(c["text"]) if args.draft else None
+        print(brief(c, drafts), "\n")
     return 0
 
 

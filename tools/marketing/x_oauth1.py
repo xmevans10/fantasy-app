@@ -148,6 +148,22 @@ def post_tweet(text: str, creds: dict, *, reply_to: str | None = None,
         return json.loads(r.read())["data"]["id"]
 
 
+def follow(user_id: str, target_id: str, creds: dict) -> dict:
+    """Follow `target_id` as `user_id` (OAuth1 user context; JSON body is not signed)."""
+    url = f"https://api.x.com/2/users/{user_id}/following"
+    header = auth_header("POST", url, creds["X_CONSUMER_KEY"], creds["X_CONSUMER_SECRET"],
+                         creds["X_OAUTH1_ACCESS_TOKEN"], creds["X_OAUTH1_ACCESS_TOKEN_SECRET"])
+    req = urllib.request.Request(url, data=json.dumps({"target_user_id": str(target_id)}).encode(),
+                                 method="POST",
+                                 headers={"Authorization": header,
+                                          "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"follow {target_id} failed: {e.code} {e.read().decode()[:200]}") from e
+
+
 def upload_media(png: bytes, creds: dict | None = None) -> str | None:
     """Upload via v1.1 with OAuth 1.0a user context. Returns the media id, or None if the
     credentials are incomplete or X refuses."""

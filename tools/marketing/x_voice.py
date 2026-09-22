@@ -1,17 +1,16 @@
-"""The voice: turn a reply brief into actual copy with a cheap LLM.
+"""The voice: turn a reply brief into copy with a cheap LLM, across the archetype range.
 
-Deterministic templates produce competent-but-never-hip lines (see docs/GROWTH-ENGINE.md). This
-module gives the briefs a writer. It deliberately runs a **nano** model — the job is short, the
-volume is high, and the guardrails below do more for quality than a bigger model would.
+Deterministic templates are never hip (docs/GROWTH-ENGINE.md §3.1), so briefs are handed to a
+nano model. The job is short and high-volume, so the guardrails below — not model size — do the
+quality work. Which *kind* of reply comes from `x_archetypes`; this module just writes it well.
 
-Guardrails, enforced after generation, not trusted to the model:
-* `x_algo.is_risky` blocks injuries/tragedy/politics;
-* links, @-mentions, hashtags and emoji are stripped;
-* whitespace collapsed to one line, hard-truncated at X's limit.
+Guardrails, enforced after generation (never trusted to the model):
+* `x_algo.is_risky` blocks injuries/tragedy/politics before and after;
+* links, @-mentions, hashtags and emoji stripped; one line; hard-truncated at X's limit;
+* numbers are only allowed if they came from the post or an explicit verified `context`.
 
-Config: `OPENAI_API_KEY` / `OPENAI_MODEL` from the process env, `tools/marketing/.env`, or the
-Supabase KV (`openai_api_key`, `openai_model`) so CI can use it. Default model is the cheapest
-usable nano.
+Config: `OPENAI_API_KEY` / `OPENAI_MODEL` from env, `tools/marketing/.env`, or the Supabase KV so
+CI can use it. Default is the cheapest usable nano.
 """
 from __future__ import annotations
 
@@ -21,45 +20,48 @@ import re
 import urllib.error
 import urllib.request
 
-from . import x_algo
+from . import x_algo, x_archetypes
 
 DEFAULT_MODEL = "gpt-5.4-nano"
 MAX_CHARS = 280
 
-SYSTEM = """You are the voice of @_Playbook_, a daily sports trivia game (Keep 4/Cut 4, blind
-resumes). You write ONE reply to someone else's viral sports post on X.
+BASE_RULES = """You write ONE reply to a viral sports post, as @_Playbook_ (a daily sports trivia
+game). Match the register of sports Twitter — a sharp, funny fan, never a brand.
 
-Reverse-engineered from what actually wins (see docs/GROWTH-ENGINE.md "What wins"): the top
-replies are confident one-line TAKES, often carrying one specific detail, not questions and not
-lowercase. Rules, all mandatory:
+Rules, all mandatory:
 - ONE sentence, normal capitalization, <= 140 characters, no semicolons
 - no hashtags, no links, no @mentions, no emoji
-- sound like a sharp, funny fan with a take, never a brand
-- lead with a BOLD OPINION or a comparison; do not end with a polite question unless nothing
-  else fits
-- NEVER state a statistic or fact that is not already in the post. Do not invent numbers
-- never mention or promote the app
-- never joke about injuries, death, illness, arrests, or politics
-- do not restate the post; never start with "congratulations", "this", or "imagine"
+- do NOT promote or mention the app
+- NEVER state a statistic or fact that is not in the post or the verified context you are given.
+  Do not invent numbers
+- never joke about injuries, death, illness, arrests, or politics; never a person's body or family
+- do not restate the post; do not begin with "congratulations", "this", or "imagine"
+
+TASK: {task}
+
 Output ONLY the reply text, nothing else."""
 
-# Few-shot: the studied voice — confident, specific, normal case. No invented numbers.
-_EXAMPLES = [
-    ("Twins Ausar and Amen Thompson are now the first pair of brothers in NBA history to each "
-     "receive a $100 million deal.",
-     "two brothers, 363 million combined, and neither one can shoot a jumper. the league has "
-     "never been weirder"),
-    ("Players with more multi-TD receiving games than Davante Adams: Jerry Rice, Randy Moss, "
-     "Terrell Owens. That's it.",
-     "adams is in a group chat with three first-ballot hall of famers and still gets called "
-     "overrated. tough crowd"),
-    ("Aaron Donald is back like he never left.",
-     "the nfc west just saw aaron donald back on the schedule and got real quiet"),
-]
+
+_DIGITS_RE = re.compile(r"\d[\d,.]*")
+_WORD_NUMS = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+              "hundred", "thousand", "million", "billion", "first", "second", "third", "half"}
+
+
+def quantity_tokens(text: str) -> set[str]:
+    """Every number-like token — digits and number words — so we can prove none were invented."""
+    low = (text or "").lower()
+    return set(_DIGITS_RE.findall(low)) | {w for w in re.findall(r"[a-z]+", low)
+                                           if w in _WORD_NUMS}
+
+
+def invented_numbers(out: str, sources: list[str]) -> set[str]:
+    """Number tokens in `out` that are absent from the post/context. Non-empty => the draft
+    fabricated a quantity and must not ship. This is the guard that keeps us from posting a false
+    stat with the brand's name on it."""
+    return quantity_tokens(out) - quantity_tokens(" ".join(s or "" for s in sources))
 
 
 def _config() -> tuple[str | None, str]:
-    """(api_key, model) from env -> .env -> Supabase KV. Key is optional; model always defaults."""
     model = os.getenv("OPENAI_MODEL")
     key = os.getenv("OPENAI_API_KEY")
     try:
@@ -80,7 +82,6 @@ def _config() -> tuple[str | None, str]:
 
 
 def _clean(text: str) -> str:
-    """Strip what the rules forbid and normalise to one line."""
     text = (text or "").strip().strip('"').strip("'").replace("\n", " ")
     text = re.sub(r"https?://\S+", "", text)
     text = re.sub(r"[@#]\w+", "", text).strip()
@@ -90,7 +91,7 @@ def _clean(text: str) -> str:
 
 def _chat(api_key: str, model: str, messages: list[dict]) -> str:
     body = {"model": model, "messages": messages}
-    if model.startswith(("gpt-5", "o4", "o3")):      # reasoning-era params
+    if model.startswith(("gpt-5", "o4", "o3")):
         body["max_completion_tokens"] = 300
     else:
         body["max_tokens"] = 80
@@ -106,36 +107,77 @@ def _chat(api_key: str, model: str, messages: list[dict]) -> str:
         raise RuntimeError(f"openai {e.code}: {e.read().decode()[:200]}") from e
 
 
-def draft_reply(post_text: str, *, api_key: str | None = None, model: str | None = None) -> str | None:
-    """One reply line for `post_text`, or None when the target is off-limits / generation fails."""
+def draft_reply(post_text: str, *, archetype: str | None = None, context: str | None = None,
+                api_key: str | None = None, model: str | None = None) -> str | None:
+    """One reply line. `archetype` None/'auto' picks a safe one by rotation; `context` is a
+    verified fact (our catalog) the model may use for `needs_fact` archetypes."""
     if x_algo.is_risky(post_text):
         return None
+    aid = archetype
+    if aid in (None, "auto"):
+        aid = x_archetypes.pick(post_text, x_archetypes.allowed())
+    a = x_archetypes.get(aid) or x_archetypes.get("fact")
     key, cfg_model = _config()
     key = api_key or key
     if not key:
         return None
-    messages = [{"role": "system", "content": SYSTEM}]
-    for example_post, example_reply in _EXAMPLES:
+    messages = [{"role": "system", "content": BASE_RULES.format(task=a.prompt)}]
+    for example_post, example_reply in a.examples:
         messages += [{"role": "user", "content": f"Post: {example_post}"},
                      {"role": "assistant", "content": example_reply}]
-    messages.append({"role": "user", "content": f"Post: {post_text.strip()[:500]}"})
+    user = f"Post: {post_text.strip()[:500]}"
+    if context:
+        user += f"\nVerified context you may use: {context.strip()[:400]}"
+    messages.append({"role": "user", "content": user})
     try:
         out = _clean(_chat(key, model or cfg_model, messages))
     except Exception as e:  # noqa: BLE001 — a failed draft is skipped, never fatal
         print(f"[voice] draft failed: {e}")
         return None
+    invented = invented_numbers(out, [post_text, context or ""])
+    if invented:
+        # One corrective retry, then drop. A fabricated number is a -234 report waiting to happen.
+        messages += [{"role": "assistant", "content": out},
+                     {"role": "user", "content":
+                      f"You invented these numbers: {', '.join(sorted(invented))}. Rewrite with NO "
+                      f"number that is not in the post or the verified context."}]
+        try:
+            out = _clean(_chat(key, model or cfg_model, messages))
+        except Exception:  # noqa: BLE001
+            return None
+        if not out or invented_numbers(out, [post_text, context or ""]):
+            return None
     if not out or x_algo.is_risky(out):
         return None
     return out
 
 
+def draft_variants(post_text: str, ids: list[str] | None = None, **kw) -> dict[str, str]:
+    """One draft per archetype, so a human (or calibration) can choose the shape that fits."""
+    ids = ids if ids is not None else x_archetypes.allowed()
+    out: dict[str, str] = {}
+    for aid in ids:
+        text = draft_reply(post_text, archetype=aid, **kw)
+        if text:
+            out[aid] = text
+    return out
+
+
 def main() -> int:
     import argparse
-    ap = argparse.ArgumentParser(description="Draft one reply in the @_Playbook_ voice.")
+    ap = argparse.ArgumentParser(description="Draft reply options in the @_Playbook_ voice.")
     ap.add_argument("post", help="the post to reply to (text)")
+    ap.add_argument("--archetype", default="auto",
+                    help="auto|<id>; ids: " + ", ".join(x_archetypes.ARCHETYPES))
+    ap.add_argument("--variants", action="store_true", help="one draft per safe archetype")
+    ap.add_argument("--context", default=None, help="a verified fact the model may use")
     ap.add_argument("--model", default=None)
     args = ap.parse_args()
-    draft = draft_reply(args.post, model=args.model)
+    if args.variants:
+        for aid, text in draft_variants(args.post, context=args.context, model=args.model).items():
+            print(f"[{aid}] {text}")
+        return 0
+    draft = draft_reply(args.post, archetype=args.archetype, context=args.context, model=args.model)
     print(draft if draft else "(no draft)")
     return 0 if draft else 1
 

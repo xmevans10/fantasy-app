@@ -109,6 +109,28 @@ part, so run them on a cadence, not continuously.
 
 ---
 
+## 3.2 Curated accounts (follow + reply), and why following matters
+
+`tools/marketing/x_replies.py` holds the list (`--list-accounts`). Categories have distinct jobs:
+
+| category | accounts | job |
+|---|---|---|
+| `reply_news` | Schefter, Shams, Pelissero, RapSheet, NFL, NBA, MLB, ESPN, SportsCenter, BleacherReport | the news wire — reply early to breaking posts |
+| `reply_banter` | PFTCommenter, BallsackSports, NBAMemes, BarstoolSports, OldTakesExposed, SportsMemes, TimelessSports | where wit actually lands; the studied winners live here |
+| `reply_stats` | statmuse, OptaSTATS, ESPNStatsInfo, ClutchPoints, HoopCentral, TheNBACentral, DovKleiman | our register; fact-drop replies fit |
+| `follow_candidates` | SharpFootball, PFF, FantasyLife, UnderdogNFL, SleeperHQ, FieldYates, minakimes, TheCheckdown, Nate_Tice | mid-tier, in-niche — **follow to seek mutuals** |
+| `niche` | NHL, ESPNFC, F1, ATPTour, OptaJoe, TSN_Sports, Sportsnet | sports the app differentiates in (hockey/F1/soccer/tennis) |
+| `competitors` | immaculategrid, Sporcle, SleeperHQ, UnderdogFantasy, PuzzGrid | study only — never reply-spam |
+
+**Why follow at all:** the reply weight is 5, and **+15 when the author mutually follows you**
+(§2). Big accounts never follow back, but mid-tier `follow_candidates` might — so following them is
+the cheapest way to turn a 5-weight reply into a 20-weight one. `x_replies --follow` does it via the
+API (`POST /2/users/:id/following`, OAuth1), **capped at 5/run and ledger-deduped**, because mass
+following is exactly the inauthentic-behaviour signal X's `bdsm` model looks for. Default is a
+dry-run preview. Handles resolve at runtime; a bad one is skipped.
+
+---
+
 ## 4. Architecture
 
 ```
@@ -131,7 +153,11 @@ tools/marketing/
 ```bash
 python -m tools.marketing.x_algo --sync-algo          # refresh weights from the upstream repo
 python -m tools.marketing.x_engine   --dry-run --media --cap 6
-python -m tools.marketing.x_replies  --dry-run --minutes 30 --cap 5
+python -m tools.marketing.x_replies  --minutes 30 --cap 5          # reply targets
+python -m tools.marketing.x_replies  --draft                       # + LLM drafts per archetype
+python -m tools.marketing.x_voice    "<post text>" --variants      # one draft per archetype
+python -m tools.marketing.x_replies  --list-accounts               # the curated lists
+python -m tools.marketing.x_replies  --follow --dry-run --follow-limit 5
 python -m tools.marketing.x_metrics  --days 7          # calibration report
 ```
 
@@ -153,7 +179,13 @@ python -m tools.marketing.x_metrics  --days 7          # calibration report
 
 - Never reply to, or post about, injuries, death, illness, arrests, or politics — `x_algo.is_risky`
   blocks these before a draft is even made.
+- **No invented numbers.** Every numeric token in a draft (digits *and* number words) must appear in
+  the target post or a piece of verified catalog context, or the draft is retried once and dropped
+  (`x_voice.invented_numbers`). A fabricated stat under the brand's name is the one mistake we
+  cannot make.
 - No @-mention spam, no reply to the same account more than once per hour, cap replies/run.
+- **Follows are capped (5/run) and ledger-deduped** — mass following is an inauthentic-behaviour
+  signal.
 - Never post something we can't answer: board kinds require their image (existing rule).
 - The trust gate stays: only `validate()`-clean, ≥6-face, image-present assets post.
 - Everything ships **dark**; enabling is a repo-variable flip by a human.
