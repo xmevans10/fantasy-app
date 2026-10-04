@@ -252,6 +252,7 @@ struct RewardsRow: View {
                 Divider().frame(height: 32)
                 metric(label: String(localized: "Streak"), value: "\(rewards.newStreak)", accent: nil, accentColor: .textMuted)
             }
+            CareerProgressCard(xp: container.xp, leveledUp: rewards.leveledUp)
             if container.isInPlacement {
                 Text(container.placementRemaining == 1
                      ? String(localized: "One more placement game and your rating starts counting.")

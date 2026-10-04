@@ -122,6 +122,10 @@ final class RepositoryContainer: ObservableObject {
         self.social = client.map { SocialRepository(client: $0) }
         self.weekPacks = WeekPackRepository(client: client)
         self.analytics = client.map { AnalyticsClient(client: $0) }
+        if !auth.isSignedIn,
+           let teams = UserDefaults.standard.dictionary(forKey: "guestFavoriteTeams") as? [String: String] {
+            favoriteTeams = FavoriteTeams(teams: teams)
+        }
         let raw = UserDefaults.standard.string(forKey: "sportFilter") ?? SportFilter.all.rawValue
         self.sportFilter = SportFilter(rawValue: raw) ?? .all
         self.store.$entitlements.sink { [weak self] value in
@@ -1206,6 +1210,9 @@ final class RepositoryContainer: ObservableObject {
 
     func saveFavoriteTeams(_ favoriteTeams: FavoriteTeams) async {
         self.favoriteTeams = favoriteTeams
+        if !auth.isSignedIn {
+            UserDefaults.standard.set(favoriteTeams.teams, forKey: "guestFavoriteTeams")
+        }
         guard let client, let uid = auth.userID else { return }
         struct Row: Encodable { let id: String; let favoriteTeams: [String: String] }
         try? await client.upsert("profiles",

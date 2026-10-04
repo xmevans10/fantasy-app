@@ -30,6 +30,15 @@ struct Keep4Puzzle: Identifiable, Codable, Equatable {
         return Set(topFour.map(\.id))
     }
 
+    /// Exclusive-team boards require all eight real seasons to represent the selected club.
+    /// Mixed-team boards that feature one favorite player do not qualify.
+    func isExclusive(to teamAbbr: String, sport: Sport) -> Bool {
+        let team = teamAbbr.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        return self.sport == sport && !team.isEmpty && players.count == 8
+            && Set(players.map(\.id)).count == 8
+            && players.allSatisfy { $0.teamAbbr.uppercased() == team }
+    }
+
     /// True if any card belongs to `teamAbbr` — powers the "YOUR TEAM" favorite-team badge.
     func features(teamAbbr: String) -> Bool {
         players.contains { $0.teamAbbr == teamAbbr }

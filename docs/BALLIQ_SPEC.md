@@ -59,9 +59,12 @@ creation, `CommunityPuzzleRepository`), Profile (tiers, per-sport ratings, Stats
 Sign in with Apple/Google, `NotificationSettings`). Browse (full unranked archive) hangs off
 Home, not a tab.
 
-**Progression:** per-sport Elo-ish rating (`RatingEngine`, ranked daily games only) with
-tiers (Bronze→…), XP/levels (`LevelCurve`), day streak. Community/archive/versus play is
-unranked (XP only).
+**Progression:** permanent career XP/levels with explicit next-level progress on Home,
+Profile and results, and participation titles (Rookie → Club legend). Thresholds preserve
+levels 1–10; later gaps cap at 1,900 XP. Competitive per-sport Elo tiers and day streak
+remain separate. Favorite-team Home entry opens an exclusive-team K4C4 archive collection,
+with existing archive entitlements and honest empty states. See
+[CAREER_TEAM_DESIGN.md](CAREER_TEAM_DESIGN.md) for research, scope and build context.
 
 **Competitive glossary (source of truth for all UI copy on these surfaces — established
 2026-07-13; "challenge" belongs exclusively to Versus):**

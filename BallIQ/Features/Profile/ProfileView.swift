@@ -50,6 +50,7 @@ struct ProfileView: View {
                         claimUsernameCard.heroReveal(0)
                     }
                     heroCard.heroReveal(1)
+                    CareerProgressCard(xp: container.xp).heroReveal(2)
                     statRow.heroReveal(2)
                     highlightReel.heroReveal(3)
                     if !container.seasonBadges.isEmpty { seasonBadgesCard.heroReveal(4) }

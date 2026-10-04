@@ -178,6 +178,9 @@ struct HomeView: View {
                             .heroReveal(1)
                     }
 
+                    CareerProgressCard(xp: container.xp, compact: true).heroReveal(1)
+                    HomeTeamSection(sport: dailyPage).heroReveal(1)
+
                     // Formats first (2026-08-27): the grid is the page's actual menu — every
                     // way to play, arcade included — and it sat below the rank widget and the
                     // archive row, three scrolls down. The dailies below it are the day's
@@ -233,7 +236,7 @@ struct HomeView: View {
                     // provisional number is what produced the contradiction this fixes: Home read
                     // the per-sport rating (BRONZE 990) while Profile read the global one
                     // (SILVER 1,000) in the same session, ninety seconds after install.
-                    section(container.isInPlacement ? "Placement" : "Your rank") {
+                    section(container.isInPlacement ? "Skill placement" : "Competitive rating") {
                         if container.isInPlacement {
                             placementCard
                         } else {
