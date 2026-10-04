@@ -3478,7 +3478,7 @@ begin
  if target not in ('player_seasons','puzzles','collectible_cards') then raise exception 'Unsupported portrait table'; end if;
  batch_size=greatest(1,least(batch_size,2000));
  if target in ('player_seasons','collectible_cards') then
-  execute format('with candidates as (select id from %I where headshot<>'''' and not exists (select 1 from league_portrait_sources s where s.url=%I.headshot) limit $1 for update skip locked) update %I p set headshot=p.headshot from candidates c where p.id=c.id',target,target,target) using batch_size;
+  execute format('with candidates as materialized (select p.id,p.headshot from %I p where p.headshot<>'''' and not exists (select 1 from league_portrait_sources s where s.url=p.headshot) limit $1 for update of p skip locked), backups as (insert into portrait_policy_backups(table_name,row_id,original) select %L,id,jsonb_build_object(''headshot'',headshot) from candidates on conflict do nothing returning row_id) update %I p set headshot='''' from candidates c where p.id=c.id',target,target,target) using batch_size;
  else
   update puzzles p set content=p.content from (select id from puzzles where content is distinct from filter_portrait_json(content) limit batch_size for update skip locked) c where p.id=c.id;
  end if;
