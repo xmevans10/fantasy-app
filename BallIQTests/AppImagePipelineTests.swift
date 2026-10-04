@@ -9,27 +9,35 @@ import XCTest
 /// functions, so they're pinned here rather than left to a visual check.
 final class AppImagePipelineTests: XCTestCase {
 
-    // MARK: - Supabase Storage transform rewriting
+    // MARK: - Public image CDN routing
 
-    func testRewritesStoragePublicObjectURLToRenderEndpoint() {
-        let url = URL(string: "https://nhccgufqwndtoasdbkhc.supabase.co"
-                      + "/storage/v1/object/public/team-logos/nfl/_/kc.png")!
-        let out = AppImagePipeline.transformed(url, pixels: 96)
-        let s = out.absoluteString
-        XCTAssertTrue(s.hasPrefix("https://nhccgufqwndtoasdbkhc.supabase.co"
-                                  + "/storage/v1/render/image/public/team-logos/nfl/_/kc.png?"), s)
-        XCTAssertTrue(s.contains("width=96"), s)
-        XCTAssertTrue(s.contains("height=96"), s)
-        XCTAssertTrue(s.contains("resize=contain"), s)
+    func testRoutesPlaybookStorageImagesToCloudflareWithoutPaidTransforms() {
+        for bucket in ["team-logos", "player-headshots"] {
+            let url = URL(string: "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/\(bucket)/nfl/a.png")!
+            let expected = "https://playbook-images.xmevans10.workers.dev/v1/\(bucket)/nfl/a.png"
+            for pixels in [CGFloat(96), 192, 384] {
+                XCTAssertEqual(AppImagePipeline.transformed(url, pixels: pixels).absoluteString, expected)
+            }
+        }
     }
 
-    /// Object path is preserved verbatim — league-qualified keys (`soccer/england/liv.png`) must
-    /// survive the rewrite or the crest 404s and the club renders bare.
-    func testPreservesNestedObjectPath() {
-        let url = URL(string: "https://x.supabase.co"
-                      + "/storage/v1/object/public/team-logos/soccer/england/liv.png")!
-        XCTAssertTrue(AppImagePipeline.transformed(url, pixels: 128).absoluteString
-            .contains("/render/image/public/team-logos/soccer/england/liv.png?"))
+    func testPreservesNestedAndEncodedObjectPath() {
+        let url = URL(string: "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/team-logos/soccer/england/a%20b.png")!
+        XCTAssertEqual(AppImagePipeline.transformed(url, pixels: 128).absoluteString,
+                       "https://playbook-images.xmevans10.workers.dev/v1/team-logos/soccer/england/a%20b.png")
+    }
+
+    func testCDNLeavesOtherProjectsBucketsAndCredentialedURLsUnchanged() {
+        for raw in [
+            "https://x.supabase.co/storage/v1/object/public/team-logos/a.png",
+            "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/avatars/a.png",
+            "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/team-logos/a.png?token=private",
+            "https://user:password@nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/team-logos/a.png",
+            "https://playbook-images.xmevans10.workers.dev/v1/team-logos/a.png",
+        ] {
+            let url = URL(string: raw)!
+            XCTAssertEqual(AppImagePipeline.transformed(url, pixels: 192), url)
+        }
     }
 
     /// Hosts with no transform API at all are left alone; rewriting them would produce a dead
