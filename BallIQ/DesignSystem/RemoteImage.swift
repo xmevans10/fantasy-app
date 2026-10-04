@@ -399,17 +399,11 @@ enum AppImagePipeline {
         return buckets.first { $0 >= needed } ?? buckets[buckets.count - 1]
     }
 
-    /// Rewrites a Supabase Storage public-object URL to the image-transform endpoint at `pixels`.
-    ///
-    /// Verified live on this project 2026-07-27: `object/public/team-logos/nfl/_/kc.png` is
-    /// 40,228 bytes, while the same asset through `render/image/public/...?width=96&height=96`
-    /// is 8,578 bytes — 4.7x smaller, same `cache-control: public, max-age=31536000, immutable`.
-    /// Across the bucket that takes the working set from 22.5 MB to roughly 5 MB.
-    ///
-    /// Non-Storage URLs (ESPN CDN crests, nflverse headshots) are returned unchanged — there is
-    /// no transform endpoint for those, and they still benefit from downsampling + caching.
+    /// Public Playbook photos are optimized during ingestion and cached on Cloudflare.
+    /// Do not call Supabase's paid render endpoint: each distinct source is billed again
+    /// each cycle, including cache hits and speculative warming.
     static func transformed(_ url: URL, pixels: CGFloat) -> URL {
-        if let storage = supabaseRender(url, pixels: pixels) { return storage }
+        if let storage = supabaseCached(url) { return storage }
         if let cloudinary = cloudinaryResized(url, pixels: pixels) { return cloudinary }
         if let espn = espnHeadshotResized(url, pixels: pixels) { return espn }
         return url
@@ -441,16 +435,20 @@ enum AppImagePipeline {
         return comps.url
     }
 
-    private static func supabaseRender(_ url: URL, pixels: CGFloat) -> URL? {
+    private static func supabaseCached(_ url: URL) -> URL? {
         let marker = "/storage/v1/object/public/"
-        let absolute = url.absoluteString
-        guard let range = absolute.range(of: marker) else { return nil }
-        let base = absolute[absolute.startIndex..<range.lowerBound]
-        let objectPath = absolute[range.upperBound...]
-        let size = Int(pixels)
-        let rewritten = "\(base)/storage/v1/render/image/public/\(objectPath)"
-            + "?width=\(size)&height=\(size)&resize=contain&quality=80"
-        return URL(string: rewritten)
+        guard url.scheme == "https", url.host == "nhccgufqwndtoasdbkhc.supabase.co",
+              url.user == nil, url.password == nil,
+              var components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              components.query == nil, components.percentEncodedPath.hasPrefix(marker)
+        else { return nil }
+        let objectPath = String(components.percentEncodedPath.dropFirst(marker.count))
+        guard objectPath.hasPrefix("player-headshots/") || objectPath.hasPrefix("team-logos/")
+        else { return nil }
+        components.host = "playbook-images.xmevans10.workers.dev"
+        components.port = nil
+        components.percentEncodedPath = "/v1/" + objectPath
+        return components.url
     }
 
     /// Constrain a Cloudinary-hosted source to the size we actually draw.
