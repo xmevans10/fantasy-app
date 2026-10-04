@@ -45,6 +45,9 @@ def test_every_player_season_has_a_headshot():
     #
     # So the baseline is DEBT, not a target: it may shrink, never grow. A new name here is a
     # genuine regression; recovering one means deleting it from the file.
+    # The baseline also records the approved official-only policy: unverified media
+    # photos become initials until an official portrait is found, rather than passing
+    # this guard merely because a URL is nonempty.
     baseline = set(json.loads((Path(__file__).parent / "known_photoless.json").read_text()))
     new_gaps = sorted(set(missing) - baseline)
     assert not new_gaps, (
@@ -54,7 +57,7 @@ def test_every_player_season_has_a_headshot():
     )
 
 
-def test_coverage_is_100_percent_per_sport():
+def test_photo_coverage_does_not_regress_per_sport():
     bundle = _load_bundle()
     total: dict[str, int] = defaultdict(int)
     has: dict[str, int] = defaultdict(int)

@@ -152,7 +152,7 @@
             "value": "0"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/468b840cf6aa01a8a419.img"
       },
       {
         "id": "nfl-marvin-harrison-2002",
@@ -387,7 +387,7 @@
             "value": "0"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/568f1ad54e9d5252a105.img"
       },
       {
         "id": "nfl-ladainian-tomlinson-2006",
@@ -1021,7 +1021,7 @@
             "value": "12"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/c969b86e209a1a63c195.img"
       }
     ],
     "grain": "season",
@@ -1399,7 +1399,7 @@
             "value": "0"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/468b840cf6aa01a8a419.img"
       },
       {
         "id": "nfl-jordy-nelson-2014",
@@ -1610,7 +1610,7 @@
             "value": "0"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/568f1ad54e9d5252a105.img"
       },
       {
         "id": "nfl-ladainian-tomlinson-2006",
@@ -1817,7 +1817,7 @@
             "value": "0"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/cdb84cd4a3009438660b.img"
       },
       {
         "id": "nfl-emmitt-smith-1995",
@@ -1847,7 +1847,7 @@
             "value": "0"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/568f1ad54e9d5252a105.img"
       },
       {
         "id": "nfl-eric-dickerson-1983",
@@ -1877,7 +1877,7 @@
             "value": "2"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0d127b89b345e0df6af5.img"
       },
       {
         "id": "nfl-marshall-faulk-1998",
@@ -1907,7 +1907,7 @@
             "value": "4"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/7a12b1423db092e7b487.img"
       },
       {
         "id": "nfl-o-j-simpson-1975",
@@ -1937,7 +1937,7 @@
             "value": "7"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ecfe8cc445f19f9d44bc.img"
       },
       {
         "id": "nfl-terrell-davis-1998",
@@ -1967,7 +1967,7 @@
             "value": "2"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/36650128537934cca028.img"
       },
       {
         "id": "nfl-walter-payton-1977",
@@ -1997,7 +1997,7 @@
             "value": "2"
           }
         ],
-        "headshot": ""
+        "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/97737a3f557af2bb920d.img"
       }
     ],
     "grain": "season",

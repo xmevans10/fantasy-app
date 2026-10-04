@@ -97,3 +97,13 @@ def test_record_registers_only_successful_league_assets(monkeypatch):
     ])
     registry = [kw["body"] for a, kw in calls if a[2].startswith("league_portrait_sources")][0]
     assert {r["url"] for r in registry} == {"https://cdn.nba.com/a.png", "https://project/a.png"}
+
+
+def test_nfl_generic_helmet_is_not_a_portrait(monkeypatch):
+    from pathlib import Path
+    from tools.ingest import headshots
+    helmet = (Path(__file__).parent / "fixtures" / "nfl_helmet.png").read_bytes()
+    assert headshots.is_nfl_placeholder(helmet)
+    assert not headshots.is_nfl_placeholder(b"not an image")
+    monkeypatch.setattr(headshots, "_get", lambda *args: (200, helmet, "image/png"))
+    assert headshots.fetch_real_image("https://static.www.nfl.com/image/private/league/test")[0] == "placeholder"

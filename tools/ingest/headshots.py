@@ -191,6 +191,22 @@ def _get(url: str, timeout: int = 30) -> tuple[int, bytes, str]:
         return -1, b"", ""
 
 
+NFL_HELMET_SHA256 = "33be6a8e3c2e353f497f2d70d75211d71d80779dcc2519b17d3045730cfc0598"
+NFL_HELMET_PIXEL_SHA256 = "f0aa9c60554abdf4ea2f34b3c573e10d0f0a6639e0c036425869146a8ddc22e5"
+
+
+def is_nfl_placeholder(data: bytes) -> bool:
+    """Recognize the league's generic helmet, even when it returns HTTP 200."""
+    if hashlib.sha256(data).hexdigest() == NFL_HELMET_SHA256:
+        return True
+    try:
+        from PIL import Image
+        pixels = Image.open(io.BytesIO(data)).convert("RGBA").resize((64, 64)).tobytes()
+        return hashlib.sha256(pixels).hexdigest() == NFL_HELMET_PIXEL_SHA256
+    except (ImportError, OSError, ValueError):
+        return False
+
+
 def fetch_real_image(source_url: str) -> tuple[str, bytes, str, str]:
     """Fetch `source_url`, distinguishing a real photo from a served placeholder.
 
@@ -215,6 +231,8 @@ def fetch_real_image(source_url: str) -> tuple[str, bytes, str, str]:
         return "error", b"", "", f"http {code}"
     if len(data) < MIN_REAL_BYTES:
         return "placeholder", b"", "", f"{len(data)}B too small"
+    if urllib.parse.urlparse(probe).hostname == "static.www.nfl.com" and is_nfl_placeholder(data):
+        return "placeholder", b"", "", "NFL generic helmet"
     if "cdn.nba.com" in probe and len(data) <= NBA_STUB_MAX_BYTES:
         return "placeholder", b"", "", f"nba stub {len(data)}B"
     return "ok", data, ctype or "image/png", ""
