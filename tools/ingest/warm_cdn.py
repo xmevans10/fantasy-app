@@ -1,29 +1,7 @@
-"""Pre-warm the image CDN so no player ever pays for a cold transform.
+"""Warm Cloudflare's cache for public puzzle photos; never invoke paid image transforms.
 
-Supabase's render endpoint is *generated on demand and then cached forever*
-(``cache-control: public, max-age=31536000, immutable``). Measured 2026-08-28 against this
-project:
-
-    cold  (first request for a given url+size)   1.4 - 1.8 s
-    warm  (cf-cache-status: HIT)                 0.06 - 0.18 s
-
-Each ``(image, width)`` pair is its own cache entry, so with ~41k headshots the cold path is not
-a rare edge — it is what the *first* player to see any given card gets, every time content
-changes. That is a second of a blank card in a timed Puzzle Blitz round.
-
-This module walks the images the app actually requests and fetches each one at each bucket the
-client uses, exactly as the client would (same transform parameters, same ``Accept`` header), so
-the CDN has the rendition ready before anybody asks for it. It writes nothing and mutates
-nothing; the only side effect is a warmer cache.
-
-Run after any content push:
-
-    python -m tools.ingest.warm_cdn --scope puzzles      # what the dailies/blitz serve
-    python -m tools.ingest.warm_cdn --scope teams        # crests (also bundled, so rarely needed)
-    python -m tools.ingest.warm_cdn --scope catalog      # the whole 41k catalog, hours
-
-``--scope puzzles`` is the one that matters and takes a few minutes; it covers every frozen
-board the app can serve today.
+Stored photos are already optimized during ingestion. Warming the whole catalog is
+unnecessary; default to the images used by puzzles. One request serves every pixel bucket.
 """
 
 from __future__ import annotations
@@ -38,18 +16,13 @@ import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-# Must match `AppImagePipeline.buckets` in BallIQ/DesignSystem/RemoteImage.swift. A size warmed
-# here that the client never asks for is wasted work, and a size the client asks for that is not
-# warmed here still costs somebody 1.5 s — the two lists have to agree.
-BUCKETS = (192, 384)
-
 # Must match `AppImagePipeline.acceptHeader`. Content negotiation means the PNG and the WebP
 # rendition are *different cache entries*: warming without this header would fill the one the app
 # never requests.
 ACCEPT = "image/webp,image/avif,image/*;q=0.8,*/*;q=0.5"
 
 STORAGE_MARKER = "/storage/v1/object/public/"
-RENDER_MARKER = "/storage/v1/render/image/public/"
+CDN_BASE = "https://playbook-images.xmevans10.workers.dev/v1/"
 
 
 def _env() -> tuple[str, str]:
@@ -112,15 +85,25 @@ def _sql_urls(base: str, key: str, scope: str) -> set[str]:
             offset += page
             if len(rows) < page:
                 break
-    # Only Storage objects have a render endpoint. Cloudinary (the league CDNs) resizes on their
-    # own edge and needs no warming from us; everything else has no transform at all.
-    return {u for u in urls if STORAGE_MARKER in u}
+    # Warm only the public photo/logo cache. External provider images stay on their own CDNs.
+    return {u for u in urls if _cdn_url(u) is not None}
 
 
-def _render_url(source: str, size: int) -> str:
-    """Byte-identical to `AppImagePipeline.supabaseRender`, or the warm lands on the wrong key."""
-    return (source.replace(STORAGE_MARKER, RENDER_MARKER)
-            + f"?width={size}&height={size}&resize=contain&quality=80")
+def _cdn_url(source: str) -> str | None:
+    """Route only Playbook's public photos/logos, preserving encoded paths."""
+    from urllib.parse import urlsplit
+    parsed = urlsplit(source)
+    if parsed.scheme != "https" or parsed.username or parsed.password or parsed.query:
+        return None
+    if parsed.netloc == "playbook-images.xmevans10.workers.dev" and parsed.path.startswith("/v1/"):
+        path = parsed.path[4:]
+    elif parsed.netloc == "nhccgufqwndtoasdbkhc.supabase.co" and parsed.path.startswith(STORAGE_MARKER):
+        path = parsed.path[len(STORAGE_MARKER):]
+    else:
+        return None
+    if not path.startswith(("player-headshots/", "team-logos/")):
+        return None
+    return CDN_BASE + path
 
 
 class _Stats:
@@ -146,7 +129,7 @@ def _warm_one(url: str, stats: _Stats, retries: int = 5) -> None:
         try:
             with urllib.request.urlopen(request, timeout=90) as response:
                 body = response.read()
-                stats.record(response.headers.get("cf-cache-status", ""), len(body), True)
+                stats.record(response.headers.get("X-Playbook-Cache", ""), len(body), True)
                 return
         except urllib.error.HTTPError as error:
             # 429 is expected: this is a burst of requests at an edge that is deliberately
@@ -176,9 +159,8 @@ def main() -> int:
 
     base, key = _env()
     sources = _sql_urls(base, key, args.scope)
-    targets = [_render_url(source, size) for source in sorted(sources) for size in BUCKETS]
-    print(f"[warm_cdn] scope={args.scope}: {len(sources)} images x {len(BUCKETS)} buckets "
-          f"= {len(targets)} renditions")
+    targets = sorted({_cdn_url(source) for source in sources})
+    print(f"[warm_cdn] scope={args.scope}: {len(targets)} cached originals; no paid transforms")
     if args.dry_run:
         for target in targets[:5]:
             print("  ", target)
@@ -193,7 +175,7 @@ def main() -> int:
 
     elapsed = time.time() - started
     print(f"[warm_cdn] done in {elapsed:.0f}s — {stats.hit} already warm, {stats.miss} newly "
-          f"rendered, {stats.failed} failed, {stats.bytes / 1024 / 1024:.1f} MB pulled")
+          f"fetched, {stats.failed} failed, {stats.bytes / 1024 / 1024:.1f} MB pulled")
     # A failure here is not fatal to a content push: the image still works, it is just cold for
     # whoever sees it first.
     return 0

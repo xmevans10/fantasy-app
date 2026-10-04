@@ -704,50 +704,10 @@ def wiki_backfill(sports: list[str] | None, workers: int, max_px: int,
 
 
 def warm_transforms(workers: int, limit: int | None) -> int:
-    """Pre-generate the 192 px rendition for every rehosted headshot.
-
-    Storage's render endpoint resizes on FIRST request and caches the result immutably — so
-    without this, the first player to open a given puzzle pays ~1-2s per uncached headshot
-    while the rendition is generated. Measured on one 8-card board: 1.94s cold vs 0.10-0.27s
-    warm. Doing it here means no real user is ever the first requester.
-
-    192 px is the only size worth warming: every headshot call site in the app draws at <=48 pt,
-    which resolves to that single bucket (AppImagePipeline.buckets).
-    """
-    load_dotenv()
-    base, key = _require_env()
-
-    urls: list[str] = []
-    page, offset = 1000, 0
-    while True:
-        rows = _rest(base, key,
-                     f"headshot_assets?select=public_url&status=eq.ok&public_url=not.is.null"
-                     f"&order=public_url&limit={page}&offset={offset}")
-        if not rows:
-            break
-        urls.extend(r["public_url"] for r in rows if r.get("public_url"))
-        offset += page
-        if len(rows) < page:
-            break
-    if limit:
-        urls = urls[:limit]
-    print(f"[warm-transforms] {len(urls)} renditions to generate", flush=True)
-
-    def warm(url: str) -> bool:
-        rendered = url.replace("/storage/v1/object/public/",
-                               "/storage/v1/render/image/public/")
-        rendered += "?width=192&height=192&resize=contain&quality=80"
-        code, _, _ = _get(rendered, timeout=45)
-        return 200 <= code < 300
-
-    done = failed = 0
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        for ok_ in pool.map(warm, urls):
-            done += 1
-            failed += 0 if ok_ else 1
-            if done % 2000 == 0:
-                print(f"[warm-transforms] {done}/{len(urls)} ({failed} failed)", flush=True)
-    print(f"[warm-transforms] DONE {done} generated, {failed} failed", flush=True)
+    """Retired CLI compatibility: a full-catalog warm incurs per-origin monthly charges."""
+    print("[warm-transforms] retired: no paid transforms requested; "
+          "use python -m tools.ingest.warm_cdn --scope puzzles for the public CDN cache",
+          flush=True)
     return 0
 
 
@@ -1049,8 +1009,7 @@ def main(argv: list[str] | None = None) -> int:
                              "placeholders so --repoint clears them")
     parser.add_argument("--dupe-threshold", type=int, default=25)
     parser.add_argument("--warm-transforms", action="store_true",
-                        help="pre-generate the 192px rendition for every rehosted headshot so "
-                             "no real user is the first requester (run AFTER --repoint)")
+                        help="retired compatibility flag; no paid transforms requested")
     parser.add_argument("--espn-nfl-backfill", action="store_true",
                         help="fill photo-less NFL rows from ESPN's headshot archive — the "
                              "official posed team photos the league CDN drops on retirement")

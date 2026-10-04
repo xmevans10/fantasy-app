@@ -17,13 +17,11 @@ final class ImageURLTransformTests: XCTestCase {
 
     // MARK: - Supabase Storage
 
-    func testStorageObjectBecomesARenderRequest() throws {
+    func testStorageObjectUsesCachedOriginalWithoutPaidRenderRequest() throws {
         let url = try XCTUnwrap(URL(string:
-            "https://x.supabase.co/storage/v1/object/public/player-headshots/nfl/abc.png"))
+            "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/abc.png"))
         let out = AppImagePipeline.transformed(url, pixels: 192).absoluteString
-        XCTAssertTrue(out.contains("/storage/v1/render/image/public/"), out)
-        XCTAssertTrue(out.contains("width=192"), out)
-        XCTAssertTrue(out.contains("height=192"), out)
+        XCTAssertEqual(out, "https://playbook-images.xmevans10.workers.dev/v1/player-headshots/nfl/abc.png")
     }
 
     // MARK: - Cloudinary (the league CDNs)
