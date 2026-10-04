@@ -794,11 +794,35 @@ def detect_dupes(threshold: int, dry_run: bool) -> int:
 # ---------------------------------------------------------------- driver
 
 
+LEAGUE_PORTRAIT_HOSTS = {"cdn.nba.com", "static.www.nfl.com", "img.mlbstatic.com", "assets.nhle.com"}
+
+
+def is_league_portrait_source(url: str) -> bool:
+    try:
+        parsed = urllib.parse.urlparse(url)
+        return (parsed.scheme == "https" and parsed.hostname in LEAGUE_PORTRAIT_HOSTS
+                and not parsed.username and not parsed.password and parsed.port in (None, 443))
+    except ValueError:
+        return False
+
+
 def record(base: str, key: str, rows: list[dict]) -> None:
     if not rows:
         return
     _rest(base, key, "headshot_assets?on_conflict=source_url", method="POST", body=rows,
           extra_headers={"Prefer": "resolution=merge-duplicates,return=minimal"})
+    approved = {}
+    for row in rows:
+        source = row.get("source_url") or ""
+        if row.get("status") != "ok" or not is_league_portrait_source(source):
+            continue
+        for url in (source, row.get("public_url")):
+            if url:
+                approved[url] = {"url": url, "original_url": source, "sport": row.get("sport") or ""}
+    if approved:
+        _rest(base, key, "league_portrait_sources?on_conflict=url", method="POST",
+              body=list(approved.values()),
+              extra_headers={"Prefer": "resolution=merge-duplicates,return=minimal"})
 
 
 def rehost_source(base: str, key: str, source_url: str, sport: str, max_px: int) -> dict:
@@ -1079,8 +1103,7 @@ def main(argv: list[str] | None = None) -> int:
         sp = [x.strip() for x in args.sports.split(",") if x.strip()] or None
         return espn_search_backfill(sp, args.workers, args.max_px, args.limit, args.dry_run)
     if args.wiki_backfill:
-        sports = [x.strip() for x in args.sports.split(",") if x.strip()] or None
-        return wiki_backfill(sports, args.workers, args.max_px, args.limit, args.dry_run)
+        parser.error("Wiki portrait adoption is disabled: use verified league portraits or initials.")
 
     try:
         index, total = (int(x) for x in args.shard.split("/"))
