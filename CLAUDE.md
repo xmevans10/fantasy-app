@@ -43,24 +43,14 @@ fair game to just run; destructive ones are not.
 functions via CLI, service role key is in .env" while closing out M17 (community career-grain
 creation) — don't make them re-authorize this every session.
 
-## Git/GitHub CLI operations — use the PAT in `.env`, not the `gh`-managed OAuth token
+## Git/GitHub CLI operations
 
-The repo now has a real GitHub remote: `github.com/xmevans10/fantasy-app` (public). `gh auth
-status`'s default OAuth token only has `repo`/`read:org`/`gist` scopes — it will be **rejected**
-by GitHub on any push that touches `.github/workflows/*.yml` (this repo has one,
-`ingest.yml`, from M7), because that requires the `workflow` scope.
-
-For `git push`/other authenticated git operations, use the PAT in gitignored root `.env`
-(`GITHUB_TOKEN=...`) instead — confirmed as of 2026-07-04 to carry `repo` + `workflow` (and
-several broader admin scopes the user should consider narrowing down later, but it works).
-Example: `source .env && git push "https://x-access-token:${GITHUB_TOKEN}@github.com/xmevans10/fantasy-app.git" main`.
-Don't embed the token literally in a command — always reference `$GITHUB_TOKEN` after
-sourcing `.env`, so it never lands in shell history/process-list snapshots in plaintext.
-
-**Why this rule exists:** established 2026-07-04 — the first push attempt using `gh`'s own
-token was rejected for exactly this reason (`refusing to allow an OAuth App to create or
-update workflow ... without workflow scope`), and the user supplied this PAT specifically to
-unblock it.
+Use the installed `gh` login for this repository. Verified 2026-10-14: `gh api user`
+returns `xmevans10`, branch pushes work with
+`git -c 'credential.helper=!gh auth git-credential' push origin <branch>`, and `gh pr create`
+works. The gitignored root `.env` PAT returned **401 Bad credentials** for the GitHub API;
+do not prefer it over the working login. The GitHub connector returned 403 for PR creation.
+Never print or embed credentials in commands or URLs.
 
 ## App Store Connect / TestFlight
 
