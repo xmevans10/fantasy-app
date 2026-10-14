@@ -6,6 +6,8 @@ import StoreKit
 /// (instant, offline); when signed in, `RemoteSync` mirrors progress/rating to Supabase.
 @MainActor
 final class RepositoryContainer: ObservableObject {
+    let teamGames: TeamPuzzleRepository
+    @Published private(set) var teamCompletedIDs: Set<String> = []
     let puzzles: PuzzleRepository
     let auth: AuthService
     /// Real-stat catalog for Keep4 creation + community puzzles (nil community when local-only).
@@ -109,6 +111,7 @@ final class RepositoryContainer: ObservableObject {
     init(auth: AuthService, client: SupabaseClient?, store: StoreService? = nil) {
         self.auth = auth
         self.client = client
+        self.teamGames = TeamPuzzleRepository(client: client)
         self.store = store ?? StoreService()
         self.puzzles = client.map { RemotePuzzleRepository(client: $0) } ?? LocalPuzzleRepository()
         self.catalog = PlayerSeasonCatalog(client: client)
@@ -169,8 +172,10 @@ final class RepositoryContainer: ObservableObject {
     /// Load persisted local state on launch, then sync if already signed in.
     func bootstrap() async {
         await refreshFromLocal()
+        favoriteTeams = await loadFavoriteTeams()
         await refreshCurrentSeason()
         await syncIfSignedIn()
+        teamCompletedIDs = teamGames.state.completed
     }
 
     /// Fetch the active rating season (server-defined). No-op local-only. Safe to call for guests —
@@ -207,6 +212,7 @@ final class RepositoryContainer: ObservableObject {
             await mirror.pullSeasonRatings(seasonID: season.id)
             seasonBadges = await seasons?.badges(userID: uid) ?? []
         }
+        await settlePendingTeamGames()
         await refreshFromLocal()
         await pushPendingDeviceTokenIfNeeded()
         isAdmin = await community?.isAdmin(userID: uid) ?? false
@@ -382,7 +388,7 @@ final class RepositoryContainer: ObservableObject {
             + LocalSeasonRatingRepository.persistedKeyPrefixes
             + DailyDraftStore.persistedKeyPrefixes
             + LocalOverUnderStore.persistedKeyPrefixes
-            + ["sportFilter", Self.localDataOwnerKey]
+            + ["sportFilter", Self.localDataOwnerKey, TeamPuzzleRepository.key, "myTeams.favorites"]
 
         let defaults = UserDefaults.standard
         for key in defaults.dictionaryRepresentation().keys
@@ -394,6 +400,8 @@ final class RepositoryContainer: ObservableObject {
         // The career log lives in Application Support, which neither the UserDefaults sweep above
         // nor `DiskCache.purge()` (Caches) reaches. Without this, a deleted account leaves its
         // complete play history on disk — an App Store 5.1.1(v) problem, not just a bug.
+        teamGames.reset()
+        teamCompletedIDs = []
         LocalGameLogRepository.wipe()
         Task { [gameLog] in await gameLog.invalidate() }
     }
@@ -1199,16 +1207,19 @@ final class RepositoryContainer: ObservableObject {
     // MARK: - Favorite teams
 
     func loadFavoriteTeams() async -> FavoriteTeams {
-        guard let client, let uid = auth.userID else { return .empty }
+        guard let client, let uid = auth.userID else {
+            return FavoriteTeams(teams: UserDefaults.standard.dictionary(forKey: "myTeams.favorites") as? [String: String] ?? [:])
+        }
         struct Row: Decodable { let favoriteTeams: [String: String] }
         let items = [URLQueryItem(name: "id", value: "eq.\(uid)"),
                      URLQueryItem(name: "select", value: "favorite_teams"), URLQueryItem(name: "limit", value: "1")]
         let rows: [Row]? = try? await client.select("profiles", query: items)
-        return rows?.first.map { FavoriteTeams(teams: $0.favoriteTeams) } ?? .empty
+        return rows?.first.map { FavoriteTeams(teams: $0.favoriteTeams) } ?? FavoriteTeams(teams: UserDefaults.standard.dictionary(forKey: "myTeams.favorites") as? [String: String] ?? [:])
     }
 
     func saveFavoriteTeams(_ favoriteTeams: FavoriteTeams) async {
         self.favoriteTeams = favoriteTeams
+        UserDefaults.standard.set(favoriteTeams.teams, forKey: "myTeams.favorites")
         guard let client, let uid = auth.userID else { return }
         struct Row: Encodable { let id: String; let favoriteTeams: [String: String] }
         try? await client.upsert("profiles",
@@ -1283,5 +1294,45 @@ extension RepositoryContainer {
         } catch {
             track(.cardPackCreditFailed, ["error": String(describing: error)])
         }
+    }
+}
+
+extension RepositoryContainer {
+    func settlePendingTeamGames() async {
+        guard auth.userID != nil else { return }
+        for pending in teamGames.state.pending {
+            do {
+                let reward = try await teamGames.settle(pending)
+                localProgress.overwrite(ProgressSnapshot(streak: reward.streak, xp: reward.xp, lastPlayedDay: reward.lastPlayedDay))
+            } catch { break }
+        }
+        try? await teamGames.syncCompleted()
+        teamCompletedIDs = teamGames.state.completed
+        progressSnapshot = await localProgress.load()
+    }
+
+    func completeTeam(puzzle: Keep4Puzzle, placement: [String: Pile], detail: SessionDetail) async -> SessionRewards {
+        let rating = self.rating(for: puzzle.sport)
+        let beforeLevel = level
+        let result = Keep4Scoring.score(puzzle: puzzle, placement: placement)
+        if teamGames.state.completed.contains(puzzle.id) {
+            return SessionRewards(ratingChange: RatingChange(old: rating, new: rating), xpEarned: 0, newStreak: progressSnapshot.streak, newLevel: level, leveledUp: false)
+        }
+        let ids = placement.filter { $0.value == .keep }.map(\.key).sorted()
+        teamGames.stage(id: puzzle.id, keepIDs: ids, guest: auth.userID == nil)
+        teamCompletedIDs = teamGames.state.completed
+        if auth.userID == nil {
+            return await complete(format: .keep4Normal, sport: puzzle.sport, performance: Double(result.correctCount)/8, perfect: result.isPerfect, puzzleID: puzzle.id, ranked: false, detail: detail)
+        }
+        var earned = 0
+        if let pending = teamGames.state.pending.first(where: { $0.id == puzzle.id }),
+           let reward = try? await teamGames.settle(pending) {
+            earned = reward.awardedXP
+            localProgress.overwrite(ProgressSnapshot(streak: reward.streak, xp: reward.xp, lastPlayedDay: reward.lastPlayedDay))
+            progressSnapshot = await localProgress.load()
+        }
+        await recordGameResult(format: .keep4Normal, sport: puzzle.sport, performance: Double(result.correctCount)/8, perfect: result.isPerfect, puzzleID: puzzle.id, ranked: false, date: Date(), ratingBefore: rating, ratingAfter: rating, xpEarned: earned, streakAfter: progressSnapshot.streak, detail: detail)
+        track(.teamPuzzleCompleted, ["format": "keep4", "surface": "my_teams", "puzzle_id": puzzle.id, "xp": "\(earned)"])
+        return SessionRewards(ratingChange: RatingChange(old: rating, new: rating), xpEarned: earned, newStreak: progressSnapshot.streak, newLevel: level, leveledUp: level > beforeLevel)
     }
 }

@@ -151,6 +151,13 @@ struct ContentView: View {
             case .none: break
             }
         }
+        if id.hasPrefix("team-") {
+            if let board = try? await container.teamGames.load(sport: .nfl, team: "NO").first(where: { $0.id == id }),
+               board.isStarter || container.entitlements.canAccessArchive {
+                linkKeep4 = LinkedPlay(puzzle: board.content)
+            }
+            return
+        }
         // Not a community id: nil communityID so the game view doesn't log a community play.
         if let p = await container.puzzles.allKeep4(for: .all).first(where: { $0.id == id }) {
             linkKeep4 = LinkedPlay(puzzle: p)

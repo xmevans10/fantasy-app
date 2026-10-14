@@ -4,6 +4,9 @@ import Foundation
 /// events beats instrumenting every tap. Raw values are the `events.event_name` strings the
 /// queries in docs/ANALYTICS.md group by, so treat them as a stable schema.
 enum AnalyticsEvent: String {
+    case teamViewed = "team_viewed"
+    case teamPuzzleStarted = "team_puzzle_started"
+    case teamPuzzleCompleted = "team_puzzle_completed"
     case onboardingCompleted   = "onboarding_completed"
     case signInCompleted       = "sign_in_completed"
     case gameStarted           = "game_started"

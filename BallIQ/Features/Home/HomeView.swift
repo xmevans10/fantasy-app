@@ -167,6 +167,9 @@ struct HomeView: View {
                         .heroReveal(0)
                     }
 
+                    MyTeamsView()
+                    CareerProgressCard(xp: container.xp, compact: true)
+
                     if showPushPrimer { pushPrimerCard.heroReveal(1) }
                     else if let moment = inlineMoment { momentCard(moment).heroReveal(1) }
 

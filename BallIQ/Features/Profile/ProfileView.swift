@@ -49,6 +49,7 @@ struct ProfileView: View {
                     if auth.isSignedIn && container.identity.username == nil {
                         claimUsernameCard.heroReveal(0)
                     }
+                    CareerProgressCard(xp: container.xp)
                     heroCard.heroReveal(1)
                     statRow.heroReveal(2)
                     highlightReel.heroReveal(3)
