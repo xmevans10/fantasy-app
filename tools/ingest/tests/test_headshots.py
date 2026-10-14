@@ -107,3 +107,13 @@ def test_nfl_generic_helmet_is_not_a_portrait(monkeypatch):
     assert not headshots.is_nfl_placeholder(b"not an image")
     monkeypatch.setattr(headshots, "_get", lambda *args: (200, helmet, "image/png"))
     assert headshots.fetch_real_image("https://static.www.nfl.com/image/private/league/test")[0] == "placeholder"
+
+
+def test_known_nfl_helmet_thumbnail_needs_no_optional_pillow(monkeypatch):
+    import sys
+    from pathlib import Path
+    from tools.ingest import headshots
+    monkeypatch.setitem(sys.modules, "PIL", None)
+    helmet = (Path(__file__).parent / "fixtures" / "nfl_helmet.png").read_bytes()
+    assert headshots.is_nfl_placeholder(helmet)
+    assert not headshots.is_nfl_placeholder(b"not an image")
