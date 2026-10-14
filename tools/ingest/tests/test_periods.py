@@ -137,7 +137,11 @@ def test_window_labels_read_as_words_across_a_month_boundary():
 
 def test_wired_means_a_full_league_weekly_source_exists():
     from tools.ingest import weekly
-    assert periods.WIRED == frozenset(weekly.SOURCES)
+    # Soccer has a source but not on `closed_period`'s calendar: a soccer week is a league
+    # round (`weekly.soccer_closed_round`), and its source declines the rolling Mon-Sun window
+    # this module hands it, so it is correctly NOT wired for the calendar-week callers.
+    assert periods.WIRED == frozenset(weekly.SOURCES) - {"soccer"}
+    assert weekly.soccer_week(periods.closed_period("soccer", dt.date(2026, 9, 29))) is None
     assert periods.rolling_week("nba", dt.date(2026, 8, 25)).wired is True
     assert periods.rolling_week("hockey", dt.date(2026, 8, 25)).wired is False
 

@@ -14,7 +14,7 @@ struct RatingLadderView: View {
             }
             .padding(16)
         }
-        .background(Color.appBackground)
+        .paperGround()
         .navigationTitle("Ratings")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -22,7 +22,7 @@ struct RatingLadderView: View {
     private var ratingsCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("RATINGS").font(.label12).foregroundStyle(Color.textMuted)
-            ForEach(Sport.allCases) { ratingRow($0) }
+            ForEach(Sport.released) { ratingRow($0) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)

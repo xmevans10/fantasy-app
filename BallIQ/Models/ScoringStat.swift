@@ -15,7 +15,7 @@ struct ScoringStat: Identifiable, Hashable {
 
     var id: String { "\(sport.rawValue):\(key)" }
 
-    enum Fmt { case commaInt, int, dec1, pct, dec3, dec2 }
+    enum Fmt { case commaInt, int, dec1, pct, dec3, dec2, usd }
 
     /// A fixed-scale scoring term seeded from this stat's defaults.
     func term(weight: Double = 1) -> ScoringRule.Term {
@@ -35,6 +35,12 @@ struct ScoringStat: Identifiable, Hashable {
         // Rate stats conventionally printed to 2 places (hockey GAA). Mirrors the `dec2`
         // case `Keep4Theme.format` and `themes.py` already carry.
         case .dec2: return String(format: "%.2f", value)
+        // Golf earnings — whole-dollar USD, comma-grouped, no cents (career/season prize
+        // money is always reported this way, and cents would be noise at this magnitude).
+        case .usd:
+            let f = NumberFormatter(); f.numberStyle = .currency; f.currencyCode = "USD"
+            f.maximumFractionDigits = 0
+            return f.string(from: NSNumber(value: value.rounded())) ?? "$\(Int(value.rounded()))"
         }
     }
 }
@@ -168,6 +174,18 @@ extension ScoringStat {
             ScoringStat(key: "races",         label: "Starts",  sport: .f1, lo: 1, hi: 24, higherWins: true,  fmt: .int),
             ScoringStat(key: "championships", label: "Titles",  sport: .f1, lo: 0, hi: 1,  higherWins: true,  fmt: .int),
             ScoringStat(key: "dnfs",          label: "DNFs",    sport: .f1, lo: 0, hi: 12, higherWins: false, fmt: .int),
+        ],
+        // Golf. Single position ("Golfer"), same shape as tennis/F1 — no positionStatFamilies
+        // entry needed. `scoring_avg` is the one inverted stat here (lower is better), the
+        // same convention `era`/`gaa` already use above; bounds are a full-season PGA Tour
+        // card's range, not a single great round.
+        .golf: [
+            ScoringStat(key: "events",      label: "Events",  sport: .golf, lo: 15,      hi: 30,       higherWins: true,  fmt: .int),
+            ScoringStat(key: "wins",        label: "Wins",    sport: .golf, lo: 0,       hi: 8,        higherWins: true,  fmt: .int),
+            ScoringStat(key: "top10s",      label: "Top 10s", sport: .golf, lo: 0,       hi: 20,       higherWins: true,  fmt: .int),
+            ScoringStat(key: "cuts_made",   label: "Cuts",    sport: .golf, lo: 10,      hi: 28,       higherWins: true,  fmt: .int),
+            ScoringStat(key: "earnings",    label: "Earnings", sport: .golf, lo: 500000, hi: 15000000, higherWins: true,  fmt: .usd),
+            ScoringStat(key: "scoring_avg", label: "Scoring Avg", sport: .golf, lo: 68.0, hi: 72.5,    higherWins: false, fmt: .dec2),
         ],
     ]
 

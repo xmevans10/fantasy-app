@@ -74,7 +74,7 @@ struct LeaguesView: View {
                     .padding(.top, 12)
                 }
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("Leagues")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -577,7 +577,7 @@ struct LeaguesView: View {
     private var sportChipRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(Sport.allCases) { sport in
+                ForEach(Sport.released) { sport in
                     PrimeChip(label: sport.abbreviation, active: sport == selectedSport) {
                         selectedSport = sport
                     }
@@ -678,10 +678,12 @@ struct LeaguesView: View {
     }
 
     /// The signed-in user's strongest sport by local rating — mirrors `PublicProfile.bestSport`'s
-    /// convention (ties favor `Sport.allCases` order) so the default chip matches what a
-    /// friend would see if they looked *us* up.
+    /// convention (ties favor `Sport.released` order) so the default chip matches what a
+    /// friend would see if they looked *us* up. Reduced over `Sport.released`, not `allCases`:
+    /// this feeds `selectedSport`, which `sportChipRow` above only renders released chips for —
+    /// picking an unreleased sport here would default to a chip that isn't even on the row.
     private func bestSport() -> Sport {
-        Sport.allCases.reduce(Sport.nfl) { container.rating(for: $1) > container.rating(for: $0) ? $1 : $0 }
+        Sport.released.reduce(Sport.nfl) { container.rating(for: $1) > container.rating(for: $0) ? $1 : $0 }
     }
 
     private func load() async {

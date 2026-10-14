@@ -110,7 +110,7 @@ struct SplitsSection: View {
                 )
                 switch mode {
                 case .bySport:
-                    ForEach(Sport.allCases) { sport in
+                    ForEach(Sport.released) { sport in
                         bar(label: sport.displayName,
                             split: FormatSplit(rows.filter { $0.sport == sport }), fill: sport.cardFill)
                     }

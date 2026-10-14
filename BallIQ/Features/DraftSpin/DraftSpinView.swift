@@ -106,7 +106,7 @@ struct DraftSpinView: View {
                 draftBoard
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .task { await load() }
         .onChange(of: sport) { _, selectedSport in
             // Warm the broad discovery pool while the player is still choosing settings.
@@ -317,7 +317,7 @@ struct DraftSpinView: View {
                 .font(.body14).foregroundStyle(Color.textMuted)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBackground)
+        .paperGround()
     }
 
     /// `-screenshotDraftSpinResult`: simctl can't tap through the roster/lineup UI, so pick the

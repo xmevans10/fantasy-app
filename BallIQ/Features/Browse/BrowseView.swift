@@ -61,7 +61,7 @@ struct BrowseView: View {
             Divider().overlay(Color.hairline)
             content
         }
-        .background(Color.appBackground)
+        .paperGround()
         .navigationTitle(pinnedFormat?.title ?? "Browse")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: refreshKey) { await load() }
@@ -125,7 +125,7 @@ struct BrowseView: View {
                             PrimeDropdown(options: BrowseFormat.allCases, selection: $format,
                                          title: \.title, isDefault: { _ in false })
                         }
-                        PrimeDropdown(options: SportFilter.allCases, selection: $sportFilter, title: \.title,
+                        PrimeDropdown(options: SportFilter.released, selection: $sportFilter, title: \.title,
                                       unsetLabel: String(localized: "Sport"))
                         if format == .keep4 {
                             PrimeDropdown(options: DecadeFilter.allCases, selection: $decadeFilter, title: \.title,

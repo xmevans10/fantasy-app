@@ -254,6 +254,28 @@ final class ScoringRuleTests: XCTestCase {
             rule.grade(stats: grindSeason, sport: .tennis, position: "Player", seasonYear: 2015))
     }
 
+    func testGolfExactGrade() {
+        // Mirrors grade.py's golf_fantasy: 5 wins (150) + 15 top-10s (60) + 20 cuts (20)
+        // + 22 events (4.4) + a 44-stroke margin (88) = 322.4. Earnings are not graded.
+        let bigSeason: [String: Double] = ["wins": 5, "top10s": 15, "cuts_made": 20, "events": 22,
+                                           "earnings": 8_000_000, "scoring_margin": 44]
+        let g = ScoringRule.preset("golf_fantasy")!
+            .grade(stats: bigSeason, sport: .golf, position: "Golfer", seasonYear: 2023)
+        XCTAssertEqual(g, 322.4, accuracy: 0.001)
+    }
+
+    func testGolfLowerScoringAverageOutranksAtEqualResume() {
+        // `scoring_margin` is scoring_avg's gradeable form, and it can go negative.
+        let rule = ScoringRule.preset("golf_fantasy")!
+        let base: [String: Double] = ["wins": 1, "top10s": 5, "cuts_made": 15, "events": 20,
+                                      "earnings": 2_000_000]
+        var sharp = base; sharp["scoring_margin"] = 40
+        var loose = base; loose["scoring_margin"] = -10
+        XCTAssertGreaterThan(
+            rule.grade(stats: sharp, sport: .golf, position: "Golfer", seasonYear: 2023),
+            rule.grade(stats: loose, sport: .golf, position: "Golfer", seasonYear: 2023))
+    }
+
     func testEraAdjustedHonorsLowerWins() {
         let table: [String: StatBaselines.Stat] = [
             StatBaselines.key(sport: "nfl", position: "QB", stat: "interceptions", year: 2020):

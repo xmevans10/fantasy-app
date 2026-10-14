@@ -78,6 +78,7 @@ struct ScoringBreakdown: Equatable {
         case .hockey:   return [("Skaters", "hockey_skater_fantasy"),
                                 ("Goalies", "hockey_goalie_fantasy")]
         case .f1:       return [(nil, "f1_driver_fantasy")]
+        case .golf:     return [(nil, "golf_fantasy")]
         }
     }
 
@@ -125,6 +126,9 @@ struct ScoringBreakdown: Equatable {
             "podiums": "Podium", "poles": "Pole position", "races": "Race start",
             "fastest_laps": "Fastest lap", "dnfs": "DNF",
             "championship_position": "Championship finish",
+            // Golf. `wins` already reads "Win" from the map above.
+            "top10s": "Top-10 finish", "cuts_made": "Cut made", "events": "Events played",
+"scoring_margin": "Stroke under 71, per event",
         ]
         return names[stat] ?? ScoringStat.find(stat, sport: sport)?.label
             ?? stat.replacingOccurrences(of: "_", with: " ").capitalized
@@ -189,7 +193,7 @@ struct ScoringDetailSheet: View {
             .padding(.bottom, 16)   // keep the footnote clear of the home indicator
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color.appBackground)
+        .paperGround()
         .presentationDetents([.medium, .large], selection: $detent)
         .presentationDragIndicator(.visible)
     }

@@ -8,17 +8,18 @@ import SwiftUI
 /// anything has proved worth signing in *for*, and it names formats — K4C4, Who Am I?, The Grid,
 /// Daily Draft — that mean nothing yet.
 ///
-/// The flow is now: pick a sport (the one question a new player can actually answer) → learn the
-/// one game in three lines while today's puzzle loads behind it → play it → *then* the account
-/// ask, framed against the streak they just earned. Nothing here is gated: daily puzzles are
-/// free in every sport, so the first game always exists.
+/// The flow is now: what Playbook is, with a flippable deck of every mode → pick a sport (the one
+/// question a new player can actually answer) → make one practice keep/cut call while today's
+/// puzzle loads behind it → play it → *then* the account ask, framed against the streak they
+/// just earned and the rating they can build. Nothing here is gated: daily puzzles are free
+/// in every sport, so the first game always exists.
 struct OnboardingView: View {
     @EnvironmentObject private var container: RepositoryContainer
     @AppStorage("hasOnboarded") private var hasOnboarded = false
     /// Persisted, not `@State`: the first game runs in a fullScreenCover, and an app switch or a
     /// kill mid-puzzle used to drop the player back at the top of the pitch. Resuming at the
     /// step they left is also what keeps the funnel's step events honest about where people stop.
-    @AppStorage("onboardingStep") private var stepRaw = OnboardingStep.sport.rawValue
+    @AppStorage("onboardingStep") private var stepRaw = OnboardingStep.welcome.rawValue
 
     @State private var error: String?
     /// Gates the post-sign-in username claim prompt (M20): a brand-new account has no
@@ -38,8 +39,11 @@ struct OnboardingView: View {
     @State private var pendingPlay = false
     /// The step whose `onboarding_step_viewed` row has already been written — see the `.task`.
     @State private var trackedStep: String?
+    /// The sport tile that was just tapped, held for the half-second pop before advancing.
+    @State private var pickedSport: Sport?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var step: OnboardingStep { OnboardingStep(rawValue: stepRaw) ?? .sport }
+    private var step: OnboardingStep { OnboardingStep(rawValue: stepRaw) ?? .welcome }
 
     /// Scrolls when the content overflows, sits at the top when it doesn't.
     ///
@@ -74,18 +78,30 @@ struct OnboardingView: View {
         // mid-transition — that is what wrote duplicate `onboarding_step_viewed` rows, and it
         // would put the first game's cover on a view that's being replaced.
         ZStack {
-            Group {
-                switch step {
-                case .sport:     sportStep
-                case .howToPlay: howToPlayStep
-                case .account:   accountStep
+            VStack(spacing: 12) {
+                OnboardingProgress(current: step.index, total: OnboardingStep.allCases.count)
+                Group {
+                    switch step {
+                    case .welcome:
+                        OnboardingWelcomeStep { go(.modes) }
+                    case .modes:
+                        OnboardingModesStep { go(.sport) }
+                    case .sport:     sportStep
+                    case .howToPlay: howToPlayStep
+                    case .account:   accountStep
+                    }
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
+                                        removal: .move(edge: .leading).combined(with: .opacity)))
+                .id(stepRaw)
             }
-            .padding(16)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+            .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBackground)
-        .animation(Motion.easeOut, value: stepRaw)
+        .slideBackdrop(step.tint)
+        .animation(Motion.overshoot, value: stepRaw)
         .fullScreenCover(isPresented: $showFirstGame, onDismiss: finishFirstGame) {
             if let firstPuzzle {
                 Keep4GameView(puzzle: firstPuzzle).environmentObject(container)
@@ -119,70 +135,83 @@ struct OnboardingView: View {
     }
 
     private var sportStepContent: some View {
-        VStack(spacing: 20) {
-            VStack(spacing: 10) {
-                Wordmark(size: 44)
-                Text("WHICH SPORT DO YOU KNOW BEST?")
-                    .font(.display1)
-                    .foregroundStyle(Color.textPrimary)
+        VStack(spacing: 22) {
+            // Over the orange backdrop block, so white, not ink.
+            VStack(spacing: 0) {
+                Text("PICK YOUR")
+                    .font(.custom(FontName.condBlack, size: 24))
+                    .foregroundStyle(Color.white.opacity(0.9))
+                Text("SPORT")
+                    .font(.hero(72))
+                    .foregroundStyle(Color.white)
+                    .shadow(color: Color.borderInk, radius: 0, x: 4, y: 4)
+                Text("Every sport stays playable. This just picks where you start.")
+                    .font(.label12)
+                    .foregroundStyle(Color.white.opacity(0.9))
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.6)
+                    .padding(.top, 4)
             }
             .heroReveal(0)
 
-            VStack(spacing: 10) {
-                ForEach(Array(Sport.allCases.enumerated()), id: \.element) { i, sport in
-                    sportRow(sport, volt: i.isMultiple(of: 2) == false)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                      spacing: 12) {
+                ForEach(Array(Sport.released.enumerated()), id: \.element) { i, sport in
+                    sportTile(sport, palette: Self.tilePalette[i % Self.tilePalette.count])
+                        .heroReveal(1 + i / 2)
                 }
             }
-            .heroReveal(1)
-
-            Text("Every sport stays playable, this just picks where you start.")
-                .font(.label12)
-                .foregroundStyle(Color.textMuted)
-                .multilineTextAlignment(.center)
-                .heroReveal(2)
+            .padding(.top, 8)
         }
+        .frame(maxWidth: 520)
+        .frame(maxWidth: .infinity)
     }
 
-    private func sportRow(_ sport: Sport, volt: Bool) -> some View {
-        Button {
-            Haptics.tap()
-            choose(sport)
+    /// Fill/on pairs cycled across the tiles so the grid reads as a sticker sheet, not a list.
+    private static let tilePalette: [(fill: Color, on: Color)] = [
+        (.accentFill, .onAccent), (.voltFill, .onVolt), (.proFill, .onPro),
+        (.successFill, .onSuccess), (.dangerFill, .onDanger), (.goldFill, .onGold),
+    ]
+
+    /// A tap pops the tile and stamps it before moving on. The short hold is the point: an
+    /// instant jump to the next slide makes the choice feel like it didn't register.
+    private func sportTile(_ sport: Sport, palette: (fill: Color, on: Color)) -> some View {
+        let picked = pickedSport == sport
+        return Button {
+            guard pickedSport == nil else { return }
+            Haptics.success()
+            withAnimation(Motion.overshoot) { pickedSport = sport }
+            DispatchQueue.main.asyncAfter(deadline: .now() + (reduceMotion ? 0 : 0.55)) {
+                choose(sport)
+            }
         } label: {
-            HStack(spacing: 14) {
-                sportSticker(sport, volt: volt)
+            VStack(spacing: 8) {
+                Image(systemName: sport.symbol)
+                    .font(.system(size: 24, weight: .black))
+                    .foregroundStyle(palette.fill)
+                    .frame(width: 48, height: 48)
+                    .background(Circle().fill(palette.on))
+                    .overlay(Circle().strokeBorder(Color.borderInk, lineWidth: 2.5))
+                    .rotationEffect(.degrees(picked ? -12 : 0))
                 Text(sport.displayName.uppercased())
-                    .font(.title)
-                    .foregroundStyle(Color.textPrimary)
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(Color.textMuted)
+                    .font(.custom(FontName.condBlack, size: 22))
+                    .foregroundStyle(palette.on)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
-            .cardSurface()
-        }
-        .buttonStyle(PrimePressStyle())
-    }
-
-    /// One sport icon as a sticker: accent/volt fill, ink ring, hard ledge shadow.
-    private func sportSticker(_ sport: Sport, volt: Bool) -> some View {
-        Image(systemName: sport.symbol)
-            .font(.system(size: 19, weight: .bold))
-            .foregroundStyle(volt ? Color.onVolt : Color.onAccent)
-            .frame(width: 46, height: 46)
-            .background(
-                ZStack {
-                    Circle().fill(Color.borderInk).offset(x: 3, y: 3)
-                    Circle().fill(volt ? Color.voltFill : Color.accentFill)
-                    Circle().strokeBorder(Color.borderInk, lineWidth: 2.5)
+            .padding(.vertical, 10)
+            .blockCard(fill: palette.fill)
+            .overlay(alignment: .topTrailing) {
+                if picked {
+                    PopStamp(text: "MY SPORT!", angle: 10, size: 13)
+                        .offset(x: 6, y: -10)
                 }
-            )
-            .accessibilityHidden(true)
+            }
+            .scaleEffect(picked ? 1.08 : (pickedSport == nil ? 1 : 0.94))
+            .opacity(pickedSport == nil || picked ? 1 : 0.55)
+        }
+        .buttonStyle(PrimePressStyle(scale: 0.94))
+        .accessibilityLabel(Text(sport.displayName))
     }
 
     /// The pick is written straight to `container.sportFilter` — the same value Home's daily
@@ -191,7 +220,11 @@ struct OnboardingView: View {
     /// setup screens have their own guard (`GameSetupScreen.correctLockedDefault`).
     private func choose(_ sport: Sport) {
         container.sportFilter = SportFilter(rawValue: sport.rawValue) ?? .all
-        stepRaw = OnboardingStep.howToPlay.rawValue
+        go(.howToPlay)
+    }
+
+    private func go(_ next: OnboardingStep) {
+        stepRaw = next.rawValue
     }
 
     // MARK: - Step 2 — how it works (and the puzzle fetch)
@@ -204,29 +237,8 @@ struct OnboardingView: View {
                 .frame(maxHeight: .infinity)
 
             VStack(spacing: 12) {
-                Button { startFirstGame() } label: {
-                    VStack(spacing: 2) {
-                        HStack(spacing: 8) {
-                            if !puzzleLoadFinished {
-                                ProgressView().tint(Color.onAccent)
-                            }
-                            Text(primaryLabel)
-                                .font(.custom(FontName.condBlack, size: 18))
-                        }
-                        if let theme = firstPuzzle?.theme {
-                            Text(theme)
-                                .font(.label11)
-                                .lineLimit(1)
-                                .opacity(0.8)
-                        }
-                    }
-                    .foregroundStyle(Color.onAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Color.accentFill)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
-                .buttonStyle(PrimePressStyle())
+                OnboardingCTA(title: primaryLabel, subtitle: firstPuzzle?.theme,
+                              loading: !puzzleLoadFinished) { startFirstGame() }
 
                 Button { advanceToAccount() } label: {
                     Text("Skip for now")
@@ -239,26 +251,12 @@ struct OnboardingView: View {
         .task { await loadFirstPuzzle() }
     }
 
+    /// One practice card instead of three rule lines: production showed a 60% drop between
+    /// picking a sport and starting the first game (HANDOFF-m30), and a rule list is the part of
+    /// that screen a new player skims. Making the call once teaches the gesture and the grade
+    /// before the real board, while today's puzzle loads behind it.
     private var howToPlayContent: some View {
-        VStack(spacing: 18) {
-            VStack(spacing: 4) {
-                Text("K4C4")
-                    .font(.hero(46))
-                    .foregroundStyle(Color.accentText)
-                Text("KEEP 4, CUT 4")
-                    .font(.display1)
-                    .foregroundStyle(Color.textPrimary)
-            }
-            VStack(alignment: .leading, spacing: 14) {
-                ruleRow(1, "Eight real seasons, dealt one card at a time.")
-                ruleRow(2, "Keep the four you think scored the most fantasy points.")
-                ruleRow(3, "Every call is final. Score 8/8 for a perfect round.")
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .blockCard()
-        }
-        .heroReveal(0)
+        OnboardingPracticeCard(sport: Sport(rawValue: container.sportFilter.rawValue) ?? .nfl)
     }
 
     /// Reads as a load state, then a promise, then an escape hatch — a thin sport on a day with
@@ -267,26 +265,6 @@ struct OnboardingView: View {
     private var primaryLabel: LocalizedStringKey {
         if firstPuzzle != nil { return "PLAY TODAY'S PUZZLE" }
         return puzzleLoadFinished ? "CONTINUE" : "LOADING TODAY'S PUZZLE…"
-    }
-
-    private func ruleRow(_ number: Int, _ text: LocalizedStringKey) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text("\(number)")
-                .font(.custom(FontName.condBlack, size: 15))
-                .foregroundStyle(Color.onAccent)
-                .frame(width: 26, height: 26)
-                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Color.accentFill))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .strokeBorder(Color.borderInk, lineWidth: 2)
-                )
-            Text(text)
-                .font(.body14)
-                .foregroundStyle(Color.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
-        }
-        .accessibilityElement(children: .combine)
     }
 
     private func loadFirstPuzzle() async {
@@ -332,30 +310,20 @@ struct OnboardingView: View {
     }
 
     private func advanceToAccount() {
-        stepRaw = OnboardingStep.account.rawValue
+        go(.account)
     }
 
     // MARK: - Step 3 — account (after the first game, not before it)
 
     private var accountStep: some View {
         VStack(spacing: 0) {
-            // `Spacer`s rather than a measuring container: this step must stay clear of
-            // `ViewThatFits` and `GeometryReader { ScrollView { … } }`, both of which render a
-            // measurement pass that draws a clipped ghost copy of "Not now" at the top of the
-            // screen on iPad (bisected 2026-07-28 — see `fitsOrScrolls`). Plain spacers around a
-            // content-sized ScrollView centre the pitch without any of that: they collapse to
-            // zero when the content is tall, so an SE-class screen still scrolls.
-            Spacer(minLength: 0)
+            // Same shape as the how-to-play step: content scrolls, auth buttons pinned below.
+            // This step used spacers around a `fixedSize` ScrollView to centre a short pitch;
+            // the account benefits need room to wrap, and `fixedSize` then
+            // pushed the content up under the status bar and "Not now" off the bottom instead
+            // of scrolling. Still no measuring container (iPad ghost button — see `fitsOrScrolls`).
             fitsOrScrolls { accountPitch }
-                // A ScrollView is greedy vertically — without this it swallows the whole gap and
-                // the spacers collapse to nothing, which is exactly the "one sentence stranded
-                // above 800pt of cream" this step started as. `fixedSize` asks it for its content
-                // height instead, so the spacers get the slack and centre the card. It is a
-                // modifier, not a measuring container, so it does not reintroduce the iPad ghost
-                // button; when the content is genuinely taller than the space, the VStack
-                // compresses it and `scrollBounceBehavior(.basedOnSize)` scrolls as before.
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
+                .frame(maxHeight: .infinity)
 
             authButtons.heroReveal(1)
         }
@@ -399,8 +367,7 @@ struct OnboardingView: View {
         .heroReveal(0)
     }
 
-    /// Mirrors `ruleRow` on the how-to-play step — same icon-tile-plus-copy rhythm, so the two
-    /// onboarding screens read as one flow rather than two designs.
+    /// Icon tile plus copy, the same rhythm as the welcome deck's stickers.
     private func keepRow(_ symbol: String, _ title: LocalizedStringKey,
                          _ detail: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 12) {
@@ -488,4 +455,16 @@ private extension OnboardingStep {
     /// Position in the flow, carried on the step event so a warehouse query can order the funnel
     /// without hardcoding the step names in SQL.
     var index: Int { Self.allCases.firstIndex(of: self) ?? 0 }
+
+    /// The colour block behind each slide. One per slide, and a different one each time, so a
+    /// tap forward visibly changes the whole screen, not just the text on it.
+    var tint: Color {
+        switch self {
+        case .welcome:   .accentFill
+        case .modes:     .proFill
+        case .sport:     .warningFill
+        case .howToPlay: .dangerFill
+        case .account:   .goldFill
+        }
+    }
 }

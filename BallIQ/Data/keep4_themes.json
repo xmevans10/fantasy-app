@@ -2086,5 +2086,156 @@
     "poolCap": 24,
     "grain": "season",
     "eraAdjusted": false
+  },
+  {
+    "key": "golf-tour-winners",
+    "title": "Winning PGA Tour seasons",
+    "sport": "golf",
+    "scale": "golf_fantasy",
+    "positions": [
+      "Golfer"
+    ],
+    "minStats": {
+      "events": 10,
+      "wins": 1
+    },
+    "columns": [
+      {
+        "stat": "wins",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "top10s",
+        "label": "Top 10s",
+        "fmt": "int"
+      },
+      {
+        "stat": "cuts_made",
+        "label": "Cuts Made",
+        "fmt": "int"
+      },
+      {
+        "stat": "scoring_avg",
+        "label": "Scoring Avg",
+        "fmt": "dec2"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "golf-scoring-elite",
+    "title": "Elite scoring average seasons",
+    "sport": "golf",
+    "scale": "golf_fantasy",
+    "positions": [
+      "Golfer"
+    ],
+    "minStats": {
+      "events": 15
+    },
+    "columns": [
+      {
+        "stat": "scoring_avg",
+        "label": "Scoring Avg",
+        "fmt": "dec2"
+      },
+      {
+        "stat": "top10s",
+        "label": "Top 10s",
+        "fmt": "int"
+      },
+      {
+        "stat": "wins",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "cuts_made",
+        "label": "Cuts Made",
+        "fmt": "int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "golf-fedex-cup-era",
+    "title": "FedEx Cup era seasons",
+    "sport": "golf",
+    "scale": "golf_fantasy",
+    "positions": [
+      "Golfer"
+    ],
+    "minStats": {
+      "cuts_made": 15,
+      "events": 15,
+      "fedex_points": 1
+    },
+    "columns": [
+      {
+        "stat": "fedex_points",
+        "label": "FedEx Pts",
+        "fmt": "int"
+      },
+      {
+        "stat": "top10s",
+        "label": "Top 10s",
+        "fmt": "int"
+      },
+      {
+        "stat": "wins",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "earnings",
+        "label": "Earnings",
+        "fmt": "comma_int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "season",
+    "eraAdjusted": false
+  },
+  {
+    "key": "golf-career-fantasy",
+    "title": "Career PGA Tour leaders",
+    "sport": "golf",
+    "scale": "golf_fantasy",
+    "positions": [
+      "Golfer"
+    ],
+    "minStats": {
+      "events": 40
+    },
+    "columns": [
+      {
+        "stat": "wins",
+        "label": "Wins",
+        "fmt": "int"
+      },
+      {
+        "stat": "top10s",
+        "label": "Top 10s",
+        "fmt": "int"
+      },
+      {
+        "stat": "cuts_made",
+        "label": "Cuts Made",
+        "fmt": "int"
+      },
+      {
+        "stat": "earnings",
+        "label": "Earnings",
+        "fmt": "comma_int"
+      }
+    ],
+    "poolCap": 24,
+    "grain": "career",
+    "eraAdjusted": false
   }
 ]

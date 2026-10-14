@@ -9,8 +9,12 @@ final class Keep4ThemeTests: XCTestCase {
     private let themes = Keep4Theme.loadBundled()
 
     func testBundleDecodesAllThemes() {
-        XCTAssertEqual(themes.count, 51, "bundled keep4_themes.json out of sync with themes.py")
+        XCTAssertEqual(themes.count, 55, "bundled keep4_themes.json out of sync with themes.py")
         XCTAssertEqual(Set(themes.map(\.key)).count, themes.count, "duplicate theme keys")
+        // The four PGA themes are present in themes.py and the exact Python export.
+        XCTAssertEqual(Set(themes.filter { $0.sport == .golf }.map(\.key)), [
+            "golf-tour-winners", "golf-scoring-elite", "golf-fedex-cup-era", "golf-career-fantasy",
+        ])
     }
 
     func testEraThemeDecodesWithFlag() throws {

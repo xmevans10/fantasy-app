@@ -16,7 +16,7 @@ from .whoami_clues import CLUE_COUNT, DIFFICULTIES, leaked_name_part
 # kind fails `WhoAmIPuzzle`'s decode on older clients and drops them to the bundled pool.
 # See tools/ingest/whoami_clues.py's module docstring before adding to this set.
 _VALID_KINDS = {"era", "position", "teams", "statLine", "fact", "jersey"}
-_VALID_SPORTS = {"nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"}
+_VALID_SPORTS = {"nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1", "golf"}
 
 # Sports whose PUZZLES may be minted to the live `puzzles` table right now — a RELEASE gate,
 # not a data gate. Everything in `_VALID_SPORTS` is real and fully ingested (catalog, teams,
@@ -32,6 +32,10 @@ _VALID_SPORTS = {"nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"}
 # hockey/f1 (M31) are therefore ingested but NOT minted until a build whose `Sport` knows them
 # is the floor in the wild. **To release them: add them here, then re-mint.** Nothing else
 # needs changing — `daily_puzzle` and `run_grid` both read this.
+#
+# golf is the same story, one client floor earlier: it is fully ingested (this data-provider
+# pass) but no shipped `Sport` enum knows the case yet, so it stays out of this set on purpose
+# until an app build carrying it is the floor in the wild.
 WIRE_SAFE_SPORTS = {"nfl", "nba", "baseball", "soccer", "tennis"}
 
 

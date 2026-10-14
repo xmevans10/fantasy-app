@@ -45,7 +45,7 @@ struct DraftSpinResultView: View {
             }
             doneBar
         }
-        .background(Color.appBackground)
+        .paperGround()
         .celebrate(on: $confetti, intensity: result.outcome == .champion ? 90 : 40)
         .onAppear { if result.outcome == .champion { confetti += 1 } }
     }

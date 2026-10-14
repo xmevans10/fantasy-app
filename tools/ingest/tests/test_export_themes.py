@@ -53,7 +53,7 @@ def test_every_season_theme_scale_is_app_preset():
         "nfl_fantasy", "nfl_skill_ppr", "nfl_qb_fantasy", "nba_fantasy",
         "baseball_hitter_fantasy", "baseball_pitcher_fantasy",
         "soccer_attacker_fantasy", "soccer_defender_fantasy", "tennis_fantasy",
-        "hockey_skater_fantasy", "hockey_goalie_fantasy", "f1_driver_fantasy",
+        "hockey_skater_fantasy", "hockey_goalie_fantasy", "f1_driver_fantasy", "golf_fantasy",
     }
     for t in KEEP4_THEMES:
         if t.grain == "season":

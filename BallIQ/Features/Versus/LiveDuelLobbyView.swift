@@ -58,7 +58,7 @@ struct LiveDuelLobbyView: View {
                 readyPrompt
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .task { session.start() }
         .onDisappear { session.stop() }
         .onChange(of: scenePhase) { _, phase in

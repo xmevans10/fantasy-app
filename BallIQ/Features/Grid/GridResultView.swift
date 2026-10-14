@@ -6,6 +6,8 @@ struct GridResultView: View {
     let correctCount: Int
     var puzzle: GridPuzzle? = nil
     var solved: [Int: String] = [:]
+    /// Actual canonical board day; nil for practice, fallback boards and duels.
+    var crowdDay: String? = nil
     var rewards: RepositoryContainer.SessionRewards? = nil
     /// False for a re-rolled practice board. A practice board is not pinned to `(sport, day)`,
     /// so it cannot be challenged — the recipient would be sent to that day's *daily* board and
@@ -26,6 +28,7 @@ struct GridResultView: View {
     @State private var confetti = 0
     @State private var showLeaderboard = false
     @State private var rematching = false
+    @State private var answerCell: Int?
     /// cell index → (name → pct of that cell's correct picks). Empty until the crowd stats
     /// land (or forever, offline) — the recap simply shows no % line then.
     @State private var pickPct: [Int: [String: Int]] = [:]
@@ -71,7 +74,8 @@ struct GridResultView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 18) {
-                    scoreHeader.heroReveal(0)
+                    if let puzzle { boardRecap(puzzle).heroReveal(0) }
+                    scoreHeader.heroReveal(1)
                     // Above the leaderboard on purpose: when you came here from a friend's dare,
                     // the one number you want is theirs, not this week's top 10.
                     if let duelVerdict, challenge == nil {
@@ -83,13 +87,13 @@ struct GridResultView: View {
                     }
                     leaderboardEntry.heroReveal(challenge == nil ? 1 : 2)
                     if let rewards { RewardsRow(rewards: rewards).heroReveal(3) }
-                    if let puzzle { boardRecap(puzzle).heroReveal(4) }
+
                 }
                 .padding(16)
             }
             doneBar
         }
-        .background(Color.appBackground)
+        .paperGround()
         .celebrate(on: $confetti, intensity: isPerfect ? 90 : 40)
         .onAppear {
             if let challenge {
@@ -107,7 +111,7 @@ struct GridResultView: View {
             }
         }
         .task {
-            let day = OverUnderRoundGenerator.dayString(Date())
+            guard let day = crowdDay else { return }
             let stats = await container.gridGuessStats(day: day, sport: sport)
             var pct: [Int: [String: Int]] = [:]
             for row in stats where row.cellTotal > 0 {
@@ -146,74 +150,35 @@ struct GridResultView: View {
         .blockCard(fill: isPerfect ? .voltFill : .accentFill)
     }
 
-    /// A recap of all 9 cells (hit/miss + the matched player, where solved) — echoes
-    /// `GridGameView.gridLayout`'s single flat `ForEach` shape (a `ForEach` nested inside
-    /// another `ForEach` silently drops cells in `LazyVGrid`; see that file's comment).
     private func boardRecap(_ puzzle: GridPuzzle) -> some View {
-        let cols = puzzle.cols.count
-        let columns = [GridItem(.fixed(60))] + puzzle.cols.map { _ in GridItem(.flexible()) }
-        let totalSlots = (puzzle.rows.count + 1) * (cols + 1)
-        return VStack(alignment: .leading, spacing: 10) {
-            Text("THE BOARD").font(.heading).foregroundStyle(Color.textPrimary)
-            LazyVGrid(columns: columns, spacing: 6) {
-                ForEach(0..<totalSlots, id: \.self) { slot in
-                    let row = slot / (cols + 1)
-                    let col = slot % (cols + 1)
-                    if row == 0 {
-                        if col == 0 {
-                            Color.clear.frame(height: 36)
-                        } else {
-                            recapAxis(puzzle, axis: puzzle.cols[col - 1])
+        VStack(spacing: 10) {
+            GridBoardPresentation(puzzle: puzzle, solved: solved, completed: true, pickPct: pickPct) {
+                answerCell = $0
+            }
+            Text("Tap a square to explore accepted answers.")
+                .font(.label11).foregroundStyle(Color.textMuted)
+        }
+        .sheet(isPresented: Binding(get: { answerCell != nil }, set: { if !$0 { answerCell = nil } })) {
+            if let index = answerCell {
+                NavigationStack {
+                    List {
+                        Section(puzzle.prompt(row: index / 3, col: index % 3)) {
+                            ForEach(puzzle.cells[index].validAnswerNames, id: \.self) { name in
+                                HStack {
+                                    Text(name)
+                                    Spacer()
+                                    if name == solved[index] { Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.successText) }
+                                    if let pct = pickPct[index]?[name] { Text("\(pct)%").foregroundStyle(Color.textMuted) }
+                                }
+                            }
                         }
-                    } else if col == 0 {
-                        recapAxis(puzzle, axis: puzzle.rows[row - 1])
-                    } else {
-                        recapCell(row: row - 1, col: col - 1)
                     }
+                    .navigationTitle("Accepted answers")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { answerCell = nil } } }
                 }
             }
         }
-    }
-
-    /// Recap-sized twin of `GridGameView.axisCell` — a team axis keeps its crest chip, any other
-    /// kind renders as a text label.
-    @ViewBuilder
-    private func recapAxis(_ puzzle: GridPuzzle, axis: GridPuzzle.GridAxis) -> some View {
-        if axis.kind == .team {
-            TeamAbbrChip(sport: puzzle.sport, abbr: axis.teamAbbr, league: axis.teamLeague,
-                         fontSize: 12, minHeight: 36, showLogo: true,
-                         displayText: axis.label)
-        } else {
-            Text(axis.label)
-                .font(.custom(FontName.condBlack, size: 12))
-                .foregroundStyle(Color.textPrimary)
-                .multilineTextAlignment(.center)
-                .lineLimit(2).minimumScaleFactor(0.6)
-                .padding(.horizontal, 2)
-                .frame(maxWidth: .infinity, minHeight: 36)
-                .background(Color.surfaceMuted)
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-        }
-    }
-
-    private func recapCell(row: Int, col: Int) -> some View {
-        let index = row * 3 + col
-        return VStack(spacing: 2) {
-            if let name = solved[index] {
-                Image(systemName: "checkmark.circle.fill").font(.system(size: 12)).foregroundStyle(Color.successText)
-                Text(name).font(.label11).foregroundStyle(Color.textPrimary).lineLimit(2).minimumScaleFactor(0.6)
-                if let pct = pickPct[index]?[name] {
-                    Text("\(pct)% picked").font(.label11).foregroundStyle(Color.textMuted)
-                }
-            } else {
-                Image(systemName: "xmark.circle.fill").font(.system(size: 12)).foregroundStyle(Color.dangerText)
-            }
-        }
-        .frame(maxWidth: .infinity, minHeight: 56)
-        .padding(4)
-        .background(Color.surface)
-        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.borderInk, lineWidth: 1.5))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     /// The card previewed in the share sheet next to `shareText`. Same spoiler-free shape as
@@ -228,6 +193,7 @@ struct GridResultView: View {
             Rectangle().fill(Color.hairline).frame(height: Hairline.width)
             HStack(spacing: 12) {
                 ShareLink(item: Self.shareText(sport: sport, score: score, solved: solved,
+                                              date: challenge?.date ?? Date(),
                                                isDaily: isDaily,
                                                challenger: container.identity.username),
                           preview: SharePreview(isDaily ? "Grid challenge" : "Grid result",

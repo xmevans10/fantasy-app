@@ -25,7 +25,9 @@ on:
   schedule:
     # NFL: Monday Night Football ends ~02:30 UTC Tue; nflverse posts the weekly file overnight.
     - cron: "30 8 * * 2"      # Tue 08:30 UTC  -> board lands Wednesday local
-    # Soccer: Big-5 matchweeks close Sunday/Monday.
+    # Soccer: a league ROUND (weekly.soccer_closed_round), which closes Sunday or Monday night.
+    # The one job builds a pack per league in weekly.SOCCER_LEAGUES (eng.1 today); a midweek
+    # round is superseded by the weekend round before the next Tuesday run and is not packed.
     - cron: "35 8 * * 2"      # Tue 08:35 UTC
     # NBA, MLB, NHL: rolling Mon-Sun window, closed Sunday night.
     - cron: "30 8 * * 3"      # Wed 08:30 UTC  -> board lands Thursday local

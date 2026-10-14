@@ -9,27 +9,35 @@ import XCTest
 /// functions, so they're pinned here rather than left to a visual check.
 final class AppImagePipelineTests: XCTestCase {
 
-    // MARK: - Supabase Storage transform rewriting
+    // MARK: - Public image CDN routing
 
-    func testRewritesStoragePublicObjectURLToRenderEndpoint() {
-        let url = URL(string: "https://nhccgufqwndtoasdbkhc.supabase.co"
-                      + "/storage/v1/object/public/team-logos/nfl/_/kc.png")!
-        let out = AppImagePipeline.transformed(url, pixels: 96)
-        let s = out.absoluteString
-        XCTAssertTrue(s.hasPrefix("https://nhccgufqwndtoasdbkhc.supabase.co"
-                                  + "/storage/v1/render/image/public/team-logos/nfl/_/kc.png?"), s)
-        XCTAssertTrue(s.contains("width=96"), s)
-        XCTAssertTrue(s.contains("height=96"), s)
-        XCTAssertTrue(s.contains("resize=contain"), s)
+    func testRoutesPlaybookStorageImagesToCloudflareWithoutPaidTransforms() {
+        for bucket in ["team-logos", "player-headshots"] {
+            let url = URL(string: "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/\(bucket)/nfl/a.png")!
+            let expected = "https://playbook-images.xmevans10.workers.dev/v1/\(bucket)/nfl/a.png"
+            for pixels in [CGFloat(96), 192, 384] {
+                XCTAssertEqual(AppImagePipeline.transformed(url, pixels: pixels).absoluteString, expected)
+            }
+        }
     }
 
-    /// Object path is preserved verbatim — league-qualified keys (`soccer/england/liv.png`) must
-    /// survive the rewrite or the crest 404s and the club renders bare.
-    func testPreservesNestedObjectPath() {
-        let url = URL(string: "https://x.supabase.co"
-                      + "/storage/v1/object/public/team-logos/soccer/england/liv.png")!
-        XCTAssertTrue(AppImagePipeline.transformed(url, pixels: 128).absoluteString
-            .contains("/render/image/public/team-logos/soccer/england/liv.png?"))
+    func testPreservesNestedAndEncodedObjectPath() {
+        let url = URL(string: "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/team-logos/soccer/england/a%20b.png")!
+        XCTAssertEqual(AppImagePipeline.transformed(url, pixels: 128).absoluteString,
+                       "https://playbook-images.xmevans10.workers.dev/v1/team-logos/soccer/england/a%20b.png")
+    }
+
+    func testCDNLeavesOtherProjectsBucketsAndCredentialedURLsUnchanged() {
+        for raw in [
+            "https://x.supabase.co/storage/v1/object/public/team-logos/a.png",
+            "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/avatars/a.png",
+            "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/team-logos/a.png?token=private",
+            "https://user:password@nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/team-logos/a.png",
+            "https://playbook-images.xmevans10.workers.dev/v1/team-logos/a.png",
+        ] {
+            let url = URL(string: raw)!
+            XCTAssertEqual(AppImagePipeline.transformed(url, pixels: 192), url)
+        }
     }
 
     /// Hosts with no transform API at all are left alone; rewriting them would produce a dead
@@ -91,14 +99,24 @@ final class AppImagePipelineTests: XCTestCase {
                        "crest sizes \(inUse) should collapse to one rendition, got \(buckets)")
     }
 
-    /// The one outlier — an 84 pt avatar — legitimately needs a bigger rendition than a 22 pt
-    /// chip. It's the only reason a second rung exists.
-    func testLargeAvatarGetsItsOwnLargerBucket() {
-        let chip = AppImagePipeline.pixelBucket(for: CGSize(width: 22, height: 22))
+    /// An 84 pt avatar fits 192 px at 2x but needs 384 px at 3x.
+    /// The requested physical pixels, rather than the point size alone, choose the bucket.
+    func testLargeAvatarBucketCoversItsNativePixelSize() {
+        let avatarPixels = 84 * AppImagePipeline.screenScale
         let avatar = AppImagePipeline.pixelBucket(for: CGSize(width: 84, height: 84))
-        XCTAssertGreaterThan(avatar, chip)
+        XCTAssertEqual(avatar, avatarPixels <= 192 ? 192 : 384)
+        XCTAssertGreaterThanOrEqual(avatar, avatarPixels)
     }
 
+    /// A request crossing the first bucket's pixel boundary must use the larger rendition
+    /// on every screen scale, including the SE's 2x display.
+    func testRequestBeyondSmallBucketUsesLargerRendition() {
+        let points = 193 / AppImagePipeline.screenScale
+        let larger = AppImagePipeline.pixelBucket(for: CGSize(width: points, height: points))
+        XCTAssertEqual(larger, 384)
+    }
+
+    /// Oversized requests use the largest available rendition.
     func testOversizedRequestClampsToLargestBucketRatherThanFailing() {
         let huge = CGSize(width: 4000, height: 4000)
         XCTAssertEqual(AppImagePipeline.pixelBucket(for: huge), AppImagePipeline.buckets.last)

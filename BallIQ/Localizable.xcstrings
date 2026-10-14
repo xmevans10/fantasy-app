@@ -7166,6 +7166,66 @@
           }
         }
       }
+    },
+    "PLAYER OF THE YEAR" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JUGADOR DEL AÑO"
+          }
+        }
+      }
+    },
+    "Events played" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torneos jugados"
+          }
+        }
+      }
+    },
+    "Stroke under 71, per event" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Golpe bajo 71, por torneo"
+          }
+        }
+      }
+    },
+    "Top-10 finish" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top 10"
+          }
+        }
+      }
+    },
+    "Cut made" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corte superado"
+          }
+        }
+      }
+    },
+    "Ranked by real season résumés: wins, top-10s, scoring" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clasificado por palmarés reales de la temporada: victorias, top 10, promedio"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

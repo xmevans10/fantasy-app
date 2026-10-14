@@ -78,7 +78,18 @@ final class CommunityPuzzleRepository {
             items.append(URLQueryItem(name: "content",
                                       value: "cs.{\"players\":[{\"teamAbbr\":\"\(team)\"}]}"))
         }
-        if let sport { items.append(URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)")) }
+        if let sport {
+            items.append(URLQueryItem(name: "sport", value: "eq.\(sport.rawValue)"))
+        } else {
+            // Same self-protection `RemotePuzzleRepository.fetch` applies to the daily/archive
+            // "All" filter: without this predicate the feed asks for every sport the table
+            // holds, decodes the response as one array, and a single row naming a sport this
+            // build has never heard of throws for the whole feed rather than just its own row
+            // (see `Sport.decodableFilterValue`'s doc comment). Community rows are USER-written,
+            // so this gap is live the moment a new-build player publishes to a sport an old
+            // build doesn't know — no daily-mint delay to hide behind.
+            items.append(URLQueryItem(name: "sport", value: Sport.decodableFilterValue))
+        }
         // .week fetches in recent order; the caller reorders via CommunityTrending +
         // weeklyPlayCounts() (and keeps recent order if that RPC isn't available).
         let order = sort == .popular ? "play_count.desc" : "created_at.desc"

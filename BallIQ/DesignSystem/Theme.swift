@@ -20,25 +20,35 @@ extension Color {
     }
 
     // MARK: Surfaces (bright paper canvas; bold night in dark mode)
-    static let surface0 = dynamic(light: Color(hex: 0xF4F1E9), dark: Color(hex: 0x0E0C08)) // page
+    //
+    // Light mode is defined by VALUE, not by shadow (2026-09-27, "make light mode more defined"):
+    // the canvas sits a clear step below the white cards (1.23:1, was 1.13:1 at #F4F1E9, where
+    // cards barely lifted off the page), chips sit a step below the canvas, and muted text clears
+    // WCAG AA on the canvas (4.55:1; it was 3.29:1). Dark values are unchanged.
+    static let surface0 = dynamic(light: Color(hex: 0xECE7DB), dark: Color(hex: 0x0E0C08)) // page
     static let surface1 = dynamic(light: Color(hex: 0xFFFFFF), dark: Color(hex: 0x1A1611)) // card
     static let surface2 = dynamic(light: Color(hex: 0xFFFFFF), dark: Color(hex: 0x232019)) // panel
     static let surface3 = dynamic(light: Color(hex: 0xFFFFFF), dark: Color(hex: 0x2C281F)) // popover
     static let appBackground = surface0
     static let surface = surface1
-    static let surfaceMuted = dynamic(light: Color(hex: 0xECE6D7), dark: Color(hex: 0x232019))
+    static let surfaceMuted = dynamic(light: Color(hex: 0xE3DCCA), dark: Color(hex: 0x232019))
+
+    /// The card's lit top edge and its soft depth. Tuned for light mode; near-invisible in dark,
+    /// where the night palette separates surfaces by value already.
+    static let cardHighlight = dynamic(light: Color.white.opacity(0.9), dark: Color.white.opacity(0.06))
+    static let cardAmbient = dynamic(light: Color(hex: 0x3A2F14).opacity(0.07), dark: Color.black.opacity(0.25))
 
     // MARK: Ink / text
     static let ink = dynamic(light: Color(hex: 0x15120B), dark: Color(hex: 0xF4F1E9))
     static let textPrimary = ink
-    static let textSecondary = dynamic(light: Color(hex: 0x57503F), dark: Color(hex: 0xCFC8B8))
-    static let textMuted = dynamic(light: Color(hex: 0x8C8470), dark: Color(hex: 0x978E7C))
+    static let textSecondary = dynamic(light: Color(hex: 0x4A4435), dark: Color(hex: 0xCFC8B8))
+    static let textMuted = dynamic(light: Color(hex: 0x6F6754), dark: Color(hex: 0x978E7C))
     static let textDisabled = dynamic(light: Color(hex: 0xB4AD9A), dark: Color(hex: 0x6A6354))
 
     // MARK: Borders — a hairline for subtle dividers, and an INK line for bold pop outlines
-    static let hairline = dynamic(light: Color(hex: 0xE0D9C7), dark: Color(hex: 0x322E26))
+    static let hairline = dynamic(light: Color(hex: 0xD9D1BE), dark: Color(hex: 0x322E26))
     static let border = hairline
-    static let borderStrong = dynamic(light: Color(hex: 0xC9C0AB), dark: Color(hex: 0x423D33))
+    static let borderStrong = dynamic(light: Color(hex: 0xBFB59E), dark: Color(hex: 0x423D33))
     static let borderInk = dynamic(light: Color(hex: 0x15120B), dark: Color(hex: 0xF4F1E9))
 
     // MARK: accent — dominant "Prime" electric blue
@@ -113,6 +123,11 @@ extension Color {
     static let onSportHockey   = Color.white
     static let sportF1Fill     = Color(hex: 0xB5179E)
     static let onSportF1       = Color.white
+    // Golf — fairway olive-green at ~100°. NFL already owns green (145°) and volt (0xC2F03A)
+    // sits at 75°; this hue splits the two by 25°+ each way so the band reads as its own color
+    // rather than a duller NFL or a darker volt at thumbnail size.
+    static let sportGolfFill   = Color(hex: 0x478E23)
+    static let onSportGolf     = Color.white
 
     // MARK: aliases kept for source compatibility
     static let brandBlue    = accentFill
@@ -149,12 +164,24 @@ struct CardSurface: ViewModifier {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(Color.borderStrong, lineWidth: 1)
             )
+            // Lit top edge: a 1pt inner highlight that fades out by mid-card. It is what makes a
+            // white card read as an object rather than a hole in the page.
+            .overlay(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .inset(by: 1)
+                    .stroke(LinearGradient(colors: [Color.cardHighlight, .clear],
+                                           startPoint: .top, endPoint: .center), lineWidth: 1)
+            )
             // Flatten before the shadow, or it is applied to every element in the subtree
             // separately rather than to the card's silhouette — which draws a grey ghost of each
             // glyph 3pt below it. Invisible against most backgrounds on device, glaring once the
             // card is rendered through `ImageRenderer` for OPM artwork (2026-08-28).
             .compositingGroup()
-            .shadow(color: Color.black.opacity(0.10), radius: 0, x: 0, y: 3) // hard ledge
+            .shadow(color: Color.black.opacity(0.10), radius: 0, x: 0, y: 3) // hard ledge (brand)
+            // Layered depth under the ledge: a tight contact shadow and a soft ambient one, each
+            // too faint to read alone, which together seat the card on the page.
+            .shadow(color: Color.cardAmbient, radius: 1.5, x: 0, y: 1)
+            .shadow(color: Color.cardAmbient, radius: 12, x: 0, y: 6)
     }
 }
 

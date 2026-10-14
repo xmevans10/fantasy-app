@@ -1199,9 +1199,13 @@ NFL_GAME_QUIRKS: list[Quirk] = [
     #     rush >= 70y: 16    rush >= 100y: 7     20+ carries: 7
     #     pass >= 250y: 13   pass >= 300y: 5     3+ pass TD: 2
     # Re-measure before moving any of these; they are empirical, not editorial.
-    Quirk("rec80", (Filter("receiving_yards", "gte", 80),), "Eighty-yard receiving games",
+    #
+    # TITLES SAY "N+", NOT "N-". Every filter here is `gte`, and "Fifteen-carry games" reads as
+    # exactly fifteen: 2026 Week 2's board carried James Cook's 21-carry game under that title and
+    # a player flagged it as wrong (2026-09-26). Same rule for the NBA and MLB week boards below.
+    Quirk("rec80", (Filter("receiving_yards", "gte", 80),), "80+ yard receiving games",
           adjective="eighty-yard-receiving", axis="rec-volume", only=("WR", "TE", "ANY")),
-    Quirk("catch8", (Filter("receptions", "gte", 8),), "Eight-catch games",
+    Quirk("catch8", (Filter("receptions", "gte", 8),), "8+ catch games",
           adjective="eight-catch", axis="rec-usage", only=("WR", "TE", "ANY")),
     # RATE HOOKS NEED A VOLUME FLOOR. Without one, 2026 Week 1's "5.5-a-carry" board kept Nico
     # Collins for a single 7-yard carry, and across 2025-26 roughly half of each week's
@@ -1213,17 +1217,17 @@ NFL_GAME_QUIRKS: list[Quirk] = [
           "Big-play receiving games (16+ yards a catch)", adjective="big-play",
           axis="rec-efficiency", only=("WR", "TE", "ANY"),
           columns=(StatColumn("ypr", "Yds/Rec", "dec1"), StatColumn("receptions", "Rec", "int"))),
-    Quirk("rush70", (Filter("rushing_yards", "gte", 70),), "Seventy-yard rushing games",
+    Quirk("rush70", (Filter("rushing_yards", "gte", 70),), "70+ yard rushing games",
           adjective="seventy-yard-rushing", axis="rush-volume", only=("RB", "QB", "ANY")),
-    Quirk("workhorse-game", (Filter("carries", "gte", 15),), "Fifteen-carry games",
+    Quirk("workhorse-game", (Filter("carries", "gte", 15),), "15+ carry games",
           adjective="fifteen-carry", axis="rush-usage", only=("RB", "QB", "ANY")),
     Quirk("explosive-game", (Filter("ypc", "gte", 5.5), Filter("carries", "gte", 5)),
           "5.5-yards-a-carry games", adjective="5.5-yards-a-carry", axis="rush-efficiency",
           only=("RB", "QB", "ANY"),
           columns=(StatColumn("ypc", "Yds/Carry", "dec1"), StatColumn("carries", "Carries", "int"))),
-    Quirk("pass250", (Filter("passing_yards", "gte", 250),), "250-yard passing games",
+    Quirk("pass250", (Filter("passing_yards", "gte", 250),), "250+ yard passing games",
           adjective="250-yard-passing", axis="pass-volume", only=("QB", "ANY")),
-    Quirk("scrim100", (Filter("scrimmage_yards", "gte", 100),), "Hundred-yard scrimmage games",
+    Quirk("scrim100", (Filter("scrimmage_yards", "gte", 100),), "100+ yard scrimmage games",
           adjective="hundred-scrimmage", axis="all-purpose"),
 ]
 
@@ -1260,13 +1264,13 @@ NBA_GAME_POSITIONS: dict[str, PositionSpec] = {
 # Week-scale like NFL_GAME_QUIRKS: a week is ~50 games and ~1,300 player-games, so each of
 # these needs to clear roughly a dozen in a normal week. Re-measure with `pack --replay`.
 NBA_GAME_QUIRKS: list[Quirk] = [
-    Quirk("pts30", (Filter("points", "gte", 30),), "Thirty-point games",
+    Quirk("pts30", (Filter("points", "gte", 30),), "30+ point games",
           adjective="thirty-point", axis="scoring"),
     Quirk("dbl-dbl", (Filter("points", "gte", 10), Filter("rebounds", "gte", 10)),
           "Double-double games", adjective="double-double", axis="two-way"),
-    Quirk("ast10", (Filter("assists", "gte", 10),), "Ten-assist games",
+    Quirk("ast10", (Filter("assists", "gte", 10),), "10+ assist games",
           adjective="ten-assist", axis="playmaking"),
-    Quirk("reb14", (Filter("rebounds", "gte", 14),), "Fourteen-rebound games",
+    Quirk("reb14", (Filter("rebounds", "gte", 14),), "14+ rebound games",
           adjective="fourteen-rebound", axis="glass"),
 ]
 
@@ -1300,11 +1304,11 @@ MLB_GAME_POSITIONS: dict[str, PositionSpec] = {
 MLB_GAME_QUIRKS: list[Quirk] = [
     Quirk("hr2", (Filter("home_runs", "gte", 2),), "Multi-homer games",
           adjective="multi-homer", axis="power", only=("H",)),
-    Quirk("hits3", (Filter("hits", "gte", 3),), "Three-hit games",
+    Quirk("hits3", (Filter("hits", "gte", 3),), "3+ hit games",
           adjective="three-hit", axis="contact", only=("H",)),
-    Quirk("rbi4", (Filter("rbi", "gte", 4),), "Four-RBI games",
+    Quirk("rbi4", (Filter("rbi", "gte", 4),), "4+ RBI games",
           adjective="four-RBI", axis="run-production", only=("H",)),
-    Quirk("k9", (Filter("strike_outs", "gte", 9),), "Nine-strikeout starts",
+    Quirk("k9", (Filter("strike_outs", "gte", 9),), "9+ strikeout starts",
           adjective="nine-strikeout", axis="strikeouts", only=("P",)),
     Quirk("gem", (Filter("innings_pitched", "gte", 7), Filter("earned_runs", "lte", 1)),
           "Seven-inning gems", adjective="seven-inning-gem", axis="run-prevention", only=("P",)),
@@ -1312,3 +1316,68 @@ MLB_GAME_QUIRKS: list[Quirk] = [
 
 SPORTS["baseball-games"] = SportCuration(
     "baseball", MLB_GAME_POSITIONS, MLB_GAME_QUIRKS, (), team_slices=0, daily=False)
+
+
+# ── Soccer week cohort (Week Packs) ─────────────────────────────────────────────────────
+#
+# Fed by `weekly.soccer_week`: every player who got on the pitch in one league round. Scored on
+# the two soccer scales the app ALREADY ships (grade.py / ScoringRule.presets), with no `_game`
+# alias, so the in-app formula sheet resolves them exactly on every installed build and no new
+# scale exists anywhere. A game total is the season formula over one match: appearances is 1,
+# clean_sheets 0 or 1. Same `daily=False` rule as the other week cohorts.
+
+def matchweek_slice(league_code: str, season_end: int, number: int, label: str) -> Slice:
+    """One derived league round (see `weekly.soccer_rounds`). The key keeps the `YYYY-wkNN`
+    shape `fresh_drop.theme_kind` strips, behind the league code, so each league's boards
+    cool down as their own kind: 'fresh-soccer-eng1-2027-wk05-any' -> 'fresh-soccer-eng1-any'."""
+    return Slice(
+        key=f"{league_code}-{season_end}-wk{number:02d}",
+        filters=(Filter("week", "eq", number),),
+        prefix=f"{label}: ",
+        axis="period",
+    )
+
+
+_SOCCER_GAME_ATT_COLS = [StatColumn("goals", "Goals", "int"),
+                         StatColumn("assists", "Assists", "int")]
+_SOCCER_GAME_DEF_COLS = [StatColumn("clean_sheets", "Clean Sheets", "int"),
+                         StatColumn("goals", "Goals", "int"),
+                         StatColumn("assists", "Assists", "int")]
+
+SOCCER_GAME_POSITIONS: dict[str, PositionSpec] = {
+    # Cross-positional on the attacking scale (goal 5, assist 3): the week's top performances
+    # are its goal contributions, whoever made them.
+    "ANY": PositionSpec("ANY", "player", "soccer_attacker_fantasy", {"appearances": 1},
+                        _SOCCER_GAME_ATT_COLS, members=("GK", "DF", "MF", "FW"),
+                        grain="game", pool_cap=24),
+    "FW": PositionSpec("FW", "forward", "soccer_attacker_fantasy", {"appearances": 1},
+                       _SOCCER_GAME_ATT_COLS, grain="game", pool_cap=24),
+    "MF": PositionSpec("MF", "midfield", "soccer_attacker_fantasy", {"appearances": 1},
+                       _SOCCER_GAME_ATT_COLS, grain="game", pool_cap=24),
+    "BACK": PositionSpec("BACK", "back-line", "soccer_defender_fantasy", {"appearances": 1},
+                         _SOCCER_GAME_DEF_COLS, members=("DF", "GK"), grain="game", pool_cap=24),
+}
+
+# Week-scale, like NFL_GAME_QUIRKS. Measured medians per round, all 43 eng.1 rounds of 2025-26
+# and 2026-27 through Matchweek 5 (a viable board needs roughly twelve in the pool):
+#     1+ goal: 24 (FW 13, MF 8, back line 3)    2+ goals: 2     goal and assist: 2
+#     1+ assist: 18                              2+ assists: 1   2+ goal involvements: 5
+#     clean sheet, back line: 26                 4+ shots: 11    3+ on target: 3
+# A soccer round is ten matches, so single-match highlights (a brace, a hat-trick) are far too
+# rare to fill a board; the viable hooks are the everyday ones. Shots and saves are pulled but
+# not hooked: the shipped soccer card has no tile for them (themes.POSITION_STAT_FAMILIES),
+# and a board titled for a stat the card cannot show fails the hook rules.
+#
+# TITLES SAY "N+" for every `gte`, as the NFL/NBA/MLB week boards now do. "Clean-sheet games"
+# carries no number because a game's clean_sheets is 0 or 1: the filter is exact.
+SOCCER_GAME_QUIRKS: list[Quirk] = [
+    Quirk("scored", (Filter("goals", "gte", 1),), "1+ goal games",
+          adjective="one-goal", axis="scoring", only=("ANY",)),
+    Quirk("assisted", (Filter("assists", "gte", 1),), "1+ assist games",
+          adjective="one-assist", axis="creation", only=("ANY",)),
+    Quirk("clean-sheet", (Filter("clean_sheets", "gte", 1),), "Clean-sheet games",
+          adjective="clean-sheet", axis="clean-sheets", only=("BACK",)),
+]
+
+SPORTS["soccer-games"] = SportCuration(
+    "soccer", SOCCER_GAME_POSITIONS, SOCCER_GAME_QUIRKS, (), team_slices=0, daily=False)

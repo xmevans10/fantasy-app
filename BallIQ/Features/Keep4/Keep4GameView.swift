@@ -100,7 +100,7 @@ struct Keep4GameView: View {
                 playBoard
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .onAppear {
             if order.isEmpty {
                 order = Self.blindOrder(for: puzzle)
@@ -196,7 +196,7 @@ struct Keep4GameView: View {
             }
             footer
         }
-        .background(Color.appBackground)
+        .paperGround()
     }
 
     /// The franchise's real name for a card, once `identitiesWarm` says the `teams` rows are in.

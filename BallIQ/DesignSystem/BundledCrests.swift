@@ -62,7 +62,15 @@ enum BundledCrests {
         let resolved = Bundle.main.url(forResource: name, withExtension: "webp")
             ?? Bundle.main.url(forResource: filename(sport: sport, abbr: abbr, league: nil),
                                withExtension: "webp")
-        cache[name] = resolved
-        return resolved
+        // Catalog aliases (e.g. NFL LA) share the palette's canonical franchise code.
+        // Prefer an exact crest first so an explicitly bundled historical badge still wins.
+        let canonical = TeamColors.normalize(abbr, sport: sport)
+        let result = resolved ?? (canonical == abbr.uppercased() ? nil
+            : Bundle.main.url(forResource: filename(sport: sport, abbr: canonical, league: league),
+                              withExtension: "webp")
+                ?? Bundle.main.url(forResource: filename(sport: sport, abbr: canonical, league: nil),
+                                   withExtension: "webp"))
+        cache[name] = result
+        return result
     }
 }

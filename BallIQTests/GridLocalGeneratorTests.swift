@@ -133,6 +133,15 @@ final class GridLocalGeneratorTests: XCTestCase {
         }
     }
 
+    /// Golf mirrors tennis exactly — a golfer's "team" is also a fixed country, so it gets the
+    /// same exclusion from `teamMobileSports`.
+    func testGolfNeverGetsATeamByTeamBoard() {
+        let index = richIndex(sport: .golf, teams: ["USA", "ESP", "NIR", "AUS", "RSA"])
+        let feasible = generator(index).feasibleArchetypes
+        XCTAssertFalse(feasible.contains(.teamsXTeams))
+        XCTAssertTrue(feasible.contains(.teamsXDecades), "golf still gets its usual shape")
+    }
+
     func testTeamMobileSportsDoGetTeamByTeamBoards() {
         for sport in [Sport.nfl, .nba, .baseball, .soccer] {
             let index = richIndex(sport: sport)
@@ -236,8 +245,8 @@ final class GridLocalGeneratorTests: XCTestCase {
     /// is the career-grain "ever satisfied" axis list, `axisTeams` the season-grain (axis, team)
     /// pairs a single season satisfied. Every player satisfies all four axes for both of their
     /// teams, so any drawn board is viable and a failure is the generator's, not the fixture's.
-    private func axisIndex() -> GridMembershipIndex {
-        var index = richIndex()
+    private func axisIndex(sport: Sport = .nba) -> GridMembershipIndex {
+        var index = richIndex(sport: sport)
         index.axes = [
             .init(key: "stat:points:gte:2000", kind: "stat", label: "2,000+ Points"),
             .init(key: "stat:rebounds:gte:700", kind: "stat", label: "700+ Rebounds"),
@@ -330,5 +339,57 @@ final class GridLocalGeneratorTests: XCTestCase {
         XCTAssertFalse(index.hasAxes)
         XCTAssertEqual(Set(generator(index).feasibleArchetypes.map(\.rawValue)),
                        ["teams-x-decades", "teams-x-teams"])
+    }
+    private func answerCells(_ options: [[String]]) -> [GridPuzzle.GridCell] {
+        options.map { .init(validAnswerIds: $0, validAnswerNames: $0, rarityStars: 1) }
+    }
+
+    func testDistinctAnswerMatchingReassignsEarlierChoices() {
+        let cells = answerCells([["a", "b"], ["a"]] + (0..<7).map { [String($0)] })
+        XCTAssertTrue(GridLocalGenerator.hasDistinctAnswers(cells))
+    }
+
+    func testDistinctAnswerMatchingRejectsSharedBottleneck() {
+        let cells = answerCells([["a", "b"], ["a", "b"], ["a", "b"],
+                                 ["c", "d", "e", "f", "g", "h", "i"]]
+                                + (0..<5).map { [String($0)] })
+        XCTAssertFalse(GridLocalGenerator.hasDistinctAnswers(cells))
+    }
+
+    func testGeneratedNFLBoardsHaveDistinctSolutionsAndTeamAnchors() throws {
+        let gen = generator(axisIndex(sport: .nfl))
+        XCTAssertEqual(GridLocalGenerator.Archetype.teamsXTeams.weight(for: .nfl), 4)
+        XCTAssertEqual(GridLocalGenerator.Archetype.teamsXTeams.weight(for: .nba), 1)
+        for seed in UInt64(1)...20 {
+            let board = try XCTUnwrap(gen.board(seed: seed))
+            XCTAssertTrue(GridLocalGenerator.hasDistinctAnswers(board.puzzle.cells))
+            for row in board.puzzle.rows {
+                for col in board.puzzle.cols {
+                    XCTAssertTrue(row.kind == .team || col.kind == .team)
+                }
+            }
+        }
+    }
+    func testMixedSeasonCategoryRequiresPairedClubSeason() {
+        var index = GridMembershipIndex(sport: .nfl, version: 2, minYear: 1990,
+                                       teams: [.init(abbr: "SF", league: ""),
+                                               .init(abbr: "DAL", league: "")],
+                                       players: ["Traveler", "Qualified"],
+                                       memberships: ["0:0;1:10", "1:0"])
+        index.axes = [.init(key: "stat:receiving_yards:gte:1400", kind: "stat", label: "1,400+ Rec Yds")]
+        index.axisMemberships = ["0", "0"]
+        index.axisTeams = ["0:0", "0:1"]
+        let gen = generator(index)
+        let club = GridLocalGenerator.LocalAxis(axis: .init(kind: .team, label: "DAL"),
+                                               key: "team:DAL", team: 1)
+        let stat = GridLocalGenerator.LocalAxis(axis: .init(kind: .stat, label: "1,400+ Rec Yds"),
+                                               key: "stat:receiving_yards:gte:1400", milestone: 0)
+        let decade = GridLocalGenerator.LocalAxis(axis: .init(kind: .decade, label: "1990s"),
+                                                 key: "decade:1990", decade: 1990)
+        XCTAssertEqual(gen.answers(archetype: .mixedXTeams, row: stat, col: club), [1])
+        XCTAssertEqual(gen.answers(archetype: .mixedXTeams, row: decade, col: club), [1])
+        let otherClub = GridLocalGenerator.LocalAxis(axis: .init(kind: .team, label: "SF"),
+                                                    key: "team:SF", team: 0)
+        XCTAssertEqual(gen.answers(archetype: .mixedXTeams, row: otherClub, col: club), [0])
     }
 }

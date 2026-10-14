@@ -59,6 +59,18 @@ creation, `CommunityPuzzleRepository`), Profile (tiers, per-sport ratings, Stats
 Sign in with Apple/Google, `NotificationSettings`). Browse (full unranked archive) hangs off
 Home, not a tab.
 
+**Product focus (2026-10-14 user directive):** focus on the core sports-puzzle product.
+Trading cards, the collection binder, free/paid card packs, pack rewards and cosmetic flairs
+are retired from the app and removed from planned product scope. Keep weekly puzzle packs,
+player-season game cards, ratings, streaks, leagues and existing game-format purchases.
+Prioritize correctness, reliable loading, clear onboarding, and polish of existing gameplay.
+New product expansion is deferred unless explicitly requested.
+
+Legacy card tables, migrations and receipt fulfillment remain for compatibility with older
+installed builds and purchase audit history; they are not active roadmap work. Production
+research on 2026-10-14 found 0 recorded purchases, 5 pack openings, 21 owned-card rows and
+1 wallet. Do not drop those records as part of client retirement.
+
 **Progression:** per-sport Elo-ish rating (`RatingEngine`, ranked daily games only) with
 tiers (Bronze→…), XP/levels (`LevelCurve`), day streak. Community/archive/versus play is
 unranked (XP only).
@@ -1980,6 +1992,19 @@ the two "first" events fire once per install. Verified live in the production `e
 a duplicate-`app_opened` bug (a `.task` on a `Group` runs on every child during a transition) was
 caught and fixed by reading those rows rather than trusting the call site.
 
+**Onboarding revision: say what Playbook is, teach by doing (agent, 2026-09-26).** The 1.2.1
+flow never said what the app was, and it named one mode. It is now five slides sharing one
+chrome (`OnboardingChrome`: segmented progress, a colour-block backdrop per slide, a ledge CTA):
+**welcome** (`OnboardingWelcomeStep`: a fan of three real bundled seasons as foil/holo/polychrome
+`TradingCardView`s and the "prove you know ball" pitch) → **modes** (`OnboardingModesStep`: a
+swipeable deck of every `GameFormat.all` mode that flips to a one-line how-it-plays) → **sport** →
+**how_to_play** (`OnboardingPracticeCard`: one practice keep/cut call on a real `Keep4CardView`
+from the bundled puzzles, alternating clearest-keep/clearest-cut, while today's puzzle loads) →
+first game → **account** (`OnboardingStarterPack`: the free pack a new install already holds,
+shown sealed and tilting, with sign-in as what opens it). `welcome`/`modes` are new steps 0–1, which
+shifted the later steps' `index` (see docs/ANALYTICS.md). Watch `welcome` → `sport` in the funnel:
+two screens were added *ahead* of the one that already lost 60% of players.
+
 **Two hard findings on the push retention loop:**
 1. `registerForRemoteNotifications()` was only ever called from Profile's settings card, so a
    token was never re-requested at launch. `device_tokens.user_id` is `not null`, so a grant made
@@ -2234,6 +2259,10 @@ The original five:
 
 ### 9.3 Post-1.5 roadmap (next ~6 months, drafted 2026-07-31)
 
+**2026-10-14 override:** core product quality takes precedence over the growth and expansion
+sequencing below. Trading cards and associated collection/pack/flair expansion are canceled.
+The older entries remain as historical context; they do not authorize new expansion.
+
 §9.1's version roadmap (1.2 push → 1.3 monetization → 1.4 rating seasons → 1.5 content depth)
 is fully shipped and live (§8) — there is no more agent-buildable backlog sitting behind a
 user gate. This re-cuts what's next, sequenced per user directive 2026-07-31: **growth/
@@ -2391,7 +2420,27 @@ boards about it drops together, on its own card at the top of Home until the pla
   WHOLE league's week (schedule + every final box score: nflverse, MLB Stats API, ESPN NBA);
   `readiness.py` is the "appropriate weekly data" contract (SOURCED, SCORABLE, a real week,
   SETTLED, COMPLETE, FRESH, CLEAN). Every sport runs; SKIP exits 0, BLOCKED exits 1. No source
-  yet for NHL, soccer, tennis or F1, so they SKIP with that reason.
+  yet for NHL, tennis or F1, so they SKIP with that reason.
+- **Soccer (built 2026-09-26, not yet live):** the period is a league ROUND, not a calendar week.
+  ESPN publishes no round number, so `weekly.soccer_rounds` derives it: a club's k-th fixture by
+  date is its round-k game, a fixture takes the larger of its two clubs' counts (a postponement
+  only puts one club behind), and rearranged fixtures are re-homed to the round whose dates they
+  were played in. eng.1 2024-25 and 2025-26: 38/38 rounds, 8 to 11 games each. Key
+  `soccer-eng1-2027-wk05` (league code, season END year, round), label "Premier League
+  Matchweek 5". `weekly.SOCCER_LEAGUES` is the league list, one line per league (only eng.1 is
+  on); the Tuesday job builds one pack per league. Scored on the two soccer scales every build
+  already ships (`soccer_attacker_fantasy` for ANY/FW/MF, `soccer_defender_fantasy` for the back
+  line), one match at a time. Photos and positions come from the Transfermarkt catalog by
+  name (ESPN has almost no soccer headshots), and 541/542 of those URLs are already in the ledger.
+  Quirks (median pool per round): "1+ goal games" 24, "1+ assist games" 18, "Clean-sheet
+  games" (back line) 26. A league with no divisions fills the division slot with a second
+  position board. **Needs one line in `fresh_drop.py` to go live:**
+  `GAME_COHORTS["soccer"] = ("soccer-games",)`; until then readiness SKIPs soccer on SCORABLE.
+  Pack size is capped by the scale, not the data: whole-number match totals tie at the keep/cut
+  line, so a replay of Matchweeks 28-38 of 2025-26 and 1-5 of 2026-27 gave 16/16 READY and 0 rule
+  violations but only 8/16 packs at 3+ boards (2x4, 6x3, 5x2, 3x1); a thin week ships board zero
+  as the soccer daily and no pack. More boards need a finer game scale (shots on target, saves),
+  which is a grade.py + GradeFormula/ScoringRule + card-family change.
 - **Assembly:** slots headline, game of the week, position, division, niche; a player on at most
   two boards, no shared keep-set, one board per kind, 14-day kind cooldown. Board zero ships as
   the sport's keep4 daily (wire-safe sports only). Photos through the headshot ledger, new ones

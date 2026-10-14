@@ -73,6 +73,11 @@ struct GridLocalGenerator {
             }
         }
 
+        /// NFL mirrors grid.py's team-based rotation with regular club x club boards.
+        func weight(for sport: Sport) -> Int {
+            sport == .nfl && self == .teamsXTeams ? 4 : weight
+        }
+
         /// Whether this shape needs `GridMembershipIndex.axes`. The first two don't, which is why
         /// a v1 payload still generates.
         var needsAxes: Bool {
@@ -160,7 +165,7 @@ struct GridLocalGenerator {
     func board(seed: UInt64, recentlyServed: Set<String> = []) -> Board? {
         let feasible = feasibleArchetypes
         guard !feasible.isEmpty else { return nil }
-        let rotation = feasible.flatMap { Array(repeating: $0, count: $0.weight) }
+        let rotation = feasible.flatMap { Array(repeating: $0, count: $0.weight(for: sport)) }
 
         for attempt in 0..<Self.maxAttempts {
             var rng = SeededGenerator(seed: seed &+ UInt64(attempt))
@@ -170,7 +175,8 @@ struct GridLocalGenerator {
             if !Set(rows.map(\.key)).isDisjoint(with: Set(cols.map(\.key))) { continue }
             let combo = Self.comboKey(rows: rows, cols: cols)
             if recentlyServed.contains(combo) { continue }
-            guard let cells = cells(archetype: archetype, rows: rows, cols: cols) else { continue }
+            guard let cells = cells(archetype: archetype, rows: rows, cols: cols),
+                  Self.hasDistinctAnswers(cells) else { continue }
             return Board(puzzle: GridPuzzle(sport: sport,
                                             rows: rows.map(\.axis), cols: cols.map(\.axis),
                                             cells: cells, archetype: archetype.rawValue),
@@ -341,7 +347,29 @@ struct GridLocalGenerator {
         return out
     }
 
-    private func answers(archetype: Archetype, row: LocalAxis, col: LocalAxis) -> Set<Int> {
+    /// Nine individually nonempty cells can still require reusing a player. Match players
+    /// to cells, moving earlier choices when necessary, before admitting a practice board.
+    static func hasDistinctAnswers(_ cells: [GridPuzzle.GridCell]) -> Bool {
+        var assigned: [String: Int] = [:]
+        func place(_ cellIndex: Int, seen: inout Set<String>) -> Bool {
+            for player in cells[cellIndex].validAnswerIds {
+                guard seen.insert(player).inserted else { continue }
+                if let previous = assigned[player] {
+                    guard place(previous, seen: &seen) else { continue }
+                }
+                assigned[player] = cellIndex
+                return true
+            }
+            return false
+        }
+        for index in cells.indices {
+            var seen: Set<String> = []
+            if !place(index, seen: &seen) { return false }
+        }
+        return true
+    }
+
+    func answers(archetype: Archetype, row: LocalAxis, col: LocalAxis) -> Set<Int> {
         switch archetype {
         case .teamsXDecades:
             guard let team = row.team, let decade = col.decade else { return [] }
@@ -361,17 +389,17 @@ struct GridLocalGenerator {
             guard let milestone = col.milestone else { return [] }
             return tables.axisTeamPlayers[.init(axis: milestone, team: team)] ?? []
         case .mixedXTeams:
-            // The column is career grain, so whatever the row is, it is the cell's ONLY
-            // season-grain constraint — which reduces the grain rule to "some season satisfied
-            // it" and makes a plain set intersection correct here (and only here).
+            // Club x club is career-level; a season category must instead have been
+            // satisfied while playing for the paired club, regardless of edge orientation.
             guard let team = col.team else { return [] }
-            let opposite = tables.teamPlayers[team]
-            if let rowTeam = row.team { return tables.teamPlayers[rowTeam].intersection(opposite) }
+            if let rowTeam = row.team {
+                return tables.teamPlayers[rowTeam].intersection(tables.teamPlayers[team])
+            }
             if let decade = row.decade {
-                return (tables.decadePlayers[decade] ?? []).intersection(opposite)
+                return tables.teamDecadePlayers[.init(team: team, decade: decade)] ?? []
             }
             guard let milestone = row.milestone else { return [] }
-            return tables.axisPlayers[milestone].intersection(opposite)
+            return tables.axisTeamPlayers[.init(axis: milestone, team: team)] ?? []
         }
     }
 

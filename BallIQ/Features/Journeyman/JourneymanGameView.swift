@@ -122,7 +122,7 @@ struct JourneymanGameView: View {
                 playBoard
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .task {
             // `LiveJourneymanBoard` owns its own name index and its own start analytics — this
             // solo/async path must stay byte-for-byte what 1.6.0 already shipped, so it skips
@@ -174,7 +174,7 @@ struct JourneymanGameView: View {
             }
             guessBar
         }
-        .background(Color.appBackground)
+        .paperGround()
     }
 
     private var header: some View {
@@ -560,7 +560,7 @@ private struct LiveJourneymanBoard: View {
                 board
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .task {
             if nameIndex.isEmpty {
                 nameIndex = await container.puzzles.playerNameIndex(for: puzzle.sport)
@@ -613,7 +613,7 @@ private struct LiveJourneymanBoard: View {
                 guessBar
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
     }
 
     /// Ticks up in real time off the poll — count only, never the guess itself (§1: a wrong

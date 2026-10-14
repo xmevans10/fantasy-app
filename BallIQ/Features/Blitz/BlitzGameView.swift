@@ -72,7 +72,7 @@ struct BlitzGameView: View {
                 }
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .task {
             // A ladder rung has no setup: its config, duration and boards are all fixed by the
             // match, so it goes straight onto the first board.
@@ -82,11 +82,33 @@ struct BlitzGameView: View {
             }
             sport = container.sportFilter.sport ?? .nfl
             if !config.sports.contains(sport) { config.sports = [sport] }
-            // Warm the arcade pool for the sport most likely to come up while the player is
-            // still reading the setup screen — same trick Over/Under and Draft & Spin use, and
-            // the reason a blitz opens on a board rather than a spinner.
-            container.catalog.prefetchDraftSpinSample(for: sport)
+            // Hide the selected pools' cold reads behind setup. Repository coalescing lets
+            // Start join any reads still in flight instead of downloading the pools twice.
+            prefetchPools()
             if DebugLaunch.autoOpenBlitz && !DebugLaunch.holdBlitzSetup { await start() }
+        }
+        .onChange(of: config.sports) { _, _ in prefetchPools() }
+        .onChange(of: config.formats) { _, _ in prefetchPools() }
+    }
+
+    private func prefetchPools() {
+        guard ladder == nil, phase == .setup else { return }
+        let selection = config
+        for sport in selection.orderedSports {
+            let filter = SportFilter(rawValue: sport.rawValue) ?? .nfl
+            if selection.formats.contains(.overunder) {
+                container.catalog.prefetchArcadePool(for: sport)
+            }
+            Task {
+                async let keep4 = selection.formats.contains(.keep4)
+                    ? container.puzzles.allKeep4(for: filter) : []
+                async let whoami = selection.formats.contains(.whoami)
+                    ? container.puzzles.allWhoAmI(for: filter) : []
+                async let journeyman = selection.formats.contains(.journeyman)
+                    && BlitzFormat.journeyman.isAvailable(for: sport)
+                    ? container.puzzles.allJourneyman(for: filter) : []
+                _ = await (keep4, whoami, journeyman)
+            }
         }
     }
 
@@ -137,7 +159,7 @@ struct BlitzGameView: View {
             Text("DEALING PUZZLES").font(.label12).foregroundStyle(Color.textMuted)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBackground)
+        .paperGround()
     }
 
     /// A real empty state, not a spinner that never resolves: the chosen sport/format mix has no
@@ -155,7 +177,7 @@ struct BlitzGameView: View {
             .padding(.horizontal, 16)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBackground)
+        .paperGround()
     }
 
     // MARK: - Run lifecycle

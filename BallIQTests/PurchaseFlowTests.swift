@@ -152,7 +152,11 @@ final class PurchaseFlowTests: XCTestCase {
     /// malformed price is the other way a purchase screen reads as broken.
     func testEveryProductHasADisplayablePrice() async throws {
         let service = try await loadedService()
-        XCTAssertEqual(service.products.count, 4)
+        let expectedIDs = Set(StoreProduct.allCases.map(\.rawValue))
+        XCTAssertEqual(Set(service.products.map(\.id)), expectedIDs,
+                       "every configured product must load, including consumable card packs")
+        XCTAssertEqual(service.products.count, expectedIDs.count,
+                       "the loaded catalog must not contain duplicate products")
         for product in service.products {
             XCTAssertFalse(product.displayPrice.isEmpty, "\(product.id) has no display price")
             XCTAssertFalse(product.displayName.isEmpty, "\(product.id) has no display name")

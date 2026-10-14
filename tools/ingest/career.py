@@ -57,7 +57,23 @@ _RATE_WEIGHTS: dict[str, dict[str, str | tuple[str, ...]]] = {
     # F1 has no rate stats at all — every column is a count of things that happened (wins,
     # podiums, poles, starts), which is exactly what a career total should be.
     "f1": {},
+    # Golf. `scoring_avg` is a strokes-per-round rate — summing three seasons' averages would
+    # produce a career "scoring average" north of 200, so it is weighted by `events` (the
+    # closest volume denominator this provider pulls; a true rounds-played weight isn't
+    # gathered). `scoring_margin` is NOT listed here on purpose: it is already a per-season
+    # derived TOTAL (`(baseline - scoring_avg) * events`, see `golf_pga.load_seasons`), so
+    # summing it across seasons is the correct career aggregate, the same as wins/top10s.
+    "golf": {"scoring_avg": "events"},
 }
+
+# Sports whose rate stats are genuinely ABSENT on some seasons (not zero), so a season without
+# the rate must drop out of that rate's weighted average instead of counting as a 0 reading.
+# Golf: 168 seasons have no official scoring average (short of the rounds minimum), and
+# counting their events as weight on a 0 average dragged careers toward a sub-par "best ever"
+# number. Scoped to golf rather than applied everywhere because changing it for a live sport
+# would move already-published career values; whether any other sport has the same gap is
+# unmeasured.
+_SPARSE_RATE_SPORTS = frozenset({"golf"})
 
 # Stats derived AFTER the weighted-average pass rather than averaged directly, because
 # they don't share one clean denominator with their inputs.
@@ -100,12 +116,18 @@ def _aggregate_stats(sport: str, rows: list[RawSeason]) -> dict[str, float]:
     for key in all_keys - derived_keys:
         if key in rate_weights:
             weight_key = rate_weights[key]
-            total_weight = sum(_weight(r.stats, weight_key) for r in rows)
+            if sport in _SPARSE_RATE_SPORTS:
+                rated = [r for r in rows if key in r.stats]
+                if not rated:
+                    continue   # never recorded: leave it absent, don't publish a 0
+            else:
+                rated = rows
+            total_weight = sum(_weight(r.stats, weight_key) for r in rated)
             if total_weight <= 0:
                 out[key] = 0.0
                 continue
             out[key] = round(
-                sum(r.stats.get(key, 0.0) * _weight(r.stats, weight_key) for r in rows)
+                sum(r.stats.get(key, 0.0) * _weight(r.stats, weight_key) for r in rated)
                 / total_weight,
                 3,
             )

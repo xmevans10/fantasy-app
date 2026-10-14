@@ -53,7 +53,7 @@ struct Keep4ResultView: View {
             }
             doneBar
         }
-        .background(Color.appBackground)
+        .paperGround()
         .celebrate(on: $confetti, intensity: result.isPerfect ? 90 : 40)
         .onAppear {
             if let challenge {

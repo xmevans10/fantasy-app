@@ -9,7 +9,7 @@ struct SportFilterBar: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(SportFilter.allCases) { filter in
+                ForEach(SportFilter.released) { filter in
                     PrimeChip(label: filter.title, active: filter == selection,
                               systemImage: locked(filter) ? "lock.fill" : nil) {
                         withAnimation(Motion.snap) { selection = filter }

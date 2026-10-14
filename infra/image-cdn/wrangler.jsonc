@@ -1,0 +1,12 @@
+{
+  "name": "playbook-images",
+  "main": "worker.mjs",
+  "account_id": "f2a9eae3dfc27027e5f30e37b4c2e2d6",
+  "compatibility_date": "2026-10-04",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 0.1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  }
+}

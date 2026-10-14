@@ -65,7 +65,7 @@ struct WhoAmIResultView: View {
             }
             doneBar
         }
-        .background(Color.appBackground)
+        .paperGround()
         .celebrate(on: $confetti, intensity: result.cluesUsed == 1 ? 90 : 50)
         .onAppear {
             if let challenge {

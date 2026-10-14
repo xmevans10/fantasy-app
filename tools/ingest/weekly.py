@@ -17,12 +17,15 @@ All sources are stdlib-only and keyless, like the rest of the daily pipeline.
 """
 from __future__ import annotations
 
+import collections
 import dataclasses
 import datetime as dt
+import functools
 import time
 from typing import Callable
 
-from .models import RawSeason
+from . import curation
+from .models import RawSeason, slug
 from .periods import Period
 
 
@@ -228,10 +231,313 @@ def nba_week(period: Period) -> WeekData:
     return WeekData("nba", games, rows, "espn scoreboard + summary")
 
 
-SOURCES: dict[str, Callable[[Period], WeekData]] = {
+# ── Soccer (ESPN site API) ────────────────────────────────────────────────────
+#
+# A soccer week is a ROUND ("Premier League Matchweek 5"), not a calendar week: a round runs
+# Friday to Monday, a midweek round Tuesday to Thursday, and a Mon-Sun window would cut the
+# Monday game off one and staple it to the next. ESPN publishes no round number (the site API's
+# events carry none and the core API's `weeks` list is empty for eng.1, checked 2026-09-26), so
+# the round is DERIVED from the fixture list; see `soccer_rounds`.
+#
+# One pack per league per round. The period key carries the league so two leagues' packs never
+# collide (`soccer-eng1-2027-wk05`), and keeps the `YYYY-wkNN` shape `fresh_drop.theme_kind`
+# already strips, so "top performances" cools down across rounds the way NFL's does.
+
+_ESPN_SOCCER = "https://site.api.espn.com/apis/site/v2/sports/soccer/{league}/{path}"
+_SOCCER_EXCLUDED = ("STATUS_POSTPONED", "STATUS_CANCELED", "STATUS_ABANDONED", "STATUS_SUSPENDED")
+
+
+@dataclasses.dataclass(frozen=True)
+class SoccerLeague:
+    slug: str            # ESPN competition slug, the same one soccer_leagues.csv keys on
+    name: str            # what a board title calls it
+
+    @property
+    def code(self) -> str:
+        """The league's prefix in a period key: 'eng.1' -> 'eng1'."""
+        return self.slug.replace(".", "")
+
+
+# The leagues that get Week Packs. Adding one is one line here, nothing else: the pack job runs
+# every entry. Verified before shipping, per league, with
+# `python -m tools.ingest.pack --sport soccer --league <slug> --replay-from ... --replay-to ...`.
+# The Big-5 siblings would be SoccerLeague("esp.1", "LaLiga"), ("ger.1", "Bundesliga"),
+# ("ita.1", "Serie A") and ("fra.1", "Ligue 1"); none has been replayed yet.
+SOCCER_LEAGUES: dict[str, SoccerLeague] = {
+    lg.slug: lg for lg in (SoccerLeague("eng.1", "Premier League"),)
+}
+
+# A round whose last match is further back than this is not "the round that just finished":
+# it is an international break or the close season, and there is nothing new to pack.
+SOCCER_STALE_DAYS = 10
+
+
+def soccer_season_end(day: dt.date) -> int:
+    """The season-END year `day` falls in (2026-09-19 -> 2027), the pipeline's soccer
+    convention (see providers/espn_soccer.py)."""
+    return day.year + (1 if day.month >= 7 else 0)
+
+
+def _club_code(team: dict, country: str | None) -> str:
+    """The catalog's code for an ESPN team, remembering ESPN's short name for titles
+    (`shapes.DISPLAY_NAMES`)."""
+    from .providers.club_codes import resolve_code
+    from .shapes import DISPLAY_NAMES
+    code = resolve_code(team["displayName"], country=country)
+    DISPLAY_NAMES.setdefault(code, team.get("shortDisplayName") or team["displayName"])
+    return code
+
+
+def soccer_games(scoreboard: dict, day: str, country: str) -> list[Game]:
+    """`day` is the date the scoreboard was requested for, as for NBA. Clubs are coded with
+    `club_codes.resolve_code`, the same codes the catalog and the teams table use, so a board's
+    team chips and colours resolve; ESPN's own abbreviations are a different vocabulary."""
+    from .providers.club_codes import resolve_code
+    out = []
+    for e in scoreboard.get("events", []):
+        comp = e["competitions"][0]
+        status = comp.get("status", {}).get("type", {})
+        sides = {c["homeAway"]: _club_code(c["team"], country) for c in comp["competitors"]}
+        out.append(Game(id=str(e["id"]), date=day, home=sides.get("home", ""),
+                        away=sides.get("away", ""), final=bool(status.get("completed")),
+                        excluded=status.get("name") in _SOCCER_EXCLUDED))
+    return out
+
+
+def soccer_rounds(games: list[Game]) -> dict[int, list[Game]]:
+    """Group a season's fixtures into rounds. Pure.
+
+    Each club's k-th fixture by date is its round-k game, and a fixture takes the LARGER of its
+    two clubs' counts. The larger, because a postponement only ever makes one club fall behind
+    the schedule: its opponent's count is still the true round. Measured on eng.1, this alone
+    puts 36 of 38 rounds at exactly ten games in both 2024-25 and 2025-26.
+
+    The rest are rearranged fixtures (a cup-final weekend's games played weeks later, a
+    brought-forward tie), which the count files under a round played on another date. So a
+    round keeps only the fixtures within three days of its median date; a fixture that falls
+    outside is re-homed to whichever round's window it was actually played in, or left out
+    when it was a stand-alone midweek catch-up belonging to no round's window.
+    """
+    ordered = sorted(games, key=lambda g: (g.date, g.id))
+    played: collections.Counter = collections.Counter()
+    hint: dict[str, int] = {}
+    for g in ordered:
+        played[g.home] += 1
+        played[g.away] += 1
+        hint[g.id] = max(played[g.home], played[g.away])
+
+    by_hint: dict[int, list[Game]] = collections.defaultdict(list)
+    for g in ordered:
+        by_hint[hint[g.id]].append(g)
+    day = dt.date.fromisoformat
+    rounds: dict[int, list[Game]] = {}
+    strays: list[Game] = []
+    for k, members in by_hint.items():
+        middle = day(sorted(g.date for g in members)[len(members) // 2])
+        rounds[k] = [g for g in members if abs((day(g.date) - middle).days) <= 3]
+        strays += [g for g in members if abs((day(g.date) - middle).days) > 3]
+    rounds = {k: gs for k, gs in rounds.items() if gs}
+    span = lambda gs: (min(g.date for g in gs), max(g.date for g in gs))
+    # Clubs running a fixture AHEAD of the schedule (a brought-forward tie) count one higher
+    # for the rest of the season, so at the newest round their fixtures form a phantom round of
+    # two, played on the real round's own dates. Smallest first, any round that sits wholly
+    # inside a bigger round's window is that round.
+    for k in sorted(rounds, key=lambda k: len(rounds[k])):
+        lo, hi = span(rounds[k])
+        host = next((j for j in rounds if j != k and len(rounds[j]) > len(rounds[k])
+                     and span(rounds[j])[0] <= lo and hi <= span(rounds[j])[1]), None)
+        if host is not None:
+            rounds[host] += rounds.pop(k)
+    windows = {k: span(gs) for k, gs in rounds.items()}
+    for g in strays:
+        home = next((k for k, (lo, hi) in sorted(windows.items()) if lo <= g.date <= hi), None)
+        if home is not None:
+            rounds[home].append(g)
+    return {k: sorted(gs, key=lambda g: (g.date, g.id)) for k, gs in sorted(rounds.items())}
+
+
+def _soccer_fetch(league: SoccerLeague, path: str, cache_key: str, ttl_hours: float,
+                  settled: Callable[[dict], bool]) -> dict:
+    """`fetch_json`, refetched once when the cached copy is not `settled`: a scoreboard or box
+    score cached mid-match would otherwise be served as final data for its whole TTL."""
+    from .providers.http import fetch_json
+    url = _ESPN_SOCCER.format(league=league.slug, path=path)
+    data = fetch_json(url, cache_key=cache_key, ttl_hours=ttl_hours)
+    return data if settled(data) else fetch_json(url, cache_key=cache_key, ttl_hours=0)
+
+
+def soccer_fixtures(league: SoccerLeague, season_end: int, through: dt.date) -> list[Game]:
+    """Every league fixture of the season dated on or before `through`, from the season's
+    match-day calendar plus one scoreboard per match day (the same two calls, and cache keys,
+    providers/espn_soccer.py uses)."""
+    from .providers.http import fetch_json
+    from .soccer_leagues import nation_for
+    current = season_end >= soccer_season_end(dt.date.today())
+    calendar = fetch_json(
+        _ESPN_SOCCER.format(league=league.slug, path=f"scoreboard?dates={season_end - 1}0701"),
+        cache_key=f"espn_soccer_{league.slug}_{season_end}_calendar_weekly.json",
+        ttl_hours=12 if current else 24 * 365)
+    days = sorted({d[:10] for d in (calendar.get("leagues") or [{}])[0].get("calendar", [])})
+    country = nation_for(league.slug)
+    games: list[Game] = []
+    for day in days:
+        if day > through.isoformat():
+            break
+        stamp = day.replace("-", "")
+        recent = (dt.date.today() - dt.date.fromisoformat(day)).days <= 7
+        # A past day is settled once nothing on it is still waiting to be played.
+        board = _soccer_fetch(
+            league, f"scoreboard?dates={stamp}", f"espn_soccer_{league.slug}_{stamp}_events.json",
+            1 if recent else 24 * 365,
+            lambda b: day >= dt.date.today().isoformat() or all(
+                g.final or g.excluded for g in soccer_games(b, day, country)))
+        games += soccer_games(board, day, country)
+    return games
+
+
+def soccer_period(league: SoccerLeague, season_end: int, number: int,
+                  games: list[Game]) -> Period:
+    start, end = min(g.date for g in games), max(g.date for g in games)
+    label = f"{league.name} Matchweek {number}"
+    return Period(sport="soccer", key=f"{league.code}-{season_end}-wk{number:02d}", label=label,
+                  start=start, end=end, season_year=season_end,
+                  slice=curation.matchweek_slice(league.code, season_end, number, label))
+
+
+def soccer_closed_round(league: SoccerLeague, today: dt.date) -> Period | None:
+    """The round that most recently finished before `today`, or None between rounds.
+
+    Chosen by DATE, not by status: a round whose last day has passed is closed even when a
+    result is missing, so the readiness contract BLOCKs on it loudly (SETTLED) instead of this
+    quietly falling back to a round that was already packed. Postponed fixtures never hold a
+    round open (`Game.excluded`)."""
+    season_end = soccer_season_end(today - dt.timedelta(days=1))
+    rounds = soccer_rounds(soccer_fixtures(league, season_end, today))
+    closed = [(k, gs) for k, gs in rounds.items()
+              if max(g.date for g in gs) < today.isoformat()]
+    if not closed:
+        return None
+    number, games = closed[-1]
+    if (today - dt.date.fromisoformat(max(g.date for g in games))).days > SOCCER_STALE_DAYS:
+        return None
+    return soccer_period(league, season_end, number, games)
+
+
+def soccer_round_periods(league: SoccerLeague, season_end: int) -> list[Period]:
+    """Every round of a season with at least one fixture played, for replays."""
+    rounds = soccer_rounds(soccer_fixtures(league, season_end, dt.date.today()))
+    return [soccer_period(league, season_end, k, gs) for k, gs in rounds.items()]
+
+
+_SOCCER_POSITIONS = {"G": "GK", "D": "DF", "M": "MF", "F": "FW"}
+
+
+@functools.lru_cache(maxsize=1)
+def _soccer_catalog() -> dict[tuple[str, str], RawSeason]:
+    """The committed Transfermarkt sweep, latest season per (player, club) and per player.
+
+    ESPN carries a soccer headshot for almost nobody (2 of the 32 players in one checked
+    2026-27 match), so a week row takes the photo, and the position, the rest of the app
+    already shows for that player. Those photos are the ones the headshot ledger already
+    rehosted for the catalog, which is what lets `pack.apply_photos` keep them."""
+    from .providers.transfermarkt_soccer import load_seasons
+    out: dict[tuple[str, str], RawSeason] = {}
+    for s in sorted(load_seasons(), key=lambda s: s.season_year):
+        out[(slug(s.name), s.team_abbr)] = s
+        out[(slug(s.name), "")] = s
+    return out
+
+
+def _catalog_match(name: str, team: str) -> RawSeason | None:
+    catalog = _soccer_catalog()
+    return catalog.get((slug(name), team)) or catalog.get((slug(name), ""))
+
+
+def soccer_rows(game: Game, summary: dict, number: int,
+                catalog: Callable[[str, str], RawSeason | None] = _catalog_match) -> list[RawSeason]:
+    """Every player who got on the pitch in one final match. Pure given `catalog`.
+
+    Clean sheet means STARTED a match his side did not concede in. ESPN's per-player
+    `goalsConceded` counts only goals while that player was on (a starter subbed off at 2-0
+    reads 0), and a substitute on for the last five minutes of a 1-0 has not kept anything."""
+    from .providers.espn_soccer import _bucket_position
+    from .providers.club_codes import resolve_code
+    from .soccer_leagues import nation_for
+    league = (summary.get("header", {}).get("league") or {}).get("slug", "")
+    country = nation_for(league) if league else None
+    conceded: dict[str, float] = {}
+    for comp in summary.get("header", {}).get("competitions", [])[:1]:
+        scores = {_club_code(c["team"], country): float(c.get("score") or 0)
+                  for c in comp.get("competitors", [])}
+        for team in scores:
+            conceded[team] = sum(v for t, v in scores.items() if t != team)
+    out: list[RawSeason] = []
+    for roster in summary.get("rosters", []):
+        team = _club_code(roster["team"], country)
+        opponent = game.away if team == game.home else game.home
+        for p in roster.get("roster", []):
+            stats = {s["name"]: float(s.get("value") or 0) for s in p.get("stats", [])}
+            athlete = p.get("athlete") or {}
+            name = athlete.get("displayName", "")
+            if not name or stats.get("appearances", 0) < 1:
+                continue                      # an unused substitute
+            known = catalog(name, team)
+            kickoff = (p.get("position") or {}).get("name", "")
+            position = (known.position if known else "") or (
+                _bucket_position(kickoff) if p.get("starter") else "MF")
+            out.append(RawSeason(
+                name=name, team_abbr=team, season_year=int(game.date[:4]), sport="soccer",
+                position=position,
+                stats={"appearances": 1.0, "goals": stats.get("totalGoals", 0.0),
+                       "assists": stats.get("goalAssists", 0.0),
+                       "clean_sheets": float(bool(p.get("starter"))
+                                             and conceded.get(team, 1.0) == 0),
+                       "shots": stats.get("totalShots", 0.0),
+                       "shots_on_target": stats.get("shotsOnTarget", 0.0),
+                       "saves": stats.get("saves", 0.0)},
+                source="espn_boxscore",
+                headshot=(known.headshot if known else "")
+                         or (athlete.get("headshot") or {}).get("href", ""),
+                person_id=str(athlete.get("id", "")),
+                week=number, opponent=opponent, game_date=_date_label(game.date),
+                event_date=game.date,
+                meta={"competition": league, "league": country or ""}))
+    return out
+
+
+def soccer_week(period: Period) -> WeekData | None:
+    """One league round, parsed back out of the period key ('eng1-2027-wk05'). None for any
+    other period shape, e.g. the rolling Mon-Sun week `periods.closed_period` gives soccer:
+    a calendar week is not a soccer week, so that caller gets "no source" rather than a
+    window that splits a round."""
+    import re
+    match = re.fullmatch(r"([a-z]+\d)-(\d{4})-wk(\d{2})", period.key)
+    league = next((lg for lg in SOCCER_LEAGUES.values()
+                   if match and lg.code == match.group(1)), None)
+    if league is None:
+        return None
+    season_end, number = int(match.group(2)), int(match.group(3))
+    games = soccer_rounds(soccer_fixtures(league, season_end,
+                                          dt.date.fromisoformat(period.end))).get(number, [])
+    rows: list[RawSeason] = []
+    for game in games:
+        if not game.final:
+            continue
+        summary = _soccer_fetch(
+            league, f"summary?event={game.id}", f"espn_soccer_{league.slug}_match_{game.id}.json",
+            24 * 365 * 5,
+            lambda s: any(c.get("status", {}).get("type", {}).get("completed")
+                          for c in s.get("header", {}).get("competitions", [])))
+        rows += soccer_rows(game, summary, number)
+        time.sleep(0.05)
+    return WeekData("soccer", games, rows, "espn soccer scoreboard + summary")
+
+
+SOURCES: dict[str, Callable[[Period], WeekData | None]] = {
     "nfl": nfl_week,
     "baseball": mlb_week,
     "nba": nba_week,
+    "soccer": soccer_week,
 }
 
 

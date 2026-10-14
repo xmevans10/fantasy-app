@@ -8,6 +8,7 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     case tennis
     case hockey
     case f1
+    case golf
 
     var id: String { rawValue }
 
@@ -30,6 +31,39 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         "in.(\(allCases.map(\.rawValue).joined(separator: ",")))"
     }
 
+    /// Whether this sport is exposed to players at all yet — both for CREATING content (a
+    /// Keep4/Cut4 community puzzle, a Versus challenge, anything written client-side rather than
+    /// minted by the daily pipeline) and for BROWSING it (sport pickers/pagers/filters that would
+    /// otherwise show an empty or thin section for a sport with no real content behind it yet).
+    ///
+    /// This is the client-side mirror of `tools/ingest/validate.WIRE_SAFE_SPORTS`, but for a gap
+    /// that gate doesn't cover: `WIRE_SAFE_SPORTS` only holds back SERVER-minted rows until the
+    /// build that knows the new sport is the support floor (see `decodableFilterValue`'s doc
+    /// comment and `prompts/M31-hockey-f1-rugby.md` §7.3). It says nothing about a live client on
+    /// the NEW build publishing sport-named content of its own — that write reaches every other
+    /// installed build immediately, no mint delay to hide behind, and an older build's `Sport`
+    /// decode still nils the whole array on the one unrecognized row. It also says nothing about
+    /// a browsing surface that just lists `allCases` and would happily render a "Golf" page or
+    /// pill backed by zero puzzles.
+    ///
+    /// False only for `golf` while it's mid-rollout. Once golf ships and its build is the
+    /// accepted floor, flip this back to unconditionally `true` (or delete it) in the same change
+    /// that adds `"golf"` to `WIRE_SAFE_SPORTS`.
+    ///
+    /// Hockey and F1 are NOT in `WIRE_SAFE_SPORTS` either as of this writing, and creation/browse
+    /// surfaces already let a player pick them today — the exact same latent gap this property
+    /// targets, just pre-existing and out of scope here: fixing it would change hockey/F1's
+    /// already-shipped behavior, which wasn't asked for. Left as a known issue for a follow-up.
+    ///
+    /// Deliberately does NOT affect `allCases` or `decodableFilterValue` — decoding must still
+    /// know every sport this build can be handed, released or not; this only governs what the
+    /// UI voluntarily offers.
+    var isReleased: Bool { self != .golf }
+
+    /// Every released sport, in `allCases` order — the list every user-facing sport
+    /// picker/pager/filter should iterate instead of `allCases` directly. See `isReleased`.
+    static var released: [Sport] { allCases.filter(\.isReleased) }
+
     var displayName: String {
         switch self {
         case .nfl: return "NFL"
@@ -39,6 +73,7 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         case .tennis: return "Tennis"
         case .hockey: return "NHL"
         case .f1: return "F1"
+        case .golf: return "Golf"
         }
     }
 
@@ -47,17 +82,17 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     /// Whether this sport's careers are a **club history** at all — the precondition for
     /// Journeyman, whose entire board is "which clubs, in which order".
     ///
-    /// False for tennis, and permanently: a tour player has a nationality, not a club, so there
-    /// is no path to draw. This is a category fact about the sport, **not** a content gap waiting
-    /// on a backfill, and it mirrors the pipeline's own source of truth —
+    /// False for tennis and golf, and permanently: a tour player has a nationality, not a club, so
+    /// there is no path to draw. This is a category fact about the sport, **not** a content gap
+    /// waiting on a backfill, and it mirrors the pipeline's own source of truth —
     /// `tools/ingest/journeyman.py`'s `MIN_STINTS` is keyed `{nfl, nba, baseball, soccer}` and has
-    /// never had a tennis entry. Live pool counts agree (2026-08-25): 158 NFL / 150 NBA / 158 MLB
-    /// / 87 soccer boards, and 0 tennis.
+    /// never had a tennis or golf entry. Live pool counts agree (2026-08-25): 158 NFL / 150 NBA /
+    /// 158 MLB / 87 soccer boards, and 0 tennis.
     ///
     /// Declared here rather than inferred from an empty fetch because the two mean different
     /// things: an empty fetch is "nothing right now" (retry, or wait for the mint), while this is
     /// "never". Only the second one justifies hiding the format from a picker.
-    var hasClubCareers: Bool { self != .tennis }
+    var hasClubCareers: Bool { self != .tennis && self != .golf }
 
     /// SF Symbol used in filter pills / format icons.
     var symbol: String {
@@ -71,6 +106,7 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         // F1 has no car/circuit symbol in SF Symbols; the checkered flag is the sport's
         // most-recognized mark and is the same visual family (a filled glyph) as the balls.
         case .f1: return "flag.checkered"
+        case .golf: return "figure.golf"
         }
     }
 
@@ -86,6 +122,7 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         case .tennis: return .sportTennisFill
         case .hockey: return .sportHockeyFill
         case .f1: return .sportF1Fill
+        case .golf: return .sportGolfFill
         }
     }
 
@@ -99,16 +136,17 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         case .tennis: return .onSportTennis
         case .hockey: return .onSportHockey
         case .f1: return .onSportF1
+        case .golf: return .onSportGolf
         }
     }
 
-    /// Whether `PlayerSeason.teamAbbr` names a real club/franchise for this sport. Tennis has
-    /// no team — `teamAbbr` holds the player's country code instead (see `providers/seed.py`'s
+    /// Whether `PlayerSeason.teamAbbr` names a real club/franchise for this sport. Tennis and golf
+    /// have no team — `teamAbbr` holds the player's country code instead (see `providers/seed.py`'s
     /// `load_tennis` docstring), so card UI should render a country flag in the logo slot rather
     /// than attempting a team lookup/logo fetch that can never resolve.
-    var hasTeams: Bool { self != .tennis }
+    var hasTeams: Bool { self != .tennis && self != .golf }
 
-    /// ESPN CDN league slug used for team-logo lookups; nil for teamless sports (tennis).
+    /// ESPN CDN league slug used for team-logo lookups; nil for teamless sports (tennis, golf).
     /// Each sport MUST map to its own slug — sharing one (e.g. defaulting non-NFL to "nba")
     /// silently pulls the wrong league's crest for shared city codes (MLB "HOU" → the NBA
     /// Rockets instead of the Astros).
@@ -126,6 +164,8 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
         // come through the `teams` table / Storage rehost instead, so this returns nil and
         // `teamLogoURL` falls through to the fetched identity or a neutral placeholder.
         case .f1: return nil
+        // Golf has no team/club at all — same teamless shape as tennis.
+        case .golf: return nil
         }
     }
 
@@ -289,7 +329,7 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     /// that overcomplicate a default card. Soccer GK gets its own narrower list than DF
     /// (clean sheets + appearances only) since goals/assists aren't an obvious keeper stat
     /// even though the daily pipeline's `soccer-defenders` theme shows all 4 to both.
-    /// NBA/tennis/F1 omitted for the same reason as `positionStatFamilies` — their stats
+    /// NBA/tennis/F1/golf omitted for the same reason as `positionStatFamilies` — their stats
     /// apply broadly regardless of position. Defensive groups follow the same app-first note as
     /// `positionStatFamilies`: each reads like a real IDP stat line — the sack line for a
     /// rusher (DL), the tackle line for a run-stopper (LB), the coverage line for a DB.
@@ -377,7 +417,7 @@ enum Sport: String, Codable, CaseIterable, Identifiable {
     /// Whether `position` records `stat` at all in this sport — the single-stat form of
     /// `sliceForPosition`'s membership test, and the predicate `Keep4Theme.columns(for:)`
     /// composes a card from. `true` when the sport/position has no family entry: absence
-    /// means "no split to draw here" (NBA, tennis, F1), not "unknown". Mirrors
+    /// means "no split to draw here" (NBA, tennis, F1, golf), not "unknown". Mirrors
     /// `tools/ingest/themes.py`'s `produces`.
     func produces(position: String?, stat: String) -> Bool {
         guard let position, let prefixes = Sport.positionStatFamilies[self]?[position] else { return true }
@@ -406,6 +446,7 @@ enum SportFilter: String, CaseIterable, Identifiable {
     case tennis
     case hockey
     case f1
+    case golf
 
     var id: String { rawValue }
 
@@ -419,6 +460,7 @@ enum SportFilter: String, CaseIterable, Identifiable {
         case .tennis: return "Tennis"
         case .hockey: return "NHL"
         case .f1: return "F1"
+        case .golf: return "Golf"
         }
     }
 
@@ -433,8 +475,14 @@ enum SportFilter: String, CaseIterable, Identifiable {
         case .tennis: return sport == .tennis
         case .hockey: return sport == .hockey
         case .f1: return sport == .f1
+        case .golf: return sport == .golf
         }
     }
+
+    /// Every released filter, in `allCases` order — the list a sport picker/pager should iterate
+    /// instead of `allCases` directly. Keeps `.all`; drops any filter whose concrete sport isn't
+    /// released yet (see `Sport.isReleased`/`Sport.released`).
+    static var released: [SportFilter] { allCases.filter { $0.sport?.isReleased ?? true } }
 
     /// The concrete sport this filter pins to, or nil for `.all`.
     var sport: Sport? {
@@ -447,6 +495,7 @@ enum SportFilter: String, CaseIterable, Identifiable {
         case .tennis: return .tennis
         case .hockey: return .hockey
         case .f1: return .f1
+        case .golf: return .golf
         }
     }
 }

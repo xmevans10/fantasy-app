@@ -12,6 +12,7 @@ final class SportLogoTests: XCTestCase {
         XCTAssertEqual(Sport.baseball.espnLeagueSlug, "mlb")
         XCTAssertEqual(Sport.soccer.espnLeagueSlug, "soccer")
         XCTAssertNil(Sport.tennis.espnLeagueSlug)   // teamless — country flag, no team logo
+        XCTAssertNil(Sport.golf.espnLeagueSlug)     // teamless — same shape as tennis
     }
 
     // These assert the LEGACY ESPN-CDN fallback specifically, so each passes a fresh empty
@@ -36,6 +37,14 @@ final class SportLogoTests: XCTestCase {
         }
     }
 
+    func testCatalogNFLAliasesUseBundledCrests() {
+        for (alias, canonical) in [("LA", "LAR"), ("JAC", "JAX"), ("GNB", "GB")] {
+            let expected = Sport.nfl.teamLogoURL(forAbbr: canonical, index: emptyIndex)
+            XCTAssertTrue(expected?.isFileURL == true)
+            XCTAssertEqual(Sport.nfl.teamLogoURL(forAbbr: alias, index: emptyIndex), expected)
+        }
+    }
+
     /// A sport with no bundled crest for the code still reaches the ESPN fallback, so the
     /// legacy path stays exercised rather than silently dead.
     func testUnbundledCodeStillFallsBackToESPN() {
@@ -55,5 +64,37 @@ final class SportLogoTests: XCTestCase {
         XCTAssertNil(Sport.baseball.teamLogoURL(forAbbr: "", index: emptyIndex))    // empty abbr
         XCTAssertNil(Sport.soccer.teamLogoURL(forAbbr: "ZZZ", index: emptyIndex))   // unmapped club
         XCTAssertNil(Sport.tennis.teamLogoURL(forAbbr: "ESP", index: emptyIndex))   // teamless sport
+        XCTAssertNil(Sport.golf.teamLogoURL(forAbbr: "USA", index: emptyIndex))     // teamless sport
+    }
+
+    // MARK: - isReleased / released (release-compat gate)
+
+    /// Golf is mid-rollout: a Create/Versus publish is a live client write with no mint-delay to
+    /// hide behind, unlike `WIRE_SAFE_SPORTS`'s server-mint gate, and a browse surface would
+    /// otherwise render an empty section — so it must stay fenced off of every user-facing
+    /// creation AND browsing surface until its ingest lands and the build is the accepted floor.
+    func testGolfIsNotReleasedYet() {
+        XCTAssertFalse(Sport.golf.isReleased)
+    }
+
+    /// Every other shipped sport must remain released — this property is a single, deliberate
+    /// exception, not a broad allowlist that silently drops a future sport too.
+    func testEveryOtherSportIsReleased() {
+        for sport in Sport.allCases where sport != .golf {
+            XCTAssertTrue(sport.isReleased, sport.rawValue)
+        }
+    }
+
+    /// `Sport.released` is the exact filtered list every sport picker/pager/filter should use.
+    func testSportReleasedExcludesOnlyGolf() {
+        XCTAssertFalse(Sport.released.contains(.golf))
+        XCTAssertEqual(Set(Sport.released), Set(Sport.allCases.filter { $0 != .golf }))
+    }
+
+    /// `SportFilter.released` keeps `.all` but drops the golf filter case.
+    func testSportFilterReleasedKeepsAllButDropsGolf() {
+        XCTAssertTrue(SportFilter.released.contains(.all))
+        XCTAssertFalse(SportFilter.released.contains(.golf))
+        XCTAssertEqual(Set(SportFilter.released), Set(SportFilter.allCases.filter { $0 != .golf }))
     }
 }

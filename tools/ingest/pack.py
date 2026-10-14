@@ -36,6 +36,12 @@ supersede, so the week reaches builds that predate packs too. Only for sports in
     python -m tools.ingest.pack --sport baseball --upsert
     python -m tools.ingest.pack --sport nfl --replay 2025
     python -m tools.ingest.pack --sport nba --replay-from 2026-01-05 --replay-to 2026-03-29
+    python -m tools.ingest.pack --sport soccer --league eng.1 --replay-from 2026-08-01 --replay-to 2026-09-25
+
+Soccer runs one pack per league per ROUND (`weekly.SOCCER_LEAGUES`, `weekly.soccer_rounds`),
+not per calendar week, so its period comes from `weekly.soccer_closed_round` rather than
+`periods.closed_period`; `--league` narrows a run to one league, and without it every
+configured league runs.
 """
 from __future__ import annotations
 
@@ -118,6 +124,11 @@ def build_candidates(sport: str, period: Period, seasons: list[RawSeason],
     for theme in fresh_drop.flagship_themes(sport, period):
         role, position = _role_of_flagship(theme.key, sport, period)
         add(role, theme, position=position)
+        # A league with no divisions (soccer) would leave that slot empty every week, so it
+        # takes a second position board instead. `assemble_pack`'s one-board-per-kind rule
+        # keeps it from being the same board the position slot took.
+        if role == "position" and not fresh_drop.DIVISIONS.get(sport):
+            add("division", theme, position=position)
 
     # Game of the week: every real fixture the week can field eight players from, strongest
     # first by the combined grade of its best eight (the board a player would actually see).
@@ -336,17 +347,20 @@ def _candidate_from_item(item: dict) -> Candidate:
                      signature=item["signature"])
 
 
-def replace_item(sport: str, today: dt.date, ordinal: int, *, upsert: bool) -> int:
+def replace_item(sport: str, today: dt.date, ordinal: int, *, upsert: bool,
+                 league: str | None = None) -> int:
     """Swap one board of an already-published pack for the next board that fits, when nobody has
     played it. For a board that should never have shipped (the Week 1 "5.5-a-carry" deep cut),
     once the rule that let it through is fixed: the candidates are rebuilt under today's rules."""
     from .upsert import (count_results, delete_unplayed_pack_item, fetch_history_signatures,
                          fetch_pack_items, fetch_pack_signatures, upsert_pack_items)
     ingest_main.load_dotenv()
-    period = periods.closed_period(sport, today)
-    if period is None:
-        print(f"[pack] {sport}: no closed period as of {today.isoformat()}")
+    found = closed_periods(sport, today, league)
+    if len(found) != 1:
+        print(f"[pack] {sport}: {len(found)} closed periods as of {today.isoformat()} "
+              "(soccer needs --league to name one)")
         return 1
+    period = found[0]
     pid = pack_id(sport, period)
     items = fetch_pack_items(pid)
     old = next((i for i in items if i["ordinal"] == ordinal), None)
@@ -399,6 +413,25 @@ def fetch_pack_release(pid: str) -> str:
 
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
+def _soccer_leagues(league: str | None) -> list[weekly.SoccerLeague]:
+    if league is None:
+        return list(weekly.SOCCER_LEAGUES.values())
+    if league not in weekly.SOCCER_LEAGUES:
+        raise SystemExit(f"[pack] unknown soccer league {league!r}; configured: "
+                         f"{sorted(weekly.SOCCER_LEAGUES)}")
+    return [weekly.SOCCER_LEAGUES[league]]
+
+
+def closed_periods(sport: str, today: dt.date, league: str | None = None) -> list[Period]:
+    """The period(s) `sport` just finished: one per configured league for soccer (each league
+    closes its own round), otherwise `periods.closed_period`'s one."""
+    if sport == "soccer":
+        found = [weekly.soccer_closed_round(lg, today) for lg in _soccer_leagues(league)]
+    else:
+        found = [periods.closed_period(sport, today)]
+    return [p for p in found if p is not None]
+
+
 @dataclasses.dataclass
 class Week:
     verdict: readiness.Verdict
@@ -421,7 +454,23 @@ def prepare(sport: str, period: Period) -> Week:
 
 
 def _replay_periods(sport: str, season: int | None, start: str | None,
-                    end: str | None) -> list[tuple[dt.date, Period]]:
+                    end: str | None, league: str | None = None) -> list[tuple[dt.date, Period]]:
+    if sport == "soccer":
+        # Every round of the season(s) in range, each replayed the day after its last match,
+        # which is when the live job would first see it closed.
+        if season is not None:
+            seasons = [season]
+        else:
+            seasons = sorted({weekly.soccer_season_end(dt.date.fromisoformat(start)),
+                              weekly.soccer_season_end(dt.date.fromisoformat(end))})
+        out = []
+        for lg in _soccer_leagues(league):
+            for year in seasons:
+                for period in weekly.soccer_round_periods(lg, year):
+                    if season is None and not start <= period.end <= end:
+                        continue
+                    out.append((dt.date.fromisoformat(period.end) + dt.timedelta(days=1), period))
+        return sorted(out, key=lambda t: (t[0], t[1].key))
     if sport == "nfl":
         from .providers import nfl_nflverse_schedule as sched
         rows = sched.fetch_rows()
@@ -441,14 +490,14 @@ def _replay_periods(sport: str, season: int | None, start: str | None,
 
 
 def replay(sport: str, season: int | None, start: str | None = None, end: str | None = None,
-           *, photos: bool = False) -> int:
+           *, photos: bool = False, league: str | None = None) -> int:
     """Dry-run every week in range, carrying novelty and cooldown forward the way the live cron
     would. Exit 1 if a READY week breaks a rule or yields fewer than MIN_ITEMS boards."""
     ingest_main.load_dotenv()
     served: set[str] = set()
     history: list[tuple[dt.date, str]] = []
     bad, sizes, verdicts = 0, [], collections.Counter()
-    for today, period in _replay_periods(sport, season, start, end):
+    for today, period in _replay_periods(sport, season, start, end, league):
         week = prepare(sport, period)
         verdicts[week.verdict.status.value] += 1
         if not week.verdict.ready:
@@ -493,25 +542,32 @@ def main() -> int:
     ap.add_argument("--replay-to", type=str, default=None, metavar="DATE")
     ap.add_argument("--replay-photos", action="store_true",
                     help="apply the (read-only) photo gate during a replay")
+    ap.add_argument("--league", type=str, default=None, metavar="SLUG",
+                    help="soccer: run one configured league (e.g. eng.1) instead of all")
     ap.add_argument("--replace", type=int, default=None, metavar="ORDINAL",
                     help="swap one unplayed board of the published pack for --date's period")
     args = ap.parse_args()
     if args.replace is not None:
         today = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
-        return replace_item(args.sport, today, args.replace, upsert=args.upsert)
+        return replace_item(args.sport, today, args.replace, upsert=args.upsert,
+                            league=args.league)
     if args.replay is not None or args.replay_from:
         return replay(args.sport, args.replay, args.replay_from, args.replay_to,
-                      photos=args.replay_photos)
+                      photos=args.replay_photos, league=args.league)
     if not args.upsert and not args.dry_run:
         args.dry_run = True
 
     ingest_main.load_dotenv()
     today = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
-    period = periods.closed_period(args.sport, today)
-    if period is None:
+    found = closed_periods(args.sport, today, args.league)
+    if not found:
         print(f"[pack] {args.sport}: no closed period as of {today.isoformat()}. Nothing to do.")
         return 0
+    # Several only for soccer's leagues, each its own pack; one failing never stops the next.
+    return max(run_period(args, today, period) for period in found)
 
+
+def run_period(args: argparse.Namespace, today: dt.date, period: Period) -> int:
     drop = fresh_drop.target_date(today, args.same_day)
     pid = pack_id(args.sport, period)
     print(f"[pack] {pid}: {period.label} closed as of {today.isoformat()}; opens {drop.isoformat()}")

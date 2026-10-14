@@ -75,9 +75,9 @@ final class StoreProductLoadTests: XCTestCase {
     }
 
     /// Every id the app asks for must be one App Store Connect actually has. A typo here yields
-    /// an empty catalog that looks exactly like an outage — and all four were verified live
-    /// against ASC on 2026-07-27.
-    func testRequestsExactlyTheFourConfiguredProductIDs() async {
+    /// an empty catalog that looks exactly like an outage — the first four were verified live
+    /// against ASC on 2026-07-27. Retired card consumables must not be requested.
+    func testRequestsExactlyTheConfiguredProductIDs() async {
         var requested: [String] = []
         let service = StoreService(fetchStub: { ids in
             requested = ids
@@ -127,7 +127,7 @@ final class StoreProductLoadTests: XCTestCase {
         guard !service.products.isEmpty else {
             throw XCTSkip("No StoreKit products, SKTestSession config not applied")
         }
-        XCTAssertEqual(service.products.count, 4, "all four configured products should resolve")
+        XCTAssertEqual(service.products.count, StoreProduct.allCases.count, "every configured product should resolve (4 unlocks/subscriptions)")
         XCTAssertEqual(service.productLoadState, .loaded, "a reachable store must settle on loaded")
         XCTAssertEqual(service.productFetchAttempts, 1, "success must not burn extra retries")
     }
