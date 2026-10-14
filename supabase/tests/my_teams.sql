@@ -19,6 +19,7 @@ begin
  begin perform public.complete_team_puzzle(board,array['bad'],current_date::text);
  exception when others then denied:=true;end;
  if not denied then raise exception 'Invalid cards accepted';end if;
+ if public.complete_team_puzzle(board,keeps,null) is not null then raise exception 'Null day accepted';end if;
  denied:=false;
  begin perform public.complete_team_puzzle(board,keeps,(current_date-10)::text);
  exception when others then denied:=true;end;

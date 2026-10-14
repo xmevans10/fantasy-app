@@ -16,3 +16,5 @@ begin
  return new;
 end $$;
 create trigger preserve_team_progress before update on public.progress for each row execute function public.preserve_team_progress();
+
+alter function public.complete_team_puzzle(text,text[],text,boolean) strict;
