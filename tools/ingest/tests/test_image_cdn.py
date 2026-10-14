@@ -27,3 +27,8 @@ def test_retired_transform_warm_never_uses_network(monkeypatch):
         raise AssertionError("retired command must never request paid transforms")
     monkeypatch.setattr(urllib.request, "urlopen", forbidden)
     assert warm_transforms(workers=12, limit=None) == 0
+
+
+def test_legacy_img_objects_are_not_warmed_through_unsupported_cdn_route():
+    assert _cdn_url(ORIGIN + "player-headshots/nfl/portrait.img") is None
+    assert _cdn_url(CDN + "player-headshots/nfl/portrait.img") is None

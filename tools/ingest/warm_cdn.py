@@ -108,6 +108,9 @@ def _cdn_url(source: str) -> str | None:
         path = parsed.path[len(STORAGE_MARKER):]
     else:
         return None
+    # Legacy .img objects are readable at storage but outside the CDN route contract.
+    if path.rsplit(".", 1)[-1].lower() not in {"png", "jpg", "jpeg", "webp", "gif"}:
+        return None
     if not path.startswith(("player-headshots/", "team-logos/")):
         return None
     return CDN_BASE + path

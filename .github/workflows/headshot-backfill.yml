@@ -184,11 +184,7 @@ jobs:
       # NBA rows still photo-less after the ESPN passes, via cdn.nba.com's person-id catalog.
       - if: always()
         run: python -m tools.ingest.headshots --nba-backfill
-      # Sequential by design inside the script (not thread-pooled) to avoid Wikimedia's 429
-      # throttle — 75% hit rate on baseball players MLB's CDN lacks, plus tennis/soccer/older
-      # NBA-NFL coverage.
-      - if: always()
-        run: python -m tools.ingest.headshots --wiki-backfill
+      # No Wikimedia adoption: official portraits or the existing initials fallback.
       # Catches stock/stub graphics the byte-floor check alone doesn't (e.g. the NFL helmet is a
       # normal-sized PNG) by flagging byte-identical sources repeated across many players.
       - if: always()

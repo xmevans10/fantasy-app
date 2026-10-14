@@ -74,3 +74,36 @@ def test_placeholder_thresholds_separate_stubs_from_real_photos():
     assert NBA_STUB_MAX_BYTES > 12_430
     assert NBA_STUB_MAX_BYTES < 150_000
     assert MIN_REAL_BYTES < NBA_STUB_MAX_BYTES
+
+
+def test_league_source_policy_rejects_media_and_spoofed_hosts():
+    from tools.ingest.headshots import is_league_portrait_source
+    assert is_league_portrait_source("https://cdn.nba.com/headshots/a.png")
+    assert is_league_portrait_source("https://static.www.nfl.com/a.png")
+    for url in ["https://upload.wikimedia.org/a.jpg", "https://a.espncdn.com/a.png",
+                "https://cdn.nba.com.evil.example/a.png", "https://evil.example/cdn.nba.com/a.png",
+                "https://user@cdn.nba.com/a.png", "http://cdn.nba.com/a.png"]:
+        assert not is_league_portrait_source(url)
+
+
+def test_record_registers_only_successful_league_assets(monkeypatch):
+    from tools.ingest import headshots
+    calls = []
+    monkeypatch.setattr(headshots, "_rest", lambda *a, **kw: calls.append((a, kw)))
+    headshots.record("https://project", "key", [
+        {"source_url": "https://cdn.nba.com/a.png", "public_url": "https://project/a.png", "sport": "nba", "status": "ok"},
+        {"source_url": "https://upload.wikimedia.org/b.jpg", "public_url": "https://project/b.jpg", "sport": "nba", "status": "ok"},
+        {"source_url": "https://cdn.nba.com/c.png", "sport": "nba", "status": "placeholder"},
+    ])
+    registry = [kw["body"] for a, kw in calls if a[2].startswith("league_portrait_sources")][0]
+    assert {r["url"] for r in registry} == {"https://cdn.nba.com/a.png", "https://project/a.png"}
+
+
+def test_nfl_generic_helmet_is_not_a_portrait(monkeypatch):
+    from pathlib import Path
+    from tools.ingest import headshots
+    helmet = (Path(__file__).parent / "fixtures" / "nfl_helmet.png").read_bytes()
+    assert headshots.is_nfl_placeholder(helmet)
+    assert not headshots.is_nfl_placeholder(b"not an image")
+    monkeypatch.setattr(headshots, "_get", lambda *args: (200, helmet, "image/png"))
+    assert headshots.fetch_real_image("https://static.www.nfl.com/image/private/league/test")[0] == "placeholder"
