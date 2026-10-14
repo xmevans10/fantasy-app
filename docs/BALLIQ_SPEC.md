@@ -555,7 +555,10 @@ loading, onboarding, content-freshness and official-portrait fixes. Golf stays h
 of active schedules. Validation: 1,034 iOS tests (one skip, no failures), 966 ingestion tests,
 91 Edge Function tests and complete Edge Function type checks. All seven existing sports'
 names/membership cache refreshes succeeded. Signed archive verified; the App Store draft
-uses manual release. Physical-device validation is blocked by Xcode's developer disk image
+uses manual release with build 59 attached; Apple reports VALID and ready for internal beta testing.
+An additive season-only index (0041) fixes the public NFL arcade sample timeout without
+changing its rows; repeated public reads returned 200, with an NFL spot check at 0.74s.
+Physical-device validation is blocked by Xcode's developer disk image
 mount failure; simulator onboarding checks passed on SE and iPhone 15.
 
 **Historical release status (2026-09-21):** **1.8.7 (build 55) is `WAITING_FOR_REVIEW`**, submitted
