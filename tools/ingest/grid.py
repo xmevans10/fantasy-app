@@ -127,6 +127,27 @@ def _rarity_stars(count: int) -> int:
     return 1
 
 
+def _has_distinct_answers(cells: list[GridCell]) -> bool:
+    """A perfect board must have a different valid player for every square.
+
+    An augmenting-path matching catches shared-answer bottlenecks that checking each
+    cell (or even the board's total distinct answers) cannot detect. Nine cells bound the work.
+    """
+    assigned: dict[str, int] = {}
+    def place(cell_index: int, seen: set[str]) -> bool:
+        for answer in cells[cell_index].valid_answers:
+            player = answer.player_id
+            if player in seen:
+                continue
+            seen.add(player)
+            previous = assigned.get(player)
+            if previous is None or place(previous, seen):
+                assigned[player] = cell_index
+                return True
+        return False
+    return all(place(i, set()) for i in range(len(cells)))
+
+
 def _group_by_player(pool: list[RawSeason]) -> dict[str, list[RawSeason]]:
     """Seasons keyed by player name. Grouping once up front (rather than per cell, as the
     teams x decades version did) is what makes career-grain axes cheap: "did this player ever
@@ -150,6 +171,10 @@ def _satisfying_season(seasons: list[RawSeason], row: GridAxis, col: GridAxis) -
         if axis.grain == "career" and not any(axis.matches(s) for s in seasons):
             return None
     season_axes = [a for a in axes if a.grain == "season"]
+    # Mixed edges mark teams career-grain for club x club cells. Against a season
+    # category, the paired club must nevertheless be part of the qualifying season.
+    if any(a.kind != "team" for a in season_axes):
+        season_axes += [a for a in axes if a.kind == "team" and a.grain == "career"]
     candidates = [s for s in seasons if all(a.matches(s) for a in season_axes)]
     if season_axes and not candidates:
         return None
@@ -241,6 +266,14 @@ ARCHETYPES: tuple[Archetype, ...] = (
     # now fail the ceiling on their own.
     Archetype("decades-x-stats", "decade", "stat", weight=4),
 )
+
+# NFL boards always include a club dimension. Give the signature club x club shape
+# regular turns, while mixed and season-stat boards retain most of the rotation.
+NFL_ARCHETYPES = tuple(
+    Archetype(a.key, a.rows, a.cols, 4 if a.key == "teams-x-teams" else a.weight)
+    for a in ARCHETYPES if a.key != "decades-x-stats"
+)
+
 
 # Diversity weighting (rebalanced 2026-08-07, from a player-reported "all teams again"): the
 # weights above tilt the rotation toward the shapes that *mix kinds on one board* and away from
@@ -441,7 +474,7 @@ def generate_grid(seasons: list[RawSeason], sport: str, date: str,
     pools: dict[str, tuple[list[GridAxis], list[GridAxis]]] = {}
     feasible: list[Archetype] = []
     varied: list[Archetype] = []
-    for candidate in (archetypes or ARCHETYPES):
+    for candidate in (archetypes or (NFL_ARCHETYPES if sport == "nfl" else ARCHETYPES)):
         row_pool = _axis_pool(candidate.rows, sport, pool, teams, decades)
         col_pool = _axis_pool(candidate.cols, sport, pool, teams, decades)
         if len(row_pool) < 3 or len(col_pool) < 3:
@@ -504,7 +537,7 @@ def generate_grid(seasons: list[RawSeason], sport: str, date: str,
                     viable = False
                     break
                 cells.append(cell)
-            if viable:
+            if viable and _has_distinct_answers(cells):
                 return GridPuzzle(sport=sport, rows=rows, cols=cols, cells=tuple(cells),
                                   archetype=archetype.key)
     return None

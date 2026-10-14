@@ -118,7 +118,7 @@ struct MomentSheet: View {
                 .padding(.bottom, 16)
                 .heroReveal(2)
         }
-        .background(Color.appBackground)
+        .paperGround()
         .onAppear { moments.markShown(container: container) }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)

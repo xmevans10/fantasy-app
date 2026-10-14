@@ -33,7 +33,7 @@ struct FriendsView: View {
                     content
                 }
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("Friends")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Wordmark.toolbarItem() }

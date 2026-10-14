@@ -26,7 +26,7 @@ struct ArcadeLeaderboardView: View {
                     board
                 }
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle(game.displayName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

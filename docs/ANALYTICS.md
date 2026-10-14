@@ -161,6 +161,11 @@ where event_name = 'onboarding_step_viewed'
 group by 1, 2 order by 1;
 ```
 
+`welcome` (what Playbook is) and `modes` (the game-mode deck) were added as steps 0 and 1 on
+2026-09-26, which shifted every later step's `index` up by two. Rows from before that date have
+`sport` at index 0;
+group by `step` rather than `index` when a window straddles the change.
+
 ### Retention curve, and whether push can even reach these installs
 
 ```sql

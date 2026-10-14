@@ -244,6 +244,17 @@ _STATS: dict[str, tuple[StatAxisSpec, ...]] = {
         StatAxisSpec("World Champion", "championships", "gte", 1),
         StatAxisSpec("10+ Top-10 Finishes", "top_tens", "gte", 10),
     ),
+    "golf": (
+        StatAxisSpec("Won a Tournament", "wins", "gte", 1),
+        StatAxisSpec("3+ Wins", "wins", "gte", 3),
+        StatAxisSpec("5+ Top-10 Finishes", "top10s", "gte", 5),
+        StatAxisSpec("10+ Top-10 Finishes", "top10s", "gte", 10),
+        StatAxisSpec("20+ Cuts Made", "cuts_made", "gte", 20),
+        # Rate axis gated on volume, the same treatment baseball's AVG/ERA get — a sub-69
+        # average over four starts isn't the same claim as one over a full season.
+        StatAxisSpec("Sub-69 Scoring Average", "scoring_avg", "lte", 69.0,
+                     (Filter("events", "gte", 15),)),
+    ),
 }
 
 # Display names for the raw position codes the catalog stores. Sports whose position column is a

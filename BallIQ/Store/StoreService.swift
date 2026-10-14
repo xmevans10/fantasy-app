@@ -174,6 +174,30 @@ final class StoreService: ObservableObject {
         }
     }
 
+    /// Signed card-pack transactions bought but not yet credited.
+    func unfinishedCardPacks() async -> [String] {
+        var jws: [String] = []
+        for await result in Transaction.unfinished {
+            guard let transaction = try? checkVerified(result),
+                  StoreProduct.retiredCardPackIDs.contains(transaction.productID) else { continue }
+            jws.append(result.jwsRepresentation)
+        }
+        return jws
+    }
+
+    /// Finishes the card-pack transactions the server confirmed it has credited.
+    func finishCardPacks(_ transactionIDs: Set<String>) async {
+        for await result in Transaction.unfinished {
+            guard let transaction = try? checkVerified(result),
+                  transactionIDs.contains(String(transaction.id)) else { continue }
+            await transaction.finish()
+        }
+    }
+
+    /// Called for card-pack transactions arriving outside a purchase call (Ask to Buy approvals,
+    /// purchases completed on another launch). Set by `RepositoryContainer`.
+    var onCardPackTransaction: (() async -> Void)?
+
     func restore() async {
         try? await AppStore.sync()
         await refreshEntitlements()
@@ -216,6 +240,11 @@ final class StoreService: ObservableObject {
         Task.detached { [weak self] in
             for await result in Transaction.updates {
                 guard let transaction = try? checkVerified(result) else { continue }
+                // Card packs stay open until the server has credited them.
+                if StoreProduct.retiredCardPackIDs.contains(transaction.productID) {
+                    await self?.onCardPackTransaction?()
+                    continue
+                }
                 await transaction.finish()
                 await self?.refreshEntitlements()
             }

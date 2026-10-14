@@ -75,7 +75,7 @@ enum TeamColors {
 
     // MARK: - Abbreviation normalization (catalog/nflverse use historical variants)
 
-    private static func normalize(_ abbr: String, sport: Sport) -> String {
+    static func normalize(_ abbr: String, sport: Sport) -> String {
         let up = abbr.uppercased()
         let aliases: [String: String]
         switch sport {
@@ -138,7 +138,7 @@ enum TeamColors {
                        "CLR": "NJD", "KCS": "NJD",  // Colorado Rockies / KC Scouts → Devils
                        "T.B": "TBL", "TB": "TBL", "L.A": "LAK", "LA": "LAK",
                        "N.J": "NJD", "NJ": "NJD", "S.J": "SJS", "SJ": "SJS", "VEG": "VGK"]
-        case .baseball, .soccer, .tennis, .f1:
+        case .baseball, .soccer, .tennis, .f1, .golf:
             aliases = [:]   // no historical-franchise collisions to normalize yet
         }
         return aliases[up] ?? up
@@ -161,6 +161,7 @@ enum TeamColors {
         // (the data-driven overload above, which already wins over this table for every
         // sport) and fall through to the neutral `fallback` until that has warmed.
         case .f1: return [:]
+        case .golf: return [:]   // no team/club — every lookup falls through to `fallback`
         }
     }
 

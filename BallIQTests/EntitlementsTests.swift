@@ -34,6 +34,7 @@ final class EntitlementsTests: XCTestCase {
         XCTAssertTrue(admin.canSelect(.baseball))
         XCTAssertTrue(admin.canSelect(.soccer))
         XCTAssertTrue(admin.canSelect(.tennis))
+        XCTAssertTrue(admin.canSelect(.golf))
     }
 
     func testPackUnlocksOnlyItsOwnFormat() {
@@ -57,6 +58,7 @@ final class EntitlementsTests: XCTestCase {
         XCTAssertFalse(free.canSelect(.baseball))
         XCTAssertFalse(free.canSelect(.soccer))
         XCTAssertFalse(free.canSelect(.tennis))
+        XCTAssertFalse(free.canSelect(.golf))
     }
 
     func testProUserCanSelectEverySport() {

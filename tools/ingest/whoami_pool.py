@@ -62,7 +62,7 @@ POOL_FILE = "whoami_pool.json"
 # tennis, where the catalog's season grain is thinner and a four-year pro tour player is
 # already a fairly deep cut.
 MIN_SEASONS: dict[str, int] = {"nfl": 4, "nba": 4, "baseball": 4, "soccer": 5, "tennis": 4,
-                               "hockey": 4, "f1": 3}
+                               "hockey": 4, "f1": 3, "golf": 3}
 
 # Career-production percentile a subject must clear within their (sport, position) cohort to
 # be considered nameable at all. Tuned to what it buys, not to a round number: see
@@ -262,6 +262,10 @@ COHORTS: dict[tuple[str, str], Cohort] = {
         Headline("wins", "race wins", _INT, one="race win"),
         Headline("podiums", "podiums", _INT),
         Headline("poles", "pole positions", _INT, one="pole position"))),
+    ("golf", "Golfer"): Cohort("golf_fantasy", "Golfer", (
+        Headline("wins", "PGA Tour wins", _INT, one="PGA Tour win"),
+        Headline("top10s", "top-10 finishes", _INT, one="top-10 finish"),
+        Headline("cuts_made", "cuts made", _YDS))),
 }
 
 

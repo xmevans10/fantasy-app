@@ -58,7 +58,7 @@ struct BotCharacterCard<Footer: View>: View {
             footer()
         }
         .frame(maxWidth: .infinity)
-        .background(Color.appBackground)
+        .paperGround()
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
@@ -261,7 +261,7 @@ extension BotCharacterCard where Footer == EmptyView {
                     .buttonStyle(PrimePressStyle())
             }
             .padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 20)
-            .background(Color.appBackground)
+            .paperGround()
         }
     }
 }

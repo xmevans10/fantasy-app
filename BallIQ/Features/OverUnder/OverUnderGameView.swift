@@ -100,7 +100,7 @@ struct OverUnderGameView: View {
                 playBoard
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .task {
             // A blitz round is fully supplied: sport and board both come from the loader, so
             // this skips the pool fetch, the setup screen and the prefetch entirely.
@@ -118,7 +118,7 @@ struct OverUnderGameView: View {
             lives = DebugLaunch.forceEmptyOverUnderLives
                 ? LivesBank(count: 0, lastLostAt: Date().addingTimeInterval(-18 * 60))
                 : (refillsLivesInstantly ? .initial : store.loadLives())
-            container.catalog.prefetchDraftSpinSample(for: sport)
+            container.catalog.prefetchArcadePool(for: sport)
             // Screenshot flows target the board/result — skip the setup screen. Not when the bank
             // is empty: there is no run to open, and `-screenshotOverUnderEmpty` wants the gate.
             if DebugLaunch.autoOpenOverUnder, !isLockedOut {
@@ -128,7 +128,7 @@ struct OverUnderGameView: View {
         }
         .onChange(of: sport) { _, selected in
             // Warm the pool while the player is still on setup (same pattern as Draft & Spin).
-            if showingSetup { container.catalog.prefetchDraftSpinSample(for: selected) }
+            if showingSetup { container.catalog.prefetchArcadePool(for: selected) }
         }
     }
 
@@ -455,7 +455,7 @@ private struct OutOfLivesGate: View {
             .padding(16)
             Spacer(minLength: 0)
         }
-        .background(Color.appBackground)
+        .paperGround()
         .sheet(isPresented: $showPaywall) {
             PaywallView(trigger: .overUnderLives).environmentObject(container)
         }

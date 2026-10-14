@@ -66,7 +66,7 @@ struct ProfileView: View {
                 }
                 .padding(16)
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Wordmark.toolbarItem() }
@@ -454,9 +454,11 @@ struct ProfileView: View {
     /// `@username` under the avatar, once identity is claimed. Edit entry point is the
     /// avatar badge's pencil above — a second pencil here read as a duplicate affordance.
     private func identityLine(username: String) -> some View {
-        Text("@\(username)")
-            .font(.custom(FontName.condBlack, size: 16))
-            .foregroundStyle(Color.onAccent)
+        HStack(spacing: 6) {
+            Text("@\(username)")
+                .font(.custom(FontName.condBlack, size: 16))
+                .foregroundStyle(Color.onAccent)
+        }
     }
 
     /// The all-time-best daily streak, computed straight off the career log rather than a

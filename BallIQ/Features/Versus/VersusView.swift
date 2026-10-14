@@ -44,7 +44,7 @@ struct VersusView: View {
                     list
                 }
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationDestination(isPresented: $showLadder) {
                 LadderView().environmentObject(container).environmentObject(auth)
             }
@@ -570,7 +570,11 @@ private struct ChallengeSheet: View {
         NavigationStack {
             VStack(spacing: 18) {
                 labelled("SPORT") {
-                    PrimeSegmentedControl(options: Sport.allCases.map { ($0.displayName, $0) },
+                    // `Sport.released` fences off a sport still mid-rollout (currently golf) —
+                    // see `Sport.isReleased`'s doc comment: a challenge is written client-side
+                    // with no mint-delay to hide behind, so an opponent on an older build could
+                    // receive a sport their `Sport` decode has never heard of.
+                    PrimeSegmentedControl(options: Sport.released.map { ($0.displayName, $0) },
                                           selection: $sport)
                 }
                 labelled("GAME") {
@@ -613,7 +617,7 @@ private struct ChallengeSheet: View {
                 Spacer()
             }
             .padding(16)
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("New Duel")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

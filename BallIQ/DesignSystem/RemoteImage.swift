@@ -440,7 +440,8 @@ enum AppImagePipeline {
         guard url.scheme == "https", url.host == "nhccgufqwndtoasdbkhc.supabase.co",
               url.user == nil, url.password == nil,
               var components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              components.query == nil, components.percentEncodedPath.hasPrefix(marker)
+              components.query == nil, components.percentEncodedPath.hasPrefix(marker),
+              ["png", "jpg", "jpeg", "webp", "gif"].contains(url.pathExtension.lowercased())
         else { return nil }
         let objectPath = String(components.percentEncodedPath.dropFirst(marker.count))
         guard objectPath.hasPrefix("player-headshots/") || objectPath.hasPrefix("team-logos/")

@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The Grid (M5 Phase E, Pro-only): a 3x3 team x decade board, 9 total guesses (one attempt
-/// per cell — decisions are final, same posture as Keep4). Ranked through the normal
+/// The Grid: a 3x3 category board with nine guesses shared across every cell.
+/// Misses may be retried; solved cells and reused players are blocked. Ranked through the normal
 /// `complete(...)` pipeline; content comes only from `PuzzleRepository.gridPuzzle` (server-
 /// generated, no offline bundle — see that protocol's doc comment).
 struct GridGameView: View {
@@ -26,10 +26,10 @@ struct GridGameView: View {
     @State private var puzzle: GridPuzzle?
     @State private var loading = true
     /// Index (row*3+col) -> the matched valid-answer name, once correctly guessed.
-    @State private var solved: [Int: String] = [:]
-    @State private var wrong: Set<Int> = []
-    /// What was actually typed on each miss — kept only for the crowd-rarity log.
-    @State private var wrongNames: [Int: String] = [:]
+    @State private var run = GridRunState()
+    @State private var finishing = false
+    private var solved: [Int: String] { run.solved }
+    private var wrong: Set<Int> { run.unsolvedMisses }
     @State private var activeCell: Int?
     /// Sport-wide player names powering the guess autocomplete (empty offline → free text).
     @State private var nameIndex: [String] = []
@@ -78,17 +78,18 @@ struct GridGameView: View {
     /// mint a challenge naming a day whose board doesn't exist, and every recipient would hit
     /// "That board's gone". Only a genuinely canonical board can be challenged.
     @State private var isCanonicalDaily = false
+    @State private var boardDay: String?
     /// The challenge actually in force. Mirrors the `challenge` input so it can be *cleared* when
     /// the player declines the missing board and takes today's instead — otherwise the result
     /// screen would post a head-to-head between two scores set on two different grids.
     @State private var activeChallenge: ChallengeLink?
-    private var attemptedCount: Int { solved.count + wrong.count }
+    private var attemptedCount: Int { run.attempts.count }
 
     var body: some View {
         Group {
             if let result {
                 GridResultView(sport: sport, score: result.score, correctCount: result.correctCount,
-                               puzzle: puzzle, solved: solved,
+                               puzzle: puzzle, solved: solved, crowdDay: duel == nil && !isPractice ? boardDay : nil,
                                rewards: rewards, isDaily: duel == nil && isCanonicalDaily,
                                challenge: duel == nil ? activeChallenge : nil,
                                duelVerdict: duel?.ladder?.verdict(myHits: result.correctCount),
@@ -127,7 +128,7 @@ struct GridGameView: View {
                               actionTitle: "Close", action: { dismiss() })
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .task {
             // Duel wins over challenge (see `duel`'s doc comment). Bypasses `load(...)`
             // entirely: a duel's board arrives already resolved, so there is no daily/practice
@@ -201,6 +202,8 @@ struct GridGameView: View {
 
     private func load(random: Bool = false, challenge: ChallengeLink? = nil) async {
         showingSetup = false
+        run = GridRunState()
+        finishing = false
         isPractice = random
         // GameSetupScreen warms this for the normal path, but `-screenshotGrid*` skips the setup
         // screen entirely — without this the board's row crests fall back to the ESPN CDN.
@@ -231,6 +234,7 @@ struct GridGameView: View {
             puzzle = pick?.content
             isCanonicalDaily = pick?.isCanonicalToday ?? false
         }
+        boardDay = isCanonicalDaily && !random ? (challenge?.day ?? PuzzleStore.localDayString()) : nil
         guard !challengeBoardMissing else { loading = false; return }
         startedAt = Date()
         container.track(.gameStarted, ["format": "grid", "sport": sport.rawValue,
@@ -310,7 +314,7 @@ struct GridGameView: View {
                 }
                 .accessibilityLabel("Close")
                 Spacer()
-                Text("\(attemptedCount) OF 9 GUESSED").font(.label12).foregroundStyle(Color.textMuted)
+                Text("\(run.remaining) GUESSES LEFT").font(.label12).foregroundStyle(Color.textMuted)
             }
             // Say up front that a practice board doesn't count — finding that out only on the
             // result screen, after nine final-answer guesses, would feel like a bait and switch.
@@ -323,110 +327,25 @@ struct GridGameView: View {
         .overlay(alignment: .bottom) { Rectangle().fill(Color.hairline).frame(height: Hairline.width) }
     }
 
-    /// A single flat `ForEach` over every board slot (header row + label column + answer
-    /// cells), rather than nesting a `ForEach` inside another `ForEach` — `LazyVGrid` doesn't
-    /// reliably flatten that nested shape, which silently dropped all 9 answer cells (they
-    /// never appeared, even as zero-content placeholders — confirmed by temporarily forcing
-    /// their background to a debug color and seeing nothing render).
     private func gridLayout(_ puzzle: GridPuzzle) -> some View {
-        let cols = puzzle.cols.count
-        let columns = [GridItem(.fixed(72))] + puzzle.cols.map { _ in GridItem(.flexible()) }
-        let totalSlots = (puzzle.rows.count + 1) * (cols + 1)
-        return LazyVGrid(columns: columns, spacing: 6) {
-            ForEach(0..<totalSlots, id: \.self) { slot in
-                let row = slot / (cols + 1)
-                let col = slot % (cols + 1)
-                if row == 0 {
-                    if col == 0 {
-                        Color.clear.frame(height: 44)
-                    } else {
-                        axisCell(puzzle, axis: puzzle.cols[col - 1], fontSize: 14, minHeight: 44)
-                    }
-                } else if col == 0 {
-                    axisCell(puzzle, axis: puzzle.rows[row - 1], fontSize: 14, minHeight: 44)
-                } else {
-                    answerCell(puzzle, row: row - 1, col: col - 1)
-                }
-            }
-        }
-    }
-
-    /// One axis header. Both dimensions render through this now — before the board went
-    /// symmetric, the column headers were always decade text and the row headers always team
-    /// chips, so each had its own hardcoded builder. A team axis still gets the real crest +
-    /// color chip; every other kind is a text label.
-    @ViewBuilder
-    private func axisCell(_ puzzle: GridPuzzle, axis: GridPuzzle.GridAxis,
-                          fontSize: CGFloat, minHeight: CGFloat) -> some View {
-        if axis.kind == .team {
-            TeamAbbrChip(sport: puzzle.sport, abbr: axis.teamAbbr, league: axis.teamLeague,
-                         fontSize: fontSize, minHeight: minHeight, showLogo: true,
-                         displayText: axis.label)
-        } else {
-            Text(axis.label)
-                .font(.custom(FontName.condBlack, size: fontSize))
-                .foregroundStyle(Color.textPrimary)
-                // Stat labels ("1,000+ Rush Yds") are far longer than the decades this cell used
-                // to hold, so they wrap to two lines before shrinking rather than scaling a
-                // single line down to unreadable.
-                .multilineTextAlignment(.center)
-                .lineLimit(2).minimumScaleFactor(0.6)
-                .padding(.horizontal, 2)
-                .frame(maxWidth: .infinity, minHeight: minHeight)
-                .background(Color.surfaceMuted)
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-        }
-    }
-
-    private func answerCell(_ puzzle: GridPuzzle, row: Int, col: Int) -> some View {
-        let index = row * 3 + col
-        let cell = puzzle.cell(row: row, col: col)
-        return Button {
-            guard solved[index] == nil, !wrong.contains(index) else { return }
+        GridBoardPresentation(puzzle: puzzle, solved: solved, missed: wrong) { index in
+            guard !finishing, run.remaining > 0, solved[index] == nil else { return }
             activeCell = index
-        } label: {
-            VStack(spacing: 2) {
-                if let name = solved[index] {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.successText)
-                    Text(name).font(.label11).foregroundStyle(Color.textPrimary).lineLimit(2).minimumScaleFactor(0.6)
-                } else if wrong.contains(index) {
-                    Image(systemName: "xmark.circle.fill").foregroundStyle(Color.dangerText)
-                } else {
-                    starRating(cell.rarityStars)
-                }
-            }
-            .frame(maxWidth: .infinity, minHeight: 64)
-            .padding(4)
         }
-        .buttonStyle(.plain)
-        .background(Color.surface)
-        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.borderInk, lineWidth: 1.5))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .disabled(solved[index] != nil || wrong.contains(index))
-        .accessibilityLabel(accessibilityLabel(cell: cell, index: index))
-    }
-
-    private func starRating(_ stars: Int) -> some View {
-        HStack(spacing: 1) {
-            ForEach(0..<stars, id: \.self) { _ in
-                Image(systemName: "star.fill").font(.system(size: 8)).foregroundStyle(Color.warningFill)
-            }
-        }
-    }
-
-    private func accessibilityLabel(cell: GridPuzzle.GridCell, index: Int) -> String {
-        if let name = solved[index] { return "Solved: \(name)" }
-        if wrong.contains(index) { return "Missed" }
-        return "Empty cell, rarity \(cell.rarityStars) of 5 stars"
     }
 
     /// Phrased for the board shape actually on screen — "the team and the era" was wrong the
     /// moment a board could be teams x teams or teams x stats.
     private func footer(_ puzzle: GridPuzzle) -> some View {
-        Text(puzzle.instructions)
-            .font(.label11).foregroundStyle(Color.textMuted)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 16).padding(.vertical, 16)
+        VStack(spacing: 12) {
+            Text(puzzle.instructions)
+                .font(.label11).foregroundStyle(Color.textMuted)
+                .multilineTextAlignment(.center)
+            Button("Give up · See answers") { finish(puzzle) }
+                .font(.label12).foregroundStyle(Color.textMuted)
+                .disabled(finishing)
+        }
+        .padding(16)
     }
 
     private func cellPrompt(_ puzzle: GridPuzzle, index: Int) -> String {
@@ -437,36 +356,28 @@ struct GridGameView: View {
 
     private func submitGuess(_ guess: String) {
         guard let index = activeCell, let puzzle else { return }
-        let row = index / 3, col = index % 3
+        guard !finishing else { return }
+        let outcome = run.submit(guess, at: index, puzzle: puzzle)
+        guard let outcome else { return }
         activeCell = nil
-
-        if puzzle.isCorrect(row: row, col: col, guess: guess) {
-            let matched = puzzle.cell(row: row, col: col).validAnswerNames.first { name in
-                AnswerMatcher.matches(guess, answer: .init(canonical: name, aliases: []))
-            } ?? guess
-            solved[index] = matched
-            Haptics.success()
-        } else {
-            wrong.insert(index)
-            wrongNames[index] = guess
-            Haptics.reject()
-        }
-
-        if attemptedCount >= 9 { finish(puzzle) }
+        if outcome { Haptics.success() } else { Haptics.reject() }
+        if run.remaining == 0 { finish(puzzle) }
     }
 
     private func finish(_ puzzle: GridPuzzle) {
         // The duel timer and the ninth guess can both try to finish the same run (a guess
         // landing right as the clock hits zero) — idempotent rather than relying on either
         // caller to coordinate.
-        guard result == nil else { return }
+        guard result == nil, !finishing else { return }
+        finishing = true
+        activeCell = nil
         let performance = Double(solved.count) / 9.0
         // A duel is never ranked and never a daily (see `duel`'s doc comment) — same distinction
         // Keep4's duel branch makes via `PlayMode`.
-        let mode: PlayMode = duel != nil ? .versus : (isPractice ? .practice : .daily)
+        let mode: PlayMode = duel != nil ? .versus : (isPractice || boardDay == nil ? .practice : .daily)
         let detail = Self.buildSessionDetail(puzzle: puzzle, solved: solved, wrong: wrong,
                                              mode: mode, startedAt: startedAt,
-                                             opponentUserID: duel?.opponentUserID)
+                                             opponentUserID: duel?.opponentUserID, attempted: attemptedCount)
         let score = detail.score
         if let duel {
             // `duel.boardID` is the real `puzzles.id` the board was fetched by
@@ -487,7 +398,7 @@ struct GridGameView: View {
         // writes them to the career log (skipping XP/streak/rating, unlike `complete`), so accuracy
         // and volume stats see practice play while `PlayMode.countsForRecords` (false for
         // `.practice`) keeps it out of personal bests.
-        guard !isPractice else {
+        guard !isPractice, let day = boardDay else {
             Task {
                 await container.logSession(format: .grid, sport: sport, performance: performance,
                                            perfect: solved.count == 9,
@@ -496,11 +407,11 @@ struct GridGameView: View {
             }
             return
         }
-        let day = OverUnderRoundGenerator.dayString(Date())
         let dailyID = "grid-\(sport.rawValue)-\(day)"
-        let ranked = !container.hasCompletedToday(puzzleID: dailyID)
-        let attempts = solved.map { (cell: $0.key, name: $0.value, correct: true) }
-            + wrongNames.map { (cell: $0.key, name: $0.value, correct: false) }
+        let ranked = day == PuzzleStore.localDayString() && !container.hasCompletedToday(puzzleID: dailyID)
+        // The backend permits one pick per cell. Project the ordered attempt log to each
+        // cell's final answer; a successful retry replaces its earlier miss in crowd stats.
+        let attempts = run.finalCellAttempts.map { (cell: $0.cell, name: $0.name, correct: $0.correct) }
         Task {
             rewards = await container.complete(format: .grid, sport: sport, performance: performance,
                                                perfect: solved.count == 9, puzzleID: dailyID, ranked: ranked,
@@ -516,12 +427,11 @@ struct GridGameView: View {
     }
 
     /// Builds the log entry for a finished grid — split out of `finish` so the score/star math and
-    /// the missed-cell-header logic can be unit tested without standing up the view. `wrong` is
-    /// exactly "attempted but unsolved" here because `finish` only ever runs once all 9 cells have
-    /// a final answer, never partway through.
+    /// the missed-cell-header logic can be tested without standing up the view. `wrong` contains
+    /// attempted but unsolved cells; `attempted` includes retries and excludes unused guesses.
     static func buildSessionDetail(puzzle: GridPuzzle, solved: [Int: String], wrong: Set<Int>,
                                    mode: PlayMode, startedAt: Date?,
-                                   opponentUserID: String? = nil) -> RepositoryContainer.SessionDetail {
+                                   opponentUserID: String? = nil, attempted: Int = 9) -> RepositoryContainer.SessionDetail {
         let totalStars = solved.keys.reduce(0) { sum, index in
             sum + puzzle.cell(row: index / 3, col: index % 3).rarityStars
         }
@@ -537,18 +447,15 @@ struct GridGameView: View {
         // 9 solves x 100, plus up to 5 rarity stars x 20 each — the true ceiling (a perfect board
         // of nine 5-star cells) is 1800.
         return RepositoryContainer.SessionDetail(mode: mode, score: solved.count * 100 + totalStars * 20,
-                                                 maxScore: 1800, correct: solved.count, attempted: 9,
+                                                 maxScore: 1800, correct: solved.count, attempted: attempted,
                                                  startedAt: startedAt, details: details)
     }
 
     /// `-screenshotGridResult`: simctl can't type into the guess field, so auto-answer every
     /// cell with its first valid answer.
     private func autoSolveForScreenshot(_ puzzle: GridPuzzle) {
-        for index in 0..<9 {
-            let row = index / 3, col = index % 3
-            if let first = puzzle.cell(row: row, col: col).validAnswerNames.first {
-                solved[index] = first
-            }
+        for (index, name) in GridRunState.distinctAnswerAssignment(puzzle).sorted(by: { $0.key < $1.key }) {
+            _ = run.submit(name, at: index, puzzle: puzzle)
         }
         finish(puzzle)
     }

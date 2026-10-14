@@ -148,6 +148,7 @@ final class RepositoryContainer: ObservableObject {
         self.store.$lastLoadDiagnostic
             .sink { [weak self] in self?.productLoadDiagnostic = $0 }
             .store(in: &storeCancellables)
+        self.store.onCardPackTransaction = { [weak self] in await self?.creditPendingCardPacks() }
     }
 
     private func recomputeEntitlements() {
@@ -218,6 +219,8 @@ final class RepositoryContainer: ObservableObject {
         // is claimed, so pulling first would read an empty table and then throw away the row
         // this call just created until the next launch.
         await claimEntitlements(reason: "sign_in")
+        // Settle any unfinished purchases from versions that offered trading cards.
+        await creditPendingCardPacks()
         serverEntitlements = await mirror.pullEntitlements()
         recomputeEntitlements()
         // Set last, and only on the path that actually populated the profile fields above.
@@ -1260,5 +1263,25 @@ final class RepositoryContainer: ObservableObject {
         let edges = await social.edges(me: uid)
         pendingFriendRequests = edges.filter { $0.isIncomingPending(me: uid) }.count
         acceptedFriends = edges.filter(\.isAccepted).count
+    }
+}
+
+
+/// Compatibility for unfinished purchases made by an older version. No new packs are sold.
+extension RepositoryContainer {
+    func creditPendingCardPacks() async {
+        guard let client, isSignedIn else { return }
+        let pending = await store.unfinishedCardPacks()
+        guard !pending.isEmpty else { return }
+        struct Body: Encodable { let signedTransactions: [String] }
+        struct Result: Decodable { let finishable: [String] }
+        do {
+            let data = try await client.invokeFunction("grant-card-packs",
+                body: Body(signedTransactions: pending))
+            let result: Result = try client.decode(data)
+            await store.finishCardPacks(Set(result.finishable))
+        } catch {
+            track(.cardPackCreditFailed, ["error": String(describing: error)])
+        }
     }
 }

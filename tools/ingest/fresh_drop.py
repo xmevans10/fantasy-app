@@ -27,7 +27,8 @@ from . import assemble, curation, generate, periods
 from . import main as ingest_main
 from .assemble import PuzzleRow
 from .baselines import compute_baselines
-from .daily_puzzle import _finalize_row, _print_pick, _signature, pick_novel_puzzle
+from .daily_puzzle import (_finalize_row, _print_pick, _signature, load_board_index,
+                           pick_novel_puzzle)
 from .grade import BaselineTable
 from .models import RawSeason
 from .periods import Period
@@ -50,6 +51,7 @@ GAME_COHORTS: dict[str, tuple[str, ...]] = {
     "nfl": ("nfl-games",),
     "nba": ("nba-games",),
     "baseball": ("baseball-games",),
+    "soccer": ("soccer-games",),
 }
 
 # Division slices available as flagship boards, per sport.
@@ -298,11 +300,16 @@ def main() -> int:
     tier = (lambda t: 0 if t.key.startswith("fresh-") else 1) if prefer_simple \
         else (lambda t: 0 if t.key.startswith("gen") else 1)
     print(f"[fresh] tier: {'plain flagship board first' if prefer_simple else 'niche first'}")
+    # Same-title / 5-of-8 overlap guard, one read per run (read-only, so dry runs load it too).
+    guard = load_board_index()
     pick = pick_novel_puzzle(candidates, served, drop, recent_kinds,
-                             cooldown_key=_kind_of, tier_key=tier)
+                             cooldown_key=_kind_of, tier_key=tier, guard=guard)
+    if guard.rejected:
+        print("[guard] rejected: " + ", ".join(
+            f"{s} {why}: {n}" for (s, why), n in sorted(guard.rejected.items())))
     if pick is None:
-        print("[fresh] every candidate for this period was already served. Leaving the "
-              "evergreen daily in place.")
+        print("[fresh] every candidate for this period was already served or duplicates a "
+              "live board. Leaving the evergreen daily in place.")
         return 0
     theme, row, sig = pick
     row = _finalize_row(drop, theme, row)

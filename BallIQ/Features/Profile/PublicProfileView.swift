@@ -41,7 +41,7 @@ struct PublicProfileView: View {
             }
             .padding(16)
         }
-        .background(Color.appBackground)
+        .paperGround()
         .navigationTitle(profile?.username ?? usernameHint ?? "Player")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -219,7 +219,7 @@ struct PublicProfileView: View {
     private func ratingsCard(_ profile: PublicProfile) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("RATINGS").font(.label12).foregroundStyle(Color.textMuted)
-            ForEach(Sport.allCases) { sport in
+            ForEach(Sport.released) { sport in
                 let rating = profile.rating(for: sport)
                 let tier = Tier.forRating(rating)
                 HStack(spacing: 8) {
@@ -280,7 +280,9 @@ struct DuelPickerSheet: View {
                 }
                 VStack(alignment: .leading, spacing: 8) {
                     Text("SPORT").font(.label12).foregroundStyle(Color.textMuted)
-                    PrimeSegmentedControl(options: Sport.allCases.map { ($0.displayName, $0) },
+                    // `Sport.released` fences off a sport still mid-rollout (currently golf) —
+                    // same reasoning as `VersusView`'s challenge-creation picker.
+                    PrimeSegmentedControl(options: Sport.released.map { ($0.displayName, $0) },
                                           selection: $sport)
                 }
                 VStack(alignment: .leading, spacing: 8) {
@@ -304,7 +306,7 @@ struct DuelPickerSheet: View {
                 Spacer()
             }
             .padding(16)
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("New Challenge")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -87,7 +87,7 @@ enum UpdateNotes {
     /// player who *does* play it feels the smoother curve rather than reads about it. Rule 1 also
     /// has nothing to show here — the one new component, `LadderBlitzResultView`, has no OPM art
     /// rendered for it, and declaring a slide without that art would ship a silently-dropped one.
-    static let deliberatelySilent: Set<String> = ["1.8.4", "1.8.5", "1.8.7"]
+    static let deliberatelySilent: Set<String> = ["1.8.4", "1.8.5", "1.8.7", "1.8.8", "1.8.9"]
 
     /// Written, rendered, and **not shipping yet**.
     ///

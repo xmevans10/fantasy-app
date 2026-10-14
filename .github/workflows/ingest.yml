@@ -71,18 +71,23 @@ jobs:
       # way, for exactly this reason; this job never got the same treatment.
       - if: always()
         run: python -m tools.ingest.main --grid nfl nba baseball soccer tennis hockey f1 --upsert
-      # Re-warm the `grid_membership_index` cache (0014_grid_membership_index_cache.sql) right
-      # after minting, so "New random grid" never pays the ~10s live-aggregate cost this masked
-      # before: the cache is read on a 36h TTL, and a stale/missing row falls back to computing
-      # inline on whichever player's request loses that race. Cheap and idempotent — a no-op
-      # rebuild if nothing changed since yesterday's run.
+      # Each cache/sport commits separately; HTTP errors must fail the job visibly.
       - if: always()
         run: |
-          curl -sS -X POST "$SUPABASE_URL/rest/v1/rpc/refresh_grid_membership_index_cache" \
-            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{}'
+          refresh_failed=0
+          for cache_rpc in refresh_grid_player_names_cache refresh_grid_lookup_cache; do
+            for cache_sport in nfl nba baseball soccer tennis hockey f1; do
+              if ! curl --fail-with-body -sS --max-time 150 -X POST "$SUPABASE_URL/rest/v1/rpc/$cache_rpc" \
+                -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+                -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+                -H "Content-Type: application/json" \
+                -d "{\"p_sport\":\"$cache_sport\"}"; then
+                echo "::error::Grid cache refresh failed: $cache_rpc / $cache_sport"
+                refresh_failed=1
+              fi
+            done
+          done
+          exit "$refresh_failed"
       # Repoint already-minted Keep4/Journeyman boards (0015_repoint_puzzle_headshots.sql)
       # whenever the catalog step above improved a player's headshot but that player already
       # sits in a frozen board — the daily `--upsert --catalog` only fixes NEW rows, an existing

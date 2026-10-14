@@ -114,6 +114,9 @@ enum DraftSpinConstraint {
         // than the literal two-car grid entry — the same playability call tennis's three
         // makes, and a fantasy lineup is not a claim about a real entry list.
         .f1: [("Driver", .exact("Driver")), ("Driver", .exact("Driver")), ("Driver", .exact("Driver"))],
+        // Golf has one position too ("Golfer"), so it takes the same tennis/F1 shape: three
+        // identical slots, not a claim about a real tournament field size.
+        .golf: [("Golfer", .exact("Golfer")), ("Golfer", .exact("Golfer")), ("Golfer", .exact("Golfer"))],
     ]
 
     /// The NFL "Both sides" variant (ROSTER toggle): the six offense slots unchanged, plus
@@ -387,6 +390,14 @@ struct DraftSpinResult: Equatable {
                 case .madePlayoffs: return String(localized: "PODIUM REGULAR")
                 case .missedPlayoffs: return String(localized: "MIDFIELD SEASON")
                 }
+            // Golf has no head-to-head standings either, same as tennis — a season is a tour
+            // campaign judged by results, not a table position.
+            case .golf:
+                switch self {
+                case .champion: return String(localized: "PLAYER OF THE YEAR")
+                case .madePlayoffs: return String(localized: "TOP 10 SEASON")
+                case .missedPlayoffs: return String(localized: "TOUR GRIND")
+                }
             }
         }
     }
@@ -439,6 +450,10 @@ enum DraftSpinSimulator {
         // for the title, P(X>=12) = 41.6% for the podium-regular tier.
         case .f1: return SeasonShape(gameCount: 22, championshipWins: 15, playoffWins: 12)
         case .tennis: return SeasonShape(gameCount: 70, championshipWins: 42, playoffWins: 35)
+        // A PGA Tour season is ~24 official FedExCup events. Thresholds derived the same way
+        // as every sport above — matching NFL's tier probabilities under a 50/50 event:
+        // P(X>=16) = 7.6% for Player of the Year, P(X>=13) = 41.9% for the Top-10-season tier.
+        case .golf: return SeasonShape(gameCount: 24, championshipWins: 16, playoffWins: 13)
         }
     }
 
@@ -484,6 +499,10 @@ enum DraftSpinSimulator {
         // drafted driver than any other sport's. Worth knowing before touching these numbers.
         case .hockey:   return FantasyAnchors(p50: 497,   p90: 1185,  p99: 1808)
         case .f1:       return FantasyAnchors(p50: 61.5,  p90: 547.5, p99: 1621.8)
+        // Golf — measured 2026-09-27 from `tools/ingest/data/golf_seasons.csv` (4,978 PGA Tour
+        // seasons, 2001-2025) with grade.py's `golf_fantasy`, per-season percentile x 3 identical
+        // Golfer slots. The ceiling is Vijay Singh's 9-win 2004 (~503 for one slot).
+        case .golf:     return FantasyAnchors(p50: 144,   p90: 383.1, p99: 732.3)
         }
     }
 
@@ -510,6 +529,7 @@ enum DraftSpinSimulator {
         // stat key, so one formula cannot grade both.
         case .hockey: return season.position == "G" ? "hockey_goalie_fantasy" : "hockey_skater_fantasy"
         case .f1: return "f1_driver_fantasy"
+        case .golf: return "golf_fantasy"
         }
     }
 

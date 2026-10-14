@@ -52,6 +52,8 @@ final class PlayerSeasonCatalog {
     /// costs no network at all), without changing the randomness of the actual spin.
     private var draftSpinSamples: [Sport: [CatalogSeason]] = [:]
     private var draftSpinRosters: [String: [CatalogSeason]] = [:]
+    private var arcadeSamples: [Sport: [CatalogSeason]] = [:]
+    private var arcadeSampleTasks: [Sport: Task<[CatalogSeason], Never>] = [:]
     private var draftSpinSampleTasks: [Sport: Task<[CatalogSeason], Never>] = [:]
     private var draftSpinRosterTasks: [String: Task<[CatalogSeason], Never>] = [:]
 
@@ -131,7 +133,12 @@ final class PlayerSeasonCatalog {
     }
 
     private static func ordered(_ seasons: [CatalogSeason]) -> [CatalogSeason] {
-        Array(seasons.sorted { ($0.seasonYear, $0.name) > ($1.seasonYear, $1.name) }.prefix(2_000))
+        Array(seasons.sorted {
+            if ($0.seasonYear, $0.name) != ($1.seasonYear, $1.name) {
+                return ($0.seasonYear, $0.name) > ($1.seasonYear, $1.name)
+            }
+            return $0.id < $1.id
+        }.prefix(2_000))
     }
 
     /// Safe to call when a setup screen first appears or its sport changes. In-flight requests
@@ -145,11 +152,55 @@ final class PlayerSeasonCatalog {
         warmIdentities(for: sport)
     }
 
-    /// Every arcade format's session pool, served from the same cached broad sample Draft &
-    /// Spin discovers from — Over/Under's 200-row pool is just its prefix, so one warm fetch
-    /// (Home's prefetch, or either format's setup screen) makes BOTH formats open instantly.
+    /// Short arcade sessions consume 200 rows, while Draft & Spin needs broad team discovery.
+    /// Reuse a loaded broad sample, otherwise fetch its sorted prefix on the server.
     func arcadePool(for sport: Sport, limit: Int) async -> [CatalogSeason] {
-        Array(await draftSpinSample(for: sport).prefix(limit))
+        guard limit > 0 else { return [] }
+        if let broad = draftSpinSamples[sport] { return Array(broad.prefix(limit)) }
+        guard limit <= 200 else { return Array(await draftSpinSample(for: sport).prefix(limit)) }
+        if let cached = arcadeSamples[sport] { return Array(cached.prefix(limit)) }
+        if let task = arcadeSampleTasks[sport] { return Array(await task.value.prefix(limit)) }
+        let task = Task<[CatalogSeason], Never> { [weak self] in
+            guard let self else { return [] }
+            return await self.loadArcadeSample(for: sport)
+        }
+        arcadeSampleTasks[sport] = task
+        let rows = await task.value
+        arcadeSampleTasks[sport] = nil
+        arcadeSamples[sport] = rows
+        return Array(rows.prefix(limit))
+    }
+
+    func prefetchArcadePool(for sport: Sport) {
+        Task { _ = await arcadePool(for: sport, limit: 200) }
+        warmIdentities(for: sport)
+    }
+
+    private struct ArcadeSampleArgs: Encodable {
+        let p_sport: String
+        let p_limit: Int
+    }
+
+    private func loadArcadeSample(for sport: Sport) async -> [CatalogSeason] {
+        let key = "arcade-round-pool-v1-\(sport.rawValue)"
+        for cacheKey in [key, Self.diskCacheKey(for: sport)] {
+            if let entry = await DiskCache.read([CatalogSeason].self, key: cacheKey),
+               Date().timeIntervalSince(entry.writtenAt) < Self.diskCacheTTL {
+                return Array(entry.value.prefix(200))
+            }
+        }
+        if let client,
+           let data = try? await client.rpc("arcade_season_sample",
+                                           args: ArcadeSampleArgs(p_sport: sport.rawValue, p_limit: 200)),
+           let rows = try? decoder.decode([CatalogSeason].self, from: data), !rows.isEmpty {
+            await DiskCache.write(rows, key: key)
+            return rows
+        }
+        if let stale = await DiskCache.read([CatalogSeason].self, key: key) {
+            return stale.value
+        }
+        // Older servers or failed reads retain the existing broad-pool/offline fallback.
+        return Array(await draftSpinSample(for: sport).prefix(200))
     }
 
     /// Complete roster for the team/year that the reel actually landed on. The exact server

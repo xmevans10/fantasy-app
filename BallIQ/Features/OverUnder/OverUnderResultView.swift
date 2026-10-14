@@ -30,7 +30,7 @@ struct OverUnderResultView: View {
             }
             doneBar
         }
-        .background(Color.appBackground)
+        .paperGround()
         .celebrate(on: $confetti, intensity: beatHighScore ? 90 : 40)
         .onAppear {
             let gained = (rewards?.ratingChange.delta ?? 0) > 0

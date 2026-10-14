@@ -49,6 +49,8 @@ enum AnalyticsEvent: String {
     /// nothing — a different problem from it never running.
     case entitlementClaimed    = "entitlement_claimed"
     case entitlementClaimFailed = "entitlement_claim_failed"
+    /// An unfinished legacy consumable could not be credited.
+    case cardPackCreditFailed = "card_pack_credit_failed"
     // Viral loop. `share_tapped` shipped alone and unqualified, which made it unanswerable:
     // 6 taps, ever, with no way to tell which format produced them, what artifact went out, or
     // whether a single one led anywhere. These make it a loop you can compute a k-factor from:

@@ -37,7 +37,7 @@ struct ModerationQueueView: View {
                 }
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .navigationTitle("Moderation")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }

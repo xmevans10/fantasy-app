@@ -18,7 +18,7 @@ final class RemotePuzzleRepository: PuzzleRepository {
     /// `content` jsonb stores the puzzle in the same camelCase shape the bundled JSON uses.
     private let contentDecoder = JSONDecoder()
 
-    /// In-flight request coalescing for the three Grid reads that now have more than one caller
+    /// In-flight request coalescing for Grid reads and format pools with multiple callers
     /// (a launch warm, the setup screen's warm, and the view's own load). Without it those sites
     /// race: measured on device, the board was fetched twice on a single cold open, and the two
     /// expensive ones would double too — the name index is 183 KB and the membership RPC is
@@ -369,6 +369,12 @@ final class RemotePuzzleRepository: PuzzleRepository {
     /// rather than a write-time TTL — the one thing a daily cache must guarantee is that
     /// `pick()` above can find the row for the user's current local day.
     private func fetch<T: Codable>(format: String, filter: SportFilter, as type: T.Type) async -> [PuzzleContentRow<T>]? {
+        await coalesced("pool-\(format)-\(filter.rawValue)") {
+            await self.fetchPool(format: format, filter: filter, as: type)
+        }
+    }
+
+    private func fetchPool<T: Codable>(format: String, filter: SportFilter, as type: T.Type) async -> [PuzzleContentRow<T>]? {
         let key = "puzzles-\(format)-\(filter.rawValue)"
         let today = PuzzleStore.localDayString()
         // A cache counts only while it actually holds today's dated row. Age alone proves

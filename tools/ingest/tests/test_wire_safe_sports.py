@@ -60,6 +60,15 @@ def test_m31_sports_are_ingested_but_held_back():
     assert not ({"hockey", "f1"} & WIRE_SAFE_SPORTS), "M31 sports not yet released to clients"
 
 
+def test_golf_is_ingested_but_held_back():
+    """Same shape as the M31 doc test above, one client floor earlier: golf is fully ingested
+    (real PGA Tour provider, catalog-ready) but no shipped `Sport` enum knows the case yet, so
+    it must stay out of WIRE_SAFE_SPORTS until a build that does is the floor in the wild.
+    Add it to WIRE_SAFE_SPORTS and update this test in the same change — a deliberate act."""
+    assert "golf" in _VALID_SPORTS, "golf data should be fully ingested"
+    assert "golf" not in WIRE_SAFE_SPORTS, "golf not yet released to clients"
+
+
 # ── The release transition, not just the gate ─────────────────────────────────
 #
 # The gate above decides what may be MINTED. It says nothing about the two other halves of

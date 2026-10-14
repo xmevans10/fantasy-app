@@ -41,7 +41,7 @@ struct WeekPackView: View {
             }
             .padding(16)
         }
-        .background(Color.appBackground)
+        .paperGround()
         .navigationTitle("")
         .task { await refreshProgress() }
         .onAppear { WeekPackEngagement.markEngaged(pack.id) }

@@ -24,6 +24,12 @@ final class ImageURLTransformTests: XCTestCase {
         XCTAssertEqual(out, "https://playbook-images.xmevans10.workers.dev/v1/player-headshots/nfl/abc.png")
     }
 
+    func testLegacyStorageImageBypassesUnsupportedCDNRoute() throws {
+        let url = try XCTUnwrap(URL(string:
+            "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/portrait.img"))
+        XCTAssertEqual(AppImagePipeline.transformed(url, pixels: 192), url)
+    }
+
     // MARK: - Cloudinary (the league CDNs)
 
     /// The case that was costing 100x: transforms present, but no width.

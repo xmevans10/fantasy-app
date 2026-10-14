@@ -268,6 +268,14 @@ extension ScoringRule {
                                         ("fastest_laps", 3.0), ("top_tens", 2.0),
                                         ("races", 0.5), ("championships", 50.0),
                                         ("dnfs", -1.0)),
+        // Golf scores a season résumé, the same shape as tennis/F1 above. Mirrors grade.py's
+        // `golf_fantasy` exactly (the daily pipeline is the source of truth). `scoring_avg`
+        // itself is absent because it is lower-is-better; `scoring_margin` is its gradeable
+        // form, `(71 - scoring_avg) * events`, derived in `golf_pga.load_seasons` and shipped
+        // in the stats blob, so it may be negative for a below-baseline season. `earnings` is
+        // not graded: purses grew ~5x over the covered era (see grade.py).
+        "golf_fantasy": pointsRule(("wins", 30.0), ("top10s", 4.0), ("cuts_made", 1.0),
+                                   ("events", 0.2), ("scoring_margin", 2.0)),
     ]
 
     /// Single-game grain reuses the season coefficients under their own `_game`-suffixed

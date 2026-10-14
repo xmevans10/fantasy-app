@@ -99,14 +99,24 @@ final class AppImagePipelineTests: XCTestCase {
                        "crest sizes \(inUse) should collapse to one rendition, got \(buckets)")
     }
 
-    /// The one outlier — an 84 pt avatar — legitimately needs a bigger rendition than a 22 pt
-    /// chip. It's the only reason a second rung exists.
-    func testLargeAvatarGetsItsOwnLargerBucket() {
-        let chip = AppImagePipeline.pixelBucket(for: CGSize(width: 22, height: 22))
+    /// An 84 pt avatar fits 192 px at 2x but needs 384 px at 3x.
+    /// The requested physical pixels, rather than the point size alone, choose the bucket.
+    func testLargeAvatarBucketCoversItsNativePixelSize() {
+        let avatarPixels = 84 * AppImagePipeline.screenScale
         let avatar = AppImagePipeline.pixelBucket(for: CGSize(width: 84, height: 84))
-        XCTAssertGreaterThan(avatar, chip)
+        XCTAssertEqual(avatar, avatarPixels <= 192 ? 192 : 384)
+        XCTAssertGreaterThanOrEqual(avatar, avatarPixels)
     }
 
+    /// A request crossing the first bucket's pixel boundary must use the larger rendition
+    /// on every screen scale, including the SE's 2x display.
+    func testRequestBeyondSmallBucketUsesLargerRendition() {
+        let points = 193 / AppImagePipeline.screenScale
+        let larger = AppImagePipeline.pixelBucket(for: CGSize(width: points, height: points))
+        XCTAssertEqual(larger, 384)
+    }
+
+    /// Oversized requests use the largest available rendition.
     func testOversizedRequestClampsToLargestBucketRatherThanFailing() {
         let huge = CGSize(width: 4000, height: 4000)
         XCTAssertEqual(AppImagePipeline.pixelBucket(for: huge), AppImagePipeline.buckets.last)

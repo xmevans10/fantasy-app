@@ -56,15 +56,22 @@ def _sql_urls(base: str, key: str, scope: str) -> set[str]:
     if scope in ("puzzles", "all"):
         # Frozen board content — the set the dailies, the archive and Blitz draw from.
         for fmt in ("keep4", "journeyman"):
-            rows = _rest(base, key, f"puzzles?select=content&format=eq.{fmt}&limit=5000")
-            for row in rows:
-                content = row.get("content") or {}
-                if fmt == "keep4":
-                    for player in content.get("players") or []:
-                        if player.get("headshot"):
-                            urls.add(player["headshot"])
-                elif content.get("headshot"):
-                    urls.add(content["headshot"])
+            offset, page = 0, 1000
+            while True:
+                rows = _rest(base, key,
+                             f"puzzles?select=content&format=eq.{fmt}"
+                             f"&order=id&limit={page}&offset={offset}")
+                for row in rows:
+                    content = row.get("content") or {}
+                    if fmt == "keep4":
+                        for player in content.get("players") or []:
+                            if player.get("headshot"):
+                                urls.add(player["headshot"])
+                    elif content.get("headshot"):
+                        urls.add(content["headshot"])
+                if len(rows) < page:
+                    break
+                offset += page
     if scope in ("teams", "all"):
         for row in _rest(base, key, "teams?select=logo_url&limit=1000"):
             if row.get("logo_url"):
@@ -100,6 +107,9 @@ def _cdn_url(source: str) -> str | None:
     elif parsed.netloc == "nhccgufqwndtoasdbkhc.supabase.co" and parsed.path.startswith(STORAGE_MARKER):
         path = parsed.path[len(STORAGE_MARKER):]
     else:
+        return None
+    # Legacy .img objects are readable at storage but outside the CDN route contract.
+    if path.rsplit(".", 1)[-1].lower() not in {"png", "jpg", "jpeg", "webp", "gif"}:
         return None
     if not path.startswith(("player-headshots/", "team-logos/")):
         return None

@@ -58,6 +58,10 @@ RULES: dict[str, Rule] = {
     "nfl": Rule(min_games=10),
     "baseball": Rule(min_games=40),
     "nba": Rule(min_games=25),
+    # One league round: ten fixtures in a 20-club league, nine in an 18-club one. Measured on
+    # eng.1 2025-26, derived rounds held 8 to 11 (8 on cup-final weekends); a lone rearranged
+    # midweek fixture is the thing this exists to refuse.
+    "soccer": Rule(min_games=7),
 }
 DEFAULT_RULE = Rule(min_games=10)
 
