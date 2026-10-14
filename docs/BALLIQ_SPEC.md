@@ -66,7 +66,7 @@ player-season game cards, ratings, streaks, leagues and existing game-format pur
 Prioritize correctness, reliable loading, clear onboarding, and polish of existing gameplay.
 New product expansion is deferred unless explicitly requested.
 
-**My Teams 1.9.0 (60), TestFlight candidate (2026-10-14):** explicitly requested by the user. Saints pilot: 13 catalog-derived K4C4 boards, free Brees starter, existing Pro archive access, My Teams Home entry and shelves, permanent completion history, server-scored idempotent team rewards, offline result outbox, and visible career levels. Team inventory is separate from general daily pools. Existing formats, portrait layout and competitive rating math are preserved. No daily-team-content promise or new trading-card economy. See [MY_TEAMS.md](MY_TEAMS.md) for implementation and release verification.
+**My Teams 1.9.0 (60), TestFlight (2026-10-14):** VALID and ready internally; both external groups are assigned and await Apple beta review. explicitly requested by the user. Saints pilot: 13 catalog-derived K4C4 boards, free Brees starter, existing Pro archive access, My Teams Home entry and shelves, permanent completion history, server-scored idempotent team rewards, offline result outbox, and visible career levels. Team inventory is separate from general daily pools. Existing formats, portrait layout and competitive rating math are preserved. No daily-team-content promise or new trading-card economy. See [MY_TEAMS.md](MY_TEAMS.md) for implementation and release verification.
 
 Legacy card tables, migrations and receipt fulfillment remain for compatibility with older
 installed builds and purchase audit history; they are not active roadmap work. Production

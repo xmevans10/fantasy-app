@@ -1,6 +1,6 @@
 # My Teams — Saints TestFlight pilot
 
-Release candidate: Playbook 1.9.0 (60), October 14, 2026. Built on main `9e74a66` after core-product cleanup. This is a finite team collection, not a team daily service.
+TestFlight: Playbook 1.9.0 (60), October 14, 2026. Built on main `9e74a66` after core-product cleanup. This is a finite team collection, not a team daily service.
 
 ## Player experience
 
@@ -29,7 +29,7 @@ Migrations 0040/0041 were applied to `nhccgufqwndtoasdbkhc`. A progress trigger 
 - Hosted Home, hub, gameplay, result, completed and accessibility-text screenshots on iPhone 15 and SE. No image/name/chip redesign was imported from the rejected earlier branch.
 - Full iOS suite: 1,038 tests, one existing skip, zero failures. Final SE/version checks: 12 tests, zero failures.
 - Python suite: 968 passed, one skipped. Test-only F1 identity fetches are isolated; local-server tests ran with network access.
-- Signed Release archive succeeded; its Info.plist confirms 1.9.0 (60). Apple processing/group state is recorded after upload.
+- Signed Release archive succeeded; its Info.plist confirms 1.9.0 (60). Apple marks build 60 VALID; internal testing is READY_FOR_BETA_TESTING. Both existing external groups are assigned (HTTP 204), with beta review WAITING_FOR_REVIEW. Testing notes are set. PR #6 merged at a0672029. The shared-inventory workflow succeeded on main (run 38602185797), and the exact archived app’s guest REST configuration fetched all 13 boards with content identical to its bundle.
 
 Analytics: `team_viewed`, `team_puzzle_started`, `team_puzzle_completed`, with team/puzzle identifiers. Evaluate entry-to-play, completion, next-game selection and returns; do not treat recipe ranking or pilot traffic as proof of retention improvement.
 

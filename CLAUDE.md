@@ -9,7 +9,7 @@ one is process. **§9.1's version roadmap (1.2 push → 1.3 monetization → 1.4
 BALLIQ_SPEC.md §9.3's post-1.5 roadmap instead** (2026-10-14 directive: core-product correctness, loading and gameplay polish take priority;
 trading cards and associated collection expansion are retired; §9.0's tier rule still
 governs anything outside that roadmap). The app is LIVE on the App Store, monetization
-switched on: **v1.8.7 (build 55) is the current `READY_FOR_SALE` version as of 2026-10-14** (confirmed via the ASC API). **1.8.9 build 59** is VALID and ready for internal TestFlight testing (2026-10-14), attached to a manual-release App Store draft; public release remains 1.8.7 — treat `main` as production.
+switched on: **v1.8.7 (build 55) is the current `READY_FOR_SALE` version as of 2026-10-14** (confirmed via the ASC API). **1.9.0 build 60** is VALID and ready for internal TestFlight testing (2026-10-14); both external groups are assigned and await beta review. It adds the My Teams Saints pilot and visible career progress (docs/MY_TEAMS.md). The older 1.8.9 build 59 remains attached to a manual-release App Store draft; public release remains 1.8.7 — treat `main` as production.
 
 ## Supabase DB operations — execute directly, don't ask first
 
