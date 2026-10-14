@@ -6,12 +6,18 @@ import Foundation
 /// Locked by `ActivationFunnelTests`: renaming one has to break a test rather than silently
 /// split a funnel in the warehouse.
 enum OnboardingStep: String, CaseIterable {
+    /// What Playbook is. Added 2026-09-26 as step 0 (with `modes` as step 1), which shifted the
+    /// later steps' `index` by two (see docs/ANALYTICS.md, "Where the first run
+    /// stops"). Raw values of the older steps are unchanged, so name-keyed queries still hold.
+    case welcome   = "welcome"
+    /// The game-mode deck, split out of `welcome` the same day so each slide makes one point.
+    case modes     = "modes"
     /// One tap — which sport do you know best. The only question a brand-new player can answer
     /// without having played anything, and it pays off immediately (Home's daily pager opens on
     /// that sport).
     case sport     = "sport"
-    /// What K4C4 actually is. Doubles as the load state for today's puzzle, which has to happen
-    /// somewhere regardless.
+    /// What K4C4 actually is, taught with one practice card. Doubles as the load state for
+    /// today's puzzle, which has to happen somewhere regardless.
     case howToPlay = "how_to_play"
     /// The account ask, deliberately *after* the first game — see `OnboardingView`'s note.
     case account   = "account"

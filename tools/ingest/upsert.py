@@ -246,19 +246,9 @@ def upsert_grid(rows: list[dict]) -> int:
 
 
 def fetch_history_signatures() -> set[str]:
-    """Every puzzle signature ever served by the daily novel-puzzle picker (see
-    daily_puzzle.py) — a small, service-role-only table, so a full pull is fine."""
-    base, key = _require_env()
-    endpoint = f"{base}/rest/v1/puzzle_history?select=signature"
-    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
-    req = urllib.request.Request(endpoint, headers=headers, method="GET")
-    try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            rows = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as err:
-        body = err.read().decode("utf-8", "ignore")
-        raise RuntimeError(f"puzzle_history fetch failed ({err.code}): {body}") from err
-    return {r["signature"] for r in rows}
+    """Every served signature, paged past PostgREST's response cap so novelty is permanent."""
+    return {r["signature"] for r in fetch_rows_keyset(
+        "puzzle_history", "signature", cursor="signature")}
 
 
 def upsert_history(rows: list[dict]) -> int:
@@ -304,6 +294,21 @@ def fetch_served_pairs(dates: list[str]) -> set[tuple[str, str]]:
     return {(r["served_date"], r["sport"]) for r in rows}
 
 
+def fetch_keep4_boards() -> tuple[list[dict], list[dict]]:
+    """`(live, retired)` keep4 boards as `{id, sport, title, players}` dicts, for
+    `daily_puzzle.BoardIndex` (the same-title / 5-of-8 overlap guard).
+
+    `live` is every keep4 row in `puzzles`; `retired` is every keep4 row the 2026-09-26 sweep
+    moved to `puzzles_retired` (migration 0033). A retired board's *title* must stay burned —
+    re-minting it would put the duplicate straight back into Browse — while its players need
+    not, since the board they would overlap is no longer shown. Both tables are a few hundred
+    rows, so this is two keyset reads per run, never per candidate."""
+    select = "id,sport,title:content->>theme,players:content->players"
+    live = fetch_rows_keyset("puzzles", select, where="format=eq.keep4")
+    retired = fetch_rows_keyset("puzzles_retired", select, where="format=eq.keep4")
+    return live, retired
+
+
 def fetch_recent_theme_keys(since: str) -> dict[str, set[str]]:
     """`{sport: {theme_key, …}}` for every keep4 daily served on/after `since` (YYYY-MM-DD).
 
@@ -327,20 +332,8 @@ def fetch_recent_theme_keys(since: str) -> dict[str, set[str]]:
 
 
 def fetch_whoami_history() -> list[dict]:
-    """Every Who Am I? pick ever served (sport, player_key, served_date) — small,
-    service-role-only table (one row per day per sport), so a full pull is fine. Feeds
-    daily_whoami.py's least-recently-served ranking AND its per-(date, sport) idempotency
-    check in one round trip."""
-    base, key = _require_env()
-    endpoint = f"{base}/rest/v1/whoami_history?select=sport,player_key,served_date"
-    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
-    req = urllib.request.Request(endpoint, headers=headers, method="GET")
-    try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as err:
-        body = err.read().decode("utf-8", "ignore")
-        raise RuntimeError(f"whoami_history fetch failed ({err.code}): {body}") from err
+    """Every Who Am I? pick, including history beyond the server's single-response cap."""
+    return fetch_rows_keyset("whoami_history", "id,sport,player_key,served_date")
 
 
 def upsert_whoami_history(rows: list[dict]) -> int:
@@ -350,19 +343,8 @@ def upsert_whoami_history(rows: list[dict]) -> int:
 
 
 def fetch_journeyman_history() -> list[dict]:
-    """Every Journeyman pick ever served — same shape, size and purpose as
-    `fetch_whoami_history` (one row per day per sport), feeding daily_journeyman.py's
-    least-recently-served ranking and its idempotency check in one round trip."""
-    base, key = _require_env()
-    endpoint = f"{base}/rest/v1/journeyman_history?select=sport,player_key,served_date"
-    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
-    req = urllib.request.Request(endpoint, headers=headers, method="GET")
-    try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as err:
-        body = err.read().decode("utf-8", "ignore")
-        raise RuntimeError(f"journeyman_history fetch failed ({err.code}): {body}") from err
+    """Every Journeyman pick, paged for rotation and per-day idempotency."""
+    return fetch_rows_keyset("journeyman_history", "id,sport,player_key,served_date")
 
 
 def upsert_journeyman_history(rows: list[dict]) -> int:
@@ -530,29 +512,29 @@ def delete_daily_keep4(served_date: str, sport: str, *, keep_id: str) -> int:
 
 
 def fetch_rows_keyset(table: str, select: str, *, where: str = "",
-                      page_size: int = 1000) -> list[dict]:
-    """Every row of `table` matching `where`, keyset-paged on `id`.
+                      page_size: int = 1000, cursor: str = "id") -> list[dict]:
+    """Every row of `table` matching `where`, keyset-paged on its unique cursor.
 
     Keyset, not Range/offset, for the reason spelled out in `fetch_existing_catalog_ids`:
     a deep OFFSET walks and discards every earlier row and blows the statement timeout.
-    `select` must include `id` — it's the paging cursor.
+    `select` must include `cursor`, a unique ordered column (usually the primary key).
     """
     base, key = _require_env()
     headers = {"apikey": key, "Authorization": f"Bearer {key}"}
     rows: list[dict] = []
     last: str | None = None
     while True:
-        query = f"select={select}&order=id.asc&limit={page_size}"
+        query = f"select={select}&order={cursor}.asc&limit={page_size}"
         if where:
             query += f"&{where}"
         if last is not None:
-            query += f"&id=gt.{urllib.parse.quote(last)}"
+            query += f"&{cursor}=gt.{urllib.parse.quote(str(last), safe='')}"
         page = _get_json(f"{base}/rest/v1/{table}?{query}", headers,
                          what=f"{table} fetch")
         if not page:
             break
         rows.extend(page)
-        last = page[-1]["id"]
+        last = page[-1][cursor]
     return rows
 
 

@@ -63,7 +63,7 @@ struct LadderView: View {
                 list
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .navigationTitle("Ladder")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -176,7 +176,7 @@ struct LadderView: View {
             Spacer()
         }
         .padding(.vertical, 8)
-        .background(Color.appBackground)
+        .paperGround()
     }
 
     /// One opponent, as the ladder lists them: portrait, name, tagline. Deliberately nothing
@@ -392,7 +392,7 @@ private struct LadderBriefingSheet: View {
             .padding(.horizontal, 20)
             .padding(.top, 12)
             .padding(.bottom, 20)
-            .background(Color.appBackground)
+            .paperGround()
         }
     }
 }

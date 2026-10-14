@@ -60,7 +60,7 @@ struct PaywallView: View {
     private var packs: [Product] {
         guard !container.entitlements.isPro else { return [] }
         return container.products
-            .filter { StoreProduct(rawValue: $0.id)?.isSubscription == false }
+            .filter { StoreProduct(rawValue: $0.id)?.isFeatureUnlock == true }
             .filter { !container.entitlements.unlockedPacks.contains($0.id) }
             .sorted { $0.price < $1.price }
     }
@@ -83,7 +83,7 @@ struct PaywallView: View {
                     .padding(16)
                 }
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

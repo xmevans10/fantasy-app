@@ -36,10 +36,13 @@ struct PublicProfile: Decodable, Equatable {
     let ratings: [String: Int]
 
     func rating(for sport: Sport) -> Int { ratings[sport.rawValue] ?? 1000 }
-    /// The sport this player is strongest at (ties favor `Sport.allCases` order, matching
-    /// `ProfileView.bestSport`'s convention).
+    /// The sport this player is strongest at (ties favor `Sport.released` order, matching
+    /// `ProfileView.bestSport`'s convention). Reduced over `Sport.released`, not `allCases`:
+    /// `PublicProfileView` feeds this straight in as a challenge sheet's `defaultSport`, and that
+    /// sheet's own sport picker only offers released sports — an unreleased `bestSport` would
+    /// pick an initial selection the picker can't actually show as active.
     var bestSport: Sport {
-        Sport.allCases.reduce(Sport.nfl) { rating(for: $1) > rating(for: $0) ? $1 : $0 }
+        Sport.released.reduce(Sport.nfl) { rating(for: $1) > rating(for: $0) ? $1 : $0 }
     }
 }
 

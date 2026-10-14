@@ -111,7 +111,7 @@ struct GameSetupScreen<Options: View>: View {
             }
             .padding(16)
         }
-        .background(Color.appBackground)
+        .paperGround()
         .onAppear { correctLockedDefault(); warmTeamIdentities() }
         // Each format seeds `sport` asynchronously (last sport played / date-seeded "sport
         // of the day" / debug override) with no entitlement check, and that seeding often
@@ -192,7 +192,9 @@ struct GameSetupScreen<Options: View>: View {
             }
             let corrected = allowed.isEmpty ? Set([Sport.nfl]) : allowed
             if corrected != sports.wrappedValue { sports.wrappedValue = corrected }
-            let primary = Sport.allCases.first(where: corrected.contains) ?? .nfl
+            // `Sport.released` order, not `allCases` — a persisted set from before golf's
+            // fence existed must never resurface it as the primary sport.
+            let primary = Sport.released.first(where: corrected.contains) ?? .nfl
             if sport != primary { sport = primary }
             return
         }
@@ -206,7 +208,7 @@ struct GameSetupScreen<Options: View>: View {
         let columns = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8),
                        GridItem(.flexible(), spacing: 8)]
         return LazyVGrid(columns: columns, spacing: 8) {
-            ForEach(Sport.allCases, id: \.self) { candidate in
+            ForEach(Sport.released, id: \.self) { candidate in
                 let filter = SportFilter(rawValue: candidate.rawValue) ?? .all
                 // On an exempt screen the forced (active) sport plays for free today, so it
                 // renders as a normal selection even when it'd otherwise be Pro-locked.
@@ -252,7 +254,7 @@ struct GameSetupScreen<Options: View>: View {
             next.insert(candidate)
         }
         sports.wrappedValue = next
-        sport = Sport.allCases.first(where: next.contains) ?? .nfl
+        sport = Sport.released.first(where: next.contains) ?? .nfl
     }
 }
 

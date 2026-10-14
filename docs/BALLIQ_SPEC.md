@@ -59,6 +59,20 @@ creation, `CommunityPuzzleRepository`), Profile (tiers, per-sport ratings, Stats
 Sign in with Apple/Google, `NotificationSettings`). Browse (full unranked archive) hangs off
 Home, not a tab.
 
+**Product focus (2026-10-14 user directive):** focus on the core sports-puzzle product.
+Trading cards, the collection binder, free/paid card packs, pack rewards and cosmetic flairs
+are retired from the app and removed from planned product scope. Keep weekly puzzle packs,
+player-season game cards, ratings, streaks, leagues and existing game-format purchases.
+Prioritize correctness, reliable loading, clear onboarding, and polish of existing gameplay.
+New product expansion is deferred unless explicitly requested.
+
+**My Teams 1.9.0 (60), TestFlight candidate (2026-10-14):** explicitly requested by the user. Saints pilot: 13 catalog-derived K4C4 boards, free Brees starter, existing Pro archive access, My Teams Home entry and shelves, permanent completion history, server-scored idempotent team rewards, offline result outbox, and visible career levels. Team inventory is separate from general daily pools. Existing formats, portrait layout and competitive rating math are preserved. No daily-team-content promise or new trading-card economy. See [MY_TEAMS.md](MY_TEAMS.md) for implementation and release verification.
+
+Legacy card tables, migrations and receipt fulfillment remain for compatibility with older
+installed builds and purchase audit history; they are not active roadmap work. Production
+research on 2026-10-14 found 0 recorded purchases, 5 pack openings, 21 owned-card rows and
+1 wallet. Do not drop those records as part of client retirement.
+
 **Progression:** per-sport Elo-ish rating (`RatingEngine`, ranked daily games only) with
 tiers (Bronze→…), XP/levels (`LevelCurve`), day streak. Community/archive/versus play is
 unranked (XP only).
@@ -537,7 +551,19 @@ Live verification enqueued 14 sources, then returned zero candidates on the idem
 | M31 hockey + F1 (2 new sports) | ✅ data + backend shipped 2026-09-03 — the app goes 5 sports to 7. **Both were verified as first-class sources before a line was written, which is what separates them from the soccer/tennis ceiling in §3:** `nhl_stats.py` sweeps the NHL's own keyless stats API for every league-wide season back to **1917-18** (39,533 rows; deeper history than any other sport here) with 6,213/6,218 players carrying a real portrait, and `f1_ergast.py` reads 1950-present driver-seasons from the maintained Ergast mirror (2,557 rows; `ergast.com` itself is dead). Live: 47,317 catalog rows, **zero** photo-less or team-less; 33/33 hockey crests and 86/164 F1 constructor crests rehosted; Who Am I? pools (151 hockey / 77 F1), Journeyman pools (150 / 65), Grid axis membership + cached index for both. **F1 earns Journeyman where tennis never could** — the constructor IS the club, so Prost's real McLaren→Renault→McLaren→Ferrari→Williams path is a board. **Three defects caught and fixed in build, all of the fail-silently class:** a duplicate `"saves"` key in `ScoringDetailSheet`'s label map (a Swift dictionary literal with duplicate keys is a *runtime* crash, not a compile error — it built clean and killed several test hosts); Ergast's mid-season standings minting the 2026 points leader a world championship he had not won (fixed by judging completeness against the season SCHEDULE — both cheaper checks give the wrong answer, see `_season_is_complete`); and `_SKATER_MAP` never carrying `timeOnIcePerGame`, so TOI was empty in all 39,533 rows while `ScoringStat` advertised it — the original test hid this by patching in the very mapping whose absence was the bug. **Rugby was investigated and cut on evidence** (§3): ESPN serves rugby crests but literally no player statistics, and Wikidata's matches-played property is unpopulated for rugby union. **Remaining:** Keep4 daily mint, `--write-fallback` bundle regen, and app-surface screenshots |
 | M32 bot knowledge + Blitz ladder (v1.8.7) | ✅ submitted for review 2026-09-21 (build 55) — the Ladder stops being single boards and becomes **Puzzle Blitz runs**, moving `LadderRung.mode` off `PuzzleFormat` onto a lenient-decoding `LadderMode` (`blitz4k`) so a server-side mode can never empty the tab. Every per-format rung was fighting a floor its format could not get under and the two floors pointed opposite ways (keep4's forced 4/4 split floors the win rate at ~0.27, ~0.63 on an easy board — which is why rungs 1–9 shipped at minimum skill and were won 99.8% of the time; Who Am I?'s clue ladder saturates so a perfect bot still lost ~75%). A blitz run rebases chance to exactly zero (`BlitzScoring.surplus`) and aggregates several boards, so the curve is solvable again: measured **1.000 → 0.011** across the skill range, and the seeder solves for win rate directly. Rungs are now **seeded duels** — one board sequence per attempt, the same boards for both sides, points decide (ties to the player, no speed term). **Bots get knowledge:** an era window, per-sport deltas and a fame bias, mirrored in `ladder.py` and pinned in both languages, so Solomon is genuinely unbeatable on the forgotten decades and Nova is the identity profile. Migrations 0029/0030 applied live, 30 blitz rungs seeded, `bots.knowledge` populated. **The live DB is deliberately ahead of the shipped client and that is safe by construction:** a build that predates `LadderMode` decodes `mode='blitz'` as `.keep4` through `PuzzleFormat`'s existing unknown-case fallback, so the tab degrades to the old per-format pool rather than emptying; build 55 closes the gap. 847 Python tests green; Swift suite not re-run this session (simulators avoided by request). |
 
-**Release status (updated 2026-09-21):** **1.8.7 (build 55) is `WAITING_FOR_REVIEW`**, submitted
+**Release preparation (2026-10-14):** ASC confirms 1.8.7 build 55 is live.
+Candidate 1.8.9 build 59 removes the trading-card expansion and integrates core gameplay,
+loading, onboarding, content-freshness and official-portrait fixes. Golf stays hidden and out
+of active schedules. Validation: 1,034 iOS tests (one skip, no failures), 966 ingestion tests,
+91 Edge Function tests and complete Edge Function type checks. All seven existing sports'
+names/membership cache refreshes succeeded. Signed archive verified; the App Store draft
+uses manual release with build 59 attached; Apple reports VALID and ready for internal beta testing.
+An additive season-only index (0041) fixes the public NFL arcade sample timeout without
+changing its rows; repeated public reads returned 200, with an NFL spot check at 0.74s.
+Physical-device validation is blocked by Xcode's developer disk image
+mount failure; simulator onboarding checks passed on SE and iPhone 15.
+
+**Historical release status (2026-09-21):** **1.8.7 (build 55) is `WAITING_FOR_REVIEW`**, submitted
 2026-09-21 16:38 UTC, carrying the M32 bot-knowledge + Blitz-ladder work. **1.8.6 (build 54) is
 the current `READY_FOR_SALE` version** (Week Packs lead Home until finished, for at most two days).
 The live ASC API confirms the whole 1.8.x line is `READY_FOR_SALE` back to 1.8.0; the earlier
@@ -1980,6 +2006,19 @@ the two "first" events fire once per install. Verified live in the production `e
 a duplicate-`app_opened` bug (a `.task` on a `Group` runs on every child during a transition) was
 caught and fixed by reading those rows rather than trusting the call site.
 
+**Onboarding revision: say what Playbook is, teach by doing (agent, 2026-09-26).** The 1.2.1
+flow never said what the app was, and it named one mode. It is now five slides sharing one
+chrome (`OnboardingChrome`: segmented progress, a colour-block backdrop per slide, a ledge CTA):
+**welcome** (`OnboardingWelcomeStep`: a fan of three real bundled seasons as foil/holo/polychrome
+`TradingCardView`s and the "prove you know ball" pitch) → **modes** (`OnboardingModesStep`: a
+swipeable deck of every `GameFormat.all` mode that flips to a one-line how-it-plays) → **sport** →
+**how_to_play** (`OnboardingPracticeCard`: one practice keep/cut call on a real `Keep4CardView`
+from the bundled puzzles, alternating clearest-keep/clearest-cut, while today's puzzle loads) →
+first game → **account** (`OnboardingStarterPack`: the free pack a new install already holds,
+shown sealed and tilting, with sign-in as what opens it). `welcome`/`modes` are new steps 0–1, which
+shifted the later steps' `index` (see docs/ANALYTICS.md). Watch `welcome` → `sport` in the funnel:
+two screens were added *ahead* of the one that already lost 60% of players.
+
 **Two hard findings on the push retention loop:**
 1. `registerForRemoteNotifications()` was only ever called from Profile's settings card, so a
    token was never re-requested at launch. `device_tokens.user_id` is `not null`, so a grant made
@@ -2234,6 +2273,10 @@ The original five:
 
 ### 9.3 Post-1.5 roadmap (next ~6 months, drafted 2026-07-31)
 
+**2026-10-14 override:** core product quality takes precedence over the growth and expansion
+sequencing below. Trading cards and associated collection/pack/flair expansion are canceled.
+The older entries remain as historical context; they do not authorize new expansion.
+
 §9.1's version roadmap (1.2 push → 1.3 monetization → 1.4 rating seasons → 1.5 content depth)
 is fully shipped and live (§8) — there is no more agent-buildable backlog sitting behind a
 user gate. This re-cuts what's next, sequenced per user directive 2026-07-31: **growth/
@@ -2391,7 +2434,27 @@ boards about it drops together, on its own card at the top of Home until the pla
   WHOLE league's week (schedule + every final box score: nflverse, MLB Stats API, ESPN NBA);
   `readiness.py` is the "appropriate weekly data" contract (SOURCED, SCORABLE, a real week,
   SETTLED, COMPLETE, FRESH, CLEAN). Every sport runs; SKIP exits 0, BLOCKED exits 1. No source
-  yet for NHL, soccer, tennis or F1, so they SKIP with that reason.
+  yet for NHL, tennis or F1, so they SKIP with that reason.
+- **Soccer (built 2026-09-26, not yet live):** the period is a league ROUND, not a calendar week.
+  ESPN publishes no round number, so `weekly.soccer_rounds` derives it: a club's k-th fixture by
+  date is its round-k game, a fixture takes the larger of its two clubs' counts (a postponement
+  only puts one club behind), and rearranged fixtures are re-homed to the round whose dates they
+  were played in. eng.1 2024-25 and 2025-26: 38/38 rounds, 8 to 11 games each. Key
+  `soccer-eng1-2027-wk05` (league code, season END year, round), label "Premier League
+  Matchweek 5". `weekly.SOCCER_LEAGUES` is the league list, one line per league (only eng.1 is
+  on); the Tuesday job builds one pack per league. Scored on the two soccer scales every build
+  already ships (`soccer_attacker_fantasy` for ANY/FW/MF, `soccer_defender_fantasy` for the back
+  line), one match at a time. Photos and positions come from the Transfermarkt catalog by
+  name (ESPN has almost no soccer headshots), and 541/542 of those URLs are already in the ledger.
+  Quirks (median pool per round): "1+ goal games" 24, "1+ assist games" 18, "Clean-sheet
+  games" (back line) 26. A league with no divisions fills the division slot with a second
+  position board. **Needs one line in `fresh_drop.py` to go live:**
+  `GAME_COHORTS["soccer"] = ("soccer-games",)`; until then readiness SKIPs soccer on SCORABLE.
+  Pack size is capped by the scale, not the data: whole-number match totals tie at the keep/cut
+  line, so a replay of Matchweeks 28-38 of 2025-26 and 1-5 of 2026-27 gave 16/16 READY and 0 rule
+  violations but only 8/16 packs at 3+ boards (2x4, 6x3, 5x2, 3x1); a thin week ships board zero
+  as the soccer daily and no pack. More boards need a finer game scale (shots on target, saves),
+  which is a grade.py + GradeFormula/ScoringRule + card-family change.
 - **Assembly:** slots headline, game of the week, position, division, niche; a player on at most
   two boards, no shared keep-set, one board per kind, 14-day kind cooldown. Board zero ships as
   the sport's keep4 daily (wire-safe sports only). Photos through the headshot ledger, new ones

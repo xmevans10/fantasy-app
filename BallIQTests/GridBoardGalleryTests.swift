@@ -83,6 +83,12 @@ final class GridBoardGalleryTests: XCTestCase {
                 cols: [axis(.position, "Pitchers"), axis(.stat, "30+ Stolen Bases"),
                        axis(.stat, "Sub-3.00 ERA")],
                 sport: .baseball)),
+            ("nba-completed", board(archetype: "teams-x-stats",
+                rows: [axis(.team, "MIL"), axis(.team, "OKC"), axis(.team, "LAL")],
+                cols: [axis(.stat, "30+ Points Per Game"), axis(.stat, "10+ Rebounds Per Game"), axis(.stat, "10+ Assists Per Game")], sport: .nba)),
+            ("tennis-decades-x-stats", board(archetype: "decades-x-stats",
+                rows: [axis(.decade, "1990s"), axis(.decade, "2000s"), axis(.decade, "2020s")],
+                cols: [axis(.stat, "Grand Slam champion"), axis(.stat, "40+ Match Wins"), axis(.stat, "70%+ Win Percentage")], sport: .tennis)),
         ]
 
         let window = try XCTUnwrap(
@@ -92,7 +98,10 @@ final class GridBoardGalleryTests: XCTestCase {
             "no window in hosted test app")
 
         for (name, puzzle) in boards {
-            let view = GridBoardGalleryHarness(puzzle: puzzle)
+            let completed = name == "nba-completed"
+            let view = GridBoardGalleryHarness(puzzle: puzzle,
+                solved: completed ? [0: "Giannis Antetokounmpo", 4: "Shai Gilgeous-Alexander"] : [:],
+                completed: completed)
             let host = UIHostingController(rootView: view.environmentObject(RepositoryContainer.make()))
             let previous = window.rootViewController
             window.rootViewController = host
@@ -156,9 +165,11 @@ final class SpinRevealPendingGalleryTests: XCTestCase {
 
 /// Minimal stand-in for `GridGameView`'s board section. `GridGameView` itself can't be hosted
 /// here — it fetches its puzzle from the repository on `.task` and would overwrite any injected
-/// content — so this mirrors the same `gridLayout` structure against a fixed puzzle.
+/// content — so the shared production board is rendered against a fixed puzzle.
 private struct GridBoardGalleryHarness: View {
     let puzzle: GridPuzzle
+    var solved: [Int: String] = [:]
+    var completed = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -177,57 +188,6 @@ private struct GridBoardGalleryHarness: View {
     }
 
     private var layout: some View {
-        let cols = puzzle.cols.count
-        let columns = [GridItem(.fixed(72))] + puzzle.cols.map { _ in GridItem(.flexible()) }
-        let totalSlots = (puzzle.rows.count + 1) * (cols + 1)
-        return LazyVGrid(columns: columns, spacing: 6) {
-            ForEach(0..<totalSlots, id: \.self) { slot in
-                let row = slot / (cols + 1)
-                let col = slot % (cols + 1)
-                if row == 0 {
-                    if col == 0 { Color.clear.frame(height: 44) }
-                    else { header(puzzle.cols[col - 1]) }
-                } else if col == 0 {
-                    header(puzzle.rows[row - 1])
-                } else {
-                    cell(index: (row - 1) * 3 + (col - 1))
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func header(_ axis: GridPuzzle.GridAxis) -> some View {
-        if axis.kind == .team {
-            TeamAbbrChip(sport: puzzle.sport, abbr: axis.label,
-                         fontSize: 14, minHeight: 44, showLogo: true)
-        } else {
-            Text(axis.label)
-                .font(.custom(FontName.condBlack, size: 14))
-                .foregroundStyle(Color.textPrimary)
-                .multilineTextAlignment(.center)
-                .lineLimit(2).minimumScaleFactor(0.6)
-                .padding(.horizontal, 2)
-                .frame(maxWidth: .infinity, minHeight: 44)
-                .background(Color.surfaceMuted)
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-        }
-    }
-
-    private func cell(index: Int) -> some View {
-        VStack(spacing: 2) {
-            HStack(spacing: 1) {
-                ForEach(0..<puzzle.cells[index].rarityStars, id: \.self) { _ in
-                    Image(systemName: "star.fill").font(.system(size: 8))
-                        .foregroundStyle(Color.warningFill)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, minHeight: 64)
-        .padding(4)
-        .background(Color.surface)
-        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .strokeBorder(Color.borderInk, lineWidth: 1.5))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        GridBoardPresentation(puzzle: puzzle, solved: solved, completed: completed) { _ in }
     }
 }

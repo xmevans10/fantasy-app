@@ -11,7 +11,7 @@ struct GridGuessSheet: View {
     let names: [String]
     /// Display names already used in other cells — the Immaculate Grid rule: one player per
     /// grid. Filtered out of suggestions, and a typed duplicate is blocked with inline
-    /// feedback rather than burning the cell's one attempt. Duplicate detection uses the same
+    /// feedback rather than spending a guess. Duplicate detection uses the same
     /// typo-tolerant `AnswerMatcher` the grader uses, so "Tom Bradyy" can't sneak a reuse past
     /// an exact-string check.
     let usedNames: [String]
@@ -114,7 +114,7 @@ struct GridGuessSheet: View {
 
                 Spacer(minLength: 0)
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("Name that player")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

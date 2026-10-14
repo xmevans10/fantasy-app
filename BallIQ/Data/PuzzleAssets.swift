@@ -124,7 +124,7 @@ struct PuzzleAssetGate<Content: View>: View {
             ProgressView()
                 .tint(Color.textMuted)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.appBackground)
+                .paperGround()
                 .task {
                     await assets.prepare()
                     ready = true

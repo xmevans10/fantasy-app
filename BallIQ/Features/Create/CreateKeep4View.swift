@@ -78,7 +78,7 @@ struct CreateKeep4View: View {
             }
             .padding(16)
         }
-        .background(Color.appBackground)
+        .paperGround()
         .navigationTitle("New K4C4")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -365,7 +365,11 @@ struct CreateKeep4View: View {
                 PrimeChip(label: String(localized: "Any"), active: query.sport == nil) {
                     query.sport = nil; query.positions = []
                 }
-                ForEach(Sport.allCases) { s in
+                // `Sport.released` fences off a sport still mid-rollout (currently golf) —
+                // see `Sport.isReleased`'s doc comment: an older build can't decode a puzzle
+                // naming a sport it has never heard of, and unlike server-minted content, a
+                // Create publish has no mint-delay to hide behind.
+                ForEach(Sport.released) { s in
                     PrimeChip(label: s.displayName, active: query.sport == s) {
                         query.sport = s; query.positions = []
                     }
@@ -482,7 +486,8 @@ struct CreateKeep4View: View {
     private func sportToggle(selection: Sport, _ pick: @escaping (Sport) -> Void) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(Sport.allCases) { s in
+                // Same `Sport.released` fence as `anySportToggle` above.
+                ForEach(Sport.released) { s in
                     PrimeChip(label: s.displayName, active: selection == s) { pick(s) }
                 }
             }
@@ -556,11 +561,14 @@ struct CreateKeep4View: View {
         // `providers/nhl_stats.py`); F1 has a single position, the same shape as tennis.
         case .hockey: return ["C", "L", "R", "D", "G"]
         case .f1: return ["Driver"]
+        // Golf has a single position too, the same shape as tennis/F1 — but its own code
+        // ("Golfer") so it doesn't collide with either in the deduped `nil` list below.
+        case .golf: return ["Golfer"]
         case nil:
             // Deduped: hockey's C/G and F1's single code overlap with NBA's and baseball's,
             // and a duplicate here renders the same filter chip twice.
             return ["QB", "RB", "WR", "TE", "DL", "LB", "DB", "G", "F", "C", "H", "P",
-                    "FW", "MF", "DF", "GK", "Player", "L", "R", "D", "Driver"]
+                    "FW", "MF", "DF", "GK", "Player", "L", "R", "D", "Driver", "Golfer"]
         }
     }
 
@@ -702,6 +710,7 @@ private enum ScoringChoice: String, CaseIterable, Identifiable {
         // there is no position to pick from without a template. F1 has one scale, period.
         case (_, .hockey):        return "hockey_skater_fantasy"
         case (_, .f1):            return "f1_driver_fantasy"
+        case (_, .golf):          return "golf_fantasy"
         case (.ppr, .nfl):        return "nfl_fantasy"
         case (.halfPPR, .nfl):    return "nfl_fantasy_half"
         case (.standard, .nfl):   return "nfl_fantasy_standard"

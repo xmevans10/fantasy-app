@@ -46,7 +46,7 @@ struct IdentityEditorSheet: View {
                 }
                 .padding(16)
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("Your Identity")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -316,21 +316,26 @@ final class BlitzTests: XCTestCase {
 
     // MARK: - What a sport can actually serve
 
-    /// **Tennis cannot ever have a Journeyman board**, and blitz has to know that rather than
-    /// discover it as an empty pool.
+    /// **Tennis and golf can never have a Journeyman board**, and blitz has to know that rather
+    /// than discover it as an empty pool.
     ///
     /// Journeyman's board is a club history, and a tour player has a nationality instead. It is a
     /// category fact, not a backfill waiting to happen: `tools/ingest/journeyman.py`'s
-    /// `MIN_STINTS` is keyed `{nfl, nba, baseball, soccer}` and never had a tennis entry, and the
-    /// live pool agrees (2026-08-25: 158/150/158/87 boards, 0 for tennis).
-    func testJourneymanIsUnavailableForTennisAndOnlyTennis() {
-        XCTAssertFalse(Sport.tennis.hasClubCareers)
-        for sport in Sport.allCases where sport != .tennis {
+    /// `MIN_STINTS` is keyed `{nfl, nba, baseball, soccer}` and never had a tennis or golf entry,
+    /// and the live pool agrees (2026-08-25: 158/150/158/87 boards, 0 for tennis).
+    func testJourneymanIsUnavailableForTennisAndGolfOnly() {
+        let clubless: Set<Sport> = [.tennis, .golf]
+        for sport in clubless {
+            XCTAssertFalse(sport.hasClubCareers, sport.rawValue)
+        }
+        for sport in Sport.allCases where !clubless.contains(sport) {
             XCTAssertTrue(sport.hasClubCareers, sport.rawValue)
         }
-        XCTAssertFalse(BlitzFormat.journeyman.isAvailable(for: .tennis))
+        for sport in clubless {
+            XCTAssertFalse(BlitzFormat.journeyman.isAvailable(for: sport), sport.rawValue)
+        }
         for format in BlitzFormat.allCases {
-            for sport in Sport.allCases where !(format == .journeyman && sport == .tennis) {
+            for sport in Sport.allCases where !(format == .journeyman && clubless.contains(sport)) {
                 XCTAssertTrue(format.isAvailable(for: sport), "\(format.rawValue)/\(sport.rawValue)")
             }
         }
@@ -379,6 +384,28 @@ final class BlitzTests: XCTestCase {
         let defaults = UserDefaults(suiteName: "blitz-unservable-\(UUID().uuidString)")!
         BlitzConfig(sports: [.tennis], formats: [.journeyman], duration: .three).save(to: defaults)
         XCTAssertEqual(BlitzConfig.load(from: defaults), .default)
+    }
+
+    /// Golf mirrors tennis exactly — same club-less shape, same three servable formats.
+    func testGolfEstimateIgnoresTheFormatItCannotServe() {
+        let all = Set(BlitzFormat.allCases)
+        for duration in BlitzDuration.allCases {
+            let ticked = BlitzConfig(sports: [.golf], formats: all, duration: duration)
+            let honest = BlitzConfig(sports: [.golf],
+                                     formats: [.keep4, .whoami, .overunder], duration: duration)
+            XCTAssertEqual(ticked.servableFormats, honest.servableFormats)
+            XCTAssertEqual(ticked.estimatedBoards, honest.estimatedBoards,
+                           "Journeyman must not be counted in a golf estimate (\(duration.rawValue)s)")
+        }
+    }
+
+    func testGolfPlusJourneymanOnlyIsNotPlayable() {
+        XCTAssertFalse(BlitzConfig(sports: [.golf], formats: [.journeyman], duration: .one)
+            .isPlayable)
+        XCTAssertTrue(BlitzConfig(sports: [.golf], formats: [.journeyman, .whoami], duration: .one)
+            .isPlayable)
+        XCTAssertTrue(BlitzConfig(sports: [.golf, .soccer], formats: [.journeyman], duration: .one)
+            .isPlayable)
     }
 
     // MARK: - Personal bests

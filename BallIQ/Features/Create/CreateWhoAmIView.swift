@@ -34,7 +34,9 @@ struct CreateWhoAmIView: View {
             VStack(alignment: .leading, spacing: 16) {
                 field("Title") { plain("e.g. AI legends", text: $title) }
                 field("Sport") {
-                    PrimeSegmentedControl(options: Sport.allCases.map { ($0.displayName, $0) },
+                    // `Sport.released` fences off a sport still mid-rollout (currently golf) —
+                    // see `Sport.isReleased`'s doc comment.
+                    PrimeSegmentedControl(options: Sport.released.map { ($0.displayName, $0) },
                                           selection: $sport)
                 }
                 field("Answer (full name)") { plain("Allen Iverson", text: $canonical) }
@@ -47,7 +49,7 @@ struct CreateWhoAmIView: View {
             }
             .padding(16)
         }
-        .background(Color.appBackground)
+        .paperGround()
         .navigationTitle("New Who Am I?")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

@@ -221,3 +221,13 @@ Deno.test("the daily drop carries the featured sport for a future deep link", ()
   // No sport resolved (nothing minted) — no stray key.
   assertEquals(buildDailyDropPayload(null).data?.sport, undefined);
 });
+
+Deno.test("every sport in the push rotation has a push label", async () => {
+  // The rotation grew (hockey, F1, golf) while the label map did not, so those days' pushes
+  // silently fell back to the sport-less wording. Pin the two lists together.
+  const { SPORT_ROTATION } = await import("./sport.ts");
+  for (const sport of SPORT_ROTATION) {
+    const body = buildDailyDropPayload("Some theme", sport).body;
+    assertEquals(body.includes("New K4C4:"), false, `${sport} has no push label`);
+  }
+});

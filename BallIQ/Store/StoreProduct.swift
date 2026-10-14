@@ -7,8 +7,17 @@ enum StoreProduct: String, CaseIterable {
     case proYearly = "com.balliqfantasy.app.pro.yearly"
     case draftSpinPack = "com.balliqfantasy.app.pack.draftspin"
     case gridPack = "com.balliqfantasy.app.pack.grid"
-
     var isSubscription: Bool { self == .proMonthly || self == .proYearly }
+
+    /// Retired consumables are recognized only to settle unfinished legacy transactions.
+    static let retiredCardPackIDs: Set<String> = [
+        "com.balliqfantasy.app.cards.pack1",
+        "com.balliqfantasy.app.cards.pack5",
+        "com.balliqfantasy.app.cards.pack12"
+    ]
+
+    /// One-time feature unlocks (Draft Spin, the Grid): what the paywall lists under packs.
+    var isFeatureUnlock: Bool { !isSubscription }
 
     /// What a one-time pack actually unlocks, in the user's terms. Lives here rather than in
     /// the App Store Connect description so the paywall can say it per-row — a bare product

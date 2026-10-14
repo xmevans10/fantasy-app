@@ -213,7 +213,7 @@ struct SpinRevealView: View {
             marqueeLights.padding(.bottom, 26)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBackground)
+        .paperGround()
         .celebrate(on: $confetti, intensity: 60)
         .onAppear {
             ticker.prepare()   // wake the Taptic Engine before the first tick, not on it

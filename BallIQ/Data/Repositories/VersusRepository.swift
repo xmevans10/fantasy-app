@@ -41,6 +41,13 @@ final class VersusRepository {
             URLQueryItem(name: "select", value: "*"),
             URLQueryItem(name: "or", value: "(challenger_id.eq.\(userID),opponent_id.eq.\(userID))"),
             URLQueryItem(name: "status", value: "in.(\(statusFilter))"),
+            // Same self-protection `RemotePuzzleRepository.fetch`/`CommunityPuzzleRepository.feed`
+            // apply: this fetches every sport the caller has a challenge in, decoded as ONE array
+            // under `try?` below, falling back to `[]` on failure. A single row naming a sport
+            // this build has never heard of (a challenge from a newer build, or one this build's
+            // own golf-fenced Create/Versus pickers never should have let a peer send) would
+            // otherwise empty the caller's ENTIRE challenge list, not just that row.
+            URLQueryItem(name: "sport", value: Sport.decodableFilterValue),
             URLQueryItem(name: "order", value: "created_at.desc"),
         ]
         if let limit { items.append(URLQueryItem(name: "limit", value: String(limit))) }
@@ -69,6 +76,8 @@ final class VersusRepository {
         let series: [VersusSeries] = (try? await client.select("versus_series", query: [
             URLQueryItem(name: "select", value: "id,user_a,user_b,sport,format,wins_a,wins_b,status"),
             URLQueryItem(name: "id", value: "in.(\(ids))"),
+            // Same reasoning as `myChallenges` above — self-protect the batched series join too.
+            URLQueryItem(name: "sport", value: Sport.decodableFilterValue),
         ], decoder: rowDecoder)) ?? []
         let seriesByID = Dictionary(uniqueKeysWithValues: series.map { ($0.id, $0) })
         return rows.map { row in

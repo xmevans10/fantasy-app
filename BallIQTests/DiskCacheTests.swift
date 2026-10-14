@@ -130,6 +130,64 @@ final class DiskCacheTests: XCTestCase {
         XCTAssertNil(onDisk, "a bundled-fallback result must not be written to disk")
     }
 
+    func testArcadeSampleUsesBoundedRPCAndPreservesStatKeys() async throws {
+        let counter = RequestCounter()
+        MockURLProtocol.handler = { req in
+            counter.hit()
+            XCTAssertEqual(req.url?.path, "/rest/v1/rpc/arcade_season_sample")
+            var bodyData = req.httpBody ?? Data()
+            if let stream = req.httpBodyStream, bodyData.isEmpty {
+                stream.open()
+                defer { stream.close() }
+                var buffer = [UInt8](repeating: 0, count: 1024)
+                while true {
+                    let count = stream.read(&buffer, maxLength: buffer.count)
+                    if count <= 0 { break }
+                    bodyData.append(contentsOf: buffer.prefix(count))
+                }
+            }
+            let body = (try? JSONSerialization.jsonObject(with: bodyData)) as? [String: Any]
+            XCTAssertEqual(body?["p_limit"] as? Int, 200)
+            XCTAssertEqual(body?["p_sport"] as? String, Sport.nfl.rawValue)
+            return self.respond(req, status: 200, json: "[\(self.rowJSON("arcade-1", sport: .nfl, year: 2024))]")
+        }
+        let catalog = PlayerSeasonCatalog(client: makeClient())
+        async let first = catalog.arcadePool(for: .nfl, limit: 200)
+        async let second = catalog.arcadePool(for: .nfl, limit: 200)
+        let results = await (first, second)
+        XCTAssertEqual(results.0.map(\.id), ["arcade-1"])
+        XCTAssertEqual(results.0.first?.stats["passing_yards"], 4000)
+        XCTAssertEqual(results.0, results.1)
+        XCTAssertEqual(counter.count, 1, "setup and Start must share one bounded request")
+    }
+
+    func testArcadeSampleReusesFreshBroadDiskCache() async {
+        let rows = (0..<250).map { season("broad-\($0)", sport: .nba) }
+        await DiskCache.write(rows, key: "arcade-pool-nba")
+        MockURLProtocol.handler = { req in
+            XCTFail("a fresh broad sample already contains the arcade prefix")
+            return self.respond(req, status: 500, json: "[]")
+        }
+        let catalog = PlayerSeasonCatalog(client: makeClient())
+        let result = await catalog.arcadePool(for: .nba, limit: 200)
+        XCTAssertEqual(result, Array(rows.prefix(200)))
+    }
+
+    func testArcadeSampleFallsBackOnOlderServer() async {
+        let counter = RequestCounter()
+        MockURLProtocol.handler = { req in
+            counter.hit()
+            if req.url?.path.contains("/rpc/") == true {
+                return self.respond(req, status: 404, json: #"{"message":"missing RPC"}"#)
+            }
+            return self.respond(req, status: 200, json: "[\(self.rowJSON("legacy-1", sport: .baseball, year: 2024))]")
+        }
+        let catalog = PlayerSeasonCatalog(client: makeClient())
+        let result = await catalog.arcadePool(for: .baseball, limit: 200)
+        XCTAssertEqual(result.map(\.id), ["legacy-1"])
+        XCTAssertEqual(counter.count, 2)
+    }
+
     // MARK: - RemotePuzzleRepository daily-puzzle cache
 
     /// A cache entry that CONTAINS today's dated row is fresh — no network. (Its write time is

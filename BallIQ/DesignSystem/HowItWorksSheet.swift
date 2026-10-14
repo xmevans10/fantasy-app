@@ -51,7 +51,7 @@ struct HowItWorksSheet: View {
             .padding(.bottom, 16)   // keep the footnote clear of the home indicator
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color.appBackground)
+        .paperGround()
         .presentationDetents([.medium, .large], selection: $detent)
         .presentationDragIndicator(.visible)
         .onAppear { if startExpanded { detent = .large } }

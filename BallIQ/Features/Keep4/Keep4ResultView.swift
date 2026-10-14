@@ -22,6 +22,7 @@ struct Keep4ResultView: View {
     var duelVerdict: DuelVerdict? = nil
     let onDone: () -> Void
 
+    @Environment(\.teamPlayNext) private var teamPlayNext
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.requestReview) private var requestReview
     @Environment(\.ladderRematch) private var ladderRematch
@@ -44,8 +45,17 @@ struct Keep4ResultView: View {
                     } else if let duelVerdict {
                         ChallengeResultBanner(verdict: duelVerdict).heroReveal(1)
                     }
-                    if let top = topSeason { foilCard(top).heroReveal(2) }
-                    if let rewards { RewardsRow(rewards: rewards).heroReveal(3) }
+                    if !puzzle.id.hasPrefix("team-"), let top = topSeason { foilCard(top).heroReveal(2) }
+                    if puzzle.id.hasPrefix("team-") {
+                        VStack(spacing: 10) {
+                            if let rewards {
+                                Text(rewards.xpEarned > 0 ? "+\(rewards.xpEarned) CAREER XP" : container.teamGames.state.pending.contains(where: { $0.id == puzzle.id && !$0.guest }) ? "PROGRESS SAVED · XP SYNCS WHEN ONLINE" : "COMPLETED · NO REPEAT XP").font(.label12)
+                                CareerProgressCard(xp: container.xp, leveledUp: rewards.leveledUp, compact: true)
+                            }
+                            Text("Unranked · Your competitive rating is unchanged.").font(.label11).foregroundStyle(Color.textMuted)
+                        }
+                    } else if let rewards { RewardsRow(rewards: rewards).heroReveal(3) }
+                    if puzzle.id.hasPrefix("team-"), let top = topSeason { foilCard(top) }
                     breakdown.heroReveal(4)
                     shareCardPreview.heroReveal(5)
                 }
@@ -53,7 +63,7 @@ struct Keep4ResultView: View {
             }
             doneBar
         }
-        .background(Color.appBackground)
+        .paperGround()
         .celebrate(on: $confetti, intensity: result.isPerfect ? 90 : 40)
         .onAppear {
             if let challenge {
@@ -220,6 +230,9 @@ struct Keep4ResultView: View {
                                  day: PuzzleStore.localDayString(date),
                                  hits: result.correctCount, outOf: puzzle.players.count,
                                  score: result.total, challenger: challenger)
+        if puzzle.id.hasPrefix("team-") {
+            return ShareMessage.compose(headline: "I went \(result.correctCount)/8 on \(puzzle.theme).", board: board, detail: "Try my team game: balliq://play/\(puzzle.id)", campaign: "my_teams")
+        }
         guard isDaily else {
             // An archive or community board has no shared identity, so the message brags without
             // daring — same rule as a re-rolled practice Grid.
@@ -259,6 +272,11 @@ struct Keep4ResultView: View {
         VStack(spacing: 0) {
             Rectangle().fill(Color.hairline).frame(height: Hairline.width)
             HStack(spacing: 12) {
+                if let teamPlayNext, puzzle.id.hasPrefix("team-") {
+                    Button("NEXT TEAM GAME", action: teamPlayNext)
+                        .font(.heading).foregroundStyle(Color.onAccent)
+                        .padding(14).frame(maxWidth: .infinity).background(Color.accentFill, in: RoundedRectangle(cornerRadius: 12))
+                }
                 Button(action: onDone) {
                     Text("DONE")
                         .font(.heading)

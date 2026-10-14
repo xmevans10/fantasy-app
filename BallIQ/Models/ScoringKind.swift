@@ -38,9 +38,9 @@ enum ScoringKind: String, Codable {
         }
     }
 
-    /// Short ALL-CAPS badge text for puzzle cards. PPR is an NFL term; tennis and F1 have no
-    /// fantasy game behind their scale (both are points résumés — see `explainer`), so they
-    /// get the neutral POINTS;
+    /// Short ALL-CAPS badge text for puzzle cards. PPR is an NFL term; tennis, F1 and golf have
+    /// no fantasy game behind their scale (all three are points résumés — see `explainer`), so
+    /// they get the neutral POINTS;
     /// other sports use the generic fantasy label. All kept to one word so the card header's
     /// format name doesn't truncate next to the grain + sport chips (the explainer chip
     /// carries the full copy).
@@ -49,10 +49,10 @@ enum ScoringKind: String, Codable {
         case .ppr:
             switch sport {
             case .nfl:    return "PPR"                          // brand acronym, every locale
-            // Tennis and F1 both rank a season *résumé*, not a fantasy total — see
+            // Tennis, F1 and golf all rank a season *résumé*, not a fantasy total — see
             // `explainer` below and `grade.py`'s `f1_driver_fantasy` note. Hockey is a real
             // fantasy sport with a real points-league convention, so it takes the default.
-            case .tennis, .f1: return String(localized: "POINTS")
+            case .tennis, .f1, .golf: return String(localized: "POINTS")
             default:      return "FANTASY"                      // "fantasy" is the loanword in es too
             }
         case .era:    return String(localized: "ERA-ADJUSTED")
@@ -62,9 +62,9 @@ enum ScoringKind: String, Codable {
 
     /// 1–2 line scoring-method explainer shown above the first card in the play flow.
     /// `author` (community username) personalizes the vibes copy when available.
-    /// Copy is per-sport where "fantasy points" would ring false: tennis and F1 have no
+    /// Copy is per-sport where "fantasy points" would ring false: tennis, F1 and golf have no
     /// fantasy game — their scales are résumé formulas (wins + titles + Slams; wins +
-    /// podiums + poles, see grade.py) — so each
+    /// podiums + poles; wins + top-10s + scoring, see grade.py) — so each
     /// says what's actually counted. Soccer's scale IS FPL-style, so "fantasy points" stands.
     func explainer(sport: Sport, author: String? = nil) -> String {
         switch self {
@@ -76,6 +76,7 @@ enum ScoringKind: String, Codable {
             // an achievements résumé, and it pointedly is NOT the championship points column,
             // which has been rewritten three times and does not compare across eras.
             case .f1:     return String(localized: "Ranked by real season résumés: wins, podiums, poles")
+            case .golf:   return String(localized: "Ranked by real season résumés: wins, top-10s, scoring")
             default:      return String(localized: "Ranked by real fantasy points")
             }
         case .era:
@@ -125,11 +126,12 @@ struct ScoringNoteChip: View {
     /// Renders a trailing info glyph — set where the chip is a button opening
     /// `ScoringDetailSheet` (the Keep4 pre-game header), so the tap-through is discoverable.
     var tappable: Bool = false
+    var explainerOverride: String? = nil
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             Image(systemName: kind.symbol).font(.system(size: 11, weight: .bold))
-            Text(kind.explainer(sport: sport, author: author))
+            Text(explainerOverride ?? kind.explainer(sport: sport, author: author))
                 .font(.label11)
                 .multilineTextAlignment(.leading)
             if tappable {

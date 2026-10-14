@@ -65,7 +65,7 @@ struct WhoAmIResultView: View {
             }
             doneBar
         }
-        .background(Color.appBackground)
+        .paperGround()
         .celebrate(on: $confetti, intensity: result.cluesUsed == 1 ? 90 : 50)
         .onAppear {
             if let challenge {
@@ -252,6 +252,7 @@ struct RewardsRow: View {
                 Divider().frame(height: 32)
                 metric(label: String(localized: "Streak"), value: "\(rewards.newStreak)", accent: nil, accentColor: .textMuted)
             }
+            CareerProgressCard(xp: container.xp, leveledUp: rewards.leveledUp, compact: true)
             if container.isInPlacement {
                 Text(container.placementRemaining == 1
                      ? String(localized: "One more placement game and your rating starts counting.")

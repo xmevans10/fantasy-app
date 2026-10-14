@@ -40,7 +40,7 @@ struct RosterView: View {
                 grid
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .navigationTitle("Roster")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }

@@ -41,7 +41,7 @@ struct CommunityView: View {
                 Divider().overlay(Color.hairline)
                 content
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("Community")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -161,7 +161,7 @@ struct CommunityView: View {
             } else {
                 PrimeDropdown(options: CommunityFormat.allCases, selection: $format,
                              title: \.title, isDefault: { _ in false })
-                PrimeDropdown(options: SportFilter.allCases, selection: $sportFilter, title: \.title,
+                PrimeDropdown(options: SportFilter.released, selection: $sportFilter, title: \.title,
                               unsetLabel: String(localized: "Sport"))
                 PrimeDropdown(options: [CommunitySort.recent, .popular, .week], selection: $sort,
                              title: sortTitle, isDefault: { $0 == .recent })

@@ -100,7 +100,7 @@ struct Keep4GameView: View {
                 playBoard
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .onAppear {
             if order.isEmpty {
                 order = Self.blindOrder(for: puzzle)
@@ -196,7 +196,7 @@ struct Keep4GameView: View {
             }
             footer
         }
-        .background(Color.appBackground)
+        .paperGround()
     }
 
     /// The franchise's real name for a card, once `identitiesWarm` says the `teams` rows are in.
@@ -288,7 +288,7 @@ struct Keep4GameView: View {
             // is a subscription upsell on card 1 of the first game a new player ever sees, so it
             // stays hidden until they have finished one. Hidden, not disabled — a greyed-out paid
             // control is the same ask wearing a worse outfit.
-            if placement.isEmpty, container.entitlements.isPro || container.completedGames >= 1 {
+            if !puzzle.id.hasPrefix("team-"), placement.isEmpty, container.entitlements.isPro || container.completedGames >= 1 {
                 modePicker
             } else if mode == .hard {
                 Label("Hard mode: stats hidden", systemImage: "eye.slash")
@@ -332,7 +332,8 @@ struct Keep4GameView: View {
             showScoringInfo = true
         } label: {
             ScoringNoteChip(kind: puzzle.scoringKind(), sport: puzzle.sport,
-                            author: authorName, tappable: true)
+                            author: authorName, tappable: true,
+                            explainerOverride: puzzle.scale == "nfl_qb_fantasy" ? "Ranked by QB fantasy points" : nil)
         }
         .buttonStyle(.plain)
         .accessibilityHint("Shows the exact scoring formula")
@@ -444,6 +445,7 @@ struct Keep4GameView: View {
         let playMode: PlayMode = duel != nil ? .versus
             : communityID != nil ? .community
             : packID != nil ? .pack
+            : puzzle.id.hasPrefix("team-") ? .archive
             : .daily
         let detail = RepositoryContainer.SessionDetail(
             mode: playMode, score: r.total, maxScore: 3000,
@@ -460,6 +462,8 @@ struct Keep4GameView: View {
                 await container.logSession(format: mode.formatKind, sport: puzzle.sport,
                                            performance: performance, perfect: r.isPerfect,
                                            puzzleID: puzzle.id, detail: detail)
+            } else if puzzle.id.hasPrefix("team-") {
+                rewards = await container.completeTeam(puzzle: puzzle, placement: placement, detail: detail)
             } else {
                 rewards = await container.complete(format: mode.formatKind, sport: puzzle.sport,
                                                    performance: performance, perfect: r.isPerfect,

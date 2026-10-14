@@ -111,7 +111,7 @@ final class ActivationFunnelTests: XCTestCase {
 
     func testOnboardingStepRawValuesAndOrderAreStable() {
         XCTAssertEqual(OnboardingStep.allCases.map(\.rawValue),
-                       ["sport", "how_to_play", "account"])
+                       ["welcome", "modes", "sport", "how_to_play", "account"])
     }
 
     /// Milestone keys are persisted UserDefaults keys, so renaming one silently re-fires the

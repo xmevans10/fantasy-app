@@ -242,6 +242,35 @@ _FANTASY: dict[str, list[tuple[str, float]]] = {
         ("championships", 50.0),
         ("dnfs", -1.0),
     ],
+    # Golf (single position "Golfer", like tennis/F1 — no positional stat families).
+    #
+    # `scoring_avg` is lower-is-better, like ERA/GAA — but unlike those, it is a RATE with a
+    # large near-constant baseline (~69-73 for every tour regular), not a count starting near
+    # zero. Baseball/hockey solve the same "invert a rate" problem by penalizing the raw COUNT
+    # instead (`earned_runs`, `goals_against`), never the rate itself — putting a big negative
+    # coefficient directly on a ~70-valued stat would swamp every other term with a nearly
+    # identical constant and push most real tour seasons negative, not just the deliberate
+    # backmarker case F1's test guards for. Golf has no natural zero-based count for this (no
+    # total-strokes column is pulled), so `scoring_margin` fills that role: a derived,
+    # documented approximation — `(BASELINE_SCORING_AVG - scoring_avg) * events` (computed in
+    # `golf_pga.load_seasons`, same "derive a gradeable total from a per-unit rate" move
+    # `main.derive_nba_totals` already makes for NBA per-game averages) — so a season below the
+    # baseline scores negative on this term and one comfortably ahead of it scores positive,
+    # scaled by how many events that margin was sustained over. `scoring_avg` itself stays in
+    # the stats dict unscaled, for display and the grid's rate-stat axes.
+    "golf_fantasy": [
+        ("wins", 30.0),
+        ("top10s", 4.0),
+        ("cuts_made", 1.0),
+        # Chosen to print exactly in the app's scoring sheet ("+1 per 5"):
+        # `ScoringBreakdown.pointsText` only renders a sub-1 weight as "+1 per N" when 1/weight
+        # is a whole number >= 5, and shows anything else to one decimal.
+        ("events", 0.2),
+        # `earnings` is deliberately NOT graded: purses grew ~5x from 2001 ($5.7M money
+        # leader) to 2025 ($27.7M), so any weight on it ranks recent seasons above equal or
+        # better older ones in every cross-era theme. It stays a display column.
+        ("scoring_margin", 2.0),
+    ],
 }
 
 # Single-game grain reuses the season coefficients (same PPR math) under their own keys —

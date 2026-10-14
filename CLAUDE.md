@@ -6,12 +6,10 @@ product/architecture/status — that's the living source of truth, not this file
 habits, shared-vs-duplicated logic, blast-radius judgment) — this file is project facts, that
 one is process. **§9.1's version roadmap (1.2 push → 1.3 monetization → 1.4 rating seasons
 → 1.5 content depth) is fully shipped and live — when picking what to work on next, check
-BALLIQ_SPEC.md §9.3's post-1.5 roadmap instead** (growth/marketing + new engagement features
-prioritized ahead of further Grid-depth/monetization-funnel work; §9.0's tier rule still
+BALLIQ_SPEC.md §9.3's post-1.5 roadmap instead** (2026-10-14 directive: core-product correctness, loading and gameplay polish take priority;
+trading cards and associated collection expansion are retired; §9.0's tier rule still
 governs anything outside that roadmap). The app is LIVE on the App Store, monetization
-switched on: **v1.8.6 (build 54) is the current `READY_FOR_SALE` version, and v1.8.7 (build 55)
-is `WAITING_FOR_REVIEW` as of 2026-09-21** (both confirmed via the ASC API — see BALLIQ_SPEC.md
-§8 Release status for what shipped in each build) — treat `main` as production.
+switched on: **v1.8.7 (build 55) is the current `READY_FOR_SALE` version as of 2026-10-14** (confirmed via the ASC API). **1.8.9 build 59** is VALID and ready for internal TestFlight testing (2026-10-14), attached to a manual-release App Store draft; public release remains 1.8.7 — treat `main` as production.
 
 ## Supabase DB operations — execute directly, don't ask first
 
@@ -45,24 +43,14 @@ fair game to just run; destructive ones are not.
 functions via CLI, service role key is in .env" while closing out M17 (community career-grain
 creation) — don't make them re-authorize this every session.
 
-## Git/GitHub CLI operations — use the PAT in `.env`, not the `gh`-managed OAuth token
+## Git/GitHub CLI operations
 
-The repo now has a real GitHub remote: `github.com/xmevans10/fantasy-app` (public). `gh auth
-status`'s default OAuth token only has `repo`/`read:org`/`gist` scopes — it will be **rejected**
-by GitHub on any push that touches `.github/workflows/*.yml` (this repo has one,
-`ingest.yml`, from M7), because that requires the `workflow` scope.
-
-For `git push`/other authenticated git operations, use the PAT in gitignored root `.env`
-(`GITHUB_TOKEN=...`) instead — confirmed as of 2026-07-04 to carry `repo` + `workflow` (and
-several broader admin scopes the user should consider narrowing down later, but it works).
-Example: `source .env && git push "https://x-access-token:${GITHUB_TOKEN}@github.com/xmevans10/fantasy-app.git" main`.
-Don't embed the token literally in a command — always reference `$GITHUB_TOKEN` after
-sourcing `.env`, so it never lands in shell history/process-list snapshots in plaintext.
-
-**Why this rule exists:** established 2026-07-04 — the first push attempt using `gh`'s own
-token was rejected for exactly this reason (`refusing to allow an OAuth App to create or
-update workflow ... without workflow scope`), and the user supplied this PAT specifically to
-unblock it.
+Use the installed `gh` login for this repository. Verified 2026-10-14: `gh api user`
+returns `xmevans10`, branch pushes work with
+`git -c 'credential.helper=!gh auth git-credential' push origin <branch>`, and `gh pr create`
+works. The gitignored root `.env` PAT returned **401 Bad credentials** for the GitHub API;
+do not prefer it over the working login. The GitHub connector returned 403 for PR creation.
+Never print or embed credentials in commands or URLs.
 
 ## App Store Connect / TestFlight
 

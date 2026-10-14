@@ -1481,4 +1481,74 @@ KEEP4_THEMES: list[Theme] = [
             StatColumn("fastest_laps", "FL", "int"),
         ],
     ),
+
+    # -- Golf (live via providers/golf_pga.py: PGA Tour player-seasons, 2001-2025 from ESPN's
+    # keyless core API). Single position "Golfer", like tennis/F1 — no positional stat
+    # families. `scoring_avg` prints "dec2" (the ERA/GAA convention for a rate stat) and is
+    # deliberately never used as a `min_stats` floor (a `>=` inclusion threshold on a
+    # lower-is-better stat would keep the WORST seasons in, not the best) — a ceiling on it
+    # belongs in `filters` (`op="lte"`) instead, as `golf-scoring-elite` does below. --
+    Theme(
+        key="golf-tour-winners",
+        title="Winning PGA Tour seasons",
+        sport="golf",
+        scale="golf_fantasy",
+        positions=frozenset({"Golfer"}),
+        min_stats={"wins": 1, "events": 10},
+        # The card shows scoring_avg, and a season with no official average would print 0.00.
+        filters=(Filter(field="scoring_avg", op="exists", value=True),),
+        columns=[
+            StatColumn("wins", "Wins", "int"),
+            StatColumn("top10s", "Top 10s", "int"),
+            StatColumn("cuts_made", "Cuts Made", "int"),
+            StatColumn("scoring_avg", "Scoring Avg", "dec2"),
+        ],
+    ),
+    Theme(
+        key="golf-scoring-elite",
+        title="Elite scoring average seasons",
+        sport="golf",
+        scale="golf_fantasy",
+        positions=frozenset({"Golfer"}),
+        min_stats={"events": 15},
+        filters=(Filter(field="scoring_avg", op="lte", value=70.0),),
+        columns=[
+            StatColumn("scoring_avg", "Scoring Avg", "dec2"),
+            StatColumn("top10s", "Top 10s", "int"),
+            StatColumn("wins", "Wins", "int"),
+            StatColumn("cuts_made", "Cuts Made", "int"),
+        ],
+    ),
+    Theme(
+        key="golf-fedex-cup-era",
+        title="FedEx Cup era seasons",
+        sport="golf",
+        scale="golf_fantasy",
+        positions=frozenset({"Golfer"}),
+        # `fedex_points: 1` because the source has no FedEx points for 2009-14 and 2016-17
+        # (see golf_pga.load_seasons); without it those boards show a blank lead column.
+        min_stats={"events": 15, "cuts_made": 15, "fedex_points": 1},
+        filters=(Filter(field="season_year", op="gte", value=2007),),
+        columns=[
+            StatColumn("fedex_points", "FedEx Pts", "int"),
+            StatColumn("top10s", "Top 10s", "int"),
+            StatColumn("wins", "Wins", "int"),
+            StatColumn("earnings", "Earnings", "comma_int"),
+        ],
+    ),
+    Theme(
+        key="golf-career-fantasy",
+        title="Career PGA Tour leaders",
+        sport="golf",
+        scale="golf_fantasy",
+        positions=frozenset({"Golfer"}),
+        min_stats={"events": 40},
+        grain="career",
+        columns=[
+            StatColumn("wins", "Wins", "int"),
+            StatColumn("top10s", "Top 10s", "int"),
+            StatColumn("cuts_made", "Cuts Made", "int"),
+            StatColumn("earnings", "Earnings", "comma_int"),
+        ],
+    ),
 ]

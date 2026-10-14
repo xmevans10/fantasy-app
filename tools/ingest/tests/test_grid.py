@@ -850,3 +850,57 @@ def test_a_board_never_puts_one_franchise_on_two_axes():
     stat = GridAxis(kind="stat", label="30+ Goals", filters=(), key="stat:g30")
     other = GridAxis(kind="stat", label="40+ Goals", filters=(), key="stat:g40")
     assert _franchises_distinct("hockey", [stat, other])
+
+
+def _answer_cells(options):
+    return [grid.GridCell(tuple(grid.GridAnswer(p, p, "SF", 2020) for p in names), 1)
+            for names in options]
+
+
+def test_distinct_player_solution_reassigns_early_choices():
+    assert grid._has_distinct_answers(_answer_cells([
+        ["a", "b"], ["a"], *[[str(i)] for i in range(7)]
+    ]))
+
+
+def test_distinct_player_solution_rejects_bottleneck_even_with_nine_total_players():
+    assert not grid._has_distinct_answers(_answer_cells([
+        ["a", "b"], ["a", "b"], ["a", "b"],
+        ["c", "d", "e", "f", "g", "h", "i"],
+        *[[str(i)] for i in range(5)]
+    ]))
+
+
+def test_generator_rejects_board_requiring_player_reuse():
+    pool = [_season("Only Player", team, year)
+            for team in ["SF", "GB", "DAL"] for year in [1990, 2000, 2010]]
+    assert grid.generate_grid(pool, "nfl", "2026-10-02", archetypes=TEAMS_X_DECADES,
+                              max_attempts=5) is None
+
+
+def test_nfl_rotation_keeps_every_cell_team_based_and_varied():
+    assert {a.key for a in grid.NFL_ARCHETYPES} == {
+        "teams-x-teams", "teams-x-stats", "teams-x-decades", "teams-x-mixed", "mixed-x-teams"}
+    assert next(a for a in grid.NFL_ARCHETYPES if a.key == "teams-x-teams").weight == 4
+    for day in range(1, 11):
+        board = grid.generate_grid(_rich_pool(), "nfl", f"2026-10-{day:02d}")
+        assert board is not None
+        assert grid._has_distinct_answers(list(board.cells))
+        assert all(row.kind == "team" or col.kind == "team"
+                   for row in board.rows for col in board.cols)
+
+
+@pytest.mark.parametrize("category", [
+    next(a for a in grid_axes.stat_axes("nfl") if a.label == "1,400+ Rec Yds"),
+    grid_axes.decade_axis(1990),
+])
+def test_mixed_team_category_requires_the_qualifying_season_on_that_team(category):
+    seasons = [_season("Traveler", "SF", 1995, stats={"receiving_yards": 1500}),
+               _season("Traveler", "DAL", 2005, stats={"receiving_yards": 500})]
+    assert grid._satisfying_season(seasons, category,
+        grid_axes.team_axis("DAL", grain="career")) is None
+    assert grid._satisfying_season(seasons, category,
+        grid_axes.team_axis("SF", grain="career")) == seasons[0]
+    assert grid._satisfying_season(seasons,
+        grid_axes.team_axis("DAL", grain="career"),
+        grid_axes.team_axis("SF", grain="career")) is not None

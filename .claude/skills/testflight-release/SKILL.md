@@ -28,9 +28,10 @@ metadata via its REST API — lives in gitignored `tools/release/`:
     -destination 'generic/platform=iOS' -archivePath build/BallIQ.xcarchive
   xcodebuild -exportArchive -archivePath build/BallIQ.xcarchive \
     -exportOptionsPlist tools/release/ExportOptions.plist -exportPath build/export \
-    -authenticationKeyPath tools/release/private_keys/AuthKey_G3X8K8ZRNJ.p8 \
+    -authenticationKeyPath /Users/xanderevans/Documents/code/personal/fantasy-app/tools/release/private_keys/AuthKey_G3X8K8ZRNJ.p8 \
     -authenticationKeyID G3X8K8ZRNJ -authenticationKeyIssuerID 39423832-9d26-41bd-8f97-a06fdbc3c311
   ```
+  The authentication key path must be absolute; Xcode rejects a relative path before export.
   (`destination: upload` in ExportOptions.plist makes this upload straight to App Store
   Connect, not just export an `.ipa`.)
 - For anything else in App Store Connect (TestFlight groups, beta review, app metadata,

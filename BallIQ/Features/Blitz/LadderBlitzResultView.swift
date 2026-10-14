@@ -38,7 +38,7 @@ struct LadderBlitzResultView: View {
             }
             doneBar
         }
-        .background(Color.appBackground)
+        .paperGround()
         .celebrate(on: $confetti, intensity: outcome.won ? 80 : 30)
         .onAppear { if outcome.won { confetti += 1 } }
     }

@@ -1,0 +1,3359 @@
+[
+  {
+    "id": "team-nfl-no-v1-2059006185c30dfb4da5",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "icons",
+    "recipe": "icon-00-0020531",
+    "recipe_version": 1,
+    "content_hash": "2059006185c30dfb4da506296736d3c9974eb654cfc2c5c4ede0726517678e11",
+    "content": {
+      "id": "team-nfl-no-v1-2059006185c30dfb4da5",
+      "theme": "Drew Brees: peak Saints seasons",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-drew-brees-2008",
+          "name": "Drew Brees",
+          "teamAbbr": "NO",
+          "seasonYear": 2008,
+          "grade": 304.7,
+          "stats": [
+            {
+              "label": "Pass Yds",
+              "value": "5,069"
+            },
+            {
+              "label": "Pass TD",
+              "value": "34"
+            },
+            {
+              "label": "INT",
+              "value": "17"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "-1"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png"
+        },
+        {
+          "id": "nfl-drew-brees-2009",
+          "name": "Drew Brees",
+          "teamAbbr": "NO",
+          "seasonYear": 2009,
+          "grade": 304.8,
+          "stats": [
+            {
+              "label": "Pass Yds",
+              "value": "4,388"
+            },
+            {
+              "label": "Pass TD",
+              "value": "34"
+            },
+            {
+              "label": "INT",
+              "value": "11"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "33"
+            },
+            {
+              "label": "Rush TD",
+              "value": "2"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png"
+        },
+        {
+          "id": "nfl-drew-brees-2011",
+          "name": "Drew Brees",
+          "teamAbbr": "NO",
+          "seasonYear": 2011,
+          "grade": 392.0,
+          "stats": [
+            {
+              "label": "Pass Yds",
+              "value": "5,535"
+            },
+            {
+              "label": "Pass TD",
+              "value": "46"
+            },
+            {
+              "label": "INT",
+              "value": "14"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "86"
+            },
+            {
+              "label": "Rush TD",
+              "value": "1"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png"
+        },
+        {
+          "id": "nfl-drew-brees-2012",
+          "name": "Drew Brees",
+          "teamAbbr": "NO",
+          "seasonYear": 2012,
+          "grade": 347.6,
+          "stats": [
+            {
+              "label": "Pass Yds",
+              "value": "5,177"
+            },
+            {
+              "label": "Pass TD",
+              "value": "43"
+            },
+            {
+              "label": "INT",
+              "value": "19"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "5"
+            },
+            {
+              "label": "Rush TD",
+              "value": "1"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png"
+        },
+        {
+          "id": "nfl-drew-brees-2013",
+          "name": "Drew Brees",
+          "teamAbbr": "NO",
+          "seasonYear": 2013,
+          "grade": 361.7,
+          "stats": [
+            {
+              "label": "Pass Yds",
+              "value": "5,162"
+            },
+            {
+              "label": "Pass TD",
+              "value": "39"
+            },
+            {
+              "label": "INT",
+              "value": "12"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "52"
+            },
+            {
+              "label": "Rush TD",
+              "value": "3"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png"
+        },
+        {
+          "id": "nfl-drew-brees-2014",
+          "name": "Drew Brees",
+          "teamAbbr": "NO",
+          "seasonYear": 2014,
+          "grade": 308.9,
+          "stats": [
+            {
+              "label": "Pass Yds",
+              "value": "4,952"
+            },
+            {
+              "label": "Pass TD",
+              "value": "33"
+            },
+            {
+              "label": "INT",
+              "value": "17"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "68"
+            },
+            {
+              "label": "Rush TD",
+              "value": "1"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png"
+        },
+        {
+          "id": "nfl-drew-brees-2015",
+          "name": "Drew Brees",
+          "teamAbbr": "NO",
+          "seasonYear": 2015,
+          "grade": 308.2,
+          "stats": [
+            {
+              "label": "Pass Yds",
+              "value": "4,870"
+            },
+            {
+              "label": "Pass TD",
+              "value": "32"
+            },
+            {
+              "label": "INT",
+              "value": "11"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "14"
+            },
+            {
+              "label": "Rush TD",
+              "value": "1"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png"
+        },
+        {
+          "id": "nfl-drew-brees-2016",
+          "name": "Drew Brees",
+          "teamAbbr": "NO",
+          "seasonYear": 2016,
+          "grade": 340.3,
+          "stats": [
+            {
+              "label": "Pass Yds",
+              "value": "5,208"
+            },
+            {
+              "label": "Pass TD",
+              "value": "37"
+            },
+            {
+              "label": "INT",
+              "value": "15"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "20"
+            },
+            {
+              "label": "Rush TD",
+              "value": "2"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5a5f0a141ff8cd6c326a.png"
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_qb_fantasy"
+    },
+    "status": "validated",
+    "sort_order": 0,
+    "is_starter": true
+  },
+  {
+    "id": "team-nfl-no-v1-7b0871cee99eded67ca6",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "deep_cuts",
+    "recipe": "era-WR-2000",
+    "recipe_version": 1,
+    "content_hash": "7b0871cee99eded67ca6c3e46c416614d27c01a605d0377a96ab4113a1cbf25e",
+    "content": {
+      "id": "team-nfl-no-v1-7b0871cee99eded67ca6",
+      "theme": "Saints receiving: the 2000s",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-david-patten-2007",
+          "name": "David Patten",
+          "teamAbbr": "NO",
+          "seasonYear": 2007,
+          "grade": 150.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "54"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "792"
+            },
+            {
+              "label": "Rec TD",
+              "value": "3"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "-5"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-devery-henderson-2009",
+          "name": "Devery Henderson",
+          "teamAbbr": "NO",
+          "seasonYear": 2009,
+          "grade": 144.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "51"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "804"
+            },
+            {
+              "label": "Rec TD",
+              "value": "2"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "13"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-donte-stallworth-2005",
+          "name": "Donte' Stallworth",
+          "teamAbbr": "NO",
+          "seasonYear": 2005,
+          "grade": 206.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "70"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "945"
+            },
+            {
+              "label": "Rec TD",
+              "value": "7"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "2"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-joe-horn-2004",
+          "name": "Joe Horn",
+          "teamAbbr": "NO",
+          "seasonYear": 2004,
+          "grade": 299.9,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "94"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,399"
+            },
+            {
+              "label": "Rec TD",
+              "value": "11"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-lance-moore-2008",
+          "name": "Lance Moore",
+          "teamAbbr": "NO",
+          "seasonYear": 2008,
+          "grade": 231.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "79"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "928"
+            },
+            {
+              "label": "Rec TD",
+              "value": "10"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-marques-colston-2007",
+          "name": "Marques Colston",
+          "teamAbbr": "NO",
+          "seasonYear": 2007,
+          "grade": 284.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "98"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,202"
+            },
+            {
+              "label": "Rec TD",
+              "value": "11"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-robert-meachem-2009",
+          "name": "Robert Meachem",
+          "teamAbbr": "NO",
+          "seasonYear": 2009,
+          "grade": 179.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "45"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "722"
+            },
+            {
+              "label": "Rec TD",
+              "value": "9"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "82"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-willie-jackson-2001",
+          "name": "Willie Jackson",
+          "teamAbbr": "NO",
+          "seasonYear": 2001,
+          "grade": 215.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "81"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,046"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 1,
+    "is_starter": false
+  },
+  {
+    "id": "team-nfl-no-v1-3d126e9d6b84a9094eb4",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "icons",
+    "recipe": "icon-00-0024466",
+    "recipe_version": 1,
+    "content_hash": "3d126e9d6b84a9094eb4693885e6bfbd3da6c211f191141da5524e3634cb5b2b",
+    "content": {
+      "id": "team-nfl-no-v1-3d126e9d6b84a9094eb4",
+      "theme": "Marques Colston: peak Saints seasons",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-marques-colston-2006",
+          "name": "Marques Colston",
+          "teamAbbr": "NO",
+          "seasonYear": 2006,
+          "grade": 221.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "70"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,038"
+            },
+            {
+              "label": "Rec TD",
+              "value": "8"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-marques-colston-2007",
+          "name": "Marques Colston",
+          "teamAbbr": "NO",
+          "seasonYear": 2007,
+          "grade": 284.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "98"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,202"
+            },
+            {
+              "label": "Rec TD",
+              "value": "11"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-marques-colston-2009",
+          "name": "Marques Colston",
+          "teamAbbr": "NO",
+          "seasonYear": 2009,
+          "grade": 232.0,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "70"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,074"
+            },
+            {
+              "label": "Rec TD",
+              "value": "9"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "6"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-marques-colston-2010",
+          "name": "Marques Colston",
+          "teamAbbr": "NO",
+          "seasonYear": 2010,
+          "grade": 228.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "84"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,023"
+            },
+            {
+              "label": "Rec TD",
+              "value": "7"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "1"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-marques-colston-2011",
+          "name": "Marques Colston",
+          "teamAbbr": "NO",
+          "seasonYear": 2011,
+          "grade": 246.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "82"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,164"
+            },
+            {
+              "label": "Rec TD",
+              "value": "8"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-marques-colston-2012",
+          "name": "Marques Colston",
+          "teamAbbr": "NO",
+          "seasonYear": 2012,
+          "grade": 258.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "83"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,154"
+            },
+            {
+              "label": "Rec TD",
+              "value": "10"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-marques-colston-2013",
+          "name": "Marques Colston",
+          "teamAbbr": "NO",
+          "seasonYear": 2013,
+          "grade": 199.3,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "75"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "943"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-marques-colston-2014",
+          "name": "Marques Colston",
+          "teamAbbr": "NO",
+          "seasonYear": 2014,
+          "grade": 179.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "59"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "902"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 2,
+    "is_starter": false
+  },
+  {
+    "id": "team-nfl-no-v1-2f269d797f354af27ba8",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "history",
+    "recipe": "position-WR",
+    "recipe_version": 1,
+    "content_hash": "2f269d797f354af27ba8d1c74dc97c1817abc1c19f176354fb3adf2c661b0063",
+    "content": {
+      "id": "team-nfl-no-v1-2f269d797f354af27ba8",
+      "theme": "Saints receiving seasons",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-brandin-cooks-2015",
+          "name": "Brandin Cooks",
+          "teamAbbr": "NO",
+          "seasonYear": 2015,
+          "grade": 253.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "84"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,138"
+            },
+            {
+              "label": "Rec TD",
+              "value": "9"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "18"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/95d98ce28dfc45b039b4.png"
+        },
+        {
+          "id": "nfl-chris-olave-2025",
+          "name": "Chris Olave",
+          "teamAbbr": "NO",
+          "seasonYear": 2025,
+          "grade": 270.0,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "100"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,163"
+            },
+            {
+              "label": "Rec TD",
+              "value": "9"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "-3"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/6745870a5023c1eb7888.png"
+        },
+        {
+          "id": "nfl-donte-stallworth-2005",
+          "name": "Donte' Stallworth",
+          "teamAbbr": "NO",
+          "seasonYear": 2005,
+          "grade": 206.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "70"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "945"
+            },
+            {
+              "label": "Rec TD",
+              "value": "7"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "2"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-joe-horn-2004",
+          "name": "Joe Horn",
+          "teamAbbr": "NO",
+          "seasonYear": 2004,
+          "grade": 299.9,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "94"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,399"
+            },
+            {
+              "label": "Rec TD",
+              "value": "11"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-lance-moore-2008",
+          "name": "Lance Moore",
+          "teamAbbr": "NO",
+          "seasonYear": 2008,
+          "grade": 231.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "79"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "928"
+            },
+            {
+              "label": "Rec TD",
+              "value": "10"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-marques-colston-2007",
+          "name": "Marques Colston",
+          "teamAbbr": "NO",
+          "seasonYear": 2007,
+          "grade": 284.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "98"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,202"
+            },
+            {
+              "label": "Rec TD",
+              "value": "11"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-willie-jackson-2001",
+          "name": "Willie Jackson",
+          "teamAbbr": "NO",
+          "seasonYear": 2001,
+          "grade": 215.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "81"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,046"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-willie-snead-2016",
+          "name": "Willie Snead",
+          "teamAbbr": "NO",
+          "seasonYear": 2016,
+          "grade": 185.5,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "72"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "895"
+            },
+            {
+              "label": "Rec TD",
+              "value": "4"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/98fa63e5a6584c981fa5.png"
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 3,
+    "is_starter": false
+  },
+  {
+    "id": "team-nfl-no-v1-4632a2f4cb8a66607ba8",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "deep_cuts",
+    "recipe": "era-WR-2000",
+    "recipe_version": 1,
+    "content_hash": "4632a2f4cb8a66607ba8251ca5aec09e07269de4e7cec8c965b41147e540e8c5",
+    "content": {
+      "id": "team-nfl-no-v1-4632a2f4cb8a66607ba8",
+      "theme": "Saints receiving: the 2000s: second look",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-az-zahir-hakim-2005",
+          "name": "Az-Zahir Hakim",
+          "teamAbbr": "NO",
+          "seasonYear": 2005,
+          "grade": 94.9,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "34"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "489"
+            },
+            {
+              "label": "Rec TD",
+              "value": "2"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-boo-williams-2003",
+          "name": "Boo Williams",
+          "teamAbbr": "NO",
+          "seasonYear": 2003,
+          "grade": 114.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "41"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "436"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-david-patten-2007",
+          "name": "David Patten",
+          "teamAbbr": "NO",
+          "seasonYear": 2007,
+          "grade": 150.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "54"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "792"
+            },
+            {
+              "label": "Rec TD",
+              "value": "3"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "-5"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-devery-henderson-2009",
+          "name": "Devery Henderson",
+          "teamAbbr": "NO",
+          "seasonYear": 2009,
+          "grade": 144.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "51"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "804"
+            },
+            {
+              "label": "Rec TD",
+              "value": "2"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "13"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-donte-stallworth-2005",
+          "name": "Donte' Stallworth",
+          "teamAbbr": "NO",
+          "seasonYear": 2005,
+          "grade": 206.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "70"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "945"
+            },
+            {
+              "label": "Rec TD",
+              "value": "7"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "2"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-jerome-pathon-2003",
+          "name": "Jerome Pathon",
+          "teamAbbr": "NO",
+          "seasonYear": 2003,
+          "grade": 125.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "44"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "578"
+            },
+            {
+              "label": "Rec TD",
+              "value": "4"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-robert-meachem-2009",
+          "name": "Robert Meachem",
+          "teamAbbr": "NO",
+          "seasonYear": 2009,
+          "grade": 179.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "45"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "722"
+            },
+            {
+              "label": "Rec TD",
+              "value": "9"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "82"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-willie-jackson-2001",
+          "name": "Willie Jackson",
+          "teamAbbr": "NO",
+          "seasonYear": 2001,
+          "grade": 215.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "81"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,046"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 4,
+    "is_starter": false
+  },
+  {
+    "id": "team-nfl-no-v1-65234cde292fbea70ea5",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "icons",
+    "recipe": "icon-00-0027966",
+    "recipe_version": 1,
+    "content_hash": "65234cde292fbea70ea5eb62f737d44780faace0bcf228cd5344196b1d0b68b8",
+    "content": {
+      "id": "team-nfl-no-v1-65234cde292fbea70ea5",
+      "theme": "Mark Ingram: peak Saints seasons",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-mark-ingram-2011",
+          "name": "Mark Ingram",
+          "teamAbbr": "NO",
+          "seasonYear": 2011,
+          "grade": 93.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "11"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "46"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "478"
+            },
+            {
+              "label": "Rush TD",
+              "value": "5"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/12a6fb8a88001651b873.png"
+        },
+        {
+          "id": "nfl-mark-ingram-2012",
+          "name": "Mark Ingram",
+          "teamAbbr": "NO",
+          "seasonYear": 2012,
+          "grade": 99.1,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "6"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "29"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "602"
+            },
+            {
+              "label": "Rush TD",
+              "value": "5"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/12a6fb8a88001651b873.png"
+        },
+        {
+          "id": "nfl-mark-ingram-2014",
+          "name": "Mark Ingram",
+          "teamAbbr": "NO",
+          "seasonYear": 2014,
+          "grade": 193.9,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "29"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "145"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "964"
+            },
+            {
+              "label": "Rush TD",
+              "value": "9"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/12a6fb8a88001651b873.png"
+        },
+        {
+          "id": "nfl-mark-ingram-2015",
+          "name": "Mark Ingram",
+          "teamAbbr": "NO",
+          "seasonYear": 2015,
+          "grade": 203.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "50"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "405"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "769"
+            },
+            {
+              "label": "Rush TD",
+              "value": "6"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/12a6fb8a88001651b873.png"
+        },
+        {
+          "id": "nfl-mark-ingram-2016",
+          "name": "Mark Ingram",
+          "teamAbbr": "NO",
+          "seasonYear": 2016,
+          "grade": 242.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "46"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "319"
+            },
+            {
+              "label": "Rec TD",
+              "value": "4"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "1,043"
+            },
+            {
+              "label": "Rush TD",
+              "value": "6"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/12a6fb8a88001651b873.png"
+        },
+        {
+          "id": "nfl-mark-ingram-2017",
+          "name": "Mark Ingram",
+          "teamAbbr": "NO",
+          "seasonYear": 2017,
+          "grade": 284.0,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "58"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "416"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "1,124"
+            },
+            {
+              "label": "Rush TD",
+              "value": "12"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/12a6fb8a88001651b873.png"
+        },
+        {
+          "id": "nfl-mark-ingram-2018",
+          "name": "Mark Ingram",
+          "teamAbbr": "NO",
+          "seasonYear": 2018,
+          "grade": 144.5,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "21"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "170"
+            },
+            {
+              "label": "Rec TD",
+              "value": "1"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "645"
+            },
+            {
+              "label": "Rush TD",
+              "value": "6"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/12a6fb8a88001651b873.png"
+        },
+        {
+          "id": "nfl-mark-ingram-2021",
+          "name": "Mark Ingram",
+          "teamAbbr": "NO",
+          "seasonYear": 2021,
+          "grade": 110.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "27"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "162"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "554"
+            },
+            {
+              "label": "Rush TD",
+              "value": "2"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/12a6fb8a88001651b873.png"
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 5,
+    "is_starter": false
+  },
+  {
+    "id": "team-nfl-no-v1-e0f423261d9879b609d6",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "history",
+    "recipe": "position-WR",
+    "recipe_version": 1,
+    "content_hash": "e0f423261d9879b609d6cf3d9f9f7d121b0b715803b2ab80d61bc693843bb608",
+    "content": {
+      "id": "team-nfl-no-v1-e0f423261d9879b609d6",
+      "theme": "Saints receiving seasons: second look",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-brandin-cooks-2015",
+          "name": "Brandin Cooks",
+          "teamAbbr": "NO",
+          "seasonYear": 2015,
+          "grade": 253.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "84"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,138"
+            },
+            {
+              "label": "Rec TD",
+              "value": "9"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "18"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/95d98ce28dfc45b039b4.png"
+        },
+        {
+          "id": "nfl-donte-stallworth-2005",
+          "name": "Donte' Stallworth",
+          "teamAbbr": "NO",
+          "seasonYear": 2005,
+          "grade": 206.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "70"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "945"
+            },
+            {
+              "label": "Rec TD",
+              "value": "7"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "2"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-eddie-kennison-1999",
+          "name": "Eddie Kennison",
+          "teamAbbr": "NO",
+          "seasonYear": 1999,
+          "grade": 169.0,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "60"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "830"
+            },
+            {
+              "label": "Rec TD",
+              "value": "4"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "20"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-kenny-stills-2014",
+          "name": "Kenny Stills",
+          "teamAbbr": "NO",
+          "seasonYear": 2014,
+          "grade": 173.9,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "63"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "931"
+            },
+            {
+              "label": "Rec TD",
+              "value": "3"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "-2"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/31aa4892c3a0ad36643e.png"
+        },
+        {
+          "id": "nfl-lance-moore-2008",
+          "name": "Lance Moore",
+          "teamAbbr": "NO",
+          "seasonYear": 2008,
+          "grade": 231.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "79"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "928"
+            },
+            {
+              "label": "Rec TD",
+              "value": "10"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-robert-meachem-2009",
+          "name": "Robert Meachem",
+          "teamAbbr": "NO",
+          "seasonYear": 2009,
+          "grade": 179.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "45"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "722"
+            },
+            {
+              "label": "Rec TD",
+              "value": "9"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "82"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-willie-jackson-2001",
+          "name": "Willie Jackson",
+          "teamAbbr": "NO",
+          "seasonYear": 2001,
+          "grade": 215.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "81"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,046"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-willie-snead-2016",
+          "name": "Willie Snead",
+          "teamAbbr": "NO",
+          "seasonYear": 2016,
+          "grade": 185.5,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "72"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "895"
+            },
+            {
+              "label": "Rec TD",
+              "value": "4"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/98fa63e5a6584c981fa5.png"
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 6,
+    "is_starter": false
+  },
+  {
+    "id": "team-nfl-no-v1-5c8688a97381bab70bfd",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "deep_cuts",
+    "recipe": "era-WR-2010",
+    "recipe_version": 1,
+    "content_hash": "5c8688a97381bab70bfd3647ce9fee2b126ab77a028286e82377bf5dc63d6691",
+    "content": {
+      "id": "team-nfl-no-v1-5c8688a97381bab70bfd",
+      "theme": "Saints receiving: the 2010s",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-brandin-cooks-2015",
+          "name": "Brandin Cooks",
+          "teamAbbr": "NO",
+          "seasonYear": 2015,
+          "grade": 253.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "84"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,138"
+            },
+            {
+              "label": "Rec TD",
+              "value": "9"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "18"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/95d98ce28dfc45b039b4.png"
+        },
+        {
+          "id": "nfl-kenny-stills-2014",
+          "name": "Kenny Stills",
+          "teamAbbr": "NO",
+          "seasonYear": 2014,
+          "grade": 173.9,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "63"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "931"
+            },
+            {
+              "label": "Rec TD",
+              "value": "3"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "-2"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/31aa4892c3a0ad36643e.png"
+        },
+        {
+          "id": "nfl-lance-moore-2012",
+          "name": "Lance Moore",
+          "teamAbbr": "NO",
+          "seasonYear": 2012,
+          "grade": 205.1,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "65"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,041"
+            },
+            {
+              "label": "Rec TD",
+              "value": "6"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-marques-colston-2012",
+          "name": "Marques Colston",
+          "teamAbbr": "NO",
+          "seasonYear": 2012,
+          "grade": 258.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "83"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,154"
+            },
+            {
+              "label": "Rec TD",
+              "value": "10"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-robert-meachem-2011",
+          "name": "Robert Meachem",
+          "teamAbbr": "NO",
+          "seasonYear": 2011,
+          "grade": 145.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "41"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "658"
+            },
+            {
+              "label": "Rec TD",
+              "value": "6"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "26"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "id": "nfl-ted-ginn-2017",
+          "name": "Ted Ginn",
+          "teamAbbr": "NO",
+          "seasonYear": 2017,
+          "grade": 159.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "53"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "787"
+            },
+            {
+              "label": "Rec TD",
+              "value": "4"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "39"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/18181ab3af3ead8ab330.png"
+        },
+        {
+          "id": "nfl-tre-quan-smith-2018",
+          "name": "Tre'Quan Smith",
+          "teamAbbr": "NO",
+          "seasonYear": 2018,
+          "grade": 100.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "28"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "427"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/b14d9fa74351df653ef1.png"
+        },
+        {
+          "id": "nfl-willie-snead-2016",
+          "name": "Willie Snead",
+          "teamAbbr": "NO",
+          "seasonYear": 2016,
+          "grade": 185.5,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "72"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "895"
+            },
+            {
+              "label": "Rec TD",
+              "value": "4"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/98fa63e5a6584c981fa5.png"
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 7,
+    "is_starter": false
+  },
+  {
+    "id": "team-nfl-no-v1-61a419d6545c0e53eaa0",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "icons",
+    "recipe": "icon-00-0033906",
+    "recipe_version": 1,
+    "content_hash": "61a419d6545c0e53eaa05b67d38b30309f0edc111a0c42e8162281018855db2a",
+    "content": {
+      "id": "team-nfl-no-v1-61a419d6545c0e53eaa0",
+      "theme": "Alvin Kamara: peak Saints seasons",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-alvin-kamara-2017",
+          "name": "Alvin Kamara",
+          "teamAbbr": "NO",
+          "seasonYear": 2017,
+          "grade": 314.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "81"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "826"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "728"
+            },
+            {
+              "label": "Rush TD",
+              "value": "8"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c24458fb34212c951a0.png"
+        },
+        {
+          "id": "nfl-alvin-kamara-2018",
+          "name": "Alvin Kamara",
+          "teamAbbr": "NO",
+          "seasonYear": 2018,
+          "grade": 348.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "81"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "709"
+            },
+            {
+              "label": "Rec TD",
+              "value": "4"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "883"
+            },
+            {
+              "label": "Rush TD",
+              "value": "14"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c24458fb34212c951a0.png"
+        },
+        {
+          "id": "nfl-alvin-kamara-2019",
+          "name": "Alvin Kamara",
+          "teamAbbr": "NO",
+          "seasonYear": 2019,
+          "grade": 250.0,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "81"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "533"
+            },
+            {
+              "label": "Rec TD",
+              "value": "1"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "797"
+            },
+            {
+              "label": "Rush TD",
+              "value": "5"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c24458fb34212c951a0.png"
+        },
+        {
+          "id": "nfl-alvin-kamara-2020",
+          "name": "Alvin Kamara",
+          "teamAbbr": "NO",
+          "seasonYear": 2020,
+          "grade": 377.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "83"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "756"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "932"
+            },
+            {
+              "label": "Rush TD",
+              "value": "16"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c24458fb34212c951a0.png"
+        },
+        {
+          "id": "nfl-alvin-kamara-2021",
+          "name": "Alvin Kamara",
+          "teamAbbr": "NO",
+          "seasonYear": 2021,
+          "grade": 234.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "47"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "439"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "898"
+            },
+            {
+              "label": "Rush TD",
+              "value": "4"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c24458fb34212c951a0.png"
+        },
+        {
+          "id": "nfl-alvin-kamara-2022",
+          "name": "Alvin Kamara",
+          "teamAbbr": "NO",
+          "seasonYear": 2022,
+          "grade": 219.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "57"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "490"
+            },
+            {
+              "label": "Rec TD",
+              "value": "2"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "897"
+            },
+            {
+              "label": "Rush TD",
+              "value": "2"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c24458fb34212c951a0.png"
+        },
+        {
+          "id": "nfl-alvin-kamara-2023",
+          "name": "Alvin Kamara",
+          "teamAbbr": "NO",
+          "seasonYear": 2023,
+          "grade": 227.0,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "75"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "466"
+            },
+            {
+              "label": "Rec TD",
+              "value": "1"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "694"
+            },
+            {
+              "label": "Rush TD",
+              "value": "5"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c24458fb34212c951a0.png"
+        },
+        {
+          "id": "nfl-alvin-kamara-2024",
+          "name": "Alvin Kamara",
+          "teamAbbr": "NO",
+          "seasonYear": 2024,
+          "grade": 265.3,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "68"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "543"
+            },
+            {
+              "label": "Rec TD",
+              "value": "2"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "950"
+            },
+            {
+              "label": "Rush TD",
+              "value": "6"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c24458fb34212c951a0.png"
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 8,
+    "is_starter": false
+  },
+  {
+    "id": "team-nfl-no-v1-aba7fa3d59f4a12452df",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "history",
+    "recipe": "position-RB",
+    "recipe_version": 1,
+    "content_hash": "aba7fa3d59f4a12452dfd4d08f9475ede133d88fd5a288aebc85d569164ac2c9",
+    "content": {
+      "id": "team-nfl-no-v1-aba7fa3d59f4a12452df",
+      "theme": "Saints rushing seasons",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-alvin-kamara-2020",
+          "name": "Alvin Kamara",
+          "teamAbbr": "NO",
+          "seasonYear": 2020,
+          "grade": 377.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "83"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "756"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "932"
+            },
+            {
+              "label": "Rush TD",
+              "value": "16"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c24458fb34212c951a0.png"
+        },
+        {
+          "id": "nfl-darren-sproles-2011",
+          "name": "Darren Sproles",
+          "teamAbbr": "NO",
+          "seasonYear": 2011,
+          "grade": 271.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "86"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "710"
+            },
+            {
+              "label": "Rec TD",
+              "value": "7"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "604"
+            },
+            {
+              "label": "Rush TD",
+              "value": "2"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ff16d5df0f0809ae5a6d.png"
+        },
+        {
+          "id": "nfl-deuce-mcallister-2003",
+          "name": "Deuce McAllister",
+          "teamAbbr": "NO",
+          "seasonYear": 2003,
+          "grade": 332.7,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "69"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "516"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "1,641"
+            },
+            {
+              "label": "Rush TD",
+              "value": "8"
+            }
+          ]
+        },
+        {
+          "id": "nfl-latavius-murray-2019",
+          "name": "Latavius Murray",
+          "teamAbbr": "NO",
+          "seasonYear": 2019,
+          "grade": 157.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "34"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "235"
+            },
+            {
+              "label": "Rec TD",
+              "value": "1"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "637"
+            },
+            {
+              "label": "Rush TD",
+              "value": "5"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/052c23742ce231a53939.png"
+        },
+        {
+          "id": "nfl-mark-ingram-2017",
+          "name": "Mark Ingram",
+          "teamAbbr": "NO",
+          "seasonYear": 2017,
+          "grade": 284.0,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "58"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "416"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "1,124"
+            },
+            {
+              "label": "Rush TD",
+              "value": "12"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/12a6fb8a88001651b873.png"
+        },
+        {
+          "id": "nfl-pierre-thomas-2013",
+          "name": "Pierre Thomas",
+          "teamAbbr": "NO",
+          "seasonYear": 2013,
+          "grade": 213.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "77"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "513"
+            },
+            {
+              "label": "Rec TD",
+              "value": "3"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "549"
+            },
+            {
+              "label": "Rush TD",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "id": "nfl-reggie-bush-2006",
+          "name": "Reggie Bush",
+          "teamAbbr": "NO",
+          "seasonYear": 2006,
+          "grade": 267.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "89"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "748"
+            },
+            {
+              "label": "Rec TD",
+              "value": "2"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "558"
+            },
+            {
+              "label": "Rush TD",
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "id": "nfl-ricky-williams-2001",
+          "name": "Ricky Williams",
+          "teamAbbr": "NO",
+          "seasonYear": 2001,
+          "grade": 277.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "60"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "511"
+            },
+            {
+              "label": "Rec TD",
+              "value": "1"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "1,245"
+            },
+            {
+              "label": "Rush TD",
+              "value": "6"
+            }
+          ]
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 9,
+    "is_starter": false
+  },
+  {
+    "id": "team-nfl-no-v1-97c43ae931849bf2cec7",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "deep_cuts",
+    "recipe": "era-WR-2020",
+    "recipe_version": 1,
+    "content_hash": "97c43ae931849bf2cec7c800b8c298e3ed9406e0f100ea7b6075a2019e996e2d",
+    "content": {
+      "id": "team-nfl-no-v1-97c43ae931849bf2cec7",
+      "theme": "Saints receiving: the 2020s",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-chris-olave-2025",
+          "name": "Chris Olave",
+          "teamAbbr": "NO",
+          "seasonYear": 2025,
+          "grade": 270.0,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "100"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "1,163"
+            },
+            {
+              "label": "Rec TD",
+              "value": "9"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "-3"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/6745870a5023c1eb7888.png"
+        },
+        {
+          "id": "nfl-deonte-harty-2021",
+          "name": "Deonte Harty",
+          "teamAbbr": "NO",
+          "seasonYear": 2021,
+          "grade": 115.1,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "36"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "570"
+            },
+            {
+              "label": "Rec TD",
+              "value": "3"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "41"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/47f34e7ec7aa5be6efb5.png"
+        },
+        {
+          "id": "nfl-emmanuel-sanders-2020",
+          "name": "Emmanuel Sanders",
+          "teamAbbr": "NO",
+          "seasonYear": 2020,
+          "grade": 164.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "61"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "726"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "12"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/522f7e365ef3cdb898c6.png"
+        },
+        {
+          "id": "nfl-marquez-callaway-2021",
+          "name": "Marquez Callaway",
+          "teamAbbr": "NO",
+          "seasonYear": 2021,
+          "grade": 151.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "46"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "698"
+            },
+            {
+              "label": "Rec TD",
+              "value": "6"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/69f4aaba34b9de8019ad.png"
+        },
+        {
+          "id": "nfl-marquez-valdes-scantling-2024",
+          "name": "Marquez Valdes-Scantling",
+          "teamAbbr": "NO",
+          "seasonYear": 2024,
+          "grade": 84.5,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "19"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "411"
+            },
+            {
+              "label": "Rec TD",
+              "value": "4"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "4"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/5e6f6aa7014f037a91d2.png"
+        },
+        {
+          "id": "nfl-michael-thomas-2023",
+          "name": "Michael Thomas",
+          "teamAbbr": "NO",
+          "seasonYear": 2023,
+          "grade": 89.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "39"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "448"
+            },
+            {
+              "label": "Rec TD",
+              "value": "1"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "0"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c4d3ba62756aa7f2298.png"
+        },
+        {
+          "id": "nfl-rashid-shaheed-2023",
+          "name": "Rashid Shaheed",
+          "teamAbbr": "NO",
+          "seasonYear": 2023,
+          "grade": 151.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "46"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "719"
+            },
+            {
+              "label": "Rec TD",
+              "value": "5"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "37"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/d8731e4cb89df02909b2.png"
+        },
+        {
+          "id": "nfl-tre-quan-smith-2020",
+          "name": "Tre'Quan Smith",
+          "teamAbbr": "NO",
+          "seasonYear": 2020,
+          "grade": 103.1,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "34"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "448"
+            },
+            {
+              "label": "Rec TD",
+              "value": "4"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "3"
+            },
+            {
+              "label": "Rush TD",
+              "value": "0"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/b14d9fa74351df653ef1.png"
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 10,
+    "is_starter": false
+  },
+  {
+    "id": "team-nfl-no-v1-21637060f5b6fcade324",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "history",
+    "recipe": "position-RB",
+    "recipe_version": 1,
+    "content_hash": "21637060f5b6fcade324cc1bc5446e942ded1c62694741f386907fb5d399b9f2",
+    "content": {
+      "id": "team-nfl-no-v1-21637060f5b6fcade324",
+      "theme": "Saints rushing seasons: second look",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-aaron-stecker-2007",
+          "name": "Aaron Stecker",
+          "teamAbbr": "NO",
+          "seasonYear": 2007,
+          "grade": 132.9,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "37"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "215"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "444"
+            },
+            {
+              "label": "Rush TD",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "id": "nfl-chris-ivory-2010",
+          "name": "Chris Ivory",
+          "teamAbbr": "NO",
+          "seasonYear": 2010,
+          "grade": 104.3,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "1"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "17"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "716"
+            },
+            {
+              "label": "Rush TD",
+              "value": "5"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/acad2e61b3a60bf02021.png"
+        },
+        {
+          "id": "nfl-darren-sproles-2011",
+          "name": "Darren Sproles",
+          "teamAbbr": "NO",
+          "seasonYear": 2011,
+          "grade": 271.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "86"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "710"
+            },
+            {
+              "label": "Rec TD",
+              "value": "7"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "604"
+            },
+            {
+              "label": "Rush TD",
+              "value": "2"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ff16d5df0f0809ae5a6d.png"
+        },
+        {
+          "id": "nfl-latavius-murray-2019",
+          "name": "Latavius Murray",
+          "teamAbbr": "NO",
+          "seasonYear": 2019,
+          "grade": 157.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "34"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "235"
+            },
+            {
+              "label": "Rec TD",
+              "value": "1"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "637"
+            },
+            {
+              "label": "Rush TD",
+              "value": "5"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/052c23742ce231a53939.png"
+        },
+        {
+          "id": "nfl-pierre-thomas-2013",
+          "name": "Pierre Thomas",
+          "teamAbbr": "NO",
+          "seasonYear": 2013,
+          "grade": 213.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "77"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "513"
+            },
+            {
+              "label": "Rec TD",
+              "value": "3"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "549"
+            },
+            {
+              "label": "Rush TD",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "id": "nfl-reggie-bush-2006",
+          "name": "Reggie Bush",
+          "teamAbbr": "NO",
+          "seasonYear": 2006,
+          "grade": 267.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "89"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "748"
+            },
+            {
+              "label": "Rec TD",
+              "value": "2"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "558"
+            },
+            {
+              "label": "Rush TD",
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "id": "nfl-ricky-williams-2001",
+          "name": "Ricky Williams",
+          "teamAbbr": "NO",
+          "seasonYear": 2001,
+          "grade": 277.6,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "60"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "511"
+            },
+            {
+              "label": "Rec TD",
+              "value": "1"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "1,245"
+            },
+            {
+              "label": "Rush TD",
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "id": "nfl-tim-hightower-2016",
+          "name": "Tim Hightower",
+          "teamAbbr": "NO",
+          "seasonYear": 2016,
+          "grade": 126.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "22"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "200"
+            },
+            {
+              "label": "Rec TD",
+              "value": "1"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "548"
+            },
+            {
+              "label": "Rush TD",
+              "value": "4"
+            }
+          ]
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 11,
+    "is_starter": false
+  },
+  {
+    "id": "team-nfl-no-v1-1f8e9486e00a1ec0c6b4",
+    "sport": "nfl",
+    "team_abbr": "NO",
+    "format": "keep4",
+    "shelf": "deep_cuts",
+    "recipe": "era-RB-2010",
+    "recipe_version": 1,
+    "content_hash": "1f8e9486e00a1ec0c6b465e5424ac054977234fb2c3e17a563d4372537515b2e",
+    "content": {
+      "id": "team-nfl-no-v1-1f8e9486e00a1ec0c6b4",
+      "theme": "Saints rushing: the 2010s",
+      "sport": "nfl",
+      "players": [
+        {
+          "id": "nfl-alvin-kamara-2018",
+          "name": "Alvin Kamara",
+          "teamAbbr": "NO",
+          "seasonYear": 2018,
+          "grade": 348.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "81"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "709"
+            },
+            {
+              "label": "Rec TD",
+              "value": "4"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "883"
+            },
+            {
+              "label": "Rush TD",
+              "value": "14"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/0c24458fb34212c951a0.png"
+        },
+        {
+          "id": "nfl-chris-ivory-2010",
+          "name": "Chris Ivory",
+          "teamAbbr": "NO",
+          "seasonYear": 2010,
+          "grade": 104.3,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "1"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "17"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "716"
+            },
+            {
+              "label": "Rush TD",
+              "value": "5"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/acad2e61b3a60bf02021.png"
+        },
+        {
+          "id": "nfl-darren-sproles-2011",
+          "name": "Darren Sproles",
+          "teamAbbr": "NO",
+          "seasonYear": 2011,
+          "grade": 271.4,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "86"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "710"
+            },
+            {
+              "label": "Rec TD",
+              "value": "7"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "604"
+            },
+            {
+              "label": "Rush TD",
+              "value": "2"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/ff16d5df0f0809ae5a6d.png"
+        },
+        {
+          "id": "nfl-khiry-robinson-2014",
+          "name": "Khiry Robinson",
+          "teamAbbr": "NO",
+          "seasonYear": 2014,
+          "grade": 68.5,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "8"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "63"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "362"
+            },
+            {
+              "label": "Rush TD",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "id": "nfl-latavius-murray-2019",
+          "name": "Latavius Murray",
+          "teamAbbr": "NO",
+          "seasonYear": 2019,
+          "grade": 157.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "34"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "235"
+            },
+            {
+              "label": "Rec TD",
+              "value": "1"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "637"
+            },
+            {
+              "label": "Rush TD",
+              "value": "5"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/052c23742ce231a53939.png"
+        },
+        {
+          "id": "nfl-mark-ingram-2017",
+          "name": "Mark Ingram",
+          "teamAbbr": "NO",
+          "seasonYear": 2017,
+          "grade": 284.0,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "58"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "416"
+            },
+            {
+              "label": "Rec TD",
+              "value": "0"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "1,124"
+            },
+            {
+              "label": "Rush TD",
+              "value": "12"
+            }
+          ],
+          "headshot": "https://nhccgufqwndtoasdbkhc.supabase.co/storage/v1/object/public/player-headshots/nfl/12a6fb8a88001651b873.png"
+        },
+        {
+          "id": "nfl-pierre-thomas-2013",
+          "name": "Pierre Thomas",
+          "teamAbbr": "NO",
+          "seasonYear": 2013,
+          "grade": 213.2,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "77"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "513"
+            },
+            {
+              "label": "Rec TD",
+              "value": "3"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "549"
+            },
+            {
+              "label": "Rush TD",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "id": "nfl-tim-hightower-2016",
+          "name": "Tim Hightower",
+          "teamAbbr": "NO",
+          "seasonYear": 2016,
+          "grade": 126.8,
+          "stats": [
+            {
+              "label": "Rec",
+              "value": "22"
+            },
+            {
+              "label": "Rec Yds",
+              "value": "200"
+            },
+            {
+              "label": "Rec TD",
+              "value": "1"
+            },
+            {
+              "label": "Rush Yds",
+              "value": "548"
+            },
+            {
+              "label": "Rush TD",
+              "value": "4"
+            }
+          ]
+        }
+      ],
+      "grain": "season",
+      "scale": "nfl_skill_ppr"
+    },
+    "status": "validated",
+    "sort_order": 12,
+    "is_starter": false
+  }
+]

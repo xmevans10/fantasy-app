@@ -54,7 +54,7 @@ struct CareerView: View {
             content
                 .padding(16)
         }
-        .background(Color.appBackground)
+        .paperGround()
         .navigationTitle("Career")
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -100,7 +100,7 @@ struct CareerView: View {
     private var scopePicker: some View {
         PrimeSegmentedControl(
             options: [(title: "ALL", value: CareerScope.all)]
-                + Sport.allCases.map { (title: $0.displayName, value: CareerScope.sport($0)) },
+                + Sport.released.map { (title: $0.displayName, value: CareerScope.sport($0)) },
             selection: $scope
         )
     }

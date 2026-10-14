@@ -167,6 +167,9 @@ struct HomeView: View {
                         .heroReveal(0)
                     }
 
+                    MyTeamsView()
+                    CareerProgressCard(xp: container.xp, compact: true)
+
                     if showPushPrimer { pushPrimerCard.heroReveal(1) }
                     else if let moment = inlineMoment { momentCard(moment).heroReveal(1) }
 
@@ -211,7 +214,7 @@ struct HomeView: View {
                             // sport's pair (2026-07-20); it never writes `container.sportFilter`
                             // (2026-07-09: sport is chosen per-game on each format's own setup
                             // screen, not globally) — that's still the only writer.
-                            DailyGamesPager(sports: Sport.allCases, selection: $dailyPage) { sport in
+                            DailyGamesPager(sports: Sport.released, selection: $dailyPage) { sport in
                                 dailyCardStack(for: sport)
                             }
                             .opacity(allDailiesComplete ? 0.6 : 1)
@@ -255,7 +258,7 @@ struct HomeView: View {
                 }
                 .padding(16)
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("")
             .navigationDestination(isPresented: $showWeekPack) {
                 if let openWeekPack {
@@ -639,7 +642,7 @@ struct HomeView: View {
         // The pager and root may both ask to load a sport. Only the task that actually
         // finishes its visible boards starts speculative work, never a duplicate caller.
         if sport == (container.sportFilter.sport ?? .nfl) {
-            container.catalog.prefetchDraftSpinSample(for: sport)
+            container.catalog.prefetchArcadePool(for: sport)
             if container.entitlements.canPlayGrid() { container.puzzles.prefetchGrid(for: sport) }
         }
     }
@@ -760,9 +763,6 @@ struct HomeView: View {
         }
     }
 
-    @ViewBuilder
-    // LocalizedStringKey so the three literal section titles extract into
-    // Localizable.xcstrings — same pattern as EmptyStateView/GameSetupScreen.
     private func section<Content: View>(_ title: LocalizedStringKey,
                                         @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {

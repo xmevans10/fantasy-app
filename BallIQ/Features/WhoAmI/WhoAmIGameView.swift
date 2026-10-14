@@ -81,7 +81,7 @@ struct WhoAmIGameView: View {
                 playBoard
             }
         }
-        .background(Color.appBackground)
+        .paperGround()
         .task {
             // A blitz round never shows the reveal, so it would be a search per round for nothing.
             guard blitz == nil, answerRow == nil else { return }
@@ -155,7 +155,7 @@ struct WhoAmIGameView: View {
             }
             guessBar
         }
-        .background(Color.appBackground)
+        .paperGround()
     }
 
     private var header: some View {

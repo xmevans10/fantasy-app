@@ -156,7 +156,7 @@ struct JourneymanResultView: View {
             }
             doneBar
         }
-        .background(Color.appBackground)
+        .paperGround()
         .celebrate(on: $confetti, intensity: firstGuess ? 90 : 50)
         .onAppear {
             if let challenge {

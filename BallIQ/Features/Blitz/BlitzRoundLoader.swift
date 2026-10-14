@@ -88,44 +88,55 @@ final class BlitzRoundLoader {
     /// board is available. A false return is a real empty state (no content for this
     /// sport/format mix), not a transient failure to retry.
     func warm() async -> Bool {
-        for sport in config.orderedSports {
-            let filter = SportFilter(rawValue: sport.rawValue) ?? .all
-            // Independent reads for one sport, started together — the same round-trip saving
-            // `HomeView.loadDaily(for:)` makes, and the reason a cold blitz opens in about the
-            // time one fetch takes rather than four.
-            async let keep4Pool = config.formats.contains(.keep4)
-                ? container.puzzles.allKeep4(for: filter) : []
-            async let whoamiPool = config.formats.contains(.whoami)
-                ? container.puzzles.allWhoAmI(for: filter) : []
-            // `isAvailable(for:)` short-circuits the one structurally impossible pairing
-            // (Journeyman + tennis, see `Sport.hasClubCareers`) so a tennis blitz doesn't spend a
-            // round trip fetching a pool the server will always answer empty.
-            async let journeymanPool = config.formats.contains(.journeyman)
-                && BlitzFormat.journeyman.isAvailable(for: sport)
-                ? container.puzzles.allJourneyman(for: filter) : []
-            async let arcadePool = config.formats.contains(.overunder)
-                ? container.catalog.arcadePool(for: sport, limit: 200) : []
-            // Today's canonical rows, so they can be held back (see `withheld`).
-            async let todayKeep4 = config.formats.contains(.keep4)
-                ? container.puzzles.keep4Puzzle(for: filter, date: Date()) : nil
-            async let todayWhoAmI = config.formats.contains(.whoami)
-                ? container.puzzles.whoAmIPuzzle(for: filter, date: Date()) : nil
-            async let todayJourneyman = config.formats.contains(.journeyman)
-                && BlitzFormat.journeyman.isAvailable(for: sport)
-                ? container.puzzles.journeymanPuzzle(for: filter, date: Date()) : nil
-
-            keep4[sport] = await keep4Pool
-            whoami[sport] = await whoamiPool
-            journeyman[sport] = await journeymanPool
-            overUnderPool[sport] = PlayerRelevance.filter(await arcadePool, sport: sport, minimum: 20)
-
-            if let pick = await todayKeep4, pick.isCanonicalToday { withheld.insert(pick.content.id) }
-            if let pick = await todayWhoAmI, pick.isCanonicalToday { withheld.insert(pick.content.id) }
-            if let pick = await todayJourneyman, pick.isCanonicalToday { withheld.insert(pick.content.id) }
-
-            warmImages(for: sport)
+        await withTaskGroup(of: Void.self) { group in
+            for sport in config.orderedSports {
+                group.addTask { @MainActor in
+                    await self.warm(sport: sport)
+                }
+            }
         }
+        guard !Task.isCancelled else { return false }
         return next() != nil
+    }
+
+    private func warm(sport: Sport) async {
+        guard !Task.isCancelled else { return }
+        let filter = SportFilter(rawValue: sport.rawValue) ?? .all
+        // Independent reads for one sport, started together — the same round-trip saving
+        // `HomeView.loadDaily(for:)` makes, and the reason a cold blitz opens in about the
+        // time one fetch takes rather than four.
+        async let keep4Pool = config.formats.contains(.keep4)
+            ? container.puzzles.allKeep4(for: filter) : []
+        async let whoamiPool = config.formats.contains(.whoami)
+            ? container.puzzles.allWhoAmI(for: filter) : []
+        // `isAvailable(for:)` short-circuits the one structurally impossible pairing
+        // (Journeyman + tennis, see `Sport.hasClubCareers`) so a tennis blitz doesn't spend a
+        // round trip fetching a pool the server will always answer empty.
+        async let journeymanPool = config.formats.contains(.journeyman)
+            && BlitzFormat.journeyman.isAvailable(for: sport)
+            ? container.puzzles.allJourneyman(for: filter) : []
+        async let arcadePool = config.formats.contains(.overunder)
+            ? container.catalog.arcadePool(for: sport, limit: 200) : []
+        // Today's canonical rows, so they can be held back (see `withheld`).
+        async let todayKeep4 = config.formats.contains(.keep4)
+            ? container.puzzles.keep4Puzzle(for: filter, date: Date()) : nil
+        async let todayWhoAmI = config.formats.contains(.whoami)
+            ? container.puzzles.whoAmIPuzzle(for: filter, date: Date()) : nil
+        async let todayJourneyman = config.formats.contains(.journeyman)
+            && BlitzFormat.journeyman.isAvailable(for: sport)
+            ? container.puzzles.journeymanPuzzle(for: filter, date: Date()) : nil
+
+        keep4[sport] = await keep4Pool
+        whoami[sport] = await whoamiPool
+        journeyman[sport] = await journeymanPool
+        overUnderPool[sport] = PlayerRelevance.filter(await arcadePool, sport: sport, minimum: 20)
+
+        if let pick = await todayKeep4, pick.isCanonicalToday { withheld.insert(pick.content.id) }
+        if let pick = await todayWhoAmI, pick.isCanonicalToday { withheld.insert(pick.content.id) }
+        if let pick = await todayJourneyman, pick.isCanonicalToday { withheld.insert(pick.content.id) }
+
+        guard !Task.isCancelled else { return }
+        warmImages(for: sport)
     }
 
     /// How many boards' worth of art to warm per sport. A blitz is a handful of boards (see

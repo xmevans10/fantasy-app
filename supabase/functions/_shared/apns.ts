@@ -43,6 +43,9 @@ const SPORT_LABEL: Record<string, string> = {
   baseball: "MLB",
   soccer: "Soccer",
   tennis: "Tennis",
+  hockey: "NHL",
+  f1: "F1",
+  golf: "Golf",
 };
 
 /** `theme` is today's minted K4C4 theme when known — naming it makes the push concrete proof

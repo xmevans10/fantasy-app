@@ -14,7 +14,7 @@ struct CreateView: View {
                     signInPrompt
                 }
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("Create")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

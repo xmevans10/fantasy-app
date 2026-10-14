@@ -71,6 +71,16 @@ final class ScoringBreakdownTests: XCTestCase {
                               "grand_slams": 30.0, "matches_lost": -0.5])
     }
 
+    /// Golf, same single-formula shape as tennis (one position, no role split).
+    func testGolfLegacyFallbackAndRowsMirrorPreset() {
+        let breakdown = ScoringBreakdown(puzzle: puzzle(sport: .golf))
+        XCTAssertFalse(breakdown.exact)
+        XCTAssertEqual(breakdown.sections.map(\.scaleKey), ["golf_fantasy"])
+        let rows = Dictionary(uniqueKeysWithValues: breakdown.sections[0].rows.map { ($0.stat, $0.points) })
+        XCTAssertEqual(rows, ["wins": 30.0, "top10s": 4.0, "cuts_made": 1.0, "events": 0.2,
+                              "scoring_margin": 2.0])
+    }
+
     /// base_on_balls means "walk" for hitters but "walk allowed" for pitchers.
     func testWalkLabelDisambiguatesByRole() {
         let hitter = ScoringBreakdown.section(scale: "baseball_hitter_fantasy", sport: .baseball, heading: nil)

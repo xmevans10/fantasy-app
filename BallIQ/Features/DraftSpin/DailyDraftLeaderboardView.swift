@@ -25,7 +25,7 @@ struct DailyDraftLeaderboardView: View {
                     board
                 }
             }
-            .background(Color.appBackground)
+            .paperGround()
             .navigationTitle("Daily Draft")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

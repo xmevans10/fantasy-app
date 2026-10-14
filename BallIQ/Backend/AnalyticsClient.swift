@@ -4,6 +4,9 @@ import Foundation
 /// events beats instrumenting every tap. Raw values are the `events.event_name` strings the
 /// queries in docs/ANALYTICS.md group by, so treat them as a stable schema.
 enum AnalyticsEvent: String {
+    case teamViewed = "team_viewed"
+    case teamPuzzleStarted = "team_puzzle_started"
+    case teamPuzzleCompleted = "team_puzzle_completed"
     case onboardingCompleted   = "onboarding_completed"
     case signInCompleted       = "sign_in_completed"
     case gameStarted           = "game_started"
@@ -49,6 +52,8 @@ enum AnalyticsEvent: String {
     /// nothing — a different problem from it never running.
     case entitlementClaimed    = "entitlement_claimed"
     case entitlementClaimFailed = "entitlement_claim_failed"
+    /// An unfinished legacy consumable could not be credited.
+    case cardPackCreditFailed = "card_pack_credit_failed"
     // Viral loop. `share_tapped` shipped alone and unqualified, which made it unanswerable:
     // 6 taps, ever, with no way to tell which format produced them, what artifact went out, or
     // whether a single one led anywhere. These make it a loop you can compute a k-factor from:

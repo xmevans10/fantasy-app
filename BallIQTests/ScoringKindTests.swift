@@ -89,6 +89,7 @@ final class ScoringKindTests: XCTestCase {
         XCTAssertEqual(ScoringKind.ppr.badgeLabel(for: .nfl), "PPR")
         XCTAssertEqual(ScoringKind.ppr.badgeLabel(for: .nba), "FANTASY")
         XCTAssertEqual(ScoringKind.ppr.badgeLabel(for: .tennis), "POINTS")
+        XCTAssertEqual(ScoringKind.ppr.badgeLabel(for: .golf), "POINTS")
         XCTAssertEqual(ScoringKind.vibes.badgeLabel(for: .nfl), "VIBES")
     }
 

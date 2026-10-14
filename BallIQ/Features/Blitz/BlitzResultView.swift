@@ -48,7 +48,7 @@ struct BlitzResultView: View {
             }
             doneBar
         }
-        .background(Color.appBackground)
+        .paperGround()
         .celebrate(on: $confetti, intensity: beatHighScore ? 90 : 40)
         .onAppear { if beatHighScore || summary.bestStreak >= 3 { confetti += 1 } }
     }

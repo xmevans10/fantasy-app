@@ -283,4 +283,26 @@ final class GridPuzzleTests: XCTestCase {
         XCTAssertEqual(detail.correct, 0)
         XCTAssertEqual(detail.attempted, 9)
     }
+
+    func testAxisMetadataSurvivesDecodeAndRoundTrip() throws {
+        let data = Data(#"{"kind":"stat","label":"1,000+ Rush Yds","grain":"season","key":"stat:rushing_yards:gte:1000"}"#.utf8)
+        let axis = try JSONDecoder().decode(GridPuzzle.GridAxis.self, from: data)
+        XCTAssertEqual(axis.grain, "season")
+        XCTAssertEqual(axis.key, "stat:rushing_yards:gte:1000")
+        XCTAssertEqual(try JSONDecoder().decode(GridPuzzle.GridAxis.self,
+            from: JSONEncoder().encode(axis)), axis)
+        let legacy = try JSONDecoder().decode(GridPuzzle.GridAxis.self,
+            from: Data(#"{"kind":"team","label":"KC"}"#.utf8))
+        XCTAssertNil(legacy.grain)
+    }
+
+    func testInstructionsDescribeSharedBudgetAndCategoryHelp() {
+        let board = puzzle()
+        XCTAssertTrue(board.instructions.contains("Nine guesses total"))
+        XCTAssertTrue(board.instructions.contains("Each player can be used once"))
+        XCTAssertFalse(board.instructions.contains("One guess per cell"))
+        XCTAssertTrue(board.explanation(for: .init(kind: .stat, label: "1,000+ Rush Yds", grain: "season")).contains("with that club"))
+        XCTAssertTrue(board.explanation(for: .init(kind: .stat, label: "10,000 career yards", grain: "career")).contains("career milestone"))
+    }
+
 }

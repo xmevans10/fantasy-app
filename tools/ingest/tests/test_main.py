@@ -293,3 +293,20 @@ def test_without_the_ledger_the_helmet_still_reaches_the_catalog():
         out = filter_new_catalog_rows(catalog_rows(seasons))
 
     assert len(out) == 1 and out[0]["headshot"] == _HELMET
+
+
+def test_grid_mint_does_not_accept_unverified_roster_memberships():
+    # A roster-only player must never become a valid answer without a catalog appearance.
+    row = {"name": "Recorded Player", "team_abbr": "KC", "season_year": 2024,
+           "sport": "nfl", "position": "QB", "stats": {"passing_yards": 1000}}
+    with patch("tools.ingest.main.load_dotenv"), \
+         patch("tools.ingest.upsert.fetch_existing_puzzle_ids", return_value=set()), \
+         patch("tools.ingest.upsert.fetch_grid_history", return_value=[]), \
+         patch("tools.ingest.upsert.fetch_player_seasons", return_value=[row]), \
+         patch("tools.ingest.providers.nfl_rosters.fetch_years", side_effect=AssertionError("unverified roster fetch")) as rosters, \
+         patch("tools.ingest.grid.generate_grid", return_value=None) as generate:
+        assert main.run_grid(["nfl"], upsert=False, dry_run=True,
+                             start=dt.date(2026, 10, 3), days=1) == 0
+    rosters.assert_not_called()
+    assert generate.call_args.kwargs["extra_members"] is None
+    assert generate.call_args.args[0][0].name == "Recorded Player"

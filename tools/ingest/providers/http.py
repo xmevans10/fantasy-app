@@ -89,12 +89,13 @@ def fetch_json(url: str, *, headers: dict[str, str] | None = None,
         return json.loads(_cache_path(cache_key).read_text(encoding="utf-8"))
 
     body = _get(url, headers=headers)
+    decoded = json.loads(body)  # Do not cache a malformed HTTP200 response for the whole TTL.
 
     if cache_key and ttl_hours > 0:
         path = _cache_path(cache_key)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(body, encoding="utf-8")
-    return json.loads(body)
+    return decoded
 
 
 def _get(url: str, *, headers: dict[str, str] | None = None, retries: int = 3) -> str:

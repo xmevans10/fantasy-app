@@ -43,6 +43,7 @@ from .providers import (
     nfl_players,
     seed,
     f1_ergast,
+    golf_pga,
     nhl_stats,
     tennis_atp,
     tennis_recent,
@@ -354,7 +355,13 @@ def gather_seasons(nfl_years: list[int], game_years: list[int] | None = None) ->
     f1 = f1_ergast.load_seasons()
     print(f"[f1] {len(f1)} driver-seasons")
 
-    all_seasons = seasons + nba + baseball + soccer + tennis + hockey + f1
+    # Golf: PGA Tour player-seasons, 2001-2025 from the committed ESPN core-API sweep (see
+    # providers/golf_pga.py). Committed-CSV-only, same as hockey/F1/tennis — a completed PGA
+    # Tour season is immutable and the sweep is re-run by the weekly refresh workflow.
+    golf = golf_pga.load_seasons()
+    print(f"[golf] {len(golf)} player-seasons")
+
+    all_seasons = seasons + nba + baseball + soccer + tennis + hockey + f1 + golf
     # Bake NBA season totals BEFORE career aggregation so career rows sum real season
     # totals (a counting stat) instead of re-deriving from career-averaged rates.
     derive_nba_totals(all_seasons)
@@ -802,13 +809,9 @@ def run_grid(sports: list[str], *, upsert: bool, dry_run: bool,
                      meta={"league": r.get("league") or ""})
             for r in raw
         ]
-        # NFL cells accept the FULL roster (every position, Immaculate-Grid-style), not just
-        # the graded offensive pool — validity only; stars/viability stay graded-pool-driven.
+        # Roster status alone does not prove a game appearance (IR/practice squads qualify
+        # there). Mint from recorded catalog seasons; expand only with verified appearances.
         extra_members = None
-        if sport == "nfl":
-            from .providers import nfl_rosters
-            extra_members = nfl_rosters.fetch_years(list(range(nfl_rosters.MIN_YEAR, _CURRENT_YEAR + 1)))
-            print(f"[grid] nfl: {len(extra_members)} roster memberships widen the answer pools")
         recent = recent_by_sport.setdefault(sport, set())
         misses = 0
         for date in pending:
@@ -934,7 +937,7 @@ def main() -> int:
                     help="rewrite BallIQ/Data/keep4_themes.json only (no data pull)")
     ap.add_argument("--dry-run", action="store_true", help="build + validate + print, no writes")
     ap.add_argument("--grid", nargs="+",
-                    choices=["nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"],
+                    choices=["nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1", "golf"],
                     help="generate Grid puzzles for the given sport(s) from the live "
                          "player_seasons catalog (standalone — skips the season gather pull)")
     ap.add_argument("--grid-days", type=int, default=2, metavar="N",
@@ -945,7 +948,7 @@ def main() -> int:
                     help="first day of the --grid-days window (default today, UTC). Backfilling "
                          "into the past deepens the pool without pre-committing future dailies")
     ap.add_argument("--grid-axis-membership", nargs="+", metavar="SPORT",
-                    choices=["nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"],
+                    choices=["nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1", "golf"],
                     help="materialise which (player, season) pairs satisfy each stat/position "
                          "axis into `grid_axis_membership` — the input the CLIENT needs to "
                          "generate mixed practice boards (standalone; reads the live catalog)")
@@ -1022,6 +1025,16 @@ def main() -> int:
         except Exception as err:                      # noqa: BLE001 - never block a run on it
             print(f"[headshots] ledger skipped ({err}) — headshots stay as providers gave them")
     keep4, whoami, health_report = build_rows(seasons)
+    # Boards retired as duplicates (migration 0033) must not come back: the stable pool rebuilds
+    # the same ids every run (`f1-modern-era-00`, `nba-playmakers-00`, ...) and the upsert is
+    # on_conflict=id, so without this each run re-inserted them into Browse. Read whenever we
+    # will write anywhere; a failed read on an --upsert stops the run rather than resurrecting them.
+    if args.upsert or (args.write_fallback and os.getenv("SUPABASE_URL")):
+        from .upsert import fetch_rows_keyset
+        retired = {r["id"] for r in fetch_rows_keyset("puzzles_retired", "id")}
+        before = len(keep4)
+        keep4 = [row for row in keep4 if row.id not in retired]
+        print(f"[retired] skipped {before - len(keep4)} keep4 row(s) retired as duplicates")
     all_rows = keep4 + whoami
 
     # Written on every run, --dry-run included — the durable version of the pool
@@ -1041,11 +1054,9 @@ def main() -> int:
         from .upsert import fetch_served_pairs
         window = [(dt.date.today() - dt.timedelta(days=d)).isoformat()
                   for d in range(_ARCHIVE_MIN_OFFSET_DAYS, args.backfill + _ARCHIVE_MIN_OFFSET_DAYS + 2)]
-        try:
-            claimed = fetch_served_pairs(window)
-            print(f"[archive] {len(claimed)} (date, sport) slot(s) already owned by a daily mint")
-        except Exception as err:  # noqa: BLE001
-            print(f"[archive] could not read minted slots, spreading without them: {err}")
+        # A failed read must stop the write: stamping blind can claim an existing daily slot.
+        claimed = fetch_served_pairs(window)
+        print(f"[archive] {len(claimed)} (date, sport) slot(s) already owned by a daily mint")
     assign_active_dates(all_rows, args.backfill, claimed)
     print_summary(keep4, whoami)
 

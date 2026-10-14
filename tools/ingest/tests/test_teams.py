@@ -231,3 +231,12 @@ def test_logo_download_retries_a_rate_limit_but_not_a_real_absence(monkeypatch):
     monkeypatch.setattr(logos.urllib.request, "urlopen", gone)
     assert logos._download("https://upload.wikimedia.org/missing.png") is None
     assert calls["n"] == 1, "a 404 is a real absence — retrying it just slows the build"
+
+
+# Unit tests provide their own constructor identity fixture. Tests covering soccer/US
+# metadata must not fetch unrelated live F1 logos; the constructor test overrides this stub.
+import pytest
+
+@pytest.fixture(autouse=True)
+def isolate_constructor_network(monkeypatch):
+    monkeypatch.setattr(teams.f1_constructors, "build_identity", lambda: [])

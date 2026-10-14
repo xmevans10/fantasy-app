@@ -87,15 +87,12 @@ struct Keep4CardView: View {
 
     // MARK: - Team-color band
 
-    /// On a full-height card the band is the piece that absorbs whatever room the stat sheet
-    /// and the controls don't need — a bigger photo on a bigger field of team color, the way a
-    /// physical card is mostly picture. Letting the *stats* absorb it instead is what the first
-    /// pass at this did, and it just relocated the dead space into 150pt-tall tiles.
+    /// Board art uses the open canvas for the actual portrait; recap cards retain the
+    /// compact badge so their scrolling rows do not grow with the board treatment.
     @ViewBuilder private var teamBand: some View {
         if fillsHeight {
             GeometryReader { geo in
-                bandContent(headshot: min(140, max(56, geo.size.height - 90)))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                heroBand(size: geo.size)
             }
             .frame(minHeight: 120, maxHeight: .infinity)
             .background(bandBackground)
@@ -106,8 +103,83 @@ struct Keep4CardView: View {
         }
     }
 
+    /// Short canvases use a side-by-side composition so the art cannot push Keep/Cut offscreen.
+    /// On taller phones the portrait uses the entire field above the identity footer, with the
+    /// small club mark overlaid in the corner rather than consuming a separate row of height.
+    @ViewBuilder private func heroBand(size: CGSize) -> some View {
+        if size.height < 210 {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .center, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        heroClub(compact: true)
+                        heroName(fontSize: 23, lines: size.height < 150 ? 1 : 2)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    heroPortrait(size: CGSize(width: max(48, (size.width - 36) * 0.46),
+                                              height: max(40, size.height - 54)))
+                }
+                .frame(maxHeight: .infinity)
+                chipStrip
+            }
+            .padding(12)
+        } else {
+            ZStack(alignment: .bottomTrailing) {
+                heroPortrait(size: CGSize(width: min(300, size.width - 28),
+                                          height: max(48, size.height - 78)))
+                    .padding(.bottom, 64)
+                VStack(alignment: .leading, spacing: 6) {
+                    heroClub(compact: false)
+                    Spacer(minLength: 0)
+                    heroName(fontSize: 28, lines: 1)
+                    chipStrip
+                }
+                .padding(14)
+            }
+        }
+    }
+
+    private func heroClub(compact: Bool) -> some View {
+        HStack(spacing: 7) {
+            TeamLogoBadge(sport: sport, teamAbbr: player.teamAbbr,
+                          tint: team.onPrimary, size: compact ? 24 : 36, fetchSize: 40)
+            if let fullName = teamFullName {
+                Text(fullName.uppercased())
+                    .font(.custom(FontName.condBold, size: compact ? 10 : 12))
+                    .foregroundStyle(team.onPrimary.opacity(0.8))
+                    .lineLimit(2).minimumScaleFactor(0.7)
+            }
+            Spacer(minLength: 0)
+            if isLocked && showGrade { gradeChip }
+        }
+    }
+
+    private func heroName(fontSize: CGFloat, lines: Int) -> some View {
+        Text(player.name.uppercased())
+            .font(.custom(FontName.condBlack, size: fontSize))
+            .foregroundStyle(team.onPrimary)
+            .lineLimit(lines).minimumScaleFactor(0.6)
+    }
+
+    @ViewBuilder private func heroPortrait(size: CGSize) -> some View {
+        if let raw = player.headshot, !raw.trimmingCharacters(in: .whitespaces).isEmpty,
+           let url = URL(string: raw) {
+            RemoteImage(url: url, targetSize: size, contentMode: .fit,
+                        placeholder: { portraitFallback(size: size) },
+                        failure: { portraitFallback(size: size) })
+                .frame(width: size.width, height: size.height, alignment: .bottom)
+                .accessibilityHidden(true)
+        } else {
+            portraitFallback(size: size)
+        }
+    }
+
+    private func portraitFallback(size: CGSize) -> some View {
+        PlayerHeadshotBadge(headshot: nil, tint: team.onPrimary,
+                            size: min(size.width, size.height), name: player.name)
+    }
+
     /// The team color as a *field*, not a flat block: a diagonal shade across it, broadcast
-    /// stripes, and (on a full card) the crest blown up and cropped by the trailing edge.
+    /// stripes that keep the portrait and separate club badge legible.
     /// Every layer is derived from `team` — nothing here is a hardcoded color — and all of it
     /// keys off `onPrimary`, so a light-primary team (Vegas gold, Padres sand) gets dark
     /// texture where a dark-primary team gets light.
@@ -118,7 +190,6 @@ struct Keep4CardView: View {
                                     team.onPrimary.opacity(0.0), Color.black.opacity(0.20)],
                            startPoint: .topLeading, endPoint: .bottomTrailing)
             diagonalStripes
-            if fillsHeight { crestWatermark }
         }
         .clipped()
     }
@@ -140,21 +211,6 @@ struct Keep4CardView: View {
                 ctx.fill(path, with: .color(team.onPrimary.opacity(0.055)))
                 x += gap
             }
-        }
-        .allowsHitTesting(false)
-    }
-
-    /// The crest at card-art scale, bled off the trailing edge. Same badge the corner uses, so
-    /// a defunct team with no crest degrades to its abbreviation here too instead of a hole.
-    private var crestWatermark: some View {
-        HStack {
-            Spacer(minLength: 0)
-            TeamLogoBadge(sport: sport, teamAbbr: player.teamAbbr, tint: team.onPrimary, size: 168,
-                          // Drawn at 168, fetched at the badge size — see `fetchSize`. This is
-                          // what lets the warm pass cover it.
-                          fetchSize: 40)
-                .opacity(0.15)
-                .offset(x: 34, y: 14)
         }
         .allowsHitTesting(false)
     }
@@ -227,10 +283,12 @@ struct Keep4CardView: View {
     private var metaChips: [String] {
         var chips: [String] = []
         if !player.teamAbbr.isEmpty { chips.append(player.teamAbbr.uppercased()) }
-        if let week = player.week, let opponent = player.opponent {
-            chips.append("WK \(week) · \(opponent.uppercased())")
-        } else if let date = player.gameDate, let opponent = player.opponent {
+        // A date wins over a week: only the NFL's `week` is a real week. Elsewhere it has been an
+        // internal sequence (MLB game-id digits), which rendered as "WK 823499 · COL".
+        if let date = player.gameDate, let opponent = player.opponent {
             chips.append("\(date.uppercased()) · \(opponent.uppercased())")
+        } else if let week = player.week, let opponent = player.opponent {
+            chips.append("WK \(week) · \(opponent.uppercased())")
         }
         if let first = player.firstYear, let last = player.lastYear {
             chips.append(first == last ? "\(first)" : "\(first)–\(last)")

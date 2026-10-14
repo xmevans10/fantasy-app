@@ -192,12 +192,13 @@ def _get(url: str, timeout: int = 30) -> tuple[int, bytes, str]:
 
 
 NFL_HELMET_SHA256 = "33be6a8e3c2e353f497f2d70d75211d71d80779dcc2519b17d3045730cfc0598"
+NFL_HELMET_THUMB_SHA256 = "c34715875cda4e9f248327835c4186a13cc7b51ca49ed940774fc733ef58153d"
 NFL_HELMET_PIXEL_SHA256 = "f0aa9c60554abdf4ea2f34b3c573e10d0f0a6639e0c036425869146a8ddc22e5"
 
 
 def is_nfl_placeholder(data: bytes) -> bool:
     """Recognize the league's generic helmet, even when it returns HTTP 200."""
-    if hashlib.sha256(data).hexdigest() == NFL_HELMET_SHA256:
+    if hashlib.sha256(data).hexdigest() in {NFL_HELMET_SHA256, NFL_HELMET_THUMB_SHA256}:
         return True
     try:
         from PIL import Image

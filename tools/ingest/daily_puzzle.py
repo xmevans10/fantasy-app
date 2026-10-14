@@ -29,6 +29,8 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import collections
+import dataclasses
 import datetime as dt
 import os
 import random
@@ -63,6 +65,95 @@ THEME_COOLDOWN_DAYS = 21
 def _signature(theme_key: str, row: PuzzleRow) -> str:
     ids = sorted(p["id"] for p in row.content["players"])
     return f"{theme_key}|{','.join(ids)}"
+
+
+# A new board sharing this many of its eight cards with a live board of the same sport is a
+# near-duplicate, whatever its title. Signature novelty only rejects the IDENTICAL eight, which
+# is how Browse ended up with "20-goal seasons" and "Elite goal-scoring seasons" carrying the
+# same six forwards (2026-09-26 sweep: 62 of 465 keep4 boards retired on exactly this rule).
+OVERLAP_LIMIT = 5
+
+
+def normalize_title(title: str) -> str:
+    """Case- and whitespace-insensitive title key ("Ace  Pitching seasons" == "ace pitching
+    seasons"). Deliberately nothing looser: punctuation and wording differences are real
+    differences a player can see."""
+    return " ".join(title.casefold().split())
+
+
+def _title_of(theme: Theme, row: PuzzleRow) -> str:
+    # `content.theme` is what Browse renders; fall back to the theme for hand-built test rows.
+    return row.content.get("theme") or theme.title
+
+
+@dataclasses.dataclass
+class BoardIndex:
+    """What is already on show, per sport, for the same-title / near-duplicate guard.
+
+    `titles` holds normalised titles of every live AND retired keep4 board (a retired title
+    re-minted would put the duplicate straight back into Browse). `boards` holds the player-id
+    sets of live boards only: a retired board is not shown, so overlapping it is harmless.
+
+    Built once per run from `upsert.fetch_keep4_boards()` and grown with `add` as a batch picks,
+    so a 14-day batch can't mint two of its own days the same title either. Signature novelty
+    (`puzzle_history`) stays the hard, permanent guarantee; this is the Browse-shaped one."""
+    titles: dict[str, set[str]] = dataclasses.field(default_factory=dict)
+    boards: dict[str, list[frozenset[str]]] = dataclasses.field(default_factory=dict)
+    rejected: collections.Counter = dataclasses.field(default_factory=collections.Counter)
+
+    @classmethod
+    def from_rows(cls, live: list[dict], retired: list[dict] = ()) -> "BoardIndex":
+        """`live`/`retired` rows are `{sport, title, players: [{id, …}, …]}` dicts."""
+        index = cls()
+        for r in live:
+            index.add(r["sport"], r.get("title") or "", [p["id"] for p in r.get("players") or []])
+        for r in retired:
+            if r.get("title"):
+                index.titles.setdefault(r["sport"], set()).add(normalize_title(r["title"]))
+        return index
+
+    def add(self, sport: str, title: str, player_ids) -> None:
+        if title:
+            self.titles.setdefault(sport, set()).add(normalize_title(title))
+        ids = frozenset(player_ids)
+        if ids:
+            self.boards.setdefault(sport, []).append(ids)
+
+    def conflict(self, sport: str, title: str, player_ids) -> str | None:
+        """Why a candidate board may not be minted ('same title' / '5+ of 8 same players',
+        the same reason strings as `puzzles_retired.reason`), or None if it is clear."""
+        if title and normalize_title(title) in self.titles.get(sport, ()):
+            return "same title"
+        ids = frozenset(player_ids)
+        if any(len(ids & board) >= OVERLAP_LIMIT for board in self.boards.get(sport, ())):
+            return f"{OVERLAP_LIMIT}+ of 8 same players"
+        return None
+
+    def check(self, theme: Theme, row: PuzzleRow) -> str | None:
+        """`conflict` for a (theme, row) candidate, tallied in `rejected` by reason."""
+        why = self.conflict(theme.sport, _title_of(theme, row),
+                            [p["id"] for p in row.content["players"]])
+        if why:
+            self.rejected[(theme.sport, why)] += 1
+        return why
+
+    def admit(self, theme: Theme, row: PuzzleRow) -> None:
+        self.add(theme.sport, _title_of(theme, row), [p["id"] for p in row.content["players"]])
+
+
+def load_board_index() -> BoardIndex:
+    """One read of live + retired keep4 boards per run. Offline (no credentials) returns an
+    empty index, so the guard is a no-op rather than a crash for local dry runs. A failed read
+    WITH credentials raises: minting blind is exactly how the duplicates got in."""
+    if not os.getenv("SUPABASE_URL"):
+        print("[guard] no SUPABASE_URL: same-title / overlap guard starts empty")
+        return BoardIndex()
+    from .upsert import fetch_keep4_boards
+    live, retired = fetch_keep4_boards()
+    index = BoardIndex.from_rows(live, retired)
+    print(f"[guard] {len(live)} live + {len(retired)} retired keep4 boards loaded "
+          f"({sum(len(v) for v in index.titles.values())} burned titles)")
+    return index
 
 
 # How many viable themes to ROLL per sport per batch, and the ceiling on rolls spent finding
@@ -156,6 +247,7 @@ def pick_novel_puzzle(
     recent_themes: set[str] | frozenset[str] = frozenset(),
     cooldown_key=lambda theme: theme.key,
     tier_key=lambda theme: 0 if theme.key.startswith("gen") else 1,
+    guard: BoardIndex | None = None,
 ) -> tuple[Theme, PuzzleRow, str] | None:
     """Shuffle deterministically per-day (varied day to day, reproducible within a day) while
     keeping niche candidates ranked ahead of curated ones, then return the first row whose
@@ -175,7 +267,12 @@ def pick_novel_puzzle(
     They're sorted to the back rather than filtered out, so the
     cooldown shapes the pick without ever being able to starve a slot: a sport whose whole
     space is inside the window still mints, it just mints last-resort. That soft form matters
-    because signature-novelty is the hard guarantee here and must stay the binding one."""
+    because signature-novelty is the hard guarantee here and must stay the binding one.
+
+    `guard`, when given, is the hard same-title / near-duplicate filter (see `BoardIndex`): a
+    candidate whose title is already live or retired for its sport, or which shares
+    `OVERLAP_LIMIT`+ cards with a live board, is skipped and the next candidate tried. Unlike
+    the cooldown it CAN starve a slot; that is deliberate, and `mint_batch` logs it."""
     rng = random.Random(today.isoformat())
     order = list(range(len(candidates)))
     rng.shuffle(order)
@@ -187,8 +284,11 @@ def pick_novel_puzzle(
     for i in ranked:
         theme, row = candidates[i]
         sig = _signature(theme.key, row)
-        if sig not in served:
-            return theme, row, sig
+        if sig in served:
+            continue
+        if guard is not None and guard.check(theme, row):
+            continue
+        return theme, row, sig
     return None
 
 
@@ -215,6 +315,7 @@ def mint_batch(
     candidates_by_sport: dict[str, list[tuple[Theme, PuzzleRow]]], served: set[str],
     targets: list[tuple[dt.date, str]],
     recent_themes: dict[str, set[str]] | None = None,
+    guard: BoardIndex | None = None,
 ) -> list[tuple[dt.date, Theme, PuzzleRow, str]]:
     """Pick a novel puzzle for each (date, sport) slot in order, mutating `served` in place
     as it goes so a later slot in the same batch can never reuse a signature an earlier one
@@ -224,17 +325,22 @@ def mint_batch(
 
     `recent_themes` (per sport, from `puzzle_history` inside the cooldown window) is likewise
     mutated as the batch runs, so minting 30 days in one invocation spreads themes across the
-    whole batch instead of only avoiding what was already in the table when it started."""
+    whole batch instead of only avoiding what was already in the table when it started.
+
+    `guard` (see `BoardIndex`) is grown the same way: each pick is admitted before the next
+    slot, so a batch can't mint two of its own days the same title or 5+ of the same cards."""
     recent = {s: set(k) for s, k in (recent_themes or {}).items()}
     minted: list[tuple[dt.date, Theme, PuzzleRow, str]] = []
     for date, sport in targets:
         pick = pick_novel_puzzle(candidates_by_sport.get(sport, []), served, date,
-                                 recent.get(sport, frozenset()))
+                                 recent.get(sport, frozenset()), guard=guard)
         if pick is None:
             print(f"[daily] {date.isoformat()} {sport}: candidate space exhausted — skipped")
             continue
         theme, row, sig = pick
         served.add(sig)
+        if guard is not None:
+            guard.admit(theme, row)
         recent.setdefault(sport, set()).add(theme.key)
         minted.append((date, theme, _finalize_row(date, theme, row), sig))
     return minted
@@ -315,7 +421,12 @@ def main() -> int:
         recent_themes = {}
         print("[daily] --dry-run: skipping the puzzle_history lookup (starting from empty history)")
 
-    minted = mint_batch(candidates_by_sport, served, targets, recent_themes)
+    # Read even on --dry-run (it is read-only), so a dry run shows what the guard would do.
+    guard = load_board_index()
+    minted = mint_batch(candidates_by_sport, served, targets, recent_themes, guard)
+    if guard.rejected:
+        print("[guard] rejected: " + ", ".join(
+            f"{s} {why}: {n}" for (s, why), n in sorted(guard.rejected.items())))
     for date, theme, row, _ in minted:
         _print_pick(date, theme, row)
     if len(minted) < len(targets):

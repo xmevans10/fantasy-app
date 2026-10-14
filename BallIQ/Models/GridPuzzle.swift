@@ -34,12 +34,18 @@ struct GridPuzzle: Codable, Equatable, SportScoped {
         /// render the wrong badge.
         let abbr: String?
         let league: String?
+        /// Optional wire metadata keeps legacy boards decodable while category help stays precise.
+        let grain: String?
+        let key: String?
 
-        init(kind: Kind, label: String, abbr: String? = nil, league: String? = nil) {
+        init(kind: Kind, label: String, abbr: String? = nil, league: String? = nil,
+             grain: String? = nil, key: String? = nil) {
             self.kind = kind
             self.label = label
             self.abbr = abbr
             self.league = league
+            self.grain = grain
+            self.key = key
         }
 
         /// What the crest/color lookup should key on. Falls back to the label for legacy content
@@ -144,7 +150,29 @@ extension GridPuzzle {
     /// a career question ("played for both"); every other shape asks about a single season.
     var instructions: String {
         archetype == "teams-x-teams"
-            ? "Tap a cell and name a player who played for both clubs. One guess per cell."
-            : "Tap a cell and name a player who fits both the row and the column. One guess per cell."
+            ? "Tap a cell and name a player who played for both clubs. Nine guesses total. Each player can be used once."
+            : "Tap a cell and name a player who fits both the row and the column. Nine guesses total. Each player can be used once."
+    }
+}
+
+
+extension GridPuzzle {
+    func explanation(for axis: GridAxis) -> String {
+        switch axis.kind {
+        case .team:
+            return archetype == "teams-x-teams" || axis.grain == "career"
+                ? "Name a player with a recorded appearance for this club. A team × team answer can come from different seasons."
+                : "Match this club. When paired with a season milestone, the player must have earned that milestone with this club."
+        case .decade:
+            return "Match a recorded season in this decade. A season milestone must be reached in that same season."
+        case .position:
+            return "Match this recorded player position and the intersecting category."
+        case .stat:
+            return axis.grain == "career"
+                ? "Match this career milestone and the intersecting category."
+                : "Match this milestone in a single recorded season. When paired with a club, the milestone must be earned with that club."
+        case .other:
+            return "Match this category and the intersecting category. Answers use Playbook’s recorded data."
+        }
     }
 }

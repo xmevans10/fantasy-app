@@ -375,6 +375,11 @@ create table if not exists public.community_puzzles (
 );
 create index if not exists community_puzzles_feed_idx
   on public.community_puzzles (format, sport, created_at desc);
+-- 0036: golf stays out of UGC until the release gate opens (see that migration).
+alter table public.community_puzzles
+  drop constraint if exists community_puzzles_sport_released;
+alter table public.community_puzzles
+  add constraint community_puzzles_sport_released check (sport <> 'golf');
 
 -- One row per (puzzle, player). Drives the "Popular" sort; unique stops double-count.
 create table if not exists public.community_plays (
@@ -1996,10 +2001,8 @@ create trigger friends_notify_request
   after insert on public.friends
   for each row execute function public.notify_friend_request_webhook();
 
--- ============================================================
--- APNs credentials via Vault (2026-07-15, applied live as migration `apns_vault_config`)
--- ============================================================
--- The real APNs auth key (F92WNG523G) lives in Supabase Vault, written 2026-07-15, because
+-- =====================================================-- APNs credentials via Vault (2026-07-15, applied live as migration `apns_vault_config`)
+-- =====================================================-- The real APNs auth key (F92WNG523G) lives in Supabase Vault, written 2026-07-15, because
 -- no management token exists in the agent environment to set true Edge Function secrets.
 -- Edge functions read it through this service-role-only RPC (see _shared/apns.ts: env vars
 -- win when present; Vault is the fallback). A temporary `vault_set_secret` writer was used
@@ -2044,16 +2047,27 @@ grant execute on function public.get_app_store_config() to service_role;
 -- live as migration `grid_player_names_index`). security definer to read the full catalog past
 -- player_seasons RLS, and returns one array so PostgREST's 1000-row table cap doesn't truncate
 -- it. Sport-wide by design — a cell-scoped list would hand the player the grid's answers.
+create table if not exists public.grid_player_names_cache (
+  sport text primary key,
+  names text[] not null,
+  computed_at timestamptz not null default now()
+);
+alter table public.grid_player_names_cache enable row level security;
+
 create or replace function public.grid_player_names(p_sport text)
 returns text[]
 language sql
 stable
 security definer
 set search_path = ''
+set statement_timeout = '30s'
 as $$
-  select coalesce(array_agg(distinct name order by name), '{}')
-  from public.player_seasons
-  where sport = p_sport and not career and name <> '';
+  select coalesce(
+    (select names from public.grid_player_names_cache where sport = p_sport),
+    (select coalesce(array_agg(distinct name order by name), '{}')
+     from public.player_seasons
+     where sport = p_sport and not career and name <> '')
+  );
 $$;
 
 revoke all on function public.grid_player_names(text) from public;
@@ -2149,22 +2163,17 @@ create policy grid_membership_index_cache_read
 -- blank-league rows are dropped, because soccer codes collide across countries (MCI is Manchester
 -- City and Melbourne City). Every other sport forces league to '' so a franchise can't split.
 --
--- Cache-or-compute as of migration 0014 (`grid_membership_index_cache`): the live aggregate below
--- (`grid_membership_index_compute`) measured ~10s for NFL once the v2 axis joins landed on top of
--- v1's 1.2-7.4s — unacceptable to block "New random grid"'s spinner on, and `set statement_timeout`
--- alone only kept it from 57014-ing signed-out users under anon's 3s default (the same failure mode
--- migration 0007 documents), it didn't make it fast. `grid_membership_index` is now a thin wrapper:
--- serve a cached payload (indexed row lookup, milliseconds) if one exists and is under 36h old,
--- else fall back to computing live and populate the cache for the next caller.
--- `refresh_grid_membership_index_cache()` lets CI (`ingest.yml`, right after the daily grid mint)
--- proactively warm every (sport, version) pair so real users hit the fast path essentially always.
+-- Public reads serve the last cached historical payload without an age cutoff (0037).
+-- A missing cache returns NULL; no player request performs expensive aggregation or writes.
+-- CI refreshes names and memberships in separate requests per sport, so a failed rebuild
+-- cannot roll back other sports. The original all-sport refresh remains for compatibility.
 create or replace function public.grid_membership_index_compute(p_sport text, p_version int default 1)
 returns jsonb
 language sql
 stable
 security definer
 set search_path = ''
-set statement_timeout = '30s'
+set statement_timeout = '120s'
 as $$
   with base as (
     select distinct
@@ -2264,34 +2273,15 @@ grant execute on function public.grid_membership_index_compute(text, int) to ser
 
 create or replace function public.grid_membership_index(p_sport text, p_version int default 1)
 returns jsonb
-language plpgsql
+language sql
 stable
 security definer
 set search_path = ''
-set statement_timeout = '30s'
 as $$
-declare
-  v_version int := case when p_version >= 2 then 2 else 1 end;
-  v_payload jsonb;
-begin
-  select payload into v_payload
+  select payload
   from public.grid_membership_index_cache
-  where sport = p_sport and version = v_version
-    and computed_at > now() - interval '36 hours';
-
-  if v_payload is not null then
-    return v_payload;
-  end if;
-
-  v_payload := public.grid_membership_index_compute(p_sport, v_version);
-
-  insert into public.grid_membership_index_cache (sport, version, payload, computed_at)
-  values (p_sport, v_version, v_payload, now())
-  on conflict (sport, version) do update
-    set payload = excluded.payload, computed_at = excluded.computed_at;
-
-  return v_payload;
-end;
+  where sport = p_sport
+    and version = case when p_version >= 2 then 2 else 1 end;
 $$;
 
 revoke all on function public.grid_membership_index(text, int) from public;
@@ -2306,7 +2296,7 @@ as $$
 declare
   v_sport text;
 begin
-  foreach v_sport in array array['nfl','nba','baseball','soccer','tennis'] loop
+  foreach v_sport in array array['nfl','nba','baseball','soccer','tennis','hockey','f1','golf'] loop
     insert into public.grid_membership_index_cache (sport, version, payload, computed_at)
     values (v_sport, 1, public.grid_membership_index_compute(v_sport, 1), now())
     on conflict (sport, version) do update
@@ -3032,8 +3022,7 @@ on conflict (rung) do update set
   time_limit_seconds = excluded.time_limit_seconds, seed = excluded.seed,
   is_boss = excluded.is_boss;
 
--- ============================================================================
--- M26 — player headshot rehost (2026-08-24)
+-- =====================================================================-- M26 — player headshot rehost (2026-08-24)
 --
 -- Headshots were hotlinked to five third-party CDNs while only team logos were ever
 -- rehosted, and every one of them failed differently and silently:
@@ -3045,8 +3034,7 @@ on conflict (rung) do update set
 -- as a coverage metric. Rehosting also unlocks Storage's render/transform endpoint, which
 -- AppImagePipeline.transformed() only applies to Storage URLs — hotlinked NFL headshots
 -- were shipping at a 373 KB median for circles drawn at ~40 pt.
--- ============================================================================
-
+-- =====================================================================
 -- One row per distinct SOURCE url seen in player_seasons.headshot. Doubles as the work
 -- queue for the rehost: shards claim a disjoint slice by (status, shard) rather than each
 -- paginating player_seasons, which at 18 concurrent deep-OFFSET scans produced 57014
@@ -3398,6 +3386,689 @@ create index if not exists marketing_posts_date_idx on public.marketing_posts (d
 
 alter table public.marketing_posts enable row level security;
 
+
+-- ============================================================ collectibles (migrations 0030/0031)
+-- Collectibles: trading cards of famous seasons, flairs, and the packs that deal them.
+--
+-- Every roll happens here, never on the device. A pack is a random draw that can be paid for,
+-- so the odds, the daily free pack and the paid balance all have to live where a modified client
+-- cannot reach them. The client asks `open_card_pack` for a pack and renders what comes back.
+--
+-- Named `card_*` throughout because `packs` / `pack_items` already mean Week Packs (0028).
+--
+-- Odds (disclosed in the app before any purchase, App Store Guideline 3.1.1):
+--   per card:  Gold Base 70%, Foil 20%, Holographic 8%, Polychrome 2%
+--   per pack:  five cards, at least one Foil or better; 1 in 12 packs also carries a flair.
+
+-- ---------------------------------------------------------------- catalog
+
+create table if not exists public.collectible_cards (
+  id           text primary key,                 -- the player_seasons.id the card depicts
+  set_key      text not null default 'series-1',
+  sport        text not null,
+  name         text not null,
+  team_abbr    text,
+  season_year  int  not null,
+  position     text,
+  headshot     text not null,                    -- store-hosted only, so a card never shows a blank face
+  stat_line    jsonb not null,                   -- [{"label":"PASS TD","value":"55"}, ...], in display order
+  signature    text not null,                    -- the stat the season was picked for
+  active       boolean not null default true,
+  created_at   timestamptz not null default now()
+);
+
+create table if not exists public.flairs (
+  id      text primary key,
+  label   text not null,
+  symbol  text not null,                          -- SF Symbol name
+  rarity  text not null check (rarity in ('common', 'rare', 'epic', 'legendary')),
+  source  text not null check (source in ('unlock', 'pack')),
+  sort    int  not null default 0
+);
+
+create table if not exists public.unlocks (
+  id            text primary key,
+  label         text not null,
+  detail        text not null,
+  reward_packs  int  not null default 0,
+  reward_flair  text references public.flairs(id),
+  sort          int  not null default 0
+);
+
+-- ---------------------------------------------------------------- per-user state
+
+create table if not exists public.user_cards (
+  user_id          uuid not null references auth.users(id) on delete cascade,
+  card_id          text not null references public.collectible_cards(id),
+  finish           text not null check (finish in ('gold', 'foil', 'holographic', 'polychrome')),
+  copies           int  not null default 1 check (copies > 0),
+  first_pulled_at  timestamptz not null default now(),
+  primary key (user_id, card_id, finish)
+);
+
+create table if not exists public.user_flairs (
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  flair_id     text not null references public.flairs(id),
+  acquired_at  timestamptz not null default now(),
+  primary key (user_id, flair_id)
+);
+
+create table if not exists public.user_unlocks (
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  unlock_id   text not null references public.unlocks(id),
+  claimed_at  timestamptz not null default now(),
+  primary key (user_id, unlock_id)
+);
+
+-- `packs` is the unopened balance from purchases and unlock rewards. The free pack is not a
+-- balance: it is "has this user opened a free pack on this device-local day yet".
+create table if not exists public.card_pack_wallet (
+  user_id        uuid primary key references auth.users(id) on delete cascade,
+  packs          int  not null default 0 check (packs >= 0),
+  last_free_day  date,
+  updated_at     timestamptz not null default now()
+);
+
+-- One row per Apple transaction, so a replayed receipt can never grant twice.
+create table if not exists public.card_pack_purchases (
+  transaction_id  text primary key,
+  user_id         uuid not null references auth.users(id) on delete cascade,
+  product_id      text not null,
+  packs           int  not null check (packs > 0),
+  created_at      timestamptz not null default now()
+);
+
+create table if not exists public.card_pack_openings (
+  id         bigserial primary key,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  source     text not null check (source in ('free', 'paid')),
+  local_day  date not null,
+  cards      jsonb not null,
+  flair_id   text references public.flairs(id),
+  opened_at  timestamptz not null default now()
+);
+create index if not exists card_pack_openings_user_idx on public.card_pack_openings (user_id, opened_at desc);
+
+alter table public.profiles add column if not exists equipped_flair text references public.flairs(id);
+
+-- ---------------------------------------------------------------- RLS
+
+alter table public.collectible_cards   enable row level security;
+alter table public.flairs              enable row level security;
+alter table public.unlocks             enable row level security;
+alter table public.user_cards          enable row level security;
+alter table public.user_flairs         enable row level security;
+alter table public.user_unlocks        enable row level security;
+alter table public.card_pack_wallet    enable row level security;
+alter table public.card_pack_purchases enable row level security;
+alter table public.card_pack_openings  enable row level security;
+
+drop policy if exists "active cards readable" on public.collectible_cards;
+create policy "active cards readable" on public.collectible_cards for select using (active);
+drop policy if exists "flairs readable" on public.flairs;
+create policy "flairs readable" on public.flairs for select using (true);
+drop policy if exists "unlocks readable" on public.unlocks;
+create policy "unlocks readable" on public.unlocks for select using (true);
+drop policy if exists "own cards" on public.user_cards;
+create policy "own cards" on public.user_cards for select using (auth.uid() = user_id);
+drop policy if exists "own flairs" on public.user_flairs;
+create policy "own flairs" on public.user_flairs for select using (auth.uid() = user_id);
+drop policy if exists "own unlocks" on public.user_unlocks;
+create policy "own unlocks" on public.user_unlocks for select using (auth.uid() = user_id);
+drop policy if exists "own wallet" on public.card_pack_wallet;
+create policy "own wallet" on public.card_pack_wallet for select using (auth.uid() = user_id);
+drop policy if exists "own openings" on public.card_pack_openings;
+create policy "own openings" on public.card_pack_openings for select using (auth.uid() = user_id);
+-- No write policies anywhere: every write goes through the security-definer functions below.
+-- card_pack_purchases has no read policy either; it is bookkeeping for the service role.
+
+-- ---------------------------------------------------------------- the roll
+
+-- Deals one pack to `p_user`. Internal: callers are `open_card_pack` (after it has charged the
+-- pack) and tests. Not granted to any client role.
+create or replace function public._deal_card_pack(p_user uuid, p_source text, p_local_day date)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  finishes text[] := '{}';
+  r        double precision;
+  card_ids text[];
+  result   jsonb := '[]'::jsonb;
+  flair    text;
+  was_new  boolean;
+  i        int;
+begin
+  for i in 1..5 loop
+    r := random();
+    finishes := finishes || case
+      when r < 0.02 then 'polychrome'
+      when r < 0.10 then 'holographic'
+      when r < 0.30 then 'foil'
+      else 'gold' end;
+  end loop;
+  if not ('foil' = any(finishes) or 'holographic' = any(finishes) or 'polychrome' = any(finishes)) then
+    finishes[5] := 'foil';
+  end if;
+  -- Rarest last, so the reveal builds instead of peaking on card one.
+  select array_agg(f order by case f when 'gold' then 0 when 'foil' then 1 when 'holographic' then 2 else 3 end)
+    into finishes from unnest(finishes) f;
+
+  select array_agg(id) into card_ids
+    from (select id from collectible_cards where active order by random() limit 5) c;
+  if coalesce(array_length(card_ids, 1), 0) < 5 then
+    raise exception 'catalog_too_small';
+  end if;
+
+  for i in 1..5 loop
+    insert into user_cards (user_id, card_id, finish) values (p_user, card_ids[i], finishes[i])
+    on conflict (user_id, card_id, finish) do update set copies = user_cards.copies + 1
+    returning copies = 1 into was_new;
+    result := result || jsonb_build_object('card_id', card_ids[i], 'finish', finishes[i], 'is_new', was_new);
+  end loop;
+
+  if random() < 1.0 / 12 then
+    select f.id into flair from flairs f
+     where f.source = 'pack'
+       and not exists (select 1 from user_flairs u where u.user_id = p_user and u.flair_id = f.id)
+     order by random() limit 1;
+    if flair is not null then
+      insert into user_flairs (user_id, flair_id) values (p_user, flair) on conflict do nothing;
+    end if;
+  end if;
+
+  insert into card_pack_openings (user_id, source, local_day, cards, flair_id)
+  values (p_user, p_source, p_local_day, result, flair);
+
+  return jsonb_build_object('source', p_source, 'cards', result, 'flair_id', flair);
+end;
+$$;
+
+-- Opens the caller's free pack for `p_local_day` if it hasn't been opened, otherwise spends one
+-- from the balance. `p_local_day` is the device's calendar day (the same convention dailies
+-- use); it must sit within a day of the server's, so a changed device clock can't mint packs.
+create or replace function public.open_card_pack(p_local_day date)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid    uuid := auth.uid();
+  wallet card_pack_wallet;
+  source text;
+begin
+  if uid is null then raise exception 'not_authenticated'; end if;
+  if p_local_day not between current_date - 1 and current_date + 1 then
+    raise exception 'bad_local_day';
+  end if;
+
+  insert into card_pack_wallet (user_id) values (uid) on conflict do nothing;
+  select * into wallet from card_pack_wallet where user_id = uid for update;
+
+  if wallet.last_free_day is null or wallet.last_free_day < p_local_day then
+    source := 'free';
+    update card_pack_wallet set last_free_day = p_local_day, updated_at = now() where user_id = uid;
+  elsif wallet.packs > 0 then
+    source := 'paid';
+    update card_pack_wallet set packs = packs - 1, updated_at = now() where user_id = uid;
+  else
+    raise exception 'no_packs';
+  end if;
+
+  return public._deal_card_pack(uid, source, p_local_day);
+end;
+$$;
+
+-- Credits packs for one verified Apple transaction. Service role only (the `grant-card-packs`
+-- Edge Function, after it has verified the signed transaction). Returns false for a transaction
+-- already credited, which the function reports as success: the client may finish it.
+create or replace function public.grant_card_packs(p_user uuid, p_transaction text, p_product text, p_packs int)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare inserted int;
+begin
+  insert into card_pack_purchases (transaction_id, user_id, product_id, packs)
+  values (p_transaction, p_user, p_product, p_packs)
+  on conflict (transaction_id) do nothing;
+  get diagnostics inserted = row_count;
+  if inserted = 0 then return false; end if;
+  insert into card_pack_wallet (user_id, packs) values (p_user, p_packs)
+  on conflict (user_id) do update set packs = card_pack_wallet.packs + excluded.packs, updated_at = now();
+  return true;
+end;
+$$;
+
+-- Checks every unlock the caller hasn't claimed against what they've actually done, and pays
+-- out the ones they now meet. Idempotent: returns only what this call newly claimed.
+create or replace function public.claim_unlocks()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid      uuid := auth.uid();
+  games    int;
+  perfects int;
+  streak   int;
+  claimed  jsonb := '[]'::jsonb;
+  u        unlocks;
+  met      boolean;
+begin
+  if uid is null then raise exception 'not_authenticated'; end if;
+
+  select count(*), count(*) filter (where perfect), coalesce(max(streak_after), 0)
+    into games, perfects, streak from game_results where user_id = uid;
+  streak := greatest(streak, coalesce((select p.streak from progress p where p.user_id = uid), 0));
+
+  for u in select * from unlocks
+            where id not in (select unlock_id from user_unlocks where user_id = uid)
+            order by sort loop
+    met := case u.id
+      when 'first_game'   then games >= 1
+      when 'games_50'     then games >= 50
+      when 'games_250'    then games >= 250
+      when 'perfect_10'   then perfects >= 10
+      when 'streak_7'     then streak >= 7
+      when 'streak_30'    then streak >= 30
+      when 'week_pack'    then exists (
+        select 1 from pack_items i
+          join game_results g on g.puzzle_id = i.id and g.user_id = uid and g.mode = 'pack'
+         group by i.pack_id
+        having count(distinct i.id) = (select count(*) from pack_items j where j.pack_id = i.pack_id))
+      when 'versus_win'   then exists (select 1 from versus_challenges v where v.winner_id = uid)
+      when 'ladder_10'    then exists (select 1 from ladder_progress l where l.user_id = uid and l.highest_rung >= 10)
+      when 'season_badge' then exists (select 1 from season_badges s where s.user_id = uid)
+      when 'collector_25' then (select count(distinct card_id) from user_cards c where c.user_id = uid) >= 25
+      when 'polychrome'   then exists (select 1 from user_cards c where c.user_id = uid and c.finish = 'polychrome')
+      else false end;
+    continue when not met;
+
+    insert into user_unlocks (user_id, unlock_id) values (uid, u.id) on conflict do nothing;
+    if u.reward_packs > 0 then
+      insert into card_pack_wallet (user_id, packs) values (uid, u.reward_packs)
+      on conflict (user_id) do update set packs = card_pack_wallet.packs + excluded.packs, updated_at = now();
+    end if;
+    if u.reward_flair is not null then
+      insert into user_flairs (user_id, flair_id) values (uid, u.reward_flair) on conflict do nothing;
+    end if;
+    claimed := claimed || jsonb_build_object('unlock_id', u.id, 'reward_packs', u.reward_packs, 'reward_flair', u.reward_flair);
+  end loop;
+
+  return claimed;
+end;
+$$;
+
+-- Wears a flair the caller owns, or clears it with null.
+create or replace function public.equip_flair(p_flair text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception 'not_authenticated'; end if;
+  if p_flair is not null and not exists (select 1 from user_flairs where user_id = uid and flair_id = p_flair) then
+    raise exception 'flair_not_owned';
+  end if;
+  update profiles set equipped_flair = p_flair where id = uid;
+end;
+$$;
+
+revoke all on function public._deal_card_pack(uuid, text, date) from public, anon, authenticated;
+revoke all on function public.grant_card_packs(uuid, text, text, int) from public, anon, authenticated;
+revoke all on function public.open_card_pack(date) from public, anon;
+revoke all on function public.claim_unlocks() from public, anon;
+revoke all on function public.equip_flair(text) from public, anon;
+grant execute on function public.open_card_pack(date) to authenticated;
+grant execute on function public.claim_unlocks() to authenticated;
+grant execute on function public.equip_flair(text) to authenticated;
+
+-- ---------------------------------------------------------------- seed: flairs + unlocks
+
+insert into public.flairs (id, label, symbol, rarity, source, sort) values
+  ('rookie',         'Rookie',         'figure.walk',            'common',    'unlock', 10),
+  ('grinder',        'Grinder',        'hammer.fill',            'common',    'unlock', 20),
+  ('iron_man',       'Iron Man',       'shield.lefthalf.filled', 'epic',      'unlock', 30),
+  ('on_fire',        'On Fire',        'flame.fill',             'rare',      'unlock', 40),
+  ('flawless',       'Flawless',       'checkmark.seal.fill',    'rare',      'unlock', 50),
+  ('weekly_warrior', 'Weekly Warrior', 'calendar',               'rare',      'unlock', 60),
+  ('duelist',        'Duelist',        'bolt.fill',              'rare',      'unlock', 70),
+  ('climber',        'Climber',        'figure.stairs',          'rare',      'unlock', 80),
+  ('ranked',         'Ranked',         'rosette',                'rare',      'unlock', 90),
+  ('collector',      'Collector',      'square.stack.3d.up.fill','rare',      'unlock', 100),
+  ('prism',          'Prism',          'sparkles',               'epic',      'unlock', 110),
+  ('clutch',         'Clutch',         'timer',                  'rare',      'pack',   200),
+  ('ball_knower',    'Ball Knower',    'brain.head.profile',     'epic',      'pack',   210),
+  ('dynasty',        'Dynasty',        'building.columns.fill',  'epic',      'pack',   220),
+  ('hall_of_famer',  'Hall of Famer',  'star.circle.fill',       'legendary', 'pack',   230),
+  ('goat',           'GOAT',           'crown.fill',             'legendary', 'pack',   240)
+on conflict (id) do update set label = excluded.label, symbol = excluded.symbol,
+  rarity = excluded.rarity, source = excluded.source, sort = excluded.sort;
+
+insert into public.unlocks (id, label, detail, reward_packs, reward_flair, sort) values
+  ('first_game',   'First whistle',   'Finish your first game.',                    1, 'rookie',         10),
+  ('streak_7',     'Seven straight',  'Reach a 7-day streak.',                      1, 'on_fire',        20),
+  ('perfect_10',   'Perfect ten',     'Score 10 perfect games.',                    1, 'flawless',       30),
+  ('week_pack',    'Full week',       'Finish every board in a Week Pack.',         1, 'weekly_warrior', 40),
+  ('versus_win',   'First blood',     'Win a Versus duel.',                         1, 'duelist',        50),
+  ('games_50',     'Fifty up',        'Finish 50 games.',                           1, 'grinder',        60),
+  ('ladder_10',    'Up the ladder',   'Reach rung 10 on the ladder.',               1, 'climber',        70),
+  ('season_badge', 'Rated',           'Earn a rating-season badge.',                1, 'ranked',         80),
+  ('collector_25', 'Binder',          'Own 25 different cards.',                    2, 'collector',      90),
+  ('streak_30',    'Thirty straight', 'Reach a 30-day streak.',                     2, 'iron_man',      100),
+  ('games_250',    'Lifer',           'Finish 250 games.',                          3, null,            110),
+  ('polychrome',   'Oil slick',       'Pull a Polychrome card.',                    0, 'prism',         120)
+on conflict (id) do update set label = excluded.label, detail = excluded.detail,
+  reward_packs = excluded.reward_packs, reward_flair = excluded.reward_flair, sort = excluded.sort;
+
+-- Card formatter used by the Series 1 seed (0031); the seed itself is data, not schema.
+create or replace function public._fmt_stat(v numeric)
+returns text language sql immutable set search_path = '' as $$
+  select case
+    when v is null then '–'
+    when v <> trunc(v) and abs(v) < 1 then ltrim(to_char(v, 'FM0.000'), '0')     -- .349 AVG
+    when v <> trunc(v) then to_char(v, 'FM999990.0')                              -- 30.1 PPG
+    else to_char(v, 'FM999,999,990') end                                         -- 5,477
+$$;
+
+
+-- Card tiers by season quality (migration 0032). The Series 1 re-tier itself is data.
+alter table public.collectible_cards
+  add column if not exists tier text not null default 'gold'
+  check (tier in ('gold', 'foil', 'holographic', 'polychrome'));
+create index if not exists collectible_cards_tier_idx on public.collectible_cards (tier) where active;
+
+-- The deal: roll the tier per slot exactly as before, then draw a card of that tier.
+-- A pack's five-card set may never repeat for the same account, regardless of reveal order.
+create table if not exists public.card_pack_sets (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  card_ids text[] not null,
+  primary key (user_id, card_ids)
+);
+alter table public.card_pack_sets enable row level security;
+revoke all on public.card_pack_sets from anon, authenticated;
+insert into public.card_pack_sets (user_id, card_ids)
+select o.user_id, array(select c->>'card_id' from jsonb_array_elements(o.cards) c order by c->>'card_id')
+from public.card_pack_openings o
+on conflict do nothing;
+
+create or replace function public._deal_card_pack(p_user uuid, p_source text, p_local_day date)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  finishes text[] := '{}';
+  r        double precision;
+  chosen   text[] := '{}';
+  pick     text;
+  result   jsonb := '[]'::jsonb;
+  flair    text;
+  was_new  boolean;
+  i        int;
+  attempt  int;
+  registered int;
+  canonical text[];
+begin
+  for i in 1..5 loop
+    r := random();
+    finishes := finishes || case
+      when r < 0.02 then 'polychrome'
+      when r < 0.10 then 'holographic'
+      when r < 0.30 then 'foil'
+      else 'gold' end;
+  end loop;
+  if not ('foil' = any(finishes) or 'holographic' = any(finishes) or 'polychrome' = any(finishes)) then
+    finishes[5] := 'foil';
+  end if;
+  select array_agg(f order by case f when 'gold' then 0 when 'foil' then 1 when 'holographic' then 2 else 3 end)
+    into finishes from unnest(finishes) f;
+
+  -- Reserve the complete set before granting any cards. A unique key protects even
+  -- concurrent calls; exhaustion aborts the transaction, including its wallet charge.
+  for attempt in 1..100 loop
+    chosen := '{}';
+    for i in 1..5 loop
+      select id into pick from collectible_cards
+       where active and tier = finishes[i] and not (id = any(chosen))
+       order by random() limit 1;
+      if pick is null then raise exception 'catalog_too_small'; end if;
+      chosen := chosen || pick;
+    end loop;
+    select array_agg(id order by id) into canonical from unnest(chosen) id;
+    insert into card_pack_sets (user_id, card_ids) values (p_user, canonical)
+    on conflict do nothing;
+    get diagnostics registered = row_count;
+    exit when registered = 1;
+  end loop;
+  if registered <> 1 then raise exception 'no_unique_packs'; end if;
+
+  for i in 1..5 loop
+    pick := chosen[i];
+    insert into user_cards (user_id, card_id, finish) values (p_user, pick, finishes[i])
+    on conflict (user_id, card_id, finish) do update set copies = user_cards.copies + 1
+    returning copies = 1 into was_new;
+    result := result || jsonb_build_object('card_id', pick, 'finish', finishes[i], 'is_new', was_new);
+    pick := null;
+  end loop;
+
+  if random() < 1.0 / 12 then
+    select f.id into flair from flairs f
+     where f.source = 'pack'
+       and not exists (select 1 from user_flairs u where u.user_id = p_user and u.flair_id = f.id)
+     order by random() limit 1;
+    if flair is not null then
+      insert into user_flairs (user_id, flair_id) values (p_user, flair) on conflict do nothing;
+    end if;
+  end if;
+
+  insert into card_pack_openings (user_id, source, local_day, cards, flair_id)
+  values (p_user, p_source, p_local_day, result, flair);
+
+  return jsonb_build_object('source', p_source, 'cards', result, 'flair_id', flair);
+end;
+$$;
+
+revoke all on function public._deal_card_pack(uuid, text, date) from public, anon, authenticated;
+
+
+-- Boards retired from Browse as duplicates (migration 0033). Restorable: insert back into puzzles.
+create table if not exists public.puzzles_retired (
+  id           text primary key,
+  sport        text not null,
+  format       text not null,
+  content      jsonb not null,
+  active_date  date,
+  kept_id      text,
+  reason       text not null,
+  retired_at   timestamptz not null default now()
+);
+alter table public.puzzles_retired enable row level security;
+
+-- Series 1 seeding (migration 0034). Re-tier/refresh the catalog with: select public._seed_collectible_series1();
+create or replace function public._fold_name(v text)
+returns text language sql immutable set search_path = '' as $$
+  select lower(translate(v, 'áàâäãåéèêëíìîïóòôöõúùûüñçøšžćčłőű', 'aaaaaaeeeeiiiiooooouuuuncoszcclou'))
+$$;
+
+create or replace function public._seed_collectible_series1()
+returns int
+language plpgsql
+security definer
+set search_path = public
+set statement_timeout = '300s'
+as $fn$
+declare
+  s record;
+  n int;
+begin
+  update collectible_cards set active = false;
+
+  create temp table if not exists big_five_clubs on commit drop as
+    select distinct team_abbr from player_seasons
+     where sport = 'soccer' and competition in ('eng.1', 'esp.1', 'ger.1', 'ita.1', 'fra.1');
+
+  for s in
+    select * from (values
+      ('nfl',      '{QB}'::text[],        'passing_tds',     12, 'games',       10, '{passing_tds,passing_yards,completion_pct}'::text[], '{PASS TD,PASS YDS,CMP%}'::text[]),
+      ('nfl',      '{RB}',                'rushing_yards',   10, 'games',       10, '{rushing_yards,rushing_tds,ypc}',                   '{RUSH YDS,RUSH TD,YPC}'),
+      ('nfl',      '{WR,TE}',             'receiving_yards', 10, 'games',       10, '{receiving_yards,receptions,receiving_tds}',        '{REC YDS,REC,REC TD}'),
+      ('nba',      null,                  'ppg',             30, 'games',       50, '{ppg,rpg,apg}',                                     '{PPG,RPG,APG}'),
+      ('baseball', '{H}',                 'home_runs',       16, null,          0,  '{home_runs,rbi,avg}',                               '{HR,RBI,AVG}'),
+      ('baseball', '{P}',                 'strike_outs',     10, null,          0,  '{strike_outs,era,wins}',                            '{K,ERA,W}'),
+      ('soccer',   '{FW,MF}',             'goals',           20, null,          0,  '{goals,assists,appearances}',                       '{GOALS,AST,APPS}'),
+      ('hockey',   null,                  'points',          16, 'games',       40, '{points,goals,assists}',                            '{PTS,G,A}'),
+      ('f1',       null,                  'wins',            10, null,          0,  '{wins,poles,podiums}',                              '{WINS,POLES,PODIUMS}'),
+      ('tennis',   null,                  'titles',          10, null,          0,  '{titles,grand_slams,matches_won}',                  '{TITLES,SLAMS,WINS}')
+    ) as spec(sport, positions, sort_key, n, games_key, min_games, keys, labels)
+  loop
+    insert into collectible_cards
+      (id, sport, name, team_abbr, season_year, position, headshot, stat_line, signature, tier, active)
+    select ranked.id, ranked.sport, ranked.name, ranked.team_abbr, ranked.season_year, ranked.position,
+           ranked.headshot,
+           (select jsonb_agg(jsonb_build_object('label', s.labels[k],
+                                                'value', _fmt_stat((ranked.stats ->> s.keys[k])::numeric))
+                             order by k)
+              from generate_subscripts(s.keys, 1) k),
+           s.sort_key,
+           case
+             when (ranked.rn - 1)::numeric / ranked.total < 0.07 then 'polychrome'
+             when (ranked.rn - 1)::numeric / ranked.total < 0.20 then 'holographic'
+             when (ranked.rn - 1)::numeric / ranked.total < 0.45 then 'foil'
+             else 'gold' end,
+           true
+      from (
+        select top.*,
+               row_number() over (order by (top.stats ->> s.sort_key)::numeric desc) rn,
+               count(*) over () total
+          from (
+            select best.*
+              from (
+                select distinct on (_fold_name(p.name)) p.*
+                  from player_seasons p
+                 where p.sport = s.sport
+                   and p.career = false
+                   and p.week is null
+                   and p.headshot like '%/storage/v1/object/public/player-headshots/%'
+                   and (s.positions is null or p.position = any(s.positions))
+                   and (s.games_key is null or coalesce((p.stats ->> s.games_key)::numeric, 0) >= s.min_games)
+                   and (p.stats ->> s.sort_key) is not null
+                   -- Modern era only for baseball: 1880s pitchers threw 400+ innings and would
+                   -- otherwise own the strikeout Polychromes.
+                   and (p.sport <> 'baseball' or p.season_year >= 1901)
+                   and (p.sport <> 'soccer' or p.team_abbr in (select team_abbr from big_five_clubs))
+                 order by _fold_name(p.name), (p.stats ->> s.sort_key)::numeric desc
+              ) best
+             order by (best.stats ->> s.sort_key)::numeric desc
+             limit s.n
+          ) top
+      ) ranked
+    on conflict (id) do update set
+      name = excluded.name, team_abbr = excluded.team_abbr, season_year = excluded.season_year,
+      position = excluded.position, headshot = excluded.headshot, stat_line = excluded.stat_line,
+      signature = excluded.signature, tier = excluded.tier, active = true;
+  end loop;
+
+  select count(*) into n from collectible_cards where active;
+  return n;
+end;
+$fn$;
+
+revoke all on function public._seed_collectible_series1() from public, anon, authenticated;
+
+
+
+-- Grid lookups refresh separately from public cache reads (migration 0037).
+-- One RPC/transaction per sport prevents a timeout in one sport rolling back every other cache.
+create or replace function public.refresh_grid_lookup_cache(p_sport text)
+returns void
+language plpgsql
+volatile
+security definer
+set search_path = ''
+set statement_timeout = '120s'
+as $$
+declare
+  v_version int;
+  v_payload jsonb;
+begin
+  if p_sport is null or p_sport not in ('nfl','nba','baseball','soccer','tennis','hockey','f1','golf') then
+    raise exception 'Unsupported sport';
+  end if;
+
+  for v_version in 1..2 loop
+    v_payload := public.grid_membership_index_compute(p_sport, v_version);
+    insert into public.grid_membership_index_cache(sport, version, payload, computed_at)
+    values (p_sport, v_version, v_payload, now())
+    on conflict (sport, version) do update
+      set payload = excluded.payload, computed_at = excluded.computed_at;
+  end loop;
+end;
+$$;
+revoke all on function public.refresh_grid_lookup_cache(text) from public;
+grant execute on function public.refresh_grid_lookup_cache(text) to service_role;
+
+-- Names refresh independently so expensive membership rebuilds cannot roll it back.
+create or replace function public.refresh_grid_player_names_cache(p_sport text)
+returns void
+language sql
+volatile
+security definer
+set search_path = ''
+set statement_timeout = '120s'
+as $$
+  insert into public.grid_player_names_cache(sport, names, computed_at)
+  select p_sport, coalesce(array_agg(distinct name order by name), '{}'), now()
+  from public.player_seasons
+  where sport = p_sport and not career and name <> ''
+  on conflict (sport) do update
+    set names = excluded.names, computed_at = excluded.computed_at;
+
+$$;
+revoke all on function public.refresh_grid_player_names_cache(text) from public;
+grant execute on function public.refresh_grid_player_names_cache(text) to service_role;
+
+-- Rebuilds run only in service-role refreshes, outside player requests.
+alter function public.grid_membership_index_compute(text, int) set statement_timeout = '120s';
+
+
+
+
+-- Preserve the client sample: first 2,000 season rows by id, then newest/name-desc prefix.
+-- JSON aggregation avoids PostgREST's row cap on the inner sample. Only the arcade's prefix
+-- crosses the network; Draft & Spin still requests the full discovery sample.
+create or replace function public.arcade_season_sample(p_sport text, p_limit int default 200)
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  with sample as materialized (
+    select id, sport, name, team_abbr, season_year, position, stats, headshot, league, competition
+    from public.player_seasons
+    where sport = p_sport and not career and week is null
+    order by id
+    limit 2000
+  ), selected as (
+    select * from sample
+    order by season_year desc, name collate "C" desc, id
+    limit greatest(0, least(coalesce(p_limit, 200), 200))
+  )
+  select coalesce(jsonb_agg(to_jsonb(selected) order by season_year desc, name collate "C" desc, id), '[]'::jsonb)
+  from selected;
+$$;
+revoke all on function public.arcade_season_sample(text, int) from public;
+grant execute on function public.arcade_season_sample(text, int) to anon, authenticated, service_role;
 -- Official-source portrait policy. Original image references are retained for rollback.
 create table if not exists public.league_portrait_sources (
  url text primary key, original_url text not null, sport text not null
@@ -3488,3 +4159,99 @@ revoke all on function public.enforce_portraits_batch(text,int) from public,anon
 grant execute on function public.enforce_portraits_batch(text,int) to service_role;
 
 grant all on public.league_portrait_sources,public.portrait_policy_backups to service_role;
+
+-- Match the bounded arcade sample's season-only filter before scanning ordered ids.
+-- NFL has enough weekly rows that filtering them after an index scan can exceed anon's 3s limit.
+create index if not exists player_seasons_arcade_sample_idx
+  on public.player_seasons (sport, id)
+  where not career and week is null;
+
+-- Shared, immutable team inventory. Kept outside general dailies to protect older clients.
+create table if not exists public.team_puzzles (
+ id text primary key check (id like 'team-%'),
+ sport text not null, team_abbr text not null, format text not null check(format='keep4'),
+ shelf text not null check(shelf in ('icons','history','deep_cuts')),
+ recipe text not null, recipe_version int not null, content_hash text not null unique,
+ source_snapshot text not null, content jsonb not null,
+ status text not null check(status in ('draft','validated','published','withdrawn')),
+ sort_order int not null default 0, is_starter boolean not null default false,
+ available_at timestamptz not null default now(), created_at timestamptz not null default now()
+);
+create index if not exists team_puzzles_inventory_idx on public.team_puzzles(sport,team_abbr,sort_order) where status='published';
+alter table public.team_puzzles enable row level security;
+create policy "released team puzzles" on public.team_puzzles for select to anon,authenticated using(status='published' and available_at<=now());
+grant select on public.team_puzzles to anon,authenticated;
+grant all on public.team_puzzles to service_role;
+
+create table if not exists public.team_completions (
+ user_id uuid not null references auth.users(id) on delete cascade,
+ puzzle_id text not null references public.team_puzzles(id),
+ keep_ids text[] not null, correct int not null, xp_awarded int not null,
+ completed_at timestamptz not null default now(), primary key(user_id,puzzle_id)
+);
+alter table public.team_completions enable row level security;
+create policy "own team completions" on public.team_completions for select to authenticated using(user_id=auth.uid());
+grant select on public.team_completions to authenticated;
+grant all on public.team_completions to service_role;
+
+-- Grades and correctness come from published content; reward and completion commit together.
+-- Guest migration records an already awarded local completion without awarding again.
+create or replace function public.complete_team_puzzle(p_puzzle_id text,p_keep_ids text[],p_day text,p_guest_migration boolean default false)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare uid uuid:=auth.uid(); board jsonb; top_ids text[]; all_ids text[];
+ correct_count int; award int:=0; inserted int; state public.progress%rowtype;
+ day date; prior date; next_streak int;
+begin
+ if uid is null then raise exception 'Sign in required'; end if;
+ day:=p_day::date;
+ if abs(day-current_date)>1 then raise exception 'Invalid completion day'; end if;
+ select content into board from public.team_puzzles where id=p_puzzle_id and status='published' and available_at<=now();
+ if board is null then raise exception 'Puzzle unavailable'; end if;
+ select array_agg(value->>'id') into all_ids from jsonb_array_elements(board->'players');
+ if cardinality(all_ids)<>8 or cardinality(p_keep_ids)<>4 or
+    (select count(distinct x) from unnest(p_keep_ids) x)<>4 or not p_keep_ids <@ all_ids then
+   raise exception 'Exactly four distinct published cards required';
+ end if;
+ select array_agg(id) into top_ids from (select value->>'id' id from jsonb_array_elements(board->'players') order by (value->>'grade')::numeric desc limit 4) t;
+ select count(*)*2 into correct_count from unnest(p_keep_ids) x where x=any(top_ids);
+ insert into public.progress(user_id) values(uid) on conflict do nothing;
+ select * into state from public.progress where user_id=uid for update;
+ if not p_guest_migration then
+   award:=100+case when correct_count=8 then 75 else 0 end;
+   prior:=nullif(state.last_played_day,'')::date;
+   next_streak:=case when prior=day then state.streak when prior=day-1 then state.streak+1 else 1 end;
+   if prior is distinct from day then award:=award+50+least(next_streak,30)*25; end if;
+ end if;
+ insert into public.team_completions(user_id,puzzle_id,keep_ids,correct,xp_awarded)
+ values(uid,p_puzzle_id,p_keep_ids,correct_count,award) on conflict do nothing;
+ get diagnostics inserted=row_count;
+ if inserted=0 then award:=0; end if;
+ if award>0 then
+   update public.progress set xp=xp+award,streak=next_streak,last_played_day=p_day,updated_at=now() where user_id=uid returning * into state;
+   perform public.bump_weekly_xp(award);
+ end if;
+ return jsonb_build_object('awardedXP',award,'xp',state.xp,'streak',state.streak,'lastPlayedDay',coalesce(state.last_played_day,''),'correct',correct_count);
+end $$;
+revoke all on function public.complete_team_puzzle(text,text[],text,boolean) from public,anon;
+grant execute on function public.complete_team_puzzle(text,text[],text,boolean) to authenticated;
+
+-- Reuse the existing official-portrait policy for the new inventory.
+create trigger official_portrait_guard before insert or update of content on public.team_puzzles for each row execute function public.enforce_league_portrait();
+
+-- Older clients mirror a whole progress snapshot. Once team rewards exist, a delayed
+-- pre-reward snapshot must not erase the XP/streak the atomic team completion just banked.
+create or replace function public.preserve_team_progress() returns trigger
+language plpgsql security definer set search_path='' as $$
+begin
+ if exists(select 1 from public.team_completions where user_id=old.user_id) then
+   new.xp:=greatest(new.xp,old.xp);
+   if coalesce(new.last_played_day,'') < coalesce(old.last_played_day,'') then
+     new.last_played_day:=old.last_played_day;
+     new.streak:=old.streak;
+   end if;
+ end if;
+ return new;
+end $$;
+create trigger preserve_team_progress before update on public.progress for each row execute function public.preserve_team_progress();
+
+alter function public.complete_team_puzzle(text,text[],text,boolean) strict;

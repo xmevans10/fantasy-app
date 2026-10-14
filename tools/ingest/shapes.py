@@ -183,6 +183,13 @@ def same_game_subjects(seasons: list[RawSeason], sport: str, positions: frozense
     return [key for key, n in counts.most_common() if n >= minimum]
 
 
+# Code -> readable club name, for titles only. Soccer club codes are generated for any club the
+# curated table doesn't know, and a promoted side reads badly as one ("HCI vs NEW" was Hull City,
+# 2026-09-26), so the weekly soccer source records ESPN's short name for every code it resolves
+# and the game title uses it. Codes stay the join key everywhere else (chips, colours, filters).
+DISPLAY_NAMES: dict[str, str] = {}
+
+
 def same_game(sport: str, event_date: str, team_a: str, team_b: str,
               spec: curation.PositionSpec) -> Theme:
     """Eight players from one real game, both sides of it.
@@ -192,7 +199,8 @@ def same_game(sport: str, event_date: str, team_a: str, team_b: str,
     """
     return _spec_theme(
         f"shape-game-{sport}-{event_date}-{slug(team_a)}-{slug(team_b)}".lower(),
-        f"{team_a} vs {team_b}, {_pretty_date(event_date)}: who had the better day?",
+        f"{DISPLAY_NAMES.get(team_a, team_a)} vs {DISPLAY_NAMES.get(team_b, team_b)}, "
+        f"{_pretty_date(event_date)}: who had the better day?",
         spec, sport,
         (Filter("event_date", "eq", event_date),
          Filter("team", "in", (team_a, team_b))),
