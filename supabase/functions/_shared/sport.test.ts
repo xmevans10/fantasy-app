@@ -61,3 +61,7 @@ Deno.test("the day parse is pure, not re-interpreted in the server's timezone", 
   const jan01 = SPORT_ROTATION.indexOf(sportForDay("2026-01-01", ALL) as never);
   assertEquals(jan01, (dec31 + 1) % SPORT_ROTATION.length);
 });
+
+Deno.test("notification rotation stays on released sports", () => {
+  assertEquals([...SPORT_ROTATION], ["nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"]);
+});

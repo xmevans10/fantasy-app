@@ -54,11 +54,10 @@ def test_every_sport_has_a_cron_that_actually_fires():
             f"{sport} is gated on {cron!r}, which is not in `on.schedule`, so it never runs")
 
 
-def test_every_sport_runs():
+def test_every_released_sport_runs():
     sports = {sport for sport, _ in _matrix_rows(_text())}
-    # Every sport is on; readiness.py, not this list, decides whether a week gets a pack.
-    from tools.ingest.validate import _VALID_SPORTS
-    assert sports == set(_VALID_SPORTS)
+    # Core-product release: golf remains unreleased, including scheduled content.
+    assert sports == {"nfl", "nba", "baseball", "soccer", "tennis", "hockey", "f1"}
 
 
 def test_the_sports_are_staggered_across_more_than_one_day():
