@@ -45,7 +45,7 @@ what changed most recently (DB hand-offs, TestFlight, App Store submission), see
   career's shape ("Part of the 2003 draft class — and no forwarding address"), generated from the
   Who Am I? clue dimensions under a reveal cap and leak-checked against the answer.
 
-**Two-Minute Drill (2026-10-14, build 61; merged, uploaded; Apple processing pending)** — free, unranked NFL play-calling minigame on Home. A UTC daily starting situation or randomized practice drive uses a bundled 2024 nflverse bank (53 historical starts, 33,936 observed plays). Run/pass/kick choices, timeouts, spikes, visible empirical play samples, a persistent scoreboard, collapsible field and sourced play-by-play. Clock costs and field-position changes are explicit game rules; no invented defensive reads, player ratings or win probabilities. First daily finish per device earns XP; replays/practice only record a zero-XP session. See [TWO_MINUTE_DRILL.md](TWO_MINUTE_DRILL.md) for provenance, simulation limits and release validation.
+**Two-Minute Drill (2026-10-14)** — free, unranked NFL play-calling minigame on Home. Build 61 is VALID internally and installed on Xander’s iPhone. Build 62’s arcade redesign adds a 22-player roster-based tactical field, editable receiver routes, run/pass/RPO/trick concepts, tempo and clock actions, staged snap/throw/tackle animation, replay/skip, Survivor, narration, sounds, haptics and confetti. The 2024 nflverse bank has 53 real starts and 33,936 observed outcomes; formations and defensive weighting are explicit arcade rules. Final score is 70% call quality, 30% drive result. Daily first finish earns unranked XP; replays, practice and Survivor only record a session. See [TWO_MINUTE_DRILL.md](TWO_MINUTE_DRILL.md) for reference study, provenance, model limits, verification and delivery.
 
 **Puzzle Blitz (M27)** is listed separately because it is **not a format** — it is a fixed-length
 run (1/3/5 min) that serves whole, real boards of K4C4 / Who Am I? / Journeyman / Over/Under back
@@ -513,6 +513,7 @@ Live verification enqueued 14 sources, then returned zero candidates on the idem
   environmental reasons (§7.1) and passes on **18.3**, so prefer an 18.3 device for a full run.
 - Python: `python3 -m venv /tmp/balliq-venv && /tmp/balliq-venv/bin/pip install pytest &&
   /tmp/balliq-venv/bin/python -m pytest tools/ingest/tests/ -q`
+  In the managed filesystem sandbox, the two `test_drive_upload.py` integration tests require localhost socket access. Run the suite with the required escalation; a sandbox `PermissionError` on binding localhost is not a provider regression.
 - Screenshots: `xcrun simctl install/launch booted com.balliqfantasy.app
   [-screenshotGame|-screenshotResult|-screenshotWhoAmI[Result]|
   -screenshotJourneyman[Result] [-screenshotJourneymanHints <n>]|-screenshotCreate|

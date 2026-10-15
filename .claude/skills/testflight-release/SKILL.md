@@ -113,6 +113,7 @@ metadata via its REST API — lives in gitignored `tools/release/`:
 - **The `409 STATE_ERROR` propagation lag on the submit `PATCH` is real and can outlast two
   attempts.** 2026-08-25: attempts at 18:47 and 18:48 both 409'd, 18:50 returned 200. Keep the
   ~60s retry loop and give it at least 4-5 tries before concluding anything is actually wrong.
+- **A new build can be missing from the builds listing after it has finished processing.** Verified for build 61 on 2026-10-14: the list/filter returned no row, while `GET /v1/apps/6785275045/buildUploads` reported `COMPLETE`; `GET /v1/buildUploads/<id>?include=build` exposed the exact build with `processingState: VALID`. Resolve that relationship, then read `/v1/builds/<build-id>/buildBetaDetail` for internal readiness. Do not infer processing failure or keep polling the stale list alone.
 - **Empty `reviewSubmissions` cannot be cancelled** (`PATCH {"canceled":true}` → 409) — a
   submission with zero items has nothing to cancel. They appear to age out on their own; don't
   burn time trying to clean them up, and don't create them speculatively in the first place.
