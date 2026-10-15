@@ -1,6 +1,6 @@
 # Two-Minute Drill — arcade edition
 
-Native, free, unranked NFL play-calling minigame inspired by https://nfl2mindrill.com/. Build 62 significantly replaces build 61's simple run/pass screen. No reference-site code, assets, private playbook or proprietary ratings are copied.
+Native, free, unranked NFL play-calling minigame inspired by https://nfl2mindrill.com/. Build 63 significantly replaces build 61's simple run/pass screen. No reference-site code, assets, private playbook or proprietary ratings are copied.
 
 ## Reference study and acceptance bar
 
@@ -47,6 +47,6 @@ Debug snapshots: `-drillScreen setup|play|pass|run|trick|flight|feedback|result|
 
 ## Delivery
 
-Build 61's initial version is merged in [PR #7](https://github.com/xmevans10/fantasy-app/pull/7), uploaded, confirmed VALID/READY_FOR_BETA_TESTING, and installed/launched on Xander's iPhone over Wi-Fi. Build 62 is the arcade replacement has passed offscreen iPhone 15/SE visual verification of playbook, throws, feedback, touchdown/end-zone camera and dark-mode trick concepts; its signed release delivery is being finalized. Public App Store release remains 1.8.7 (55). Internal TestFlight uses the existing automatic-build-access group; external group distribution is outside this release request.
+The arcade implementation is merged in [PR #8](https://github.com/xmevans10/fantasy-app/pull/8) (`7adf75a`), with the enlarged-text scoreboard correction in [PR #9](https://github.com/xmevans10/fantasy-app/pull/9) (`0d2e6ba`). Final **1.9.0 (63)** is uploaded, confirmed **VALID / READY_FOR_BETA_TESTING** internally, and installed on Xander's iPhone over Wi-Fi. Launch on the phone remains unverified because it was locked; unlock and open Playbook. Offscreen iPhone 15/SE visual verification covers the playbook, throws, feedback, touchdown/end-zone camera, dark-mode trick concepts and enlarged text. Public App Store release remains 1.8.7 (55). Internal TestFlight uses the existing automatic-build-access group; no external beta distribution or App Store submission was performed for this release.
 
 Accessibility follow-up: build 63 fixes team-score rendering at enlarged Dynamic Type sizes. The exact failing SE state was re-rendered after the fix and both scores remain visible. The broadcast HUD uses stable label/score sizing while the playbook and narration still scale.
