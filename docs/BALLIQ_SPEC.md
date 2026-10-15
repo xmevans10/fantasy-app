@@ -45,6 +45,8 @@ what changed most recently (DB hand-offs, TestFlight, App Store submission), see
   career's shape ("Part of the 2003 draft class — and no forwarding address"), generated from the
   Who Am I? clue dimensions under a reveal cap and leak-checked against the answer.
 
+**Two-Minute Drill (2026-10-14, build 61)** — free, unranked NFL play-calling minigame on Home. A UTC daily starting situation or randomized practice drive uses a bundled 2024 nflverse bank (53 historical starts, 33,936 observed plays). Run/pass/kick choices, timeouts, spikes, visible empirical play samples, a persistent scoreboard, collapsible field and sourced play-by-play. Clock costs and field-position changes are explicit game rules; no invented defensive reads, player ratings or win probabilities. First daily finish per device earns XP; replays/practice only record a zero-XP session. See [TWO_MINUTE_DRILL.md](TWO_MINUTE_DRILL.md) for provenance, simulation limits and release validation.
+
 **Puzzle Blitz (M27)** is listed separately because it is **not a format** — it is a fixed-length
 run (1/3/5 min) that serves whole, real boards of K4C4 / Who Am I? / Journeyman / Over/Under back
 to back from the sports and formats you pick, and shows a score only once the clock stops. It

@@ -159,6 +159,15 @@ enum GameLogFixtures {
             details.bestCombo = rng.nextInt(0..<picks + 1)
             details.livesLeft = rng.nextInt(0..<4)
 
+        case .twoMinuteDrill:
+            attempted = 0
+            correct = 0
+            score = rng.nextInt(0..<1001)
+            maxScore = 1000
+            perfect = false
+            performance = Double(score) / 1000
+            details.outcome = "Drive complete"
+
         case .blitz:
             // A whole timed run in one row (see `GameFormatKind.blitz`): `attempted`/`correct`
             // are boards served and boards cleared, and `maxScore` is what a flawless run of

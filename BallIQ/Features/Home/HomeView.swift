@@ -40,6 +40,7 @@ struct HomeView: View {
     @State private var showDailyDraft = false
     @State private var showGrid = false
     @State private var showBlitz = false
+    @State private var showDrill = false
     /// The K4C4/Who Am I? tiles open their format hub (daily + archive in one place,
     /// 2026-07-17 IA fix) — not just today's daily, which made the flashiest tiles the
     /// shallowest tap on the page.
@@ -300,6 +301,9 @@ struct HomeView: View {
             .fullScreenCover(isPresented: $showGrid, onDismiss: evaluateMoment) {
                 GridGameView().environmentObject(container)
             }
+            .fullScreenCover(isPresented: $showDrill, onDismiss: evaluateMoment) {
+                TwoMinuteDrillView().environmentObject(container)
+            }
             .fullScreenCover(isPresented: $showBlitz, onDismiss: evaluateMoment) {
                 BlitzGameView().environmentObject(container)
             }
@@ -528,6 +532,7 @@ struct HomeView: View {
         // (BALLIQ_SPEC §9.3 sequences those first) and it serves boards the player can't choose,
         // which is a different product from the Pro archive's browse-and-replay.
         case "blitz": showBlitz = true
+        case "drill": showDrill = true
         case "draft": launchDraftSpin(daily: false)
         case "grid":
             if container.entitlements.canPlayGrid() { showGrid = true }
@@ -602,7 +607,9 @@ struct HomeView: View {
         dailyPage = initial
         await loadDaily(for: initial)
         guard !Task.isCancelled else { return }
-        if DebugLaunch.autoOpenWhoAmI, activeWhoAmI == nil {
+        if DebugLaunch.autoOpenDrill {
+            showDrill = true
+        } else if DebugLaunch.autoOpenWhoAmI, activeWhoAmI == nil {
             activeWhoAmI = whoAmIBySport[initial]?.content
         } else if DebugLaunch.autoOpenJourneyman, activeJourneyman == nil {
             activeJourneyman = journeymanBySport[initial]?.content
