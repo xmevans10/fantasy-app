@@ -26,10 +26,10 @@ struct DrillPlayer: Decodable, Identifiable {
 }
 
 enum DrillTempo: String, CaseIterable, Identifiable {
-    case hurry, huddle, milk
+    case arcade, hurry, huddle, milk
     var id: String { rawValue }
-    var title: String { switch self { case .hurry: return "NO HUDDLE"; case .huddle: return "HUDDLE"; case .milk: return "MILK CLOCK" } }
-    var seconds: Int { switch self { case .hurry: return 20; case .huddle: return 32; case .milk: return 38 } }
+    var title: String { switch self { case .arcade: return "AUTO"; case .hurry: return "NO HUDDLE"; case .huddle: return "HUDDLE"; case .milk: return "MILK CLOCK" } }
+    var seconds: Int { switch self { case .arcade: return 8; case .hurry: return 20; case .huddle: return 32; case .milk: return 38 } }
 }
 
 enum DrillDefense: String, CaseIterable {
@@ -37,10 +37,10 @@ enum DrillDefense: String, CaseIterable {
     var title: String { switch self { case .blitz: return "BLITZ SHOWING"; case .loadedBox: return "LOADED BOX"; case .twoHigh: return "TWO HIGH"; case .lightBox: return "LIGHT BOX" } }
     var detail: String {
         switch self {
-        case .blitz: return "Pressure coming. Get the ball out before the rush arrives."
-        case .loadedBox: return "Extra bodies crowd the run lanes. A fake can pull the linebackers in."
-        case .twoHigh: return "Two deep safeties. Underneath space, crowded deep windows."
-        case .lightBox: return "Extra men in coverage. The run has room to breathe."
+        case .blitz: return "Quick routes beat the rush."
+        case .loadedBox: return "They’re crowding the run. Try a pass."
+        case .twoHigh: return "They’re deep. Look underneath."
+        case .lightBox: return "Room to run. Follow your blocks."
         }
     }
     static func draw(seed: UInt64, snap: Int) -> Self {
@@ -51,12 +51,13 @@ enum DrillDefense: String, CaseIterable {
 enum DrillConcept: String, CaseIterable, Identifiable {
     case inside, outsideLeft, outsideRight, keeper, screen, slant, out, post, go, rpo, reverse, fleaFlicker, kick
     var id: String { rawValue }
+    static let simple: [Self] = [.inside, .screen, .slant, .out, .post, .go, .kick]
     static let runs: [Self] = [.inside, .outsideLeft, .outsideRight, .keeper]
     static let routes: [Self] = [.screen, .slant, .out, .post, .go]
     static let tricks: [Self] = [.reverse, .fleaFlicker]
     var title: String {
         switch self {
-        case .inside: return "INSIDE ZONE"
+        case .inside: return "RUN"
         case .outsideLeft: return "SWEEP LEFT"
         case .outsideRight: return "SWEEP RIGHT"
         case .keeper: return "QB KEEPER"
@@ -98,7 +99,7 @@ enum DrillConcept: String, CaseIterable, Identifiable {
     func matches(_ play: DrillPlay, defense: DrillDefense) -> Bool {
         guard play.call == call(against: defense) else { return false }
         switch self {
-        case .inside: return play.side == "middle" && play.qbRun != true
+        case .inside: return true
         case .outsideLeft: return play.side == "left" && play.qbRun != true
         case .outsideRight: return play.side == "right" && play.qbRun != true
         case .keeper: return play.qbRun == true
@@ -152,7 +153,7 @@ extension DrillBank {
     /// effects are explicitly arcade rules, not claimed tracking data or win probability.
     func choice(_ concept: DrillConcept, state: DrillState, defense: DrillDefense,
                 target: DrillPlayer?, options: DrillPlayOptions = .init()) -> DrillChoice {
-        let eligible = plays.filter { concept.matches($0, defense: defense) }
+        let eligible = (concept == .rpo ? nil : routePools?[concept]) ?? plays.filter { concept.matches($0, defense: defense) }
         func distance(_ p: DrillPlay) -> Int {
             abs(p.yardline - state.yardline) + abs(p.toGo - state.toGo) * 5
                 + (concept == .kick || p.down == state.down ? 0 : 80)

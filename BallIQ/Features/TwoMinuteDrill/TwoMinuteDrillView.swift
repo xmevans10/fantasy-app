@@ -3,7 +3,7 @@ import SwiftUI
 @MainActor
 struct TwoMinuteDrillView: View {
     private enum Mode: String, CaseIterable { case daily = "Daily", practice = "Practice", survivor = "Survivor" }
-    private enum Family: String, CaseIterable { case run = "RUN", pass = "PASS", rpo = "RPO", trick = "TRICK" }
+    private enum Family: String, CaseIterable { case run = "RUN", pass = "PASS" }
     @EnvironmentObject private var container: RepositoryContainer
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -21,8 +21,6 @@ struct TwoMinuteDrillView: View {
     @State private var concept: DrillConcept = .slant
     @State private var targetID: String?
     @State private var routes: [String: DrillConcept] = [:]
-    @State private var options = DrillPlayOptions()
-    @State private var tempo: DrillTempo = .hurry
     @State private var choices: [DrillConcept: DrillChoice] = [:]
     @State private var preparing = false
     @State private var preparationID = UUID()
@@ -39,6 +37,9 @@ struct TwoMinuteDrillView: View {
     @State private var showExit = false
     @State private var showComparison = false
     @State private var showLog = false
+    @State private var showHistory = false
+    @State private var showMoreModes = false
+    @State private var showModes = false
     @State private var inspected: DrillPlayer?
     @State private var survivorWins = 0
     @State private var survivorPlayed: Set<String> = []
@@ -71,7 +72,7 @@ struct TwoMinuteDrillView: View {
                                     }.padding(.top, 36).transition(.scale(scale: 1.4).combined(with: .opacity))
                                 }
                             }
-                            .frame(height: max(195, min(family == nil ? 300 : 250, geometry.size.height * (phase == .result ? 0.33 : 0.41))))
+                            .frame(height: max(195, min(250, geometry.size.height * (phase == .result ? 0.33 : 0.35))))
                             .celebrate(on: $celebrations, intensity: 50)
                             ScrollView {
                                 if animating { liveCommentary }
@@ -96,6 +97,8 @@ struct TwoMinuteDrillView: View {
                     }.labelStyle(.iconOnly).disabled(saving)
                 }
                 ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button("More modes", systemImage: "ellipsis.circle") { showModes = true }
+                        .labelStyle(.iconOnly).disabled(animating || saving)
                     Button(sound ? "Mute game sound" : "Enable game sound", systemImage: sound ? "speaker.wave.2" : "speaker.slash") { sound.toggle() }.labelStyle(.iconOnly)
                     Button("How to play", systemImage: "info.circle") { showHelp = true }.labelStyle(.iconOnly)
                 }
@@ -103,9 +106,17 @@ struct TwoMinuteDrillView: View {
             .confirmationDialog("Leave this drive? Unfinished progress will be lost.", isPresented: $showExit, titleVisibility: .visible) {
                 Button("Leave drive", role: .destructive) { animationTask?.cancel(); dismiss() }
             }
+            .confirmationDialog("Start a fresh drive", isPresented: $showModes, titleVisibility: .visible) {
+                ForEach(Mode.allCases, id: \.self) { value in
+                    Button(value.rawValue) {
+                        mode = value; survivorWins = 0; survivorPlayed = []; start()
+                    }
+                }
+            } message: { Text("Choosing a mode starts a new possession.") }
             .sheet(isPresented: $showHelp) { help }
             .sheet(isPresented: $showComparison) { comparison }
             .sheet(isPresented: $showLog) { playLog }
+            .sheet(isPresented: $showHistory) { historicalReveal }
             .sheet(item: $inspected) { player in playerDetails(player) }
             .task { await load() }
             .onDisappear { animationTask?.cancel(); preparationID = UUID() }
@@ -127,9 +138,12 @@ struct TwoMinuteDrillView: View {
                     targetID: lineup.offense.first { $0.role == "WR1" }?.id, presentation: nil,
                     motion: 0, onPlayer: { inspected = $0 }).frame(height: 205)
             }
-            Picker("Mode", selection: $mode) {
-                ForEach(Mode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-            }.pickerStyle(.segmented)
+            Button(showMoreModes ? "Hide other modes" : "More modes · Practice & Survivor", systemImage: "ellipsis.circle") { showMoreModes.toggle() }.font(.label12)
+            if showMoreModes {
+                Picker("Mode", selection: $mode) {
+                    ForEach(Mode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                }.pickerStyle(.segmented)
+            }
             if daily {
                 HStack {
                     Text("\(preview.offense) \(preview.offenseScore)  –  \(preview.defenseScore) \(preview.defense)").font(.heading)
@@ -138,7 +152,7 @@ struct TwoMinuteDrillView: View {
                 }
                 Text("\(preview.date) · \(preview.timeouts) timeouts · Real starting situation").font(.label12).foregroundStyle(Color.textSecondary)
             } else {
-                Text(mode == .survivor ? "SCORE TO STAY ALIVE. Tie or take the lead to earn another drive. One failed possession ends your run." : "A fresh historical drive every run. Explore the whole playbook without risking your rating.")
+                Text(mode == .survivor ? "SCORE TO STAY ALIVE. Tie or take the lead to earn another drive. One failed possession ends your run." : "A fresh historical drive every run. Draw up your own plays without risking your rating.")
                     .font(.bodyStrong)
             }
             Text(daily ? (alreadyPlayed ? "Daily XP banked · Replays are practice" : "Daily · Unranked · First finish earns XP · Resets midnight UTC") : "Practice scoring · No XP or rating changes")
@@ -187,76 +201,39 @@ struct TwoMinuteDrillView: View {
 
     private func playbook(_ s: DrillState) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center) {
+            HStack {
                 Image(systemName: defense == .blitz ? "bolt.fill" : "eye.fill").foregroundStyle(Color.warningText)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(defense.title).font(.heading)
-                    Text("ARCADE DEFENSIVE READ").font(.system(size: 8, weight: .bold, design: .monospaced)).foregroundStyle(Color.textSecondary)
-                }
+                Text(defense.title).font(.heading)
                 Spacer()
                 Button("Play-by-play", systemImage: "list.bullet") { showLog = true }.labelStyle(.iconOnly)
             }
-            if let family {
-                HStack {
-                    Button("Back", systemImage: "chevron.left") { self.family = nil }.font(.label12)
-                    Spacer()
-                    Text(family.rawValue + " PLAYBOOK").font(.heading)
+            Text(defense.detail).font(.label12).foregroundStyle(Color.textSecondary)
+            HStack(spacing: 8) {
+                ForEach(Family.allCases, id: \.self) { item in
+                    Button { chooseFamily(item) } label: {
+                        Label(item.rawValue, systemImage: item == .run ? "figure.run" : "arrow.up.right")
+                            .font(.heading).padding(9).frame(maxWidth: .infinity)
+                            .foregroundStyle(family == item ? Color.onAccent : Color.ink)
+                            .background(family == item ? Color.accentFill : Color.surface1, in: RoundedRectangle(cornerRadius: 9))
+                    }.buttonStyle(PrimePressStyle()).accessibilityAddTraits(family == item ? .isSelected : [])
                 }
-                if family == .pass { passPanel }
-                else {
-                    let concepts = family == .run ? DrillConcept.runs : family == .trick ? DrillConcept.tricks : [.rpo]
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 7) {
-                        ForEach(concepts) { item in conceptButton(item) }
-                    }
-                    if family == .rpo { Text("Read the box: hand off against a light box or two-high; throw a quick pass against pressure or a loaded box.").font(.label12) }
-                }
-                optionButtons
-                if s.running { tempoPicker }
-                if preparing { ProgressView("Reading the matchup…").font(.label12) }
-                else if let choice = choices[concept] {
-                    HStack(spacing: 12) {
-                        Text("\(choice.averageYards, specifier: "%.1f") YDS / CALL")
-                        Text("\(Int(choice.stopped * 100))% STOP CLOCK")
-                        Text("\(Int(choice.turnover * 100))% TURNOVER")
-                    }.font(.system(size: 8, weight: .heavy, design: .monospaced)).foregroundStyle(Color.textSecondary)
-                }
-            } else {
-                Text(defense.detail).font(.body14).foregroundStyle(Color.textSecondary)
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                    ForEach(Family.allCases, id: \.self) { item in
-                        Button { chooseFamily(item) } label: {
-                            HStack {
-                                Image(systemName: item == .run ? "figure.run" : item == .pass ? "arrow.up.right" : item == .rpo ? "arrow.triangle.branch" : "sparkles")
-                                Text(item.rawValue)
-                                Spacer()
-                                Image(systemName: "chevron.right").font(.system(size: 10, weight: .black))
-                            }.font(.heading).foregroundStyle(item == .rpo || item == .trick ? Color.onVolt : .white)
-                                .padding(12).frame(maxWidth: .infinity)
-                        }.buttonStyle(.borderedProminent)
-                            .tint(item == .run ? .sportNFLFill : item == .pass ? .accentFill : item == .rpo ? .voltFill : .goldFill)
-                    }
-                }
-                if s.canKick {
-                    Button("FIELD GOAL · \(s.yardline + 17) YARDS", systemImage: "sportscourt") {
-                        concept = .kick; family = .trick
-                        if choices[.kick] != nil { callPlay() } else { prepareChoices() }
-                    }.font(.heading).frame(maxWidth: .infinity).buttonStyle(.bordered)
-                }
-                if s.running { tempoPicker }
             }
-            HStack {
-                Button("TIMEOUT · \(s.timeouts)") { manageClock(spike: false) }.disabled(!s.running || s.timeouts == 0)
-                Button("SPIKE · LOSE DOWN") { manageClock(spike: true) }.disabled(!s.running)
-                Button("KNEEL") { kneel() }
-            }.font(.label12).buttonStyle(.bordered)
-            Text(s.running ? "\(tempo.seconds)s before the snap · 6s to run the play · Thinking time is free" : "Clock stopped · 6s per snap · Thinking time is free")
+            if family == .pass { passPanel }
+            else { Text("Follow your blocks and find daylight.").font(.bodyStrong) }
+            if s.shouldOfferKick {
+                Button("KICK · \(s.yardline + 17) YDS", systemImage: "sportscourt") {
+                    concept = .kick
+                    if choices[.kick] != nil { callPlay() } else { prepareChoices() }
+                }.font(.label12).buttonStyle(.bordered).disabled(preparing)
+            }
+            Text(s.running ? "Auto hurry-up · 8s setup + 6s play · Thinking time is free" : "Clock stopped · 6s per play · Thinking time is free")
                 .font(.system(size: 9, weight: .medium)).foregroundStyle(Color.textSecondary)
         }.padding(.bottom, 14)
     }
 
     private var passPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("TAP A RECEIVER. TAP HIS TOKEN AGAIN TO CHANGE THE ROUTE.").font(.system(size: 9, weight: .bold)).foregroundStyle(Color.textSecondary)
+            Text("TAP A RECEIVER. TAP HIS TOKEN AGAIN TO EDIT HIS ROUTE.").font(.system(size: 9, weight: .bold)).foregroundStyle(Color.textSecondary)
             ScrollView(.horizontal) {
                 HStack(spacing: 7) {
                     ForEach(lineup?.offense.filter(\.eligible) ?? []) { player in
@@ -264,7 +241,6 @@ struct TwoMinuteDrillView: View {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("#\(player.jersey) · \(player.position)").font(.system(size: 9, weight: .heavy))
                                 Text(player.shortName).font(.bodyStrong).lineLimit(1)
-                                Text(player.catchRate.map { "\(Int($0 * 100))% caught · 2024" } ?? "2024 active roster").font(.system(size: 9))
                             }.padding(9).foregroundStyle(targetID == player.id ? Color.onVolt : Color.ink)
                                 .background(targetID == player.id ? Color.voltFill : Color.surface1, in: RoundedRectangle(cornerRadius: 9))
                                 .overlay(RoundedRectangle(cornerRadius: 9).stroke(Color.borderStrong))
@@ -290,37 +266,6 @@ struct TwoMinuteDrillView: View {
                 .background(concept == item ? Color.accentFill : Color.surface1, in: RoundedRectangle(cornerRadius: 8))
         }.buttonStyle(PrimePressStyle()).accessibilityAddTraits(concept == item ? .isSelected : [])
     }
-    private var optionButtons: some View {
-        HStack(spacing: 7) {
-            if concept.call(against: defense) == .pass {
-                option("PLAY ACTION", selected: options.playAction) { options.playAction.toggle(); prepareChoices() }
-                option("ROLL OUT", selected: options.rollout) { options.rollout.toggle(); prepareChoices() }
-            }
-            option("SIDELINE", selected: options.sideline) { options.sideline.toggle(); prepareChoices() }
-        }
-    }
-    private func option(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: selected ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 9, weight: .bold)).padding(.vertical, 7).padding(.horizontal, 5)
-                .foregroundStyle(selected ? Color.accentText : Color.textSecondary)
-        }.buttonStyle(.bordered).accessibilityValue(selected ? "On" : "Off")
-    }
-    private var tempoPicker: some View {
-        HStack(spacing: 6) {
-            ForEach(DrillTempo.allCases) { value in
-                Button { tempo = value; Haptics.tap() } label: {
-                    VStack(spacing: 2) {
-                        Text(value.title).font(.system(size: 8, weight: .heavy))
-                        Text("\(value.seconds)s").font(.label12)
-                    }.padding(6).frame(maxWidth: .infinity)
-                        .foregroundStyle(tempo == value ? Color.onAccent : Color.textSecondary)
-                        .background(tempo == value ? Color.accentFill : Color.surface1, in: RoundedRectangle(cornerRadius: 7))
-                }.buttonStyle(.plain).accessibilityAddTraits(tempo == value ? .isSelected : [])
-            }
-        }.accessibilityElement(children: .contain).accessibilityLabel("Tempo, time before the snap")
-    }
-
     private var liveTitle: String {
         guard let p = presentation else { return "GET SET" }
         if p.concept == .kick { return phase == .snap ? "LONG SNAP" : phase == .develop ? "THE HOLD" : phase == .flight ? "KICK IS UP" : "THE VERDICT" }
@@ -356,35 +301,76 @@ struct TwoMinuteDrillView: View {
     }
     private func feedback(_ p: DrillPresentation) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text(p.grade).font(.display(25)).italic().foregroundStyle(p.quality >= 0.9 ? Color.successText : p.quality >= 0.7 ? Color.accentText : Color.warningText)
-                Spacer()
-                Text("+\(Int(p.quality * 100)) CALL PTS").font(.heading).foregroundStyle(Color.accentText)
-            }
             Text(p.narration).font(.bodyStrong)
-            if p.quality < 0.9 { Text("Better read: \(p.bestTitle). Grade measures your call, not the bounce of the ball.").font(.label12).foregroundStyle(Color.textSecondary) }
-            HStack {
-                Button("Replay", systemImage: "arrow.counterclockwise") { animate(p) }
-                Spacer()
-                Button("Every option", systemImage: "chart.bar.xaxis") { showComparison = true }
-                Spacer()
-                Button("Source", systemImage: "list.bullet") { showLog = true }
-            }.font(.label12).buttonStyle(.bordered)
             if let s = state, s.ended != nil {
+                Text(s.won ? "YOU DID IT!" : "ONE MORE DRIVE?").font(.display(28)).italic()
+                    .foregroundStyle(s.won ? Color.successText : Color.accentText)
                 HStack(alignment: .firstTextBaseline) {
-                    CountUpText(value: s.score, font: .hero(46))
+                    CountUpText(value: s.score, font: .hero(42))
                     Text("/ 1000").font(.heading)
                     Spacer()
-                    Text("\(Int(s.meanGrade * 100))%\nCALL GRADE").font(.label12).multilineTextAlignment(.trailing)
+                    Button("What actually happened?", systemImage: "clock.arrow.circlepath") { showHistory = true }
+                        .font(.bodyStrong).buttonStyle(.bordered)
                 }
-                Text("Original drive: \(s.scenario.actualResult) · \(s.scenario.game)").font(.label12)
-                Text(saving ? "Recording drive…" : rewardText).font(.bodyStrong)
+                Text(saving ? "Recording drive…" : rewardText).font(.label12)
                 if mode == .survivor && !survived(s) { Text("RUN OVER · \(survivorWins) DRIVES SURVIVED").font(.heading) }
-                ShareLink(item: "Playbook · Two-Minute Drill\n\(daily ? day : mode.rawValue) · \(s.scenario.offense) vs \(s.scenario.defense)\n\(s.score)/1000 · \(Int(s.meanGrade * 100))% call grade · Unranked arcade simulation") {
+                ShareLink(item: "Playbook · Two-Minute Drill\n\(daily ? day : mode.rawValue) · \(s.scenario.offense) vs \(s.scenario.defense)\n\(s.score)/1000 · Unranked arcade simulation") {
                     Label("Share drive", systemImage: "square.and.arrow.up")
                 }.font(.label12)
             }
+            DisclosureGroup("Replay & play breakdown") {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(p.grade).font(.heading).foregroundStyle(Color.accentText)
+                    if p.quality < 0.9 { Text("Better read: \(p.bestTitle). A good call can still get an unlucky bounce.").font(.body14) }
+                    HStack {
+                        Button("Replay", systemImage: "arrow.counterclockwise") { animate(p) }
+                        Spacer()
+                        Button("Compare calls", systemImage: "chart.bar.xaxis") { showComparison = true }
+                        Spacer()
+                        Button("Source", systemImage: "list.bullet") { showLog = true }
+                    }.font(.label12).buttonStyle(.bordered)
+                }.padding(.top, 8)
+            }.font(.label12)
         }.padding(.bottom, 18)
+    }
+
+    private var historicalReveal: some View {
+        NavigationStack {
+            List {
+                if let s = state {
+                    Section {
+                        Text("SAME START. YOUR OWN FINISH.").font(.heading)
+                        Text("\(s.scenario.offense) vs \(s.scenario.defense) · \(s.scenario.date)").font(.bodyStrong)
+                        Text("\(DrillState(s.scenario).clock) left · \(DrillState(s.scenario).fieldPosition) · Down \(s.scenario.defenseScore - s.scenario.offenseScore)").font(.body14)
+                        HStack(alignment: .top) {
+                            VStack(alignment: .leading) {
+                                Text("YOUR DRIVE").font(.label12)
+                                Text(s.ended ?? "In progress").font(.heading)
+                                Text("\(s.points) points · Arcade").font(.body14)
+                            }.frame(maxWidth: .infinity, alignment: .leading)
+                            VStack(alignment: .leading) {
+                                Text("REAL DRIVE").font(.label12)
+                                Text(s.scenario.actualResult).font(.heading)
+                                Text("Real NFL").font(.body14)
+                            }.frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        Text("Here’s how \(s.scenario.offense)’s real drive unfolded.").font(.body14).foregroundStyle(Color.textSecondary)
+                    }
+                    Section("WHAT ACTUALLY HAPPENED") {
+                        ForEach(s.scenario.history ?? []) { play in
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(play.clock).font(.heading).foregroundStyle(Color.accentText)
+                                Text(play.description).font(.body14)
+                            }.padding(.vertical, 4)
+                        }
+                    }
+                    Section {
+                        Text("Source: \(s.scenario.game) · nflverse · CC BY 4.0 · Conversions excluded").font(.label12)
+                        Link("View data source", destination: URL(string: "https://github.com/nflverse/nflverse-data")!)
+                    }
+                }
+            }.navigationTitle("The real drive").navigationBarTitleDisplayMode(.inline).toolbar { Button("Done") { showHistory = false } }
+        }
     }
     @ViewBuilder private var actionDock: some View {
         if state == nil && bank != nil {
@@ -395,23 +381,32 @@ struct TwoMinuteDrillView: View {
                 .padding(.horizontal, 20).padding(.vertical, 8).background(Color.surface0)
         } else if let s = state, !animating {
             if presentation == nil && family != nil {
-                Button { callPlay() } label: {
-                    HStack {
-                        Image(systemName: "football.fill")
-                        Text(preparing ? "READING THE MATCHUP…" : "SNAP · \(concept.title)")
-                        Spacer(); Image(systemName: "arrow.right")
-                    }.font(.heading).foregroundStyle(Color.onVolt).padding(10).frame(maxWidth: .infinity)
-                }.buttonStyle(.borderedProminent).tint(Color.voltFill)
-                    .disabled(preparing || choices[concept]?.pool.isEmpty != false)
-                    .padding(.horizontal, 14).padding(.vertical, 8).background(Color.surface0)
+                HStack(spacing: 8) {
+                    if s.running && s.timeouts > 0 {
+                        Button { takeTimeout() } label: {
+                            VStack(spacing: 2) {
+                                Text("TIMEOUT").font(.label12)
+                                Text("\(s.timeouts) LEFT").font(.system(size: 9, weight: .heavy))
+                            }.padding(.vertical, 9)
+                        }.buttonStyle(.bordered).tint(Color.accentText)
+                    }
+                    Button { callPlay() } label: {
+                        HStack {
+                            Image(systemName: "football.fill")
+                            Text(preparing ? "GET SET…" : "SNAP · \(concept.title)")
+                            Spacer(); Image(systemName: "arrow.right")
+                        }.font(.heading).foregroundStyle(Color.onVolt).padding(10).frame(maxWidth: .infinity)
+                    }.buttonStyle(.borderedProminent).tint(Color.voltFill)
+                        .disabled(preparing || choices[concept]?.pool.isEmpty != false)
+                }.padding(.horizontal, 14).padding(.vertical, 8).background(Color.surface0)
             } else if presentation != nil && phase == .result {
                 Button {
                     if s.ended == nil { nextSnap() }
                     else if mode == .survivor && survived(s) { start() }
-                    else { dismiss() }
+                    else { start() }
                 } label: {
                     HStack {
-                        Text(s.ended == nil ? "NEXT SNAP" : mode == .survivor && survived(s) ? "NEXT DRIVE · \(survivorWins) WINS" : "BACK TO PLAYBOOK")
+                        Text(s.ended == nil ? "NEXT SNAP" : mode == .survivor && survived(s) ? "NEXT DRIVE · \(survivorWins) WINS" : "PLAY AGAIN")
                         Spacer()
                         if s.ended == nil { Text(s.clock) }
                         Image(systemName: "arrow.right")
@@ -478,16 +473,16 @@ struct TwoMinuteDrillView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("READ IT. CALL IT. WATCH IT.").font(.display1)
-                    Text("Pick RUN, PASS, RPO or TRICK. Select a receiver, then tap his field token again or a route chip to change the route. Play action, rollouts and sideline intent change the arcade outcome weights. Snap the ball to watch the play. Replay and Skip never execute the play twice.")
+                    Text("Pick RUN or PASS. Every receiver has a default route, so you can snap immediately or draw up your own play. Select a receiver, then tap his field token again or a route chip to change the route. Snap the ball to watch the play. Replay and Skip never execute the play twice.")
                     Text("THE CLOCK").font(.heading)
-                    Text("Each play costs 6 seconds. When the clock is running, your selected tempo adds 20, 32 or 38 seconds before the next snap. Timeout stops that runoff; a spike takes 3 seconds and a down. A kneel loses one yard and keeps the clock running. Thinking and animation time are free. Fourth-down spikes turn it over. Kicks unlock inside the opponent’s 45.")
+                    Text("Each play costs 6 seconds. When the clock is running, automatic hurry-up takes 8 seconds before the next snap. A timeout stops that runoff. Thinking and animation time are free. A tying or winning kick is offered inside the opponent’s 45 on fourth down or with 20 seconds left.")
                     Text("MAKE THE RIGHT CALL").font(.heading)
-                    Text("Your call grade compares expected yards, first downs, clock stops and turnovers across the available concepts. Final score is 70% average call quality and 30% drive result, so a smart call still matters when a real sampled play goes wrong. Drive result: TD 1,000; field goal to lead 800, other made kicks 600; otherwise five per net yard, capped at 400.")
+                    Text("Your call grade compares expected yards, first downs, clock stops and turnovers across the available concepts. Final score is 80% drive result and 20% call quality. Scoring is the main reward; good reads add a smaller bonus. Drive result: TD 1,000; field goal to lead 800, other made kicks 600; otherwise five per net yard, capped at 400.")
                     Text("SURVIVOR").font(.heading)
                     Text("Tie or take the lead to keep going. A failed possession ends the run. Each new drive uses another historical situation. Practice and Survivor are unranked and award no XP. Your first daily finish per device earns XP; midnight UTC resets the daily.")
                     Text("HISTORICAL START. ARCADE FOOTBALL.").font(.heading)
-                    Text("Starting clock, ball, score and timeouts are real 2024 situations. Roster names, jerseys and receiving stats come from nflverse. The 22-player formation, routes, defensive reads, movement, tempo and defensive weighting are game rules, not NFL tracking data. Route types map to observed pass depth or run direction. RPO chooses a run or quick-pass pool. Trick plays use descriptions identifying reverses, laterals or flea-flickers.")
-                    Text("Each concept draws from up to 80 nearby archived plays, with down, distance and field-position matching. Target catch rates use 2024 season statistics; defensive looks and optional adjustments reweight those observed outcomes. Displayed odds describe this arcade model, not calibrated player ratings or real win chances. All samples retain source ids and original descriptions. Penalties, opposing possessions and conversions are not simulated.")
+                    Text("Starting clock, ball, score and timeouts are real 2024 situations. Roster names, jerseys and receiving stats come from nflverse. The 22-player formation, routes, defensive reads, movement, tempo and defensive weighting are game rules, not NFL tracking data. Route types map to observed pass depth or run direction. After the drive, “What actually happened?” reveals the original NFL possession.")
+                    Text("An offline statistical model estimates outcome categories by pass depth/direction or run, distance and field zone. It was checked on later unseen 2024 games before refitting. Nearby source plays provide the outcome examples. Small receiver adjustments use shrunk season catch rates. Arcade rules boost gains and reduce sacks/turnovers; defensive reads change those weights. These are arcade outcomes, not calibrated player ratings or real win chances. All samples retain source ids and original descriptions. Penalties, opposing possessions and conversions are not simulated.")
                     Link("nflverse data · CC BY 4.0 · adapted for arcade play", destination: URL(string: "https://github.com/nflverse/nflverse-data")!)
                     Text("Sound respects silent mode. Reduce Motion skips the animated sequence and keeps the full play explanation.").foregroundStyle(Color.textSecondary)
                 }.font(.body14).padding(20)
@@ -503,10 +498,10 @@ struct TwoMinuteDrillView: View {
             bank = try await Task.detached { try DrillBank.load() }.value
             if let screen = DebugLaunch.drillScreen, screen != "setup" {
                 mode = .practice; start()
-                if ["pass", "flight", "feedback", "result", "replay"].contains(screen) { chooseFamily(.pass) }
+                if ["pass", "flight", "feedback", "result", "replay", "history"].contains(screen) { chooseFamily(.pass) }
                 else if screen == "run" { chooseFamily(.run) }
-                else if screen == "trick" { chooseFamily(.trick) }
-            }
+                else if screen == "clock" { state?.running = true; state?.seconds = 18; state?.timeouts = 1; prepareChoices() }
+            } else if DebugLaunch.drillScreen == nil { start() }
         }
         catch { self.error = "The offline playbook couldn’t be loaded. Close and try again." }
     }
@@ -518,19 +513,19 @@ struct TwoMinuteDrillView: View {
         if mode == .survivor { survivorPlayed.insert(scenario.id) }
         seed = daily || DebugLaunch.drillScreen != nil ? DrillBank.seed("plays-\(day)") : UInt64.random(in: 1...UInt64.max)
         state = DrillState(scenario); snapIndex = 0; startedAt = Date(); saved = false; saving = false
-        rewardText = ""; presentation = nil; committed = nil; phase = .set; motion = 0; family = nil
+        rewardText = ""; presentation = nil; committed = nil; phase = .set; motion = 0; family = .pass
         targetID = bank.lineups?[scenario.id]?.offense.first { $0.role == "WR1" }?.id
         let receivers: [DrillPlayer] = bank.lineups?[scenario.id]?.offense.filter(\.eligible) ?? []
         let assignments: [(String, DrillConcept)] = receivers.map { ($0.id, DrillConcept.defaultForRole($0.role)) }
         routes = Dictionary(uniqueKeysWithValues: assignments)
-        concept = .slant; options = .init(); tempo = .hurry
+        concept = .slant
         prepareChoices(); Haptics.commit()
     }
-    private func survived(_ state: DrillState) -> Bool { state.points > 0 && state.scenario.offenseScore + state.points >= state.scenario.defenseScore }
+    private func survived(_ state: DrillState) -> Bool { state.won }
     private func chooseFamily(_ value: Family) {
-        family = value; options = .init()
-        concept = value == .run ? .inside : value == .pass ? .slant : value == .rpo ? .rpo : .reverse
-        let role = concept == .reverse ? "WR2" : concept.call(against: defense) == .run ? "RB" : "WR1"
+        family = value
+        concept = value == .run ? .inside : .slant
+        let role = value == .run ? "RB" : "WR1"
         targetID = lineup?.offense.first { $0.role == role }?.id
         if value == .pass, let targetID { concept = routes[targetID] ?? .slant }
         prepareChoices(); Haptics.tap()
@@ -550,11 +545,11 @@ struct TwoMinuteDrillView: View {
     private func prepareChoices() {
         guard let bank, let state, state.ended == nil else { return }
         let id = UUID(); preparationID = id; preparing = true
-        let defense = self.defense, target = self.target, options = self.options
+        let defense = self.defense, target = self.target
         Task {
             let result = await Task.detached {
-                Dictionary(uniqueKeysWithValues: DrillConcept.allCases.filter { $0 != .kick || state.canKick }.map {
-                    ($0, bank.choice($0, state: state, defense: defense, target: target, options: options))
+                Dictionary(uniqueKeysWithValues: DrillConcept.simple.filter { $0 != .kick || state.shouldOfferKick }.map {
+                    ($0, bank.arcadeChoice($0, state: state, defense: defense, target: target))
                 }.filter { !$0.1.pool.isEmpty })
             }.value
             guard preparationID == id else { return }
@@ -565,11 +560,11 @@ struct TwoMinuteDrillView: View {
     }
     private func callPlay() {
         guard !preparing, !animating, presentation == nil, let before = state,
-              let choice = choices[concept], let play = choice.draw(seed: DrillBank.seed("\(seed)-\(snapIndex)-\(concept.rawValue)-\(targetID ?? "")-\(options.playAction)-\(options.rollout)-\(options.sideline)")) else { return }
+              let choice = choices[concept], let play = choice.draw(seed: DrillBank.seed("\(seed)-\(snapIndex)-\(concept.rawValue)-\(targetID ?? "")")) else { return }
         let best = choices.values.max { $0.expected < $1.expected }
         var quality = choice.quality(best: best?.expected ?? choice.expected)
-        if before.running && before.seconds <= tempo.seconds { quality = 0 }
-        var after = before; after.snap(play, tempo: tempo, grade: quality)
+        if before.running && before.seconds <= DrillTempo.arcade.seconds { quality = 0 }
+        var after = before; after.arcadeSnap(play, grade: quality)
         let actor: DrillPlayer? = concept == .kick ? lineup?.specialists?.first { $0.role == "K" } : play.call == .run ? lineup?.offense.first { $0.role == (concept == .keeper ? "QB" : concept == .reverse ? "WR2" : "RB") } : target
         let p = DrillPresentation(before: before, after: after, play: play, concept: concept, target: actor,
             defense: defense, quality: quality, bestTitle: best?.concept.title ?? concept.title,
@@ -611,8 +606,8 @@ struct TwoMinuteDrillView: View {
         }
     }
     private func nextSnap() {
-        animationTask?.cancel(); presentation = nil; phase = .set; motion = 0; family = nil
-        options = .init(); concept = .slant
+        animationTask?.cancel(); presentation = nil; phase = .set; motion = 0; family = .pass
+        concept = .slant
         targetID = lineup?.offense.first { $0.role == "WR1" }?.id
         if let targetID { concept = routes[targetID] ?? .slant }
         prepareChoices()
@@ -624,7 +619,7 @@ struct TwoMinuteDrillView: View {
            let play = choice.pool.first(where: { $0.complete == true && $0.yards > 0 }) {
             let best = choices.values.map(\.expected).max() ?? choice.expected
             let quality = choice.quality(best: best)
-            var after = before; after.snap(play, tempo: tempo, grade: quality)
+            var after = before; after.arcadeSnap(play, grade: quality)
             let p = DrillPresentation(before: before, after: after, play: play, concept: concept,
                 target: target, defense: defense, quality: quality,
                 bestTitle: choices.values.max { $0.expected < $1.expected }?.concept.title ?? concept.title,
@@ -638,7 +633,7 @@ struct TwoMinuteDrillView: View {
                 finishAnimation() // The skip/replay commit latch must not execute a second snap.
                 assert(state?.snaps == snaps)
             }
-        } else if screen == "result", let before = state, let bank,
+        } else if (screen == "result" || screen == "history"), let before = state, let bank,
                   let touchdown = bank.plays.filter({ !$0.turnover && $0.yards >= before.yardline }).first {
             var after = before; after.snap(touchdown, grade: 0.95)
             let qb = lineup?.offense.first { $0.role == "QB" }
@@ -647,34 +642,14 @@ struct TwoMinuteDrillView: View {
                 concept: touchdown.call == .run ? .outsideLeft : .go, target: actor,
                 defense: defense, quality: 0.95, bestTitle: "GO", quarterback: qb?.shortName ?? "QB")
             presentation = p; finishAnimation()
+            if screen == "history" { showHistory = true }
         }
     }
-    private func kneel() {
-        guard let before = state, !animating, presentation == nil, before.ended == nil else { return }
-        var after = before; after.kneel(tempo: tempo)
-        let play = DrillPlay(id: "clock-kneel", game: "ARCADE CLOCK RULE", call: .run,
-            down: before.down, toGo: before.toGo, yardline: before.yardline, yards: -1,
-            turnover: false, stopped: false, made: false, description: "Modeled kneel: one yard lost; clock runs.")
-        let qb = lineup?.offense.first { $0.role == "QB" }
-        let p = DrillPresentation(before: before, after: after, play: play, concept: .keeper,
-            target: qb, defense: defense, quality: 0, bestTitle: "Keep attacking", quarterback: qb?.shortName ?? "The quarterback")
-        presentation = p; animate(p)
-    }
-    private func manageClock(spike: Bool) {
-        guard var current = state, !animating, current.ended == nil else { return }
-        if spike { current.spike() } else { current.timeout() }
+    private func takeTimeout() {
+        guard var current = state, !animating, presentation == nil, current.ended == nil else { return }
+        current.timeout()
         withAnimation(reduceMotion ? nil : Motion.snap) { state = current }
         Haptics.commit(); prepareChoices()
-        if current.ended != nil {
-            current.callGrades.append(0); state = current
-            // A fourth-down spike or final-second spike must still show a result and save.
-            let play = DrillPlay(id: "clock", game: current.scenario.game, call: .run, down: current.down,
-                toGo: current.toGo, yardline: current.yardline, yards: 0, turnover: false, stopped: true, made: false, description: "Clock-management action")
-            let p = DrillPresentation(before: current, after: current, play: play, concept: .inside, target: nil,
-                defense: defense, quality: 0, bestTitle: "Preserve the possession", quarterback: "The quarterback")
-            presentation = p; committed = p.id; phase = .result; motion = 0
-            Task { await save() }
-        }
     }
     private func save() async {
         guard !saved, let state, state.ended != nil else { return }
@@ -685,11 +660,11 @@ struct TwoMinuteDrillView: View {
         if daily && !alreadyPlayed {
             UserDefaults.standard.set(true, forKey: "drill.finished.\(day)")
             let reward = await container.complete(format: .twoMinuteDrill, sport: .nfl, performance: Double(state.score) / 1000,
-                perfect: false, puzzleID: "drill-v2-\(day)-\(state.scenario.id)", ranked: false, detail: detail)
+                perfect: false, puzzleID: "drill-v3-\(day)-\(state.scenario.id)", ranked: false, detail: detail)
             rewardText = "+\(reward.xpEarned) XP · DAILY DRIVE BANKED"
         } else {
             await container.logSession(format: .twoMinuteDrill, sport: .nfl, performance: Double(state.score) / 1000,
-                perfect: false, puzzleID: "drill-v2-\(state.scenario.id)", detail: detail)
+                perfect: false, puzzleID: "drill-v3-\(state.scenario.id)", detail: detail)
             rewardText = "DRIVE RECORDED · RATING UNCHANGED"
         }
         saving = false

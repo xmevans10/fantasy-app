@@ -6,17 +6,29 @@ struct DrillBank: Decodable, Sendable {
     let scenarios: [DrillScenario]
     let plays: [DrillPlay]
     var lineups: [String: DrillLineup]?
+    var outcomeModel: DrillOutcomeModel?
+    var routePools: [DrillConcept: [DrillPlay]]?
+    var arcadePools: [String: [DrillPlay]]?
+
+    private enum CodingKeys: String, CodingKey { case season, source, scenarios, plays, lineups, outcomeModel }
 
     static func load() throws -> DrillBank {
         guard let url = Bundle.main.url(forResource: "two_minute_drill", withExtension: "json") else {
             throw CocoaError(.fileNoSuchFile)
         }
-        let bank = try JSONDecoder().decode(Self.self, from: Data(contentsOf: url))
-        guard !bank.scenarios.isEmpty, bank.scenarios.allSatisfy({ scenario in
+        var bank = try JSONDecoder().decode(Self.self, from: Data(contentsOf: url))
+        guard !bank.scenarios.isEmpty, Set(bank.plays.map(\.id)).count == bank.plays.count,
+              bank.outcomeModel?.version == 1, bank.scenarios.allSatisfy({ scenario in
             bank.lineups?[scenario.id]?.offense.count == 11 && bank.lineups?[scenario.id]?.defense.count == 11
+                && scenario.history?.first?.id == scenario.id
         }), DrillCall.allCases.allSatisfy({ call in
             bank.plays.contains { $0.call == call }
         }) else { throw CocoaError(.coderReadCorrupt) }
+        bank.indexPlays()
+        guard bank.arcadePools?.count == 63, bank.arcadePools?.values.allSatisfy({ !$0.isEmpty }) == true,
+              bank.outcomeModel?.probabilities.values.allSatisfy({ probabilities in
+                  probabilities.values.allSatisfy { $0.isFinite && $0 >= 0 } && abs(probabilities.values.reduce(0, +) - 1) < 0.000001
+              }) == true else { throw CocoaError(.coderReadCorrupt) }
         return bank
     }
 
@@ -62,6 +74,7 @@ struct DrillScenario: Codable, Identifiable, Sendable {
     let timeouts: Int
     let actualResult: String
     var defenseTimeouts: Int? = nil
+    var history: [DrillHistoricalPlay]? = nil
 }
 
 enum DrillCall: String, Codable, CaseIterable {
@@ -126,6 +139,9 @@ struct DrillState: Sendable {
     var fieldPosition: String { yardline > 50 ? "Own \(100 - yardline)" : yardline == 50 ? "Midfield" : "Opp \(yardline)" }
     var situation: String { "\(down)\(["st", "nd", "rd", "th"][min(3, max(0, down - 1))]) & \(toGo) · \(fieldPosition)" }
     var canKick: Bool { yardline <= 45 && ended == nil }
+    var shouldOfferKick: Bool {
+        canKick && scenario.offenseScore + 3 >= scenario.defenseScore && (down == 4 || seconds <= 20)
+    }
     var driveScore: Int {
         let gain = max(0, scenario.yardline - yardline)
         if points == 6 { return 1000 }
@@ -134,7 +150,14 @@ struct DrillState: Sendable {
     }
 
     var score: Int {
-        callGrades.isEmpty ? driveScore : min(1000, Int(meanGrade * 700) + driveScore * 3 / 10)
+        // Winning the possession is the headline reward; the read supplies a smaller bonus.
+        callGrades.isEmpty ? driveScore : min(1000, driveScore * 8 / 10 + Int(meanGrade * 200))
+    }
+
+    var won: Bool { points > 0 && scenario.offenseScore + points >= scenario.defenseScore }
+
+    mutating func arcadeSnap(_ play: DrillPlay, grade: Double) {
+        snap(play, tempo: .arcade, grade: grade)
     }
 
     mutating func timeout() {
@@ -190,4 +213,10 @@ struct DrillState: Sendable {
         if ended == nil && seconds == 0 { ended = "Time expired" }
         log.insert("\(play.call.title) · \(play.call == .fieldGoal ? (play.made ? "GOOD" : "NO GOOD") : "\(play.yards) yards") · \(clock)\nSource: \(play.game)\n\(play.description)", at: 0)
     }
+}
+
+struct DrillHistoricalPlay: Codable, Identifiable, Sendable {
+    let id: String
+    let clock: String
+    let description: String
 }

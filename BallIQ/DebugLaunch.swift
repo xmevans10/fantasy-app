@@ -8,7 +8,7 @@ enum DebugLaunch {
         let args = ProcessInfo.processInfo.arguments
         guard let index = args.firstIndex(of: "-drillScreen"), args.indices.contains(index + 1) else { return nil }
         let value = args[index + 1]
-        return ["setup", "play", "pass", "run", "trick", "flight", "feedback", "result", "replay"].contains(value) ? value : nil
+        return ["setup", "play", "pass", "run", "clock", "history", "flight", "feedback", "result", "replay"].contains(value) ? value : nil
     }
     static var autoOpenDrill: Bool { has("-screenshotDrill") || drillScreen != nil }
     private static func has(_ arg: String) -> Bool {

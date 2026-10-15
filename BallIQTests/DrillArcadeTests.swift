@@ -80,7 +80,7 @@ final class DrillArcadeTests: XCTestCase {
         XCTAssertEqual(hurry.seconds, 4)
         XCTAssertEqual(hurry.snaps, 1)
         XCTAssertEqual(hurry.meanGrade, 1)
-        XCTAssertGreaterThanOrEqual(hurry.score, 700)
+        XCTAssertGreaterThanOrEqual(hurry.score, 200)
         XCTAssertLessThanOrEqual(hurry.score, 1000)
     }
     func testKneelUsesClockAndLosesARealDownWithoutInventingASourcedPlay() throws {
@@ -107,6 +107,54 @@ final class DrillArcadeTests: XCTestCase {
         XCTAssertEqual(after.points, 6)
         XCTAssertEqual(p.creditedYards, 5)
         XCTAssertTrue(p.narration.contains("5 yards"))
+    }
+
+    func testOfflineModelHasFiniteSupportedProbabilitiesAndFastPools() throws {
+        let bank = try DrillBank.load()
+        let model = try XCTUnwrap(bank.outcomeModel)
+        XCTAssertEqual(model.version, 1)
+        XCTAssertEqual(model.probabilities.count, 63)
+        for scenario in bank.scenarios {
+            let state = DrillState(scenario)
+            for concept in DrillConcept.simple {
+                let key = DrillOutcomeModel.key(concept, state: state)
+                let probabilities = try XCTUnwrap(model.probabilities[key])
+                XCTAssertEqual(probabilities.values.reduce(0, +), 1, accuracy: 0.000001)
+                let pool = try XCTUnwrap(bank.arcadePools?[key])
+                XCTAssertFalse(pool.isEmpty)
+                XCTAssertTrue(pool.allSatisfy { concept.matches($0, defense: .blitz) })
+                let choice = bank.arcadeChoice(concept, state: state, defense: .blitz, target: nil)
+                XCTAssertTrue(choice.weights.allSatisfy { $0 > 0 && $0.isFinite })
+                XCTAssertEqual(choice.draw(seed: 12)?.id, choice.draw(seed: 12)?.id)
+            }
+        }
+    }
+
+    func testSimpleClockScoringAndUsefulKickOffer() throws {
+        let bank = try DrillBank.load()
+        let play = bank.plays.first { $0.call == .run && $0.yards == 5 && !$0.turnover }!
+        var state = DrillState(bank.scenarios[0]); state.seconds = 90; state.running = true
+        state.arcadeSnap(play, grade: 1)
+        XCTAssertEqual(state.seconds, 76)
+        XCTAssertEqual(state.snaps, 1)
+        let noScore = state.score
+        state.points = 6
+        XCTAssertTrue(state.won)
+        XCTAssertGreaterThan(state.score, noScore)
+        XCTAssertEqual(state.score, 1000)
+        state.points = 0; state.ended = nil; state.yardline = 25; state.down = 1; state.seconds = 60
+        XCTAssertFalse(state.shouldOfferKick)
+        state.down = 4
+        XCTAssertEqual(state.shouldOfferKick, state.scenario.offenseScore + 3 >= state.scenario.defenseScore)
+    }
+
+    func testHistoricalRevealStartsAtTheSameSnapAndNeverUsesOtherGames() throws {
+        let bank = try DrillBank.load()
+        for scenario in bank.scenarios {
+            let history = try XCTUnwrap(scenario.history)
+            XCTAssertEqual(history.first?.id, scenario.id)
+            XCTAssertTrue(history.allSatisfy { $0.id.hasPrefix(scenario.game + ":") && !$0.description.isEmpty })
+        }
     }
 
 }

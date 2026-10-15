@@ -4,6 +4,7 @@ Usage: python3 tools/drill/build.py --input /tmp/drill-pbp-2024.csv.gz --rosters
 No accounts or third-party Python dependencies required. See docs/TWO_MINUTE_DRILL.md.
 """
 import argparse
+from calibrate import build_model
 from collections import Counter, defaultdict
 import csv
 import gzip
@@ -27,6 +28,10 @@ def build(path, roster_path):
     with gzip.open(roster_path, 'rt') as stream:
         quarterback_ids = {row['gsis_id'] for row in csv.DictReader(stream) if row['position'] == 'QB'}
     plays, scenarios, seen = [], [], set()
+    drive_rows = defaultdict(list)
+    for row in rows:
+        if row['posteam'] and row['fixed_drive'] and row['desc']:
+            drive_rows[(row['game_id'], row['fixed_drive'])].append(row)
     for row in rows:
         if row['season_type'] != 'REG' or row['posteam'] == '' or row['down'] == '':
             continue
@@ -62,7 +67,10 @@ def build(path, roster_path):
             continue
         if play['down'] != 1 or call == 'field_goal' or play['yardline'] < 25:
             continue
-        scenarios.append(dict(id=play['id'], game=row['game_id'], date=row['game_date'],
+        history = [dict(id=r['game_id'] + ':' + r['play_id'], clock=r['time'], description=r['desc'])
+                   for r in drive_rows[drive_key] if float(r['play_id']) >= float(row['play_id'])
+                   and r['play_type'] not in ('kickoff', 'extra_point')]
+        scenarios.append(dict(history=history, id=play['id'], game=row['game_id'], date=row['game_date'],
                               offense=row['posteam'], defense=row['defteam'],
                               offenseScore=number(row, 'posteam_score'), defenseScore=number(row, 'defteam_score'),
                               seconds=seconds, yardline=play['yardline'], toGo=play['toGo'],
@@ -73,6 +81,7 @@ def build(path, roster_path):
     assert {p['call'] for p in plays} == {'run', 'pass', 'field_goal'}
     bank = dict(season=2024, source=SOURCE, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                 scenarios=scenarios, plays=plays)
+    bank['outcomeModel'], bank['calibration'] = build_model(plays)
     if roster_path is not None:
         bank['lineups'] = lineups(rows, scenarios, roster_path)
         bank['rosterSource'] = 'https://github.com/nflverse/nflverse-data/releases/download/weekly_rosters/roster_weekly_2024.csv.gz'
