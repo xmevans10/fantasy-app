@@ -175,13 +175,13 @@ struct TwoMinuteDrillView: View {
         return HStack(spacing: 7) {
             RoundedRectangle(cornerRadius: 2).fill(palette.primary).overlay(RoundedRectangle(cornerRadius: 2).stroke(.white.opacity(0.3))).frame(width: 5, height: 33)
             VStack(alignment: .leading, spacing: 1) {
-                Text(team).font(.display(22))
+                Text(team).font(.custom(FontName.condBlack, fixedSize: 22))
                 HStack(spacing: 3) {
                     if you { Text("YOU").font(.system(size: 7, weight: .black)).fixedSize() }
                     ForEach(0..<3) { index in Capsule().fill(index < (you ? state?.timeouts ?? 0 : state?.scenario.defenseTimeouts ?? 0) ? Color.goldFill : .white.opacity(0.15)).frame(width: 7, height: 3) }
                 }
             }
-            Text("\(score)").font(.hero(32)).contentTransition(.numericText())
+            Text("\(score)").font(.hero(32)).frame(minWidth: 30).fixedSize()
         }.frame(minWidth: 93).fixedSize(horizontal: true, vertical: false)
     }
 
