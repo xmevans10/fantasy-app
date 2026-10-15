@@ -32,13 +32,13 @@ final class AccountDeletionUITests: XCTestCase {
                 .flatMap(\.windows).first,
             "no window in hosted test app")
         let host = UIHostingController(
-            rootView: ProfileView().environmentObject(container).environmentObject(auth))
+            rootView: ProfileView(initialSettings: signedIn).environmentObject(container).environmentObject(auth))
         let previous = window.rootViewController
         window.rootViewController = host
         return (window, previous)
     }
 
-    /// The row must exist for a signed-in user. Captured as a PNG so the deletion entry point can
+    /// Profile → Settings must offer deletion for a signed-in user. Captured as a PNG so the deletion entry point can
     /// be eyeballed without a device — the path is printed as `DELETE_ACCOUNT_UI:`.
     func testProfileOffersAccountDeletionWhenSignedIn() async throws {
         let (window, previous) = try render(signedIn: true)

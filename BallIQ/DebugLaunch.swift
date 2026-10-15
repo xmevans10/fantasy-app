@@ -27,7 +27,8 @@ enum DebugLaunch {
     }
     static var autoOpenCreateKeep4: Bool { has("-screenshotCreate") }
     static var autoOpenStats: Bool { has("-screenshotStats") }
-    static var autoOpenProfile: Bool { has("-screenshotProfile") }
+    static var autoOpenProfile: Bool { has("-screenshotProfile") || autoOpenProfileSettings }
+    static var autoOpenProfileSettings: Bool { has("-screenshotProfileSettings") }
     static var autoOpenLeagues: Bool { has("-screenshotLeagues") }
     /// Opens Leagues on the SEASON scope and bypasses the sign-in gate so the 8-week rating-season
     /// chrome (hero + season-end countdown + board) can be captured without a real account:
@@ -293,6 +294,7 @@ enum DebugLaunch {
     static let autoOpenCreateKeep4 = false
     static let autoOpenStats = false
     static let autoOpenProfile = false
+    static let autoOpenProfileSettings = false
     static let autoOpenLeagues = false
     static let autoOpenSeason = false
     static let autoOpenVersus = false

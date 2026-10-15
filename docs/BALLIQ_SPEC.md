@@ -61,6 +61,8 @@ creation, `CommunityPuzzleRepository`), Profile (tiers, per-sport ratings, Stats
 Sign in with Apple/Google, `NotificationSettings`). Browse (full unranked archive) hangs off
 Home, not a tab.
 
+**Profile cleanup (2026-10-15):** one neutral identity/level-progress card replaces the stacked level explainer and oversized accuracy hero. Games, applicable accuracy and streak form a compact summary; accessibility sizes stack identity metadata and use full-width stat rows. Career/Rating/Friends share one navigation surface. Detailed highlights remain in Career; sharing, favorite teams, notifications and account controls move behind the Settings gear. Guest sign-in stays on Profile, username/avatar editing stays on the avatar, and signed-in account deletion remains in Settings. Existing career/progression/stat/account UI tests: 73 passed; Python: 972 passed, one skip. SE before/after and enlarged-text checks cover the layout. Build 65 signed delivery is being finalized; build 64 remains ready internally.
+
 **Product focus (2026-10-14 user directive):** focus on the core sports-puzzle product.
 Trading cards, the collection binder, free/paid card packs, pack rewards and cosmetic flairs
 are retired from the app and removed from planned product scope. Keep weekly puzzle packs,
