@@ -4,6 +4,7 @@ import Foundation
 /// Compiled out of release builds.
 enum DebugLaunch {
     #if DEBUG
+    static var autoOpenDrill: Bool { has("-screenshotDrill") }
     private static func has(_ arg: String) -> Bool {
         ProcessInfo.processInfo.arguments.contains(arg)
     }
@@ -307,6 +308,7 @@ enum DebugLaunch {
     static let autoOpenGrid = false
     static let autoSubmitGrid = false
     static let holdGridSetup = false
+    static let autoOpenDrill = false
     static let autoOpenBlitz = false
     static let holdBlitzSetup = false
     static let blitzSeconds: Int? = nil

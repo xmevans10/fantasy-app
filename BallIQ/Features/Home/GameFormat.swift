@@ -20,6 +20,8 @@ struct GameFormat: Identifiable {
     var onTint: Color = .onAccent
 
     static let all: [GameFormat] = [
+        GameFormat(id: "drill", name: "Two-Minute Drill", symbol: "football.fill", isPro: false,
+                   isPlayable: true, subtitle: "NFL · Call the plays", tint: .sportNFLFill, onTint: .onSportNFL),
         // "Daily + archive": these two tiles open the format hub (BrowseView pinned),
         // not just today's puzzle — the subtitle should promise what the tap delivers.
         GameFormat(id: "keep4", name: "K4C4", symbol: "rectangle.stack.fill", isPro: false, isPlayable: true,
@@ -56,5 +58,5 @@ struct GameFormat: Identifiable {
     /// (already played out for today) and Versus (a separate social loop, not filler). Blitz
     /// leads the list on purpose: it is the only one of the four that is *bounded* ("five more
     /// minutes"), which is the honest pitch to someone who has just finished their dailies.
-    static let arcade: [GameFormat] = all.filter { ["blitz", "draft", "overunder", "grid"].contains($0.id) }
+    static let arcade: [GameFormat] = all.filter { ["blitz", "drill", "draft", "overunder", "grid"].contains($0.id) }
 }

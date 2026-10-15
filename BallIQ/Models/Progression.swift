@@ -24,6 +24,7 @@ enum GameFormatKind: String, Codable, CaseIterable {
     /// single rating to move, and it is infinitely repeatable. `ratingWeight` is declared for
     /// completeness and never consulted.
     case blitz
+    case twoMinuteDrill
 
     /// Relative difficulty weight (Keep4 Normal < Keep4 Hard < Journeyman < Who Am I? < Grid).
     var ratingWeight: Double {
@@ -35,7 +36,7 @@ enum GameFormatKind: String, Codable, CaseIterable {
         case .draftSpin:   return 1.0
         case .grid:        return 2.0
         case .journeyman:  return 1.5
-        case .blitz:       return 1.0
+        case .blitz, .twoMinuteDrill: return 1.0
         }
     }
 
@@ -53,6 +54,7 @@ enum GameFormatKind: String, Codable, CaseIterable {
         // XP that scaled with round count would make the longest timer strictly correct and turn
         // the timer choice into a chore rather than a taste.
         case .blitz:       return 250
+        case .twoMinuteDrill: return 100
         }
     }
 

@@ -59,7 +59,7 @@ enum SpeedMultiplier {
         // three: a blitz run is *already* priced on speed — finishing a board sooner is what
         // buys the next one — so an M25 bonus on top would charge the same second twice. See
         // `BlitzFormat`'s doc comment.
-        case .overUnder, .draftSpin, .blitz: return nil
+        case .overUnder, .draftSpin, .blitz, .twoMinuteDrill: return nil
         }
     }
 

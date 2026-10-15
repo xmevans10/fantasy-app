@@ -577,6 +577,7 @@ private extension GameFormatKind {
         case .grid:        return "The Grid"
         case .journeyman:  return "Journeyman"
         case .blitz:       return "Puzzle Blitz"
+        case .twoMinuteDrill: return "Two-Minute Drill"
         }
     }
 }
