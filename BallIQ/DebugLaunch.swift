@@ -4,7 +4,13 @@ import Foundation
 /// Compiled out of release builds.
 enum DebugLaunch {
     #if DEBUG
-    static var autoOpenDrill: Bool { has("-screenshotDrill") }
+    static var drillScreen: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let index = args.firstIndex(of: "-drillScreen"), args.indices.contains(index + 1) else { return nil }
+        let value = args[index + 1]
+        return ["setup", "play", "pass", "run", "trick", "flight", "feedback", "result", "replay"].contains(value) ? value : nil
+    }
+    static var autoOpenDrill: Bool { has("-screenshotDrill") || drillScreen != nil }
     private static func has(_ arg: String) -> Bool {
         ProcessInfo.processInfo.arguments.contains(arg)
     }
@@ -308,6 +314,7 @@ enum DebugLaunch {
     static let autoOpenGrid = false
     static let autoSubmitGrid = false
     static let holdGridSetup = false
+    static let drillScreen: String? = nil
     static let autoOpenDrill = false
     static let autoOpenBlitz = false
     static let holdBlitzSetup = false

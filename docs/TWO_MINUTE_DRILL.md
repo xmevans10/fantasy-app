@@ -1,35 +1,50 @@
-# Two-Minute Drill
+# Two-Minute Drill — arcade edition
 
-Native, free, unranked NFL minigame inspired by https://nfl2mindrill.com/. Original SwiftUI implementation; no reference-site assets, code, player grades or private data copied.
+Native, free, unranked NFL play-calling minigame inspired by https://nfl2mindrill.com/. Build 62 significantly replaces build 61's simple run/pass screen. No reference-site code, assets, private playbook or proprietary ratings are copied.
+
+## Reference study and acceptance bar
+
+The reference was played through its pass route editor, targeted throw, post-snap explanation and option comparison, run concepts, tempo, RPO, trick playbook and Survivor introduction. The arcade edition's acceptance criteria are visible 22-player football action, meaningful receiver/route/concept choices, clock management, staged snap/development/flight/contact feedback, replay/skip without duplicate execution, and a clear call grade independent of the realized play outcome.
+
+The native implementation offers inside zone, left/right sweeps, QB keeper, screen/slant/out/post/go routes, play-action/rollout/sideline modifiers, a box-reading RPO, reverse/flea-flicker concepts, field goals, timeout/spike/kneel, and three tempos. Daily, Practice and Survivor are separate setup choices. Survivor advances when a scored possession ties or takes the lead; failure ends the run. It does not simulate overtime or an opponent possession.
 
 ## Data and reproducibility
 
-The offline bank contains 53 starting situations and 33,936 observed run/pass/kick plays from the **2024 regular season**, not a live coverage claim. Source: [nflverse play-by-play release](https://github.com/nflverse/nflverse-data/releases/tag/pbp), maintained by the nflverse contributors under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Full license is bundled as `nflverse-license.txt`; attribution and transformation disclosure appear in Rules & data sources.
+The offline bank retains **53 real starting situations and 33,936 observed plays** from the 2024 regular season. It adds **22 active-roster players per situation**, plus real kickers/holders when available, with names, jersey numbers, positions, optional headshots and archived receiving statistics. Schematics select players from that week's active roster, prioritizing recorded involvement in that game; they are not historical tracking lineups.
 
-Download `play_by_play_2024.csv.gz` from that release, then run:
+Sources, maintained by the nflverse contributors under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/):
+
+- [2024 play-by-play](https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2024.csv.gz)
+- [2024 weekly rosters](https://github.com/nflverse/nflverse-data/releases/download/weekly_rosters/roster_weekly_2024.csv.gz)
+
+The full license is bundled as `nflverse-license.txt`; attribution and transformation disclosure appear in the app's rules. Both input SHA-256 values and source URLs are stored in the bank.
 
 ```
-python3 tools/drill/build.py --input /path/to/play_by_play_2024.csv.gz
+python3 tools/drill/build.py --input /path/to/play_by_play_2024.csv.gz --rosters /path/to/roster_weekly_2024.csv.gz
 ```
 
-The output stores the source URL and input SHA-256. Output is deterministic (verified byte-for-byte). This is a fixed historical season edition; there is no current-season constant or refresh promise.
+Output is deterministic, verified byte-for-byte. This is a fixed historical edition with no current-season/refresh promise. Starting situations are the first eligible Q4 snap of a possession, 30–120 seconds left, tied or trailing by up to five, first down, at least 25 yards from the goal. Penalties, kneels and spikes are excluded from the sampled bank. Kneel/spike actions are explicitly modeled clock rules.
 
-Starting situations: first eligible snap of a Q4 possession, 30–120 seconds left, tied or trailing by 1–5, first down, at least 25 yards from the goal. Kneels, spikes and penalty plays are excluded. Snap outcomes retain source game/play ids and descriptions. No API key, account, new server table or network connection is required to play.
+## Arcade model and scoring
 
-## Rules and limits
+Concepts map to observed pass depth/direction or run direction; sacks are included in pass pools. RPO uses a run pool against light/two-high looks and a quick-pass pool against pressure/loaded boxes. Trick pools use descriptions marking reverses, flea-flickers or laterals. Pools contain up to 80 nearby plays, prioritized by field position, distance and down. The selected receiver's archived catch rate reweights pass completions. Simulated defensive reads and optional modifiers reweight observed outcomes; they are game rules, not calibrated NFL probabilities.
 
-Run/pass pools contain the 40 nearest plays with the same down. Distance metric: absolute distance-to-go difference ×5 plus absolute field-position difference. Field goals use nearest field position. Uniform draws are stable by UTC date, snap number and call for daily play; practice randomizes the seed and starting scenario. The game shows empirical average gain and clock-stop rate for each pool, not defensive reads or calibrated win probabilities.
+The option comparison grades expected yards, first downs, clock stops and turnovers across concepts for the current target/modifiers. Final score is **70% average call quality + 30% drive score**, capped at 1000. Drive score: touchdown 1000; field goal to lead 800, other made kicks 600; otherwise five per net yard advanced, capped at 400. A smart call still pays when the sampled outcome is unlucky.
 
-Observed yards, turnovers, out-of-bounds/incomplete flags and kick results are applied to the virtual drive. Source text always describes the original play. Time is explicitly modeled: six seconds per snap, twenty seconds of hurry-up runoff before a subsequent snap when running, three seconds plus a lost down for a spike. A timeout stops the clock without runoff. Thinking/background time consumes no game time. A snap begun before zero can finish at zero. Turnovers, downs, safety, score and clock expiry terminate the possession. Kicks are available at opponent 45 or closer. Opponent possessions, penalties, conversions, player ratings and defensive alignments are outside this edition.
+Time advances when acting: six seconds per play; 20/32/38 seconds before a subsequent snap when the clock is running. Timeout removes runoff; spike costs three seconds and a down; kneel loses a yard and keeps the clock running. Thinking, animation, replay and background time do not consume extra game time. A final snap may finish after zero; expired pre-snap runoff prevents the snap. Turnovers, downs, safety, score and clock expiry end the possession. Kicks unlock at opponent 45 or closer. Penalties, conversions and opposing possessions are omitted.
 
-Scores: TD 1000; field goal taking the lead 800, otherwise 600; no score earns five per net yard advanced, capped at 400. The score measures the drive; it does not claim the real game would have been won. Touchdowns add six; no conversion is silently invented.
+Only the first daily finish per UTC date/device earns XP through the existing unranked completion path. Practice, Survivor and daily replays record zero-XP sessions. There is no cross-device daily uniqueness or global leaderboard claim.
 
-Daily reset: midnight UTC. First finish per date/device uses the existing completion/XP/streak path with `ranked:false`; replays/practice use the existing zero-XP session log. There is no global leaderboard or cross-device daily XP uniqueness guarantee. The scoreboard stays visible while the playbook scrolls; the field can collapse for compact screens. Exiting a live drive requires confirmation and discards it. Results include source-drive outcome, share text and play-by-play. App backgrounding preserves the current in-memory drive.
+## Presentation and verification
 
-## Validation
+A normalized tactical camera shows all 22 roster players, route diagrams, line of scrimmage, first-down line, blocking/rush movement, ball flight, catches/contact, result stamps and play narration. Replay and Skip share a presentation-id commit latch; they cannot repeat a snap, Survivor win or reward. Score/clock transitions, team colors, haptics, synthesized sound cues and existing brand confetti provide feedback. Ambient sound respects silent mode, can be muted, and Reduce Motion resolves immediately with the full explanation.
 
-`TwoMinuteDrillTests` exercises clock/runoff/timeout behavior, final-snap scores, fourth-down spikes, terminal input latching, losses/goal-to-go, turnovers, kick range, full-bank pool coverage, stable UTC selection and bounded termination across every starting scenario. Run on an iOS 18.3 simulator. Launch `-screenshotDrill` to open setup; verify setup, gameplay, result, help and Home tile on iPhone 15 and SE, plus dark mode and enlarged text. Do not interact with the simulator during the test run.
+The scoreboard and primary actions stay pinned while the playbook scrolls. The camera follows long plays into the end zone, and run/receiver motion follows the drawn path. Routes remain assigned when changing targets. Field labels and buttons support compact screens; eligible receiver cards give larger selection targets. Historical source text is available separately from virtual roster narration.
 
-Validation on October 14, 2026: full iOS 18.3 suite 1,046 tests, one skipped, zero failures; final layout pass reran eight minigame tests successfully. Python suite: 969 passed, one skipped. Source rebuild matches bundled JSON byte-for-byte. Simulator interaction verified real sampled outcomes, fourth-down conversion, spike, field goal, original-drive comparison and one daily XP award. Compact field sizing was corrected from screenshot evidence.
+Automated validation: full iOS 18.3 suite **1,053 tests, one skipped, zero failures**; targeted minigame/arcade tests **16 passed**. Python suite **969 passed, one skipped**. Independent source audit matched 33,936 outcomes, 53 starts and all 1,166 standard active-roster placements to the original CSVs. Rebuild matches the bundled JSON byte-for-byte.
 
-Release delivery, October 14, 2026: [PR #7](https://github.com/xmevans10/fantasy-app/pull/7) merged at `65d6a41`. Signed Playbook 1.9.0 (61) uploaded successfully to App Store Connect (`EXPORT SUCCEEDED`); Apple processing is pending. Existing internal `PlaybookTesters` automatically receives all builds; no external group assignment was requested or added. The same development-signed archive was installed over Wi-Fi on Xander’s paired iPhone 15, and installation metadata confirms version 1.9.0, bundle version 61. Application launch succeeded. Public App Store release remains 1.8.7 (55).
+Debug snapshots: `-drillScreen setup|play|pass|run|trick|flight|feedback|result|replay` (with `-hasOnboarded YES -skipStoreKit`). They exercise the shipping seams, force practice logging, and are disabled in Release. `flight` holds the throw for inspection; `feedback` also asserts repeated commit does not execute a second snap; `result` uses an observed long scoring play to inspect touchdown layout. `flight` and `replay` choose a completed archived pass for repeatable inspection; `replay` runs the full sequence for a motion recording. Snapshot stages are deterministic by UTC date and include the standard long-label/small-screen cases.
+
+## Delivery
+
+Build 61's initial version is merged in [PR #7](https://github.com/xmevans10/fantasy-app/pull/7), uploaded, confirmed VALID/READY_FOR_BETA_TESTING, and installed/launched on Xander's iPhone over Wi-Fi. Build 62 is the arcade replacement has passed offscreen iPhone 15/SE visual verification of playbook, throws, feedback, touchdown/end-zone camera and dark-mode trick concepts; its signed release delivery is being finalized. Public App Store release remains 1.8.7 (55). Internal TestFlight uses the existing automatic-build-access group; external group distribution is outside this release request.

@@ -1,17 +1,20 @@
 import Foundation
 
-struct DrillBank: Decodable {
+struct DrillBank: Decodable, Sendable {
     let season: Int
     let source: String
     let scenarios: [DrillScenario]
     let plays: [DrillPlay]
+    var lineups: [String: DrillLineup]?
 
     static func load() throws -> DrillBank {
         guard let url = Bundle.main.url(forResource: "two_minute_drill", withExtension: "json") else {
             throw CocoaError(.fileNoSuchFile)
         }
         let bank = try JSONDecoder().decode(Self.self, from: Data(contentsOf: url))
-        guard !bank.scenarios.isEmpty, DrillCall.allCases.allSatisfy({ call in
+        guard !bank.scenarios.isEmpty, bank.scenarios.allSatisfy({ scenario in
+            bank.lineups?[scenario.id]?.offense.count == 11 && bank.lineups?[scenario.id]?.defense.count == 11
+        }), DrillCall.allCases.allSatisfy({ call in
             bank.plays.contains { $0.call == call }
         }) else { throw CocoaError(.coderReadCorrupt) }
         return bank
@@ -45,7 +48,7 @@ struct DrillBank: Decodable {
     }
 }
 
-struct DrillScenario: Codable, Identifiable {
+struct DrillScenario: Codable, Identifiable, Sendable {
     let id: String
     let game: String
     let date: String
@@ -58,6 +61,7 @@ struct DrillScenario: Codable, Identifiable {
     let toGo: Int
     let timeouts: Int
     let actualResult: String
+    var defenseTimeouts: Int? = nil
 }
 
 enum DrillCall: String, Codable, CaseIterable {
@@ -70,7 +74,7 @@ enum DrillCall: String, Codable, CaseIterable {
     }
 }
 
-struct DrillPlay: Codable, Identifiable {
+struct DrillPlay: Codable, Identifiable, Sendable {
     let id: String
     let game: String
     let call: DrillCall
@@ -82,9 +86,19 @@ struct DrillPlay: Codable, Identifiable {
     let stopped: Bool
     let made: Bool
     let description: String
+    var air: Int? = nil
+    var side: String? = nil
+    var gap: String? = nil
+    var sack: Bool? = nil
+    var complete: Bool? = nil
+    var qbRun: Bool? = nil
+    var trick: Bool? = nil
+    var runner: String? = nil
+    var receiver: String? = nil
+    var passer: String? = nil
 }
 
-struct DrillState {
+struct DrillState: Sendable {
     let scenario: DrillScenario
     var seconds: Int
     var yardline: Int
@@ -96,6 +110,9 @@ struct DrillState {
     var ended: String?
     var log: [String] = []
     var snaps = 0
+    var callGrades: [Double] = []
+    var coachPoints: Int { Int(callGrades.reduce(0, +) * 100) }
+    var meanGrade: Double { callGrades.isEmpty ? 0 : callGrades.reduce(0, +) / Double(callGrades.count) }
 
     init(_ scenario: DrillScenario) {
         self.scenario = scenario
@@ -109,11 +126,15 @@ struct DrillState {
     var fieldPosition: String { yardline > 50 ? "Own \(100 - yardline)" : yardline == 50 ? "Midfield" : "Opp \(yardline)" }
     var situation: String { "\(down)\(["st", "nd", "rd", "th"][min(3, max(0, down - 1))]) & \(toGo) · \(fieldPosition)" }
     var canKick: Bool { yardline <= 45 && ended == nil }
-    var score: Int {
+    var driveScore: Int {
         let gain = max(0, scenario.yardline - yardline)
         if points == 6 { return 1000 }
         if points == 3 { return scenario.offenseScore + 3 > scenario.defenseScore ? 800 : 600 }
         return min(400, gain * 5)
+    }
+
+    var score: Int {
+        callGrades.isEmpty ? driveScore : min(1000, Int(meanGrade * 700) + driveScore * 3 / 10)
     }
 
     mutating func timeout() {
@@ -133,12 +154,23 @@ struct DrillState {
         else if down > 4 { ended = "Turnover on downs" }
     }
 
-    mutating func snap(_ play: DrillPlay) {
+    mutating func kneel(tempo: DrillTempo = .hurry) {
+        let play = DrillPlay(id: "clock-kneel", game: "ARCADE CLOCK RULE", call: .run,
+            down: down, toGo: toGo, yardline: yardline, yards: -1, turnover: false,
+            stopped: false, made: false, description: "Modeled kneel: one yard lost; clock runs.")
+        snap(play, tempo: tempo, grade: 0)
+    }
+
+    mutating func snap(_ play: DrillPlay, tempo: DrillTempo = .hurry, grade: Double? = nil) {
         guard ended == nil, play.call != .fieldGoal || canKick else { return }
         if running {
-            seconds = max(0, seconds - 20)
-            if seconds == 0 { ended = "Time expired before the snap"; return }
+            seconds = max(0, seconds - tempo.seconds)
+            if seconds == 0 {
+                if grade != nil { callGrades.append(0) }
+                ended = "Time expired before the snap"; return
+            }
         }
+        if let grade { callGrades.append(min(1, max(0, grade))) }
         snaps += 1
         seconds = max(0, seconds - 6)
         running = !play.stopped
