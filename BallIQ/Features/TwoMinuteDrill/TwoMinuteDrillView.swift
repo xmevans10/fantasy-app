@@ -163,7 +163,7 @@ struct TwoMinuteDrillView: View {
                     Image(systemName: "football.fill")
                     Text(s.fieldPosition.uppercased()).font(.label12)
                 }.padding(.horizontal, 12).padding(.vertical, 6)
-                    .background(Color.ink).clipShape(Capsule()).offset(y: -ballY + 14)
+                    .background(Color.black.opacity(0.85)).clipShape(Capsule()).offset(y: -ballY + 14)
             }.foregroundStyle(.white)
         }.frame(height: 160)
         .accessibilityElement(children: .ignore)
