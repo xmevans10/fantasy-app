@@ -68,12 +68,6 @@ struct DrillFieldView: View, Animatable {
                         Text("↑ ATTACK").font(.system(size: 9, weight: .bold, design: .monospaced))
                     }.padding(10).background(.black.opacity(0.3))
                     Spacer()
-                    HStack {
-                        Text("\(state.scenario.offense) · \(state.fieldPosition.uppercased())")
-                        Spacer()
-                        Text("ROSTER-BASED SCHEMATIC")
-                    }.font(.system(size: 8, weight: .bold, design: .monospaced))
-                        .padding(9).background(.black.opacity(0.4))
                 }.foregroundStyle(.white)
                 if motion > 0 && motion < 4 {
                     VStack {
@@ -115,7 +109,7 @@ struct DrillFieldView: View, Animatable {
                 }
                 var line = Path(); line.move(to: CGPoint(x: 12, y: y * canvas.height)); line.addLine(to: CGPoint(x: canvas.width - 12, y: y * canvas.height))
                 context.stroke(line, with: .color(.white.opacity(yards % 10 == 0 ? 0.4 : 0.15)), lineWidth: 1)
-                if number % 10 == 0 {
+                if number % 10 == 0 && y * canvas.height > 40 && y * canvas.height < canvas.height - 20 {
                     let label = Text("\(number)").font(.system(size: 10, weight: .heavy, design: .monospaced)).foregroundColor(.white.opacity(0.6))
                     context.draw(label, at: CGPoint(x: 23, y: y * canvas.height - 8))
                     context.draw(label, at: CGPoint(x: canvas.width - 23, y: y * canvas.height - 8))
